@@ -5,3 +5,14 @@ ios/
 *.txt
 package-lock - Copy.json
 package - Copy.json
+
+hostly-release.jks
+android/keystore.properties
+js/
+scripts/
+package-lock.json
+COMPLETION_REPORT.md
+DETAILED_CHANGES.md
+ENHANCEMENT_SUMMARY.md
+IMPLEMENTATION_NOTES.md
+QUICK_REFERENCE.md

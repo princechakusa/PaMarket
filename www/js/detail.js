@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 (function (H) {
   const pages    = H.pages;
   const state    = H.state;
@@ -61,7 +61,7 @@
           <div class="nego-pill">Negotiable</div>
         </div>
         <div class="det-listing-title">${escHtml(l.title)}</div>
-        <div class="det-loc-row">${S.location} ${escHtml(l.suburb || l.city)}, ${escHtml(l.prov)} · ${timeAgo(l.createdAt)} · ${S.eye} ${l.views || 0}</div>
+        <div class="det-loc-row">${S.location} ${escHtml(l.suburb || l.city)}, ${escHtml(l.prov)} Â· ${timeAgo(l.createdAt)} Â· ${S.eye} ${l.views || 0}</div>
 
         <div class="seller-card" onclick="H.openUserProfile('${seller.id}')">
           ${seller.avatar
@@ -74,9 +74,9 @@
                 <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>` : ''}
             </div>
             <div class="seller-phone">${escHtml(seller.phone)}</div>
-            <div class="seller-meta">Member since ${new Date(seller.joinedAt).toLocaleDateString()}${seller.verified ? ' · ID Verified' : ''}</div>
+            <div class="seller-meta">Member since ${new Date(seller.joinedAt).toLocaleDateString()}${seller.verified ? ' Â· ID Verified' : ''}</div>
           </div>
-          <div class="mi-arrow">›</div>
+          <div class="mi-arrow">â€º</div>
         </div>
 
         <div class="desc-text">${escHtml(l.desc || 'No description provided.')}</div>
@@ -117,7 +117,7 @@
 
   H.shareListing = function (id) {
     const l = state.listings.find(x => x.id === id); if (!l) return;
-    const text = `${l.title} · ${fmtPrice(l.price, l.currency)} on Hostly`;
+    const text = `${l.title} Â· ${fmtPrice(l.price, l.currency)} on Hostly`;
     if (navigator.share) {
       navigator.share({ title: l.title, text, url: location.href }).catch(() => {});
     } else {
@@ -170,7 +170,7 @@
       onConfirm: () => {
         const reason = document.getElementById('reportReason').value;
         const note   = document.getElementById('reportNote').value;
-        state.reports.push({ id: uid(), reporterId: state.currentUserId, targetType: 'listing', targetId: id, reason: reason + (note ? ' … ' + note : ''), t: Date.now(), status: 'open' });
+        state.reports.push({ id: uid(), reporterId: state.currentUserId, targetType: 'listing', targetId: id, reason: reason + (note ? ' â€¦ ' + note : ''), t: Date.now(), status: 'open' });
         saveState(); toast('Report submitted. Thank you.');
       }
     });
@@ -186,7 +186,7 @@
       onConfirm: () => {
         const reason = document.getElementById('reportReason').value;
         const note   = document.getElementById('reportNote').value;
-        state.reports.push({ id: uid(), reporterId: state.currentUserId, targetType: 'user', targetId: id, reason: reason + (note ? ' … ' + note : ''), t: Date.now(), status: 'open' });
+        state.reports.push({ id: uid(), reporterId: state.currentUserId, targetType: 'user', targetId: id, reason: reason + (note ? ' â€¦ ' + note : ''), t: Date.now(), status: 'open' });
         saveState(); toast('Report submitted');
       }
     });
@@ -195,7 +195,7 @@
   H.openListing = window.openListing = async function (id) {
     const l = state.listings.find(x => x.id === id); if (!l) return;
     l.views = (l.views || 0) + 1; saveState();
-    await openInner('Detail', { id });
+    await H.openInner('Detail', { id });
   };
 
   // ---------------------------------------------------

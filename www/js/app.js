@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 window.H = {
   KEY:           'hostly.v2',
   ADMIN_PHONES:  ['+263770000000', '+971589772645'],
@@ -17,7 +17,7 @@ window.H = {
     'Matabeleland South': ['Beitbridge','Gwanda','Plumtree','Filabusi']
   },
 
-  // ─── SVG Icons (Feather style) ────────────────────────────
+  // â”€â”€â”€ SVG Icons (Feather style) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   ICONS: {
     search:        `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
     user:          `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
@@ -33,7 +33,7 @@ window.H = {
     camera:        `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
   },
 
-  // Category icons – now SVG based
+  // Category icons â€“ now SVG based
   CATEGORIES: [
     {id:'property',    name:'Property',     icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},
     {id:'vehicles',    name:'Vehicles',     icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>'},
@@ -55,7 +55,7 @@ window.H = {
     {id:'mega',     name:'Mega Boost',     price:10, days:30, desc:'30 days of maximum visibility across all sections.', badgeText:'Best Value'}
   ],
 
-  // ─── State ────────────────────────────────────────────────
+  // â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   state: {},
   pageStack: [],
   currentPageName: 'Home',
@@ -73,7 +73,7 @@ window.H = {
     adminLogs: [], supportTickets: [], adminSession: null
   },
 
-  // ─── Persistence (localStorage + optional Supabase) ──────
+  // â”€â”€â”€ Persistence (localStorage + optional Supabase) â”€â”€â”€â”€â”€â”€
   loadState() {
     const root = window.H || this;
     try {
@@ -87,8 +87,8 @@ window.H = {
     const root = window.H || this;
     // Always save to localStorage
     try { localStorage.setItem(root.KEY, JSON.stringify(root.state)); }
-    catch (e) { if (e.name === 'QuotaExceededError') root.toast('Storage full — try deleting old listings'); }
-    // Optionally sync to Supabase (fire‑and‑forget, never throws)
+    catch (e) { if (e.name === 'QuotaExceededError') root.toast('Storage full â€” try deleting old listings'); }
+    // Optionally sync to Supabase (fireâ€‘andâ€‘forget, never throws)
     root.syncToSupabase().catch(() => {});
   },
 
@@ -102,12 +102,12 @@ window.H = {
         .from('app_state')
         .upsert({ id: root.KEY, data: root.state, updated_at: new Date().toISOString() });
     } catch (e) {
-      // Silently fail – local storage is the primary source
+      // Silently fail â€“ local storage is the primary source
       console.warn('Supabase sync failed (will retry next save):', e.message);
     }
   },
 
-  // ─── Utilities ────────────────────────────────────────────
+  // â”€â”€â”€ Utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   uid()        { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); },
   currentUser(){
     const root = window.H || this;
@@ -137,13 +137,13 @@ window.H = {
     return c === 'USD' ? '$' + n : n + ' ZiG';
   },
 
-  // ─── Filtering ────────────────────────────────────────────
-  filterListings(list, q) {
+  // â”€â”€â”€ Filtering â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  filterListings(list, q) { const _s = window.H ? window.H.state : {};
     const query = (q !== undefined ? q : (document.getElementById('searchIn')?.value || '')).toLowerCase().trim();
     return list.filter(l => {
-      if (this.state.cityFilter !== 'All Zimbabwe') {
+      if (_s.cityFilter !== 'All Zimbabwe') {
         const city = (l.city + ' ' + l.prov).toLowerCase();
-        if (!city.includes(this.state.cityFilter.toLowerCase())) return false;
+        if (!city.includes(_s.cityFilter.toLowerCase())) return false;
       }
       if (query && !(l.title + ' ' + (l.desc || '') + ' ' + l.city + ' ' + (l.suburb || '')).toLowerCase().includes(query)) return false;
       return true;
@@ -155,7 +155,7 @@ window.H = {
     });
   },
 
-  // ─── UI Components ────────────────────────────────────────
+  // â”€â”€â”€ UI Components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   toast(msg, duration = 2600) {
     const el = document.getElementById('toastEl');
     if (!el) return;
@@ -222,7 +222,7 @@ window.H = {
         <div class="list-price">${H.escHtml(H.fmtPrice(l.price, l.currency))}</div>
         <div class="list-tags">
           <span class="tag">${H.ICONS.location} ${H.escHtml(l.city)}</span>
-          <span class="tag">· ${H.timeAgo(l.createdAt)}</span>
+          <span class="tag">Â· ${H.timeAgo(l.createdAt)}</span>
           ${seller && seller.verified ? `<span class="blue-check" title="ID Verified"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>` : ''}
           ${boosted ? `<span class="boost-pill">${H.ICONS.boost} Boosted</span>` : ''}
         </div>
@@ -244,13 +244,13 @@ window.H = {
     </div>`;
   },
 
-  // ─── Camera ───────────────────────────────────────────────
+  // â”€â”€â”€ Camera â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   stopCam() {
     if (this.camStream)    { this.camStream.getTracks().forEach(t => t.stop()); this.camStream = null; }
     if (this.livenessTimer){ clearInterval(this.livenessTimer); this.livenessTimer = null; }
   },
 
-  // ─── Image compression ────────────────────────────────────
+  // â”€â”€â”€ Image compression â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   compressImage(file, maxDim = 1200, q = 0.8) {
     return new Promise(res => {
       const r = new FileReader();
@@ -270,7 +270,7 @@ window.H = {
     });
   },
 
-  // ─── Ban system ───────────────────────────────────────────
+  // â”€â”€â”€ Ban system â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   checkBan() {
     const u = this.currentUser();
     if (!u || u.role === 'admin') { document.getElementById('banScreen').classList.remove('show'); return false; }
@@ -293,7 +293,7 @@ window.H = {
       countdown = `Lifted in ${d > 0 ? d + 'd ' : ''}${h > 0 ? h + 'h ' : ''}${m}m`;
     }
     document.getElementById('banScreen').innerHTML = `
-      <div class="ic">${isTemp ? '⏳' : '🚫'}</div>
+      <div class="ic">${isTemp ? 'â³' : 'ðŸš«'}</div>
       <h1>${isTemp ? 'Account Suspended' : 'Account Banned'}</h1>
       <p>${isTemp ? 'Your account has been temporarily suspended.' : 'Your account has been permanently banned.'} Contact support if you believe this is in error.</p>
       <div class="reason"><strong>Reason:</strong> ${this.escHtml(u.banReason || 'Policy violation')}</div>
@@ -307,7 +307,7 @@ window.H = {
   appealBan() {
     this.modal({
       title: 'Submit Appeal',
-      body: `<div class="fl">Your reason</div><textarea class="fi" id="appealText" rows="4" placeholder="Explain why this ban should be reviewed…"></textarea>`,
+      body: `<div class="fl">Your reason</div><textarea class="fi" id="appealText" rows="4" placeholder="Explain why this ban should be reviewedâ€¦"></textarea>`,
       confirmText: 'Submit',
       onConfirm: () => {
         const txt = document.getElementById('appealText')?.value.trim();
@@ -342,7 +342,7 @@ window.H = {
     this.saveState();
   },
 
-  // ─── Navigation ───────────────────────────────────────────
+  // â”€â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async boot() {
     this.applyTheme();
     this.applyLanguage();
@@ -383,8 +383,9 @@ window.H = {
   },
 
   async openInner(name, params) {
-    if (!this.currentUser()) { this.authPage(); return; }
-    if (this.isAdminPage(name) && (!this.isAdmin() || !this.state.adminSession)) { this.toast('Admin login required'); return; }
+    const _h = window.H;
+    if (!_h.currentUser()) { _h.authPage(); return; }
+    if (_h.isAdminPage(name) && (!_h.isAdmin() || !_h.state.adminSession)) { _h.toast('Admin login required'); return; }
     this.pageStack.push({ name: this.currentPageName, params: this.currentPageParams });
     document.getElementById('bottomNav').style.display = 'none';
     await this.renderPage(name, params);
@@ -428,7 +429,7 @@ window.H = {
 
   filterByCat(cid) { this.openInner('CategoryView', { cid }); },
 
-  // ─── Theme / Language ─────────────────────────────────────
+  // â”€â”€â”€ Theme / Language â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   applyTheme() {
     const u     = this.currentUser();
     const theme = (u && u.settings && u.settings.theme) || 'light';
@@ -439,7 +440,7 @@ window.H = {
     if (u && u.language) document.querySelectorAll('.current-lang').forEach(el => el.textContent = u.language);
   },
 
-  // ─── Logo easter egg ──────────────────────────────────────
+  // â”€â”€â”€ Logo easter egg â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   logoTap() {
     this.logoTaps++;
     clearTimeout(this.logoTapsTimer);
@@ -450,7 +451,7 @@ window.H = {
     }
   },
 
-  // ─── CategoryView stub ────────────────────────────────────
+  // â”€â”€â”€ CategoryView stub â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   _registerCategoryView() {
     this.pages.CategoryView = function ({ cid }) {
       const cat  = H.CATEGORIES.find(c => c.id === cid) || { name: 'Category', icon: H.ICONS.close };
@@ -462,7 +463,7 @@ return `<div class="page active">${H.innerTopbar(cat.icon + ' ' + cat.name, fals
     };
   },
 
-  // ─── Account Menu (emoji‑free) ─────────────────────────────
+  // â”€â”€â”€ Account Menu (emojiâ€‘free) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   showAccountMenu(btn) {
     const u = this.currentUser();
     if (!u) return;
@@ -472,27 +473,27 @@ return `<div class="page active">${H.innerTopbar(cat.icon + ' ' + cat.name, fals
 
     sheet.innerHTML = `
       <div class="sheet-header">Account Menu</div>
-      <button class="sheet-item" onclick="H.openInner('Profile'); H.closeSheet()">
+      <button class="sheet-item" onclick="H.closeSheet(); setTimeout(()=>H.openInner('Profile'),50)">
         <span class="sheet-icon">${I.user}</span>
         <span class="sheet-label">My Profile</span>
       </button>
-      <button class="sheet-item" onclick="H.openInner('MyListings'); H.closeSheet()">
+      <button class="sheet-item" onclick="H.closeSheet(); setTimeout(()=>H.openInner('MyListings'),50)">
         <span class="sheet-icon">${I.doc}</span>
         <span class="sheet-label">My Listings</span>
       </button>
-      <button class="sheet-item" onclick="H.openInner('Favorites'); H.closeSheet()">
+      <button class="sheet-item" onclick="H.closeSheet(); setTimeout(()=>H.openInner('Favorites'),50)">
         <span class="sheet-icon">${I.heart}</span>
         <span class="sheet-label">Saved & Favorites</span>
       </button>
-      <button class="sheet-item" onclick="H.openInner('Wallet'); H.closeSheet()">
+      <button class="sheet-item" onclick="H.closeSheet(); setTimeout(()=>H.openInner('Wallet'),50)">
         <span class="sheet-icon">${I.wallet}</span>
         <span class="sheet-label">Wallet & Payments</span>
       </button>
-      <button class="sheet-item" onclick="H.openInner('Settings'); H.closeSheet()">
+      <button class="sheet-item" onclick="H.closeSheet(); setTimeout(()=>H.openInner('Settings'),50)">
         <span class="sheet-icon">${I.settings}</span>
         <span class="sheet-label">Settings</span>
       </button>
-      <button class="sheet-item" onclick="H.openInner('Help'); H.closeSheet()">
+      <button class="sheet-item" onclick="H.closeSheet(); setTimeout(()=>H.openInner('Help'),50)">
         <span class="sheet-icon">${I.help}</span>
         <span class="sheet-label">Help & Support</span>
       </button>
@@ -507,7 +508,7 @@ return `<div class="page active">${H.innerTopbar(cat.icon + ' ' + cat.name, fals
     bg.classList.add('open');
 },
 
-  // ─── Bootstrap ────────────────────────────────────────────
+  // â”€â”€â”€ Bootstrap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   init() {
     this.state = this.loadState();
     this._registerCategoryView();
@@ -532,10 +533,17 @@ return `<div class="page active">${H.innerTopbar(cat.icon + ' ' + cat.name, fals
   }
 };
 
-// ─── Backward-compat globals ──────────────────────────────────
+// â”€â”€â”€ Backward-compat globals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 ['navTo','openInner','goBack','toast','closeModal','closeSheet'].forEach(fn => {
   window[fn] = (...a) => H[fn](...a);
 });
 window.pushNotif = (uid, title, body) => H.pushNotif && H.pushNotif(uid, title, body);
 
 H.init();
+
+
+
+
+
+
+
