@@ -1,4 +1,4 @@
-// supabase.js — safe Supabase client initialisation
+﻿// supabase.js "” safe Supabase client initialisation
 (function () {
   // Make sure the CDN loaded
   if (!window.supabase) {
@@ -34,7 +34,7 @@
   }
 
   // Create the client instance and assign it to the global `supabase` variable
-  // (overwrites the window.supabase object that held the SDK — this is fine
+  // (overwrites the window.supabase object that held the SDK "” this is fine
   //  because other files expect `supabase` to be the client)
   window.supabase = window.supabase.createClient(supabaseUrl || '', supabaseAnonKey || '');
 })();

@@ -11,22 +11,10 @@
 
   H.pages.Home = async function () {
     const u = H.currentUser();
-    if (!u) {
-      // Show sign-in prompt with proper icon
-      return `<div class="page active">
-        ${emptyState('Please sign in', 'Join Zimbabwe\'s #1 marketplace', 'Go to Login', "H.boot()")}
-      </div>`;
-    }
+    
 
-    // Optional: pull fresh data from Supabase
-    if (typeof H.fetchListingsFromSupabase === 'function') {
-      try { await H.fetchListingsFromSupabase(); } catch {}
-    }
-
-    const unreadNotifs = (H.state.notifs[u.id] || []).filter(n => !n.read).length;
-    const unreadMsgs   = (H.state.conversations || []).filter(c =>
-      c.members.includes(u.id) && c.messages.some(m => m.from !== u.id && !m.read)
-    ).length;
+    const unreadNotifs = u ? (H.state.notifs[u.id] || []).filter(n => !n.read).length : 0;
+    const unreadMsgs = u ? (H.state.conversations || []).filter(cv => cv.members.includes(u.id) && cv.messages.some(m => m.from !== u.id && !m.read)).length : 0;
     const activeListings = (H.state.listings || []).filter(l => l.status === 'active');
     const filtered       = filterListings(activeListings);
     const featured       = filtered.filter(l => l.boost && l.boost.until > Date.now()).slice(0, 6);
@@ -40,11 +28,11 @@
             <span>Host<em>ly</em></span>
           </div>
           <div class="hdr-icons">
-            <div class="hdr-ic" onclick="H.openInner('Notifications')" role="button" tabindex="0" aria-label="Notifications${unreadNotifs ? ', ' + unreadNotifs + ' unread' : ''}">
+            <div class="hdr-ic" onclick="H.currentUser()?H.openInner('Notifications'):H.requireAuth('Sign in to view notifications')" role="button" tabindex="0" aria-label="Notifications${unreadNotifs ? ', ' + unreadNotifs + ' unread' : ''}">
               <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               ${unreadNotifs ? `<span class="badge" aria-hidden="true">${unreadNotifs > 9 ? '9+' : unreadNotifs}</span>` : ''}
             </div>
-            <div class="hdr-ic" onclick="H.openInner('Messages')" role="button" tabindex="0" aria-label="Messages${unreadMsgs ? ', ' + unreadMsgs + ' unread' : ''}">
+            <div class="hdr-ic" onclick="H.currentUser()?H.openInner('Messages'):H.requireAuth('Sign in to view messages')" role="button" tabindex="0" aria-label="Messages${unreadMsgs ? ', ' + unreadMsgs + ' unread' : ''}">
               <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               ${unreadMsgs ? `<span class="badge" aria-hidden="true">${unreadMsgs > 9 ? '9+' : unreadMsgs}</span>` : ''}
             </div>

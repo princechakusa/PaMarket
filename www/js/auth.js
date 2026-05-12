@@ -1,8 +1,10 @@
-'use strict';
+﻿'use strict';
 (function (H) {
   const state = H.state;
   const { uid, toast, modal, saveState } = H;
   let authBusy = false;
+let signupCooldown = false;
+let signinCooldown = false;
   let adminLogoTaps = 0;
   let adminTapTimer = null;
 
@@ -95,9 +97,9 @@
     });
   };
 
-  // ═══════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // AUTH FLOW
-  // ═══════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   H.authStepEmail = function () {
     const card = document.getElementById('authCard');
     if (!card) return;
@@ -169,7 +171,19 @@
 
     if (window.supabase && window.supabase.auth) {
       const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
-      if (error) { toast(error.message); setAuthBusy(false); return; }
+      if (error) {
+    if (error.status === 429) {
+    const retryAfter = (error.headers?.['retry-after'] || 60) * 1000;
+    signinCooldown = true;
+    setTimeout(() => { signinCooldown = false; }, retryAfter);
+    toast(`Too many attempts. Wait ${Math.round(retryAfter/1000)} seconds.`);
+    setAuthBusy(false);
+    return;
+}
+    toast(error.message);
+    setAuthBusy(false);
+    return;
+}
       state.currentUserId = data.user.id;
       await H.loadProfile(data.user.id);
       saveState();
@@ -209,13 +223,25 @@
 
     if (window.supabase && window.supabase.auth) {
       const { data, error } = await window.supabase.auth.signUp({ email, password });
-      if (error) { toast(error.message); setAuthBusy(false); return; }
+      if (error) {
+    if (error.status === 429) {
+    const retryAfter = (error.headers?.['retry-after'] || 60) * 1000;
+    signinCooldown = true;
+    setTimeout(() => { signinCooldown = false; }, retryAfter);
+    toast(`Too many attempts. Wait ${Math.round(retryAfter/1000)} seconds.`);
+    setAuthBusy(false);
+    return;
+}
+    toast(error.message);
+    setAuthBusy(false);
+    return;
+}
 
       const userId = data.user.id;
       const { error: profileError } = await window.supabase
         .from('profiles')
         .insert({ id: userId, name, phone: phone || null });
-      if (profileError) { toast('Could not create profile: ' + profileError.message); setAuthBusy(false); return; }
+      if (profileError) { console.warn(`Profile insert skipped: ${profileError.message}`); }
 
       const u = {
         id: userId, email, name, phone: phone || '', avatar: null,
@@ -323,9 +349,9 @@
     });
   };
 
-  // ═══════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // LEGAL TEXTS
-  // ═══════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   const TERMS_TEXT = `<div class="doc-content">
     <h2>Welcome to Hostly</h2>
     <p>By using Hostly, you agree to these Terms. Please read them carefully before posting or responding to any listing.</p>
@@ -367,11 +393,11 @@
     <p>We never sell your data. ID and selfie data stays on your device only.</p>
     <h2>3. Your Rights</h2>
     <ul>
-      <li>Access, correct, or delete your data via Profile → Settings</li>
+      <li>Access, correct, or delete your data via Profile â†’ Settings</li>
       <li>Request full data deletion by emailing us</li>
     </ul>
     <h2>4. Contact</h2>
-    <p>privacy@hostly.co.zw — Last updated: Jan 2025</p>
+    <p>privacy@hostly.co.zw "” Last updated: Jan 2025</p>
   </div>`;
 
 })(window.H);

@@ -8,6 +8,9 @@
   let postState = {};
 
   pages.Post = function () {
+    if (!currentUser()) {
+      return `<div class="page active">${H.innerTopbar('Post a Listing')}<div style="padding: 20px;">${H.emptyState('Sign In Required', 'Sign in to post listings and reach millions of buyers.', 'Sign In', 'H.requireLogin(\"post listings\")')}</div></div>`;
+    }
     postState = {
       step: 1, cat: null, title: '', desc: '', price: '',
       currency: 'USD', prov: PROVINCES[0],

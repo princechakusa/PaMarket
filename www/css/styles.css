@@ -908,3 +908,9 @@ select.fi {
 [data-theme="dark"] .admin-row-meta { color: var(--n3); }
 [data-theme="dark"] .pay-balance { box-shadow: none; }
 [data-theme="dark"] .tx-date { color: var(--n3); }
+
+/* Toggle fix - visible on light background */
+.toggle-sw { background: #CBD5E1; }
+.toggle-sw.on { background: var(--blue); }
+.toggle-slider { background: #CBD5E1; }
+.toggle-switch input:checked + .toggle-slider { background: var(--blue); }

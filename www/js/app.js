@@ -33,7 +33,7 @@ window.H = {
     camera:        `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
   },
 
-  // Category icons â€“ now SVG based
+  // Category icons "“ now SVG based
   CATEGORIES: [
     {id:'property',    name:'Property',     icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},
     {id:'vehicles',    name:'Vehicles',     icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>'},
@@ -69,7 +69,7 @@ window.H = {
 
   defaultState: {
     users: [], listings: [], conversations: [], reports: [], txns: [],
-    saves: {}, notifs: {}, currentUserId: null, cityFilter: 'All Zimbabwe',
+    saves: {}, notifs: {}, currentUserId: null, cityFilter: 'All Zimbabwe', _sortMode: 'newest', _priceMin: '', _priceMax: '',
     adminLogs: [], supportTickets: [], adminSession: null
   },
 
@@ -87,13 +87,13 @@ window.H = {
     const root = window.H || this;
     // Always save to localStorage
     try { localStorage.setItem(root.KEY, JSON.stringify(root.state)); }
-    catch (e) { if (e.name === 'QuotaExceededError') root.toast('Storage full â€” try deleting old listings'); }
-    // Optionally sync to Supabase (fireâ€‘andâ€‘forget, never throws)
+    catch (e) { if (e.name === 'QuotaExceededError') root.toast('Storage full "” try deleting old listings'); }
+    // Optionally sync to Supabase (fire"‘and"‘forget, never throws)
     root.syncToSupabase().catch(() => {});
   },
 
   // Attempt to push state to Supabase if client exists
-  async syncToSupabase() {
+  async syncToSupabase() { return; // disabled
     const root = window.H || this;
     if (!window.supabase || typeof window.supabase.from !== 'function') return;
     try {
@@ -102,7 +102,7 @@ window.H = {
         .from('app_state')
         .upsert({ id: root.KEY, data: root.state, updated_at: new Date().toISOString() });
     } catch (e) {
-      // Silently fail â€“ local storage is the primary source
+      // Silently fail "“ local storage is the primary source
       console.warn('Supabase sync failed (will retry next save):', e.message);
     }
   },
@@ -119,7 +119,8 @@ window.H = {
 
   // Return the SVG icon string for a category ID (fallback to generic box)
   categoryIcon(cid) {
-    const cat = this.CATEGORIES.find(c => c.id === cid);
+    const root = window.H || this;
+    const cat = root.CATEGORIES.find(c => c.id === cid);
     return cat ? cat.icon : `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`;
   },
 
@@ -138,19 +139,30 @@ window.H = {
   },
 
   // â”€â”€â”€ Filtering â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  filterListings(list, q) { const _s = window.H ? window.H.state : {};
+  filterListings(list, q) {
+    const _s = window.H ? window.H.state : {};
     const query = (q !== undefined ? q : (document.getElementById('searchIn')?.value || '')).toLowerCase().trim();
+    const priceMin = parseFloat(_s._priceMin) || 0;
+    const priceMax = parseFloat(_s._priceMax) || Infinity;
+    const sort = _s._sortMode || 'newest';
     return list.filter(l => {
-      if (_s.cityFilter !== 'All Zimbabwe') {
+      if (_s.cityFilter && _s.cityFilter !== 'All Zimbabwe') {
         const city = (l.city + ' ' + l.prov).toLowerCase();
         if (!city.includes(_s.cityFilter.toLowerCase())) return false;
       }
       if (query && !(l.title + ' ' + (l.desc || '') + ' ' + l.city + ' ' + (l.suburb || '')).toLowerCase().includes(query)) return false;
+      if (l.price < priceMin) return false;
+      if (l.price > priceMax) return false;
       return true;
     }).sort((a, b) => {
       const ba = (a.boost && a.boost.until > Date.now()) ? 1 : 0;
       const bb = (b.boost && b.boost.until > Date.now()) ? 1 : 0;
       if (ba !== bb) return bb - ba;
+      if (sort === 'newest') return b.createdAt - a.createdAt;
+      if (sort === 'oldest') return a.createdAt - b.createdAt;
+      if (sort === 'price_asc') return (a.price||0) - (b.price||0);
+      if (sort === 'price_desc') return (b.price||0) - (a.price||0);
+      if (sort === 'views') return (b.views||0) - (a.views||0);
       return b.createdAt - a.createdAt;
     });
   },
@@ -215,14 +227,14 @@ window.H = {
       ? `<img src="${l.photos[0]}" alt="${H.escHtml(l.title)}" loading="lazy">`
       : `<div class="ph" aria-hidden="true">${H.categoryIcon(l.cat)}</div>`;
     const boosted = l.boost && l.boost.until > Date.now();
-    return `<div class="list-card" onclick="H.openListing('${l.id}')" role="button" tabindex="0" aria-label="${H.escHtml(l.title)}">
+    return `<div class="list-card-wrap" style="position:relative" onclick="H.openListing('${l.id}')"><button class="share-card-btn" onclick="event.stopPropagation();H.shareListing('${l.id}')" title="Share"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button><div class="list-card" role="button" tabindex="0" aria-label="${H.escHtml(l.title)}">
       <div class="list-thumb">${photo}</div>
       <div class="list-body">
         <div class="list-title">${H.escHtml(l.title)}</div>
         <div class="list-price">${H.escHtml(H.fmtPrice(l.price, l.currency))}</div>
         <div class="list-tags">
           <span class="tag">${H.ICONS.location} ${H.escHtml(l.city)}</span>
-          <span class="tag">Â· ${H.timeAgo(l.createdAt)}</span>
+          <span class="tag">· ${H.timeAgo(l.createdAt)}</span>
           ${seller && seller.verified ? `<span class="blue-check" title="ID Verified"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>` : ''}
           ${boosted ? `<span class="boost-pill">${H.ICONS.boost} Boosted</span>` : ''}
         </div>
@@ -307,7 +319,7 @@ window.H = {
   appealBan() {
     this.modal({
       title: 'Submit Appeal',
-      body: `<div class="fl">Your reason</div><textarea class="fi" id="appealText" rows="4" placeholder="Explain why this ban should be reviewedâ€¦"></textarea>`,
+      body: `<div class="fl">Your reason</div><textarea class="fi" id="appealText" rows="4" placeholder="Explain why this ban should be reviewed"¦"></textarea>`,
       confirmText: 'Submit',
       onConfirm: () => {
         const txt = document.getElementById('appealText')?.value.trim();
@@ -322,8 +334,7 @@ window.H = {
     return ['Admin'].includes(name);
   },
   canAccessPage(name) {
-    if (!this.currentUser()) return false;
-    if (this.isAdminPage(name) && !this.isAdmin()) return false;
+        if (this.isAdminPage(name) && !this.isAdmin()) return false;
     if (this.isAdminPage(name) && !this.state.adminSession) return false;
     return true;
   },
@@ -346,9 +357,9 @@ window.H = {
   async boot() {
     this.applyTheme();
     this.applyLanguage();
-    if (!this.state.currentUserId) { this.authPage(); return; }
-    if (this.checkBan()) return;
-    document.getElementById('bottomNav').style.display = 'flex';
+    // guest browse enabled
+    if(this.state.currentUserId && this.checkBan()) return;
+    document.getElementById("bottomNav").style.display="flex";
     await this.navTo('Home');
   },
 
@@ -372,7 +383,8 @@ window.H = {
   },
 
   async navTo(name, btn) {
-    if (!this.currentUser()) { this.authPage(); return; }
+    if(["Post"].includes(name)&&!this.currentUser()){this.requireAuth("Log in to post an ad");return;}
+    if(name==="Account"&&!this.currentUser()){this.requireAuth("Sign in to your account");return;}
     if (this.isAdminPage(name) && (!this.isAdmin() || !this.state.adminSession)) { this.toast('Admin login required'); return; }
     this.pageStack = [];
     document.getElementById('bottomNav').style.display = 'flex';
@@ -384,7 +396,8 @@ window.H = {
 
   async openInner(name, params) {
     const _h = window.H;
-    if (!_h.currentUser()) { _h.authPage(); return; }
+    const _gated=["Messages","Chat","MyListings","Favorites","Profile","Settings","Wallet","Boost","Notifications","Security"];
+    if(_gated.includes(name)&&!_h.currentUser()){_h.requireAuth("Sign in to continue");return;}
     if (_h.isAdminPage(name) && (!_h.isAdmin() || !_h.state.adminSession)) { _h.toast('Admin login required'); return; }
     this.pageStack.push({ name: this.currentPageName, params: this.currentPageParams });
     document.getElementById('bottomNav').style.display = 'none';
@@ -409,7 +422,7 @@ window.H = {
   },
 
   async renderPage(name, params) {
-    if (!this.currentUser()) { this.authPage(); return; }
+    // guest browse enabled
     if (!this.canAccessPage(name)) { this.toast('Access denied'); await this.navTo('Home'); return; }
     this.currentPageName = name; this.currentPageParams = params || {};
     const fn  = this.pages[name] || this.pages.Home;
@@ -423,8 +436,87 @@ window.H = {
 
   openListing(id) {
     const l = this.state.listings.find(x => x.id === id); if (!l) return;
-    l.views = (l.views || 0) + 1; this.saveState();
+    l.views = (l.views || 0) + 1;
+    // Track recently viewed
+    const rv = JSON.parse(localStorage.getItem('hostly_rv')||'[]');
+    const filtered_rv = rv.filter(x => x !== l.id);
+    filtered_rv.unshift(l.id);
+    localStorage.setItem('hostly_rv', JSON.stringify(filtered_rv.slice(0,10)));
+    this.saveState();
     this.openInner('Detail', { id });
+  },
+
+  toggleSort() {
+    const sheet = document.getElementById('actionSheet');
+    const bg = document.getElementById('sheetBg');
+    const cur = H.state._sortMode || 'newest';
+    const opts = [
+      {id:'newest', label:'Newest First'},
+      {id:'oldest', label:'Oldest First'},
+      {id:'price_asc', label:'Price: Low to High'},
+      {id:'price_desc', label:'Price: High to Low'},
+      {id:'views', label:'Most Viewed'}
+    ];
+    let html = '<div class="sheet-header">Sort By</div>';
+    opts.forEach(function(o) {
+      const st = o.id === cur ? 'color:#1A3A8F;font-weight:700' : '';
+      const ck = o.id === cur ? '&#10003; ' : '';
+      html += '<button class="sheet-item" style="' + st + '" onclick="H.setSort(this.dataset.id)" data-id="' + o.id + '">' + ck + o.label + '</button>';
+    });
+    html += '<button class="sheet-close" onclick="H.closeSheet()">Cancel</button>';
+    sheet.innerHTML = html;
+    sheet.classList.add('open');
+    bg.classList.add('open');
+  },
+
+  setSort(mode) {
+    H.state._sortMode = mode;
+    H.closeSheet();
+    if (H.currentPageName === 'Browse') H.renderPage('Browse', H.currentPageParams);
+    else H.navTo('Home');
+  },
+
+  showPriceFilter() {
+    const sheet = document.getElementById('actionSheet');
+    const bg = document.getElementById('sheetBg');
+    const min = H.state._priceMin || '';
+    const max = H.state._priceMax || '';
+    sheet.innerHTML = '<div class="sheet-header">Filter by Price</div>'
+      + '<div style="padding:0 16px 16px">'
+      + '<label style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">Min Price (USD)</label>'
+      + '<input id="priceMinIn" type="number" value="'+min+'" placeholder="0" class="fi" style="margin-bottom:12px">'
+      + '<label style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">Max Price (USD)</label>'
+      + '<input id="priceMaxIn" type="number" value="'+max+'" placeholder="Any" class="fi" style="margin-bottom:16px">'
+      + '<button onclick="H.applyPriceFilter()" style="width:100%;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">Apply Filter</button>'
+      + '<button onclick="H.clearPriceFilter()" style="width:100%;padding:13px;background:transparent;color:var(--sub);border:none;font-size:14px;font-family:Inter,sans-serif;cursor:pointer;margin-top:4px">Clear Filter</button>'
+      + '</div>'
+      + '<button class="sheet-close" onclick="H.closeSheet()">Cancel</button>';
+    sheet.classList.add('open');
+    bg.classList.add('open');
+  },
+
+  applyPriceFilter() {
+    H.state._priceMin = document.getElementById('priceMinIn').value;
+    H.state._priceMax = document.getElementById('priceMaxIn').value;
+    H.closeSheet();
+    if (H.currentPageName === 'Browse') H.renderPage('Browse', H.currentPageParams);
+    else H.navTo('Home');
+  },
+
+  clearPriceFilter() {
+    H.state._priceMin = '';
+    H.state._priceMax = '';
+    H.closeSheet();
+    if (H.currentPageName === 'Browse') H.renderPage('Browse', H.currentPageParams);
+    else H.navTo('Home');
+  },
+
+  setLocFilter(loc, btn) {
+    this.state.cityFilter = loc;
+    this.saveState();
+    document.querySelectorAll('.loc-filter-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    this.navTo('Home');
   },
 
   filterByCat(cid) { this.openInner('CategoryView', { cid }); },
@@ -463,7 +555,7 @@ return `<div class="page active">${H.innerTopbar(cat.icon + ' ' + cat.name, fals
     };
   },
 
-  // â”€â”€â”€ Account Menu (emojiâ€‘free) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€â”€ Account Menu (emoji"‘free) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   showAccountMenu(btn) {
     const u = this.currentUser();
     if (!u) return;
@@ -509,9 +601,100 @@ return `<div class="page active">${H.innerTopbar(cat.icon + ' ' + cat.name, fals
 },
 
   // â”€â”€â”€ Bootstrap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  requireAuth(msg) {
+    const m = msg || 'Sign in to continue';
+    const sheet = document.getElementById('actionSheet');
+    const bg = document.getElementById('sheetBg');
+    sheet.innerHTML = '<div style="text-align:center;padding:8px 0 16px">'
+      + '<div style="width:56px;height:56px;background:#1A3A8F;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
+      + '<div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px">' + m + '</div>'
+      + '<div style="font-size:13px;color:var(--sub);margin-bottom:24px">Join Zimbabwe\'s #1 free marketplace</div>'
+      + '<button onclick="H.closeSheet();setTimeout(()=>H.authPage(),50)" style="display:block;width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer;margin-bottom:10px">Sign In</button>'
+      + '<button onclick="H.closeSheet()" style="display:block;width:100%;padding:12px;background:transparent;color:var(--sub);border:none;font-size:14px;font-family:Inter,sans-serif;cursor:pointer">Browse as Guest</button>'
+      + '</div>';
+    sheet.classList.add('open');
+    bg.classList.add('open');
+  },
+
+
+  _showOnboarding() {
+    if (localStorage.getItem('hostly_onboarded')) return;
+    const slides = [
+      {icon:'🏪', title:'Zimbabwe\'s Free Marketplace', sub:'Buy and sell anything across all provinces'},
+      {icon:'📱', title:'Browse Without Signing Up', sub:'Explore listings freely. Sign in only when you\'re ready to buy or sell'},
+      {icon:'💬', title:'Connect via WhatsApp', sub:'Chat directly with sellers via WhatsApp or in-app messaging'},
+      {icon:'🚀', title:'Post Your Ad Free', sub:'List your items in minutes and reach thousands of buyers'}
+    ];
+    let cur = 0;
+    const overlay = document.createElement('div');
+    overlay.id = 'onboardOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:#1A3A8F;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;font-family:Inter,sans-serif';
+    const render = () => {
+      const s = slides[cur];
+      overlay.innerHTML = `
+        <div style="font-size:72px;margin-bottom:24px">${s.icon}</div>
+        <div style="font-size:24px;font-weight:700;color:#fff;text-align:center;margin-bottom:12px">${s.title}</div>
+        <div style="font-size:15px;color:rgba(255,255,255,.7);text-align:center;margin-bottom:48px;line-height:1.6">${s.sub}</div>
+        <div style="display:flex;gap:8px;margin-bottom:40px">
+          ${slides.map((_,i)=>`<div style="width:${i===cur?24:8}px;height:8px;border-radius:4px;background:${i===cur?'#F5A623':'rgba(255,255,255,.3)'}"></div>`).join('')}
+        </div>
+        ${cur < slides.length-1
+          ? `<button onclick="window._onboardNext()" style="width:100%;padding:16px;background:#F5A623;color:#1A3A8F;border:none;border-radius:14px;font-size:16px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer">Next</button>
+             <button onclick="window._onboardSkip()" style="margin-top:12px;background:transparent;border:none;color:rgba(255,255,255,.6);font-size:14px;font-family:Inter,sans-serif;cursor:pointer">Skip</button>`
+          : `<button onclick="window._onboardSkip()" style="width:100%;padding:16px;background:#F5A623;color:#1A3A8F;border:none;border-radius:14px;font-size:16px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer">Get Started</button>`
+        }
+      `;
+    };
+    window._onboardNext = () => { cur++; render(); };
+    window._onboardSkip = () => {
+      localStorage.setItem('hostly_onboarded','1');
+      overlay.remove();
+    };
+    document.body.appendChild(overlay);
+    render();
+  },
+
+  _seedDemoData() {
+    this.state._seeded = false;
+    this.state.listings = (this.state.listings||[]).filter(l=>!l.id.startsWith("demo"));
+    const now = Date.now();
+    this.state.listings = [
+      {id:'demo1',title:'iPhone 14 Pro Max 256GB',photos:['https://picsum.photos/id/1/600/400'],desc:'Excellent condition, bought 6 months ago. Comes with original box and accessories. No scratches.',price:850,currency:'USD',cat:'electronics',prov:'Harare',city:'Harare CBD',suburb:'Avondale',sellerId:'demo_seller1',status:'active',createdAt:now-3600000,views:24,photos:[]},
+      {id:'demo2',title:'Toyota Vitz 2018 - Low Mileage',photos:['https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600'],desc:'Well maintained, full service history. Fuel efficient. Negotiable for serious buyers.',price:7500,currency:'USD',cat:'vehicles',prov:'Harare',city:'Harare CBD',suburb:'Borrowdale',sellerId:'demo_seller2',status:'active',createdAt:now-7200000,views:56,photos:[]},
+      {id:'demo3',title:'3 Bedroom House for Rent - Borrowdale',photos:['https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600'],desc:'Spacious 3 bed house with garden, garage, solar and borehole. Available immediately.',price:1200,currency:'USD',cat:'property',prov:'Harare',city:'Harare CBD',suburb:'Borrowdale',sellerId:'demo_seller3',status:'active',createdAt:now-86400000,views:103,photos:[]},
+      {id:'demo4',title:'Samsung 55" Smart TV 4K',photos:['https://images.unsplash.com/photo-1593359677879-a4bb92f829e1?w=600'],desc:'Barely used Samsung QLED TV. Perfect working condition with remote and stand.',price:450,currency:'USD',cat:'electronics',prov:'Bulawayo',city:'Bulawayo CBD',suburb:'Hillside',sellerId:'demo_seller1',status:'active',createdAt:now-172800000,views:31,photos:[]},
+      {id:'demo5',title:'Sofa Set - 7 Seater L-Shape',photos:['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600'],desc:'Modern L-shape sofa in grey fabric. Good condition, selling due to relocation.',price:320,currency:'USD',cat:'furniture',prov:'Harare',city:'Harare CBD',suburb:'Greendale',sellerId:'demo_seller2',status:'active',createdAt:now-259200000,views:18,photos:[]},
+      {id:'demo6',title:'Software Developer - Remote Job',photos:['https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600'],desc:'Looking for React/Node developer. 2+ years experience. USD salary. Apply with CV.',price:0,currency:'USD',cat:'jobs',prov:'Harare',city:'Harare CBD',suburb:'CBD',sellerId:'demo_seller3',status:'active',createdAt:now-43200000,views:89,photos:[]},
+      {id:'demo7',title:'Fresh Farm Eggs - 30 Pack',photos:['https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=600'],desc:'Free range eggs from our farm. Delivery available in Harare. WhatsApp to order.',price:5,currency:'USD',cat:'agriculture',prov:'Mashonaland East',city:'Marondera',suburb:'Marondera',sellerId:'demo_seller1',status:'active',createdAt:now-21600000,views:12,photos:[]},
+      {id:'demo8',title:'Room to Rent - Warren Park',photos:['https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600'],desc:'Furnished single room, all utilities included. Quiet neighborhood, close to shops.',price:120,currency:'USD',cat:'rooms',prov:'Harare',city:'Harare CBD',suburb:'Warren Park',sellerId:'demo_seller2',status:'active',createdAt:now-108000000,views:44,photos:[]}
+    ];
+    this.state.users = this.state.users || [];
+    const hasDemoUsers = this.state.users.some(u => u.id === 'demo_seller1');
+    if (!hasDemoUsers) {
+      this.state.users.push(
+        {id:'demo_seller1',name:'Tafadzwa Moyo',phone:'+263771234567',email:'tafadzwa@demo.com',role:'user',status:'active',verified:true,joinedAt:now-2592000000,settings:{theme:'light'}},
+        {id:'demo_seller2',name:'Rumbidzai Ncube',phone:'+263772345678',email:'rumbi@demo.com',role:'user',status:'active',verified:false,joinedAt:now-5184000000,settings:{theme:'light'}},
+        {id:'demo_seller3',name:'Tatenda Dube',phone:'+263773456789',email:'tatenda@demo.com',role:'user',status:'active',verified:true,joinedAt:now-7776000000,settings:{theme:'light'}}
+      );
+    }
+    this.saveState();
+  },
+  openPhotoViewer(photos, idx) {
+    let cur = idx || 0;
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:#000;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column';
+    const btn = '<button onclick="document.getElementById(\'pvOv\').remove()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer">&times;</button>';
+    ov.id = 'pvOv';
+    ov.innerHTML = btn + '<img id="pvImg" src="' + photos[cur] + '" style="max-width:100%;max-height:85vh;object-fit:contain">';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', function(e) { if(e.target === ov) ov.remove(); });
+  },
+
   init() {
     this.state = this.loadState();
     this._registerCategoryView();
+    this._seedDemoData();
+    setTimeout(()=>this._showOnboarding(),800);
 
     document.addEventListener('DOMContentLoaded', () => {
       const nav = document.getElementById('bottomNav');
@@ -520,8 +703,9 @@ return `<div class="page active">${H.innerTopbar(cat.icon + ' ' + cat.name, fals
           const btn  = e.target.closest('[data-nav]');
           if (!btn) return;
           const name = btn.dataset.nav;
-          if (name === 'Post') H.navTo('Post', btn);
-          else if (name === 'Account') H.showAccountMenu(btn);
+          if (name === 'Post') { if(!H.currentUser()){H.requireAuth('Log in to post an ad');return;} H.navTo('Post', btn); }
+          else if (name === 'Account') { if(!H.currentUser()){H.requireAuth('Sign in to your account');return;} H.showAccountMenu(btn); }
+          else if (name === 'Messages') { if(!H.currentUser()){H.requireAuth('Sign in to view messages');return;} H.navTo(name, btn); }
           else H.navTo(name, btn);
         });
       }
@@ -540,14 +724,3 @@ return `<div class="page active">${H.innerTopbar(cat.icon + ' ' + cat.name, fals
 window.pushNotif = (uid, title, body) => H.pushNotif && H.pushNotif(uid, title, body);
 
 H.init();
-
-
-
-
-
-
-
-
-
-
-

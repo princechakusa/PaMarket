@@ -4,7 +4,7 @@
   const state    = H.state;
   const { currentUser, escHtml, timeAgo, uid, toast, modal,
           innerTopbar, emptyState, openInner, goBack, renderPage,
-          saveState, fmtPrice, categoryIcon, renderListCard,
+          saveState, fmtPrice, renderListCard,
           initials, pushNotif, filterListings } = H;
 
   // Icons (prefer H.ICONS, fallback)
@@ -28,10 +28,10 @@
     const l = state.listings.find(x => x.id === id);
     if (!l) return `<div class="page active">${innerTopbar('Listing')}<div class="empty-state"><div class="empty-icon">${S.crossCircle}</div><div class="empty-title">Listing not found</div></div></div>`;
 
-    const seller = state.users.find(u => u.id === l.sellerId) || { name: 'Unknown', phone: '', verified: false };
+    const seller = state.users.find(u => u.id === l.sellerId) || { id: null, name: 'Unknown', phone: '', verified: false, joinedAt: Date.now() };
     const u      = currentUser();
-    const saved  = (state.saves[u.id] || []).includes(id);
-    const isMine = seller.id === u.id;
+    const saved = u && u.id ? (state.saves[u.id] || []).includes(id) : false;
+    const isMine = u && u.id && seller.id && seller.id === u.id;
     const photos = l.photos && l.photos.length ? l.photos : [];
 
     return `<div class="page active">
@@ -50,7 +50,7 @@
       </div>
 
       <div class="det-photo" id="dPhoto">
-        ${photos.length ? `<img src="${photos[0]}" id="dPhotoImg">` : `<div class="ph">${categoryIcon(l.cat)}</div>`}
+        ${photos.length ? `<img src="${photos[0]}" id="dPhotoImg">` : `<div class="ph">${H.H.categoryIcon(l.cat)}</div>`}
         ${photos.length > 1 ? `<div class="photo-dots">${photos.map((_, i) =>
           `<div class="pdot ${i === 0 ? 'on' : ''}" onclick="H.setPhoto('${l.id}',${i})"></div>`).join('')}</div>` : ''}
       </div>
@@ -89,7 +89,7 @@
             <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
             Chat on WhatsApp
           </button>
-          <button class="msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')">${S.message} Message in App</button>
+          <button class="msg-btn" onclick="H.currentUser()?H.startChatWith('${seller.id}','${l.id}'):H.requireAuth('Sign in to message sellers')">${S.message} Message in App</button>
           <button class="call-btn" onclick="H.callSeller('${seller.phone}')">${S.phone} Call ${escHtml(seller.phone)}</button>
           <button class="report-btn" onclick="H.reportListing('${l.id}')">${S.flag} Report this listing</button>
         `}
@@ -100,6 +100,26 @@
   // ---------------------------------------------------
   // DETAIL ACTIONS
   // ---------------------------------------------------
+  H._initSwipe = function() {
+    const el = document.getElementById('dPhoto');
+    if (!el) return;
+    let sx = 0;
+    el.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
+    el.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) < 40) return;
+      const dots = document.querySelectorAll('.pdot');
+      if (!dots.length) return;
+      const cur = Array.from(dots).findIndex(d => d.classList.contains('on'));
+      const next = dx < 0 ? Math.min(cur+1, dots.length-1) : Math.max(cur-1, 0);
+      const idMatch = el.closest('.page').querySelector('[onclick*="setPhoto"]');
+      if (idMatch) {
+        const m = idMatch.getAttribute('onclick').match(/'([^']+)'/);
+        if (m) H.setPhoto(m[1], next);
+      }
+    }, {passive:true});
+  };
+
   H.setPhoto = function (id, i) {
     const l = state.listings.find(x => x.id === id);
     if (!l || !l.photos[i]) return;
@@ -229,5 +249,18 @@
     </div>`;
   };
 
+  H.pages.Detail_after = function(params) {
+    H._initSwipe();
+    // Inject similar listings
+    const l = H.state.listings.find(x => x.id === params.id);
+    if (!l) return;
+    const similar = (H.state.listings||[]).filter(x => x.id !== l.id && x.cat === l.cat && x.status === 'active').slice(0,4);
+    if (!similar.length) return;
+    const det = document.querySelector('.det-content');
+    if (!det) return;
+    const sec = document.createElement('div');
+    sec.innerHTML = '<div class="sec-head" style="margin-top:24px"><div class="sec-title">Similar Listings</div></div><div class="listing-list">' + similar.map(H.renderListCard).join('') + '</div>';
+    det.appendChild(sec);
+  };
 })(window.H);
 
