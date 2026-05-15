@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 (function(H) {
   const state = H.state;
   let authBusy = false;

@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 (function (H) {
   const pages    = H.pages;
   const state    = H.state;
@@ -190,7 +190,7 @@
       onConfirm: () => {
         const reason = document.getElementById('reportReason').value;
         const note   = document.getElementById('reportNote').value;
-        state.reports.push({ id: uid(), reporterId: state.currentUserId, targetType: 'listing', targetId: id, reason: reason + (note ? ' â€¦ ' + note : ''), t: Date.now(), status: 'open' });
+        state.reports.push({ id: uid(), reporterId: state.currentUserId, targetType: 'listing', targetId: id, reason: reason + (note ? ' ... ' + note : ''), t: Date.now(), status: 'open' });
         saveState(); toast('Report submitted. Thank you.');
       }
     });
@@ -206,7 +206,7 @@
       onConfirm: () => {
         const reason = document.getElementById('reportReason').value;
         const note   = document.getElementById('reportNote').value;
-        state.reports.push({ id: uid(), reporterId: state.currentUserId, targetType: 'user', targetId: id, reason: reason + (note ? ' â€¦ ' + note : ''), t: Date.now(), status: 'open' });
+        state.reports.push({ id: uid(), reporterId: state.currentUserId, targetType: 'user', targetId: id, reason: reason + (note ? ' ... ' + note : ''), t: Date.now(), status: 'open' });
         saveState(); toast('Report submitted');
       }
     });

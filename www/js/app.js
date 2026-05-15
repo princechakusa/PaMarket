@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 window.H = {
   KEY:           'hostly.v2',
   ADMIN_PHONES:  ['+263770000000', '+971589772645'],
