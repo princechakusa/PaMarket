@@ -422,7 +422,6 @@ window.H = {
 
   async renderPage(name, params) {
     const area=document.getElementById('mainArea');
-    if(area){ area.style.opacity='0'; await new Promise(r=>setTimeout(r,70)); area.style.opacity='1'; }
     if(this.canAccessPage&&!this.canAccessPage(name)){this.toast('Access denied');await this.navTo('Home');return;}
     this.currentPageName=name; this.currentPageParams=params||{};
     const fn=this.pages[name]||this.pages.Home;
@@ -431,6 +430,7 @@ window.H = {
     if(!area) return;
     area.scrollTop=0;
     area.innerHTML=html;
+    if(area.style.opacity!=='1') area.style.opacity='1';
     if(this.pages[name+'_after']) this.pages[name+'_after'](params||{});
     this._initPullToRefresh();
   },
@@ -458,11 +458,8 @@ window.H = {
       rooms:       'Rooms'
     };
     const page = map[cid];
-    if (cid === 'jobs') {
-      H._jobsState = { tab:'find', search:'', category:'', type:'', dateFilter:'', expLevel:'', province:'', page:1 };
-    }
     if (page) { this.openInner(page, {cid}); }
-    else { this.openInner('Browse', {cat:cid}); }
+    else { this.openInner('CategoryView', {cid}); }
   },
 
   // ── Sort & Filter ────────────────────────────────────────

@@ -208,20 +208,18 @@
   H.startChatWith = function(sellerId, listingId) {
     if (!H.currentUser()) { H.requireAuth('Sign in to message sellers'); return; }
     const u = H.currentUser();
-    if (sellerId === u.id) { H.toast("You cannot message yourself"); return; }
-    const seller  = (H.state.users||[]).find(x => x.id === sellerId);
-    const listing = (H.state.listings||[]).find(l => l.id === listingId);
-    const sellerName = seller ? seller.name : (listing ? listing.sellerName||'Seller' : 'Seller');
+    if (!sellerId || sellerId === u.id) { H.toast('You cannot message yourself'); return; }
     H.state.conversations = H.state.conversations || [];
-    let conv = H.state.conversations.find(c =>
-      c.members.includes(u.id) && c.members.includes(sellerId) && c.listingId === listingId
-    );
+    // Deterministic ID: sorted user IDs + listingId ensures same conv across sessions
+    const ids = [u.id, sellerId].sort();
+    const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId || '').slice(-6);
+    let conv = H.state.conversations.find(c => c.id === convId);
     if (!conv) {
-      conv = { id:H.uid(), members:[u.id, sellerId], listingId, messages:[] };
+      conv = { id: convId, members: [u.id, sellerId], listingId: listingId || null, messages: [] };
       H.state.conversations.push(conv);
       H.saveState();
     }
-    H.openInner('Chat', {id: conv.id});
+    H.openInner('Chat', { id: convId });
   };
 
   H.reportListing = function(id) {

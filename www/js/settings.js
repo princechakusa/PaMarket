@@ -215,12 +215,16 @@
   };
 
   pages.NotificationSettings_after = function () {
+    const DEFAULTS = { messages: true, listings: true, approvals: true, promotions: true, favorites: true, security: true };
     H._notifSettings = {
       toggle: (key) => {
         const u = H.currentUser();
-        if (!u.notificationPrefs) u.notificationPrefs = {};
+        if (!u.notificationPrefs) u.notificationPrefs = Object.assign({}, DEFAULTS);
+        // Seed with default if key was never explicitly set
+        if (!(key in u.notificationPrefs)) u.notificationPrefs[key] = DEFAULTS[key] !== false;
         u.notificationPrefs[key] = !u.notificationPrefs[key];
         H.saveState();
+        H.toast(u.notificationPrefs[key] ? 'Enabled' : 'Disabled');
       }
     };
   };

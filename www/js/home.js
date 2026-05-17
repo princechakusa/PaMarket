@@ -11,7 +11,7 @@
   const CAT_COLORS = {
     vehicles:'#e53935',property:'#1E88E5',electronics:'#8E24AA',
     fashion:'#F06292',furniture:'#6D4C41',services:'#00897B',
-    jobs:'#F5A623',other:'#546E7A',
+    jobs:'#F5A623',rooms:'#00838F',other:'#546E7A',
   };
 
   function renderHCard(l) {
