@@ -96,9 +96,33 @@
 
   H.startChatPolling = function(convId) {
     if (window._chatPoll) clearInterval(window._chatPoll);
-    window._chatPoll = setInterval(function() {
-      if (H.currentPageName !== 'Chat') { clearInterval(window._chatPoll); return; }
-      if (typeof H.fetchNewMessages === "function") H.fetchNewMessages(convId);
+    window._chatPoll = setInterval(async function() {
+      if (H.currentPageName !== 'Chat' || H._activeChat !== convId) {
+        clearInterval(window._chatPoll);
+        return;
+      }
+      const conv = (H.state.conversations || []).find(c => c.id === convId);
+      const countBefore = conv ? conv.messages.length : 0;
+      if (typeof H.syncConversations === 'function') {
+        await H.syncConversations();
+      }
+      const convAfter = (H.state.conversations || []).find(c => c.id === convId);
+      if (!convAfter || convAfter.messages.length <= countBefore) return;
+      // Append only the new messages without a full page re-render
+      const thread = document.getElementById('chatThread');
+      if (!thread) return;
+      const u = H.currentUser();
+      const newMsgs = convAfter.messages.slice(countBefore);
+      newMsgs.forEach(function(m) {
+        if (m.from === u.id) return; // we already added our own
+        m.read = true;
+        const div = document.createElement('div');
+        div.className = 'chat-bubble them';
+        div.innerHTML = escHtml(m.text) + '<div style="font-size:10px;opacity:.6;margin-top:3px">' + timeAgo(m.t) + '</div>';
+        thread.appendChild(div);
+      });
+      thread.scrollTop = thread.scrollHeight;
+      saveState();
     }, 4000);
   };
 
@@ -127,7 +151,6 @@
         });
       });
       H.saveState();
-      console.log('Conversations synced');
     } catch(e) { console.warn('syncConversations error:', e.message); }
   };
 
@@ -136,28 +159,32 @@
     const inp = document.getElementById('chatIn');
     const text = inp ? inp.value.trim() : '';
     if (!text) return;
-    const c = (state.conversations || []).find(function(x){ return x.id === H._activeChat; });
+    const c = (H.state.conversations || []).find(function(x){ return x.id === H._activeChat; });
     if (!c) return;
-    const u = currentUser();
+    const u = H.currentUser();
     var msgId = H.uid();
     var msgT = Date.now();
     c.messages.push({ id: msgId, from: u.id, senderName: u.name||'', text: text, t: msgT, read: false });
-    saveState();
+    H.saveState();
     inp.value = '';
+    // Append to DOM directly — no full page re-render to avoid flicker
+    const thread = document.getElementById('chatThread');
+    if (thread) {
+      const div = document.createElement('div');
+      div.className = 'chat-bubble me';
+      div.innerHTML = escHtml(text) + '<div style="font-size:10px;opacity:.6;margin-top:3px">just now</div>';
+      thread.appendChild(div);
+      thread.scrollTop = thread.scrollHeight;
+    }
     try {
       if (window.supabase && typeof window.supabase.from === 'function') {
         window.supabase.from('messages').insert({
-          id: msgId,
-          conversation_id: c.id,
-          sender_id: u.id,
-          sender_name: u.name || '',
-          text: text,
-          created_at: new Date(msgT).toISOString(),
-          read: false
+          id: msgId, conversation_id: c.id,
+          sender_id: u.id, sender_name: u.name || '',
+          text: text, created_at: new Date(msgT).toISOString(), read: false
         }).then(function(r){ if(r&&r.error) console.warn('Msg save failed:', r.error.message); });
       }
     } catch(e) { console.warn('Msg cloud error:', e.message); }
-    H.renderPage('Chat', { id: c.id });
   };
 
 })(window.H);
