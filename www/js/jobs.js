@@ -329,51 +329,244 @@
     H.goBack();
   };
 
-  // ── JOB DETAIL ────────────────────────────────────────────
+  // ── JOB DETAIL (LinkedIn-style) ───────────────────────────
   H.pages.JobDetail = function (params) {
     var id = params && params.id;
     var l = (H.state.listings || []).find(function (x) { return x.id === id; });
     if (!l) return '<div class="page active">' + H.innerTopbar('Job') + H.emptyState('Job not found', 'This posting may have been removed.', 'Browse Jobs', "H.filterByCat('jobs')") + '</div>';
+
     var lines = (l.desc || '').split('\n');
-    var company = l.company || l.sellerName || parseLine(lines, 'COMPANY') || 'Company';
-    var jobType = parseLine(lines, 'JOB TYPE') || '';
+    var company  = l.company || l.sellerName || parseLine(lines, 'COMPANY') || 'Company';
+    var jobType  = parseLine(lines, 'JOB TYPE') || '';
     var industry = parseLine(lines, 'INDUSTRY') || '';
-    var salary = parseLine(lines, 'SALARY') || 'Not disclosed';
+    var salary   = parseLine(lines, 'SALARY')   || 'Not disclosed';
     var deadline = parseLine(lines, 'DEADLINE') || '';
-    var d = l.desc;
-    var descS = d.indexOf('\nDESCRIPTION:\n'), respS = d.indexOf('\nRESPONSIBILITIES:\n');
-    var reqS = d.indexOf('\nREQUIREMENTS:\n'), applyS = d.indexOf('\nHOW TO APPLY:');
-    function _next(from) { return [respS, reqS, applyS, d.length].filter(function (x) { return x > from; }).sort(function (a, b) { return a - b; })[0]; }
-    var description = descS > -1 ? d.slice(descS + 14, _next(descS)).trim() : '';
-    var responsibilities = respS > -1 ? d.slice(respS + 19, _next(respS)).trim() : '';
-    var requirements = reqS > -1 ? d.slice(reqS + 15, _next(reqS)).trim() : '';
-    var applySection = applyS > -1 ? d.slice(applyS + 14).trim() : '';
+    var d = l.desc || '';
+    var descS  = d.indexOf('\nDESCRIPTION:\n');
+    var respS  = d.indexOf('\nRESPONSIBILITIES:\n');
+    var reqS   = d.indexOf('\nREQUIREMENTS:\n');
+    var applyS = d.indexOf('\nHOW TO APPLY:');
+    function _next(from) { return [respS,reqS,applyS,d.length].filter(function(x){return x>from;}).sort(function(a,b){return a-b;})[0]; }
+    var description      = descS  > -1 ? d.slice(descS  + 14, _next(descS)).trim()  : (d.split('\n').filter(function(ln){return !ln.includes(':');}).slice(0,4).join('\n') || '');
+    var responsibilities = respS  > -1 ? d.slice(respS  + 19, _next(respS)).trim()  : '';
+    var requirements     = reqS   > -1 ? d.slice(reqS   + 15, _next(reqS)).trim()   : '';
+    var applySection     = applyS > -1 ? d.slice(applyS + 14).trim()                : '';
     var em = applySection.match(/Email:\s*(.+)/), ph = applySection.match(/WhatsApp:\s*(.+)/);
-    var applyEmail = em ? em[1].trim() : '', applyPhone = ph ? ph[1].trim().replace(/[^\d+]/g, '') : '';
+    var applyEmail = em ? em[1].trim() : '';
+    var applyPhone = ph ? ph[1].trim().replace(/[^\d+]/g, '') : '';
+
+    var u      = H.currentUser();
+    var isMine = u && l.sellerId && l.sellerId === u.id;
+    var apps   = (H.state.applications || []);
+    var myApp  = u ? apps.find(function(a){ return a.jobId === id && a.applicantId === u.id; }) : null;
+    var appCount = apps.filter(function(a){ return a.jobId === id; }).length;
+
+    var companyInitials = (company || 'C').split(' ').slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();
+
+    var chipStyle = 'display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;margin-right:6px;margin-bottom:6px';
 
     return '<div class="page active">'
-      + '<div class="det-topbar" style="background:#F5A623"><button class="back" onclick="H.goBack()" style="color:#1A3A8F"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title" style="color:#1A3A8F;font-size:14px">' + H.escHtml(l.title) + '</div></div>'
-      + '<div style="background:#F5A623;padding:16px;padding-top:4px"><div style="background:rgba(255,255,255,.9);border-radius:14px;padding:16px">'
-      + '<div style="font-size:18px;font-weight:800;color:#1A3A8F;margin-bottom:4px">' + H.escHtml(l.title) + '</div>'
-      + '<div style="font-size:14px;color:#333;font-weight:600;margin-bottom:10px">' + H.escHtml(company) + '</div>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
-      + (jobType ? '<span style="background:#1A3A8F;color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:8px">' + H.escHtml(jobType) + '</span>' : '')
-      + (industry ? '<span style="background:#F5A62330;color:#c07800;font-size:12px;font-weight:700;padding:4px 10px;border-radius:8px">' + H.escHtml(industry) + '</span>' : '')
-      + '</div></div></div>'
-      + '<div style="padding:12px 12px 120px">'
-      + '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid var(--border)">'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-      + _ji('Salary', salary) + _ji('Location', l.city || 'Zimbabwe')
-      + (deadline ? _ji('Deadline', deadline) : '') + _ji('Posted', H.timeAgo(l.createdAt))
-      + '</div></div>'
-      + (description ? _jb('Job Description', description) : '')
-      + (responsibilities ? _jb('Key Responsibilities', responsibilities) : '')
-      + (requirements ? _jb('Requirements', requirements) : '')
+      + '<div class="det-topbar" style="background:#0a2558"><button class="back" onclick="H.goBack()" style="color:#fff"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      + '<div class="det-topbar-title" style="color:#fff;font-size:14px">' + H.escHtml(l.title) + '</div>'
+      + (isMine ? '<button onclick="H.openInner(\'JobApplications\',{jobId:\'' + id + '\'})" style="background:rgba(255,255,255,.18);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:5px 10px;border-radius:8px">' + appCount + ' App' + (appCount===1?'':'s') + '</button>' : '<div style="width:40px"></div>')
       + '</div>'
-      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);display:flex;gap:8px;z-index:200">'
-      + (applyEmail ? '<a href="mailto:' + H.escHtml(applyEmail) + '?subject=' + encodeURIComponent('Application: ' + l.title) + '" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px">📧 Apply by Email</a>' : '')
-      + (applyPhone ? '<button onclick="window.open(\'https://wa.me/' + H.escHtml(applyPhone) + '?text=' + encodeURIComponent('Hi, I am interested in the ' + l.title + ' position at ' + company) + '\',\'_blank\')" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">💬 WhatsApp Apply</button>' : '')
-      + (!applyEmail && !applyPhone ? '<button onclick="H.toast(\'Contact details not provided for this job\')" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Apply Now</button>' : '')
+
+      // Company hero
+      + '<div style="background:linear-gradient(160deg,#0a2558 0%,#1A3A8F 60%,#2952cc 100%);padding:20px 16px 24px">'
+      + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
+      + '<div style="width:56px;height:56px;border-radius:14px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,.2)">' + companyInitials + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:19px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:4px">' + H.escHtml(l.title) + '</div>'
+      + '<div style="font-size:14px;color:rgba(255,255,255,.8);font-weight:600">' + H.escHtml(company) + '</div>'
+      + '</div></div>'
+      + '<div style="display:flex;flex-wrap:wrap;margin-bottom:4px">'
+      + (jobType  ? '<span style="' + chipStyle + ';background:rgba(255,255,255,.18);color:#fff">' + H.escHtml(jobType)  + '</span>' : '')
+      + (industry ? '<span style="' + chipStyle + ';background:#F5A62330;color:#F5A623">'         + H.escHtml(industry) + '</span>' : '')
+      + '<span style="' + chipStyle + ';background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)">'
+      + '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+      + H.escHtml(l.city || 'Zimbabwe') + '</span>'
+      + '<span style="' + chipStyle + ';background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)">'
+      + '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+      + H.timeAgo(l.createdAt) + '</span>'
+      + '</div></div>'
+
+      // Info grid
+      + '<div style="padding:0 12px">'
+      + '<div style="background:var(--card);border-radius:16px;margin-top:-14px;padding:16px;border:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px">'
+      + _ji('Salary', salary) + _ji('Location', l.city || 'Zimbabwe')
+      + (deadline ? _ji('Deadline', deadline) : _ji('Status', l.status === 'active' ? 'Open' : 'Closed'))
+      + _ji('Posted', H.timeAgo(l.createdAt))
+      + '</div>'
+
+      // Sections
+      + (description      ? _jb('About the Role',       description)      : '')
+      + (responsibilities ? _jb('Key Responsibilities', responsibilities) : '')
+      + (requirements     ? _jb('Requirements',         requirements)     : '')
+
+      // External apply section (if provided)
+      + ((applyEmail || applyPhone) ? '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border)">'
+        + '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">How to Apply</div>'
+        + (applyEmail ? '<a href="mailto:' + H.escHtml(applyEmail) + '?subject=' + encodeURIComponent('Application: ' + l.title) + '" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#1A3A8F15;border-radius:10px;margin-bottom:8px;text-decoration:none"><span style="font-size:16px">📧</span><span style="font-size:13px;font-weight:600;color:#1A3A8F">' + H.escHtml(applyEmail) + '</span></a>' : '')
+        + (applyPhone ? '<button onclick="window.open(\'https://wa.me/' + H.escHtml(applyPhone) + '?text=' + encodeURIComponent('Hi, I am interested in the ' + l.title + ' position at ' + company) + '\',\'_blank\')" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#25D36615;border-radius:10px;width:100%;border:none;cursor:pointer"><span style="font-size:16px">💬</span><span style="font-size:13px;font-weight:600;color:#25D366">WhatsApp: ' + H.escHtml(applyPhone) + '</span></button>' : '')
+        + '</div>' : '')
+
+      + '<div style="height:90px"></div></div>'
+
+      // Fixed apply bar
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
+      + (isMine
+        ? '<button onclick="H.openInner(\'JobApplications\',{jobId:\'' + id + '\'})" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer">View Applications (' + appCount + ')</button>'
+        : myApp
+          ? '<div style="padding:14px;background:#dcfce7;border-radius:13px;text-align:center;font-size:14px;font-weight:700;color:#15803d">✓ Application Submitted · ' + H.timeAgo(myApp.appliedAt) + '</div>'
+          : '<button onclick="H._applyToJob(\'' + id + '\')" style="width:100%;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>Easy Apply in App</button>'
+      )
+      + '</div></div>';
+  };
+
+  // ── APPLY TO JOB ──────────────────────────────────────────
+  H._applyToJob = function (jobId) {
+    if (!H.currentUser()) { H.requireAuth('Sign in to apply for jobs'); return; }
+    var l = (H.state.listings || []).find(function(x){ return x.id === jobId; });
+    if (!l) { H.toast('Job not found'); return; }
+    var company = l.company || l.sellerName || 'Company';
+    H.modal({
+      title: 'Apply: ' + l.title,
+      body: '<div style="margin-bottom:10px;font-size:13px;color:var(--sub)">at <strong>' + H.escHtml(company) + '</strong> · ' + H.escHtml(l.city || 'Zimbabwe') + '</div>'
+        + '<textarea id="applyMsg" rows="4" placeholder="Introduce yourself — your experience, why you\'re a great fit, and any relevant skills…" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif"></textarea>'
+        + '<div style="font-size:11px;color:var(--sub);margin-top:6px">Your name and contact details from your profile will be shared with the employer.</div>',
+      confirmText: 'Submit Application',
+      onConfirm: function() {
+        var msg = (document.getElementById('applyMsg') || {}).value || '';
+        H._submitJobApplication(jobId, msg);
+      }
+    });
+  };
+
+  H._submitJobApplication = function (jobId, message) {
+    var u = H.currentUser(); if (!u) return;
+    var l = (H.state.listings || []).find(function(x){ return x.id === jobId; }); if (!l) return;
+    var company = l.company || l.sellerName || 'Company';
+    H.state.applications = H.state.applications || [];
+    var existing = H.state.applications.find(function(a){ return a.jobId === jobId && a.applicantId === u.id; });
+    if (existing) { H.toast('You already applied for this job'); return; }
+    var app = {
+      id: H.uid(), jobId: jobId, jobTitle: l.title, company: company,
+      applicantId: u.id, applicantName: u.name || 'Applicant',
+      applicantPhone: u.phone || '', applicantEmail: u.email || '',
+      message: message, status: 'pending', appliedAt: Date.now(),
+      employerId: l.sellerId
+    };
+    H.state.applications.push(app);
+    H.saveState();
+    // Notify employer
+    if (l.sellerId) H.pushNotif(l.sellerId, 'New Application', u.name + ' applied for ' + l.title, 'message');
+    H.toast('Application submitted! The employer will be in touch.');
+    H.renderPage('JobDetail', {id: jobId});
+    // Create conversation thread
+    H.state.conversations = H.state.conversations || [];
+    var ids = [u.id, l.sellerId].sort();
+    var convId = 'job_' + app.id.slice(-8);
+    if (!H.state.conversations.find(function(c){ return c.id === convId; })) {
+      H.state.conversations.push({
+        id: convId, members: [u.id, l.sellerId], listingId: jobId,
+        appId: app.id, isJobThread: true,
+        messages: message ? [{id: H.uid(), senderId: u.id, text: message, t: Date.now()}] : []
+      });
+      H.saveState();
+    }
+  };
+
+  // ── EMPLOYER: JOB APPLICATIONS DASHBOARD ──────────────────
+  H.pages.JobApplications = function (params) {
+    var jobId = params && params.jobId;
+    var u = H.currentUser();
+    if (!u) return '<div class="page active">' + H.innerTopbar('Applications') + H.emptyState('Sign in required', '', null, null) + '</div>';
+    var l = (H.state.listings || []).find(function(x){ return x.id === jobId; });
+    var title = l ? l.title : 'Job';
+    var apps = (H.state.applications || []).filter(function(a){ return a.jobId === jobId; })
+      .sort(function(a,b){ return b.appliedAt - a.appliedAt; });
+
+    var statusColors = { pending:'#F5A623', reviewed:'#1A3A8F', shortlisted:'#22c55e', rejected:'#ef4444' };
+    var statusLabels = { pending:'New', reviewed:'Reviewed', shortlisted:'Shortlisted', rejected:'Rejected' };
+
+    return '<div class="page active">'
+      + H.innerTopbar('Applications for ' + H.escHtml(title))
+      + '<div style="padding:12px 14px 16px;background:var(--card);border-bottom:1px solid var(--border)">'
+      + '<div style="font-size:22px;font-weight:800;color:var(--text)">' + apps.length + ' Application' + (apps.length===1?'':'s') + '</div>'
+      + '<div style="font-size:13px;color:var(--sub);margin-top:2px">' + H.escHtml(title) + '</div>'
+      + '</div>'
+      + '<div style="padding:12px 14px 88px">'
+      + (apps.length ? apps.map(function(app) {
+          var statusC = statusColors[app.status] || '#999';
+          var statusL = statusLabels[app.status] || app.status;
+          var ini = (app.applicantName||'A').split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+          return '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid var(--border)">'
+            + '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">'
+            + '<div style="width:44px;height:44px;border-radius:50%;background:#1A3A8F;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0">' + ini + '</div>'
+            + '<div style="flex:1;min-width:0">'
+            + '<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+            + '<div style="font-size:15px;font-weight:700;color:var(--text)">' + H.escHtml(app.applicantName || 'Applicant') + '</div>'
+            + '<span style="background:' + statusC + '20;color:' + statusC + ';font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px">' + statusL + '</span>'
+            + '</div>'
+            + '<div style="font-size:12px;color:var(--sub);margin-top:2px">' + H.timeAgo(app.appliedAt) + '</div>'
+            + (app.applicantPhone ? '<div style="font-size:12px;color:var(--sub);margin-top:2px">' + H.escHtml(app.applicantPhone) + '</div>' : '')
+            + '</div></div>'
+            + (app.message ? '<div style="font-size:13px;color:var(--text);line-height:1.6;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:12px">' + H.escHtml(app.message.slice(0,200)) + (app.message.length>200?'…':'') + '</div>' : '')
+            + '<div style="display:flex;gap:8px">'
+            + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'shortlisted\')" style="flex:1;padding:8px;background:#22c55e15;color:#15803d;border:1.5px solid #22c55e40;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Shortlist</button>'
+            + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'rejected\')" style="flex:1;padding:8px;background:#ef444415;color:#dc2626;border:1.5px solid #ef444440;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Decline</button>'
+            + (app.applicantPhone ? '<button onclick="window.open(\'https://wa.me/' + app.applicantPhone.replace(/[^\d]/g,'') + '\',\'_blank\')" style="flex:1;padding:8px;background:#25D36615;color:#25D366;border:1.5px solid #25D36640;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">WhatsApp</button>' : '')
+            + '</div></div>';
+        }).join('')
+        : H.emptyState('No applications yet', 'Share your job posting to attract candidates.', null, null))
+      + '</div></div>';
+  };
+
+  H._setAppStatus = function (appId, status) {
+    var app = (H.state.applications || []).find(function(a){ return a.id === appId; });
+    if (!app) return;
+    app.status = status;
+    H.saveState();
+    var u = H.currentUser();
+    var jobId = app.jobId;
+    H.toast(status === 'shortlisted' ? 'Shortlisted!' : 'Declined');
+    if (app.applicantId) {
+      H.pushNotif(app.applicantId,
+        status === 'shortlisted' ? 'Application Update' : 'Application Update',
+        status === 'shortlisted'
+          ? 'Congratulations! Your application for ' + app.jobTitle + ' has been shortlisted.'
+          : 'Your application for ' + app.jobTitle + ' was not selected at this time.',
+        status === 'shortlisted' ? 'verify' : 'info'
+      );
+    }
+    H.renderPage('JobApplications', {jobId: jobId});
+  };
+
+  // ── CANDIDATE: APPLIED JOBS ───────────────────────────────
+  H.pages.AppliedJobs = function () {
+    var u = H.currentUser();
+    if (!u) return '<div class="page active">' + H.innerTopbar('My Applications') + H.emptyState('Sign in required', '', null, null) + '</div>';
+    var apps = (H.state.applications || []).filter(function(a){ return a.applicantId === u.id; })
+      .sort(function(a,b){ return b.appliedAt - a.appliedAt; });
+    var statusColors = { pending:'#F5A623', reviewed:'#1A3A8F', shortlisted:'#22c55e', rejected:'#ef4444' };
+    var statusLabels = { pending:'Pending', reviewed:'Reviewed', shortlisted:'✓ Shortlisted', rejected:'Not selected' };
+
+    return '<div class="page active">'
+      + H.innerTopbar('My Applications')
+      + '<div style="padding:12px 14px 88px">'
+      + (apps.length ? apps.map(function(app) {
+          var statusC = statusColors[app.status] || '#999';
+          var statusL = statusLabels[app.status] || app.status;
+          return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + app.jobId + '\'})" style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid var(--border);cursor:pointer">'
+            + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
+            + '<div style="font-size:15px;font-weight:700;color:var(--text);flex:1;margin-right:10px">' + H.escHtml(app.jobTitle || 'Job') + '</div>'
+            + '<span style="background:' + statusC + '20;color:' + statusC + ';font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0">' + statusL + '</span>'
+            + '</div>'
+            + '<div style="font-size:13px;color:var(--sub);margin-bottom:4px">' + H.escHtml(app.company || '') + '</div>'
+            + '<div style="font-size:12px;color:var(--sub2)">Applied ' + H.timeAgo(app.appliedAt) + '</div>'
+            + '</div>';
+        }).join('')
+        : H.emptyState('No applications yet', 'Browse jobs and apply directly in the app.', 'Browse Jobs', "H.openInner('FindJobs')"))
       + '</div></div>';
   };
 
@@ -381,10 +574,11 @@
     return '<div><div style="font-size:10px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">' + label + '</div><div style="font-size:13px;font-weight:700;color:var(--text)">' + H.escHtml(String(value)) + '</div></div>';
   }
 
-  function _jb(title, text) {
+  function _jb(sectionTitle, text) {
     return '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid var(--border)">'
-      + '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px">' + title + '</div>'
-      + '<div style="font-size:13px;color:var(--sub);line-height:1.75;white-space:pre-line">' + H.escHtml(text) + '</div></div>';
+      + '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px">'
+      + '<div style="width:3px;height:16px;background:#1A3A8F;border-radius:2px"></div>' + sectionTitle + '</div>'
+      + '<div style="font-size:13px;color:var(--sub);line-height:1.8;white-space:pre-line">' + H.escHtml(text) + '</div></div>';
   }
 
 })(window.H);
