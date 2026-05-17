@@ -43,6 +43,25 @@
     }
   };
 
+  // ── Hash-based change detection helpers ──────────────────
+  function _notifHash(userId) {
+    const list = (H.state.notifs && H.state.notifs[userId]) || [];
+    return list.map(n => n.id + (n.read ? '1' : '0')).join(',');
+  }
+
+  let _notifRenderTimer = null;
+  function _maybeRenderNotifs(userId) {
+    if (H.currentPageName !== 'Notifications') return;
+    const newHash = _notifHash(userId);
+    if (newHash === H._lastNotifHash) return;
+    H._lastNotifHash = newHash;
+    if (_notifRenderTimer) clearTimeout(_notifRenderTimer);
+    _notifRenderTimer = setTimeout(function () {
+      _notifRenderTimer = null;
+      if (H.currentPageName === 'Notifications') H.renderPage('Notifications');
+    }, 300);
+  }
+
   // ── Sync from Supabase ────────────────────────────────────
   H.syncNotifications = async function () {
     const c = sb(); if (!c) return;
@@ -71,8 +90,8 @@
       H.state.notifs[u.id] = local;
       saveState();
       H._updateNotifBadge();
-      // Re-render if user is currently looking at the notifications page
-      if (H.currentPageName === 'Notifications') H.renderPage('Notifications');
+      // Re-render only if the notification list actually changed
+      _maybeRenderNotifs(u.id);
     } catch (e) {
       console.warn('syncNotifications error:', e.message);
     }
@@ -103,7 +122,7 @@
           if (list.length > 100) list.length = 100;
           saveState();
           H._updateNotifBadge();
-          if (H.currentPageName === 'Notifications') H.renderPage('Notifications');
+          _maybeRenderNotifs(u.id);
         }
       })
       .subscribe();
@@ -145,8 +164,11 @@
 
   // ── Pull-to-refresh handler hook ──────────────────────────
   H._refreshNotifications = async function () {
+    // Force a re-render after pull-to-refresh by clearing the cached hash
+    H._lastNotifHash = null;
     await H.syncNotifications();
-    H.renderPage('Notifications');
+    // If syncNotifications didn't trigger a re-render (no changes), force one
+    if (H.currentPageName === 'Notifications') H.renderPage('Notifications');
   };
 
   // ── Type inference & visual mapping ───────────────────────
@@ -293,19 +315,26 @@
           Choose which notifications you receive. Push notifications require app permissions.
         </div>
         <div class="section-card">
-          ${rows.map(([k, t, s, iconName]) => `
-            <div class="notif-toggle-row">
-              <div class="notif-toggle-info">
-                <div class="notif-toggle-title">${settingsIcon(iconName)} ${t}</div>
-                <div class="notif-toggle-sub">${s}</div>
+          ${rows.map(([k, t, s, iconName]) => {
+            const on = u.settings[k] !== false;
+            const trackBg = on ? '#34C759' : 'rgba(120,120,128,0.3)';
+            const knobLeft = on ? '22px' : '3px';
+            return `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)">
+              <div style="flex:1;min-width:0;padding-right:12px">
+                <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px">${settingsIcon(iconName)} ${t}</div>
+                <div style="font-size:12px;color:var(--sub);line-height:1.4">${s}</div>
               </div>
-              <button class="toggle-sw ${u.settings[k] !== false ? 'on' : ''}"
+              <button
                 onclick="H.toggleSetting('${k}',this)"
                 role="switch"
-                aria-checked="${u.settings[k] !== false ? 'true' : 'false'}"
-                aria-label="${t}">
+                aria-checked="${on ? 'true' : 'false'}"
+                aria-label="${t}"
+                style="position:relative;display:inline-block;width:46px;height:26px;border-radius:13px;background:${trackBg};border:none;cursor:pointer;flex-shrink:0;padding:0;transition:background 0.2s;outline:none;-webkit-tap-highlight-color:transparent">
+                <span style="position:absolute;top:3px;left:${knobLeft};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:left 0.2s"></span>
               </button>
-            </div>`).join('')}
+            </div>`;
+          }).join('')}
         </div>
 
         <div style="background:var(--n4);border-radius:14px;padding:14px;margin-top:14px;border:1px solid var(--n5)">
@@ -326,10 +355,15 @@
     const u = H.currentUser(); if (!u) return;
     u.settings = u.settings || {};
     u.settings[k] = !(u.settings[k] !== false);
-    btn.classList.toggle('on', u.settings[k]);
-    btn.setAttribute('aria-checked', u.settings[k] ? 'true' : 'false');
+    const on = u.settings[k];
+    // Update track background
+    btn.style.background = on ? '#34C759' : 'rgba(120,120,128,0.3)';
+    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+    // Slide the knob
+    const knob = btn.querySelector('span');
+    if (knob) knob.style.left = on ? '22px' : '3px';
     saveState();
-    toast(u.settings[k] ? 'Enabled' : 'Disabled');
+    toast(on ? 'Enabled' : 'Disabled');
   };
 
 })(window.H);

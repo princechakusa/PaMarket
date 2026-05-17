@@ -469,36 +469,127 @@
   };
 
   // ── Reviews & Ratings ────────────────────────────────────
-  pages.Reviews = function () {
-    const u = H.currentUser();
-    if (!u) return H.emptyState('Not logged in', 'Please sign in');
+  pages.Reviews = function (params) {
+    const viewId = params && params.id;
+    const me = H.currentUser();
+    const u  = viewId ? (H.state.users || []).find(x => x.id === viewId) : me;
+    if (!u) return '<div class="page active">' + H.innerTopbar('Reviews') + H.emptyState('User not found', '', null, null) + '</div>';
 
-    const avg = (u.ratings && u.ratings.length)
-      ? (u.ratings.reduce((a,b) => a+b, 0) / u.ratings.length).toFixed(1) : '0';
+    const isOwn = !viewId || (me && viewId === me.id);
+    const reviews = u.reviews || [];
+    const avg = reviews.length ? (reviews.reduce((a,r) => a + (r.rating||0), 0) / reviews.length).toFixed(1) : null;
+    const dist = [5,4,3,2,1].map(n => ({ n, count: reviews.filter(r => Math.round(r.rating||0)===n).length }));
+    const maxDist = Math.max(1, ...dist.map(d => d.count));
+
+    const alreadyReviewed = me && reviews.some(r => r.reviewerId === me.id);
 
     return `<div class="page active">
-      ${H.innerTopbar('Reviews & Ratings')}
-      <div style="text-align:center;padding:28px 20px;background:var(--card);margin-bottom:16px">
-        <div style="font-size:48px;font-weight:800;color:var(--text)">${avg}</div>
-        <div style="display:flex;justify-content:center;gap:4px;margin:8px 0">${stars(parseFloat(avg))}</div>
-        <div style="font-size:13px;color:var(--sub)">Based on ${u.ratings ? u.ratings.length : 0} reviews</div>
-      </div>
-      <div class="section-box">
-        <div class="section-title">Recent Reviews</div>
-        ${u.reviews && u.reviews.length
-          ? u.reviews.slice(0,10).map(r => `
-            <div class="review-item">
-              <div class="review-header">
-                <div class="review-name">${H.escHtml(r.reviewerName || 'Anonymous')}</div>
-                <div style="display:flex;gap:2px">${stars(r.rating)}</div>
+      ${H.innerTopbar(isOwn ? 'My Reviews' : H.escHtml(u.name) + '\'s Reviews')}
+
+      <div style="background:var(--card);padding:20px 16px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;gap:20px;align-items:center">
+          <div style="text-align:center">
+            <div style="font-size:52px;font-weight:900;color:var(--text);line-height:1">${avg || '–'}</div>
+            <div style="display:flex;justify-content:center;gap:2px;margin:6px 0">${avg ? stars(parseFloat(avg)) : stars(0)}</div>
+            <div style="font-size:12px;color:var(--sub)">${reviews.length} review${reviews.length===1?'':'s'}</div>
+          </div>
+          <div style="flex:1">
+            ${dist.map(d => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <div style="font-size:11px;color:var(--sub);width:8px">${d.n}</div>
+              <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+                <div style="height:100%;background:#f59e0b;width:${Math.round((d.count/maxDist)*100)}%;border-radius:3px;transition:width .3s"></div>
               </div>
-              <div class="review-text">${H.escHtml(r.text)}</div>
-              <div class="review-date">${H.timeAgo(r.date)}</div>
-            </div>`).join('')
-          : '<div style="color:var(--sub);padding:16px;font-size:13px">No reviews yet</div>'}
+              <div style="font-size:11px;color:var(--sub);width:14px;text-align:right">${d.count}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+        ${!isOwn && me && !alreadyReviewed ? `
+        <button onclick="H.leaveReview('${u.id}')" style="width:100%;margin-top:16px;padding:12px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">
+          Leave a Review
+        </button>` : ''}
+        ${!isOwn && me && alreadyReviewed ? `<div style="text-align:center;margin-top:14px;font-size:13px;color:var(--sub)">You have already reviewed this seller</div>` : ''}
       </div>
-      <div style="height:24px"></div>
+
+      <div style="padding:12px 14px 88px">
+        ${reviews.length ? reviews.slice().sort((a,b) => b.date - a.date).slice(0,20).map(r => `
+          <div style="background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+              <div>
+                <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(r.reviewerName || 'Anonymous')}</div>
+                <div style="display:flex;gap:2px;margin-top:3px">${stars(r.rating||0)}</div>
+              </div>
+              <div style="font-size:12px;color:var(--sub)">${H.timeAgo(r.date)}</div>
+            </div>
+            ${r.text ? `<div style="font-size:13px;color:var(--text);line-height:1.6;margin-top:8px">${H.escHtml(r.text)}</div>` : ''}
+          </div>`).join('')
+          : `<div style="text-align:center;padding:48px 20px">
+            <div style="font-size:40px;margin-bottom:12px">⭐</div>
+            <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">No reviews yet</div>
+            <div style="font-size:13px;color:var(--sub)">Reviews from buyers will appear here after transactions</div>
+          </div>`}
+      </div>
     </div>`;
   };
+
+  // ── Leave a Review ────────────────────────────────────────
+  H.leaveReview = function (sellerId) {
+    const me = H.currentUser();
+    if (!me) { H.requireAuth('Sign in to leave a review'); return; }
+    if (sellerId === me.id) { H.toast('You cannot review yourself'); return; }
+
+    let selectedRating = 0;
+
+    H.modal({
+      title: 'Leave a Review',
+      body: `<div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:13px;color:var(--sub);margin-bottom:10px">Tap to rate your experience</div>
+        <div id="starPicker" style="display:flex;justify-content:center;gap:8px">
+          ${[1,2,3,4,5].map(n => `<button data-star="${n}" onclick="H._pickStar(${n})" style="font-size:32px;background:none;border:none;cursor:pointer;padding:4px;line-height:1">☆</button>`).join('')}
+        </div>
+      </div>
+      <textarea id="reviewText" rows="3" placeholder="Share your experience with this seller…" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif"></textarea>`,
+      confirmText: 'Submit Review',
+      onConfirm: () => {
+        const rating = H._selectedStar || 0;
+        const text   = (document.getElementById('reviewText') || {}).value || '';
+        if (!rating) { H.toast('Please select a star rating'); return false; }
+        H._submitReview(sellerId, rating, text);
+      }
+    });
+  };
+
+  H._selectedStar = 0;
+  H._pickStar = function (n) {
+    H._selectedStar = n;
+    const btns = document.querySelectorAll('#starPicker button');
+    btns.forEach(function(b) {
+      const v = parseInt(b.getAttribute('data-star'));
+      b.textContent = v <= n ? '★' : '☆';
+      b.style.color = v <= n ? '#f59e0b' : 'var(--sub)';
+    });
+  };
+
+  H._submitReview = function (sellerId, rating, text) {
+    const me = H.currentUser(); if (!me) return;
+    const seller = (H.state.users || []).find(x => x.id === sellerId); if (!seller) return;
+    seller.reviews  = seller.reviews  || [];
+    seller.ratings  = seller.ratings  || [];
+    const dup = seller.reviews.find(r => r.reviewerId === me.id);
+    if (dup) { H.toast('You have already reviewed this seller'); return; }
+    const review = {
+      id: H.uid(), reviewerId: me.id, reviewerName: me.name || 'User',
+      rating, text, date: Date.now()
+    };
+    seller.reviews.unshift(review);
+    seller.ratings.push(rating);
+    H.saveState();
+    H.pushNotif(sellerId, 'New Review', me.name + ' left you a ' + rating + '-star review', 'review');
+    H.toast('Review submitted. Thank you!');
+    H.renderPage('Reviews', {id: sellerId});
+  };
+
+  // ── Applied Jobs (candidate view) ─────────────────────────
+  // Registered as pages.AppliedJobs in jobs.js — linked from account menu here
+  H._openAppliedJobs = function () { H.openInner('AppliedJobs'); };
 
 })(window.H = window.H || {});

@@ -297,70 +297,80 @@
   // --- Terms & Conditions ----------------------------------
   pages.HelpTerms = function () {
     return `<div class="page active">
-      ${H.innerTopbar('Terms & Conditions')}
+      ${H.innerTopbar('Terms of Service')}
       <div class="doc-content">
         <div class="doc-section">
-          <h2>Terms & Conditions</h2>
+          <h2>Terms of Service</h2>
           <p style="color:var(--ash);font-size:12px">Last updated: May 2026 · Effective immediately</p>
 
-          <h2>1. Acceptance</h2>
-          <p>By downloading, installing, or using Hostly ("the App"), you agree to be bound by these Terms and Conditions. If you do not agree, do not use the App. These terms apply to all users including buyers, sellers, and visitors.</p>
+          <h2>1. Agreement to Terms</h2>
+          <p>By downloading, installing, or using the Hostly application ("App"), you agree to be legally bound by these Terms of Service. If you do not agree to these terms, you must not use the App. These terms govern all users: buyers, sellers, job seekers, employers, and visitors.</p>
 
-          <h2>2. Eligibility</h2>
-          <p>You must be at least 18 years old to use Hostly. By using the App you confirm that you are 18 or older and legally capable of entering into binding contracts under Zimbabwean law.</p>
+          <h2>2. Who Can Use Hostly</h2>
+          <p>You must be at least 18 years old to create an account or use Hostly. By registering, you confirm that you meet this age requirement and are legally competent to enter into contracts under Zimbabwean law. We reserve the right to terminate accounts where the minimum age requirement is not met.</p>
 
-          <h2>3. Account Registration</h2>
-          <p>You must provide accurate, current, and complete information when creating an account. You are responsible for maintaining the confidentiality of your password and for all activity under your account. Notify us immediately at chakusaprince@gmail.com if you suspect unauthorized access.</p>
+          <h2>3. Account Responsibility</h2>
+          <p>You are responsible for keeping your account credentials confidential. All activity that occurs under your account is your responsibility. You must provide accurate and truthful information when registering. If you suspect unauthorized access to your account, contact us immediately at chakusaprince@gmail.com or WhatsApp +971 589 772 645.</p>
 
-          <h2>4. Listing Rules</h2>
-          <p>All listings must be accurate, legal, and comply with Zimbabwean law. You must own or have the right to sell any item you list. The following are strictly prohibited:</p>
+          <h2>4. What Hostly Is</h2>
+          <p>Hostly is an online classifieds marketplace that connects buyers and sellers in Zimbabwe. We provide the platform — we are not a party to any transaction between users. We do not hold payments, guarantee delivery, or verify the condition of items unless stated. All transactions are conducted directly between users at their own risk.</p>
+
+          <h2>5. Listing Rules</h2>
+          <p>All listings must be honest, legal, and comply with Zimbabwean law. You must own or have explicit authority to sell any item listed. The following content is strictly prohibited and will result in immediate removal and account termination:</p>
           <ul>
-            <li>Stolen, counterfeit, or fraudulent goods</li>
-            <li>Weapons, ammunition, or explosive devices</li>
-            <li>Illegal drugs or controlled substances</li>
-            <li>Adult or sexually explicit content</li>
-            <li>Wildlife or protected animal products</li>
-            <li>Pyramid schemes, MLM, or investment fraud</li>
-            <li>Fake job listings or recruitment scams</li>
-            <li>Misleading rental listings or deposit scams</li>
+            <li>Stolen, counterfeit, or fraudulent goods of any kind</li>
+            <li>Weapons, firearms, ammunition, or explosive devices</li>
+            <li>Illegal drugs, controlled substances, or drug paraphernalia</li>
+            <li>Adult, sexually explicit, or pornographic content</li>
+            <li>Protected wildlife, animal products, or endangered species</li>
+            <li>Pyramid schemes, multi-level marketing, or investment fraud</li>
+            <li>Fake, misleading, or non-existent job listings</li>
+            <li>Fraudulent rental listings or advance deposit scams</li>
+            <li>Human trafficking, exploitation, or domestic workers without consent</li>
           </ul>
 
-          <h2>5. Transactions</h2>
-          <p>Hostly is a marketplace platform. All transactions are directly between buyers and sellers. Hostly is not a party to any transaction and accepts no liability for disputes, non-delivery, fraud, or any loss arising from transactions. We strongly recommend meeting in safe public places and verifying items before payment.</p>
+          <h2>6. Advertising Credits (Boost Feature)</h2>
+          <p>Hostly offers optional paid advertising credits ("Boost") to increase the visibility of your listings. These credits are purchased as a business service via external payment methods (EcoCash, OneMoney, or bank transfer). Advertising credits are not processed by Google Play or the Apple App Store. Credits are non-refundable once applied to a listing. Unused credits may be refunded at our discretion within 7 days of purchase — contact us to request a refund.</p>
 
-          <h2>6. Fees</h2>
-          <p>Basic listing is free. Optional paid features including listing boosts are available. All fees are clearly displayed before purchase. All payments are final and non-refundable unless required by law.</p>
-
-          <h2>7. Intellectual Property</h2>
-          <p>All content, design, logos, and technology in Hostly are owned by Hostly and protected by copyright law. You may not copy, reproduce, or distribute any part of the App without written permission.</p>
-
-          <h2>8. User Content</h2>
-          <p>By posting content on Hostly you grant us a non-exclusive, royalty-free license to display and distribute that content within the App. You confirm that you own or have rights to all content you post.</p>
-
-          <h2>9. Prohibited Conduct</h2>
+          <h2>7. User Conduct</h2>
+          <p>You agree not to:</p>
           <ul>
-            <li>Harassment, threats, or abuse of other users</li>
-            <li>Posting false or misleading information</li>
-            <li>Spamming or posting duplicate listings</li>
-            <li>Attempting to bypass our security systems</li>
-            <li>Using the App for any illegal purpose</li>
-            <li>Impersonating another person or business</li>
+            <li>Harass, threaten, abuse, or discriminate against other users</li>
+            <li>Post false, misleading, or deceptive information or images</li>
+            <li>Send unsolicited messages (spam) to other users</li>
+            <li>Attempt to circumvent our moderation, security, or verification systems</li>
+            <li>Create multiple accounts to evade a suspension or ban</li>
+            <li>Impersonate another person, business, or official entity</li>
+            <li>Use automated tools to scrape or access the platform</li>
           </ul>
 
-          <h2>10. Moderation & Enforcement</h2>
-          <p>We reserve the right to remove any listing, suspend, or permanently ban any account that violates these terms without notice. Repeated violations will result in permanent account termination and may be reported to relevant authorities.</p>
+          <h2>8. User Content License</h2>
+          <p>By posting photos, text, or any content on Hostly, you grant us a non-exclusive, worldwide, royalty-free license to display, reproduce, and distribute that content within the App and for promotional purposes. You confirm that you own or have the rights to all content you post and that it does not infringe any third-party rights.</p>
 
-          <h2>11. Limitation of Liability</h2>
-          <p>Hostly is provided "as is" without warranties of any kind. We are not liable for any indirect, incidental, or consequential damages arising from your use of the App, including loss of data, money, or business opportunities.</p>
+          <h2>9. Intellectual Property</h2>
+          <p>All design, branding, logos, code, and content created by Hostly are protected by copyright and intellectual property law. You may not copy, reproduce, reverse-engineer, or redistribute any part of the App without our written consent.</p>
 
-          <h2>12. Governing Law</h2>
-          <p>These Terms are governed by the laws of Zimbabwe. Any disputes shall be subject to the exclusive jurisdiction of the courts of Zimbabwe.</p>
+          <h2>10. Moderation and Enforcement</h2>
+          <p>We reserve the right to remove any listing, suspend, or permanently ban any account that violates these Terms at any time, with or without notice. Serious violations including fraud, scams, or illegal activity may be reported to relevant Zimbabwean authorities. Banned users may appeal by contacting chakusaprince@gmail.com within 14 days of the ban.</p>
 
-          <h2>13. Changes to Terms</h2>
-          <p>We reserve the right to modify these Terms at any time. Continued use of the App after changes constitutes acceptance of the new Terms.</p>
+          <h2>11. Disclaimer of Warranties</h2>
+          <p>Hostly is provided "as is" and "as available" without any warranties, express or implied. We do not guarantee that the App will be uninterrupted, error-free, or that listings are accurate. We are not responsible for the quality, safety, legality, or availability of listed items.</p>
 
-          <h2>14. Contact</h2>
-          <p>For legal queries: chakusaprince@gmail.com</p>
+          <h2>12. Limitation of Liability</h2>
+          <p>To the maximum extent permitted by law, Hostly and its operators shall not be liable for any indirect, incidental, punitive, or consequential damages arising from your use of the App, including loss of money, data, or business opportunity resulting from transactions between users.</p>
+
+          <h2>13. Governing Law</h2>
+          <p>These Terms are governed exclusively by the laws of the Republic of Zimbabwe. Any legal disputes shall be subject to the jurisdiction of the courts of Zimbabwe.</p>
+
+          <h2>14. Changes to These Terms</h2>
+          <p>We may update these Terms from time to time. We will notify users of significant changes through the App. Continued use of the App after any update constitutes your acceptance of the revised Terms. You may stop using the App at any time if you disagree with the updated Terms.</p>
+
+          <h2>15. Contact Us</h2>
+          <p>For questions about these Terms, contact us at:</p>
+          <ul>
+            <li>Email: chakusaprince@gmail.com</li>
+            <li>WhatsApp: +971 589 772 645</li>
+          </ul>
         </div>
       </div>
     </div>`;
@@ -378,64 +388,78 @@ pages.HelpPrivacy = function () {
 
           <h2>2. Data We Collect</h2>
           <ul>
-            <li><strong>Account data:</strong> Name, email, phone number, password (encrypted)</li>
-            <li><strong>Profile data:</strong> Profile photo, bio, location (city/province)</li>
-            <li><strong>Listing data:</strong> Photos, descriptions, prices, location</li>
-            <li><strong>Messages:</strong> Conversations between users on our platform</li>
-            <li><strong>Payment data:</strong> Wallet balance and transaction history</li>
-            <li><strong>Device data:</strong> Device type, OS version, app version</li>
-            <li><strong>Usage data:</strong> Pages viewed, searches, listing interactions</li>
+            <li><strong>Account data:</strong> Name, email address, phone number, encrypted password</li>
+            <li><strong>Profile data:</strong> Profile photo, bio, city/province location</li>
+            <li><strong>Listing data:</strong> Photos, descriptions, prices, and location of items you post</li>
+            <li><strong>Messages:</strong> In-app conversations between buyers and sellers</li>
+            <li><strong>Transaction data:</strong> Advertising credit balance and top-up reference history</li>
+            <li><strong>Device data:</strong> Device type, operating system version, app version</li>
+            <li><strong>Usage data:</strong> Pages viewed, search queries, and listing interactions</li>
           </ul>
 
-          <h2>3. Why We Collect It</h2>
+          <h2>3. How We Use Your Data</h2>
           <ul>
-            <li>To create and manage your account</li>
-            <li>To display your listings to potential buyers</li>
-            <li>To facilitate communication between buyers and sellers</li>
-            <li>To process wallet transactions and payments</li>
-            <li>To detect and prevent fraud and policy violations</li>
-            <li>To improve the App and user experience</li>
-            <li>To send important notifications about your account</li>
+            <li>To create and manage your user account</li>
+            <li>To display your listings to other users across Zimbabwe</li>
+            <li>To facilitate secure in-app messaging between buyers and sellers</li>
+            <li>To verify advertising credit purchases and apply boosts to listings</li>
+            <li>To detect, investigate, and prevent fraud and policy violations</li>
+            <li>To improve the App, fix bugs, and enhance user experience</li>
+            <li>To send you important notifications about your account and listings</li>
           </ul>
 
-          <h2>4. Data Sharing</h2>
-          <p>We do not sell your personal data. We may share data with:</p>
+          <h2>4. Data We Do Not Collect</h2>
           <ul>
-            <li><strong>Other users:</strong> Your public profile and listings are visible to all users</li>
-            <li><strong>Supabase:</strong> Our database and authentication provider</li>
-            <li><strong>Payment processors:</strong> EcoCash, OneMoney for transaction processing</li>
-            <li><strong>Legal authorities:</strong> When required by Zimbabwean law or court order</li>
+            <li>We do not collect your precise GPS or real-time location</li>
+            <li>We do not collect payment card numbers or banking credentials</li>
+            <li>We do not access your camera or photo library without your explicit action</li>
+            <li>We do not collect contacts, call logs, or SMS messages</li>
           </ul>
 
-          <h2>5. Data Security</h2>
-          <p>We use industry-standard security measures including encrypted storage, secure HTTPS connections, and access controls. Your password is never stored in plain text. However no system is 100% secure and we cannot guarantee absolute security.</p>
-
-          <h2>6. Camera & Photos</h2>
-          <p>We request camera and photo library access only when you choose to upload photos for listings or your profile. We never access your camera or photos without your explicit action. Photos are compressed and stored securely.</p>
-
-          <h2>7. Location Data</h2>
-          <p>We collect your general location (city/province) for listing purposes. We do not track your precise GPS location without your permission.</p>
-
-          <h2>8. Data Retention</h2>
-          <p>We retain your data for as long as your account is active. When you delete your account all your personal data, listings, and messages are permanently deleted within 30 days.</p>
-
-          <h2>9. Your Rights</h2>
+          <h2>5. Data Sharing</h2>
+          <p>We do not sell your personal data to third parties. We may share data with:</p>
           <ul>
-            <li>Access your personal data at any time via your profile</li>
-            <li>Correct inaccurate information in your profile settings</li>
-            <li>Delete your account and all associated data</li>
-            <li>Opt out of promotional notifications in settings</li>
-            <li>Request a copy of your data by emailing chakusaprince@gmail.com</li>
+            <li><strong>Other users:</strong> Your public profile name, phone number (if provided), and listings are visible to all users</li>
+            <li><strong>Supabase:</strong> Our secure database and authentication infrastructure provider</li>
+            <li><strong>Legal authorities:</strong> When required by Zimbabwean law, court order, or to protect public safety</li>
           </ul>
 
-          <h2>10. Children</h2>
-          <p>Hostly is strictly for users 18 and older. We do not knowingly collect data from minors. If we discover a minor has registered we will immediately delete their account and data.</p>
+          <h2>6. Data Security</h2>
+          <p>We implement industry-standard security: HTTPS encryption for all data in transit, encrypted password storage (never stored in plain text), row-level security on our database, and access controls. While we take all reasonable precautions, no internet system is 100% secure and we cannot guarantee absolute security of your data.</p>
 
-          <h2>11. Changes</h2>
-          <p>We will notify you of significant changes to this policy through the App. Continued use after changes constitutes acceptance.</p>
+          <h2>7. Camera and Photo Permissions</h2>
+          <p>We request camera and photo library access only when you choose to upload a photo for a listing or your profile. The App never accesses your camera or photos passively. You may deny this permission and still use the App without photo uploads.</p>
 
-          <h2>12. Contact</h2>
-          <p>Privacy concerns: chakusaprince@gmail.com</p>
+          <h2>8. Notifications Permission</h2>
+          <p>We request permission to send push notifications to alert you about new messages, listing activity, and account updates. You may disable notifications at any time in your device settings. Turning off notifications will not affect your ability to use the App.</p>
+
+          <h2>9. Data Retention</h2>
+          <p>We retain your data for as long as your account is active. When you delete your account, all personal data, listings, messages, and transaction records are permanently deleted within 30 days. Backup copies are purged within 90 days of account deletion.</p>
+
+          <h2>10. Your Rights</h2>
+          <ul>
+            <li>Access and review your personal data at any time via your Profile page</li>
+            <li>Correct inaccurate information through your Profile Settings</li>
+            <li>Delete your account and all associated data via Settings → Delete Account</li>
+            <li>Opt out of promotional notifications via Settings → Notification Preferences</li>
+            <li>Request a copy of all data we hold about you by emailing chakusaprince@gmail.com</li>
+          </ul>
+
+          <h2>11. Children's Privacy</h2>
+          <p>Hostly is strictly for users aged 18 and over. We do not knowingly collect personal data from anyone under 18. If we discover that a minor has created an account, we will immediately delete their account and all associated data. If you believe a minor is using the App, please contact us.</p>
+
+          <h2>12. Third-Party Links</h2>
+          <p>Listings may include links to WhatsApp or external websites. We are not responsible for the privacy practices or content of any third-party services. We encourage you to review their privacy policies before sharing personal information.</p>
+
+          <h2>13. Changes to This Policy</h2>
+          <p>We will notify you of material changes to this Privacy Policy through the App at least 7 days before they take effect. Continued use of the App after changes constitute your acceptance of the updated policy.</p>
+
+          <h2>14. Contact Us</h2>
+          <p>For privacy concerns, data requests, or complaints, contact us at:</p>
+          <ul>
+            <li>Email: chakusaprince@gmail.com</li>
+            <li>WhatsApp: +971 589 772 645</li>
+          </ul>
         </div>
       </div>
     </div>`;

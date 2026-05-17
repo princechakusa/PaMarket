@@ -163,24 +163,26 @@
         const panel = document.getElementById('filterPanel');
         if (panel) panel.classList.toggle('open');
       },
+      _searchTimer: null,
       onSearch: () => {
-        const q = document.getElementById('searchIn')?.value || '';
-        const activeListings = (state.listings || []).filter(l => l.status === 'active');
-        const filtered = filterListings(activeListings, q);
-        const el = document.getElementById('listingList');
-        if (el) el.innerHTML = filtered.length
-          ? filtered.map(renderListCard).join('')
-          : emptyState('No matches', 'Try a different search term', null, null);
-        
-        // Store in recent searches
-        if (q.trim()) {
-          const u = H.currentUser();
-          if (u) {
-            if (!u.recentSearches) u.recentSearches = [];
-            u.recentSearches = [q, ...u.recentSearches.filter(s => s !== q)].slice(0, 10);
-            H.saveState();
+        clearTimeout(H._browse._searchTimer);
+        H._browse._searchTimer = setTimeout(() => {
+          const q = document.getElementById('searchIn')?.value || '';
+          const activeListings = (state.listings || []).filter(l => l.status === 'active');
+          const filtered = filterListings(activeListings, q);
+          const el = document.getElementById('listingList');
+          if (el) el.innerHTML = filtered.length
+            ? filtered.map(renderListCard).join('')
+            : emptyState('No matches', 'Try a different search term', null, null);
+          if (q.trim()) {
+            const u = H.currentUser();
+            if (u) {
+              if (!u.recentSearches) u.recentSearches = [];
+              u.recentSearches = [q, ...u.recentSearches.filter(s => s !== q)].slice(0, 10);
+              H.saveState();
+            }
           }
-        }
+        }, 250);
       },
       searchTag: (term) => {
         const inp = document.getElementById('searchIn');

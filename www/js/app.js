@@ -697,28 +697,58 @@ window.H = {
     H.pages.About=function(){
       return '<div class="page active">'+H.innerTopbar('About Hostly')
         +'<div class="about-wrap">'
-        +'<div class="about-hero"><div class="about-brand">Host<em>ly</em></div><div class="about-tag">Zimbabwe&#39;s #1 Free Marketplace</div></div>'
-        +'<div class="about-card"><div class="about-sec-title">Our Mission</div><div class="about-body">Hostly connects buyers and sellers across Zimbabwe, making it easy to buy, sell, and discover products and services in your local community. We believe commerce should be simple, safe, and accessible to everyone.</div></div>'
-        +'<div class="about-card"><div class="about-sec-title">What We Offer</div><div class="about-grid">'
-        +['Free Listings','Secure Messaging','WhatsApp Connect','All Categories','Province Filters','Boost Your Ads'].map(f=>'<div class="about-feat">'+f+'</div>').join('')
+        +'<div class="about-hero"><div class="about-brand">Host<em>ly</em></div><div class="about-tag">Free Zimbabwean Online Marketplace</div></div>'
+        +'<div class="about-card"><div class="about-sec-title">What is Hostly?</div><div class="about-body">Hostly is a free Zimbabwean online marketplace connecting buyers and sellers. Whether you are looking for goods, services, vehicles, property, or jobs, Hostly makes it easy to post, browse, and connect with people in your province and across Zimbabwe.</div></div>'
+        +'<div class="about-card"><div class="about-sec-title">Who is it for?</div><div class="about-body">Hostly is for anyone in Zimbabwe — individuals selling personal items, small businesses promoting services, employers posting vacancies, and buyers searching for the best local deals. The app is free to download and free to use.</div></div>'
+        +'<div class="about-card"><div class="about-sec-title">Key Features</div><div class="about-grid">'
+        +['Free Listings','Secure Messaging','WhatsApp Connect','All Categories','Province Filters','Boost Your Ads','Job Board','Photo Uploads'].map(f=>'<div class="about-feat">'+f+'</div>').join('')
         +'</div></div>'
+        +'<div class="about-card"><div class="about-sec-title">Legal &amp; Compliance</div><div class="about-body">Hostly operates as a platform for user-generated listings. We do not own, sell, or warrant any items listed. Users are responsible for ensuring their listings comply with applicable Zimbabwean law. Prohibited content (counterfeit goods, illegal services, misleading listings) will be removed and accounts suspended. By using Hostly you agree to our Terms of Service and Privacy Policy.</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Contact Us</div>'
         +'<div class="about-contact-row" onclick="window.location.href=\'mailto:chakusaprince@gmail.com\'"><div class="about-contact-ic email-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><div><div class="about-contact-label">Support Email</div><div class="about-contact-val">chakusaprince@gmail.com</div></div></div>'
         +'<div class="about-contact-row" onclick="window.open(\'https://wa.me/971589772645\')"><div class="about-contact-ic wa-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg></div><div><div class="about-contact-label">WhatsApp Support</div><div class="about-contact-val">+971 589 772 645</div></div></div>'
         +'</div>'
-        +'<div class="about-ads-banner"><div class="about-ads-title">Advertise with Hostly</div><div class="about-ads-sub">Reach thousands of buyers across Zimbabwe</div><button class="about-ads-btn" onclick="H.openInner(\'Ads\')">View Packages</button></div>'
+        +'<div class="about-ads-banner"><div class="about-ads-title">Advertise with Hostly</div><div class="about-ads-sub">Reach active buyers across all provinces of Zimbabwe</div><button class="about-ads-btn" onclick="H.openInner(\'Ads\')">Get in Touch</button></div>'
+        +'<div style="text-align:center;font-size:12px;color:var(--text-muted,#999);padding:16px 0 4px">Hostly © 2026 · Made in Zimbabwe</div>'
         +'</div></div>';
     };
 
     H.pages.Ads=function(){
       return '<div class="page active">'+H.innerTopbar('Advertise with Hostly')
         +'<div class="about-wrap">'
-        +'<div class="ads-hero"><div class="ads-hero-title">Grow Your Business</div><div class="ads-hero-sub">Reach thousands of active buyers across all provinces of Zimbabwe</div></div>'
-        +'<div class="ads-pkg"><div class="ads-pkg-name">Standard</div><div class="ads-pkg-price">$10/week</div><div class="ads-pkg-feat">&#10003; Featured listing for 7 days</div><div class="ads-pkg-feat">&#10003; Category placement</div><div class="ads-pkg-feat">&#10003; Basic analytics</div><button class="ads-pkg-btn" onclick="window.location.href=\'mailto:chakusaprince@gmail.com?subject=Standard Package\'">Get Started</button></div>'
-        +'<div class="ads-pkg ads-pkg-hot"><div class="ads-pkg-badge">MOST POPULAR</div><div class="ads-pkg-name">Premium</div><div class="ads-pkg-price">$30/month</div><div class="ads-pkg-feat">&#10003; 30-day featured listing</div><div class="ads-pkg-feat">&#10003; Homepage banner</div><div class="ads-pkg-feat">&#10003; Priority support</div><div class="ads-pkg-feat">&#10003; Advanced analytics</div><button class="ads-pkg-btn ads-pkg-btn-hot" onclick="window.location.href=\'mailto:chakusaprince@gmail.com?subject=Premium Package\'">Get Started</button></div>'
-        +'<div class="ads-pkg"><div class="ads-pkg-name">Enterprise</div><div class="ads-pkg-price">Contact Us</div><div class="ads-pkg-feat">&#10003; Custom campaign</div><div class="ads-pkg-feat">&#10003; All platforms</div><div class="ads-pkg-feat">&#10003; Dedicated manager</div><div class="ads-pkg-feat">&#10003; Full analytics</div><button class="ads-pkg-btn" onclick="window.location.href=\'mailto:chakusaprince@gmail.com?subject=Enterprise Package\'">Get Started</button></div>'
-        +'<div class="ads-contact">Questions? <span onclick="window.location.href=\'mailto:chakusaprince@gmail.com\'" style="color:#1A3A8F;font-weight:600">chakusaprince@gmail.com</span> or <span onclick="window.open(\'https://wa.me/971589772645\')" style="color:#25D366;font-weight:600">WhatsApp us</span></div>'
+        +'<div class="ads-hero"><div class="ads-hero-title">Grow Your Business</div><div class="ads-hero-sub">Connect with active buyers across all provinces of Zimbabwe. Tell us about your goals and we\'ll find the right fit for you.</div></div>'
+        +'<div class="about-card"><div class="about-sec-title">What We Offer</div>'
+        +'<div class="about-body" style="margin-bottom:0">'
+        +'<div style="display:flex;flex-direction:column;gap:10px">'
+        +[['Listing Boost','Get your listing seen first in search results and category pages.'],['Banner Ad','Eye-catching banner placement on the home screen.'],['Category Spotlight','Pin your business to the top of a category of your choice.'],['Custom Campaign','Tailored multi-placement campaign for maximum reach.']]
+          .map(([t,d])=>'<div style="background:var(--bg,#f5f7fb);border-radius:10px;padding:12px 14px"><div style="font-weight:700;font-size:14px;color:var(--text,#1a1a1a);margin-bottom:3px">'+t+'</div><div style="font-size:13px;color:var(--text-muted,#666)">'+d+'</div></div>')
+          .join('')
+        +'</div></div></div>'
+        +'<div class="about-card"><div class="about-sec-title">Send an Enquiry</div>'
+        +'<div class="fg"><div class="fl">Business Name</div><input class="fi" id="adsBiz" placeholder="Your business name"></div>'
+        +'<div class="fg"><div class="fl">Contact Email</div><input class="fi" id="adsEmail" type="email" placeholder="your@email.com"></div>'
+        +'<div class="fg"><div class="fl">Ad Type</div><select class="fi" id="adsType"><option value="Listing Boost">Listing Boost</option><option value="Banner Ad">Banner Ad</option><option value="Category Spotlight">Category Spotlight</option><option value="Custom Campaign">Custom Campaign</option></select></div>'
+        +'<div class="fg"><div class="fl">Message</div><textarea class="fi" rows="4" id="adsMsg" placeholder="Tell us about your product or service and what you\'d like to achieve..."></textarea></div>'
+        +'<button onclick="H._submitAdsEnquiry()" style="width:100%;padding:15px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px">Send Enquiry</button>'
+        +'</div>'
+        +'<div class="about-card" style="text-align:center">'
+        +'<div class="about-sec-title">Prefer WhatsApp?</div>'
+        +'<div class="about-body" style="margin-bottom:12px">Chat with us directly on WhatsApp and we\'ll get back to you quickly.</div>'
+        +'<button onclick="window.open(\'https://wa.me/971589772645?text=Hi%2C%20I\'m%20interested%20in%20advertising%20on%20Hostly\')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>Chat on WhatsApp</button>'
+        +'</div>'
         +'</div></div>';
+    };
+    H._submitAdsEnquiry=function(){
+      const biz=(document.getElementById('adsBiz').value||'').trim();
+      const email=(document.getElementById('adsEmail').value||'').trim();
+      const type=(document.getElementById('adsType').value||'').trim();
+      const msg=(document.getElementById('adsMsg').value||'').trim();
+      if(!biz){H.toast('Please enter your business name');return;}
+      if(!email){H.toast('Please enter your contact email');return;}
+      if(!msg){H.toast('Please add a message');return;}
+      const subject=encodeURIComponent('Hostly Advertising Enquiry – '+type);
+      const body=encodeURIComponent('Business: '+biz+'\nContact Email: '+email+'\nAd Type: '+type+'\n\nMessage:\n'+msg);
+      window.location.href='mailto:chakusaprince@gmail.com?subject='+subject+'&body='+body;
     };
   },
 
