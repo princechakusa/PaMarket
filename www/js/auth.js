@@ -74,19 +74,16 @@
   }
   H._updatePassStrength = updatePassStrength;
 
-  // ── LOGO TAP → ADMIN ─────────────────────────────
   H.authLogoTap = function() {
     H.logoTap && H.logoTap();
   };
 
-  // ── MAIN AUTH PAGE ───────────────────────────────
   H.authStepEmail = function() {
     var card = document.getElementById('authCard');
     if (!card) return;
     card.innerHTML = ''
       + '<div style="text-align:center;margin-bottom:20px"><div style="font-size:22px;font-weight:700;color:var(--text)">Welcome</div><div style="font-size:14px;color:var(--sub);margin-top:4px">Sign in to buy and sell across Zimbabwe</div></div>'
       + '<button class="social-auth-btn google" onclick="H.authGoogle()"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Continue with Google</button>'
-      + '<button class="social-auth-btn facebook" onclick="H.authFacebook()"><svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>Continue with Facebook</button>'
       + '<div class="auth-divider"><span>or</span></div>'
       + '<button class="social-auth-btn email" onclick="H.authShowEmailForm()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Continue with Email</button>'
       + '<div style="text-align:center;margin-top:16px;font-size:13px;color:var(--sub)">Don\'t have an account? <span onclick="H.authShowRegister()" style="color:#F5A623;font-weight:600;cursor:pointer">Create one</span></div>';
@@ -122,7 +119,6 @@
     setTimeout(function(){ var e=document.getElementById('newName'); if(e) e.focus(); }, 100);
   };
 
-  // ── OTP VERIFICATION ─────────────────────────────
   H.authShowOtp = function(email) {
     var card = document.getElementById('authCard');
     if (!card) return;
@@ -165,7 +161,6 @@
     H.toast(res.error ? res.error.message : 'Code resent — check your inbox');
   };
 
-  // ── FORGOT PASSWORD ──────────────────────────────
   H.authForgotPassword = function() {
     var card = document.getElementById('authCard');
     if (!card) return;
@@ -197,7 +192,6 @@
       + '<button class="auth-btn secondary" onclick="H.authShowEmailForm()">&larr; Back to Sign In</button>';
   };
 
-  // ── SIGN IN ──────────────────────────────────────
   H.authSignIn = async function() {
     if (authBusy) return;
     if (isLocked()) return;
@@ -231,7 +225,6 @@
     H.saveState(); setAuthBusy(false); H.boot();
   };
 
-  // ── SIGN UP ──────────────────────────────────────
   H.authSignUp = async function() {
     if (authBusy) return;
     var name      = document.getElementById('newName').value.trim();
@@ -255,8 +248,7 @@
     setAuthBusy(true);
     var c = sb();
     if (c) {
-      var redirectTo = 'https://princechakusa.github.io/Hostly/www/';
-      var res = await c.auth.signUp({email:email, password:password, options:{data:{full_name:name}, emailRedirectTo:redirectTo}});
+      var res = await c.auth.signUp({email:email, password:password, options:{data:{full_name:name}}});
       if (res.error) {
         var msg = res.error.message;
         if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('unique constraint')) {
@@ -289,7 +281,6 @@
     H.boot();
   };
 
-  // ── ADMIN LOGIN ──────────────────────────────────
   H.authAdminPage = function() {
     var card = document.getElementById('authCard');
     if (!card) return;
@@ -329,7 +320,6 @@
     H.boot();
   };
 
-  // ── LOAD PROFILE ─────────────────────────────────
   H.loadProfile = async function(userId) {
     var c = sb(); if (!c) return;
     var res = await c.from('profiles').select('*').eq('id',userId).single();
@@ -349,8 +339,14 @@
     H.saveState();
   };
 
-  // ── LOGOUT ───────────────────────────────────────
   H.logout = async function() {
+    try {
+      var sc = window.supabase;
+      if (sc) {
+        if (window._msgChannel)   { sc.removeChannel(window._msgChannel);   window._msgChannel   = null; }
+        if (H._notifChannel)      { sc.removeChannel(H._notifChannel);      H._notifChannel      = null; }
+      }
+    } catch(e) {}
     var c = sb();
     if (c) { try { await c.auth.signOut(); } catch(e) {} }
     state.currentUserId = null;
@@ -362,149 +358,84 @@
     H.authPage();
   };
 
-  // ── SOCIAL AUTH ───────────────────────────────────
-  var OAUTH_REDIRECT = 'https://princechakusa.github.io/Hostly/www/';
-
   H.authGoogle = async function() {
     const c = sb();
     if (!c) { H.toast('Sign-in service unavailable'); return; }
-    const { error } = await c.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: OAUTH_REDIRECT }
-    });
+    const { error } = await c.auth.signInWithOAuth({ provider: 'google' });
     if (error) H.toast(error.message || 'Google sign-in failed');
   };
 
-  H.authFacebook = async function() {
-    const c = sb();
-    if (!c) { H.toast('Sign-in service unavailable'); return; }
-    const { error } = await c.auth.signInWithOAuth({
-      provider: 'facebook',
-      options: { redirectTo: OAUTH_REDIRECT }
-    });
-    if (error) H.toast(error.message || 'Facebook sign-in failed');
-  };
-
-  // ── LEGAL DOCS ───────────────────────────────────
-  // Opens a full-screen slide-up sheet with the actual legal document content.
-  // Uses the same content as HelpTerms / HelpPrivacy pages so it's always in sync.
   H.authShowDoc = function(which) {
-    ['legalDocSheet','ldsFooterFixed'].forEach(function(id){
-      var el = document.getElementById(id); if (el) el.remove();
+    H.modal({
+      title: which==='terms' ? 'Terms & Conditions' : 'Privacy Policy',
+      body: which==='terms' ? H._termsText() : H._privacyText(),
+      confirmText: 'Got it', cancelText: null
     });
-
-    var isTerms = which === 'terms';
-    var title   = isTerms ? 'Terms of Service' : 'Privacy Policy';
-    var content = isTerms ? H._fullTermsHTML() : H._fullPrivacyHTML();
-
-    function closeSheet() {
-      // Restore body scroll lock before removing sheet
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      ['legalDocSheet','ldsFooterFixed'].forEach(function(id){
-        var el = document.getElementById(id); if (el) el.remove();
-      });
-    }
-
-    // Lift the global overflow:hidden so iOS Safari allows scroll inside the sheet
-    document.body.style.overflow = 'auto';
-    document.documentElement.style.overflow = 'auto';
-
-    // The sheet IS the scroll container — most reliable on iOS Safari
-    var sheet = document.createElement('div');
-    sheet.id = 'legalDocSheet';
-    sheet.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9990;overflow-y:scroll;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;background:var(--bg,#F4F1EA);animation:slideUp .28s ease';
-
-    sheet.innerHTML = ''
-      // Sticky header — stays at top as content scrolls beneath it
-      + '<div style="position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 14px;background:linear-gradient(135deg,#1A3A8F,#2952cc)">'
-      +   '<div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px">' + title + '</div>'
-      +   '<button id="ldsCloseBtn" style="background:rgba(255,255,255,.18);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">'
-      +     '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-      +   '</button>'
-      + '</div>'
-      // Content — extra bottom padding so nothing hides behind the fixed footer
-      + '<div class="doc-content" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 96px)">' + content + '</div>';
-
-    // Footer as separate fixed element so it never interferes with scroll
-    var footer = document.createElement('div');
-    footer.id = 'ldsFooterFixed';
-    footer.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9991;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);background:var(--card,#fff);border-top:1px solid var(--border,#e5e0d6)';
-    footer.innerHTML = '<button id="ldsGotItBtn" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Got it</button>';
-
-    document.body.appendChild(sheet);
-    document.body.appendChild(footer);
-
-    document.getElementById('ldsCloseBtn').onclick = closeSheet;
-    document.getElementById('ldsGotItBtn').onclick = closeSheet;
   };
 
-  H._fullTermsHTML = function() {
-    return ''
-      + '<h2>1. Agreement to Terms</h2>'
-      + '<p>By downloading, installing, or using the Hostly application ("App"), you agree to be legally bound by these Terms of Service. If you do not agree to these terms, you must not use the App. These terms govern all users: buyers, sellers, job seekers, employers, and visitors.</p>'
-      + '<h2>2. Who Can Use Hostly</h2>'
-      + '<p>You must be at least 18 years old to create an account or use Hostly. By registering, you confirm that you meet this age requirement and are legally competent to enter into contracts under Zimbabwean law.</p>'
-      + '<h2>3. Account Responsibility</h2>'
-      + '<p>You are responsible for keeping your account credentials confidential. All activity that occurs under your account is your responsibility. You must provide accurate and truthful information when registering.</p>'
-      + '<h2>4. What Hostly Is</h2>'
-      + '<p>Hostly is an online classifieds marketplace that connects buyers and sellers in Zimbabwe. We provide the platform — we are not a party to any transaction between users. We do not hold payments, guarantee delivery, or verify the condition of items unless stated.</p>'
-      + '<h2>5. Listing Rules</h2>'
-      + '<p>All listings must be honest, legal, and comply with Zimbabwean law. The following content is strictly prohibited:</p>'
-      + '<ul><li>Stolen, counterfeit, or fraudulent goods of any kind</li><li>Weapons, firearms, ammunition, or explosive devices</li><li>Illegal drugs, controlled substances, or drug paraphernalia</li><li>Adult, sexually explicit, or pornographic content</li><li>Protected wildlife, animal products, or endangered species</li><li>Pyramid schemes, multi-level marketing, or investment fraud</li><li>Fake, misleading, or non-existent job listings</li><li>Fraudulent rental listings or advance deposit scams</li><li>Human trafficking, exploitation, or domestic workers without consent</li></ul>'
-      + '<h2>6. Advertising Credits (Boost Feature)</h2>'
-      + '<p>Hostly offers optional paid advertising credits ("Boost") to increase listing visibility. These credits are purchased via external payment methods (EcoCash, OneMoney, or bank transfer) and are not processed by Google Play or the Apple App Store. Credits are non-refundable once applied. Unused credits may be refunded at our discretion within 7 days — contact us to request a refund.</p>'
-      + '<h2>7. User Conduct</h2>'
-      + '<p>You agree not to harass or threaten other users, post false or deceptive information, send unsolicited messages, create multiple accounts to evade bans, impersonate any person or entity, or use automated tools to access the platform.</p>'
-      + '<h2>8. User Content License</h2>'
-      + '<p>By posting content on Hostly, you grant us a non-exclusive, worldwide, royalty-free license to display, reproduce, and distribute that content within the App and for promotional purposes. You confirm you own or have rights to all content posted.</p>'
-      + '<h2>9. Intellectual Property</h2>'
-      + '<p>All design, branding, logos, code, and content created by Hostly are protected by copyright. You may not copy, reproduce, or redistribute any part of the App without our written consent.</p>'
-      + '<h2>10. Moderation and Enforcement</h2>'
-      + '<p>We reserve the right to remove any listing, suspend, or permanently ban any account that violates these Terms at any time. Banned users may appeal by contacting chakusaprince@gmail.com within 14 days of the ban.</p>'
-      + '<h2>11. Disclaimer of Warranties</h2>'
-      + '<p>Hostly is provided "as is" and "as available" without any warranties, express or implied. We are not responsible for the quality, safety, legality, or availability of listed items.</p>'
-      + '<h2>12. Limitation of Liability</h2>'
-      + '<p>To the maximum extent permitted by law, Hostly and its operators shall not be liable for any indirect, incidental, punitive, or consequential damages arising from your use of the App.</p>'
-      + '<h2>13. Governing Law</h2>'
-      + '<p>These Terms are governed exclusively by the laws of the Republic of Zimbabwe. Any legal disputes shall be subject to the jurisdiction of the courts of Zimbabwe.</p>'
-      + '<h2>14. Changes to These Terms</h2>'
-      + '<p>We may update these Terms from time to time. Continued use of the App after any update constitutes your acceptance of the revised Terms.</p>'
-      + '<h2>15. Contact Us</h2>'
-      + '<p>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>';
+  H._termsText = function() {
+    return '<div class="doc-content">'
+      + '<h2>Terms &amp; Conditions</h2>'
+      + '<p><strong>Effective Date: 1 May 2026</strong></p>'
+      + '<p>Welcome to Hostly Zimbabwe. By downloading or using the Hostly app you agree to be bound by these Terms and Conditions. Please read them carefully.</p>'
+      + '<h3>1. Eligibility</h3>'
+      + '<p>You must be at least 18 years old to create an account and use Hostly. By registering you confirm that you meet this requirement. Hostly reserves the right to terminate accounts of users found to be under 18.</p>'
+      + '<h3>2. Account Responsibility</h3>'
+      + '<p>You are responsible for keeping your login credentials secure. You are liable for all activity that occurs under your account. Notify us immediately at chakusaprince@gmail.com if you suspect unauthorised access.</p>'
+      + '<h3>3. Listings</h3>'
+      + '<p>You may only list items you own or have legal authority to sell. All listing information — including title, description, photos, and price — must be accurate and not misleading. Hostly reserves the right to remove any listing without notice.</p>'
+      + '<h3>4. Prohibited Content</h3>'
+      + '<p>The following are strictly prohibited on Hostly: stolen or counterfeit goods; illegal drugs, weapons, or firearms; adult or explicit content; hate speech or content that promotes discrimination; spam, pyramid schemes, or fraudulent offers; impersonation of any person or business.</p>'
+      + '<h3>5. Transactions</h3>'
+      + '<p>Hostly is a listing and communication platform only. We do not process payments, hold funds, or guarantee the quality of any item. All transactions are solely between buyer and seller. Hostly accepts no liability for disputes, losses, or damages arising from transactions.</p>'
+      + '<h3>6. Wallet &amp; Top-Ups</h3>'
+      + '<p>The in-app wallet is used exclusively for boosting listings. Top-up amounts are non-refundable except at Hostly\'s sole discretion. Wallet balances have no cash value and cannot be transferred.</p>'
+      + '<h3>7. Intellectual Property</h3>'
+      + '<p>All content you post on Hostly (photos, descriptions, etc.) remains yours. By posting, you grant Hostly a non-exclusive, royalty-free licence to display your content within the app. The Hostly name, logo, and app design are our intellectual property and may not be copied or reused.</p>'
+      + '<h3>8. Privacy</h3>'
+      + '<p>Your use of the app is also governed by our Privacy Policy, which is incorporated into these Terms by reference.</p>'
+      + '<h3>9. Termination</h3>'
+      + '<p>We may suspend or permanently ban any account that violates these Terms, with or without notice. You may delete your account at any time via Settings → Security → Delete Account.</p>'
+      + '<h3>10. Limitation of Liability</h3>'
+      + '<p>Hostly is provided "as is" without warranties of any kind. To the maximum extent permitted by law, Hostly shall not be liable for any indirect, incidental, or consequential damages arising from your use of the app.</p>'
+      + '<h3>11. Changes to Terms</h3>'
+      + '<p>We may update these Terms from time to time. Continued use of the app after changes are posted constitutes acceptance of the revised Terms.</p>'
+      + '<h3>12. Governing Law</h3>'
+      + '<p>These Terms are governed by the laws of Zimbabwe. Any disputes shall be resolved in the courts of Zimbabwe.</p>'
+      + '<h3>13. Contact</h3>'
+      + '<p>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>'
+      + '</div>';
   };
 
-  H._fullPrivacyHTML = function() {
-    return ''
-      + '<h2>1. Who We Are</h2>'
-      + '<p>Hostly is a Zimbabwean marketplace application. We are committed to protecting your privacy and handling your data responsibly. This policy explains what data we collect, why we collect it, and how we protect it.</p>'
-      + '<h2>2. Data We Collect</h2>'
-      + '<ul><li><strong>Account data:</strong> Name, email address, phone number, encrypted password</li><li><strong>Profile data:</strong> Profile photo, bio, city/province location</li><li><strong>Listing data:</strong> Photos, descriptions, prices, and location of items you post</li><li><strong>Messages:</strong> In-app conversations between buyers and sellers</li><li><strong>Transaction data:</strong> Advertising credit balance and top-up reference history</li><li><strong>Device data:</strong> Device type, operating system version, app version</li><li><strong>Usage data:</strong> Pages viewed, search queries, and listing interactions</li></ul>'
-      + '<h2>3. How We Use Your Data</h2>'
-      + '<ul><li>To create and manage your user account</li><li>To display your listings to other users across Zimbabwe</li><li>To facilitate secure in-app messaging between buyers and sellers</li><li>To detect, investigate, and prevent fraud and policy violations</li><li>To improve the App, fix bugs, and enhance user experience</li><li>To send you important notifications about your account and listings</li></ul>'
-      + '<h2>4. Data We Do Not Collect</h2>'
-      + '<ul><li>We do not collect your precise GPS or real-time location</li><li>We do not collect payment card numbers or banking credentials</li><li>We do not access your camera or photo library without your explicit action</li><li>We do not collect contacts, call logs, or SMS messages</li></ul>'
-      + '<h2>5. Data Sharing</h2>'
-      + '<p>We do not sell your personal data to third parties. We may share data with:</p>'
-      + '<ul><li><strong>Other users:</strong> Your public profile name, phone number (if provided), and listings are visible to all users</li><li><strong>Supabase:</strong> Our secure database and authentication infrastructure provider</li><li><strong>Legal authorities:</strong> When required by Zimbabwean law, court order, or to protect public safety</li></ul>'
-      + '<h2>6. Data Security</h2>'
-      + '<p>We implement industry-standard security: HTTPS encryption for all data in transit, encrypted password storage (never stored in plain text), row-level security on our database, and access controls.</p>'
-      + '<h2>7. Camera and Photo Permissions</h2>'
-      + '<p>We request camera and photo library access only when you choose to upload a photo for a listing or your profile. The App never accesses your camera or photos passively.</p>'
-      + '<h2>8. Notifications Permission</h2>'
-      + '<p>We request permission to send push notifications to alert you about new messages, listing activity, and account updates. You may disable notifications at any time in your device settings.</p>'
-      + '<h2>9. Data Retention</h2>'
-      + '<p>We retain your data for as long as your account is active. When you delete your account, all personal data, listings, messages, and transaction records are permanently deleted within 30 days.</p>'
-      + '<h2>10. Your Rights</h2>'
-      + '<ul><li>Access and review your personal data at any time via your Profile page</li><li>Correct inaccurate information through your Profile Settings</li><li>Delete your account and all associated data via Settings → Delete Account</li><li>Opt out of promotional notifications via Settings → Notification Preferences</li><li>Request a copy of all data we hold about you by emailing chakusaprince@gmail.com</li></ul>'
-      + '<h2>11. Children\'s Privacy</h2>'
-      + '<p>Hostly is strictly for users aged 18 and over. We do not knowingly collect personal data from anyone under 18. If we discover that a minor has created an account, we will immediately delete their account and all associated data.</p>'
-      + '<h2>12. Third-Party Links</h2>'
-      + '<p>Listings may include links to WhatsApp or external websites. We are not responsible for the privacy practices or content of any third-party services.</p>'
-      + '<h2>13. Changes to This Policy</h2>'
-      + '<p>We will notify you of material changes to this Privacy Policy through the App at least 7 days before they take effect.</p>'
-      + '<h2>14. Contact Us</h2>'
-      + '<p>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>';
+  H._privacyText = function() {
+    return '<div class="doc-content">'
+      + '<h2>Privacy Policy</h2>'
+      + '<p><strong>Effective Date: 1 May 2026</strong></p>'
+      + '<p>Hostly Zimbabwe ("we", "us", or "our") is committed to protecting your personal information. This Privacy Policy explains what data we collect, how we use it, and your rights.</p>'
+      + '<h3>1. Information We Collect</h3>'
+      + '<p><strong>Account data:</strong> name, email address, phone number, and profile photo when you register.</p>'
+      + '<p><strong>Listing data:</strong> photos, descriptions, prices, and location you provide when posting an ad.</p>'
+      + '<p><strong>Usage data:</strong> pages viewed, searches performed, listings saved, and messages sent within the app.</p>'
+      + '<p><strong>Device data:</strong> device type, operating system, and app version for crash reporting and performance monitoring.</p>'
+      + '<h3>2. How We Use Your Information</h3>'
+      + '<p>To operate and improve the Hostly platform; to authenticate your account and keep it secure; to display your listings to other users; to send you notifications about messages, offers, and account activity; to investigate reports of abuse or policy violations.</p>'
+      + '<h3>3. Data Sharing</h3>'
+      + '<p>We do not sell your personal data. We share data only with: <strong>Supabase</strong> (our database and authentication provider, data stored in EU data centres with encryption at rest and in transit); <strong>Google</strong> (if you choose Sign in with Google); and law enforcement when required by law.</p>'
+      + '<h3>4. Photos &amp; Camera</h3>'
+      + '<p>The app requests access to your camera and photo library only to let you upload listing photos and a profile picture. We do not access your camera or photos for any other purpose.</p>'
+      + '<h3>5. Data Retention</h3>'
+      + '<p>Your data is retained for as long as your account is active. When you delete your account, your personal data, listings, and messages are permanently deleted within 30 days.</p>'
+      + '<h3>6. Security</h3>'
+      + '<p>All data is transmitted over HTTPS. Passwords are never stored — authentication is managed by Supabase using industry-standard bcrypt hashing.</p>'
+      + '<h3>7. Your Rights</h3>'
+      + '<p>You may access, correct, or delete your personal data at any time via Settings → Edit Profile or Settings → Security → Delete Account. You may also contact us directly to request a copy of your data.</p>'
+      + '<h3>8. Children\'s Privacy</h3>'
+      + '<p>Hostly is not intended for users under 18. We do not knowingly collect data from children. If we become aware that a child has registered, we will delete the account immediately.</p>'
+      + '<h3>9. Changes to This Policy</h3>'
+      + '<p>We may update this Privacy Policy from time to time. We will notify you of significant changes via in-app notification. Continued use of the app constitutes acceptance of the updated policy.</p>'
+      + '<h3>10. Contact</h3>'
+      + '<p>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>'
+      + '</div>';
   };
 
 })(window.H);

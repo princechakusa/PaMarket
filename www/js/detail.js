@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 (function (H) {
   const pages = H.pages;
 
@@ -59,7 +59,7 @@
 
       <div class="det-photo" id="dPhoto">
         ${photos.length
-          ? `<img src="${photos[0]}" id="dPhotoImg" onclick="H.openPhotoViewer(${JSON.stringify(photos)},0)" style="cursor:zoom-in">`
+          ? `<img src="${photos[0]}" id="dPhotoImg" data-photos="${H.escHtml(JSON.stringify(photos))}" onclick="H.openPhotoViewer(JSON.parse(this.dataset.photos),0)" style="cursor:zoom-in">`
           : `<div class="ph">${H.categoryIcon(l.cat)}</div>`}
         ${photos.length > 1 ? `
           <div class="photo-dots">${photos.map((_,i)=>`<div class="pdot ${i===0?'on':''}" onclick="H.setPhoto('${l.id}',${i})"></div>`).join('')}</div>
@@ -105,7 +105,7 @@
           <button class="msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')">
             ${S.message} Message in App
           </button>
-          <button class="call-btn" onclick="H.callSeller('${H.escHtml(sellerPhone)}')">
+          <button class="call-btn" onclick="H.callSeller('${sellerPhone}')">
             ${S.phone} Call ${H.escHtml(sellerPhone||'Seller')}
           </button>
           <button class="report-btn" onclick="H.reportListing('${l.id}')">
@@ -167,9 +167,20 @@
     if (!u) { H.requireAuth('Sign in to save listings'); return; }
     H.state.saves[u.id] = H.state.saves[u.id] || [];
     const i = H.state.saves[u.id].indexOf(id);
-    if (i >= 0) { H.state.saves[u.id].splice(i,1); H.toast('Removed from saved'); }
+    const removing = i >= 0;
+    if (removing) { H.state.saves[u.id].splice(i,1); H.toast('Removed from saved'); }
     else { H.state.saves[u.id].push(id); H.toast('Saved'); }
     H.saveState();
+    var _sb = window.supabase;
+    if (_sb && typeof _sb.from === 'function') {
+      if (removing) {
+        _sb.from('user_saves').delete().eq('user_id', u.id).eq('listing_id', id)
+          .then(function(res) { if (res && res.error) console.warn('Save sync failed:', res.error.message); });
+      } else {
+        _sb.from('user_saves').upsert({ user_id: u.id, listing_id: id, saved_at: new Date().toISOString() })
+          .then(function(res) { if (res && res.error) console.warn('Save sync failed:', res.error.message); });
+      }
+    }
     H.renderPage('Detail', {id});
   };
 
@@ -196,14 +207,13 @@
 
   H.callSeller = function(phone) {
     if (!phone || phone.trim()==='') { H.toast('No phone number available'); return; }
-    const clean = phone.replace(/[^\d+\-() ]/g,'').trim();
-    if (!clean) { H.toast('No phone number available'); return; }
-    // window.open with '_system' works in Capacitor (routes through native intent)
-    // and falls back gracefully in a browser
-    window.open('tel:'+clean, '_system');
-    // Also copy to clipboard as a backup so the number is always accessible
-    if (navigator.clipboard) navigator.clipboard.writeText(clean).catch(()=>{});
-    H.toast('Calling '+clean);
+    const clean = phone.replace(/\s+/g,'');
+    if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+      location.href = 'tel:'+clean;
+    } else {
+      if (navigator.clipboard) navigator.clipboard.writeText(clean);
+      H.toast('Number copied: '+clean);
+    }
   };
 
   H.startChatWith = function(sellerId, listingId) {
@@ -211,7 +221,6 @@
     const u = H.currentUser();
     if (!sellerId || sellerId === u.id) { H.toast('You cannot message yourself'); return; }
     H.state.conversations = H.state.conversations || [];
-    // Deterministic ID: sorted user IDs + listingId ensures same conv across sessions
     const ids = [u.id, sellerId].sort();
     const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId || '').slice(-6);
     let conv = H.state.conversations.find(c => c.id === convId);
@@ -236,7 +245,10 @@
         const note   = document.getElementById('reportNote')?.value||'';
         H.state.reports = H.state.reports||[];
         H.state.reports.push({id:H.uid(), reporterId:H.currentUser().id, targetType:'listing', targetId:id, reason:reason+(note?' - '+note:''), t:Date.now(), status:'open'});
-        H.saveState(); H.toast('Report submitted. Thank you.');
+        H.saveState();
+        var _sb = window.supabase;
+        if (_sb) _sb.from('reports').insert({target_type:'listing', target_id:id, reason:reason+(note?' - '+note:''), reporter_id:String(H.currentUser().id), status:'open'}).then(function(r){ if(r&&r.error) console.warn('report save:',r.error.message); });
+        H.toast('Report submitted. Thank you.');
       }
     });
   };
@@ -254,14 +266,16 @@
         const note   = document.getElementById('reportNote')?.value||'';
         H.state.reports = H.state.reports||[];
         H.state.reports.push({id:H.uid(), reporterId:H.currentUser().id, targetType:'user', targetId:id, reason:reason+(note?' - '+note:''), t:Date.now(), status:'open'});
-        H.saveState(); H.toast('Report submitted');
+        H.saveState();
+        var _sb = window.supabase;
+        if (_sb) _sb.from('reports').insert({target_type:'user', target_id:id, reason:reason+(note?' - '+note:''), reporter_id:String(H.currentUser().id), status:'open'}).then(function(r){ if(r&&r.error) console.warn('report save:',r.error.message); });
+        H.toast('Report submitted');
       }
     });
   };
 
   H.openBoostPage = function(listingId) { H.openInner('Boost', {listingId}); };
 
-  // ── PHOTO VIEWER ──────────────────────────────────
   function pvHTML(photos, idx) {
     var dots = '';
     if (photos.length > 1) {
