@@ -90,6 +90,7 @@
       state.conversations = state.conversations || [];
       state.conversations.push(c);
       saveState();
+      if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c);
     }
     H.openInner('Chat', { id: convId });
   };
@@ -127,32 +128,7 @@
   };
 
 
-  H.syncConversations = async function() {
-    try {
-      if (!window.supabase || typeof window.supabase.from !== 'function') return;
-      var u = H.currentUser(); if (!u) return;
-      var res = await window.supabase.from('messages').select('*').order('created_at', {ascending:false}).limit(100);
-      if (res.error || !res.data) return;
-      var convIds = [...new Set(res.data.map(function(r){ return r.conversation_id; }))];
-      convIds.forEach(function(cid) {
-        var msgs = res.data.filter(function(r){ return r.conversation_id===cid; }).reverse();
-        var existing = (H.state.conversations||[]).find(function(c){ return c.id===cid; });
-        if (!existing) {
-          var otherSender = msgs.find(function(r){ return r.sender_id!==u.id; });
-          var otherId = otherSender ? otherSender.sender_id : u.id;
-          var newConv = { id: cid, members: [u.id, otherId], listingId: null, messages: [] };
-          H.state.conversations = H.state.conversations || [];
-          H.state.conversations.push(newConv);
-          existing = newConv;
-        }
-        msgs.forEach(function(r) {
-          var ex = existing.messages.find(function(m){ return m.id===r.id; });
-          if (!ex) existing.messages.push({ id: r.id, from: r.sender_id, senderName: r.sender_name||'', text: r.text, t: new Date(r.created_at).getTime(), read: r.read||false });
-        });
-      });
-      H.saveState();
-    } catch(e) { console.warn('syncConversations error:', e.message); }
-  };
+  // syncConversations is defined in app.js (cloud-aware version)
 
 
   H.sendChat = function () {

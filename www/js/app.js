@@ -351,6 +351,7 @@ window.H = {
     } catch(e) { console.warn('Boot fetch failed:', e); }
     if(typeof H._setupRealtimeMessages==='function') H._setupRealtimeMessages();
     if(typeof H.syncConversations==='function') H.syncConversations();
+    if(typeof H.syncApplications==='function') H.syncApplications();
     if(typeof H.syncNotifications==='function') H.syncNotifications();
     if(typeof H._setupRealtimeNotifs==='function') H._setupRealtimeNotifs();
     this._initPullToRefresh();
@@ -682,6 +683,125 @@ window.H = {
           }
         }).subscribe();
     } catch(e){ console.warn('Realtime setup failed:',e.message); }
+  },
+
+  // ── Sync job applications from Supabase ──────────────────
+  async syncApplications() {
+    try {
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') return;
+      const u = H.currentUser(); if (!u) return;
+      const { data, error } = await sb.from('applications')
+        .select('*')
+        .or(`applicant_id.eq.${u.id},employer_id.eq.${u.id}`)
+        .order('applied_at', { ascending: false });
+      if (error || !data) return;
+      const remote = data.map(r => ({
+        id: r.id, jobId: r.job_id, jobTitle: r.job_title,
+        company: r.company, applicantId: r.applicant_id,
+        applicantName: r.applicant_name, applicantPhone: r.applicant_phone,
+        applicantEmail: r.applicant_email, message: r.message,
+        status: r.status, employerId: r.employer_id,
+        appliedAt: r.applied_at ? new Date(r.applied_at).getTime() : Date.now()
+      }));
+      const ids = new Set((H.state.applications || []).map(a => a.id));
+      remote.forEach(a => {
+        if (!ids.has(a.id)) (H.state.applications = H.state.applications || []).push(a);
+        else {
+          const i = H.state.applications.findIndex(x => x.id === a.id);
+          if (i !== -1) H.state.applications[i] = Object.assign(H.state.applications[i], a);
+        }
+      });
+      H.saveState();
+    } catch(e) { console.warn('syncApplications:', e.message); }
+  },
+
+  async saveApplicationToCloud(app) {
+    try {
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') return;
+      const { error } = await sb.from('applications').upsert({
+        id: app.id, job_id: app.jobId, job_title: app.jobTitle,
+        company: app.company || '', applicant_id: app.applicantId,
+        applicant_name: app.applicantName, applicant_phone: app.applicantPhone,
+        applicant_email: app.applicantEmail, message: app.message,
+        status: app.status || 'pending', employer_id: app.employerId,
+        applied_at: app.appliedAt ? new Date(app.appliedAt).toISOString() : new Date().toISOString()
+      });
+      if (error) console.warn('saveApplicationToCloud:', error.message);
+    } catch(e) { console.warn('saveApplicationToCloud:', e.message); }
+  },
+
+  async updateApplicationStatusCloud(appId, status) {
+    try {
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') return;
+      await sb.from('applications').update({ status }).eq('id', appId);
+    } catch(e) { console.warn('updateApplicationStatusCloud:', e.message); }
+  },
+
+  // ── Sync conversations from Supabase ─────────────────────
+  async syncConversations() {
+    try {
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') return;
+      const u = H.currentUser(); if (!u) return;
+      const { data: convs, error } = await sb.from('conversations')
+        .select('id, members, listing_id, created_at, updated_at')
+        .contains('members', [u.id])
+        .order('updated_at', { ascending: false })
+        .limit(100);
+      if (error || !convs) return;
+      for (const c of convs) {
+        let local = (H.state.conversations || []).find(x => x.id === c.id);
+        if (!local) {
+          local = { id: c.id, members: c.members, listingId: c.listing_id, messages: [] };
+          (H.state.conversations = H.state.conversations || []).push(local);
+        }
+        // fetch recent messages for this conversation
+        const { data: msgs } = await sb.from('messages')
+          .select('id, sender_id, sender_name, text, read, created_at')
+          .eq('conversation_id', c.id)
+          .order('created_at', { ascending: true })
+          .limit(200);
+        if (msgs) {
+          const existing = new Set(local.messages.map(m => m.id));
+          msgs.forEach(m => {
+            if (!existing.has(m.id)) {
+              local.messages.push({
+                id: m.id, from: m.sender_id, senderName: m.sender_name || '',
+                text: m.text, t: new Date(m.created_at).getTime(), read: m.read
+              });
+            }
+          });
+        }
+      }
+      H.saveState();
+    } catch(e) { console.warn('syncConversations:', e.message); }
+  },
+
+  async saveMessageToCloud(convId, msg) {
+    try {
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') return;
+      await sb.from('messages').upsert({
+        id: msg.id, conversation_id: convId,
+        sender_id: msg.from, sender_name: msg.senderName || '',
+        text: msg.text, read: msg.read || false,
+        created_at: new Date(msg.t || Date.now()).toISOString()
+      });
+    } catch(e) { console.warn('saveMessageToCloud:', e.message); }
+  },
+
+  async ensureConversationInCloud(conv) {
+    try {
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') return;
+      await sb.from('conversations').upsert({
+        id: conv.id, members: conv.members,
+        listing_id: conv.listingId || null
+      });
+    } catch(e) { console.warn('ensureConversationInCloud:', e.message); }
   },
 
   // ── Category View (fallback for unmapped categories) ─────
