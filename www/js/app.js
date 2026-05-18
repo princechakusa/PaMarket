@@ -417,7 +417,8 @@ window.H = {
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
     try {
-      this.pageStack.push({name:this.currentPageName,params:this.currentPageParams});
+      const area=document.getElementById('mainArea');
+      this.pageStack.push({name:this.currentPageName,params:this.currentPageParams,scrollY:area?area.scrollTop:0});
       document.getElementById('bottomNav').style.display='none';
       await this.renderPage(name,params);
     } catch(e) {
@@ -443,31 +444,31 @@ window.H = {
         document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
         const m=document.querySelector(`[data-nav="${p.name}"]`); if(m) m.classList.add('active');
       }
-      await this.renderPage(p.name,p.params);
+      await this.renderPage(p.name,p.params,{scrollTo:p.scrollY||0});
     } else {
       document.getElementById('bottomNav').style.display='flex';
       await this.navTo('Home');
     }
   },
 
-  async renderPage(name, params) {
+  async renderPage(name, params, opts) {
     const area=document.getElementById('mainArea');
+    const scrollTo=(opts&&opts.scrollTo)||0;
     if(this.canAccessPage&&!this.canAccessPage(name)){this.toast('Access denied');await this.navTo('Home');return;}
     this.currentPageName=name; this.currentPageParams=params||{};
     const fn=this.pages[name]||this.pages.Home;
     if(!area) return;
     const res=fn(params||{});
     if(res instanceof Promise) {
-      // For async pages: fade out, await, fade back in
       area.style.opacity='0';
       const html=await res;
       if(this.currentPageName!==name) return; // navigated away while loading
-      area.scrollTop=0;
       area.innerHTML=html;
+      area.scrollTop=scrollTo;
       requestAnimationFrame(()=>{ area.style.opacity='1'; });
     } else {
-      area.scrollTop=0;
       area.innerHTML=res;
+      area.scrollTop=scrollTo;
       if(area.style.opacity!=='1') area.style.opacity='1';
     }
     if(this.pages[name+'_after']) this.pages[name+'_after'](params||{});

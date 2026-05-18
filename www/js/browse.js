@@ -20,7 +20,8 @@
     selectedCategory: null,
     condition: 'all',
     sortBy: 'recent',
-    currency: 'all'
+    currency: 'all',
+    lastSearch: ''
   };
 
   // ---------------------------------------------------
@@ -180,6 +181,7 @@
         clearTimeout(H._browse._searchTimer);
         H._browse._searchTimer = setTimeout(() => {
           const q = document.getElementById('searchIn')?.value || '';
+          browseState.lastSearch = q;
           const activeListings = (state.listings || []).filter(l => l.status === 'active');
           const filtered = filterListings(activeListings, q);
           const el = document.getElementById('listingList');
@@ -241,7 +243,8 @@
           selectedCategory: null,
           condition: 'all',
           sortBy: 'recent',
-          currency: 'all'
+          currency: 'all',
+          lastSearch: ''
         };
         // Reset UI elements
         document.querySelectorAll('.filter-checkbox input, .filter-radio input').forEach(input => {
@@ -257,6 +260,12 @@
         H._browse.onSearch();
       }
     };
+
+    // Restore search query from previous visit (must be after H._browse is assigned)
+    if (browseState.lastSearch) {
+      const inp = document.getElementById('searchIn');
+      if (inp) { inp.value = browseState.lastSearch; H._browse.onSearch(); }
+    }
   };
 
 })(window.H);
