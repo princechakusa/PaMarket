@@ -1106,10 +1106,21 @@ window.H = {
   // ── Bootstrap ────────────────────────────────────────────
   init() {
     this.state=this.loadState();
-    // Clean up any demo data left from previous versions
+    // Strip demo/seed data injected by old versions — save immediately so it sticks
+    var hadDemo = (this.state.listings||[]).some(l=>String(l.id).startsWith('demo')) ||
+                  (this.state.users||[]).some(u=>String(u.id).startsWith('demo'));
     this.state.listings=(this.state.listings||[]).filter(l=>!String(l.id).startsWith('demo'));
-    this.state.users=(this.state.users||[]).filter(u=>!String(u.id).startsWith('demo_'));
-    this._initErrorTracking();
+    this.state.users=(this.state.users||[]).filter(u=>!String(u.id).startsWith('demo'));
+    if (hadDemo) this.saveState();
+    // Wire up global error tracking to Supabase error_logs table
+    window.onerror = function(msg, src, line, col, err) {
+      try {
+        var sb = window.supabase;
+        if (sb && typeof sb.from === 'function') {
+          sb.from('error_logs').insert({ message: String(msg), source: src+':'+line, stack: err ? String(err.stack||'').slice(0,500) : null, created_at: new Date().toISOString() }).then(function(){});
+        }
+      } catch(e) {}
+    };
     this._registerCategoryView();
     this._registerJobPage();
     this._registerExtraPages();
