@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 (function (H) {
   const pages = H.pages;
 
@@ -221,7 +221,6 @@
     const u = H.currentUser();
     if (!sellerId || sellerId === u.id) { H.toast('You cannot message yourself'); return; }
     H.state.conversations = H.state.conversations || [];
-    // Deterministic ID: sorted user IDs + listingId ensures same conv across sessions
     const ids = [u.id, sellerId].sort();
     const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId || '').slice(-6);
     let conv = H.state.conversations.find(c => c.id === convId);
@@ -277,7 +276,6 @@
 
   H.openBoostPage = function(listingId) { H.openInner('Boost', {listingId}); };
 
-  // ── PHOTO VIEWER ──────────────────────────────────
   function pvHTML(photos, idx) {
     var dots = '';
     if (photos.length > 1) {

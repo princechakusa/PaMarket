@@ -4,7 +4,6 @@
   const state = H.state;
   const { escHtml, filterListings, renderListCard, CATEGORIES } = H;
 
-  // Icons (prefer shared set, fallback to inline SVGs)
   const I = (window.H && H.ICONS) || {};
   const S = {
     microphone: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
@@ -24,9 +23,6 @@
     lastSearch: ''
   };
 
-  // ---------------------------------------------------
-  // BROWSE PAGE
-  // ---------------------------------------------------
   pages.Browse = function () {
     const activeListings = (state.listings || []).filter(l => l.status === 'active');
     const u = H.currentUser();
@@ -103,39 +99,18 @@
         <div class="filter-section">
           <div class="filter-title">Condition</div>
           <div class="filter-options">
-            <label class="filter-radio">
-              <input type="radio" name="condition" value="all" onchange="H._browse.onFilterChange()" checked>
-              <span>Any</span>
-            </label>
-            <label class="filter-radio">
-              <input type="radio" name="condition" value="new" onchange="H._browse.onFilterChange()">
-              <span>New</span>
-            </label>
-            <label class="filter-radio">
-              <input type="radio" name="condition" value="like-new" onchange="H._browse.onFilterChange()">
-              <span>Like New</span>
-            </label>
-            <label class="filter-radio">
-              <input type="radio" name="condition" value="used" onchange="H._browse.onFilterChange()">
-              <span>Used</span>
-            </label>
-            <label class="filter-radio">
-              <input type="radio" name="condition" value="refurbished" onchange="H._browse.onFilterChange()">
-              <span>Refurbished</span>
-            </label>
+            <label class="filter-radio"><input type="radio" name="condition" value="all" onchange="H._browse.onFilterChange()" checked><span>Any</span></label>
+            <label class="filter-radio"><input type="radio" name="condition" value="new" onchange="H._browse.onFilterChange()"><span>New</span></label>
+            <label class="filter-radio"><input type="radio" name="condition" value="like-new" onchange="H._browse.onFilterChange()"><span>Like New</span></label>
+            <label class="filter-radio"><input type="radio" name="condition" value="used" onchange="H._browse.onFilterChange()"><span>Used</span></label>
+            <label class="filter-radio"><input type="radio" name="condition" value="refurbished" onchange="H._browse.onFilterChange()"><span>Refurbished</span></label>
           </div>
         </div>
 
         <div class="filter-section">
           <div class="filter-title">Other</div>
-          <label class="filter-checkbox">
-            <input type="checkbox" id="verifiedOnly" onchange="H._browse.onFilterChange()">
-            <span>Verified Sellers Only</span>
-          </label>
-          <label class="filter-checkbox">
-            <input type="checkbox" id="boostedOnly" onchange="H._browse.onFilterChange()">
-            <span>Premium Ads Only</span>
-          </label>
+          <label class="filter-checkbox"><input type="checkbox" id="verifiedOnly" onchange="H._browse.onFilterChange()"><span>Verified Sellers Only</span></label>
+          <label class="filter-checkbox"><input type="checkbox" id="boostedOnly" onchange="H._browse.onFilterChange()"><span>Premium Ads Only</span></label>
         </div>
 
         <div class="filter-actions">
@@ -154,7 +129,6 @@
   };
 
   pages.Browse_after = function () {
-    // Background refresh from Supabase — fills skeleton if cache was empty
     if (typeof H.fetchListingsFromSupabase === 'function') {
       H.fetchListingsFromSupabase().then(() => {
         const el = document.getElementById('listingList');
@@ -200,10 +174,7 @@
       },
       searchTag: (term) => {
         const inp = document.getElementById('searchIn');
-        if (inp) {
-          inp.value = term;
-          H._browse.onSearch();
-        }
+        if (inp) { inp.value = term; H._browse.onSearch(); }
       },
       removeSearch: (term) => {
         const u = H.currentUser();
@@ -213,9 +184,7 @@
           H.renderPage('Browse');
         }
       },
-      voiceSearch: () => {
-        H.toast('Voice search coming soon!');
-      },
+      voiceSearch: () => { H.toast('Voice search coming soon!'); },
       saveSearch: () => {
         const q = document.getElementById('searchIn')?.value?.trim() || '';
         const u = H.currentUser();
@@ -245,9 +214,7 @@
         H.saveState();
         H.renderPage('Browse');
       },
-      onFilterChange: () => {
-        // Placeholder for future filter logic
-      },
+      onFilterChange: () => {},
       onSortChange: () => {
         const sortVal = document.getElementById('sortBy')?.value;
         browseState.sortBy = sortVal;
@@ -260,29 +227,11 @@
           ev.target.classList.add('active');
         }
       },
-      applyFilters: () => {
-        H._browse.toggleFilters();
-        H._browse.onSearch();
-      },
+      applyFilters: () => { H._browse.toggleFilters(); H._browse.onSearch(); },
       resetFilters: () => {
-        browseState = {
-          showFilters: false,
-          priceMin: 0,
-          priceMax: 1000000,
-          selectedCategory: null,
-          condition: 'all',
-          sortBy: 'recent',
-          currency: 'all',
-          lastSearch: ''
-        };
-        // Reset UI elements
-        document.querySelectorAll('.filter-checkbox input, .filter-radio input').forEach(input => {
-          input.checked = false;
-        });
-        document.querySelectorAll('input[name="condition"]').forEach(input => {
-          if (input.value === 'all') input.checked = true;
-        });
-        // Update currency buttons visually
+        browseState = { showFilters:false, priceMin:0, priceMax:1000000, selectedCategory:null, condition:'all', sortBy:'recent', currency:'all', lastSearch:'' };
+        document.querySelectorAll('.filter-checkbox input, .filter-radio input').forEach(input => { input.checked = false; });
+        document.querySelectorAll('input[name="condition"]').forEach(input => { if (input.value === 'all') input.checked = true; });
         document.querySelectorAll('.cur-opt').forEach(b => b.classList.remove('active'));
         const defaultCurBtn = document.querySelector('.cur-opt.all') || document.querySelector('[onclick*="\'all\'"]');
         if (defaultCurBtn) defaultCurBtn.classList.add('active');
@@ -290,7 +239,6 @@
       }
     };
 
-    // Restore search query from previous visit (must be after H._browse is assigned)
     if (browseState.lastSearch) {
       const inp = document.getElementById('searchIn');
       if (inp) { inp.value = browseState.lastSearch; H._browse.onSearch(); }
