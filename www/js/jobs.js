@@ -458,6 +458,7 @@
     };
     H.state.applications.push(app);
     H.saveState();
+    if (typeof H.saveApplicationToCloud === 'function') H.saveApplicationToCloud(app);
     // Notify employer
     if (l.sellerId) H.pushNotif(l.sellerId, 'New Application', u.name + ' applied for ' + l.title, 'message');
     H.toast('Application submitted! The employer will be in touch.');
@@ -527,6 +528,7 @@
     if (!app) return;
     app.status = status;
     H.saveState();
+    if (typeof H.updateApplicationStatusCloud === 'function') H.updateApplicationStatusCloud(appId, status);
     var u = H.currentUser();
     var jobId = app.jobId;
     H.toast(status === 'shortlisted' ? 'Shortlisted!' : 'Declined');
