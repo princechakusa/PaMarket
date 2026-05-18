@@ -2,8 +2,13 @@
 (function (H) {
   const pages = H.pages;
   const state = H.state;
-  const { currentUser, escHtml, uid, toast, innerTopbar, goBack,
-          renderPage, saveState, pushNotif } = H;
+  const { escHtml, uid, toast, pushNotif } = H;
+  // Methods that use `this` must go through H so binding is correct
+  const currentUser = () => H.currentUser();
+  const innerTopbar = (...a) => H.innerTopbar(...a);
+  const saveState   = () => H.saveState();
+  const goBack      = () => H.goBack();
+  const renderPage  = (...a) => H.renderPage(...a);
 
   // Fallback SVG icons in case H.ICONS is not ready
   const icons = {

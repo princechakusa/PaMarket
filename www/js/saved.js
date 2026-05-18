@@ -92,17 +92,17 @@
           <div class="mi-label">Notifications</div>
           <div class="mi-arrow">›</div>
         </div>
-        <div class="mi" onclick="H.openInner('Language')">
+        <div class="mi" onclick="H.openInner('LanguageSettings')">
           <div class="mi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
           <div class="mi-label">Language</div>
           <div class="mi-arrow">›</div>
         </div>
-        <div class="mi" onclick="H.openInner('Privacy')">
+        <div class="mi" onclick="H.openInner('PrivacySettings')">
           <div class="mi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
           <div class="mi-label">Privacy Policy</div>
           <div class="mi-arrow">›</div>
         </div>
-        <div class="mi" onclick="H.openInner('Terms')">
+        <div class="mi" onclick="H.openInner('HelpTerms')">
           <div class="mi-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
           <div class="mi-label">Terms of Service</div>
           <div class="mi-arrow">›</div>

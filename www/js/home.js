@@ -1,6 +1,6 @@
 ﻿'use strict';
 (function (H) {
-  const { escHtml, timeAgo, emptyState, filterListings, renderListCard, renderFeatCard, CATEGORIES, ICONS } = H;
+  const { escHtml, timeAgo, filterListings, renderListCard, renderFeatCard, CATEGORIES, ICONS } = H;
 
   let searchTimer;
   function debounce(fn, delay) {
@@ -178,7 +178,7 @@
                 ${s.items.map(l => renderHCard(l)).join('')}
               </div>
             </div>
-          `).join('') : `<div style="padding:32px 16px">${emptyState('No listings yet', 'Be the first to post in your area!', 'Post your first ad', "H.navTo('Post',null)")}</div>`}
+          `).join('') : `<div style="padding:32px 16px">${H.emptyState('No listings yet', 'Be the first to post in your area!', 'Post your first ad', "H.navTo('Post',null)")}</div>`}
         </div>
 
       </div>
@@ -203,7 +203,7 @@
       const results  = filterListings(active, q);
       srList.innerHTML = results.length
         ? results.map(l => `<div>${renderListCard(l)}</div>`).join('')
-        : emptyState('No matches', 'Try different keywords or browse a category', null, null);
+        : H.emptyState('No matches', 'Try different keywords or browse a category', null, null);
     }, 300);
   };
 

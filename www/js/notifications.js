@@ -1,6 +1,7 @@
 'use strict';
 (function (H) {
-  const { escHtml, timeAgo, uid, toast, saveState } = H;
+  const { escHtml, timeAgo, uid, toast } = H;
+  const saveState = () => H.saveState();
   const pages = H.pages;
 
   function sb() {

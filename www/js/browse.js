@@ -2,7 +2,7 @@
 (function (H) {
   const pages = H.pages;
   const state = H.state;
-  const { escHtml, emptyState, filterListings, renderListCard, CATEGORIES } = H;
+  const { escHtml, filterListings, renderListCard, CATEGORIES } = H;
 
   // Icons (prefer shared set, fallback to inline SVGs)
   const I = (window.H && H.ICONS) || {};
@@ -187,7 +187,7 @@
           const el = document.getElementById('listingList');
           if (el) el.innerHTML = filtered.length
             ? filtered.map(renderListCard).join('')
-            : emptyState('No matches', 'Try a different search term', null, null);
+            : H.emptyState('No matches', 'Try a different search term', null, null);
           if (q.trim()) {
             const u = H.currentUser();
             if (u) {
