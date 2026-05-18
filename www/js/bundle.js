@@ -1,4 +1,4 @@
-/* Hostly bundle — built 2026-05-18T07:32:31Z */
+/* Hostly bundle — built 2026-05-18T07:38:40Z */
 
 ;/* === www/js/app.js === */
 ﻿'use strict';
@@ -1681,29 +1681,45 @@ H.init();
 
     var content = isTerms ? H._fullTermsHTML() : H._fullPrivacyHTML();
 
+    var safeTop = 'env(safe-area-inset-top,0px)';
+    var safeBot = 'env(safe-area-inset-bottom,0px)';
+
     var sheet = document.createElement('div');
     sheet.id = 'legalDocSheet';
-    sheet.style.cssText = [
-      'position:fixed', 'inset:0', 'z-index:9990',
-      'background:var(--bg,#F4F1EA)', 'display:flex', 'flex-direction:column',
-      'animation:slideUp .28s ease'
-    ].join(';');
+    // Use overflow:hidden + absolute children — more reliable than flex on iOS Safari
+    sheet.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9990;background:var(--bg,#F4F1EA);overflow:hidden;animation:slideUp .28s ease';
 
     sheet.innerHTML = ''
-      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,16px) + 16px) 16px 14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);flex-shrink:0">'
+      // Header — absolutely positioned at top
+      + '<div id="ldsHeader" style="position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:calc(' + safeTop + ' + 14px) 16px 14px;background:linear-gradient(135deg,#1A3A8F,#2952cc)">'
       +   '<div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px">' + title + '</div>'
-      +   '<button onclick="document.getElementById(\'legalDocSheet\').remove()" style="background:rgba(255,255,255,.18);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">'
-      +     '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      +   '<button onclick="document.getElementById(\'legalDocSheet\').remove()" style="background:rgba(255,255,255,.18);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer">'
+      +     '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
       +   '</button>'
       + '</div>'
-      + '<div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;min-height:0;padding:0 0 calc(env(safe-area-inset-bottom,0px) + 32px)">'
-      +   '<div class="doc-content">' + content + '</div>'
+      // Footer — absolutely positioned at bottom
+      + '<div id="ldsFooter" style="position:absolute;bottom:0;left:0;right:0;padding:12px 16px calc(' + safeBot + ' + 12px);background:var(--card,#fff);border-top:1px solid var(--border,#e5e0d6)">'
+      +   '<button onclick="document.getElementById(\'legalDocSheet\').remove()" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Got it</button>'
       + '</div>'
-      + '<div style="flex-shrink:0;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);background:var(--card,#fff);border-top:1px solid var(--border,#e5e0d6)">'
-      +   '<button onclick="document.getElementById(\'legalDocSheet\').remove()" style="width:100%;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Got it</button>'
+      // Scroll area — positioned between header and footer via JS after render
+      + '<div id="ldsScroll" style="position:absolute;left:0;right:0;overflow-y:scroll;-webkit-overflow-scrolling:touch">'
+      +   '<div class="doc-content">' + content + '</div>'
       + '</div>';
 
     document.body.appendChild(sheet);
+
+    // Size the scroll area to exactly fill between header and footer
+    requestAnimationFrame(function() {
+      var hdr = document.getElementById('ldsHeader');
+      var ftr = document.getElementById('ldsFooter');
+      var scr = document.getElementById('ldsScroll');
+      if (hdr && ftr && scr) {
+        var hh = hdr.offsetHeight;
+        var fh = ftr.offsetHeight;
+        scr.style.top    = hh + 'px';
+        scr.style.bottom = fh + 'px';
+      }
+    });
   };
 
   H._fullTermsHTML = function() {
