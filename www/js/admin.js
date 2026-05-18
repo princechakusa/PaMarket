@@ -2,7 +2,13 @@
 (function (H) {
   const pages = H.pages;
   const getState = () => H.state || {};
-  const { currentUser, escHtml, timeAgo, uid, toast, modal, innerTopbar, emptyState, openInner, saveState, fmtPrice, initials, pushNotif, renderPage } = H;
+  const { escHtml, timeAgo, uid, toast, modal, fmtPrice, initials, pushNotif } = H;
+  // Methods that use `this` must go through H so binding is correct
+  const currentUser = () => H.currentUser();
+  const innerTopbar = (...a) => H.innerTopbar(...a);
+  const emptyState  = (...a) => H.emptyState(...a);
+  const saveState   = () => H.saveState();
+  const renderPage  = (...a) => H.renderPage(...a);
 
   const S = {
     deny:     '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
