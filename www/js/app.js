@@ -379,6 +379,7 @@ window.H = {
     if(typeof H._setupRealtimeNotifs==='function') H._setupRealtimeNotifs();
     if(typeof H.startRealtime==='function') H.startRealtime();
     this._initPullToRefresh();
+    if(typeof window._hideSplash==='function') window._hideSplash();
   },
 
   authPage() {
