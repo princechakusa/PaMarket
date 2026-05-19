@@ -322,16 +322,15 @@
 
   <!-- ── App Bootstrap ────────────────────────────────── -->
   <script>
-    // ── Splash hide ──────────────────────────────────────
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const splash = document.getElementById('pamarketSplash');
-        if (splash) {
-          splash.classList.add('hiding');
-          setTimeout(() => splash.remove(), 450);
-        }
-      }, 1800);
-    });
+    // ── Splash hide — tied to app readiness, not a hard timer ──
+    window._hideSplash = function() {
+      const splash = document.getElementById('pamarketSplash');
+      if (!splash) return;
+      splash.classList.add('hiding');
+      setTimeout(() => splash.remove(), 450);
+    };
+    // Fallback: hide after 4s max in case boot is very slow
+    window.addEventListener('load', () => setTimeout(window._hideSplash, 4000));
 
     // ── Service Worker ───────────────────────────────────
     if ('serviceWorker' in navigator) {
@@ -371,7 +370,7 @@
         }
       } catch(e) {}
     }
-    setInterval(updateMsgBadge, 5000);
+    window._msgBadgeInterval = setInterval(updateMsgBadge, 5000);
 
     // ── Admin page local login fallback ──────────────────
     window.addEventListener('load', () => {

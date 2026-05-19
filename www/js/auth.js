@@ -413,6 +413,7 @@
         H.state.currentUserId = null;
         H.state.adminSession = null;
         H.saveState();
+        if (window._msgBadgeInterval) { clearInterval(window._msgBadgeInterval); window._msgBadgeInterval = null; }
         var reload = function() { window.location.reload(); };
         try {
           var sc = window.supabase;
@@ -464,6 +465,49 @@
         ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
         : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
     }
+  };
+
+  H.authShowSetPassword = function() {
+    // Called when user arrives via password reset email link
+    var bg  = document.getElementById('modalBg');
+    var box = document.getElementById('modalBox');
+    if (!bg || !box) return;
+    box.classList.remove('login-modal');
+    box.innerHTML = '<div class="modal-header"><h3>Set New Password</h3></div>'
+      + '<div class="modal-body-scroll">'
+      + '<div class="fg" style="padding-top:8px"><div class="fl">New Password</div>'
+      + '<div style="position:relative"><input class="fi" id="rpNewPass" type="password" placeholder="8+ chars, uppercase &amp; number" oninput="H._updatePassStrength()" style="padding-right:44px">'
+      + '<button type="button" onclick="H._togglePw(\'rpNewPass\')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-hint);padding:4px"><svg id="rpNewPass_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>'
+      + '<div style="height:4px;background:var(--border);border-radius:2px;margin-top:6px"><div id="passStrengthBar" style="height:100%;border-radius:2px;transition:all .3s;width:0"></div></div>'
+      + '<div id="passStrengthLabel" style="font-size:11px;margin-top:3px;text-align:right;height:14px;color:var(--text-sub)"></div></div>'
+      + '<div class="fg"><div class="fl">Confirm Password</div>'
+      + '<div style="position:relative"><input class="fi" id="rpNewPass2" type="password" placeholder="re-enter password" style="padding-right:44px">'
+      + '<button type="button" onclick="H._togglePw(\'rpNewPass2\')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-hint);padding:4px"><svg id="rpNewPass2_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>'
+      + '</div>'
+      + '<div class="modal-footer"><div class="modal-btns">'
+      + '<button class="modal-btn confirm" onclick="H.authDoSetPassword()">Save Password</button>'
+      + '</div></div>';
+    bg.classList.add('open');
+    setTimeout(function(){ var e = document.getElementById('rpNewPass'); if(e) e.focus({preventScroll:true}); }, 100);
+  };
+
+  H.authDoSetPassword = async function() {
+    var pass  = ((document.getElementById('rpNewPass')  || {}).value || '').trim();
+    var pass2 = ((document.getElementById('rpNewPass2') || {}).value || '').trim();
+    if (pass.length < 8)         { H.toast('Password must be at least 8 characters'); return; }
+    if (!/[A-Z]/.test(pass))     { H.toast('Password must include an uppercase letter'); return; }
+    if (!/[0-9]/.test(pass) && !/[^A-Za-z0-9]/.test(pass)) { H.toast('Password must include a number or special character'); return; }
+    if (pass !== pass2)          { H.toast('Passwords do not match'); return; }
+    var c = sb();
+    if (!c) { H.toast('Connection error'); return; }
+    var btns = document.querySelectorAll('#modalBox button');
+    btns.forEach(function(b){ b.disabled = true; });
+    var res = await c.auth.updateUser({ password: pass });
+    btns.forEach(function(b){ b.disabled = false; });
+    if (res.error) { H.toast(res.error.message || 'Failed to update password'); return; }
+    H.closeModal();
+    H.toast('Password updated! Please sign in.');
+    H.requireAuth('Sign in with your new password');
   };
 
   H.authShowDoc = function(which) {

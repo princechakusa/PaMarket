@@ -38,6 +38,7 @@
   // Only handle OAuth callbacks — NOT regular page loads with stored sessions.
   // The app restores login state from H.loadState() (localStorage), not from here.
   var _isOAuthCallback = window.location.search.includes('code=') || window.location.hash.includes('access_token=');
+  var _isPasswordReset = window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery');
   var _oauthHandled = false;
 
   async function handleOAuthSession(session) {
@@ -87,6 +88,18 @@
   }
 
   window.supabase.auth.onAuthStateChange(async function(event, session) {
+    // Password reset link clicked — show the set-new-password form
+    if (event === 'PASSWORD_RECOVERY') {
+      var waitH = function(attempts) {
+        if (!window.H || typeof window.H.authShowSetPassword !== 'function') {
+          if (attempts < 40) setTimeout(function(){ waitH(attempts + 1); }, 200);
+          return;
+        }
+        window.H.authShowSetPassword();
+      };
+      waitH(0);
+      return;
+    }
     if (event !== 'SIGNED_IN' || !session || !session.user) return;
     if (!_isOAuthCallback) return;
     handleOAuthSession(session);
