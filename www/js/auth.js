@@ -1,6 +1,5 @@
 'use strict';
 (function(H) {
-  const state = H.state;
   let authBusy = false;
 
   // Rate limiting — max 5 failed attempts then 30s lockout
@@ -120,7 +119,7 @@
 
   H.authCancel2FA = async function() {
     H._pendingTwoFactorUserId = null;
-    state.currentUserId = null;
+    H.state.currentUserId = null;
     H.saveState();
     try { if (window.supabase && window.supabase.auth) await window.supabase.auth.signOut(); } catch(e) {}
     if (H.closeLoginModal) H.closeLoginModal();
@@ -128,7 +127,7 @@
 
   H.authVerify2FA = async function() {
     var userId = H._pendingTwoFactorUserId;
-    var u = (state.users || []).find(function(x){ return x.id === userId; });
+    var u = (H.state.users || []).find(function(x){ return x.id === userId; });
     var code = ((document.getElementById('twoFactorLoginCode') || {}).value || '').trim();
     if (!u || !u.twoFactorEnabled || !u.twoFactorSecret) { H.toast('2FA setup not found'); return; }
     if (!H._twoFactorVerify || !await H._twoFactorVerify(u.twoFactorSecret, code)) {
@@ -136,7 +135,7 @@
       return;
     }
     H._pendingTwoFactorUserId = null;
-    state.currentUserId = userId;
+    H.state.currentUserId = userId;
     H.saveState();
     if (H.closeLoginModal) H.closeLoginModal();
     H.boot();
@@ -184,7 +183,7 @@
     setAuthBusy(true);
     var res = await c.auth.verifyOtp({ email: H._otpEmail, token: otp, type: 'signup' });
     if (res.error) { H.toast('Invalid or expired code. Try resending.'); setAuthBusy(false); return; }
-    state.currentUserId = res.data.user.id;
+    H.state.currentUserId = res.data.user.id;
     await H.loadProfile(res.data.user.id);
     H.saveState();
     setAuthBusy(false);
@@ -250,12 +249,12 @@
         recordFailure();
         H.toast(msg); setAuthBusy(false); return;
       }
-      state.currentUserId = res.data.user.id;
+      H.state.currentUserId = res.data.user.id;
       await H.loadProfile(res.data.user.id);
       var su = H.currentUser();
       if (su && su.twoFactorEnabled && su.twoFactorSecret) {
         H._pendingTwoFactorUserId = res.data.user.id;
-        state.currentUserId = null;
+        H.state.currentUserId = null;
         H.saveState();
         setAuthBusy(false);
         H.authShow2FA(res.data.user.id);
@@ -268,18 +267,18 @@
       H.boot();
       return;
     }
-    var user = (state.users||[]).find(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase() && u._localPassword===password; });
+    var user = (H.state.users||[]).find(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase() && u._localPassword===password; });
     if (!user) { recordFailure(); H.toast('Wrong email or password'); setAuthBusy(false); return; }
     recordSuccess();
     if (user.twoFactorEnabled && user.twoFactorSecret) {
       H._pendingTwoFactorUserId = user.id;
-      state.currentUserId = null;
+      H.state.currentUserId = null;
       H.saveState();
       setAuthBusy(false);
       H.authShow2FA(user.id);
       return;
     }
-    state.currentUserId = user.id;
+    H.state.currentUserId = user.id;
     H.saveState(); setAuthBusy(false); if (H.closeLoginModal) H.closeLoginModal(); H.boot();
   };
 
@@ -317,8 +316,8 @@
       var userId = res.data.user.id;
       await c.from('profiles').upsert({id:userId, name:name, phone:phone||null, verified:false});
       var u = {id:userId,email:email,name:name,phone:phone||'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]};
-      (state.users = state.users||[]).push(u);
-      state.currentUserId = userId;
+      (H.state.users = H.state.users||[]).push(u);
+      H.state.currentUserId = userId;
       H.saveState();
       setAuthBusy(false);
       if (res.data.session) {
@@ -330,11 +329,11 @@
       }
       return;
     }
-    var exists = (state.users||[]).some(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase(); });
+    var exists = (H.state.users||[]).some(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase(); });
     if (exists) { H.toast('Email already registered. Sign in instead.'); setAuthBusy(false); return; }
     var uid2 = H.uid();
-    (state.users = state.users||[]).push({id:uid2,email:email,name:name,phone:phone||'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[],_localPassword:password});
-    state.currentUserId = uid2;
+    (H.state.users = H.state.users||[]).push({id:uid2,email:email,name:name,phone:phone||'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[],_localPassword:password});
+    H.state.currentUserId = uid2;
     H.saveState(); setAuthBusy(false);
     H.toast('Account created! Welcome to PaMarket');
     if (H.closeLoginModal) H.closeLoginModal();
@@ -363,18 +362,18 @@
     H.toast('Signing in...');
     var res = await c.auth.signInWithPassword({email:email, password:pass});
     if (res.error) { recordFailure(); H.toast('Invalid credentials'); return; }
-    state.currentUserId = res.data.user.id;
+    H.state.currentUserId = res.data.user.id;
     await H.loadProfile(res.data.user.id);
     var cu = H.currentUser();
     if (!cu || cu.role !== 'admin') {
       if (c) { try { await c.auth.signOut(); } catch(e) {} }
-      state.currentUserId = null;
+      H.state.currentUserId = null;
       recordFailure();
       H.toast('Access denied. Not an admin account.');
       return;
     }
     recordSuccess();
-    state.adminSession = {at:Date.now(),via:'supabase'};
+    H.state.adminSession = {at:Date.now(),via:'supabase'};
     H.saveState();
     H.toast('Welcome Admin!');
     if (H.closeLoginModal) H.closeLoginModal();
@@ -385,15 +384,15 @@
     var c = sb(); if (!c) return;
     var res = await c.from('profiles').select('*').eq('id',userId).single();
     if (res.error||!res.data) {
-      var u = (state.users||[]).find(function(x){return x.id===userId;});
-      if (!u) { u={id:userId,email:'',name:'User',phone:'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]}; state.users.push(u); }
+      var u = (H.state.users||[]).find(function(x){return x.id===userId;});
+      if (!u) { u={id:userId,email:'',name:'User',phone:'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]}; H.state.users.push(u); }
       return;
     }
     var profile = res.data;
-    var u = (state.users||[]).find(function(x){return x.id===userId;});
+    var u = (H.state.users||[]).find(function(x){return x.id===userId;});
     if (!u) {
       u = {id:userId,email:'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,walletUSD:profile.wallet_usd||0,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
-      state.users.push(u);
+      H.state.users.push(u);
     } else {
       u.name=profile.name||u.name; u.phone=profile.phone||u.phone; u.avatar=profile.avatar||u.avatar; u.verified=profile.verified||false; u.role=profile.role||u.role||'user';
     }
@@ -410,8 +409,8 @@
     } catch(e) {}
     var c = sb();
     if (c) { try { await c.auth.signOut(); } catch(e) {} }
-    H.state.currentUserId = null;
-    H.state.adminSession = null;
+    H.H.state.currentUserId = null;
+    H.H.state.adminSession = null;
     H.saveState();
     var ban = document.getElementById('banScreen');
     if (ban) ban.classList.remove('show');
