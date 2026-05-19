@@ -398,7 +398,7 @@
 
     // ── Prevent rubber-band scroll on iOS ────────────────
     document.addEventListener('touchmove', function(e) {
-      if (e.target.closest('#mainArea, .action-sheet')) return;
+      if (e.target.closest('#mainArea, .action-sheet, #docSheetBody, .modal-body-scroll, .login-modal, .modal')) return;
       e.preventDefault();
     }, { passive: false });
   </script>
