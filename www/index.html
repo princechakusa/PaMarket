@@ -264,6 +264,17 @@
   <!-- Ban Screen -->
   <div class="ban-screen" id="banScreen" role="alert"></div>
 
+  <!-- Doc Sheet (Terms / Privacy full-screen) -->
+  <div id="docSheet">
+    <div id="docSheetBar">
+      <button id="docSheetClose" onclick="H.closeDocSheet()" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <span id="docSheetTitle"></span>
+    </div>
+    <div id="docSheetBody" class="scroll-area"></div>
+  </div>
+
   <!-- ── Supabase ──────────────────────────────────────── -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>

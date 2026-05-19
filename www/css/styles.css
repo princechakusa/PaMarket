@@ -1001,6 +1001,14 @@ select.fi {
 .sheet-close { display: flex; align-items: center; justify-content: center; width: 100%; padding: 14px; margin-top: 10px; border: 1.5px solid var(--border); background: transparent; border-radius: var(--r-md); cursor: pointer; font-size: 15px; font-weight: 600; color: var(--text-mid); transition: all .2s; font-family: var(--font); }
 .sheet-close:active { background: var(--bg); }
 
+/* ── DOC SHEET (Terms / Privacy) ────────────────────────────── */
+#docSheet { position: fixed; inset: 0; background: var(--card); z-index: 10000; display: none; flex-direction: column; }
+#docSheet.open { display: flex; }
+#docSheetBar { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--card); }
+#docSheetClose { background: none; border: none; cursor: pointer; color: var(--text-primary); padding: 4px; display: flex; align-items: center; }
+#docSheetTitle { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+#docSheetBody { flex: 1; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
+
 /* ── TOAST ───────────────────────────────────────────────────── */
 .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--text-primary); color: #fff; font-size: 13px; padding: 11px 22px; border-radius: var(--r-pill); opacity: 0; transition: all .3s var(--ease); pointer-events: none; z-index: 9999; font-weight: 600; box-shadow: var(--shadow-lg); max-width: 320px; text-align: center; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }

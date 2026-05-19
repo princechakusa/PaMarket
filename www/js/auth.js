@@ -462,11 +462,19 @@
   };
 
   H.authShowDoc = function(which) {
-    H.modal({
-      title: which==='terms' ? 'Terms & Conditions' : 'Privacy Policy',
-      body: which==='terms' ? H._termsText() : H._privacyText(),
-      confirmText: 'Got it', cancelText: null
-    });
+    var sheet   = document.getElementById('docSheet');
+    var titleEl = document.getElementById('docSheetTitle');
+    var bodyEl  = document.getElementById('docSheetBody');
+    if (!sheet || !titleEl || !bodyEl) return;
+    titleEl.textContent = which === 'terms' ? 'Terms & Conditions' : 'Privacy Policy';
+    bodyEl.innerHTML    = which === 'terms' ? H._termsText() : H._privacyText();
+    bodyEl.scrollTop    = 0;
+    sheet.classList.add('open');
+  };
+
+  H.closeDocSheet = function() {
+    var sheet = document.getElementById('docSheet');
+    if (sheet) sheet.classList.remove('open');
   };
 
   H._termsText = function() {
