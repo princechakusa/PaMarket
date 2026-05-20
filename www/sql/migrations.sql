@@ -138,6 +138,36 @@ drop policy if exists "anon write notifications" on notifications;
 create policy "anon read notifications"  on notifications for select using (true);
 create policy "anon write notifications" on notifications for all    using (true);
 
+-- ── 8. Conversations ──
+create table if not exists conversations (
+  id         text primary key,
+  members    jsonb not null default '[]',
+  listing_id text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table conversations enable row level security;
+drop policy if exists "anon read conversations"  on conversations;
+drop policy if exists "anon write conversations" on conversations;
+create policy "anon read conversations"  on conversations for select using (true);
+create policy "anon write conversations" on conversations for all    using (true);
+
+-- ── 9. Messages ──
+create table if not exists messages (
+  id               uuid primary key default gen_random_uuid(),
+  conversation_id  text,
+  sender_id        uuid,
+  sender_name      text,
+  text             text,
+  read             boolean default false,
+  created_at       timestamptz default now()
+);
+alter table messages enable row level security;
+drop policy if exists "anon read messages"  on messages;
+drop policy if exists "anon write messages" on messages;
+create policy "anon read messages"  on messages for select using (true);
+create policy "anon write messages" on messages for all    using (true);
+
 -- ── 7. Storage bucket for ad images ──
 -- Run this ONCE in Supabase SQL Editor:
 insert into storage.buckets (id, name, public)

@@ -138,8 +138,7 @@
       const thread = document.getElementById('chatThread');
       if (!thread) return;
       const u = H.currentUser();
-      const conv = (H.state.conversations || []).find(c => c.id === convId);
-      const otherId2 = conv ? conv.members.find(m => m !== u.id) : null;
+      const otherId2 = convAfter ? convAfter.members.find(m => m !== u.id) : null;
       const other2 = otherId2 ? (H.state.users || []).find(x => x.id === otherId2) : null;
       const otherIni2 = initials((other2 && other2.name) || 'U');
       const ava2 = (other2 && other2.avatar)
