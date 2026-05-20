@@ -311,6 +311,20 @@
     var u = H.currentUser();
     if (!u) return '<div class="page active">' + H.innerTopbar('Post a Job') + H.emptyState('Sign in required', 'You must sign in to post a job', 'Sign In', "H.requireAuth('Post a job')") + '</div>';
 
+    if (!u.verified) {
+      var pendingBanner = u.verification_pending
+        ? '<div style="background:#F5A62318;border:1px solid #F5A62340;border-radius:12px;padding:14px 16px;margin-bottom:20px"><div style="font-size:14px;font-weight:700;color:#c07800">Verification Pending</div><div style="font-size:13px;color:var(--sub);margin-top:4px">Your request is under review. We\'ll notify you once approved.</div></div>'
+        : '<button onclick="H.openInner(\'Verify\')" style="padding:14px 32px;background:linear-gradient(135deg,#1A3A8F,#0f2460);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:inline-block">Verify My Company →</button>';
+      return '<div class="page active">'
+        + '<div class="det-topbar"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Post a Job</div></div>'
+        + '<div style="padding:48px 24px;text-align:center">'
+        + '<div style="font-size:52px;margin-bottom:16px">🏢</div>'
+        + '<div style="font-size:19px;font-weight:800;color:var(--text);margin-bottom:8px">Company Verification Required</div>'
+        + '<div style="font-size:14px;color:var(--sub);line-height:1.7;margin-bottom:24px">To post a job, your company must be verified by PaMarket. This protects job seekers from fraudulent listings.</div>'
+        + pendingBanner
+        + '</div></div>';
+    }
+
     var ZW = (H._ZW_CITIES || []);
     return '<div class="page active">'
       + '<div class="det-topbar"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Post a Job</div></div>'
@@ -370,6 +384,7 @@
     if (desc.trim().length < 30) { H.toast('Please write a job description (min 30 chars)'); return; }
     var u = H.currentUser();
     if (!u) { H.toast('Please sign in first'); return; }
+    if (!u.verified) { H.toast('Company must be verified to post jobs. Go to Profile → Verify Identity.', 4000); return; }
     var jobType = 'Full-time';
     document.querySelectorAll('input[name="jType"]').forEach(function (r) { if (r.checked) jobType = r.value; });
     var salMin = (document.getElementById('jSalMin') || {}).value || '';

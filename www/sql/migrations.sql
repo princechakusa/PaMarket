@@ -55,6 +55,10 @@ drop policy if exists "anon write settings" on app_settings;
 create policy "anon read settings"  on app_settings for select using (true);
 create policy "anon write settings" on app_settings for all    using (true);
 
+-- ── 3a. Profiles: ensure verification columns exist ──
+alter table profiles add column if not exists verification_pending boolean default false;
+alter table profiles add column if not exists verified boolean default false;
+
 -- ── 3. Verifications (ID doc + selfie for admin review) ──
 create table if not exists verifications (
   id            uuid primary key default gen_random_uuid(),
