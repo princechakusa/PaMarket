@@ -252,7 +252,7 @@
         } catch(e) { console.warn('support ticket cloud save:', e.message); }
 
         if (btn) { btn.disabled = false; btn.textContent = 'Send Message'; }
-        H.toast('Message sent! We'll respond within 24 hours.');
+        H.toast("Message sent! We'll respond within 24 hours.");
 
         // Clear form
         const subEl = document.getElementById('supportSubject');

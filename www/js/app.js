@@ -759,8 +759,7 @@ window.H = {
         .order('created_at',{ascending:false})
         .limit(200);
       if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
-      if(!data||!data.length) return;
-      const cloud=data.map(r=>({
+      const cloud=(data||[]).map(r=>({
         id:r.id, sellerId:r.seller_id, sellerName:r.seller_name||'',
         sellerPhone:r.seller_phone||'', title:r.title, desc:r.description,
         price:r.price, currency:r.currency, cat:r.category,
@@ -769,14 +768,10 @@ window.H = {
         status:r.status, boost:r.boost, views:r.views||0,
         createdAt:r.created_at?new Date(r.created_at).getTime():Date.now()
       }));
-      const ids=new Set((H.state.listings||[]).map(l=>l.id));
-      cloud.forEach(cl=>{
-        if(!ids.has(cl.id)) H.state.listings.push(cl);
-        else {
-          const i=H.state.listings.findIndex(l=>l.id===cl.id);
-          if(i!==-1) H.state.listings[i]=Object.assign(H.state.listings[i],cl);
-        }
-      });
+      // Replace active listings entirely from cloud so deleted ones disappear.
+      // Keep local non-active listings (pending, draft) that haven't synced yet.
+      const nonActive=(H.state.listings||[]).filter(l=>l.status!=='active');
+      H.state.listings=[...cloud,...nonActive];
       H.saveState();
     } catch(e){ console.warn('fetchListingsFromSupabase:',e.message); }
   },
