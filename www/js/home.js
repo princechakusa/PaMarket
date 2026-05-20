@@ -140,15 +140,6 @@
           </div>
         </div>
 
-        <!-- POST AD BUTTON -->
-        <div style="padding:8px 12px 0">
-          <button onclick="H.navTo('Post',null)"
-            style="width:100%;padding:14px;background:#F5A623;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(245,166,35,0.35)">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Post a Free Ad
-          </button>
-        </div>
-
         <!-- HOT ON PAMARKET (paid ads horizontal scroll) -->
         ${(function(){
           var now = Date.now();
@@ -191,6 +182,15 @@
             + '</div>'
             + '</div>';
         })()}
+
+        <!-- POST AD BUTTON -->
+        <div style="padding:12px 12px 0">
+          <button onclick="H.navTo('Post',null)"
+            style="width:100%;padding:14px;background:#F5A623;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(245,166,35,0.35)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Post a Free Ad
+          </button>
+        </div>
 
         <!-- FEATURED -->
         ${featured.length ? `
