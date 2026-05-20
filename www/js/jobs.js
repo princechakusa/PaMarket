@@ -150,7 +150,9 @@
   };
 
   H.pages.HireTalent = function () {
-    var candidates = (H.state.users || []).filter(function (u) { return u.openToWork; });
+    var candidates = (H.state.users || []).filter(function (u) {
+      return u.openToWork || (u.cv && u.cv.visible !== false && (u.cv.headline || u.cv.summary || (u.cv.experience && u.cv.experience.length)));
+    });
     var sectors = ['All'].concat(JOB_CATS);
     var ZW = H._ZW_CITIES || [];
 
@@ -237,7 +239,7 @@
     var sector = H._currentTalentSector || 'All';
     var f = H._filters['talent'] || {};
     var list = (H.state.users || []).filter(function (u) {
-      return u.openToWork || (u.cv && u.cv.visible !== false && (u.cv.headline || (u.cv.experience && u.cv.experience.length)));
+      return u.openToWork || (u.cv && u.cv.visible !== false && (u.cv.headline || u.cv.summary || (u.cv.experience && u.cv.experience.length)));
     });
     if (q) list = list.filter(function (u) {
       var cv = u.cv || {};
@@ -539,10 +541,9 @@
     H.saveState();
     if (typeof H.saveApplicationToCloud === 'function') H.saveApplicationToCloud(app);
     if (l.sellerId) H.pushNotif(l.sellerId, 'New Application', u.name + ' applied for ' + l.title, 'message');
-    H.toast('Application submitted! The employer will be in touch.');
-    H.renderPage('JobDetail', {id: jobId});
-    H.state.conversations = H.state.conversations || [];
-    var convId = 'job_' + app.id.slice(-8);
+    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+    var ids = [u.id, l.sellerId].sort();
+    var convId = 'job_' + jobId.slice(-8) + '_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
     if (!H.state.conversations.find(function(c){ return c.id === convId; })) {
       var conv = {
         id: convId, members: [u.id, l.sellerId], listingId: jobId,
@@ -551,9 +552,14 @@
       };
       H.state.conversations.push(conv);
       H.saveState();
-      if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(conv);
-      if (message && typeof H.saveMessageToCloud === 'function') H.saveMessageToCloud(convId, conv.messages[0]);
+      if (typeof H.ensureConversationInCloud === 'function') {
+        H.ensureConversationInCloud(conv).then(function(){
+          if (message && typeof H.saveMessageToCloud === 'function') H.saveMessageToCloud(convId, conv.messages[0]);
+        });
+      } else if (message && typeof H.saveMessageToCloud === 'function') H.saveMessageToCloud(convId, conv.messages[0]);
     }
+    H.toast('Application submitted! The employer will be in touch.');
+    H.renderPage('JobDetail', {id: jobId});
   };
 
   H.pages.JobApplications = function (params) {
@@ -595,6 +601,7 @@
             + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'shortlisted\')" style="flex:1;padding:8px;background:#22c55e15;color:#15803d;border:1.5px solid #22c55e40;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Shortlist</button>'
             + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'rejected\')" style="flex:1;padding:8px;background:#ef444415;color:#dc2626;border:1.5px solid #ef444440;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Decline</button>'
             + (app.applicantPhone ? '<button onclick="window.open(\'https://wa.me/' + app.applicantPhone.replace(/[^\d]/g,'') + '\',\'_blank\')" style="flex:1;padding:8px;background:#25D36615;color:#25D366;border:1.5px solid #25D36640;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">WhatsApp</button>' : '')
+            + '<button onclick="H._openApplicationChat(\'' + app.id + '\')" style="flex:1;padding:8px;background:#1A3A8F15;color:#1A3A8F;border:1.5px solid #1A3A8F40;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Message</button>'
             + '</div></div>';
         }).join('')
         : H.emptyState('No applications yet', 'Share your job posting to attract candidates.', null, null))
@@ -620,6 +627,42 @@
       );
     }
     H.renderPage('JobApplications', {jobId: jobId});
+  };
+
+  H.pages.JobApplications_after = function(params) {
+    if (typeof H.syncApplications === 'function' && !H._syncingJobApplications) {
+      H._syncingJobApplications = true;
+      H.syncApplications().then(function(){
+        if (H.currentPageName === 'JobApplications') H.renderPage('JobApplications', params || H.currentPageParams);
+      }).finally(function(){
+        H._syncingJobApplications = false;
+      });
+    }
+  };
+
+  H._openApplicationChat = function(appId) {
+    var app = (H.state.applications || []).find(function(a){ return a.id === appId; });
+    if (!app) return;
+    var ids = [app.applicantId, app.employerId].sort();
+    var convId = 'job_' + app.jobId.slice(-8) + '_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+    var conv = H.state.conversations.find(function(c){ return c.id === convId; });
+    if (!conv) {
+      conv = {
+        id: convId, members: [app.applicantId, app.employerId], listingId: app.jobId,
+        appId: app.id, isJobThread: true,
+        messages: app.message ? [{ id: H.uid(), from: app.applicantId, senderName: app.applicantName || '', text: app.message, t: app.appliedAt || Date.now(), read: false }] : []
+      };
+      if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+      H.state.conversations.push(conv);
+      H.saveState();
+    }
+    if (typeof H.ensureConversationInCloud === 'function') {
+      H.ensureConversationInCloud(conv).then(function(){
+        if (conv.messages && conv.messages.length && typeof H.saveMessageToCloud === 'function') H.saveMessageToCloud(conv.id, conv.messages[0]);
+      });
+    } else if (conv.messages && conv.messages.length && typeof H.saveMessageToCloud === 'function') H.saveMessageToCloud(conv.id, conv.messages[0]);
+    H.openInner('Chat', { id: conv.id });
   };
 
   H.pages.AppliedJobs = function () {

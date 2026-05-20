@@ -64,6 +64,13 @@ alter table profiles add column if not exists verification_pending boolean defau
 alter table profiles add column if not exists verified boolean default false;
 alter table profiles add column if not exists cv jsonb;
 alter table profiles add column if not exists open_to_work boolean default false;
+alter table profiles add column if not exists email text;
+alter table profiles add column if not exists bio text;
+alter table profiles add column if not exists city text;
+alter table profiles add column if not exists job_title text;
+alter table profiles add column if not exists skills text;
+alter table profiles add column if not exists sector text;
+alter table profiles add column if not exists exp text;
 
 -- ── 3. Verifications (ID doc + selfie for admin review) ──
 create table if not exists verifications (
@@ -95,6 +102,11 @@ create table if not exists reports (
   status        text not null default 'open' check(status in ('open','resolved')),
   created_at    timestamptz default now()
 );
+alter table reports add column if not exists reporter_id uuid;
+alter table reports add column if not exists reported_by text;
+alter table reports alter column target_id type text using target_id::text;
+alter table reports drop constraint if exists reports_target_type_check;
+alter table reports add constraint reports_target_type_check check(target_type in ('listing','user','support','bug','appeal'));
 alter table reports enable row level security;
 drop policy if exists "anon read reports"  on reports;
 drop policy if exists "anon write reports" on reports;
