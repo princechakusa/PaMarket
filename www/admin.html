@@ -1883,26 +1883,41 @@ async function deleteAd(id){
 
 // ── Verifications Panel ───────────────────────────────────────
 function renderVerifications(){
-  var pendingVerifs = (DATA.verifications||[]).filter(function(v){ return v.status==="pending"; });
+  // Build a unified pending list from both sources:
+  // 1. verifications table (has photos)
+  // 2. profiles with verification_pending=true but not already in verifications table
+  var verifRecords = DATA.verifications||[];
+  var verifUserIds = new Set(verifRecords.map(function(v){ return v.user_id; }));
+
+  // Pending from verifications table
+  var pendingFromTable = verifRecords.filter(function(v){ return v.status==="pending"; });
+
+  // Pending from profiles not yet in verifications table (works before migration is run)
+  var pendingFromProfiles = DATA.users.filter(function(u){
+    return u.verification_pending===true && !verifUserIds.has(u.id);
+  });
+
+  var totalPending = pendingFromTable.length + pendingFromProfiles.length;
   var verified = DATA.users.filter(function(u){ return u.verified === true; });
   var unverified = DATA.users.filter(function(u){ return !u.verified && !u.verification_pending; });
 
   var html =
     '<div class="stats-grid" style="margin-bottom:18px">'+
-    scard(pendingVerifs.length,"Pending Requests",pendingVerifs.length>0?"warn":"")+
+    scard(totalPending,"Pending Requests",totalPending>0?"warn":"")+
     scard(verified.length,"Verified Users","")+
     scard(unverified.length,"Unverified","")+
     '</div>';
 
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
     '<div class="section-head" style="margin:0">Pending Verification Requests</div>'+
-    '<button class="ab" onclick="loadVerifications().then(renderVerifications)" style="font-size:11px;padding:4px 10px">&#8635; Refresh</button>'+
+    '<button class="ab" onclick="Promise.all([loadUsers(),loadVerifications()]).then(renderVerifications)" style="font-size:11px;padding:4px 10px">&#8635; Refresh</button>'+
     '</div>';
 
-  if(!pendingVerifs.length){
+  if(!totalPending){
     html += '<div class="empty-msg" style="color:#4ade80;margin-bottom:20px">&#10003; No pending verification requests.</div>';
   } else {
-    pendingVerifs.forEach(function(v){
+    // Show requests that have photos (from verifications table)
+    pendingFromTable.forEach(function(v){
       var u = DATA.users.find(function(x){ return x.id===v.user_id; }) || {};
       html += '<div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px;margin-bottom:14px">'+
         '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">'+
@@ -1917,8 +1932,27 @@ function renderVerifications(){
           '</div>'+
         '</div>'+
         '<div style="display:flex;gap:12px;flex-wrap:wrap">'+
-          (v.id_doc ? '<div><div style="font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600">ID DOCUMENT</div><img src="'+v.id_doc+'" style="width:140px;height:90px;object-fit:cover;border-radius:8px;border:2px solid #334155;cursor:pointer" onclick="openImgModal(this.src)"></div>' : '<div style="color:#64748b;font-size:12px;padding:20px">No ID uploaded</div>')+
-          (v.selfie ? '<div><div style="font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600">SELFIE</div><img src="'+v.selfie+'" style="width:90px;height:90px;object-fit:cover;border-radius:50%;border:2px solid #334155;cursor:pointer" onclick="openImgModal(this.src)"></div>' : '<div style="color:#64748b;font-size:12px;padding:20px">No selfie</div>')+
+          (v.id_doc ? '<div><div style="font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600">ID DOCUMENT</div><img src="'+v.id_doc+'" style="width:140px;height:90px;object-fit:cover;border-radius:8px;border:2px solid #334155;cursor:pointer" onclick="openImgModal(this.src)"></div>' : '')+
+          (v.selfie ? '<div><div style="font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600">SELFIE</div><img src="'+v.selfie+'" style="width:90px;height:90px;object-fit:cover;border-radius:50%;border:2px solid #334155;cursor:pointer" onclick="openImgModal(this.src)"></div>' : '')+
+          (!v.id_doc && !v.selfie ? '<div style="color:#64748b;font-size:12px">No photos submitted yet</div>' : '')+
+        '</div>'+
+      '</div>';
+    });
+
+    // Show pending users without a verifications record (profile-only pending)
+    pendingFromProfiles.forEach(function(u){
+      html += '<div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px;margin-bottom:14px">'+
+        '<div style="display:flex;align-items:flex-start;gap:12px">'+
+          '<div style="flex:1">'+
+            '<div style="font-weight:700;font-size:14px">'+esc(u.name||"Unknown User")+'</div>'+
+            '<div style="color:#94a3b8;font-size:12px;margin-top:2px">'+esc(u.phone||"—")+'</div>'+
+            '<div style="color:#64748b;font-size:11px;margin-top:4px">Joined: '+fmtDate(u.created_at)+' · No photos submitted</div>'+
+          '</div>'+
+          '<div style="display:flex;gap:6px">'+
+            '<button class="ab ab-view" onclick="viewUser(\''+u.id+'\')">View</button>'+
+            '<button class="ab ab-approve" onclick="approveVerification(\''+u.id+'\',null)">&#10003; Approve</button>'+
+            '<button class="ab ab-reject" onclick="rejectVerification(\''+u.id+'\',null)">&#10007; Reject</button>'+
+          '</div>'+
         '</div>'+
       '</div>';
     });
