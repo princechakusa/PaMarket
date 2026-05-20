@@ -786,9 +786,14 @@ window.H = {
       if(!window.supabase||typeof window.supabase.channel!=='function') return;
       if(window._msgChannel) window._msgChannel.unsubscribe();
       window._msgChannel=window.supabase.channel('messages-rt')
-        .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
+        .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},async payload=>{
           const msg=payload.new; if(!msg) return;
-          const conv=(H.state.conversations||[]).find(c=>c.id===msg.conversation_id);
+          let conv=(H.state.conversations||[]).find(c=>c.id===msg.conversation_id);
+          if(!conv) {
+            // Unknown conversation — sync to discover it, then retry
+            if(typeof H.syncConversations==='function') await H.syncConversations();
+            conv=(H.state.conversations||[]).find(c=>c.id===msg.conversation_id);
+          }
           if(conv){
             const ex=conv.messages.find(m=>m.id===msg.id);
             if(!ex){
@@ -862,21 +867,28 @@ window.H = {
       const sb = window.supabase;
       if (!sb || typeof sb.from !== 'function') return;
       const u = H.currentUser(); if (!u) return;
-      const { data: convs, error } = await sb.from('conversations')
-        .select('id, members, listing_id, created_at, updated_at')
-        .contains('members', [u.id])
-        .order('updated_at', { ascending: false })
-        .limit(100);
-      if (error || !convs) return;
-      for (const c of convs) {
-        let local = (H.state.conversations || []).find(x => x.id === c.id);
-        if (!local) {
-          local = { id: c.id, members: c.members, listingId: c.listing_id, messages: [] };
-          (H.state.conversations = H.state.conversations || []).push(local);
+      // Try to discover new conversations from the server (table may not exist yet)
+      try {
+        const { data: convs, error } = await sb.from('conversations')
+          .select('id, members, listing_id, created_at, updated_at')
+          .contains('members', [u.id])
+          .order('updated_at', { ascending: false })
+          .limit(100);
+        if (!error && convs) {
+          for (const c of convs) {
+            let local = (H.state.conversations || []).find(x => x.id === c.id);
+            if (!local) {
+              local = { id: c.id, members: c.members, listingId: c.listing_id, messages: [] };
+              (H.state.conversations = H.state.conversations || []).push(local);
+            }
+          }
         }
+      } catch(e) { /* conversations table may not exist */ }
+      // Always sync messages for every locally-known conversation
+      for (const local of (H.state.conversations || [])) {
         const { data: msgs } = await sb.from('messages')
           .select('id, sender_id, sender_name, text, read, created_at')
-          .eq('conversation_id', c.id)
+          .eq('conversation_id', local.id)
           .order('created_at', { ascending: true })
           .limit(200);
         if (msgs) {
