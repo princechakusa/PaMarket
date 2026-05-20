@@ -1843,10 +1843,10 @@ async function saveAd(){
 
   if(res.error){
     var msg = res.error.message||"";
-    if(msg.includes('paid_ads') && (msg.includes('does not exist')||msg.includes('schema cache'))){
-      toast('paid_ads table missing. Run sql/migrations.sql in Supabase, then go to Supabase Dashboard → Settings → API → Reload schema cache.','error');
+    if(msg.includes('does not exist')||msg.includes('schema cache')){
+      toast('Database column missing. Run sql/migrations.sql in Supabase SQL Editor, then reload the Supabase API schema cache.','error');
     } else {
-      toast("Error: "+msg,"error");
+      toast("Error saving ad: "+msg,"error");
     }
     if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=id?"Save Changes":"Create Ad"; }
     return;
