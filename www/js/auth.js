@@ -295,6 +295,10 @@
 
   H.authSignUp = async function() {
     if (authBusy) return;
+    if (H.state && H.state.signupPaused) {
+      H.toast('New sign-ups are temporarily paused. Please try again later.', 5000, true);
+      return;
+    }
     var name      = document.getElementById('newName').value.trim();
     var email     = document.getElementById('newEmail').value.trim();
     var phone     = document.getElementById('newPhone').value.trim();

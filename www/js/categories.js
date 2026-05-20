@@ -78,7 +78,8 @@
         return a.type==='spotlight' && a.active && a.endsAt > now && (a.targetCat===catId || a.targetCat===baseCat);
       });
       if (!spot) return '';
-      var tap = spot.linkUrl ? 'onclick="window.open(' + JSON.stringify(spot.linkUrl) + ')"' : '';
+      if(H.trackAdImpression) H.trackAdImpression(spot.id);
+      var tap = spot.linkUrl ? 'onclick="H.trackAdClick(' + JSON.stringify(spot.id) + ',' + JSON.stringify(spot.linkUrl) + ')"' : '';
       return '<div ' + tap + ' style="display:flex;align-items:center;gap:14px;background:' + H.escHtml(spot.bgColor||'#EFF6FF') + ';border:1.5px solid ' + H.escHtml(spot.borderColor||'rgba(26,58,143,0.2)') + ';border-radius:14px;padding:14px 16px;margin-bottom:12px;cursor:' + (spot.linkUrl?'pointer':'default') + ';position:relative">'
         + (spot.imageUrl ? '<img src="' + H.escHtml(spot.imageUrl) + '" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0" onerror="this.onerror=null;this.style.display=\'none\'">' : '')
         + '<div style="flex:1;min-width:0">'

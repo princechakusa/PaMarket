@@ -54,13 +54,16 @@
 
     if (s.step === 2) return `
       <div class="fg"><div class="fl">Price</div>
-        <div class="price-row">
-          <input class="fi" style="flex:1" type="number" placeholder="0" id="priceInput" value="${H.escHtml(s.price)}" min="0">
-          <div class="cur-toggle">
-            <button class="cur ${s.currency === 'USD' ? 'on' : ''}" onclick="H._post.setCur('USD')">USD</button>
-            <button class="cur ${s.currency === 'ZiG' ? 'on' : ''}" onclick="H._post.setCur('ZiG')">ZiG</button>
-          </div>
-        </div>
+        ${H.state.freeOnly
+          ? `<div class="fi" style="color:var(--sub);cursor:default;background:var(--bg2)">Free / Negotiable (set by platform)</div><input type="hidden" id="priceInput" value="0">`
+          : `<div class="price-row">
+              <input class="fi" style="flex:1" type="number" placeholder="0" id="priceInput" value="${H.escHtml(s.price)}" min="0">
+              <div class="cur-toggle">
+                <button class="cur ${s.currency === 'USD' ? 'on' : ''}" onclick="H._post.setCur('USD')">USD</button>
+                <button class="cur ${s.currency === 'ZiG' ? 'on' : ''}" onclick="H._post.setCur('ZiG')">ZiG</button>
+              </div>
+            </div>`
+        }
       </div>
       <div class="fg"><div class="fl">Province</div>
         <select class="fi" id="provinceSel" onchange="H._post.onProv(this.value)">
@@ -83,13 +86,16 @@
     if (s.step === 3) return `
       <div class="fg">
         <div class="fl">Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--sub2)">(up to 8 · first is the cover)</span></div>
-        <label class="img-upload-zone" for="photoFile">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <div class="img-upload-title">Tap to add photos</div>
-          <div class="img-upload-sub">JPG, PNG · Max 8 photos · auto-compressed</div>
-        </label>
-        <input type="file" id="photoFile" accept="image/*" multiple capture="environment" style="display:none" onchange="H._post.onPhotos(event)">
-        <div class="photo-grid" id="photoGrid">${renderPhotoGrid()}</div>
+        ${H.state.allowImageUploads === false
+          ? `<div style="padding:18px;background:var(--bg2);border-radius:12px;text-align:center;color:var(--sub);font-size:13px;border:1px dashed var(--border)">📷 Photo uploads are currently disabled by the admin.</div>`
+          : `<label class="img-upload-zone" for="photoFile">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <div class="img-upload-title">Tap to add photos</div>
+              <div class="img-upload-sub">JPG, PNG · Max 8 photos · auto-compressed</div>
+            </label>
+            <input type="file" id="photoFile" accept="image/*" multiple capture="environment" style="display:none" onchange="H._post.onPhotos(event)">
+            <div class="photo-grid" id="photoGrid">${renderPhotoGrid()}</div>`
+        }
       </div>
       <div class="tip-box">
         <div class="tip-title">📸 Photos sell 3× faster</div>
@@ -169,9 +175,10 @@
         s.prov   = document.getElementById('provinceSel').value;
         s.city   = document.getElementById('citySel').value;
         s.suburb = document.getElementById('suburbIn').value.trim();
-        if (!s.price || Number(s.price) <= 0) { H.toast('Enter a valid price'); return; }
+        if (!H.state.freeOnly && (!s.price || Number(s.price) <= 0)) { H.toast('Enter a valid price'); return; }
+        if (H.state.freeOnly) s.price = '0';
       } else if (s.step === 3) {
-        if (!s.photos.length) { H.toast('Add at least one photo'); return; }
+        if (H.state.allowImageUploads !== false && !s.photos.length) { H.toast('Add at least one photo'); return; }
       }
       s.step++;
       refreshSteps();
@@ -189,13 +196,14 @@
         price: s.price, currency: s.currency, cat: s.cat,
         prov: s.prov, city: s.city, suburb: s.suburb,
         photos: s.photos, createdAt: Date.now(),
-        status: H.state.requireListingApproval ? 'pending' : 'active',
+        status: (H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified)) ? 'pending' : 'active',
         boost: null, views: 0
       };
       H.state.listings.unshift(l);
       H.saveState();
       if (typeof H.saveListingToCloud === "function") H.saveListingToCloud(l);
-      H.toast(H.state.requireListingApproval ? 'Ad submitted for admin approval' : 'Your ad is live!');
+      const needsApproval = H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified);
+      H.toast(needsApproval ? 'Ad submitted for admin approval' : 'Your ad is live!');
       H.navTo('Home', document.querySelector('[data-nav="Home"]'));
     }
   };

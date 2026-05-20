@@ -391,6 +391,7 @@ window.H = {
     else if (_act === 'browse') { setTimeout(()=>this.navTo('Browse',null), 200); }
     try {
       await this.fetchListingsFromSupabase();
+      await Promise.all([this.fetchAdsFromSupabase(), this.fetchAppSettings()]);
       await this.renderPage(this.currentPageName, this.currentPageParams);
     } catch(e) { console.warn('Boot fetch failed:', e); }
     if(typeof H._setupRealtimeMessages==='function') H._setupRealtimeMessages();
@@ -702,6 +703,55 @@ window.H = {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
       await window.supabase.from('listings').delete().eq('id',id);
     } catch(e){ console.warn('deleteListingFromCloud:',e.message); }
+  },
+
+  async fetchAdsFromSupabase() {
+    try {
+      if(!window.supabase||typeof window.supabase.from!=='function') return;
+      const {data,error} = await window.supabase
+        .from('paid_ads')
+        .select('id,type,business_name,headline,tagline,image_url,bg_color,link_url,target_cat,starts_at,ends_at,active,priority,impressions,clicks')
+        .eq('active',true)
+        .order('priority',{ascending:false});
+      if(error||!data) return;
+      H.state.paidAds = data.map(r=>({
+        id:r.id, type:r.type,
+        businessName:r.business_name, headline:r.headline,
+        tagline:r.tagline, imageUrl:r.image_url,
+        bgColor:r.bg_color, linkUrl:r.link_url, targetCat:r.target_cat,
+        startsAt:r.starts_at?new Date(r.starts_at).getTime():0,
+        endsAt:r.ends_at?new Date(r.ends_at).getTime():0,
+        active:r.active, priority:r.priority||0,
+        impressions:r.impressions||0, clicks:r.clicks||0
+      }));
+    } catch(e){ console.warn('fetchAdsFromSupabase:',e.message); }
+  },
+
+  async fetchAppSettings() {
+    try {
+      if(!window.supabase||typeof window.supabase.from!=='function') return;
+      const {data,error} = await window.supabase
+        .from('app_settings').select('settings').eq('id',1).single();
+      if(error||!data) return;
+      const s = data.settings||{};
+      Object.assign(H.state, s);
+      H.saveState();
+    } catch(e){ console.warn('fetchAppSettings:',e.message); }
+  },
+
+  trackAdImpression(id) {
+    if(!id||!window.supabase||typeof window.supabase.from!=='function') return;
+    const a = (H.state.paidAds||[]).find(x=>x.id===id); if(!a) return;
+    a.impressions = (a.impressions||0)+1;
+    window.supabase.from('paid_ads').update({impressions:a.impressions}).eq('id',id).then(()=>{});
+  },
+
+  trackAdClick(id, url) {
+    if(id&&window.supabase&&typeof window.supabase.from==='function'){
+      const a = (H.state.paidAds||[]).find(x=>x.id===id);
+      if(a){ a.clicks=(a.clicks||0)+1; window.supabase.from('paid_ads').update({clicks:a.clicks}).eq('id',id).then(()=>{}); }
+    }
+    if(url) window.open(url,'_blank','noopener');
   },
 
   async fetchListingsFromSupabase() {

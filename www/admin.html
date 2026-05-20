@@ -507,10 +507,15 @@ function showTab(n){
   if(n===4) renderTopups();
   if(n===6) renderErrorLogs();
   if(n===7) renderAlertPanel();
-  if(n===8) renderAds();
+  if(n===8) initAdsTab();
   if(n===9) renderVerifications();
-  if(n===10) renderAnalytics();
-  if(n===11) renderSettings();
+  if(n===10) {
+    sb.from("paid_ads").select("*").order("created_at",{ascending:false}).then(function(res){
+      if(!res.error && res.data) DATA.ads = res.data;
+      renderAnalytics();
+    });
+  }
+  if(n===11) initSettingsTab();
 }
 
 // ── Auth ──────────────────────────────────────────────────────
@@ -1534,30 +1539,23 @@ async function sendAlert(){
   }
 }
 
-// ── Paid Ads Panel ────────────────────────────────────────────
-function loadAdsFromStorage(){
-  try {
-    var raw = localStorage.getItem(APP_KEY);
-    if(!raw) return [];
-    var state = JSON.parse(raw);
-    return Array.isArray(state.paidAds) ? state.paidAds : [];
-  } catch(e){ return []; }
-}
-
-function saveAdsToStorage(ads){
-  try {
-    var raw = localStorage.getItem(APP_KEY);
-    var state = raw ? JSON.parse(raw) : {};
-    state.paidAds = ads;
-    localStorage.setItem(APP_KEY, JSON.stringify(state));
-  } catch(e){ toast("Storage error: "+e.message,"error"); }
+// ── Paid Ads Panel (Supabase-backed) ──────────────────────────
+function initAdsTab(){
+  document.getElementById("adsContent").innerHTML = '<p class="loading-msg">Loading ads...</p>';
+  sb.from("paid_ads").select("*").order("created_at",{ascending:false})
+    .then(function(res){
+      DATA.ads = (!res.error && res.data) ? res.data : [];
+      renderAds();
+    });
 }
 
 function renderAds(){
-  var ads = loadAdsFromStorage();
-  DATA.ads = ads;
-  var now = Date.now();
-  var live = ads.filter(function(a){ return a.active && new Date(a.endsAt).getTime() > now; });
+  var ads = DATA.ads || [];
+  var now = new Date().toISOString();
+  var live = ads.filter(function(a){ return a.active && a.ends_at > now; });
+  var totalRevenue = ads.reduce(function(s,a){ return s + Number(a.price_paid||0); },0);
+  var totalImpr = ads.reduce(function(s,a){ return s + Number(a.impressions||0); },0);
+  var totalClicks = ads.reduce(function(s,a){ return s + Number(a.clicks||0); },0);
 
   var html =
     '<div class="stats-grid" style="margin-bottom:16px">'+
@@ -1565,32 +1563,47 @@ function renderAds(){
     scard(live.length,"Live Now",live.length>0?"":"")+
     scard(ads.filter(function(a){return a.type==="banner";}).length,"Banners","")+
     scard(ads.filter(function(a){return a.type==="spotlight";}).length,"Spotlights","")+
+    scard("$"+fmt(totalRevenue),"Total Revenue","")+
+    scard(totalImpr.toLocaleString(),"Impressions","")+
+    scard(totalClicks.toLocaleString(),"Clicks","")+
+    scard(totalImpr>0?Math.round(totalClicks/totalImpr*100)+"%":"—","CTR","")+
     '</div>';
 
-  html += '<div style="margin-bottom:14px"><button class="btn-send" onclick="openAdForm(null)">+ Create New Ad</button></div>';
+  html += '<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap">'+
+    '<button class="btn-send" onclick="openAdForm(null)">+ Create New Ad</button>'+
+    '<button class="btn-send" style="background:#334155" onclick="initAdsTab()">↻ Refresh</button>'+
+    '</div>';
 
   if(!ads.length){
-    html += '<div class="empty-msg"><div style="font-size:32px;margin-bottom:10px">📢</div>No paid ads yet.<br>Create one to start displaying sponsored content in the app.</div>';
+    html += '<div class="empty-msg"><div style="font-size:32px;margin-bottom:10px">📢</div>No paid ads yet.<br><br>Create one to start displaying sponsored content in the app.<br><small style="color:#475569;font-size:11px;margin-top:8px;display:block">Note: run sql/migrations.sql in Supabase once if ads table does not exist.</small></div>';
   } else {
-    html += '<div class="tbl-wrap"><table><thead><tr><th>Business</th><th>Type</th><th>Status</th><th>End Date</th><th>Actions</th></tr></thead><tbody>';
+    html += '<div class="tbl-wrap"><table><thead><tr><th>Business</th><th>Type</th><th>Status</th><th>Priority</th><th>Revenue</th><th>Impr.</th><th>Clicks</th><th>CTR</th><th>Ends</th><th>Actions</th></tr></thead><tbody>';
     ads.forEach(function(a){
-      var isLive = a.active && new Date(a.endsAt).getTime() > now;
-      var statusBadge = isLive
-        ? '<span class="b b-active">LIVE</span>'
-        : (a.active ? '<span class="b b-pending">EXPIRED</span>' : '<span class="b b-removed">PAUSED</span>');
-      var typeLabel = a.type==="banner" ? "🖼 Home Banner" : ("⭐ Spotlight · "+esc(a.targetCat||""));
-      var endDate = a.endsAt ? new Date(a.endsAt).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}) : "—";
+      var isLive = a.active && a.ends_at > now;
+      var isExpired = a.active && a.ends_at <= now;
+      var statusBadge = isLive ? '<span class="b b-active">LIVE</span>'
+        : isExpired ? '<span class="b b-pending">EXPIRED</span>'
+        : '<span class="b b-removed">PAUSED</span>';
+      var typeLabel = a.type==="banner" ? "🖼 Banner" : ("⭐ Spotlight");
+      var ctr = a.impressions>0 ? Math.round(a.clicks/a.impressions*100)+"%" : "—";
       html +=
         "<tr>"+
-        "<td><b>"+esc(a.businessName||"—")+"</b>"+(a.headline?"<br><span style='font-size:11px;color:#64748b'>"+esc(a.headline)+"</span>":"")+"</td>"+
-        "<td>"+typeLabel+"</td>"+
+        "<td><b>"+esc(a.business_name||"—")+"</b>"+(a.headline?"<br><span style='font-size:11px;color:#64748b'>"+esc(a.headline)+"</span>":"")+(a.client_name?"<br><span style='font-size:10px;color:#475569'>👤 "+esc(a.client_name)+"</span>":"")+"</td>"+
+        "<td>"+typeLabel+(a.target_cat?"<br><span style='font-size:10px;color:#64748b'>"+esc(a.target_cat)+"</span>":"")+"</td>"+
         "<td>"+statusBadge+"</td>"+
-        "<td>"+endDate+"</td>"+
+        "<td style='text-align:center'><span style='font-weight:700;color:#a78bfa'>"+Number(a.priority||0)+"</span></td>"+
+        "<td><span style='color:#22c55e'>$"+fmt(a.price_paid||0)+"</span></td>"+
+        "<td>"+Number(a.impressions||0).toLocaleString()+"</td>"+
+        "<td>"+Number(a.clicks||0).toLocaleString()+"</td>"+
+        "<td>"+ctr+"</td>"+
+        "<td>"+fmtDate(a.ends_at)+"</td>"+
         "<td><div class='actions'>"+
           "<button class='ab ab-edit' onclick='openAdForm(\""+esc(a.id)+"\")'>Edit</button>"+
           "<button class='"+(isLive?"ab ab-remove":"ab ab-approve")+"' onclick='toggleAd(\""+esc(a.id)+"\")'>"+
             (a.active?"Pause":"Activate")+
           "</button>"+
+          "<button class='ab ab-view' onclick='renewAd(\""+esc(a.id)+"\")'>+30d</button>"+
+          "<button class='ab ab-edit' style='background:#1c2a5e' onclick='duplicateAd(\""+esc(a.id)+"\")'>Clone</button>"+
           "<button class='ab ab-delete' onclick='deleteAd(\""+esc(a.id)+"\")'>Delete</button>"+
         "</div></td>"+
         "</tr>";
@@ -1602,36 +1615,60 @@ function renderAds(){
 }
 
 function openAdForm(id){
-  var ads = loadAdsFromStorage();
-  var a = id ? ads.find(function(x){ return x.id===id; }) : null;
+  var a = id ? (DATA.ads||[]).find(function(x){ return x.id===id; }) : null;
   var today = new Date().toISOString().slice(0,10);
   var inMonth = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
 
   var catOpts = AD_CATS.map(function(c){
-    return '<option value="'+c+'"'+(a&&a.targetCat===c?" selected":"")+">"+c+"</option>";
+    return '<option value="'+c+'"'+(a&&a.target_cat===c?" selected":"")+">"+c+"</option>";
   }).join("");
 
   var body =
-    '<div class="mfg"><label class="mfl">Ad Type</label>'+
-    '<select class="mfi-sel" id="adType" onchange="document.getElementById(\'adSpotRow\').style.display=this.value===\'spotlight\'?\'block\':\'none\'">'+
-      '<option value="banner"'+((!a||a.type==="banner")?" selected":"")+'>🖼 Home Screen Banner</option>'+
-      '<option value="spotlight"'+(a&&a.type==="spotlight"?" selected":"")+'>⭐ Category Spotlight</option>'+
-    '</select></div>'+
-    '<div class="mfg"><label class="mfl">Business Name *</label><input class="mfi" id="adBiz" value="'+esc(a?a.businessName||"":"")+'" placeholder="e.g. Mega Furniture Harare"></div>'+
-    '<div class="mfg"><label class="mfl">Headline</label><input class="mfi" id="adHead" value="'+esc(a?a.headline||"":"")+'" placeholder="e.g. Best prices in Harare!"></div>'+
-    '<div class="mfg"><label class="mfl">Tagline</label><input class="mfi" id="adTag" value="'+esc(a?a.tagline||"":"")+'" placeholder="e.g. Free delivery on orders over $50"></div>'+
-    '<div class="mfg"><label class="mfl">Image URL (optional — leave blank for colour card)</label><input class="mfi" id="adImg" value="'+esc(a?a.imageUrl||"":"")+'" placeholder="https://..."></div>'+
-    '<div class="mfg"><label class="mfl">Background Colour</label>'+
-      '<div style="display:flex;align-items:center;gap:10px">'+
-        '<input type="color" id="adColor" value="'+(a?a.bgColor||"#1A3A8F":"#1A3A8F")+'" style="width:48px;height:36px;border:1.5px solid #334155;border-radius:8px;cursor:pointer;background:none">'+
-        '<span style="font-size:13px;color:#94a3b8">Choose brand colour for the card background</span>'+
-      '</div></div>'+
-    '<div class="mfg"><label class="mfl">Tap Destination URL (optional)</label><input class="mfi" id="adLink" value="'+esc(a?a.linkUrl||"":"")+'" placeholder="https://wa.me/263... or leave blank"></div>'+
-    '<div class="mfg" id="adSpotRow" style="display:'+(a&&a.type==="spotlight"?"block":"none")+'"><label class="mfl">Target Category</label>'+
-      '<select class="mfi-sel" id="adCat">'+catOpts+'</select></div>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
-      '<div class="mfg"><label class="mfl">Start Date</label><input class="mfi" type="date" id="adStart" value="'+(a&&a.startsAt?new Date(a.startsAt).toISOString().slice(0,10):today)+'"></div>'+
-      '<div class="mfg"><label class="mfl">End Date *</label><input class="mfi" type="date" id="adEnd" value="'+(a&&a.endsAt?new Date(a.endsAt).toISOString().slice(0,10):inMonth)+'"></div>'+
+    // Live preview
+    '<div id="adPreviewWrap" style="background:#0f172a;border-radius:12px;padding:14px;margin-bottom:16px;border:1px solid #334155">'+
+      '<div style="font-size:10px;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Live Preview</div>'+
+      '<div id="adPreview"></div>'+
+    '</div>'+
+    // Section: Ad type & content
+    '<div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #334155">Ad Content</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+      '<div class="mfg"><label class="mfl">Ad Type</label>'+
+      '<select class="mfi-sel" id="adType" onchange="onAdTypeChange();updateAdPreview()">'+
+        '<option value="banner"'+((!a||a.type==="banner")?" selected":"")+'>🖼 Home Screen Banner</option>'+
+        '<option value="spotlight"'+(a&&a.type==="spotlight"?" selected":"")+'>⭐ Category Spotlight</option>'+
+      '</select></div>'+
+      '<div class="mfg" id="adSpotRow" style="display:'+(a&&a.type==="spotlight"?"block":"none")+'"><label class="mfl">Category</label>'+
+        '<select class="mfi-sel" id="adCat" onchange="updateAdPreview()">'+catOpts+'</select></div>'+
+      '<div class="mfg" id="adPriorityField" style="display:'+(a&&a.type==="spotlight"?"none":"block")+'"><label class="mfl">Priority (higher = shown first)</label>'+
+        '<input class="mfi" type="number" id="adPriority" value="'+(a?Number(a.priority||0):0)+'" min="0" max="100"></div>'+
+    '</div>'+
+    '<div class="mfg"><label class="mfl">Business Name *</label><input class="mfi" id="adBiz" oninput="updateAdPreview()" value="'+esc(a?a.business_name||"":"")+'" placeholder="e.g. Mega Furniture Harare"></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+      '<div class="mfg"><label class="mfl">Headline</label><input class="mfi" id="adHead" oninput="updateAdPreview()" value="'+esc(a?a.headline||"":"")+'" placeholder="Best prices in Harare!"></div>'+
+      '<div class="mfg"><label class="mfl">Tagline</label><input class="mfi" id="adTag" oninput="updateAdPreview()" value="'+esc(a?a.tagline||"":"")+'" placeholder="Free delivery on $50+"></div>'+
+    '</div>'+
+    '<div class="mfg"><label class="mfl">Image URL (optional — leave blank for colour card)</label><input class="mfi" id="adImg" oninput="updateAdPreview()" value="'+esc(a?a.image_url||"":"")+'" placeholder="https://..."></div>'+
+    '<div style="display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;margin-bottom:14px">'+
+      '<div><label class="mfl" style="display:block;margin-bottom:5px">BG Colour</label>'+
+        '<input type="color" id="adColor" oninput="updateAdPreview()" value="'+(a?a.bg_color||"#1A3A8F":"#1A3A8F")+'" style="width:52px;height:38px;border:1.5px solid #334155;border-radius:8px;cursor:pointer;background:none"></div>'+
+      '<div class="mfg" style="margin-bottom:0"><label class="mfl">Tap Destination URL</label><input class="mfi" id="adLink" value="'+esc(a?a.link_url||"":"")+'" placeholder="https://wa.me/263... or leave blank"></div>'+
+    '</div>'+
+    // Dates
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+      '<div class="mfg"><label class="mfl">Start Date</label><input class="mfi" type="date" id="adStart" value="'+(a&&a.starts_at?a.starts_at.slice(0,10):today)+'"></div>'+
+      '<div class="mfg"><label class="mfl">End Date *</label><input class="mfi" type="date" id="adEnd" value="'+(a&&a.ends_at?a.ends_at.slice(0,10):inMonth)+'"></div>'+
+    '</div>'+
+    // Client & Revenue
+    '<div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid #334155">Client & Revenue</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+      '<div class="mfg"><label class="mfl">Client Name</label><input class="mfi" id="adClientName" value="'+esc(a?a.client_name||"":"")+'" placeholder="John Moyo"></div>'+
+      '<div class="mfg"><label class="mfl">Client Phone</label><input class="mfi" id="adClientPhone" value="'+esc(a?a.client_phone||"":"")+'" placeholder="+263..."></div>'+
+      '<div class="mfg"><label class="mfl">Client Email</label><input class="mfi" id="adClientEmail" value="'+esc(a?a.client_email||"":"")+'" placeholder="client@email.com"></div>'+
+      '<div class="mfg"><label class="mfl">Amount Paid (USD)</label><input class="mfi" type="number" id="adPricePaid" step="0.01" min="0" value="'+(a?Number(a.price_paid||0):0)+'" placeholder="0.00"></div>'+
+      '<div class="mfg"><label class="mfl">Payment Method</label><select class="mfi-sel" id="adPayMethod">'+
+        ['EcoCash','Bank Transfer','Cash','Swipe','Mukuru','Other'].map(function(m){return '<option'+(a&&a.payment_method===m?" selected":"")+'>'+m+'</option>';}).join("")+
+      '</select></div>'+
+      '<div class="mfg"><label class="mfl">Payment Reference</label><input class="mfi" id="adPayRef" value="'+esc(a?a.payment_ref||"":"")+'" placeholder="ECO-12345..."></div>'+
     '</div>';
 
   var footer =
@@ -1639,53 +1676,159 @@ function openAdForm(id){
     '<button class="btn-save" onclick="saveAd('+(id?'"'+id+'"':"null")+')">'+( id?"Save Changes":"Create Ad")+'</button>';
 
   openModal((id?"Edit Ad":"Create Paid Ad"), body, footer);
+  setTimeout(updateAdPreview, 50);
 }
 
-function saveAd(id){
-  var type   = (document.getElementById("adType")||{}).value||"banner";
-  var biz    = ((document.getElementById("adBiz")||{}).value||"").trim();
-  var head   = ((document.getElementById("adHead")||{}).value||"").trim();
-  var tag    = ((document.getElementById("adTag")||{}).value||"").trim();
-  var img    = ((document.getElementById("adImg")||{}).value||"").trim();
-  var color  = ((document.getElementById("adColor")||{}).value)||"#1A3A8F";
-  var link   = ((document.getElementById("adLink")||{}).value||"").trim();
-  var cat    = ((document.getElementById("adCat")||{}).value)||"";
-  var start  = new Date(((document.getElementById("adStart")||{}).value)||new Date().toISOString().slice(0,10)).getTime();
-  var end    = new Date(((document.getElementById("adEnd")||{}).value)||"").getTime();
+function onAdTypeChange(){
+  var type = (document.getElementById('adType')||{}).value;
+  var sr = document.getElementById('adSpotRow');
+  var pr = document.getElementById('adPriorityField');
+  if(sr) sr.style.display = type==='spotlight' ? 'block' : 'none';
+  if(pr) pr.style.display = type==='spotlight' ? 'none' : 'block';
+}
+
+function updateAdPreview(){
+  var prev = document.getElementById('adPreview'); if(!prev) return;
+  var type  = ((document.getElementById('adType')||{}).value)||'banner';
+  var biz   = ((document.getElementById('adBiz')||{}).value)||'Business Name';
+  var head  = ((document.getElementById('adHead')||{}).value)||biz;
+  var tag   = ((document.getElementById('adTag')||{}).value)||'';
+  var img   = ((document.getElementById('adImg')||{}).value)||'';
+  var color = ((document.getElementById('adColor')||{}).value)||'#1A3A8F';
+
+  if(type==='banner'){
+    prev.innerHTML =
+      '<div style="border-radius:12px;overflow:hidden;position:relative;border:1px solid #334155">'+
+      (img?'<img src="'+esc(img)+'" style="width:100%;height:110px;object-fit:cover;display:block" onerror="this.onerror=null;this.style.display=\'none\'">':'') +
+      '<div style="background:'+esc(color)+';padding:14px 16px">'+
+        '<div style="font-size:16px;font-weight:900;color:#fff">'+esc(head||biz)+'</div>'+
+        (tag?'<div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:2px">'+esc(tag)+'</div>':'')+
+      '</div>'+
+      '<span style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px">SPONSORED</span>'+
+      '</div>';
+  } else {
+    prev.innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px;background:'+esc(color)+';border-radius:12px;padding:12px 14px;position:relative">'+
+      (img?'<img src="'+esc(img)+'" style="width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0" onerror="this.onerror=null;this.style.display=\'none\'">':'')+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(biz)+'</div>'+
+        (tag?'<div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:2px">'+esc(tag)+'</div>':'')+
+      '</div>'+
+      '<span style="font-size:9px;font-weight:700;color:#fff;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:6px;flex-shrink:0">SPONSORED</span>'+
+      '</div>';
+  }
+}
+
+async function saveAd(id){
+  var type      = ((document.getElementById("adType")||{}).value||"banner");
+  var biz       = ((document.getElementById("adBiz")||{}).value||"").trim();
+  var head      = ((document.getElementById("adHead")||{}).value||"").trim();
+  var tag       = ((document.getElementById("adTag")||{}).value||"").trim();
+  var img       = ((document.getElementById("adImg")||{}).value||"").trim();
+  var color     = ((document.getElementById("adColor")||{}).value)||"#1A3A8F";
+  var link      = ((document.getElementById("adLink")||{}).value||"").trim();
+  var cat       = ((document.getElementById("adCat")||{}).value)||"";
+  var priority  = parseInt((document.getElementById("adPriority")||{}).value)||0;
+  var startVal  = (document.getElementById("adStart")||{}).value;
+  var endVal    = (document.getElementById("adEnd")||{}).value;
+  var cName     = ((document.getElementById("adClientName")||{}).value||"").trim();
+  var cPhone    = ((document.getElementById("adClientPhone")||{}).value||"").trim();
+  var cEmail    = ((document.getElementById("adClientEmail")||{}).value||"").trim();
+  var pricePaid = parseFloat((document.getElementById("adPricePaid")||{}).value)||0;
+  var payMeth   = ((document.getElementById("adPayMethod")||{}).value||"EcoCash");
+  var payRef    = ((document.getElementById("adPayRef")||{}).value||"").trim();
 
   if(!biz){ toast("Business name is required.","error"); return; }
-  if(!end || end <= start){ toast("End date must be after start date.","error"); return; }
+  if(!endVal){ toast("End date is required.","error"); return; }
+  if(startVal && endVal && endVal <= startVal){ toast("End date must be after start date.","error"); return; }
 
-  var ads = loadAdsFromStorage();
+  var payload = {
+    type:type, business_name:biz, headline:head, tagline:tag,
+    image_url:img||null, bg_color:color, link_url:link||null,
+    target_cat:cat||null, active:true, priority:priority,
+    starts_at:startVal?new Date(startVal).toISOString():new Date().toISOString(),
+    ends_at:new Date(endVal+"T23:59:59").toISOString(),
+    client_name:cName||null, client_phone:cPhone||null, client_email:cEmail||null,
+    price_paid:pricePaid, payment_method:payMeth, payment_ref:payRef||null,
+    updated_at:new Date().toISOString()
+  };
+
+  var saveBtn = document.querySelector('#modalFooter .btn-save');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent="Saving..."; }
+
+  var res;
   if(id){
-    var idx = ads.findIndex(function(a){ return a.id===id; });
-    if(idx!==-1) ads[idx] = Object.assign(ads[idx], {type:type,businessName:biz,headline:head,tagline:tag,imageUrl:img,bgColor:color,linkUrl:link,targetCat:cat,startsAt:start,endsAt:end});
+    res = await sb.from("paid_ads").update(payload).eq("id",id);
   } else {
-    var uid2 = 'ad_'+(Date.now().toString(36))+'_'+(Math.random().toString(36).slice(2,7));
-    ads.unshift({id:uid2,type:type,businessName:biz,headline:head,tagline:tag,imageUrl:img,bgColor:color,linkUrl:link,targetCat:cat,startsAt:start,endsAt:end,active:true,createdAt:Date.now()});
+    payload.impressions = 0;
+    payload.clicks = 0;
+    res = await sb.from("paid_ads").insert(payload);
   }
-  saveAdsToStorage(ads);
+
+  if(res.error){
+    if(res.error.message.includes('relation "paid_ads" does not exist')){
+      toast('Run sql/migrations.sql in Supabase first.','error');
+    } else {
+      toast("Error: "+res.error.message,"error");
+    }
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=id?"Save Changes":"Create Ad"; }
+    return;
+  }
   closeModal();
-  renderAds();
-  toast((id?"Ad updated!":"Ad created — it will show in the app immediately."),"success");
+  initAdsTab();
+  toast((id?"Ad updated!":"Ad created — live in app immediately."),"success");
 }
 
-function toggleAd(id){
-  var ads = loadAdsFromStorage();
-  var a = ads.find(function(x){ return x.id===id; }); if(!a) return;
-  a.active = !a.active;
-  saveAdsToStorage(ads);
+async function toggleAd(id){
+  var a = (DATA.ads||[]).find(function(x){ return x.id===id; }); if(!a) return;
+  var newState = !a.active;
+  var {error} = await sb.from("paid_ads").update({active:newState, updated_at:new Date().toISOString()}).eq("id",id);
+  if(error){ toast("Error: "+error.message,"error"); return; }
+  a.active = newState;
   renderAds();
-  toast(a.active?"Ad activated — now showing in app.":"Ad paused.","success");
+  toast(newState?"Ad activated — now showing in app.":"Ad paused.","success");
+}
+
+async function renewAd(id){
+  var a = (DATA.ads||[]).find(function(x){ return x.id===id; }); if(!a) return;
+  var current = a.ends_at ? new Date(a.ends_at) : new Date();
+  var base = current > new Date() ? current : new Date();
+  var newEnd = new Date(base.getTime() + 30*86400000).toISOString();
+  var ok = await confirm2("Renew Ad","Extend \""+esc(a.business_name||"this ad")+"\" by 30 days until "+new Date(newEnd).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})+"?","📅","Renew");
+  if(!ok) return;
+  var {error} = await sb.from("paid_ads").update({ends_at:newEnd, active:true, updated_at:new Date().toISOString()}).eq("id",id);
+  if(error){ toast("Error: "+error.message,"error"); return; }
+  initAdsTab();
+  toast("Ad renewed by 30 days.","success");
+}
+
+async function duplicateAd(id){
+  var a = (DATA.ads||[]).find(function(x){ return x.id===id; }); if(!a) return;
+  var ok = await confirm2("Duplicate Ad","Create a copy of \""+esc(a.business_name||"this ad")+"\"?","📋","Duplicate");
+  if(!ok) return;
+  var copy = {
+    type:a.type, business_name:a.business_name+" (copy)", headline:a.headline,
+    tagline:a.tagline, image_url:a.image_url, bg_color:a.bg_color, link_url:a.link_url,
+    target_cat:a.target_cat, active:false, priority:a.priority,
+    starts_at:new Date().toISOString(),
+    ends_at:new Date(Date.now()+30*86400000).toISOString(),
+    client_name:a.client_name, client_phone:a.client_phone, client_email:a.client_email,
+    price_paid:0, payment_method:a.payment_method, payment_ref:null,
+    impressions:0, clicks:0, updated_at:new Date().toISOString()
+  };
+  var {error} = await sb.from("paid_ads").insert(copy);
+  if(error){ toast("Error: "+error.message,"error"); return; }
+  initAdsTab();
+  toast("Ad duplicated (inactive — activate when ready).","success");
 }
 
 async function deleteAd(id){
-  var ads = loadAdsFromStorage();
-  var a = ads.find(function(x){ return x.id===id; });
-  var ok = await confirm2("Delete Ad","Remove the ad for \""+(a?esc(a.businessName||"this ad"):"this ad")+"\"? Cannot be undone.","🗑️","Delete");
+  var a = (DATA.ads||[]).find(function(x){ return x.id===id; });
+  var ok = await confirm2("Delete Ad","Remove the ad for \""+(a?esc(a.business_name||"this ad"):"this ad")+"\"? Cannot be undone.","🗑️","Delete");
   if(!ok) return;
-  var updated = ads.filter(function(x){ return x.id!==id; });
-  saveAdsToStorage(updated);
+  var {error} = await sb.from("paid_ads").delete().eq("id",id);
+  if(error){ toast("Error: "+error.message,"error"); return; }
+  DATA.ads = (DATA.ads||[]).filter(function(x){ return x.id!==id; });
   renderAds();
   toast("Ad deleted.","");
 }
@@ -1834,6 +1977,9 @@ function renderAnalytics(){
   html += '</div>'; // analytic-grid
 
   // Summary stats
+  var adRevenue = (DATA.ads||[]).reduce(function(s,a){return s+Number(a.price_paid||0);},0);
+  var adImpr = (DATA.ads||[]).reduce(function(s,a){return s+Number(a.impressions||0);},0);
+  var adClicks = (DATA.ads||[]).reduce(function(s,a){return s+Number(a.clicks||0);},0);
   html +=
     '<div class="stats-grid">'+
     scard(l.length,"Total Listings","")+
@@ -1842,60 +1988,51 @@ function renderAnalytics(){
     scard(u.filter(function(x){return x.verified;}).length,"Verified Users","")+
     scard(DATA.reports.filter(function(x){return x.status==="open";}).length,"Open Reports",DATA.reports.filter(function(x){return x.status==="open";}).length>0?"warn":"")+
     scard(DATA.topupRequests.filter(function(x){return x.status==="pending";}).length,"Pending Top-Ups",DATA.topupRequests.filter(function(x){return x.status==="pending";}).length>0?"warn":"")+
+    scard("$"+fmt(adRevenue),"Ad Revenue","")+
+    scard(adImpr.toLocaleString(),"Ad Impressions","")+
     '</div>';
 
   document.getElementById("analyticsContent").innerHTML = html;
 }
 
-// ── Settings Panel ────────────────────────────────────────────
+// ── Settings Panel (Supabase-backed) ─────────────────────────
 var SETTING_DEFS = [
-  {key:"requireListingApproval",   label:"Require Listing Approval",    desc:"All new listings must be reviewed by an admin before going live."},
-  {key:"autoApproveVerified",      label:"Auto-Approve Verified Users",  desc:"Listings from verified users are automatically approved."},
-  {key:"allowImageUploads",        label:"Allow Image Uploads",          desc:"Users can upload photos to their listings."},
-  {key:"signupPaused",             label:"Pause New Sign-Ups",           desc:"Prevent new users from registering on the platform."},
-  {key:"requirePhoneVerification", label:"Require Phone Verification",   desc:"Users must verify their phone number before posting listings."},
-  {key:"enablePremiumListings",    label:"Enable Premium Listings",      desc:"Allow users to boost listings to the top of search results."},
-  {key:"freeOnly",                 label:"Free Listings Only",           desc:"Disable the pricing field — all listings show as free/negotiable."}
+  {key:"requireListingApproval",   label:"Require Listing Approval",    desc:"All new listings must be reviewed by an admin before going live.",            warn:true},
+  {key:"autoApproveVerified",      label:"Auto-Approve Verified Users",  desc:"Verified users' listings skip approval even when above is on.",              warn:false},
+  {key:"allowImageUploads",        label:"Allow Image Uploads",          desc:"Users can upload photos to their listings. Disable to text-only mode.",      warn:false},
+  {key:"signupPaused",             label:"Pause New Sign-Ups",           desc:"Immediately prevent any new user from registering on the platform.",          warn:true},
+  {key:"requirePhoneVerification", label:"Require Phone Verification",   desc:"Users must add a phone number before posting listings.",                     warn:false},
+  {key:"enablePremiumListings",    label:"Enable Premium Listings",      desc:"Show the 'Boost' option allowing users to pay to feature their listing.",     warn:false},
+  {key:"freeOnly",                 label:"Free Listings Only",           desc:"Hide the price field — all listings are listed as free / negotiable.",        warn:true}
 ];
 
-function loadAppSettings(){
-  try {
-    var raw = localStorage.getItem(APP_KEY);
-    var state = raw ? JSON.parse(raw) : {};
-    var settings = {};
-    SETTING_DEFS.forEach(function(d){
-      settings[d.key] = state[d.key] !== undefined ? !!state[d.key] : false;
+function initSettingsTab(){
+  var sec = document.getElementById("settingsContent");
+  sec.innerHTML = '<p class="loading-msg">Loading settings...</p>';
+  sb.from("app_settings").select("settings").eq("id",1).single()
+    .then(function(res){
+      var settings = {};
+      if(!res.error && res.data) settings = res.data.settings || {};
+      renderSettings(settings);
+    })
+    .catch(function(){
+      renderSettings({});
     });
-    return settings;
-  } catch(e){ return {}; }
 }
 
-function saveAppSettings(){
-  try {
-    var raw = localStorage.getItem(APP_KEY);
-    var state = raw ? JSON.parse(raw) : {};
-    SETTING_DEFS.forEach(function(d){
-      var el = document.getElementById("stg_"+d.key);
-      if(el) state[d.key] = el.checked;
-    });
-    localStorage.setItem(APP_KEY, JSON.stringify(state));
-    toast("Settings saved.","success");
-  } catch(e){ toast("Error saving settings.","error"); }
-}
-
-function renderSettings(){
-  var settings = loadAppSettings();
+function renderSettings(settings){
+  settings = settings || {};
   var html =
     '<div style="background:#1e293b;border-radius:12px;padding:20px;border:1px solid #334155;max-width:640px">'+
     '<div class="section-head">Platform Settings</div>'+
-    '<div class="section-sub">These settings control platform behaviour and are stored locally for the app to read.</div>';
+    '<div class="section-sub">Changes are saved to Supabase and take effect for ALL users within seconds — no cache clear needed.</div>';
 
   SETTING_DEFS.forEach(function(d){
     var checked = settings[d.key] ? " checked" : "";
     html +=
       '<div class="toggle-row">'+
-        '<div>'+
-          '<div class="toggle-label">'+esc(d.label)+'</div>'+
+        '<div style="flex:1">'+
+          '<div class="toggle-label">'+(d.warn?'<span style="color:#f59e0b;margin-right:5px">⚠</span>':'')+esc(d.label)+'</div>'+
           '<div class="toggle-desc">'+esc(d.desc)+'</div>'+
         '</div>'+
         '<label class="toggle-switch">'+
@@ -1906,12 +2043,38 @@ function renderSettings(){
   });
 
   html +=
-    '<div style="margin-top:20px">'+
-      '<button class="btn-send" onclick="saveAppSettings()">Save Settings</button>'+
+    '<div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">'+
+      '<button class="btn-send" id="saveStgBtn" onclick="saveAppSettings()">Save Settings</button>'+
+      '<button class="btn-send" style="background:#334155" onclick="initSettingsTab()">↻ Reload from Server</button>'+
+    '</div>'+
+    '<div style="font-size:11px;color:#475569;margin-top:12px">'+
+      '⚠ If the app_settings table does not exist yet, run <code style="background:#0f172a;padding:2px 5px;border-radius:4px;color:#94a3b8">sql/migrations.sql</code> in your Supabase SQL Editor.'+
     '</div>'+
     '</div>';
 
   document.getElementById("settingsContent").innerHTML = html;
+}
+
+async function saveAppSettings(){
+  var btn = document.getElementById("saveStgBtn");
+  if(btn){ btn.disabled=true; btn.textContent="Saving..."; }
+  var settings = {};
+  SETTING_DEFS.forEach(function(d){
+    var el = document.getElementById("stg_"+d.key);
+    if(el) settings[d.key] = el.checked;
+  });
+  var {error} = await sb.from("app_settings")
+    .upsert({id:1, settings:settings, updated_at:new Date().toISOString()});
+  if(btn){ btn.disabled=false; btn.textContent="Save Settings"; }
+  if(error){
+    if(error.message.includes('relation "app_settings" does not exist')){
+      toast('Run sql/migrations.sql in Supabase first.','error');
+    } else {
+      toast("Error saving settings: "+error.message,"error");
+    }
+    return;
+  }
+  toast("Settings saved — live across all users now.","success");
 }
 
 // ── Row helper ────────────────────────────────────────────────
