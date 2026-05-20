@@ -243,7 +243,7 @@
     if (!H.currentUser()) { H.requireAuth('Sign in to message sellers'); return; }
     const u = H.currentUser();
     if (!sellerId || sellerId === u.id) { H.toast('You cannot message yourself'); return; }
-    H.state.conversations = H.state.conversations || [];
+    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
     const ids = [u.id, sellerId].sort();
     const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId || '').slice(-6);
     let conv = H.state.conversations.find(c => c.id === convId);
@@ -251,6 +251,7 @@
       conv = { id: convId, members: [u.id, sellerId], listingId: listingId || null, messages: [] };
       H.state.conversations.push(conv);
       H.saveState();
+      if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(conv);
     }
     H.openInner('Chat', { id: convId });
   };

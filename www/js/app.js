@@ -100,7 +100,20 @@ window.H = {
   },
   currentUser() {
     const H = window.H || this;
-    return ((H.state&&H.state.users)||[]).find(u=>u.id===(H.state&&H.state.currentUserId)) || null;
+    const id = H.state && H.state.currentUserId;
+    if (!id) return null;
+    H.state.users = H.state.users || [];
+    let user = H.state.users.find(u=>u.id===id);
+    if (!user) {
+      user = { id, email:'', name:'User', phone:'', avatar:null, verified:false, walletUSD:0, language:'English', joinedAt:Date.now(), role:'user', status:'active', blocked:[] };
+      H.state.users.push(user);
+      if (typeof H.saveState === 'function') H.saveState();
+      if (typeof H.loadProfile === 'function' && !H._loadingCurrentProfile) {
+        H._loadingCurrentProfile = true;
+        H.loadProfile(id).finally(()=>{ H._loadingCurrentProfile = false; });
+      }
+    }
+    return user;
   },
   isAdmin() { const u=this.currentUser(); return !!(u&&u.role==='admin'); },
   escHtml(s) {
@@ -398,6 +411,7 @@ window.H = {
       await this.renderPage(this.currentPageName, this.currentPageParams);
     } catch(e) { console.warn('Boot fetch failed:', e); }
     if(typeof H._setupRealtimeMessages==='function') H._setupRealtimeMessages();
+    if(typeof H.syncReports==='function') H.syncReports();
     if(typeof H.syncConversations==='function') H.syncConversations();
     if(typeof H.syncApplications==='function') H.syncApplications();
     if(typeof H.syncNotifications==='function') H.syncNotifications();
@@ -433,13 +447,19 @@ window.H = {
   async navTo(name, btn) {
     const H=window.H;
     if(['Post'].includes(name)&&!H.currentUser()){H.requireAuth('Log in to post an ad');return;}
+    if(['Messages'].includes(name)&&!H.currentUser()){H.requireAuth('Sign in to view messages');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
-    H.pageStack=[];
-    document.getElementById('bottomNav').style.display='flex';
-    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-    const target=btn||document.querySelector('[data-nav="'+name+'"]');
-    if(target)target.classList.add('active');
-    await H.renderPage(name);
+    try {
+      H.pageStack=[];
+      document.getElementById('bottomNav').style.display='flex';
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+      const target=btn||document.querySelector('[data-nav="'+name+'"]');
+      if(target)target.classList.add('active');
+      await H.renderPage(name);
+    } catch(e) {
+      console.error('navTo error:', e);
+      H.toast('Could not open this page. Please try again.', 4000, true);
+    }
   },
 
   async openInner(name, params) {
@@ -788,7 +808,8 @@ window.H = {
       window._msgChannel=window.supabase.channel('messages-rt')
         .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
           const msg=payload.new; if(!msg) return;
-          const conv=(H.state.conversations||[]).find(c=>c.id===msg.conversation_id);
+          if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+          const conv=H.state.conversations.find(c=>c.id===msg.conversation_id);
           if(conv){
             const ex=conv.messages.find(m=>m.id===msg.id);
             if(!ex){
@@ -798,6 +819,10 @@ window.H = {
                 H.renderPage('Chat',{id:msg.conversation_id});
               H.pushNotif&&H.pushNotif(H.state.currentUserId,'New message',msg.text||'');
             }
+          } else if (typeof H.syncConversations === 'function') {
+            H.syncConversations().then(function(){
+              if (H.currentPageName === 'Messages') H.renderPage('Messages');
+            });
           }
         }).subscribe();
     } catch(e){ console.warn('Realtime setup failed:',e.message); }
@@ -833,6 +858,49 @@ window.H = {
     } catch(e) { console.warn('syncApplications:', e.message); }
   },
 
+  async syncReports() {
+    try {
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') return;
+      const { data, error } = await sb.from('reports')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(300);
+      if (error || !data) return;
+
+      H.state.reports = H.state.reports || [];
+      H.state.supportTickets = H.state.supportTickets || [];
+      data.forEach(r => {
+        const createdAt = r.created_at ? new Date(r.created_at).getTime() : Date.now();
+        if (r.target_type === 'support') {
+          const txt = (r.reason || '').replace(/^\[Support\]\s*/, '');
+          const parts = txt.split('\n\n');
+          const subject = (parts[0] || 'Support request').trim();
+          const message = parts.slice(1).join('\n\n').trim() || txt;
+          const ticket = {
+            id: r.id, userId: r.reporter_id || null, subject, message,
+            createdAt, status: r.status === 'resolved' ? 'closed' : 'open',
+            reportId: r.id
+          };
+          const i = H.state.supportTickets.findIndex(t => t.id === ticket.id || t.reportId === ticket.reportId);
+          if (i === -1) H.state.supportTickets.push(ticket);
+          else H.state.supportTickets[i] = Object.assign(H.state.supportTickets[i], ticket);
+        } else {
+          const report = {
+            id: r.id, reporterId: r.reporter_id || r.reported_by || null,
+            targetType: r.target_type || 'listing', targetId: r.target_id,
+            reason: r.reason || '', status: r.status || 'open',
+            t: createdAt, createdAt
+          };
+          const i = H.state.reports.findIndex(x => x.id === report.id);
+          if (i === -1) H.state.reports.push(report);
+          else H.state.reports[i] = Object.assign(H.state.reports[i], report);
+        }
+      });
+      H.saveState();
+    } catch(e) { console.warn('syncReports:', e.message); }
+  },
+
   async saveApplicationToCloud(app) {
     try {
       const sb = window.supabase;
@@ -862,17 +930,35 @@ window.H = {
       const sb = window.supabase;
       if (!sb || typeof sb.from !== 'function') return;
       const u = H.currentUser(); if (!u) return;
+      if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
       const { data: convs, error } = await sb.from('conversations')
         .select('id, members, listing_id, created_at, updated_at')
         .contains('members', [u.id])
         .order('updated_at', { ascending: false })
         .limit(100);
       if (error || !convs) return;
+      const memberIds = new Set();
+      convs.forEach(c => (c.members || []).forEach(id => memberIds.add(id)));
+      const missingIds = Array.from(memberIds).filter(id => !(H.state.users || []).some(u => u.id === id));
+      if (missingIds.length) {
+        const { data: profiles } = await sb.from('profiles')
+          .select('id,name,phone,email,avatar,verified,role,status,created_at')
+          .in('id', missingIds);
+        (profiles || []).forEach(p => {
+          (H.state.users = H.state.users || []).push({
+            id: p.id, name: p.name || 'User', phone: p.phone || '',
+            email: p.email || '', avatar: p.avatar || null,
+            verified: !!p.verified, role: p.role || 'user',
+            status: p.status || 'active',
+            joinedAt: p.created_at ? new Date(p.created_at).getTime() : Date.now()
+          });
+        });
+      }
       for (const c of convs) {
-        let local = (H.state.conversations || []).find(x => x.id === c.id);
+        let local = H.state.conversations.find(x => x.id === c.id);
         if (!local) {
           local = { id: c.id, members: c.members, listingId: c.listing_id, messages: [] };
-          (H.state.conversations = H.state.conversations || []).push(local);
+          H.state.conversations.push(local);
         }
         const { data: msgs } = await sb.from('messages')
           .select('id, sender_id, sender_name, text, read, created_at')
@@ -1111,7 +1197,8 @@ window.H = {
 
     const activeAds=(this.state.listings||[]).filter(l=>l.sellerId===u.id&&l.status==='active').length;
     const savedAds=((this.state.saves||{})[u.id]||[]).length;
-    const unread=(this.state.conversations||[]).reduce((n,c)=>c.members.includes(u.id)?n+(c.messages||[]).filter(m=>m.from!==u.id&&!m.read).length:n,0);
+    if (!Array.isArray(this.state.conversations)) this.state.conversations = [];
+    const unread=this.state.conversations.reduce((n,c)=>Array.isArray(c.members)&&c.members.includes(u.id)?n+(c.messages||[]).filter(m=>m.from!==u.id&&!m.read).length:n,0);
 
     sheet.innerHTML=`
       <div onclick="${nav('Profile')}" style="display:flex;align-items:center;gap:14px;padding:16px 18px 14px;border-bottom:1px solid var(--border);cursor:pointer">
