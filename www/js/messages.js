@@ -10,23 +10,45 @@
   const state = H.state;
   const { currentUser, escHtml, timeAgo, uid, toast, modal,
           innerTopbar, emptyState, openInner, goBack, renderPage,
-          saveState, initials, pushNotif, fmtPrice, ICONS } = H;
+          initials, pushNotif, fmtPrice, ICONS } = H;
+
+  function conversations() {
+    if (!Array.isArray(H.state.conversations)) {
+      H.state.conversations = [];
+      H.saveState();
+    }
+    return H.state.conversations;
+  }
+
+  function users() {
+    if (!Array.isArray(H.state.users)) H.state.users = [];
+    return H.state.users;
+  }
 
   // ---------------------------------------------------
   // MESSAGES LIST
   // ---------------------------------------------------
   pages.Messages = function () {
     const u = currentUser();
-    const convos = (state.conversations || [])
-      .filter(c => c.members.includes(u.id) && c.messages.length)
-      .sort((a, b) => b.messages[b.messages.length - 1].t - a.messages[a.messages.length - 1].t);
+    if (!u) {
+      return `<div class="page active">${H.innerTopbar('Messages')}
+        <div style="padding:20px">${H.emptyState('Sign in required', 'Sign in to view and send messages.', 'Sign In', "H.requireAuth('Sign in to view messages')")}</div>
+      </div>`;
+    }
+    const convos = conversations()
+      .filter(c => Array.isArray(c.members) && c.members.includes(u.id) && Array.isArray(c.messages) && c.messages.length)
+      .sort((a, b) => {
+        const am = a.messages[a.messages.length - 1] || {};
+        const bm = b.messages[b.messages.length - 1] || {};
+        return (bm.t || 0) - (am.t || 0);
+      });
 
     return `<div class="page active">${H.innerTopbar('Messages')}
       <div style="padding:10px 14px;font-size:12px;color:var(--sub)">${convos.length} conversation${convos.length === 1 ? '' : 's'}</div>
       <div>
         ${convos.length ? convos.map(c => {
           const otherId = c.members.find(m => m !== u.id);
-          const other   = state.users.find(x => x.id === otherId) || { name: (function(){ var lastMsg = c.messages.find(function(m){ return m.from===otherId; }); return lastMsg&&lastMsg.senderName ? lastMsg.senderName : 'User'; })() };
+          const other   = users().find(x => x.id === otherId) || { name: (function(){ var lastMsg = c.messages.find(function(m){ return m.from===otherId; }); return lastMsg&&lastMsg.senderName ? lastMsg.senderName : 'User'; })() };
           const last    = c.messages[c.messages.length - 1];
           const unread  = c.messages.some(m => m.from !== u.id && !m.read);
           return `<div class="msg-item" onclick="H.openChat('${c.id}')">
@@ -47,14 +69,21 @@
 
   
   pages.Chat = function ({ id }) {
-    const c = (state.conversations || []).find(x => x.id === id);
+    const c = conversations().find(x => x.id === id);
     if (!c) return '<div class="page active">' + H.innerTopbar('Chat') + '<div class="empty-state"><div class="empty-title">Conversation not found</div></div></div>';
     const u = currentUser();
+    if (!u) {
+      return `<div class="page active">${H.innerTopbar('Chat')}
+        <div style="padding:20px">${H.emptyState('Sign in required', 'Sign in to view and send messages.', 'Sign In', "H.requireAuth('Sign in to view messages')")}</div>
+      </div>`;
+    }
+    if (!Array.isArray(c.members)) c.members = [];
+    if (!Array.isArray(c.messages)) c.messages = [];
     const otherId = c.members.find(m => m !== u.id);
-    const other = state.users.find(x => x.id === otherId) || { name: (function(){ var m = c.messages.find(function(msg){ return msg.from===otherId; }); return m&&m.senderName ? m.senderName : 'User'; })() };
+    const other = users().find(x => x.id === otherId) || { name: (function(){ var m = c.messages.find(function(msg){ return msg.from===otherId; }); return m&&m.senderName ? m.senderName : 'User'; })() };
     const listing = (state.listings || []).find(l => l.id === c.listingId);
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
-    saveState();
+    H.saveState();
     H._activeChat = id;
 
     const otherIni = initials(other.name || 'U');
@@ -105,19 +134,30 @@
 
   H.startChatWith = function (otherId, listingId) {
     const u = currentUser();
+    if (!u) { H.requireAuth('Sign in to message sellers'); return; }
+    if (!otherId) { H.toast('Seller profile is not available yet'); return; }
     if (otherId === u.id) { H.toast('You cannot message yourself'); return; }
     // Use deterministic ID so both users get same conversation
     const ids = [u.id, otherId].sort();
     const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId||'').slice(-6);
-    let c = (state.conversations || []).find(x => x.id === convId);
+    let c = conversations().find(x => x.id === convId);
     if (!c) {
       c = { id: convId, members: [u.id, otherId], listingId: listingId||null, messages: [] };
-      state.conversations = state.conversations || [];
-      state.conversations.push(c);
-      saveState();
+      conversations().push(c);
+      H.saveState();
       if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c);
     }
     H.openInner('Chat', { id: convId });
+  };
+
+  pages.Messages_after = function () {
+    if (H._syncingMessagesPage || typeof H.syncConversations !== 'function' || !H.currentUser()) return;
+    H._syncingMessagesPage = true;
+    H.syncConversations().then(function () {
+      if (H.currentPageName === 'Messages') H.renderPage('Messages');
+    }).finally(function () {
+      H._syncingMessagesPage = false;
+    });
   };
 
   H.startChatPolling = function(convId) {
@@ -127,20 +167,20 @@
         clearInterval(window._chatPoll);
         return;
       }
-      const conv = (H.state.conversations || []).find(c => c.id === convId);
+      const conv = conversations().find(c => c.id === convId);
       const countBefore = conv ? conv.messages.length : 0;
       if (typeof H.syncConversations === 'function') {
         await H.syncConversations();
       }
-      const convAfter = (H.state.conversations || []).find(c => c.id === convId);
+      const convAfter = conversations().find(c => c.id === convId);
       if (!convAfter || convAfter.messages.length <= countBefore) return;
       // Append only the new messages without a full page re-render
       const thread = document.getElementById('chatThread');
       if (!thread) return;
       const u = H.currentUser();
-      const conv = (H.state.conversations || []).find(c => c.id === convId);
-      const otherId2 = conv ? conv.members.find(m => m !== u.id) : null;
-      const other2 = otherId2 ? (H.state.users || []).find(x => x.id === otherId2) : null;
+      const activeConv = conversations().find(c => c.id === convId);
+      const otherId2 = activeConv ? activeConv.members.find(m => m !== u.id) : null;
+      const other2 = otherId2 ? users().find(x => x.id === otherId2) : null;
       const otherIni2 = initials((other2 && other2.name) || 'U');
       const ava2 = (other2 && other2.avatar)
         ? '<img src="' + escHtml(other2.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
@@ -162,7 +202,7 @@
         thread.appendChild(wrap);
       });
       thread.scrollTop = thread.scrollHeight;
-      saveState();
+      H.saveState();
     }, 4000);
   };
 
@@ -170,12 +210,12 @@
   // syncConversations is defined in app.js (cloud-aware version)
 
 
-  H.sendChat = function () {
+  H.sendChat = async function () {
     if (H.checkBan && H.checkBan()) return;
     const inp = document.getElementById('chatIn');
     const text = inp ? inp.value.trim() : '';
     if (!text) return;
-    const c = (H.state.conversations || []).find(function(x){ return x.id === H._activeChat; });
+    const c = conversations().find(function(x){ return x.id === H._activeChat; });
     if (!c) return;
     const u = H.currentUser();
     var msgId = H.uid();
@@ -193,13 +233,18 @@
       thread.scrollTop = thread.scrollHeight;
     }
     try {
-      if (window.supabase && typeof window.supabase.from === 'function') {
-        window.supabase.from('messages').insert({
+      if (typeof H.ensureConversationInCloud === 'function') await H.ensureConversationInCloud(c);
+      if (typeof H.saveMessageToCloud === 'function') await H.saveMessageToCloud(c.id, c.messages[c.messages.length - 1]);
+      else if (window.supabase && typeof window.supabase.from === 'function') {
+        var r = await window.supabase.from('messages').insert({
           id: msgId, conversation_id: c.id,
           sender_id: u.id, sender_name: u.name || '',
           text: text, created_at: new Date(msgT).toISOString(), read: false
-        }).then(function(r){ if(r&&r.error) console.warn('Msg save failed:', r.error.message); });
+        });
+        if(r&&r.error) console.warn('Msg save failed:', r.error.message);
       }
+      var otherId = c.members.find(function(m){ return m !== u.id; });
+      if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Message', (u.name || 'Someone') + ': ' + text.slice(0, 80), 'message');
     } catch(e) { console.warn('Msg cloud error:', e.message); }
   };
 

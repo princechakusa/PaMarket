@@ -29,8 +29,9 @@
 
     const activeAds = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active').length;
     const savedAds  = ((H.state.saves || {})[u.id] || []).length;
-    const unread    = (H.state.conversations || []).reduce((n, c) =>
-      c.members.includes(u.id) ? n + (c.messages || []).filter(m => m.from !== u.id && !m.read).length : n, 0);
+    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+    const unread    = H.state.conversations.reduce((n, c) =>
+      Array.isArray(c.members) && c.members.includes(u.id) ? n + (c.messages || []).filter(m => m.from !== u.id && !m.read).length : n, 0);
 
     const row = (icon, label, page, badge) => `
       <div onclick="H.openInner('${page}')"
