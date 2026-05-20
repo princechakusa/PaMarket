@@ -583,10 +583,10 @@
     if (saved && saved.length > 0) {
       history = saved;
       saved.forEach(function(m) { addMsg(m.t, m.u, m); });
-      addMsg('Welcome back! 👋 How can I help you today?', false);
+      addMsg('Welcome back! 👋 How can I help you today?', false, true); // true = don't save greeting to history
       showChips(INIT_CHIPS);
     } else {
-      addMsg('Hi! 👋 I\'m the PaMarket Support Bot.\n\nI can answer your questions instantly — 26 topics covered. Tap a topic below or type anything.', false);
+      addMsg('Hi! 👋 I\'m the PaMarket Support Bot.\n\nI can answer your questions instantly — 26 topics covered. Tap a topic below or type anything.', false, true);
       showChips(INIT_CHIPS);
     }
   };
