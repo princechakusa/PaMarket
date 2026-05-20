@@ -425,7 +425,7 @@ var sb = supabase.createClient(
 );
 
 // ── App state ─────────────────────────────────────────────────
-var DATA = { listings:[], users:[], reports:[], errorLogs:[], reportsExist:true, ads:[], topupRequests:[] };
+var DATA = { listings:[], users:[], reports:[], errorLogs:[], reportsExist:true, ads:[], topupRequests:[], verifications:[] };
 var confirmResolver = null;
 var confirmInputResolver = null;
 var currentTab = 1;
@@ -631,7 +631,8 @@ async function loadAllData(){
     loadListings(),
     loadUsers(),
     loadReports(),
-    loadTopupRequests()
+    loadTopupRequests(),
+    loadVerifications()
   ]);
   renderStats();
   renderAlerts();
@@ -644,6 +645,13 @@ async function loadAllData(){
   if(currentTab===10) renderAnalytics();
   // Load error logs in background (not needed for stats)
   loadErrorLogs().then(function(){ if(currentTab===6) renderErrorLogs(); });
+}
+
+async function loadVerifications(){
+  try {
+    var {data, error} = await sb.from("verifications").select("id,user_id,id_doc,selfie,status,submitted_at,admin_note").order("submitted_at",{ascending:false}).limit(200);
+    if(!error && data) DATA.verifications = data;
+  } catch(e){}
 }
 
 async function loadListings(){
@@ -1805,10 +1813,11 @@ async function saveAd(id){
   }
 
   if(res.error){
-    if(res.error.message.includes('relation "paid_ads" does not exist')){
-      toast('Run sql/migrations.sql in Supabase first.','error');
+    var msg = res.error.message||"";
+    if(msg.includes('paid_ads') && (msg.includes('does not exist')||msg.includes('schema cache'))){
+      toast('paid_ads table missing. Run sql/migrations.sql in Supabase, then go to Supabase Dashboard → Settings → API → Reload schema cache.','error');
     } else {
-      toast("Error: "+res.error.message,"error");
+      toast("Error: "+msg,"error");
     }
     if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=id?"Save Changes":"Create Ad"; }
     return;
@@ -1874,39 +1883,48 @@ async function deleteAd(id){
 
 // ── Verifications Panel ───────────────────────────────────────
 function renderVerifications(){
-  var pending = DATA.users.filter(function(u){ return u.verification_pending === true; });
+  var pendingVerifs = (DATA.verifications||[]).filter(function(v){ return v.status==="pending"; });
   var verified = DATA.users.filter(function(u){ return u.verified === true; });
+  var unverified = DATA.users.filter(function(u){ return !u.verified && !u.verification_pending; });
 
   var html =
     '<div class="stats-grid" style="margin-bottom:18px">'+
-    scard(pending.length,"Pending Requests",pending.length>0?"warn":"")+
+    scard(pendingVerifs.length,"Pending Requests",pendingVerifs.length>0?"warn":"")+
     scard(verified.length,"Verified Users","")+
-    scard(DATA.users.filter(function(u){ return !u.verified && !u.verification_pending; }).length,"Unverified","")+
+    scard(unverified.length,"Unverified","")+
     '</div>';
 
-  html += '<div class="section-head">Pending Verification Requests</div>';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
+    '<div class="section-head" style="margin:0">Pending Verification Requests</div>'+
+    '<button class="ab" onclick="loadVerifications().then(renderVerifications)" style="font-size:11px;padding:4px 10px">&#8635; Refresh</button>'+
+    '</div>';
 
-  if(!pending.length){
+  if(!pendingVerifs.length){
     html += '<div class="empty-msg" style="color:#4ade80;margin-bottom:20px">&#10003; No pending verification requests.</div>';
   } else {
-    html += '<div class="tbl-wrap" style="margin-bottom:20px"><table><thead><tr><th>Name</th><th>Phone</th><th>Wallet</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
-    pending.forEach(function(u){
-      html += "<tr>"+
-        "<td><b>"+esc(u.name||"—")+"</b></td>"+
-        "<td>"+esc(u.phone||"—")+"</td>"+
-        "<td><b style='color:#3b82f6'>$"+fmt(u.wallet_usd)+"</b></td>"+
-        "<td>"+fmtDate(u.created_at)+"</td>"+
-        "<td><div class='actions'>"+
-          "<button class='ab ab-view' onclick='viewUser(\""+u.id+"\")'>View</button>"+
-          "<button class='ab ab-approve' onclick='approveVerification(\""+u.id+"\")'>Approve</button>"+
-          "<button class='ab ab-reject' onclick='rejectVerification(\""+u.id+"\")'>Reject</button>"+
-        "</div></td>"+
-      "</tr>";
+    pendingVerifs.forEach(function(v){
+      var u = DATA.users.find(function(x){ return x.id===v.user_id; }) || {};
+      html += '<div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px;margin-bottom:14px">'+
+        '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">'+
+          '<div style="flex:1">'+
+            '<div style="font-weight:700;font-size:14px">'+esc(u.name||"Unknown User")+'</div>'+
+            '<div style="color:#94a3b8;font-size:12px;margin-top:2px">'+esc(u.phone||"—")+'</div>'+
+            '<div style="color:#64748b;font-size:11px;margin-top:2px">Submitted: '+fmtDate(v.submitted_at)+'</div>'+
+          '</div>'+
+          '<div style="display:flex;gap:6px">'+
+            '<button class="ab ab-approve" onclick="approveVerification(\''+v.user_id+'\',\''+v.id+'\')">&#10003; Approve</button>'+
+            '<button class="ab ab-reject" onclick="rejectVerification(\''+v.user_id+'\',\''+v.id+'\')">&#10007; Reject</button>'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:flex;gap:12px;flex-wrap:wrap">'+
+          (v.id_doc ? '<div><div style="font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600">ID DOCUMENT</div><img src="'+v.id_doc+'" style="width:140px;height:90px;object-fit:cover;border-radius:8px;border:2px solid #334155;cursor:pointer" onclick="openImgModal(this.src)"></div>' : '<div style="color:#64748b;font-size:12px;padding:20px">No ID uploaded</div>')+
+          (v.selfie ? '<div><div style="font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600">SELFIE</div><img src="'+v.selfie+'" style="width:90px;height:90px;object-fit:cover;border-radius:50%;border:2px solid #334155;cursor:pointer" onclick="openImgModal(this.src)"></div>' : '<div style="color:#64748b;font-size:12px;padding:20px">No selfie</div>')+
+        '</div>'+
+      '</div>';
     });
-    html += "</tbody></table></div>";
   }
 
-  html += '<div class="section-head" style="margin-top:8px">All Verified Users ('+verified.length+')</div>';
+  html += '<div class="section-head" style="margin-top:16px;margin-bottom:10px">All Verified Users ('+verified.length+')</div>';
   if(!verified.length){
     html += '<div class="empty-msg">No verified users yet.</div>';
   } else {
@@ -1921,6 +1939,7 @@ function renderVerifications(){
         "<td>"+fmtDate(u.created_at)+"</td>"+
         "<td><div class='actions'>"+
           "<button class='ab ab-view' onclick='viewUser(\""+u.id+"\")'>View</button>"+
+          "<button class='ab ab-reject' onclick='revokeVerification(\""+u.id+"\")'>Revoke</button>"+
         "</div></td>"+
       "</tr>";
     });
@@ -1930,24 +1949,47 @@ function renderVerifications(){
   document.getElementById("verifContent").innerHTML = html;
 }
 
-async function approveVerification(id){
-  var u = DATA.users.find(function(x){ return x.id===id; });
+function openImgModal(src){
+  var m = document.createElement('div');
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer';
+  m.onclick=function(){ document.body.removeChild(m); };
+  var img = document.createElement('img');
+  img.src=src; img.style.cssText='max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain';
+  m.appendChild(img); document.body.appendChild(m);
+}
+
+async function approveVerification(userId, verifId){
+  var u = DATA.users.find(function(x){ return x.id===userId; });
   var ok = await confirm2("Approve Verification","Mark "+esc(u?u.name||"user":"user")+" as verified on the platform?","✅","Approve");
   if(!ok) return;
-  var {error} = await sb.from("profiles").update({verified:true, verification_pending:false, updated_at:new Date().toISOString()}).eq("id",id);
+  var {error} = await sb.from("profiles").update({verified:true, verification_pending:false, updated_at:new Date().toISOString()}).eq("id",userId);
   if(error){ toast("Error: "+error.message,"error"); return; }
-  await loadUsers(); renderVerifications(); renderStats();
+  if(verifId) await sb.from("verifications").update({status:"approved",reviewed_at:new Date().toISOString()}).eq("id",verifId);
+  await Promise.all([loadUsers(), loadVerifications()]);
+  renderVerifications(); renderStats();
   toast("User verified successfully.","success");
 }
 
-async function rejectVerification(id){
-  var u = DATA.users.find(function(x){ return x.id===id; });
+async function rejectVerification(userId, verifId){
+  var u = DATA.users.find(function(x){ return x.id===userId; });
   var ok = await confirm2("Reject Verification","Dismiss the verification request for "+esc(u?u.name||"user":"user")+"?","❌","Reject");
   if(!ok) return;
-  var {error} = await sb.from("profiles").update({verification_pending:false, updated_at:new Date().toISOString()}).eq("id",id);
+  var {error} = await sb.from("profiles").update({verification_pending:false, updated_at:new Date().toISOString()}).eq("id",userId);
   if(error){ toast("Error: "+error.message,"error"); return; }
-  await loadUsers(); renderVerifications();
+  if(verifId) await sb.from("verifications").update({status:"rejected",reviewed_at:new Date().toISOString()}).eq("id",verifId);
+  await Promise.all([loadUsers(), loadVerifications()]);
+  renderVerifications();
   toast("Verification request dismissed.","");
+}
+
+async function revokeVerification(userId){
+  var u = DATA.users.find(function(x){ return x.id===userId; });
+  var ok = await confirm2("Revoke Verification","Remove verified badge from "+esc(u?u.name||"user":"user")+"?","⚠️","Revoke");
+  if(!ok) return;
+  var {error} = await sb.from("profiles").update({verified:false, updated_at:new Date().toISOString()}).eq("id",userId);
+  if(error){ toast("Error: "+error.message,"error"); return; }
+  await loadUsers(); renderVerifications(); renderStats();
+  toast("Verification revoked.","");
 }
 
 // ── Analytics Panel ───────────────────────────────────────────
