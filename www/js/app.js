@@ -1,7 +1,6 @@
 'use strict';
 window.H = {
   KEY:          'pamarket.v2',
-  ADMIN_PHONES: ['+263770000000', '+971589772645'],
 
   PROVINCES: ['Harare','Bulawayo','Manicaland','Mashonaland West','Mashonaland East','Mashonaland Central','Midlands','Masvingo','Matabeleland North','Matabeleland South'],
   CITIES_BY_PROV: {
@@ -61,15 +60,13 @@ window.H = {
   _activeChat:      null,
   camStream:        null,
   livenessTimer:    null,
-  logoTaps:         0,
-  logoTapsTimer:    null,
   pages:            {},
 
   defaultState: {
     users:[], listings:[], conversations:[], reports:[], txns:[],
     saves:{}, notifs:{}, currentUserId:null, cityFilter:'All Zimbabwe',
     _sortMode:'newest', _priceMin:'', _priceMax:'',
-    adminLogs:[], supportTickets:[], adminSession:null, topupRequests:[], paidAds:[]
+    adminLogs:[], supportTickets:[], topupRequests:[], paidAds:[]
   },
 
   loadState() {
@@ -413,7 +410,7 @@ window.H = {
     document.getElementById('mainArea').innerHTML=`
       <div class="auth-wrap">
         <div class="auth-logo">
-          <img src="img/icon-192.png" alt="PaMarket" onclick="H.logoTap()" style="width:90px;height:90px;border-radius:22px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.3);cursor:pointer">
+          <img src="img/icon-192.png" alt="PaMarket" style="width:90px;height:90px;border-radius:22px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.3)">
           <div>Pa<em>Market</em></div>
         </div>
         <div class="auth-tag">Zimbabwe&#39;s Free Marketplace</div>
@@ -597,13 +594,6 @@ window.H = {
     this.applyLanguage();
     this.toast('Language saved');
     this.renderPage(this.currentPageName, this.currentPageParams);
-  },
-
-  logoTap() {
-    this.logoTaps++;
-    clearTimeout(this.logoTapsTimer);
-    this.logoTapsTimer=setTimeout(()=>{this.logoTaps=0;},4000);
-    if(this.logoTaps>=7){this.logoTaps=0;window.location.href='admin.html';}
   },
 
   _initPullToRefresh() {

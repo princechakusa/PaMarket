@@ -524,11 +524,39 @@ document.getElementById("aPass").addEventListener("keydown", function(e){ if(e.k
 document.getElementById("logoutBtn").addEventListener("click", doLogout);
 document.getElementById("refreshBtn").addEventListener("click", refreshAll);
 
+// ── Login rate limiter ────────────────────────────────────────
+var LOGIN_KEY = '_adm_fl';
+var MAX_FAILS = 5;
+var LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+function getFailState(){
+  try { return JSON.parse(sessionStorage.getItem(LOGIN_KEY)||'{"count":0,"until":0}'); }
+  catch(e){ return {count:0,until:0}; }
+}
+function saveFailState(s){ sessionStorage.setItem(LOGIN_KEY, JSON.stringify(s)); }
+function recordFail(){
+  var s = getFailState();
+  s.count++;
+  if(s.count >= MAX_FAILS) s.until = Date.now() + LOCKOUT_MS;
+  saveFailState(s);
+}
+function clearFails(){ sessionStorage.removeItem(LOGIN_KEY); }
+
 async function doLogin(){
   var email = document.getElementById("aEmail").value.trim();
   var pass  = document.getElementById("aPass").value;
   var errEl = document.getElementById("errMsg");
   errEl.style.display = "none";
+
+  // Rate limit check
+  var fs = getFailState();
+  if(fs.until && Date.now() < fs.until){
+    var mins = Math.ceil((fs.until - Date.now()) / 60000);
+    errEl.style.display = "block";
+    errEl.textContent = "Too many failed attempts. Try again in " + mins + " minute" + (mins > 1 ? "s" : "") + ".";
+    return;
+  }
+
   if(!email || !pass){
     errEl.style.display = "block";
     errEl.textContent = "Please enter your email and password.";
@@ -540,23 +568,29 @@ async function doLogin(){
   try {
     var res = await sb.auth.signInWithPassword({ email: email, password: pass });
     if(res.error || !res.data || !res.data.user){
+      recordFail();
+      var remaining = MAX_FAILS - getFailState().count;
       errEl.style.display = "block";
       errEl.textContent = res.error ? res.error.message : "Invalid credentials.";
+      if(remaining > 0) errEl.textContent += " (" + remaining + " attempt" + (remaining > 1 ? "s" : "") + " left)";
+      else errEl.textContent = "Too many failed attempts. Account locked for 15 minutes.";
       btn.disabled = false;
       btn.textContent = "Sign In";
       return;
     }
-    // Verify admin role in profiles table
+    // Verify admin role
     var uid = res.data.user.id;
     var pr = await sb.from("profiles").select("role").eq("id", uid).single();
     if(pr.error || !pr.data || pr.data.role !== "admin"){
       await sb.auth.signOut();
+      recordFail();
       errEl.style.display = "block";
       errEl.textContent = "Access denied. Insufficient permissions.";
       btn.disabled = false;
       btn.textContent = "Sign In";
       return;
     }
+    clearFails();
     showDash();
   } catch(ex){
     errEl.style.display = "block";
