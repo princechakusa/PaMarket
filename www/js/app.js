@@ -100,7 +100,20 @@ window.H = {
   },
   currentUser() {
     const H = window.H || this;
-    return ((H.state&&H.state.users)||[]).find(u=>u.id===(H.state&&H.state.currentUserId)) || null;
+    const id = H.state && H.state.currentUserId;
+    if (!id) return null;
+    H.state.users = H.state.users || [];
+    let user = H.state.users.find(u=>u.id===id);
+    if (!user) {
+      user = { id, email:'', name:'User', phone:'', avatar:null, verified:false, walletUSD:0, language:'English', joinedAt:Date.now(), role:'user', status:'active', blocked:[] };
+      H.state.users.push(user);
+      if (typeof H.saveState === 'function') H.saveState();
+      if (typeof H.loadProfile === 'function' && !H._loadingCurrentProfile) {
+        H._loadingCurrentProfile = true;
+        H.loadProfile(id).finally(()=>{ H._loadingCurrentProfile = false; });
+      }
+    }
+    return user;
   },
   isAdmin() { const u=this.currentUser(); return !!(u&&u.role==='admin'); },
   escHtml(s) {
@@ -398,6 +411,7 @@ window.H = {
       await this.renderPage(this.currentPageName, this.currentPageParams);
     } catch(e) { console.warn('Boot fetch failed:', e); }
     if(typeof H._setupRealtimeMessages==='function') H._setupRealtimeMessages();
+    if(typeof H.syncReports==='function') H.syncReports();
     if(typeof H.syncConversations==='function') H.syncConversations();
     if(typeof H.syncApplications==='function') H.syncApplications();
     if(typeof H.syncNotifications==='function') H.syncNotifications();
@@ -433,13 +447,19 @@ window.H = {
   async navTo(name, btn) {
     const H=window.H;
     if(['Post'].includes(name)&&!H.currentUser()){H.requireAuth('Log in to post an ad');return;}
+    if(['Messages'].includes(name)&&!H.currentUser()){H.requireAuth('Sign in to view messages');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
-    H.pageStack=[];
-    document.getElementById('bottomNav').style.display='flex';
-    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-    const target=btn||document.querySelector('[data-nav="'+name+'"]');
-    if(target)target.classList.add('active');
-    await H.renderPage(name);
+    try {
+      H.pageStack=[];
+      document.getElementById('bottomNav').style.display='flex';
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+      const target=btn||document.querySelector('[data-nav="'+name+'"]');
+      if(target)target.classList.add('active');
+      await H.renderPage(name);
+    } catch(e) {
+      console.error('navTo error:', e);
+      H.toast('Could not open this page. Please try again.', 4000, true);
+    }
   },
 
   async openInner(name, params) {
@@ -786,23 +806,27 @@ window.H = {
       if(!window.supabase||typeof window.supabase.channel!=='function') return;
       if(window._msgChannel) window._msgChannel.unsubscribe();
       window._msgChannel=window.supabase.channel('messages-rt')
-        .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},async payload=>{
+        .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
           const msg=payload.new; if(!msg) return;
-          let conv=(H.state.conversations||[]).find(c=>c.id===msg.conversation_id);
-          if(!conv) {
-            // Unknown conversation — sync to discover it, then retry
-            if(typeof H.syncConversations==='function') await H.syncConversations();
-            conv=(H.state.conversations||[]).find(c=>c.id===msg.conversation_id);
-          }
+          if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+          const conv=H.state.conversations.find(c=>c.id===msg.conversation_id);
           if(conv){
+            if (!Array.isArray(conv.messages)) conv.messages = [];
             const ex=conv.messages.find(m=>m.id===msg.id);
             if(!ex){
-              conv.messages.push({id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,t:new Date(msg.created_at).getTime(),read:false});
+              const localMsg = {id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,t:new Date(msg.created_at).getTime(),read:false};
+              conv.messages.push(localMsg);
               H.saveState();
-              if(H.currentPageName==='Chat'&&H.currentPageParams&&H.currentPageParams.id===msg.conversation_id)
-                H.renderPage('Chat',{id:msg.conversation_id});
+              if(H.currentPageName==='Chat'&&H.currentPageParams&&H.currentPageParams.id===msg.conversation_id&&typeof H._appendChatMessages==='function')
+                H._appendChatMessages(msg.conversation_id,[localMsg]);
+              else if(H.currentPageName==='Messages'&&typeof H._refreshMessagesPage==='function')
+                H._refreshMessagesPage({ skipSync:true });
               H.pushNotif&&H.pushNotif(H.state.currentUserId,'New message',msg.text||'');
             }
+          } else if (typeof H.syncConversations === 'function') {
+            H.syncConversations().then(function(){
+              if (H.currentPageName === 'Messages' && typeof H._refreshMessagesPage === 'function') H._refreshMessagesPage({ skipSync:true });
+            });
           }
         }).subscribe();
     } catch(e){ console.warn('Realtime setup failed:',e.message); }
@@ -838,6 +862,49 @@ window.H = {
     } catch(e) { console.warn('syncApplications:', e.message); }
   },
 
+  async syncReports() {
+    try {
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') return;
+      const { data, error } = await sb.from('reports')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(300);
+      if (error || !data) return;
+
+      H.state.reports = H.state.reports || [];
+      H.state.supportTickets = H.state.supportTickets || [];
+      data.forEach(r => {
+        const createdAt = r.created_at ? new Date(r.created_at).getTime() : Date.now();
+        if (r.target_type === 'support') {
+          const txt = (r.reason || '').replace(/^\[Support\]\s*/, '');
+          const parts = txt.split('\n\n');
+          const subject = (parts[0] || 'Support request').trim();
+          const message = parts.slice(1).join('\n\n').trim() || txt;
+          const ticket = {
+            id: r.id, userId: r.reporter_id || null, subject, message,
+            createdAt, status: r.status === 'resolved' ? 'closed' : 'open',
+            reportId: r.id
+          };
+          const i = H.state.supportTickets.findIndex(t => t.id === ticket.id || t.reportId === ticket.reportId);
+          if (i === -1) H.state.supportTickets.push(ticket);
+          else H.state.supportTickets[i] = Object.assign(H.state.supportTickets[i], ticket);
+        } else {
+          const report = {
+            id: r.id, reporterId: r.reporter_id || r.reported_by || null,
+            targetType: r.target_type || 'listing', targetId: r.target_id,
+            reason: r.reason || '', status: r.status || 'open',
+            t: createdAt, createdAt
+          };
+          const i = H.state.reports.findIndex(x => x.id === report.id);
+          if (i === -1) H.state.reports.push(report);
+          else H.state.reports[i] = Object.assign(H.state.reports[i], report);
+        }
+      });
+      H.saveState();
+    } catch(e) { console.warn('syncReports:', e.message); }
+  },
+
   async saveApplicationToCloud(app) {
     try {
       const sb = window.supabase;
@@ -865,70 +932,131 @@ window.H = {
   async syncConversations() {
     try {
       const sb = window.supabase;
-      if (!sb || typeof sb.from !== 'function') return;
-      const u = H.currentUser(); if (!u) return;
-      // Try to discover new conversations from the server (table may not exist yet)
-      try {
-        const { data: convs, error } = await sb.from('conversations')
-          .select('id, members, listing_id, created_at, updated_at')
-          .contains('members', [u.id])
-          .order('updated_at', { ascending: false })
-          .limit(100);
-        if (!error && convs) {
-          for (const c of convs) {
-            let local = (H.state.conversations || []).find(x => x.id === c.id);
-            if (!local) {
-              local = { id: c.id, members: c.members, listingId: c.listing_id, messages: [] };
-              (H.state.conversations = H.state.conversations || []).push(local);
-            }
-          }
+      if (!sb || typeof sb.from !== 'function') return false;
+      const u = H.currentUser(); if (!u) return false;
+      if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+      let changed = false;
+      const { data: convs, error } = await sb.from('conversations')
+        .select('id, members, listing_id, created_at, updated_at')
+        .contains('members', [u.id])
+        .order('updated_at', { ascending: false })
+        .limit(100);
+      if (error) console.warn('syncConversations (conversations table):', error.message);
+      const cloudConvs = (!error && Array.isArray(convs)) ? convs : [];
+      const memberIds = new Set();
+      cloudConvs.forEach(c => (c.members || []).forEach(id => memberIds.add(id)));
+      const missingIds = Array.from(memberIds).filter(id => !(H.state.users || []).some(u => u.id === id));
+      if (missingIds.length) {
+        const { data: profiles } = await sb.from('profiles')
+          .select('id,name,phone,email,avatar,verified,role,status,created_at')
+          .in('id', missingIds);
+        (profiles || []).forEach(p => {
+          (H.state.users = H.state.users || []).push({
+            id: p.id, name: p.name || 'User', phone: p.phone || '',
+            email: p.email || '', avatar: p.avatar || null,
+            verified: !!p.verified, role: p.role || 'user',
+            status: p.status || 'active',
+            joinedAt: p.created_at ? new Date(p.created_at).getTime() : Date.now()
+          });
+          changed = true;
+        });
+      }
+      for (const c of cloudConvs) {
+        let local = H.state.conversations.find(x => x.id === c.id);
+        if (!local) {
+          local = { id: c.id, members: c.members, listingId: c.listing_id, messages: [] };
+          H.state.conversations.push(local);
+          changed = true;
+        } else {
+          const members = Array.isArray(c.members) ? c.members : [];
+          if (JSON.stringify(local.members || []) !== JSON.stringify(members)) { local.members = members; changed = true; }
+          if ((local.listingId || null) !== (c.listing_id || null)) { local.listingId = c.listing_id || null; changed = true; }
         }
-      } catch(e) { /* conversations table may not exist */ }
-      // Always sync messages for every locally-known conversation
-      for (const local of (H.state.conversations || [])) {
-        const { data: msgs } = await sb.from('messages')
+        if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
+        const { data: msgs, error: msgError } = await sb.from('messages')
+          .select('id, sender_id, sender_name, text, read, created_at')
+          .eq('conversation_id', c.id)
+          .order('created_at', { ascending: true })
+          .limit(200);
+        if (msgError) { console.warn('syncConversation messages:', msgError.message); continue; }
+        if (msgs) {
+          const existing = new Map(local.messages.map(m => [m.id, m]));
+          msgs.forEach(m => {
+            const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
+            const found = existing.get(m.id);
+            const read = found && found.read ? true : !!m.read;
+            if (!found) {
+              local.messages.push({
+                id: m.id, from: m.sender_id, senderName: m.sender_name || '',
+                text: m.text, t, read
+              });
+              changed = true;
+            } else if (found.text !== m.text || found.read !== read || found.from !== m.sender_id || found.t !== t) {
+              found.from = m.sender_id;
+              found.senderName = m.sender_name || found.senderName || '';
+              found.text = m.text;
+              found.t = t;
+              found.read = read;
+              changed = true;
+            }
+          });
+          const beforeOrder = local.messages.map(m => m.id).join('|');
+          local.messages.sort((a,b) => (a.t || 0) - (b.t || 0));
+          if (beforeOrder !== local.messages.map(m => m.id).join('|')) changed = true;
+        }
+      }
+      // Also sync messages for locally-known conversations not returned by the cloud query
+      const cloudIds = new Set(cloudConvs.map(c => c.id));
+      for (const local of H.state.conversations.filter(c => !cloudIds.has(c.id))) {
+        if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
+        const { data: lmsgs, error: lmErr } = await sb.from('messages')
           .select('id, sender_id, sender_name, text, read, created_at')
           .eq('conversation_id', local.id)
           .order('created_at', { ascending: true })
           .limit(200);
-        if (msgs) {
-          const existing = new Set(local.messages.map(m => m.id));
-          msgs.forEach(m => {
-            if (!existing.has(m.id)) {
-              local.messages.push({
-                id: m.id, from: m.sender_id, senderName: m.sender_name || '',
-                text: m.text, t: new Date(m.created_at).getTime(), read: m.read
-              });
-            }
-          });
-        }
+        if (lmErr || !lmsgs) continue;
+        const lexist = new Map(local.messages.map(m => [m.id, m]));
+        lmsgs.forEach(m => {
+          const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
+          if (!lexist.has(m.id)) {
+            local.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name || '', text: m.text, t, read: !!m.read });
+            changed = true;
+          }
+        });
+        local.messages.sort((a, b) => (a.t || 0) - (b.t || 0));
       }
-      H.saveState();
+      if (changed) H.saveState();
+      return changed;
     } catch(e) { console.warn('syncConversations:', e.message); }
+    return false;
   },
 
   async saveMessageToCloud(convId, msg) {
     try {
       const sb = window.supabase;
-      if (!sb || typeof sb.from !== 'function') return;
-      await sb.from('messages').upsert({
+      if (!sb || typeof sb.from !== 'function') return { ok:false, error:'Connection unavailable' };
+      const { error } = await sb.from('messages').upsert({
         id: msg.id, conversation_id: convId,
         sender_id: msg.from, sender_name: msg.senderName || '',
         text: msg.text, read: msg.read || false,
         created_at: new Date(msg.t || Date.now()).toISOString()
       });
-    } catch(e) { console.warn('saveMessageToCloud:', e.message); }
+      if (error) { console.warn('saveMessageToCloud:', error.message); return { ok:false, error:error.message }; }
+      return { ok:true };
+    } catch(e) { console.warn('saveMessageToCloud:', e.message); return { ok:false, error:e.message }; }
   },
 
   async ensureConversationInCloud(conv) {
     try {
       const sb = window.supabase;
-      if (!sb || typeof sb.from !== 'function') return;
-      await sb.from('conversations').upsert({
+      if (!sb || typeof sb.from !== 'function') return { ok:false, error:'Connection unavailable' };
+      const { error } = await sb.from('conversations').upsert({
         id: conv.id, members: conv.members,
         listing_id: conv.listingId || null
       });
-    } catch(e) { console.warn('ensureConversationInCloud:', e.message); }
+      if (error) { console.warn('ensureConversationInCloud:', error.message); return { ok:false, error:error.message }; }
+      return { ok:true };
+    } catch(e) { console.warn('ensureConversationInCloud:', e.message); return { ok:false, error:e.message }; }
   },
 
   _registerCategoryView() {
@@ -1123,7 +1251,8 @@ window.H = {
 
     const activeAds=(this.state.listings||[]).filter(l=>l.sellerId===u.id&&l.status==='active').length;
     const savedAds=((this.state.saves||{})[u.id]||[]).length;
-    const unread=(this.state.conversations||[]).reduce((n,c)=>c.members.includes(u.id)?n+(c.messages||[]).filter(m=>m.from!==u.id&&!m.read).length:n,0);
+    if (!Array.isArray(this.state.conversations)) this.state.conversations = [];
+    const unread=this.state.conversations.reduce((n,c)=>Array.isArray(c.members)&&c.members.includes(u.id)?n+(c.messages||[]).filter(m=>m.from!==u.id&&!m.read).length:n,0);
 
     sheet.innerHTML=`
       <div onclick="${nav('Profile')}" style="display:flex;align-items:center;gap:14px;padding:16px 18px 14px;border-bottom:1px solid var(--border);cursor:pointer">

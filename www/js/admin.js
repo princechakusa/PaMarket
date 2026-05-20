@@ -78,6 +78,15 @@
     </div>`;
   };
 
+  pages.Admin_after = function () {
+    if (typeof H.syncReports === 'function') {
+      H.syncReports().then(function(){
+        const body = document.getElementById('adminBody');
+        if (body) body.innerHTML = renderBody();
+      });
+    }
+  };
+
   function renderBody() {
     switch (_adminTab) {
       case 'overview':       return renderOverview();
@@ -361,7 +370,7 @@
   let _reportFilter = 'all';
   function renderReports(filter) {
     if (filter !== undefined) _reportFilter = filter;
-    const all  = [...(H.state.reports||[])].sort((a,b)=>b.t-a.t);
+    const all  = [...(H.state.reports||[])].sort((a,b)=>(b.t||b.createdAt||0)-(a.t||a.createdAt||0));
     const open = all.filter(r=>r.status==='open');
     const list = _reportFilter==='open' ? open
                : _reportFilter==='listing' ? all.filter(r=>r.targetType==='listing')

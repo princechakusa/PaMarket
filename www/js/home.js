@@ -44,8 +44,9 @@
   H.pages.Home = function () {
     const u = H.currentUser();
     const unreadNotifs = u ? (H.state.notifs[u.id] || []).filter(n => !n.read).length : 0;
-    const unreadMsgs   = u ? (H.state.conversations || []).filter(cv =>
-      cv.members.includes(u.id) && cv.messages.some(m => m.from !== u.id && !m.read)).length : 0;
+    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+    const unreadMsgs   = u ? H.state.conversations.filter(cv =>
+      Array.isArray(cv.members) && cv.members.includes(u.id) && (cv.messages || []).some(m => m.from !== u.id && !m.read)).length : 0;
     const activeListings = (H.state.listings || []).filter(l => l.status === 'active');
     const filtered       = filterListings(activeListings);
     const featured       = filtered.filter(l => l.boost && l.boost.until > Date.now()).slice(0, 6);

@@ -198,13 +198,13 @@
       <div class="listing-tabs">
         <button class="tab active" data-tab="active">Active (${active.length})</button>
         <button class="tab" data-tab="pending">Pending (${pending.length})</button>
-        <button class="tab" data-tab="sold">Sold (${sold.length})</button>
+        <button class="tab" data-tab="sold">Sold / Filled (${sold.length})</button>
         <button class="tab" data-tab="rejected">Rejected (${rejected.length})</button>
       </div>
       <div class="tabs-content">
         <div class="tab-content active" data-tab="active">${section(active,'Active','active')}</div>
         <div class="tab-content" data-tab="pending">${section(pending,'Pending','pending')}</div>
-        <div class="tab-content" data-tab="sold">${section(sold,'Sold','sold')}</div>
+        <div class="tab-content" data-tab="sold">${section(sold,'Sold / Filled','sold')}</div>
         <div class="tab-content" data-tab="rejected">${section(rejected,'Rejected','rejected')}</div>
       </div>
       <div style="height:24px"></div>
@@ -223,9 +223,9 @@
     });
     H._myListings = {
       edit: (id) => H.openInner('EditListing', { listingId: id }),
-      markSold: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='sold'; l.soldAt=Date.now(); H.saveState(); H.toast('Listing marked as sold'); H.renderPage('MyListings'); },
+      markSold: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='sold'; l.soldAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'sold'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job marked as filled' : 'Listing marked as sold'); H.renderPage('MyListings'); },
       del: (id) => { if(!window.confirm('Delete this listing permanently?'))return; H.state.listings=(H.state.listings||[]).filter(x=>x.id!==id); H.saveState(); H.toast('Listing deleted'); H.renderPage('MyListings'); },
-      reactivate: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='active'; delete l.soldAt; l.renewedAt=Date.now(); H.saveState(); H.toast('Listing reactivated!'); H.renderPage('MyListings'); },
+      reactivate: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='active'; delete l.soldAt; l.renewedAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'active'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job reopened!' : 'Listing reactivated!'); H.renderPage('MyListings'); },
     };
   };
 
@@ -549,27 +549,44 @@
   };
 
   pages.JobSeekerProfile_after = function () {
+    function captureDraft() {
+      const u = H.currentUser();
+      if (!u) return;
+      u.cv = u.cv || {};
+      const headlineEl = document.getElementById('cvHeadline');
+      const summaryEl = document.getElementById('cvSummary');
+      const skillsEl = document.getElementById('cvSkills');
+      const certsEl = document.getElementById('cvCerts');
+      const salaryEl = document.getElementById('cvSalary');
+      const locationEl = document.getElementById('cvLocation');
+      const visibleEl = document.getElementById('cvVisible');
+      if (headlineEl) u.cv.headline = headlineEl.value.trim();
+      if (summaryEl) u.cv.summary = summaryEl.value.trim();
+      if (skillsEl) u.cv.skills = skillsEl.value.split(',').map(s => s.trim()).filter(Boolean);
+      if (certsEl) u.cv.certs = certsEl.value.split('\n').map(s => s.trim()).filter(Boolean);
+      if (salaryEl) u.cv.expectedSalary = parseFloat(salaryEl.value) || null;
+      if (locationEl) u.cv.location = locationEl.value.trim();
+      if (visibleEl) u.cv.visible = visibleEl.checked;
+    }
     H._cvProfile = {
       save() {
         const u = H.currentUser();
         if (!u) return;
-        u.cv = u.cv || {};
-        u.cv.headline = (document.getElementById('cvHeadline')?.value || '').trim();
-        u.cv.summary  = (document.getElementById('cvSummary')?.value || '').trim();
-        u.cv.skills   = (document.getElementById('cvSkills')?.value || '').split(',').map(s => s.trim()).filter(Boolean);
-        u.cv.certs    = (document.getElementById('cvCerts')?.value || '').split('\n').map(s => s.trim()).filter(Boolean);
-        u.cv.expectedSalary = parseFloat(document.getElementById('cvSalary')?.value) || null;
-        u.cv.location = (document.getElementById('cvLocation')?.value || '').trim();
-        u.cv.visible  = document.getElementById('cvVisible')?.checked ?? true;
+        captureDraft();
         // Make visible in HireTalent if they have a headline or experience
-        if (u.cv.visible && (u.cv.headline || (u.cv.experience && u.cv.experience.length))) {
+        if (u.cv.visible && (u.cv.headline || u.cv.summary || (u.cv.experience && u.cv.experience.length))) {
           u.openToWork = true;
         }
+        u.jobTitle = u.cv.headline || u.jobTitle || '';
+        u.skills = (u.cv.skills || []).join(', ');
         H.saveState();
         const sb = window.supabase;
         if (sb && typeof sb.from === 'function') {
           sb.from('profiles').upsert({
             id: u.id, cv: u.cv,
+            job_title: u.jobTitle || null,
+            skills: u.skills || null,
+            city: u.cv.location || null,
             open_to_work: u.openToWork || false,
             updated_at: new Date().toISOString()
           }).then(r => { if (r && r.error) console.warn('CV sync:', r.error.message); });
@@ -578,6 +595,7 @@
         H.goBack();
       },
       addExp() {
+        captureDraft();
         H.modal({
           title: 'Add Work Experience',
           body: `<div style="display:flex;flex-direction:column;gap:8px">
@@ -607,6 +625,7 @@
         });
       },
       addEdu() {
+        captureDraft();
         H.modal({
           title: 'Add Education',
           body: `<div style="display:flex;flex-direction:column;gap:8px">
@@ -632,6 +651,7 @@
         });
       },
       editExp(i) {
+        captureDraft();
         const u = H.currentUser();
         const e = (u.cv && u.cv.experience && u.cv.experience[i]) || {};
         H.modal({
@@ -660,6 +680,7 @@
         });
       },
       editEdu(i) {
+        captureDraft();
         const u = H.currentUser();
         const e = (u.cv && u.cv.education && u.cv.education[i]) || {};
         H.modal({

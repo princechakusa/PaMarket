@@ -1784,12 +1784,12 @@ function openAdForm(id){
     '</div>'+
     // Client
     '<div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid #334155">Client</div>'+
-    '<div class="mfg"><label class="mfl">App User / Client (optional — auto-fills name &amp; contact below)</label>'+
+    '<div class="mfg"><label class="mfl">Registered Customer (optional - choose a user to fill contact details and show their listings)</label>'+
       '<select class="mfi-sel" id="adUserPicker" onchange="onAdUserPick(this.value)">'+userOpts+'</select>'+
     '</div>'+
-    '<div class="mfg"><label class="mfl">In-App Listing Link (optional — tapping the ad in the app opens this listing)</label>'+
+    '<div class="mfg"><label class="mfl">Link Ad to Customer Listing (optional - select customer above first)</label>'+
       '<select class="mfi-sel" id="adListingPicker">'+
-        '<option value="">-- None / Use URL above instead --</option>'+
+        '<option value="">-- Select a customer first, or use URL above --</option>'+
         (a && a.client_user_id
           ? (DATA.listings||[]).filter(function(l){ return l.seller_id===a.client_user_id||l.sellerId===a.client_user_id; })
               .map(function(l){ return '<option value="'+esc(l.id)+'"'+(a.listing_id===l.id?' selected':'')+'>'+esc(l.title||'Untitled')+(l.price?' · $'+l.price:'')+'</option>'; }).join('')
@@ -1856,7 +1856,11 @@ async function uploadAdImage(input){
 }
 
 function onAdUserPick(userId){
-  if(!userId) return;
+  var lp = document.getElementById('adListingPicker');
+  if(!userId) {
+    if(lp) lp.innerHTML = '<option value="">-- Select a customer first, or use URL above --</option>';
+    return;
+  }
   var u = (DATA.users||[]).find(function(x){ return x.id===userId; });
   if(!u) return;
   var nm = document.getElementById('adClientName');
@@ -1866,14 +1870,14 @@ function onAdUserPick(userId){
   if(ph && !ph.value) ph.value = u.phone||'';
   if(em && !em.value) em.value = u.email||'';
   // Populate listing picker with this user's listings
-  var lp = document.getElementById('adListingPicker');
   if(lp){
     var userListings = (DATA.listings||[]).filter(function(l){ return l.seller_id===userId||l.sellerId===userId; });
-    lp.innerHTML = '<option value="">-- No listing (use URL or leave blank) --</option>'
-      + userListings.map(function(l){
+    lp.innerHTML = userListings.length
+      ? '<option value="">-- No listing (use URL or leave blank) --</option>' + userListings.map(function(l){
           var label = esc(l.title||'Untitled') + (l.price ? ' · $'+l.price : '') + (l.city ? ' · '+esc(l.city) : '');
           return '<option value="'+esc(l.id)+'">'+label+'</option>';
-        }).join('');
+        }).join('')
+      : '<option value="">-- This customer has no listings --</option>';
   }
 }
 

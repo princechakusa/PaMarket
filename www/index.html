@@ -21,7 +21,7 @@
   <meta name="twitter:image" content="img/icon-512.png">
   <title>PaMarket — Zimbabwe's Free Marketplace</title>
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://gxgytumhknmnwspxjzxw.supabase.co; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://gxgytumhknmnwspxjzxw.supabase.co wss://gxgytumhknmnwspxjzxw.supabase.co https://accounts.google.com https://appleid.apple.com https://graph.facebook.com; frame-src https://appleid.apple.com; object-src 'none';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://gxgytumhknmnwspxjzxw.supabase.co; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://gxgytumhknmnwspxjzxw.supabase.co wss://gxgytumhknmnwspxjzxw.supabase.co https://accounts.google.com https://appleid.apple.com https://graph.facebook.com https://cdn.jsdelivr.net; frame-src https://appleid.apple.com; object-src 'none';">
 
   <link rel="icon" href="img/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="img/icon-192.png">
@@ -290,25 +290,25 @@
 
   <!-- ── Core ─────────────────────────────────────────── -->
   <script src="js/moderation.js?v=1"></script>
-  <script src="js/app.js?v=6"></script>
+  <script src="js/app.js?v=9"></script>
   <script src="js/auth.js?v=2"></script>
 
   <!-- ── Pages ────────────────────────────────────────── -->
   <script src="js/browse.js?v=1"></script>
-  <script src="js/detail.js?v=1"></script>
+  <script src="js/detail.js?v=3"></script>
   <script src="js/post.js?v=3"></script>
   <script src="js/saved.js?v=1"></script>
-  <script src="js/messages.js?v=4"></script>
+  <script src="js/messages.js?v=7"></script>
   <script src="js/notifications.js?v=1"></script>
-  <script src="js/profile.js?v=2"></script>
-  <script src="js/account.js?v=3"></script>
+  <script src="js/profile.js?v=3"></script>
+  <script src="js/account.js?v=4"></script>
   <script src="js/settings.js?v=1"></script>
   <script src="js/security_pages.js?v=2"></script>
   <script src="js/help.js?v=2"></script>
   <script src="js/wallet.js?v=1"></script>
   <script src="js/verify.js?v=2"></script>
-  <script src="js/admin.js?v=2"></script>
-  <script src="js/home.js?v=5"></script>
+  <script src="js/admin.js?v=3"></script>
+  <script src="js/home.js?v=6"></script>
 
   <!-- ── Category Pages (base filter engine must load first) ── -->
   <script src="js/categories.js?v=3"></script>
@@ -323,7 +323,7 @@
   <script src="js/pets.js?v=1"></script>
   <script src="js/kids.js?v=1"></script>
   <script src="js/other.js?v=1"></script>
-  <script src="js/jobs.js?v=3"></script>
+  <script src="js/jobs.js?v=5"></script>
 
   <!-- ── App Bootstrap ────────────────────────────────── -->
   <script>
@@ -369,7 +369,8 @@
       try {
         const u = H.currentUser && H.currentUser();
         if (!u) return;
-        const convos = (H.state.conversations || []).filter(c => c.members.includes(u.id));
+        if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+        const convos = H.state.conversations.filter(c => Array.isArray(c.members) && c.members.includes(u.id));
         const unread = convos.reduce((n, c) =>
           n + (c.messages||[]).filter(m => m.from !== u.id && !m.read).length, 0);
         const badge = document.getElementById('msgBadge');
