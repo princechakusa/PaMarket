@@ -306,28 +306,30 @@
       thread.scrollTop = thread.scrollHeight;
     }
     try {
-      var cloudResult = { ok: true };
+      // Try to persist the conversation entry (non-fatal if table doesn't exist yet)
       if (typeof H.ensureConversationInCloud === 'function') {
-        cloudResult = await H.ensureConversationInCloud(c);
-        if (cloudResult && cloudResult.ok === false) throw new Error(cloudResult.error || 'Conversation sync failed');
+        H.ensureConversationInCloud(c).catch(function(e){ console.warn('conv sync (non-fatal):', e.message); });
       }
+      // Save the message — this is what matters
+      var msgSaved = false;
       if (typeof H.saveMessageToCloud === 'function') {
-        cloudResult = await H.saveMessageToCloud(c.id, c.messages[c.messages.length - 1]);
+        var cloudResult = await H.saveMessageToCloud(c.id, c.messages[c.messages.length - 1]);
         if (cloudResult && cloudResult.ok === false) throw new Error(cloudResult.error || 'Message sync failed');
+        msgSaved = true;
       }
-      else if (window.supabase && typeof window.supabase.from === 'function') {
+      if (!msgSaved && window.supabase && typeof window.supabase.from === 'function') {
         var r = await window.supabase.from('messages').insert({
           id: msgId, conversation_id: c.id,
           sender_id: u.id, sender_name: u.name || '',
           text: text, created_at: new Date(msgT).toISOString(), read: false
         });
-        if(r&&r.error) console.warn('Msg save failed:', r.error.message);
+        if (r && r.error) throw new Error(r.error.message);
       }
       var otherId = c.members.find(function(m){ return m !== u.id; });
       if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Message', (u.name || 'Someone') + ': ' + text.slice(0, 80), 'message');
     } catch(e) {
       console.warn('Msg cloud error:', e.message);
-      H.toast('Message sent here, but could not sync. Check your connection and sign in again.', 5000, true);
+      H.toast('Message could not be sent. Check your connection and try again.', 5000, true);
     }
   };
 
