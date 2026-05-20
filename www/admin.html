@@ -205,6 +205,33 @@ tr:hover td{background:rgba(59,130,246,.03);}
 .confirm-input:focus{border-color:#3b82f6;}
 .confirm-btns{display:flex;gap:8px;justify-content:center;}
 
+/* Settings toggles */
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid rgba(51,65,85,.5);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-label{font-size:13px;font-weight:600;color:#e2e8f0;}
+.toggle-desc{font-size:11px;color:#64748b;margin-top:3px;}
+.toggle-switch{position:relative;width:44px;height:26px;flex-shrink:0;margin-left:16px;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#334155;border-radius:26px;transition:.3s;}
+.toggle-slider:before{position:absolute;content:"";width:20px;height:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+.toggle-switch input:checked+.toggle-slider{background:#3b82f6;}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(18px);}
+/* Analytics */
+.analytic-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+@media(max-width:640px){.analytic-grid{grid-template-columns:1fr;}}
+.analytic-card{background:#1e293b;border-radius:12px;padding:18px;border:1px solid #334155;}
+.analytic-title{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #334155;}
+.bar-item{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12px;}
+.bar-label{width:108px;color:#94a3b8;text-align:right;flex-shrink:0;text-transform:capitalize;font-size:11px;}
+.bar-track{flex:1;background:#0f172a;border-radius:4px;height:20px;overflow:hidden;}
+.bar-fill{height:100%;background:#3b82f6;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:10px;font-weight:700;color:#fff;min-width:4px;transition:width .6s;}
+/* Topup requests */
+.topup-req-section{background:#1e293b;border-radius:12px;padding:20px;border:1px solid #334155;margin-bottom:20px;}
+/* Notification history */
+.notif-row{background:#0f172a;border-radius:8px;padding:12px 14px;margin-bottom:8px;border:1px solid #334155;}
+.notif-row-title{font-size:13px;font-weight:700;margin-bottom:3px;}
+.notif-row-body{font-size:12px;color:#94a3b8;margin-bottom:5px;line-height:1.45;}
+.notif-row-meta{font-size:11px;color:#475569;}
 /* Responsive */
 @media(max-width:640px){
   .hdr{padding:0 12px;}
@@ -267,6 +294,9 @@ tr:hover td{background:rgba(59,130,246,.03);}
       <button class="tab" data-tab="6">Error Logs</button>
       <button class="tab" data-tab="7">Send Alert</button>
       <button class="tab" data-tab="8">Ads</button>
+      <button class="tab" data-tab="9">Verifications</button>
+      <button class="tab" data-tab="10">Analytics</button>
+      <button class="tab" data-tab="11">Settings</button>
     </div>
 
     <!-- ── Panel 1: Overview ── -->
@@ -336,6 +366,21 @@ tr:hover td{background:rgba(59,130,246,.03);}
       <div id="adsContent"><p class="loading-msg">Loading ads...</p></div>
     </div>
 
+    <!-- ── Panel 9: Verifications ── -->
+    <div class="pnl" id="pnl9">
+      <div id="verifContent"><p class="loading-msg">Loading verification requests...</p></div>
+    </div>
+
+    <!-- ── Panel 10: Analytics ── -->
+    <div class="pnl" id="pnl10">
+      <div id="analyticsContent"><p class="loading-msg">Loading analytics...</p></div>
+    </div>
+
+    <!-- ── Panel 11: Settings ── -->
+    <div class="pnl" id="pnl11">
+      <div id="settingsContent"></div>
+    </div>
+
   </div><!-- /body -->
 </div><!-- /dash -->
 
@@ -379,11 +424,11 @@ var sb = supabase.createClient(
 );
 
 // ── App state ─────────────────────────────────────────────────
-var DATA = { listings:[], users:[], reports:[], errorLogs:[], reportsExist:true, ads:[] };
+var DATA = { listings:[], users:[], reports:[], errorLogs:[], reportsExist:true, ads:[], topupRequests:[] };
 var confirmResolver = null;
 var confirmInputResolver = null;
 var currentTab = 1;
-var TOTAL_TABS = 8;
+var TOTAL_TABS = 11;
 var APP_KEY = 'pamarket_state';
 var AD_CATS = ['property','vehicles','electronics','furniture','fashion','services','agriculture','pets','kids','rooms','other','jobs'];
 
@@ -463,6 +508,9 @@ function showTab(n){
   if(n===6) renderErrorLogs();
   if(n===7) renderAlertPanel();
   if(n===8) renderAds();
+  if(n===9) renderVerifications();
+  if(n===10) renderAnalytics();
+  if(n===11) renderSettings();
 }
 
 // ── Auth ──────────────────────────────────────────────────────
@@ -539,7 +587,8 @@ async function loadAllData(){
     loadListings(),
     loadUsers(),
     loadReports(),
-    loadErrorLogs()
+    loadErrorLogs(),
+    loadTopupRequests()
   ]);
   renderStats();
   renderAlerts();
@@ -549,6 +598,8 @@ async function loadAllData(){
   if(currentTab===4) renderTopups();
   if(currentTab===5) renderReports();
   if(currentTab===6) renderErrorLogs();
+  if(currentTab===9) renderVerifications();
+  if(currentTab===10) renderAnalytics();
 }
 
 async function loadListings(){
@@ -588,15 +639,24 @@ async function loadErrorLogs(){
   } catch(e){}
 }
 
+async function loadTopupRequests(){
+  try {
+    var {data, error} = await sb.from("topup_requests").select("*").order("created_at",{ascending:false}).limit(200);
+    if(!error && data) DATA.topupRequests = data;
+  } catch(e){ DATA.topupRequests = []; }
+}
+
 // ── Stats ─────────────────────────────────────────────────────
 function renderStats(){
   var l = DATA.listings, u = DATA.users, r = DATA.reports;
-  var totalUsers   = u.length;
-  var activeList   = l.filter(function(x){ return x.status==="active"; }).length;
-  var pendingList  = l.filter(function(x){ return x.status==="pending"; }).length;
-  var openReports  = r.filter(function(x){ return x.status==="open"; }).length;
-  var bannedUsers  = u.filter(function(x){ return x.status==="banned"; }).length;
-  var totalWallet  = u.reduce(function(a,x){ return a + Number(x.wallet_usd||0); }, 0);
+  var totalUsers    = u.length;
+  var activeList    = l.filter(function(x){ return x.status==="active"; }).length;
+  var pendingList   = l.filter(function(x){ return x.status==="pending"; }).length;
+  var openReports   = r.filter(function(x){ return x.status==="open"; }).length;
+  var bannedUsers   = u.filter(function(x){ return x.status==="banned"; }).length;
+  var totalWallet   = u.reduce(function(a,x){ return a + Number(x.wallet_usd||0); }, 0);
+  var pendingVerifs = u.filter(function(x){ return x.verification_pending===true; }).length;
+  var pendingTopups = DATA.topupRequests.filter(function(x){ return x.status==="pending"; }).length;
 
   document.getElementById("statsDiv").innerHTML =
     scard(totalUsers, "Total Users", "")+
@@ -604,7 +664,9 @@ function renderStats(){
     scard(pendingList, "Pending Review", pendingList>0?"warn":"")+
     scard(openReports, "Open Reports", openReports>0?"warn":"")+
     scard(bannedUsers, "Banned Users", bannedUsers>0?"danger":"")+
-    scard("$"+fmt(totalWallet), "Total Wallet Balance", "");
+    scard("$"+fmt(totalWallet), "Total Wallet Balance", "")+
+    scard(pendingVerifs, "Pending Verifs", pendingVerifs>0?"warn":"")+
+    scard(pendingTopups, "Pending Top-Ups", pendingTopups>0?"warn":"");
 }
 
 function scard(n, label, cls){
@@ -614,11 +676,15 @@ function scard(n, label, cls){
 // ── Alerts ────────────────────────────────────────────────────
 function renderAlerts(){
   var l = DATA.listings, r = DATA.reports;
-  var pending = l.filter(function(x){ return x.status==="pending"; }).length;
-  var openR   = r.filter(function(x){ return x.status==="open"; }).length;
+  var pending      = l.filter(function(x){ return x.status==="pending"; }).length;
+  var openR        = r.filter(function(x){ return x.status==="open"; }).length;
+  var pendingVerif = DATA.users.filter(function(x){ return x.verification_pending===true; }).length;
+  var pendingTopup = DATA.topupRequests.filter(function(x){ return x.status==="pending"; }).length;
   var html = "";
-  if(pending>0) html += '<div class="alert">&#128276; '+pending+' listing'+(pending>1?"s":"")+' waiting for review. <a href="#" onclick="showTab(2);document.getElementById(\'listFilter\').value=\'pending\';renderListings();return false;" style="color:#fbbf24;margin-left:6px;text-decoration:underline;">Review now</a></div>';
-  if(openR>0)   html += '<div class="alert red">&#128681; '+openR+' open report'+(openR>1?"s":"")+' need attention. <a href="#" onclick="showTab(5);return false;" style="color:#f87171;margin-left:6px;text-decoration:underline;">View reports</a></div>';
+  if(pending>0)      html += '<div class="alert">&#128276; '+pending+' listing'+(pending>1?"s":"")+' waiting for review. <a href="#" onclick="showTab(2);document.getElementById(\'listFilter\').value=\'pending\';renderListings();return false;" style="color:#fbbf24;margin-left:6px;text-decoration:underline;">Review now</a></div>';
+  if(openR>0)        html += '<div class="alert red">&#128681; '+openR+' open report'+(openR>1?"s":"")+' need attention. <a href="#" onclick="showTab(5);return false;" style="color:#f87171;margin-left:6px;text-decoration:underline;">View reports</a></div>';
+  if(pendingVerif>0) html += '<div class="alert">&#10003; '+pendingVerif+' verification request'+(pendingVerif>1?"s":"")+' pending. <a href="#" onclick="showTab(9);return false;" style="color:#fbbf24;margin-left:6px;text-decoration:underline;">Review</a></div>';
+  if(pendingTopup>0) html += '<div class="alert">&#128178; '+pendingTopup+' top-up request'+(pendingTopup>1?"s":"")+' awaiting approval. <a href="#" onclick="showTab(4);return false;" style="color:#fbbf24;margin-left:6px;text-decoration:underline;">Approve</a></div>';
   document.getElementById("alertsDiv").innerHTML = html;
 }
 
@@ -959,7 +1025,57 @@ function renderTopups(){
   var u = DATA.users;
   var top20 = u.slice().sort(function(a,b){ return Number(b.wallet_usd||0)-Number(a.wallet_usd||0); }).slice(0,20);
 
-  var html =
+  // ── Pending top-up requests from Supabase ──
+  var pending = DATA.topupRequests.filter(function(r){ return r.status==="pending"; });
+  var allReqs = DATA.topupRequests;
+
+  var html = '<div class="topup-req-section">';
+  html += '<div class="section-head">Pending Top-Up Requests</div>';
+  html += '<div class="section-sub">EcoCash payments submitted by users waiting for manual confirmation.</div>';
+
+  if(pending.length===0){
+    html += '<div class="empty-msg" style="color:#4ade80">&#10003; No pending top-up requests.</div>';
+  } else {
+    html += '<div class="tbl-wrap"><table><thead><tr><th>User</th><th>Phone</th><th>Amount</th><th>Method</th><th>Ref</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+    pending.forEach(function(r){
+      var user = DATA.users.find(function(u){ return u.id===r.user_id; });
+      html += "<tr>"+
+        "<td><b>"+esc(user?user.name||"—":"Unknown")+"</b></td>"+
+        "<td>"+esc(user?user.phone||"—":"—")+"</td>"+
+        "<td><b style='color:#3b82f6'>$"+fmt(r.amount||0)+"</b></td>"+
+        "<td>"+esc(r.method||"EcoCash")+"</td>"+
+        "<td><span style='font-size:11px;color:#64748b'>"+esc(r.reference||"—")+"</span></td>"+
+        "<td>"+fmtDate(r.created_at)+"</td>"+
+        "<td><div class='actions'>"+
+          "<button class='ab ab-approve' onclick='approveTopup(\""+r.id+"\",\""+esc(r.user_id)+"\","+Number(r.amount||0)+")'>Approve</button>"+
+          "<button class='ab ab-reject' onclick='rejectTopup(\""+r.id+"\")'>Reject</button>"+
+        "</div></td>"+
+      "</tr>";
+    });
+    html += "</tbody></table></div>";
+  }
+
+  // Recent history
+  var history = allReqs.filter(function(r){ return r.status!=="pending"; }).slice(0,20);
+  if(history.length>0){
+    html += '<div style="margin-top:20px"><div class="section-sub" style="margin-bottom:10px">Recent History</div>';
+    html += '<div class="tbl-wrap"><table><thead><tr><th>User</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+    history.forEach(function(r){
+      var user = DATA.users.find(function(u){ return u.id===r.user_id; });
+      var bc = r.status==="approved"?"b-active":"b-rejected";
+      html += "<tr>"+
+        "<td>"+esc(user?user.name||"—":"Unknown")+"</td>"+
+        "<td><b style='color:#3b82f6'>$"+fmt(r.amount||0)+"</b></td>"+
+        "<td>"+esc(r.method||"EcoCash")+"</td>"+
+        "<td><span class='b "+bc+"'>"+esc(r.status||"—")+"</span></td>"+
+        "<td>"+fmtDate(r.created_at)+"</td>"+
+      "</tr>";
+    });
+    html += "</tbody></table></div></div>";
+  }
+  html += '</div>';
+
+  html +=
     '<div class="wallet-section">'+
     '<div class="section-head">Manual Wallet Adjustment</div>'+
     '<div class="section-sub">Search for a user to credit an EcoCash payment to their wallet. Changes are saved directly to their profile balance.</div>'+
@@ -1086,6 +1202,35 @@ async function applyModalCredit(uid){
   closeModal();
   await loadUsers(); renderTopups(); renderStats();
   toast("Wallet updated to $"+fmt(newBal)+".","success");
+}
+
+async function approveTopup(reqId, userId, amount){
+  var user = DATA.users.find(function(u){ return u.id===userId; });
+  var name = user ? user.name||"user" : "user";
+  var ok = await confirm2(
+    "Approve Top-Up",
+    "Credit $"+fmt(amount)+" to "+name+"'s wallet?",
+    "💰","Approve"
+  );
+  if(!ok) return;
+  var currentBal = user ? Number(user.wallet_usd||0) : 0;
+  var newBal = +((currentBal + amount).toFixed(2));
+  var r1 = await sb.from("profiles").update({wallet_usd:newBal, updated_at:new Date().toISOString()}).eq("id",userId);
+  if(r1.error){ toast("Error updating wallet: "+r1.error.message,"error"); return; }
+  var r2 = await sb.from("topup_requests").update({status:"approved", updated_at:new Date().toISOString()}).eq("id",reqId);
+  if(r2.error){ toast("Error updating request: "+r2.error.message,"error"); return; }
+  await loadTopupRequests(); await loadUsers();
+  renderTopups(); renderStats();
+  toast("$"+fmt(amount)+" credited to "+name+".","success");
+}
+
+async function rejectTopup(reqId){
+  var ok = await confirm2("Reject Top-Up","This top-up request will be rejected and no funds will be credited.","❌","Reject");
+  if(!ok) return;
+  var {error} = await sb.from("topup_requests").update({status:"rejected", updated_at:new Date().toISOString()}).eq("id",reqId);
+  if(error){ toast("Error: "+error.message,"error"); return; }
+  await loadTopupRequests(); renderTopups();
+  toast("Top-up request rejected.","");
 }
 
 // ── Reports Panel ─────────────────────────────────────────────
@@ -1290,6 +1435,41 @@ function renderAlertPanel(){
     '<div id="alertHistorySection"></div>';
   document.getElementById("alertContent").innerHTML = html;
   updateAlertCount();
+  loadNotifHistory();
+}
+
+async function loadNotifHistory(){
+  var sec = document.getElementById("alertHistorySection");
+  if(!sec) return;
+  sec.innerHTML = '<p class="loading-msg">Loading history...</p>';
+  try {
+    var {data, error} = await sb.from("notifications").select("title,body,created_at,user_id").order("created_at",{ascending:false}).limit(50);
+    if(error || !data || !data.length){
+      sec.innerHTML = '<div class="empty-msg" style="margin-top:16px">No notifications sent yet.</div>';
+      return;
+    }
+    // Group by title+body+created_at (same bulk send batches together)
+    var groups = [];
+    data.forEach(function(n){
+      var key = n.title+"|||"+n.body+"|||"+n.created_at.slice(0,16);
+      var g = groups.find(function(x){ return x.key===key; });
+      if(g){ g.count++; }
+      else  { groups.push({key:key,title:n.title,body:n.body,created_at:n.created_at,count:1}); }
+    });
+    var html = '<div style="margin-top:24px"><div class="section-head">Recent Sent Notifications</div>';
+    groups.slice(0,15).forEach(function(g){
+      html +=
+        '<div class="notif-row">'+
+          '<div class="notif-row-title">'+esc(g.title)+'</div>'+
+          '<div class="notif-row-body">'+esc(g.body)+'</div>'+
+          '<div class="notif-row-meta">Sent to ~'+g.count+' user'+(g.count!==1?"s":"")+'&nbsp;&nbsp;·&nbsp;&nbsp;'+fmtDT(g.created_at)+'</div>'+
+        '</div>';
+    });
+    html += '</div>';
+    sec.innerHTML = html;
+  } catch(e){
+    sec.innerHTML = '';
+  }
 }
 
 function updateAlertCount(){
@@ -1508,6 +1688,230 @@ async function deleteAd(id){
   saveAdsToStorage(updated);
   renderAds();
   toast("Ad deleted.","");
+}
+
+// ── Verifications Panel ───────────────────────────────────────
+function renderVerifications(){
+  var pending = DATA.users.filter(function(u){ return u.verification_pending === true; });
+  var verified = DATA.users.filter(function(u){ return u.verified === true; });
+
+  var html =
+    '<div class="stats-grid" style="margin-bottom:18px">'+
+    scard(pending.length,"Pending Requests",pending.length>0?"warn":"")+
+    scard(verified.length,"Verified Users","")+
+    scard(DATA.users.filter(function(u){ return !u.verified && !u.verification_pending; }).length,"Unverified","")+
+    '</div>';
+
+  html += '<div class="section-head">Pending Verification Requests</div>';
+
+  if(!pending.length){
+    html += '<div class="empty-msg" style="color:#4ade80;margin-bottom:20px">&#10003; No pending verification requests.</div>';
+  } else {
+    html += '<div class="tbl-wrap" style="margin-bottom:20px"><table><thead><tr><th>Name</th><th>Phone</th><th>Wallet</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
+    pending.forEach(function(u){
+      html += "<tr>"+
+        "<td><b>"+esc(u.name||"—")+"</b></td>"+
+        "<td>"+esc(u.phone||"—")+"</td>"+
+        "<td><b style='color:#3b82f6'>$"+fmt(u.wallet_usd)+"</b></td>"+
+        "<td>"+fmtDate(u.created_at)+"</td>"+
+        "<td><div class='actions'>"+
+          "<button class='ab ab-view' onclick='viewUser(\""+u.id+"\")'>View</button>"+
+          "<button class='ab ab-approve' onclick='approveVerification(\""+u.id+"\")'>Approve</button>"+
+          "<button class='ab ab-reject' onclick='rejectVerification(\""+u.id+"\")'>Reject</button>"+
+        "</div></td>"+
+      "</tr>";
+    });
+    html += "</tbody></table></div>";
+  }
+
+  html += '<div class="section-head" style="margin-top:8px">All Verified Users ('+verified.length+')</div>';
+  if(!verified.length){
+    html += '<div class="empty-msg">No verified users yet.</div>';
+  } else {
+    html += '<div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Phone</th><th>Role</th><th>Wallet</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
+    verified.forEach(function(u){
+      var roleBc = u.role==="admin"?"b-admin":u.role==="moderator"?"b-moderator":"b-blue";
+      html += "<tr>"+
+        "<td><b>"+esc(u.name||"—")+"</b> <span style='color:#22c55e;font-size:11px'>&#10003;</span></td>"+
+        "<td>"+esc(u.phone||"—")+"</td>"+
+        "<td><span class='b "+roleBc+"'>"+esc(u.role||"user")+"</span></td>"+
+        "<td><b style='color:#3b82f6'>$"+fmt(u.wallet_usd)+"</b></td>"+
+        "<td>"+fmtDate(u.created_at)+"</td>"+
+        "<td><div class='actions'>"+
+          "<button class='ab ab-view' onclick='viewUser(\""+u.id+"\")'>View</button>"+
+        "</div></td>"+
+      "</tr>";
+    });
+    html += "</tbody></table></div>";
+  }
+
+  document.getElementById("verifContent").innerHTML = html;
+}
+
+async function approveVerification(id){
+  var u = DATA.users.find(function(x){ return x.id===id; });
+  var ok = await confirm2("Approve Verification","Mark "+esc(u?u.name||"user":"user")+" as verified on the platform?","✅","Approve");
+  if(!ok) return;
+  var {error} = await sb.from("profiles").update({verified:true, verification_pending:false, updated_at:new Date().toISOString()}).eq("id",id);
+  if(error){ toast("Error: "+error.message,"error"); return; }
+  await loadUsers(); renderVerifications(); renderStats();
+  toast("User verified successfully.","success");
+}
+
+async function rejectVerification(id){
+  var u = DATA.users.find(function(x){ return x.id===id; });
+  var ok = await confirm2("Reject Verification","Dismiss the verification request for "+esc(u?u.name||"user":"user")+"?","❌","Reject");
+  if(!ok) return;
+  var {error} = await sb.from("profiles").update({verification_pending:false, updated_at:new Date().toISOString()}).eq("id",id);
+  if(error){ toast("Error: "+error.message,"error"); return; }
+  await loadUsers(); renderVerifications();
+  toast("Verification request dismissed.","");
+}
+
+// ── Analytics Panel ───────────────────────────────────────────
+function renderAnalytics(){
+  var l = DATA.listings, u = DATA.users;
+
+  // Listings by category
+  var catCounts = {};
+  l.forEach(function(x){
+    var c = x.category || "other";
+    catCounts[c] = (catCounts[c]||0) + 1;
+  });
+  var catSorted = Object.keys(catCounts).sort(function(a,b){ return catCounts[b]-catCounts[a]; }).slice(0,10);
+  var maxCat = catSorted.length ? catCounts[catSorted[0]] : 1;
+
+  // Listing status breakdown
+  var statusCounts = {active:0,pending:0,rejected:0,removed:0};
+  l.forEach(function(x){ if(statusCounts[x.status]!==undefined) statusCounts[x.status]++; });
+  var maxStatus = Math.max(1, statusCounts.active, statusCounts.pending, statusCounts.rejected, statusCounts.removed);
+
+  // User growth — last 8 weeks
+  var weekCounts = [];
+  var now = Date.now();
+  for(var w=7;w>=0;w--){
+    var wStart = now - (w+1)*7*86400000;
+    var wEnd   = now - w*7*86400000;
+    var label  = w===0?"This week":"Wk -"+w;
+    var count  = u.filter(function(x){ var t=new Date(x.created_at).getTime(); return t>=wStart && t<wEnd; }).length;
+    weekCounts.push({label:label,count:count});
+  }
+  var maxWeek = Math.max(1, Math.max.apply(null, weekCounts.map(function(x){return x.count;})));
+
+  // Status colours
+  var statusColors = {active:"#22c55e",pending:"#f59e0b",rejected:"#f87171",removed:"#6b7280"};
+
+  var html = '<div class="analytic-grid">';
+
+  // Card: Listings by category
+  html += '<div class="analytic-card" style="grid-column:1/-1"><div class="analytic-title">Listings by Category</div>';
+  if(catSorted.length===0){
+    html += '<div style="color:#475569;font-size:13px">No listings yet.</div>';
+  } else {
+    catSorted.forEach(function(c){
+      var pct = Math.round((catCounts[c]/maxCat)*100);
+      html += '<div class="bar-item"><span class="bar-label">'+esc(c)+'</span><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%">'+catCounts[c]+'</div></div></div>';
+    });
+  }
+  html += '</div>';
+
+  // Card: Listing status
+  html += '<div class="analytic-card"><div class="analytic-title">Listing Status Breakdown</div>';
+  ["active","pending","rejected","removed"].forEach(function(s){
+    var pct = Math.round((statusCounts[s]/maxStatus)*100);
+    html += '<div class="bar-item"><span class="bar-label">'+s+'</span><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+statusColors[s]+'">'+statusCounts[s]+'</div></div></div>';
+  });
+  html += '</div>';
+
+  // Card: User growth
+  html += '<div class="analytic-card"><div class="analytic-title">User Sign-Ups (Last 8 Weeks)</div>';
+  weekCounts.forEach(function(w){
+    var pct = Math.round((w.count/maxWeek)*100);
+    html += '<div class="bar-item"><span class="bar-label">'+esc(w.label)+'</span><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:#a78bfa">'+w.count+'</div></div></div>';
+  });
+  html += '</div>';
+
+  html += '</div>'; // analytic-grid
+
+  // Summary stats
+  html +=
+    '<div class="stats-grid">'+
+    scard(l.length,"Total Listings","")+
+    scard(u.length,"Total Users","")+
+    scard(catSorted.length,"Categories Active","")+
+    scard(u.filter(function(x){return x.verified;}).length,"Verified Users","")+
+    scard(DATA.reports.filter(function(x){return x.status==="open";}).length,"Open Reports",DATA.reports.filter(function(x){return x.status==="open";}).length>0?"warn":"")+
+    scard(DATA.topupRequests.filter(function(x){return x.status==="pending";}).length,"Pending Top-Ups",DATA.topupRequests.filter(function(x){return x.status==="pending";}).length>0?"warn":"")+
+    '</div>';
+
+  document.getElementById("analyticsContent").innerHTML = html;
+}
+
+// ── Settings Panel ────────────────────────────────────────────
+var SETTING_DEFS = [
+  {key:"requireListingApproval",   label:"Require Listing Approval",    desc:"All new listings must be reviewed by an admin before going live."},
+  {key:"autoApproveVerified",      label:"Auto-Approve Verified Users",  desc:"Listings from verified users are automatically approved."},
+  {key:"allowImageUploads",        label:"Allow Image Uploads",          desc:"Users can upload photos to their listings."},
+  {key:"signupPaused",             label:"Pause New Sign-Ups",           desc:"Prevent new users from registering on the platform."},
+  {key:"requirePhoneVerification", label:"Require Phone Verification",   desc:"Users must verify their phone number before posting listings."},
+  {key:"enablePremiumListings",    label:"Enable Premium Listings",      desc:"Allow users to boost listings to the top of search results."},
+  {key:"freeOnly",                 label:"Free Listings Only",           desc:"Disable the pricing field — all listings show as free/negotiable."}
+];
+
+function loadAppSettings(){
+  try {
+    var raw = localStorage.getItem(APP_KEY);
+    var state = raw ? JSON.parse(raw) : {};
+    var settings = {};
+    SETTING_DEFS.forEach(function(d){
+      settings[d.key] = state[d.key] !== undefined ? !!state[d.key] : false;
+    });
+    return settings;
+  } catch(e){ return {}; }
+}
+
+function saveAppSettings(){
+  try {
+    var raw = localStorage.getItem(APP_KEY);
+    var state = raw ? JSON.parse(raw) : {};
+    SETTING_DEFS.forEach(function(d){
+      var el = document.getElementById("stg_"+d.key);
+      if(el) state[d.key] = el.checked;
+    });
+    localStorage.setItem(APP_KEY, JSON.stringify(state));
+    toast("Settings saved.","success");
+  } catch(e){ toast("Error saving settings.","error"); }
+}
+
+function renderSettings(){
+  var settings = loadAppSettings();
+  var html =
+    '<div style="background:#1e293b;border-radius:12px;padding:20px;border:1px solid #334155;max-width:640px">'+
+    '<div class="section-head">Platform Settings</div>'+
+    '<div class="section-sub">These settings control platform behaviour and are stored locally for the app to read.</div>';
+
+  SETTING_DEFS.forEach(function(d){
+    var checked = settings[d.key] ? " checked" : "";
+    html +=
+      '<div class="toggle-row">'+
+        '<div>'+
+          '<div class="toggle-label">'+esc(d.label)+'</div>'+
+          '<div class="toggle-desc">'+esc(d.desc)+'</div>'+
+        '</div>'+
+        '<label class="toggle-switch">'+
+          '<input type="checkbox" id="stg_'+d.key+'"'+checked+'>'+
+          '<span class="toggle-slider"></span>'+
+        '</label>'+
+      '</div>';
+  });
+
+  html +=
+    '<div style="margin-top:20px">'+
+      '<button class="btn-send" onclick="saveAppSettings()">Save Settings</button>'+
+    '</div>'+
+    '</div>';
+
+  document.getElementById("settingsContent").innerHTML = html;
 }
 
 // ── Row helper ────────────────────────────────────────────────
