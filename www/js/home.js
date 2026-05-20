@@ -149,56 +149,42 @@
           </button>
         </div>
 
-        <!-- PAID BANNER ADS -->
+        <!-- HOT ON PAMARKET (paid ads horizontal scroll) -->
         ${(function(){
           var now = Date.now();
-          var banners = (H.state.paidAds||[]).filter(function(a){ return a.type==='banner' && a.active && a.endsAt > now; });
-          if (!banners.length) return '';
-          var idx = Math.floor(Date.now() / 8000) % banners.length;
-          var a = banners[idx];
-          if(H.trackAdImpression) H.trackAdImpression(a.id);
-          var clickFn = 'H.trackAdClick(' + JSON.stringify(a.id) + ',' + JSON.stringify(a.linkUrl||'') + ')';
-          return '<div style="margin:12px 12px 0">'
-            + '<div onclick="' + escHtml(clickFn) + '" style="border-radius:16px;overflow:hidden;cursor:pointer;position:relative;border:1px solid var(--border)">'
-            + (a.imageUrl ? '<img src="' + escHtml(a.imageUrl) + '" style="width:100%;height:140px;object-fit:cover;display:block" loading="lazy" onerror="this.onerror=null;this.style.display=\'none\'">' : '')
-            + '<div style="background:' + escHtml(a.bgColor||'#1A3A8F') + ';padding:16px 18px">'
-            + '<div style="font-size:17px;font-weight:900;color:#fff">' + escHtml(a.headline||a.businessName) + '</div>'
-            + (a.tagline ? '<div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:3px">' + escHtml(a.tagline) + '</div>' : '')
+          var ads = (H.state.paidAds||[]).filter(function(a){ return a.active && a.endsAt > now; });
+          if (!ads.length) return '';
+          ads.forEach(function(a){ if(H.trackAdImpression) H.trackAdImpression(a.id); });
+          return '<div style="padding:20px 0 0">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">'
+            + '<div>'
+            + '<div style="font-size:10px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Sponsored</div>'
+            + '<span style="font-size:17px;font-weight:800;color:var(--text)">Hot on PaMarket</span>'
             + '</div>'
-            + '<span style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;letter-spacing:.5px">SPONSORED</span>'
             + '</div>'
-            + (banners.length > 1 ? '<div style="text-align:center;font-size:10px;color:var(--sub);margin-top:5px">' + (idx+1) + '/' + banners.length + ' sponsors</div>' : '')
+            + '<div style="display:flex;gap:12px;padding:0 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">'
+            + ads.map(function(a){
+                var clickFn = 'H.trackAdClick(' + JSON.stringify(a.id) + ',' + JSON.stringify(a.linkUrl||'') + ')';
+                var title = escHtml(a.headline || a.businessName || 'Sponsored');
+                var sub   = escHtml(a.tagline || a.businessName || '');
+                var bg    = escHtml(a.bgColor || '#1A3A8F');
+                var initials = (a.businessName||'AD').split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase();
+                return '<div onclick="' + escHtml(clickFn) + '" style="width:162px;flex-shrink:0;border-radius:16px;overflow:hidden;cursor:pointer;border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.07);background:var(--card)">'
+                  + '<div style="height:115px;background:' + bg + ';position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center">'
+                  + (a.imageUrl
+                      ? '<img src="' + escHtml(a.imageUrl) + '" style="width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0" loading="lazy" onerror="this.onerror=null;this.style.display=\'none\'">'
+                      : '<div style="font-size:32px;font-weight:900;color:rgba(255,255,255,0.45);letter-spacing:-1px">' + escHtml(initials) + '</div>')
+                  + '<span style="position:absolute;top:7px;right:7px;background:rgba(0,0,0,0.45);color:#fff;font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px;letter-spacing:.4px">AD</span>'
+                  + '</div>'
+                  + '<div style="padding:9px 11px 12px">'
+                  + '<div style="font-size:13px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">' + title + '</div>'
+                  + '<div style="font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + sub + '</div>'
+                  + '</div>'
+                  + '</div>';
+              }).join('')
+            + '</div>'
             + '</div>';
         })()}
-
-        <!-- HOT ON PAMARKET -->
-        <div style="padding:24px 16px 0">
-          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
-            <div>
-              <div style="font-size:10px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">Discover</div>
-              <span style="font-size:17px;font-weight:800;color:var(--text)">Hot on PaMarket</span>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            ${[
-              { emoji:'💼', label:'Find a Job', sub:'Browse openings in Zimbabwe', color1:'#1A3A8F', color2:'#2952cc', action:"H.openInner('Jobs')", badge:'' },
-              { emoji:'🏠', label:'Rooms & Property', sub:'Find your perfect space', color1:'#00897B', color2:'#00695C', action:"H.filterByCat('rooms')", badge:'' },
-              { emoji:'✅', label:'Verify Your Business', sub:'Get the trusted seller badge', color1:'#e53935', color2:'#b71c1c', action:"H.openInner('Verify')", badge:'' },
-              { emoji:'🛒', label:'Post a Free Ad', sub:'Sell anything in seconds', color1:'#F5A623', color2:'#e08800', action:"H.navTo('Post',null)", badge:'' },
-            ].map(c => `<div onclick="${c.action}" style="cursor:pointer;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.06)">
-              <div style="height:110px;background:linear-gradient(135deg,${c.color1},${c.color2});display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
-                <div style="position:absolute;right:-18px;top:-18px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.12)"></div>
-                <div style="position:absolute;left:-10px;bottom:-10px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.08)"></div>
-                <span style="font-size:44px;position:relative">${c.emoji}</span>
-                ${c.badge ? `<span style="position:absolute;top:8px;left:8px;background:#F5A623;color:#1A3A8F;font-size:9px;font-weight:800;padding:2px 7px;border-radius:6px">${c.badge}</span>` : ''}
-              </div>
-              <div style="padding:10px 12px 13px">
-                <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:2px">${c.label}</div>
-                <div style="font-size:11px;color:var(--sub);line-height:1.4">${c.sub}</div>
-              </div>
-            </div>`).join('')}
-          </div>
-        </div>
 
         <!-- FEATURED -->
         ${featured.length ? `
