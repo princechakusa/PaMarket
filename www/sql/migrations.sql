@@ -54,3 +54,22 @@ drop policy if exists "anon read settings"  on app_settings;
 drop policy if exists "anon write settings" on app_settings;
 create policy "anon read settings"  on app_settings for select using (true);
 create policy "anon write settings" on app_settings for all    using (true);
+
+-- ── 3. Verifications (ID doc + selfie for admin review) ──
+create table if not exists verifications (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid unique,
+  id_doc        text,
+  selfie        text,
+  status        text not null default 'pending' check(status in ('pending','approved','rejected')),
+  admin_note    text,
+  submitted_at  timestamptz default now(),
+  reviewed_at   timestamptz,
+  reviewed_by   text
+);
+
+alter table verifications enable row level security;
+drop policy if exists "anon read verifications"  on verifications;
+drop policy if exists "anon write verifications" on verifications;
+create policy "anon read verifications"  on verifications for select using (true);
+create policy "anon write verifications" on verifications for all    using (true);

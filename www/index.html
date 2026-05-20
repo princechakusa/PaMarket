@@ -306,7 +306,7 @@
   <script src="js/security_pages.js?v=2"></script>
   <script src="js/help.js?v=2"></script>
   <script src="js/wallet.js"></script>
-  <script src="js/verify.js"></script>
+  <script src="js/verify.js?v=2"></script>
   <script src="js/admin.js?v=2"></script>
   <script src="js/home.js?v=4"></script>
 
@@ -353,6 +353,10 @@
           };
         };
       }).catch(() => {});
+      // Auto-reload when a new service worker takes control
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
     }
 
     // ── Network status ───────────────────────────────────
