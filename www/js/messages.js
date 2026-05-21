@@ -93,7 +93,7 @@
           const other   = users().find(x => x.id === otherId) || { name: (function(){ var lastMsg = c.messages.find(function(m){ return m.from===otherId; }); return lastMsg&&lastMsg.senderName ? lastMsg.senderName : 'User'; })() };
           const last    = c.messages[c.messages.length - 1];
           const unread  = c.messages.some(m => m.from !== u.id && !m.read);
-          return `<div class="msg-item" onclick="H.openChat('${c.id}')">
+          return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item" data-cid="${escHtml(c.id)}" onclick="H.openChat('${c.id}')">
             <div class="msg-av">${initials(other.name)}</div>
             <div class="msg-body">
               <div class="msg-name-row">
@@ -103,7 +103,7 @@
               <div class="msg-preview">${last.from === u.id ? 'You: ' : ''}${escHtml(last.text)}</div>
             </div>
             ${unread ? '<div class="msg-unread-dot"></div>' : ''}
-          </div>`;
+          </div></div>`;
         }).join('') : H.emptyState('No messages yet', 'When buyers message you about a listing, it will show up here.', null, null)}
       </div>
     </div>`;
@@ -149,7 +149,7 @@
         + '</div></div>';
     }).join('');
 
-    return '<div class="page active" style="display:flex;flex-direction:column;overflow:hidden">'
+    return '<div class="page active" style="display:flex;flex-direction:column;overflow:hidden;height:100%">'
       + '<div class="det-topbar" style="flex-shrink:0"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
       + '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">'
       + '<div style="width:34px;height:34px;flex-shrink:0">' + otherAvatar + '</div>'
@@ -157,7 +157,7 @@
       + (other.verified ? '<div style="font-size:10px;color:#22c55e;font-weight:600">✓ Verified</div>' : '') + '</div>'
       + '</div></div>'
       + (listing ? '<div style="flex-shrink:0;padding:8px 14px;background:var(--card);border-bottom:1px solid var(--border);font-size:13px;color:var(--sub)">Re: ' + escHtml(listing.title) + '</div>' : '')
-      + '<div class="chat-thread" id="chatThread" style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px">' + (msgs || '<div style="text-align:center;color:var(--sub);padding:40px 20px;font-size:14px">No messages yet. Say hello! 👋</div>') + '</div>'
+      + '<div class="chat-thread" id="chatThread" style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"><div style="flex:1;min-height:0"></div>' + (msgs || '<div style="text-align:center;color:var(--sub);padding:40px 20px;font-size:14px">No messages yet. Say hello! 👋</div>') + '</div>'
       + '<div class="chat-input-bar" style="flex-shrink:0">'
       + '<input id="chatIn" placeholder="Type a message..." onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}" style="flex:1">'
       + '<button class="chat-send" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
@@ -205,6 +205,7 @@
       }
       H._refreshMessagesPage();
     }, 5000);
+    H._setupMsgSwipe();
   };
 
   H._refreshMessagesPage = function (opts) {
@@ -331,6 +332,65 @@
       console.warn('Msg cloud error:', e.message);
       H.toast('Message could not be sent. Check your connection and try again.', 5000, true);
     }
+  };
+
+
+  H._setupMsgSwipe = function () {
+    document.querySelectorAll('.swipe-del-row').forEach(function (row) {
+      var inner = row.querySelector('.msg-item');
+      if (!inner) return;
+      var convId = inner.dataset.cid;
+      var startX = 0, startY = 0, dx = 0, hor = false, swiped = false;
+      var THRESHOLD = 72;
+
+      row.addEventListener('touchstart', function (e) {
+        var t = e.touches[0];
+        startX = t.clientX; startY = t.clientY;
+        dx = 0; hor = false; swiped = false;
+        inner.style.transition = 'none';
+      }, { passive: true });
+
+      row.addEventListener('touchmove', function (e) {
+        var t = e.touches[0];
+        var dxNow = t.clientX - startX;
+        var dyNow = t.clientY - startY;
+        if (!hor) {
+          if (Math.abs(dxNow) > 8 && Math.abs(dxNow) > Math.abs(dyNow)) hor = true;
+          else if (Math.abs(dyNow) > 8) return;
+          else return;
+        }
+        dx = Math.min(0, dxNow);
+        inner.style.transform = 'translateX(' + dx + 'px)';
+        swiped = Math.abs(dx) > 10;
+      }, { passive: true });
+
+      row.addEventListener('touchend', function () {
+        if (!hor) return;
+        inner.style.transition = 'transform .22s ease';
+        if (dx <= -THRESHOLD) {
+          inner.style.transform = 'translateX(-110%)';
+          setTimeout(function () { H._deleteConversation(convId); }, 240);
+        } else {
+          inner.style.transform = 'translateX(0)';
+        }
+        hor = false;
+      });
+
+      inner.addEventListener('click', function (e) {
+        if (swiped) { e.preventDefault(); e.stopImmediatePropagation(); swiped = false; }
+      }, true);
+    });
+  };
+
+  H._deleteConversation = function (convId) {
+    H.state.conversations = (H.state.conversations || []).filter(function (c) { return c.id !== convId; });
+    H.saveState();
+    var sb = window.supabase;
+    if (sb && typeof sb.from === 'function') {
+      sb.from('messages').delete().eq('conversation_id', convId).then(function () {});
+      sb.from('conversations').delete().eq('id', convId).then(function () {});
+    }
+    if (H.currentPageName === 'Messages') H.renderPage('Messages');
   };
 
 })(window.H);
