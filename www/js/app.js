@@ -740,7 +740,7 @@ window.H = {
         tagline:r.tagline, imageUrl:r.image_url,
         bgColor:r.bg_color, linkUrl:r.link_url, targetCat:r.target_cat,
         startsAt:r.starts_at?new Date(r.starts_at).getTime():0,
-        endsAt:r.ends_at?new Date(r.ends_at).getTime():0,
+        endsAt:r.ends_at?new Date(r.ends_at).getTime():9999999999999,
         active:r.active, priority:r.priority||0,
         impressions:r.impressions||0, clicks:r.clicks||0,
         listingId:r.listing_id||null
