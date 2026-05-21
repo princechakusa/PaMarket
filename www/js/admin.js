@@ -67,7 +67,8 @@
       ['ads',           `Ads (${((H.state.paidAds||[]).filter(a=>a.active&&a.endsAt>Date.now())).length} live)`],
       ['notifications', 'Notify'],
       ['support',       `Support (${(H.state.supportTickets||[]).filter(t=>t.status!=='closed').length})`],
-      ['logs',          `Logs (${(H.state.adminLogs||[]).length})`]
+      ['logs',          `Logs (${(H.state.adminLogs||[]).length})`],
+      ['messages',      `Messages (${(H.state.conversations||[]).length})`]
     ];
 
     return `<div class="page active">${innerTopbar('Admin Panel')}
@@ -83,6 +84,7 @@
     const reRender = function () { if (body) body.innerHTML = renderBody(); };
     const syncs = [syncVerificationsFromSupabase()];
     if (typeof H.syncReports === 'function') syncs.push(H.syncReports());
+    if (typeof H.syncConversations === 'function') syncs.push(H.syncConversations());
     Promise.all(syncs).then(reRender);
   };
 
@@ -140,6 +142,7 @@
       case 'notifications':  return renderNotifications();
       case 'support':        return renderSupport();
       case 'logs':           return renderLogs();
+      case 'messages':       return renderMessages();
       default: return '';
     }
   }
@@ -207,6 +210,9 @@
     const expiring = listings.filter(l=>l.expiresAt&&l.expiresAt-Date.now()<7*86400000&&l.expiresAt>Date.now()).length;
     const openTickets = (H.state.supportTickets||[]).filter(t=>t.status!=='closed').length;
     const topupQueue = (H.state.topupRequests||[]).filter(r=>r.status==='pending').length;
+    const convos = H.state.conversations || [];
+    let msgUnread = 0;
+    convos.forEach(function (c) { (c.messages||[]).forEach(function (m) { if (!m.read) msgUnread++; }); });
 
     return `
       <div class="stats" style="margin:0 0 10px">
@@ -247,6 +253,11 @@
         <div class="stat"><div class="stat-n">${txns.length}</div><div class="stat-l">Transactions</div></div>
         <div class="stat"><div class="stat-n">${users.filter(u=>u.status!=='active').length}</div><div class="stat-l">Banned</div></div>
         <div class="stat"><div class="stat-n">${listings.filter(l=>l.status==='pending').length}</div><div class="stat-l">Pending</div></div>
+      </div>
+      <div class="stats" style="margin:10px 0 0" onclick="H._admin.setTab('messages')" style="cursor:pointer">
+        <div class="stat" style="cursor:pointer" onclick="H._admin.setTab('messages')"><div class="stat-n">${convos.length}</div><div class="stat-l">Conversations</div></div>
+        <div class="stat" style="cursor:pointer" onclick="H._admin.setTab('messages')"><div class="stat-n">${msgUnread}</div><div class="stat-l">Unread Msgs</div></div>
+        <div class="stat" style="cursor:pointer" onclick="H._admin.setTab('messages')"><div class="stat-n">${(H.state.users||[]).filter(u=>u.verificationPending&&!u.verified).length}</div><div class="stat-l">Verify Queue</div></div>
       </div>`;
   }
 
@@ -604,6 +615,82 @@
       </div>`;
   }
 
+  // ── MESSAGES ──────────────────────────────────────────────
+  function renderMessages() {
+    const convos = H.state.conversations || [];
+    const users  = H.state.users || [];
+
+    // Count totals
+    let totalMessages = 0;
+    let unreadCount   = 0;
+    convos.forEach(function (c) {
+      const msgs = c.messages || [];
+      totalMessages += msgs.length;
+      msgs.forEach(function (m) { if (!m.read) unreadCount++; });
+    });
+
+    function getUserName(id) {
+      const u = users.find(function (x) { return x.id === id; });
+      return u ? (u.name || u.email || u.phone || 'Unknown') : 'Unknown';
+    }
+
+    const rows = convos.length ? convos.map(function (c) {
+      const msgs     = c.messages || [];
+      const last     = msgs[msgs.length - 1];
+      const lastText = last ? escHtml((last.text || last.body || '').slice(0, 80)) : '<em>No messages</em>';
+      const lastTime = last ? timeAgo(last.createdAt || last.t || 0) : '';
+      const unread   = msgs.filter(function (m) { return !m.read; }).length;
+
+      // Build participant display
+      const participants = (c.participants || c.participantIds || []);
+      const names = participants.length
+        ? participants.map(function (id) { return escHtml(getUserName(id)); }).join(', ')
+        : (c.buyerId && c.sellerId
+            ? escHtml(getUserName(c.buyerId)) + ' &amp; ' + escHtml(getUserName(c.sellerId))
+            : 'Unknown participants');
+
+      const convId = escHtml(c.id || '');
+
+      // Expandable messages block
+      const msgsHtml = msgs.length ? msgs.map(function (m) {
+        const senderName = escHtml(getUserName(m.senderId || m.from || ''));
+        const msgTime    = new Date(m.createdAt || m.t || Date.now()).toLocaleString();
+        const isAdmin    = (users.find(function (x) { return x.id === (m.senderId || m.from); }) || {}).role === 'admin';
+        return `<div style="padding:6px 10px;border-left:3px solid ${isAdmin?'#1A3A8F':'#e5e7eb'};margin-bottom:6px;background:${isAdmin?'#eff6ff':'var(--linen)'};border-radius:0 6px 6px 0">
+          <div style="font-size:11px;font-weight:700;color:${isAdmin?'#1A3A8F':'var(--charcoal)'};margin-bottom:2px">${senderName}</div>
+          <div style="font-size:13px;color:var(--charcoal)">${escHtml((m.text||m.body||'').slice(0,300))}</div>
+          <div style="font-size:10px;color:var(--ash);margin-top:3px">${msgTime}</div>
+        </div>`;
+      }).join('') : '<div style="font-size:12px;color:var(--ash);padding:6px">No messages in this conversation</div>';
+
+      return `<div class="admin-row" style="padding:12px 14px">
+        <div class="admin-row-head" style="cursor:pointer" onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('conv-msgs-${convId}'))">
+          <div>
+            <div class="admin-row-name" style="font-size:13px;font-weight:700">${names}</div>
+            <div class="admin-row-meta" style="margin-top:3px">${lastText} &middot; ${lastTime}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            ${unread ? `<span style="background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">${unread} unread</span>` : ''}
+            <span style="font-size:11px;color:var(--sub);white-space:nowrap">${msgs.length} msg${msgs.length!==1?'s':''}</span>
+            <span style="color:var(--sub)">&#9660;</span>
+          </div>
+        </div>
+        <div id="conv-msgs-${convId}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--linen-dark)">
+          ${msgsHtml}
+        </div>
+      </div>`;
+    }).join('') : '<div style="text-align:center;padding:40px 20px;color:var(--sub);font-size:14px">No conversations found.<br>Sync from Cloud to load messages.</div>';
+
+    return `
+      <div class="stats" style="margin:0 0 14px">
+        <div class="stat"><div class="stat-n">${convos.length}</div><div class="stat-l">Conversations</div></div>
+        <div class="stat"><div class="stat-n">${totalMessages}</div><div class="stat-l">Total Messages</div></div>
+        <div class="stat"><div class="stat-n">${unreadCount}</div><div class="stat-l">Unread</div></div>
+      </div>
+      <button class="btn-pri" style="width:100%;margin-bottom:14px" onclick="H._admin.syncAllMessages()">${S.reload} Sync from Cloud</button>
+      <div class="section-card" style="padding:0">${rows}</div>`;
+  }
+
   // ── ADS MANAGEMENT ───────────────────────────────────────
   const CATS = ['property','vehicles','electronics','furniture','fashion','services','agriculture','pets','kids','other','rooms','jobs'];
 
@@ -655,6 +742,8 @@
         syncVerificationsFromSupabase().then(function () { if (body) body.innerHTML = renderBody(); });
       } else if (t === 'reports' && typeof H.syncReports === 'function') {
         H.syncReports().then(function () { if (body) body.innerHTML = renderBody(); });
+      } else if (t === 'messages' && typeof H.syncConversations === 'function') {
+        H.syncConversations().then(function () { if (body) body.innerHTML = renderBody(); });
       }
     },
 
@@ -1122,6 +1211,110 @@
       ad.active = !ad.active;
       alog(`${ad.active?'Activated':'Paused'} ad: ${ad.businessName}`);
       saveState(); this.setTab('ads');
+    },
+
+    async syncAllMessages() {
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') {
+        toast('Supabase not available'); return;
+      }
+      const body = document.getElementById('adminBody');
+      try {
+        // Fetch messages and conversations in parallel
+        const [msgsRes, convosRes] = await Promise.all([
+          sb.from('messages').select('*').order('created_at', { ascending: false }).limit(500),
+          sb.from('conversations').select('*').limit(200)
+        ]);
+
+        const msgs   = (msgsRes  && msgsRes.data)  || [];
+        const convos = (convosRes && convosRes.data) || [];
+
+        // Build conversations map from DB rows
+        if (!H.state.conversations) H.state.conversations = [];
+        const convoMap = {};
+        H.state.conversations.forEach(function (c) { convoMap[c.id] = c; });
+
+        convos.forEach(function (c) {
+          const cid = c.id;
+          if (!convoMap[cid]) {
+            convoMap[cid] = {
+              id: cid,
+              participants: c.participant_ids || c.participants || [c.buyer_id, c.seller_id].filter(Boolean),
+              buyerId:  c.buyer_id  || null,
+              sellerId: c.seller_id || null,
+              listingId: c.listing_id || null,
+              createdAt: c.created_at ? new Date(c.created_at).getTime() : Date.now(),
+              messages: []
+            };
+          } else {
+            // Merge fields
+            const existing = convoMap[cid];
+            if (!existing.participants || !existing.participants.length) {
+              existing.participants = c.participant_ids || c.participants || [c.buyer_id, c.seller_id].filter(Boolean);
+            }
+          }
+        });
+
+        // Attach messages to conversations
+        msgs.forEach(function (m) {
+          const cid = m.conversation_id;
+          if (!cid) return;
+          if (!convoMap[cid]) {
+            convoMap[cid] = { id: cid, participants: [], messages: [], createdAt: Date.now() };
+          }
+          const c = convoMap[cid];
+          if (!c.messages) c.messages = [];
+          const exists = c.messages.some(function (x) { return x.id === m.id; });
+          if (!exists) {
+            c.messages.push({
+              id:        m.id,
+              senderId:  m.sender_id  || m.senderId  || null,
+              text:      m.content    || m.text       || m.body || '',
+              createdAt: m.created_at ? new Date(m.created_at).getTime() : Date.now(),
+              read:      m.is_read    || m.read       || false
+            });
+          }
+        });
+
+        // Sort messages within each conversation
+        Object.values(convoMap).forEach(function (c) {
+          (c.messages || []).sort(function (a, b) { return a.createdAt - b.createdAt; });
+        });
+
+        H.state.conversations = Object.values(convoMap);
+
+        // Collect all participant IDs and fetch missing profiles
+        const knownIds = new Set((H.state.users || []).map(function (u) { return u.id; }));
+        const missingIds = [];
+        H.state.conversations.forEach(function (c) {
+          (c.participants || []).forEach(function (id) { if (id && !knownIds.has(id)) missingIds.push(id); });
+          if (c.buyerId  && !knownIds.has(c.buyerId))  missingIds.push(c.buyerId);
+          if (c.sellerId && !knownIds.has(c.sellerId)) missingIds.push(c.sellerId);
+        });
+        const uniqueMissing = [...new Set(missingIds)];
+        if (uniqueMissing.length) {
+          const profilesRes = await sb.from('profiles').select('id,name,phone,email').in('id', uniqueMissing);
+          const profiles = (profilesRes && profilesRes.data) || [];
+          if (!H.state.users) H.state.users = [];
+          profiles.forEach(function (p) {
+            if (!H.state.users.find(function (u) { return u.id === p.id; })) {
+              H.state.users.push({
+                id: p.id, name: p.name || 'Unknown',
+                email: p.email || '', phone: p.phone || '',
+                role: 'user', status: 'active', joinedAt: Date.now()
+              });
+            }
+          });
+        }
+
+        H.saveState();
+        alog('Synced messages from cloud');
+        if (body) body.innerHTML = renderBody();
+        toast('Messages synced');
+      } catch (e) {
+        console.error('syncAllMessages error:', e);
+        toast('Failed to sync messages');
+      }
     },
 
     deleteAd(id) {
