@@ -17,7 +17,10 @@
       H.state.conversations = [];
       H.saveState();
     }
-    return H.state.conversations;
+    const deleted = H.state.deletedConvIds || [];
+    return deleted.length
+      ? H.state.conversations.filter(function (c) { return !deleted.includes(c.id); })
+      : H.state.conversations;
   }
 
   function users() {
@@ -383,13 +386,11 @@
   };
 
   H._deleteConversation = function (convId) {
+    // Mark as deleted locally — do NOT delete from Supabase so the other party keeps their messages
+    if (!Array.isArray(H.state.deletedConvIds)) H.state.deletedConvIds = [];
+    if (!H.state.deletedConvIds.includes(convId)) H.state.deletedConvIds.push(convId);
     H.state.conversations = (H.state.conversations || []).filter(function (c) { return c.id !== convId; });
     H.saveState();
-    var sb = window.supabase;
-    if (sb && typeof sb.from === 'function') {
-      sb.from('messages').delete().eq('conversation_id', convId).then(function () {});
-      sb.from('conversations').delete().eq('id', convId).then(function () {});
-    }
     if (H.currentPageName === 'Messages') H.renderPage('Messages');
   };
 
