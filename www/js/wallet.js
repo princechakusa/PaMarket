@@ -9,7 +9,7 @@
   const pages = H.pages;
   const { escHtml, fmtPrice } = H;
 
-  const WALLET_URL = 'https://princechakusa.github.io/PaMarket/wallet.html';
+  const WALLET_URL = 'https://princechakusa.github.io/PaMarket/ads.html';
 
   const I = {
     boost: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
@@ -103,18 +103,18 @@
   pages.Wallet = function () {
     const u = H.currentUser();
     if (!u) return `<div class="page active">${H.innerTopbar('Wallet')}${H.emptyState('Not signed in', 'Sign in to access your wallet', 'Sign In', 'H.authPage()')}</div>`;
-    return `<div class="page active">${H.innerTopbar('Wallet')}
+    return `<div class="page active">${H.innerTopbar('Advertise')}
       <div style="padding:32px 20px;text-align:center">
-        <div style="font-size:48px;margin-bottom:16px">💳</div>
-        <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">PaMarket Wallet</div>
+        <div style="font-size:48px;margin-bottom:16px">📢</div>
+        <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">Advertise on PaMarket</div>
         <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">
-          Your wallet is managed on the PaMarket website.<br>
-          Sign in with the same account to top up and view your balance.
+          Boost your listing to the top of search results.<br>
+          Pay via EcoCash, OneMoney or Bank Transfer.
         </div>
         <button onclick="H._wallet.openTopUp()" style="display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:#1A3A8F;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">
-          ${I.ext} Open Wallet
+          ${I.ext} Advertise Now
         </button>
-        <div style="margin-top:12px;font-size:12px;color:var(--sub)">Opens in your browser · Same account</div>
+        <div style="margin-top:12px;font-size:12px;color:var(--sub)">Opens in your browser · Same account · From $2</div>
       </div>
     </div>`;
   };
