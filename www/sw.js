@@ -1,4 +1,4 @@
-const CACHE = 'pamarket-v39';
+const CACHE = 'pamarket-v40';
 
 // Never cache these — auth tokens, API data, realtime
 const NO_CACHE = [
@@ -19,7 +19,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE).then(cache =>
       cache.addAll([
-        './', './index.html', './manifest.json', './css/styles.css',
+        './', './index.html', './manifest.json', './css/styles.css', './wallet.html',
         './js/app.js', './js/auth.js', './js/home.js', './js/post.js',
         './js/messages.js', './js/detail.js', './js/browse.js',
         './js/wallet.js', './js/account.js', './js/profile.js',

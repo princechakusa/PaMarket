@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1A3A8F">
+  <title>PaMarket Wallet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:#F3F4F6;color:#111827;min-height:100vh;-webkit-font-smoothing:antialiased}
+    a{color:inherit;text-decoration:none}
+    button{cursor:pointer;font-family:inherit;border:none;background:none}
+    input,select{font-family:inherit}
+
+    /* Topbar */
+    .topbar{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:12px;padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top))}
+    .topbar-back{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:#1A3A8F;padding:6px 10px 6px 0}
+    .topbar-back svg{flex-shrink:0}
+    .topbar-title{font-size:17px;font-weight:800;color:#111827;flex:1;text-align:center}
+    .topbar-spacer{width:80px}
+
+    /* Cards */
+    .card{background:#fff;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden}
+    .section{padding:0 16px;margin-bottom:16px}
+    .section-label{font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;margin-top:4px}
+
+    /* Balance */
+    .balance-card{background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:20px;padding:26px 22px 22px;margin:16px}
+    .balance-label{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+    .balance-amount{font-size:44px;font-weight:900;color:#fff;letter-spacing:-2px;line-height:1;margin-bottom:4px}
+    .balance-sub{font-size:12px;color:rgba(255,255,255,.5)}
+
+    /* Method tabs */
+    .method-tabs{display:flex;gap:8px;margin-bottom:12px}
+    .method-tab{flex:1;padding:10px 4px;border-radius:12px;border:2px solid #E5E7EB;background:#fff;font-size:13px;font-weight:700;color:#6B7280;transition:all .15s;text-align:center}
+    .method-tab.active{border-color:var(--mc);background:var(--mb);color:var(--mc)}
+
+    /* Detail rows */
+    .detail-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.06)}
+    .detail-row:last-child{border-bottom:none}
+    .detail-label{font-size:12px;color:#6B7280;font-weight:500}
+    .detail-val{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#111827}
+    .copy-btn{background:none;border:none;color:#6B7280;padding:2px;line-height:1;cursor:pointer}
+
+    /* Form */
+    .fg{margin-bottom:14px}
+    .fl{font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+    .fi{width:100%;border:1.5px solid #E5E7EB;border-radius:10px;padding:12px 14px;font-size:14px;color:#111827;background:#fff;outline:none;transition:border-color .15s}
+    .fi:focus{border-color:#1A3A8F}
+    .amount-presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .preset-btn{flex:1;min-width:48px;padding:10px 0;border-radius:10px;border:2px solid #E5E7EB;background:#fff;font-size:14px;font-weight:700;color:#111827;transition:all .15s}
+    .preset-btn.active{border-color:#1A3A8F;background:#EFF6FF;color:#1A3A8F}
+
+    /* Buttons */
+    .btn-primary{width:100%;padding:15px;background:#1A3A8F;color:#fff;border-radius:12px;font-size:15px;font-weight:800;letter-spacing:.2px;transition:opacity .15s}
+    .btn-primary:disabled{opacity:.5}
+    .btn-secondary{width:100%;padding:13px;background:#fff;color:#374151;border:1.5px solid #E5E7EB;border-radius:12px;font-size:14px;font-weight:700;margin-top:10px}
+
+    /* Step list */
+    .step{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+    .step-num{width:22px;height:22px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+    .step-text{font-size:13px;color:#6B7280;line-height:1.5}
+
+    /* Notice */
+    .notice{border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.6}
+    .notice.amber{background:#FFFBEB;border:1.5px solid #FDE68A;color:#92400E}
+    .notice.blue{background:#EFF6FF;border:1.5px solid #BFDBFE;color:#1e40af}
+    .notice.green{background:#F0FDF4;border:1.5px solid #86EFAC;color:#15803d}
+
+    /* History rows */
+    .tx-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #F3F4F6}
+    .tx-row:last-child{border-bottom:none}
+    .tx-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .tx-label{font-size:14px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .tx-date{font-size:11px;color:#9CA3AF;margin-top:2px}
+    .tx-amt{font-size:15px;font-weight:800;flex-shrink:0}
+
+    /* Auth screen */
+    .auth-wrap{max-width:400px;margin:0 auto;padding:32px 20px}
+    .auth-logo{font-size:28px;font-weight:900;color:#1A3A8F;text-align:center;margin-bottom:6px}
+    .auth-logo em{color:#F5A623;font-style:normal}
+    .auth-sub{font-size:13px;color:#6B7280;text-align:center;margin-bottom:28px}
+    .auth-sep{display:flex;align-items:center;gap:10px;margin:16px 0;color:#9CA3AF;font-size:12px}
+    .auth-sep::before,.auth-sep::after{content:'';flex:1;height:1px;background:#E5E7EB}
+
+    /* Boost banner */
+    .boost-banner{background:linear-gradient(135deg,#F59E0B,#D97706);border-radius:16px;padding:16px;margin:16px;color:#fff}
+    .boost-banner-title{font-size:15px;font-weight:800;margin-bottom:4px}
+    .boost-banner-sub{font-size:12px;opacity:.85;line-height:1.4}
+
+    /* Loading */
+    .loading{text-align:center;padding:60px 20px;color:#9CA3AF;font-size:14px}
+
+    /* Error */
+    .err{background:#FEF2F2;border:1.5px solid #FECACA;border-radius:10px;color:#EF4444;font-size:13px;font-weight:600;padding:10px 12px;margin-bottom:12px;display:none}
+
+    @media(prefers-color-scheme:dark){
+      body{background:#0F172A;color:#F1F5F9}
+      .topbar,.card{background:#1E293B;border-color:#334155}
+      .topbar-title{color:#F1F5F9}
+      .fi{background:#0F172A;border-color:#334155;color:#F1F5F9}
+      .preset-btn,.btn-secondary{background:#1E293B;border-color:#334155;color:#F1F5F9}
+      .detail-val{color:#F1F5F9}
+    }
+  </style>
+</head>
+<body>
+<div id="root"><div class="loading">Loading PaMarket Wallet…</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+'use strict';
+const SUPABASE_URL = 'https://gxgytumhknmnwspxjzxw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
+const APP_URL = 'https://princechakusa.github.io/PaMarket/';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const qs = new URLSearchParams(location.search);
+const boostListing = qs.get('listing');
+const boostPlan = qs.get('plan');
+const boostPrice = qs.get('price');
+
+const METHODS = {
+  ecocash:  { id:'ecocash',  label:'EcoCash',       network:'Econet Wireless', color:'#00A651', bg:'#F0FDF4', border:'#86EFAC', textColor:'#15803d', number:'+263 77 734 1565', rawNumber:'+263777341565', name:'Prince Chakusa' },
+  onemoney: { id:'onemoney', label:'OneMoney',       network:'NetOne',          color:'#E65C00', bg:'#FFF7F0', border:'#FDBA74', textColor:'#9a3412', number:'+263 77 734 1565', rawNumber:'+263777341565', name:'Prince Chakusa' },
+  bank:     { id:'bank',     label:'Bank Transfer',  network:'CBZ Bank',        color:'#1A3A8F', bg:'#EFF6FF', border:'#BFDBFE', textColor:'#1e40af', account:'05121050340078', name:'Prince Chakusa', bankName:'CBZ Bank Zimbabwe', branch:'Harare Main' },
+};
+
+let currentUser = null;
+let walletBalance = 0;
+let selectedMethod = 'ecocash';
+let selectedAmt = null;
+let pendingRequests = [];
+
+// ─── Icons ───────────────────────────────────────────────────────────────────
+const IC = {
+  back: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>`,
+  copy: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
+  info: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  down: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`,
+  boost:`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+  google:`<svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>`,
+};
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(d){ return new Date(d).toLocaleDateString('en-ZW',{day:'numeric',month:'short',year:'numeric'}); }
+function copyText(t,lbl){ navigator.clipboard&&navigator.clipboard.writeText(t.replace(/\s/g,'')).then(()=>toast(lbl+' copied!')).catch(()=>toast(t)); }
+function toast(msg){ const el=document.getElementById('toast'); if(!el)return; el.textContent=msg; el.style.opacity='1'; setTimeout(()=>el.style.opacity='0',2200); }
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+async function init() {
+  const { data:{ session } } = await sb.auth.getSession();
+  if (session && session.user) {
+    currentUser = session.user;
+    await loadWallet();
+    renderWallet();
+  } else {
+    renderAuth();
+  }
+  sb.auth.onAuthStateChange(async (_event, session) => {
+    if (session && session.user) {
+      currentUser = session.user;
+      await loadWallet();
+      renderWallet();
+    } else {
+      currentUser = null;
+      renderAuth();
+    }
+  });
+}
+
+async function loadWallet() {
+  try {
+    const { data } = await sb.from('profiles').select('walletUSD,name').eq('id', currentUser.id).single();
+    if (data) { walletBalance = data.walletUSD || 0; currentUser._name = data.name || currentUser.email; }
+    const { data: reqs } = await sb.from('topup_requests').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(20);
+    pendingRequests = reqs || [];
+  } catch(e) { console.warn('loadWallet:', e); }
+}
+
+async function signInGoogle() {
+  await sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: location.href } });
+}
+
+async function signInEmail(e) {
+  e.preventDefault();
+  const email = document.getElementById('authEmail').value.trim();
+  const pass  = document.getElementById('authPass').value;
+  const errEl = document.getElementById('authErr');
+  const btn   = document.getElementById('authBtn');
+  if (!email || !pass) { errEl.textContent='Enter email and password'; errEl.style.display='block'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  errEl.style.display = 'none';
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { errEl.textContent = error.message; errEl.style.display='block'; btn.disabled=false; btn.textContent='Sign In'; }
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+}
+
+// ─── Top-up submit ────────────────────────────────────────────────────────────
+async function submitTopUp() {
+  const amtEl  = document.getElementById('tuAmt');
+  const refEl  = document.getElementById('tuRef');
+  const errEl  = document.getElementById('tuErr');
+  const btn    = document.getElementById('tuBtn');
+  const amt    = parseFloat(amtEl?.value);
+  const ref    = (refEl?.value || '').trim().toUpperCase();
+  errEl.style.display = 'none';
+  const showErr = (m) => { errEl.textContent=m; errEl.style.display='block'; };
+  if (!amt || amt < 1)   { showErr('Enter an amount of at least $1.00'); return; }
+  if (amt > 5000)        { showErr('Maximum single top-up is $5,000'); return; }
+  if (!ref)              { showErr('Enter the transaction reference from your SMS'); return; }
+  if (ref.length < 6)    { showErr('Reference too short — check your SMS'); return; }
+  if (pendingRequests.some(r => (r.reference||'').toUpperCase() === ref)) {
+    showErr('This reference was already submitted'); return;
+  }
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  const cfg = METHODS[selectedMethod];
+  const note = boostListing ? `Boost listing ${boostListing} (${boostPlan||''})` : '';
+  const { error } = await sb.from('topup_requests').insert({
+    user_id: currentUser.id,
+    user_name: currentUser._name || currentUser.email,
+    amount: amt,
+    method: cfg.label,
+    reference: ref,
+    status: 'pending',
+    note: note || null,
+  });
+  if (error && error.code !== '23505') {
+    btn.disabled=false; btn.textContent='I Have Paid — Submit for Verification';
+    showErr('Submission failed: '+error.message); return;
+  }
+  document.getElementById('tuSuccess').style.display = 'block';
+  document.getElementById('tuForm').style.display = 'none';
+  await loadWallet();
+}
+
+// ─── Method selection ─────────────────────────────────────────────────────────
+function selectMethod(m) {
+  selectedMethod = m;
+  document.querySelectorAll('.method-tab').forEach(t => {
+    const active = t.dataset.m === m;
+    const cfg = METHODS[t.dataset.m];
+    t.classList.toggle('active', active);
+    t.style.setProperty('--mc', cfg.color);
+    t.style.setProperty('--mb', cfg.bg);
+  });
+  document.querySelectorAll('.method-details').forEach(d => {
+    d.style.display = d.dataset.m === m ? '' : 'none';
+  });
+}
+
+function selectAmt(v) {
+  selectedAmt = v;
+  const inp = document.getElementById('tuAmt');
+  if (inp) inp.value = v;
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('active', +b.dataset.v === v);
+  });
+}
+
+function clearPresets() {
+  selectedAmt = null;
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+}
+
+function detailRow(label, val, raw) {
+  return `<div class="detail-row"><span class="detail-label">${label}</span>
+    <span class="detail-val">${esc(val)}${raw?`<button class="copy-btn" onclick="copyText('${esc(raw)}','${esc(label)}')">${IC.copy}</button>`:''}</span></div>`;
+}
+
+// ─── Render: Auth ─────────────────────────────────────────────────────────────
+function renderAuth() {
+  document.getElementById('root').innerHTML = `
+    <div class="topbar">
+      <button class="topbar-back" onclick="history.back()">${IC.back} App</button>
+      <div class="topbar-title">Wallet</div>
+      <div class="topbar-spacer"></div>
+    </div>
+    <div class="auth-wrap">
+      <div class="auth-logo">Pa<em>Market</em></div>
+      <p class="auth-sub">Sign in to access your wallet</p>
+
+      <button onclick="signInGoogle()" style="width:100%;padding:13px;background:#fff;border:1.5px solid #E5E7EB;border-radius:12px;font-size:14px;font-weight:700;color:#374151;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px">
+        ${IC.google} Continue with Google
+      </button>
+
+      <div class="auth-sep">or use email</div>
+
+      <div id="authErr" class="err"></div>
+      <form onsubmit="signInEmail(event)">
+        <div class="fg"><div class="fl">Email</div><input class="fi" id="authEmail" type="email" placeholder="you@example.com" autocomplete="email"></div>
+        <div class="fg"><div class="fl">Password</div><input class="fi" id="authPass" type="password" placeholder="Password" autocomplete="current-password"></div>
+        <button id="authBtn" type="submit" class="btn-primary">Sign In</button>
+      </form>
+
+      <p style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:16px;line-height:1.5">
+        Use the same account as the PaMarket app.<br>
+        <a href="${APP_URL}" style="color:#1A3A8F;font-weight:600">← Open PaMarket App</a>
+      </p>
+    </div>
+    <div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap"></div>
+  `;
+}
+
+// ─── Render: Wallet ───────────────────────────────────────────────────────────
+function renderWallet() {
+  const eco  = METHODS.ecocash;
+  const one  = METHODS.onemoney;
+  const bank = METHODS.bank;
+
+  const histRows = pendingRequests.map(r => {
+    const m = METHODS[r.method_id] || METHODS.ecocash;
+    const isPending = r.status === 'pending';
+    return `<div class="tx-row">
+      <div class="tx-icon" style="background:${isPending?'#FFFBEB':'#F0FDF4'}">${isPending?`<span style="font-size:18px">⏳</span>`:`<span style="font-size:18px">✅</span>`}</div>
+      <div style="flex:1;min-width:0">
+        <div class="tx-label">Top Up · ${esc(r.method||'')}</div>
+        <div class="tx-date">${fmt(r.created_at)} · Ref: ${esc(r.reference||'')}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="tx-amt" style="color:${isPending?'#D97706':'#00A651'}">+$${(+(r.amount||0)).toFixed(2)}</div>
+        <div style="font-size:10px;font-weight:700;color:${isPending?'#D97706':'#00A651'};margin-top:2px">${isPending?'Verifying':'Credited'}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('root').innerHTML = `
+    <div class="topbar">
+      <button class="topbar-back" onclick="history.back()">${IC.back} App</button>
+      <div class="topbar-title">Wallet</div>
+      <div style="width:80px;text-align:right"><button onclick="signOut()" style="font-size:12px;color:#6B7280;font-weight:600;padding:6px">Sign out</button></div>
+    </div>
+
+    ${boostListing ? `
+    <div class="boost-banner">
+      <div class="boost-banner-title">${IC.boost} Boost your listing</div>
+      <div class="boost-banner-sub">Add credits below to activate your boost. Admin will apply the boost within 24 hours after payment verification.</div>
+    </div>` : ''}
+
+    <!-- Balance -->
+    <div class="balance-card">
+      <div class="balance-label">PaMarket Wallet Balance</div>
+      <div class="balance-amount">$${walletBalance.toFixed(2)}</div>
+      <div class="balance-sub">United States Dollar (USD)</div>
+    </div>
+
+    <!-- How it works -->
+    <div class="section">
+      <div class="section-label">How to Add Credits</div>
+      <div class="card" style="padding:14px 16px">
+        <div class="step"><div class="step-num">1</div><div class="step-text">Choose a payment method below (EcoCash, OneMoney, or Bank Transfer)</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text">Send the money using the details shown — use your name as reference</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text">Copy your confirmation reference from the SMS and enter it below</div></div>
+        <div class="step" style="margin-bottom:0"><div class="step-num">4</div><div class="step-text">Submit — admin verifies within 24 hours and credits your wallet</div></div>
+      </div>
+    </div>
+
+    <!-- Payment method selector -->
+    <div class="section" id="tuForm">
+      <div class="section-label">Select Payment Method</div>
+      <div class="method-tabs">
+        <button class="method-tab active" data-m="ecocash" onclick="selectMethod('ecocash')" style="--mc:${eco.color};--mb:${eco.bg}">EcoCash</button>
+        <button class="method-tab" data-m="onemoney" onclick="selectMethod('onemoney')" style="--mc:${one.color};--mb:${one.bg}">OneMoney</button>
+        <button class="method-tab" data-m="bank" onclick="selectMethod('bank')" style="--mc:${bank.color};--mb:${bank.bg}">Bank</button>
+      </div>
+
+      <!-- EcoCash details -->
+      <div class="method-details card" data-m="ecocash" style="padding:16px;background:${eco.bg};border-color:${eco.border};margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;color:${eco.textColor};margin-bottom:10px">Send to this EcoCash number:</div>
+        <div style="font-size:28px;font-weight:900;color:${eco.color};letter-spacing:2px;margin-bottom:4px">${eco.number}</div>
+        <div style="font-size:12px;color:${eco.textColor};margin-bottom:12px">Account: <strong>${eco.name}</strong></div>
+        ${detailRow('Network','Econet Wireless (EcoCash)',null)}
+        ${detailRow('Send to',eco.number,eco.rawNumber)}
+        ${detailRow('Account name',eco.name,eco.name)}
+        ${detailRow('Reference','Your full name','')}
+      </div>
+
+      <!-- OneMoney details -->
+      <div class="method-details card" data-m="onemoney" style="display:none;padding:16px;background:${one.bg};border-color:${one.border};margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;color:${one.textColor};margin-bottom:10px">Send to this OneMoney number:</div>
+        <div style="font-size:28px;font-weight:900;color:${one.color};letter-spacing:2px;margin-bottom:4px">${one.number}</div>
+        <div style="font-size:12px;color:${one.textColor};margin-bottom:12px">Account: <strong>${one.name}</strong></div>
+        ${detailRow('Network','NetOne (OneMoney)',null)}
+        ${detailRow('Send to',one.number,one.rawNumber)}
+        ${detailRow('Account name',one.name,one.name)}
+        ${detailRow('Reference','Your full name','')}
+      </div>
+
+      <!-- Bank details -->
+      <div class="method-details card" data-m="bank" style="display:none;padding:16px;background:${bank.bg};border-color:${bank.border};margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;color:${bank.textColor};margin-bottom:10px">Bank Transfer Details:</div>
+        ${detailRow('Bank',bank.bankName,null)}
+        ${detailRow('Account Name',bank.name,bank.name)}
+        ${detailRow('Account No.',bank.account,bank.account)}
+        ${detailRow('Branch',bank.branch,null)}
+        ${detailRow('Reference','Your full name','')}
+      </div>
+
+      <!-- Amount -->
+      <div class="fg">
+        <div class="fl">Amount (USD)</div>
+        <div class="amount-presets">
+          ${[2,5,10,20,50].map(a=>`<button class="preset-btn" data-v="${a}" onclick="selectAmt(${a})">$${a}</button>`).join('')}
+        </div>
+        <input class="fi" id="tuAmt" type="number" min="1" step="1" placeholder="Or enter custom amount" oninput="clearPresets()">
+      </div>
+
+      <!-- Reference -->
+      <div class="fg">
+        <div class="fl">Transaction Reference</div>
+        <input class="fi" id="tuRef" placeholder="e.g. ECO123456789" autocapitalize="characters" autocomplete="off">
+        <div style="font-size:12px;color:#9CA3AF;margin-top:5px">The confirmation code from your EcoCash / OneMoney / bank SMS</div>
+      </div>
+
+      <div class="notice amber" style="margin-bottom:14px">
+        ${IC.info}
+        <div><strong>External payment — not processed by Google Play or App Store.</strong> Credits are purchased directly via Zimbabwe mobile money or bank transfer to PaMarket.
+        Need help? <a href="https://wa.me/971589772645" style="color:#D97706;font-weight:700">WhatsApp us</a></div>
+      </div>
+
+      <div id="tuErr" class="err"></div>
+      <button id="tuBtn" class="btn-primary" onclick="submitTopUp()">I Have Paid — Submit for Verification</button>
+      <div style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:8px">Admin verifies within 24 hours · Balance updates automatically</div>
+    </div>
+
+    <!-- Success state -->
+    <div id="tuSuccess" style="display:none" class="section">
+      <div class="notice green" style="padding:20px;border-radius:16px;display:block;text-align:center">
+        <div style="font-size:40px;margin-bottom:10px">✅</div>
+        <div style="font-size:16px;font-weight:800;color:#15803d;margin-bottom:6px">Submitted Successfully!</div>
+        <div style="font-size:13px;color:#166534;line-height:1.5">Admin will verify your payment within 24 hours and credit your wallet. You'll see the balance update in the PaMarket app.</div>
+        <a href="${APP_URL}" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#15803d;color:#fff;border-radius:10px;font-size:14px;font-weight:700">← Return to App</a>
+      </div>
+    </div>
+
+    <!-- Transaction history -->
+    ${pendingRequests.length ? `
+    <div class="section">
+      <div class="section-label">Transaction History</div>
+      <div class="card" style="padding:0 16px">${histRows}</div>
+    </div>` : ''}
+
+    <div style="height:40px"></div>
+    <div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:9999"></div>
+  `;
+}
+
+init();
+</script>
+</body>
+</html>
