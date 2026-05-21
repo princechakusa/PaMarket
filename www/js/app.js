@@ -465,8 +465,8 @@ window.H = {
 
   async openInner(name, params) {
     const H=window.H;
-    // On native app: Wallet and TopUp go to the external website (Google Play policy)
-    if((name==='Wallet'||name==='TopUp')&&window.Capacitor&&window.Capacitor.isNativePlatform()){
+    // Wallet and TopUp always go to the external wallet.html page
+    if(name==='Wallet'||name==='TopUp'){
       if(H._wallet&&typeof H._wallet.openTopUp==='function') H._wallet.openTopUp();
       return;
     }
