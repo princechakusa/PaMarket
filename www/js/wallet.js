@@ -179,17 +179,7 @@
         <div style="display:flex;flex-wrap:wrap;gap:8px" id="acPhotoGrid">${photoGrid}</div>
       </div>
 
-      ${s.cat !== 'jobs' ? `
-      <div class="fg">
-        <div class="fl">${s.cat === 'services' ? 'Starting Price' : 'Price'} <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--sub)">(optional)</span></div>
-        <div style="display:flex;gap:8px">
-          <input class="fi" style="flex:1" type="number" id="acPrice" value="${escHtml(s.price)}" placeholder="0" min="0">
-          <div style="display:flex;border:1.5px solid var(--border);border-radius:10px;overflow:hidden">
-            <button onclick="H._adsCreate.setCur('USD')" style="padding:0 14px;background:${s.currency==='USD'?'#1A3A8F':'var(--card)'};color:${s.currency==='USD'?'#fff':'var(--text)'};border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">USD</button>
-            <button onclick="H._adsCreate.setCur('ZiG')" style="padding:0 14px;background:${s.currency==='ZiG'?'#1A3A8F':'var(--card)'};color:${s.currency==='ZiG'?'#fff':'var(--text)'};border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">ZiG</button>
-          </div>
-        </div>
-      </div>` : `<input type="hidden" id="acPrice" value="0">`}
+      <input type="hidden" id="acPrice" value="0">
 
       <div class="fg">
         <div class="fl">Province</div>
@@ -486,6 +476,91 @@
     </div>`;
   };
 
+  // ─── Learn More inner page ────────────────────────────────────────────────────
+  pages.AdsLearnMore = function () {
+    function section(emoji, title, color, features, desc) {
+      return `
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:50px;height:50px;background:${color}18;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${emoji}</div>
+            <div style="font-size:18px;font-weight:900;color:var(--text)">${title}</div>
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.75;margin-bottom:14px">${desc}</div>
+          <div style="border-top:1px solid var(--border);padding-top:12px">
+            ${features.map(f => `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px"><span style="color:${color};font-size:15px;flex-shrink:0">✓</span><span style="font-size:13px;color:var(--text);line-height:1.5">${f}</span></div>`).join('')}
+          </div>
+          <div style="margin-top:12px;padding:8px 12px;background:${color}12;border-radius:8px;font-size:11px;color:${color};font-weight:700;text-align:center">
+            &copy; 2026 PaMarket. All rights reserved.
+          </div>
+        </div>`;
+    }
+
+    return `<div class="page active">${H.innerTopbar('Learn More')}
+      <div style="padding:16px 16px 80px">
+
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center">
+          <div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:6px">Advertising on Pa<span style="color:#F5A623">Market</span></div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);line-height:1.6">Zimbabwe's free marketplace connecting buyers and sellers across all 10 provinces</div>
+        </div>
+
+        ${section('👔', 'Jobs & Hiring', '#1A3A8F',
+          [
+            'Post vacancies that reach thousands of job seekers across Zimbabwe',
+            'Filter candidates by province, city or skill set',
+            'Receive applications directly through in-app chat',
+            'Free to post — no recruitment agency fees',
+            'Admin-reviewed listings guarantee quality postings',
+          ],
+          'Reach the best local talent fast. Whether you need a driver in Harare, an accountant in Bulawayo, or a farmhand in Masvingo — PaMarket connects you with active job seekers across the country. Post your vacancy today and let candidates come to you.'
+        )}
+
+        ${section('🤝', 'Hire Candidates', '#059669',
+          [
+            'Browse verified candidate profiles and CVs',
+            'View skills, experience and location at a glance',
+            'Contact candidates directly — no middleman',
+            'Candidates upload portfolios and reference letters',
+            'Real-time availability status on each profile',
+          ],
+          'Don\'t wait for applications — go straight to the talent. Our Hire Candidates section lets you browse ready-to-work professionals who have already uploaded their CVs and skills. Ideal for urgent roles or specialised positions where you need the right person fast.'
+        )}
+
+        ${section('🏠', 'Properties', '#D97706',
+          [
+            'List residential homes, plots, farms and commercial spaces',
+            'Rentals, sales and lease listings all in one place',
+            'High-quality photo galleries for each property',
+            'Location mapped to province, city and suburb',
+            'Boosted listings appear at the top of search results',
+          ],
+          'Zimbabwe\'s property market moves fast. Whether you\'re selling a house in Borrowdale, renting a flat in Mutare, or listing commercial space in the CBD — PaMarket gives your property maximum visibility. Our platform reaches serious buyers and tenants who are actively searching.'
+        )}
+
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:10px">How it works</div>
+          ${[
+            ['1', 'Choose a category and fill in your ad details'],
+            ['2', 'Add clear photos — more photos get more views'],
+            ['3', 'Our team reviews your listing (within 24 hours)'],
+            ['4', 'Your ad goes live and buyers can contact you directly'],
+          ].map(([n, t]) => `
+            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px">
+              <div style="width:26px;height:26px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div>
+              <div style="font-size:13px;color:var(--text);line-height:1.5;padding-top:4px">${t}</div>
+            </div>`).join('')}
+        </div>
+
+        <div style="text-align:center;padding:16px 0;border-top:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--sub);line-height:1.8">
+            &copy; 2026 PaMarket Zimbabwe (Pvt) Ltd. All rights reserved.<br>
+            Unauthorised reproduction of listings or content is prohibited.<br>
+            <span style="font-weight:700;color:var(--text)">info@pamarket.co.zw</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  };
+
   // ─── Handlers ─────────────────────────────────────────────────────────────────
   H._adv = {
     pickCategory(cat) {
@@ -501,22 +576,7 @@
       H.openInner('AdsContact');
     },
     learnMore() {
-      H.modal({
-        title: 'Advertising on PaMarket',
-        body: `<div style="font-size:14px;color:var(--text);line-height:1.8">
-          <p style="margin:0 0 10px"><strong>Why advertise with us?</strong></p>
-          <p style="margin:0 0 8px">✅ Free to submit — no hidden fees inside the app</p>
-          <p style="margin:0 0 8px">✅ Reach buyers across all 10 provinces of Zimbabwe</p>
-          <p style="margin:0 0 8px">✅ Your ad is reviewed and goes live within 24 hours</p>
-          <p style="margin:0 0 8px">✅ Boosted and Featured placements available</p>
-          <p style="margin:0 0 16px">✅ WhatsApp, Email and Call support from our team</p>
-          <p style="margin:0 0 8px"><strong>How does boosting work?</strong></p>
-          <p style="margin:0">Contact our sales team via WhatsApp to arrange a Sponsored or Featured placement. No payment is processed inside the app — our team handles everything directly.</p>
-        </div>`,
-        confirmText: 'Got it',
-        cancelText: null,
-        onConfirm() {},
-      });
+      H.openInner('AdsLearnMore');
     },
     promoteFromDash(listingId) {
       const u = H.currentUser();
