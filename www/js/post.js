@@ -160,7 +160,7 @@
       files.slice(0, remaining).forEach(f => {
         if (!ALLOWED.includes(f.type)) { rejected++; return; }
         if (f.size > MAX_BYTES) { rejected++; return; }
-        compressImage(f, 1200, 0.78).then(d => {
+        H.compressImage(f, 1200, 0.78).then(d => {
           postState.photos.push(d);
           document.getElementById('photoGrid').innerHTML = renderPhotoGrid();
         });
@@ -219,7 +219,7 @@
     }
   };
 
-  function compressImage(file, maxDim = 1200, q = 0.8) {
+  H.compressImage = function compressImage(file, maxDim = 1200, q = 0.8) {
     return new Promise(res => {
       const r = new FileReader();
       r.onload = ev => {

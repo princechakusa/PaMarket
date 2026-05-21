@@ -466,7 +466,7 @@ window.H = {
 
   async openInner(name, params) {
     const H=window.H;
-    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsBoost','AdsContact','MyAds','Wallet','Boost','Security','SecuritySettings','DeleteAccount','TopUp','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob'];
+    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsBoost','AdsContact','MyAds','Wallet','Boost','Security','SecuritySettings','DeleteAccount','TopUp','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob'];
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
     try {
