@@ -1254,7 +1254,7 @@ function renderAds() {
   // Cards view for ads (shows image thumbnail)
   DATA.ads.forEach(function(a){
     var advertiser = DATA.users.find(function(x){ return x.id===a.advertiser_id; })||{};
-    var imgHtml = a.image ? '<img src="'+esc(a.image)+'" style="width:64px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display=\'none\'">'
+    var imgHtml = (a.image_url||a.image) ? '<img src="'+esc(a.image_url||a.image)+'" style="width:64px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display=\'none\'">'
       : '<div style="width:64px;height:48px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📢</div>';
     var sectionLabel = {home:'🏠 Home',jobs:'💼 Jobs',property:'🏠 Property',vehicles:'🚗 Vehicles',electronics:'📱 Electronics',all:'🌐 All Pages'}[a.target_section]||esc(a.target_section||'All');
     html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px">';
@@ -1393,7 +1393,7 @@ async function saveNewAd() {
       advertiser_id: advertId||null,
       headline: head,
       tagline: (document.getElementById('adTag')||{}).value.trim(),
-      image: (document.getElementById('adImg')||{}).value||null,
+      image_url: (document.getElementById('adImg')||{}).value||null,
       type: (document.getElementById('adType')||{}).value||'banner',
       target_section: (document.getElementById('adSection')||{}).value||'all',
       starts_at: (document.getElementById('adStart')||{}).value||null,
