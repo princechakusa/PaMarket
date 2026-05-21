@@ -20,20 +20,31 @@
     info:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
   };
 
+  // Website URL — top-up form lives here (browser, not in-app)
+  const SITE_URL = 'https://princechakusa.github.io/PaMarket';
+  const TOPUP_URL = SITE_URL + '/?action=topup';
+
+  // Opens a URL in the device's external browser (Capacitor-aware)
+  function openExternal(url) {
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      window.open(url, '_system');
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  }
+
   const METHODS = {
     ecocash: {
       id: 'ecocash', label: 'EcoCash', network: 'Econet Wireless',
       color: '#00A651', bg: '#F0FDF4', border: '#86EFAC', textColor: '#15803d',
       number: '+263 77 734 1565', rawNumber: '+263777341565',
       name: 'Prince Chakusa',
-      steps: ['Open EcoCash on your phone', 'Select "Send Money"', 'Enter number: +263 77 734 1565', 'Enter the USD amount', 'Use your name as the reference / reason', 'Note the EcoCash reference number from the confirmation SMS'],
     },
     onemoney: {
       id: 'onemoney', label: 'OneMoney', network: 'NetOne',
       color: '#E65C00', bg: '#FFF7F0', border: '#FDBA74', textColor: '#9a3412',
       number: '+263 77 734 1565', rawNumber: '+263777341565',
       name: 'Prince Chakusa',
-      steps: ['Open OneMoney on your phone', 'Select "Send Money"', 'Enter number: +263 77 734 1565', 'Enter the USD amount', 'Use your name as the reference / reason', 'Note the OneMoney reference number from the confirmation SMS'],
     },
     bank: {
       id: 'bank', label: 'Bank Transfer', network: 'CBZ Bank Zimbabwe',
@@ -42,7 +53,6 @@
       name: 'Prince Chakusa',
       bankName: 'CBZ Bank Zimbabwe',
       branch: 'Harare Main',
-      steps: ['Log in to your CBZ online banking or visit a branch', 'Select "Transfer / Pay"', 'Enter account: 05121050340078', 'Account name: Prince Chakusa', 'Enter the USD amount', 'Use your name as reference', 'Note the transaction reference number'],
     },
   };
 
@@ -176,16 +186,46 @@
     return `<div class="page active">
       ${H.innerTopbar('Wallet')}
 
+      <!-- Balance card -->
       <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);margin:16px;border-radius:22px;padding:26px 22px 22px">
         <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">PaMarket Wallet Balance</div>
         <div style="font-size:42px;font-weight:900;color:#fff;letter-spacing:-2px;line-height:1;margin-bottom:4px">$${bal}</div>
         <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:22px">United States Dollar (USD)</div>
-        <button onclick="H.openInner('TopUp')"
+        <button onclick="H._wallet.openTopUp()"
           style="width:100%;padding:14px;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.4);border-radius:14px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
-          ${I.plus} Top Up via EcoCash / Bank
+          ${I.plus} Add Wallet Credits
         </button>
       </div>
 
+      <!-- How to top up -->
+      <div style="margin:0 16px 16px">
+        <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">How to Add Credits</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+          ${[
+            { n:'1', icon:'🌐', title:'Open PaMarket Website', sub:'Tap "Add Wallet Credits" — your browser opens our secure payment page' },
+            { n:'2', icon:'💳', title:'Pay via EcoCash, OneMoney or Bank', sub:'Send money using Zimbabwe\'s most trusted payment methods' },
+            { n:'3', icon:'✅', title:'Credits added within 24 hours', sub:'Admin verifies your payment and your balance updates automatically' },
+          ].map((s, i, arr) => `
+            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;${i < arr.length-1 ? 'border-bottom:1px solid var(--border)' : ''}">
+              <div style="width:36px;height:36px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">${s.icon}</div>
+              <div style="flex:1;padding-top:2px">
+                <div style="font-size:13px;font-weight:700;color:var(--text)">${s.title}</div>
+                <div style="font-size:12px;color:var(--sub);margin-top:3px;line-height:1.4">${s.sub}</div>
+              </div>
+            </div>`).join('')}
+          <!-- Payment method badges -->
+          <div style="padding:12px 16px;background:#F8FAFC;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+            <span style="font-size:11px;font-weight:700;color:#15803d;background:#F0FDF4;border:1px solid #86EFAC;padding:4px 10px;border-radius:20px">✓ EcoCash</span>
+            <span style="font-size:11px;font-weight:700;color:#9a3412;background:#FFF7F0;border:1px solid #FDBA74;padding:4px 10px;border-radius:20px">✓ OneMoney</span>
+            <span style="font-size:11px;font-weight:700;color:#1e40af;background:#EFF6FF;border:1px solid #BFDBFE;padding:4px 10px;border-radius:20px">✓ Bank Transfer</span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--sub);margin-top:8px;text-align:center;line-height:1.5">
+          Payments are processed on our website — not through Google Play.<br>Your account and balance are shared between the app and website.
+        </div>
+      </div>
+
+      <!-- Use your balance -->
       <div style="margin:0 16px 16px">
         <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Use Your Balance</div>
         ${spendItems.map(s => `
@@ -199,24 +239,7 @@
           </div>`).join('')}
       </div>
 
-      <div style="margin:0 16px 16px">
-        <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Accepted Payment Methods</div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
-          ${[
-            { label: 'EcoCash', sub: 'Econet Wireless · +263 77 734 1565', color: '#00A651', bg: '#F0FDF4' },
-            { label: 'OneMoney', sub: 'NetOne · +263 77 734 1565', color: '#E65C00', bg: '#FFF7F0' },
-            { label: 'Bank Transfer', sub: 'CBZ Bank Zimbabwe', color: '#1A3A8F', bg: '#EFF6FF' },
-          ].map((m, i, arr) => `
-            <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;${i < arr.length-1 ? 'border-bottom:1px solid var(--border)' : ''}">
-              <div style="width:10px;height:10px;border-radius:50%;background:${m.color};flex-shrink:0"></div>
-              <div style="flex:1">
-                <div style="font-size:14px;font-weight:600;color:var(--text)">${m.label}</div>
-                <div style="font-size:11px;color:var(--sub)">${m.sub}</div>
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>
-
+      <!-- Transaction history -->
       <div style="margin:0 16px">
         <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">
           Transaction History
@@ -228,7 +251,7 @@
             : `<div style="padding:36px 16px;text-align:center">
                 <div style="font-size:32px;margin-bottom:8px">💳</div>
                 <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">No transactions yet</div>
-                <div style="font-size:12px;color:var(--sub)">Top up your wallet to get started</div>
+                <div style="font-size:12px;color:var(--sub)">Add credits on our website to get started</div>
               </div>`}
         </div>
       </div>
@@ -267,15 +290,30 @@
     const bank = METHODS.bank;
 
     return `<div class="page active">
-      ${H.innerTopbar('Top Up Wallet')}
+      ${H.innerTopbar('Add Wallet Credits')}
       <div class="form-wrap">
 
-        ${reason ? `<div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin-bottom:4px;font-size:13px;color:#1e40af;font-weight:600">${I.info} Topping up for: ${H.escHtml(reason)}</div>` : ''}
+        <!-- Website-only notice banner -->
+        <div style="background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:14px;padding:14px 16px;margin-bottom:4px;display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:20px;flex-shrink:0">🌐</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">You're on the PaMarket Website</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.75);line-height:1.5">Same account as the app — credits you add here will appear in the app automatically after admin verification.</div>
+          </div>
+        </div>
 
+        ${reason ? `<div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin-bottom:4px;font-size:13px;color:#1e40af;font-weight:600">${I.info} Adding credits for: ${H.escHtml(reason)}</div>` : ''}
+
+        <!-- Steps -->
         <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:4px">
-          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">How to top up</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">How to add credits</div>
           <div style="display:flex;flex-direction:column;gap:8px">
-            ${['Send money to us using EcoCash, OneMoney, or bank transfer','Use your name as the payment reference','Copy the reference number from your confirmation SMS','Enter the reference below and submit — admin verifies within 24 hours'].map((s,i) =>
+            ${[
+              'Send money using EcoCash, OneMoney, or bank transfer to the details below',
+              'Use your full name as the payment reference',
+              'Note the confirmation reference from your SMS',
+              'Enter the amount and reference below — admin verifies within 24 hours'
+            ].map((s,i) =>
               `<div style="display:flex;gap:10px;align-items:flex-start">
                 <div style="width:22px;height:22px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${i+1}</div>
                 <div style="font-size:13px;color:var(--sub);line-height:1.5">${s}</div>
@@ -284,14 +322,16 @@
           </div>
         </div>
 
+        <!-- Help notice -->
         <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:12px;padding:12px 14px;margin-bottom:4px;display:flex;gap:10px;align-items:flex-start">
           <div style="color:#D97706;flex-shrink:0;margin-top:1px">${I.info}</div>
           <div style="font-size:12px;color:#92400E;line-height:1.6">
-            <strong>External Payment — Not an In-App Purchase.</strong> Advertising credits are purchased via mobile money or bank transfer directly to PaMarket. This transaction is not processed by Google Play or the Apple App Store.
+            <strong>Not an in-app purchase.</strong> Credits are purchased directly via Zimbabwe mobile money or bank transfer to PaMarket — not processed by Google Play or the App Store.
             Need help? <a href="https://wa.me/971589772645" style="color:#D97706;font-weight:700;text-decoration:none">WhatsApp us</a> or email <a href="mailto:chakusaprince@gmail.com" style="color:#D97706;font-weight:700;text-decoration:none">chakusaprince@gmail.com</a>
           </div>
         </div>
 
+        <!-- Payment method selector -->
         <div class="fg">
           <div class="fl">Select Payment Method</div>
           <div style="display:flex;gap:8px;margin-top:6px">
@@ -301,6 +341,7 @@
           </div>
         </div>
 
+        <!-- EcoCash details -->
         <div id="tuDetails_ecocash" style="background:${eco.bg};border:1.5px solid ${eco.border};border-radius:14px;padding:16px">
           <div style="font-size:13px;font-weight:700;color:${eco.textColor};margin-bottom:12px">Send to this EcoCash number:</div>
           <div style="font-size:26px;font-weight:900;color:${eco.color};letter-spacing:2px;margin-bottom:4px">${eco.number}</div>
@@ -311,6 +352,7 @@
           ${detailRow('Reference', H.currentUser()?.name || 'Your name', H.currentUser()?.name || '')}
         </div>
 
+        <!-- OneMoney details -->
         <div id="tuDetails_onemoney" style="display:none;background:${one.bg};border:1.5px solid ${one.border};border-radius:14px;padding:16px">
           <div style="font-size:13px;font-weight:700;color:${one.textColor};margin-bottom:12px">Send to this OneMoney number:</div>
           <div style="font-size:26px;font-weight:900;color:${one.color};letter-spacing:2px;margin-bottom:4px">${one.number}</div>
@@ -321,6 +363,7 @@
           ${detailRow('Reference', H.currentUser()?.name || 'Your name', H.currentUser()?.name || '')}
         </div>
 
+        <!-- Bank transfer details -->
         <div id="tuDetails_bank" style="display:none;background:${bank.bg};border:1.5px solid ${bank.border};border-radius:14px;padding:16px">
           <div style="font-size:13px;font-weight:700;color:${bank.textColor};margin-bottom:12px">Bank Transfer Details:</div>
           ${detailRow('Bank', bank.bankName, null)}
@@ -330,8 +373,9 @@
           ${detailRow('Reference', H.currentUser()?.name || 'Your name', H.currentUser()?.name || '')}
         </div>
 
+        <!-- Amount -->
         <div class="fg">
-          <div class="fl">Select Amount (USD)</div>
+          <div class="fl">Amount (USD)</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
             ${[2,5,10,20,50].map(amt =>
               `<button onclick="H._topup.setAmt(${amt})" id="tuPreset_${amt}"
@@ -345,11 +389,12 @@
             value="${preset}">
         </div>
 
+        <!-- Reference -->
         <div class="fg">
           <div class="fl">Transaction Reference</div>
           <input class="fi" id="tuRef" placeholder="e.g. ECO123456789" autocapitalize="characters" autocomplete="off">
           <div style="font-size:12px;color:var(--sub);margin-top:5px;line-height:1.5">
-            The reference / confirmation code from your EcoCash, OneMoney, or bank SMS after sending payment
+            The confirmation code from your EcoCash, OneMoney, or bank SMS
           </div>
         </div>
 
@@ -468,8 +513,18 @@
     if (preset) H._topup.setAmt(Number(preset));
   };
 
-  H._wallet   = {};
-  H.showTopUp = () => H.openInner('TopUp');
+  H._wallet = {
+    openTopUp() {
+      // On native app: open external browser (Google Play policy compliant)
+      // On web browser: open TopUp page directly within the app
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        openExternal(TOPUP_URL);
+      } else {
+        H.openInner('TopUp');
+      }
+    }
+  };
+  H.showTopUp = () => H._wallet.openTopUp();
 
   H._copyText = function (el) {
     const text = (el && el.dataset) ? el.dataset.v : String(el);
