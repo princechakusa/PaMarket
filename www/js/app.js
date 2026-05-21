@@ -405,6 +405,7 @@ window.H = {
     if (_lid) { setTimeout(()=>this.openListing(_lid), 200); }
     else if (_act === 'post')   { if(this.currentUser()) setTimeout(()=>this.navTo('Post',null), 200); }
     else if (_act === 'browse') { setTimeout(()=>this.navTo('Browse',null), 200); }
+    else if (_act === 'topup')  { setTimeout(()=>{ if(this.currentUser()) this.openInner('TopUp'); else this.requireAuth('Sign in to add wallet credits'); }, 300); }
     try {
       await this.fetchListingsFromSupabase();
       await Promise.all([this.fetchAdsFromSupabase(), this.fetchAppSettings()]);
