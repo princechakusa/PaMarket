@@ -6,7 +6,18 @@
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PaMarket</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
+<script>
+// Fallback: if CDN fails, surface a clear error instead of a blank page
+window.addEventListener('error', function(e) {
+  if (e.filename && e.filename.includes('supabase')) {
+    var msg = document.getElementById('errMsg');
+    if (msg) { msg.textContent = 'Could not load Supabase library (CDN error). Please check your internet connection and reload.'; msg.style.display = 'block'; }
+    var btn = document.getElementById('loginBtn');
+    if (btn) btn.disabled = true;
+  }
+}, true);
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;}
@@ -419,10 +430,18 @@ tr:hover td{background:rgba(59,130,246,.03);}
 'use strict';
 
 // ── Supabase client ───────────────────────────────────────────
-var sb = supabase.createClient(
-  "https://gxgytumhknmnwspxjzxw.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs"
-);
+var sb;
+try {
+  sb = supabase.createClient(
+    "https://gxgytumhknmnwspxjzxw.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs"
+  );
+} catch(e) {
+  var _m = document.getElementById('errMsg');
+  if (_m) { _m.textContent = 'Failed to initialise: ' + (e.message || 'Supabase not loaded. Please reload the page.'); _m.style.display = 'block'; }
+  var _b = document.getElementById('loginBtn');
+  if (_b) _b.disabled = true;
+}
 
 // ── App state ─────────────────────────────────────────────────
 var DATA = { listings:[], users:[], reports:[], errorLogs:[], reportsExist:true, ads:[], topupRequests:[], verifications:[] };
@@ -513,7 +532,7 @@ function showTab(n){
   if(n===6) renderErrorLogs();
   if(n===7) renderAlertPanel();
   if(n===8) initAdsTab();
-  if(n===9) renderVerifications();
+  if(n===9) { Promise.all([loadUsers(), loadVerifications()]).then(function(){ renderVerifications(); }); }
   if(n===10) {
     sb.from("paid_ads").select("id,type,business_name,headline,tagline,image_url,bg_color,link_url,target_cat,starts_at,ends_at,active,priority,impressions,clicks,price_paid,client_name").order("created_at",{ascending:false}).limit(200).then(function(res){
       if(!res.error && res.data) DATA.ads = res.data;
@@ -548,6 +567,12 @@ function recordFail(){
 function clearFails(){ sessionStorage.removeItem(LOGIN_KEY); }
 
 async function doLogin(){
+  if (!sb) {
+    var errEl2 = document.getElementById("errMsg");
+    errEl2.textContent = "Cannot connect: Supabase not loaded. Please reload the page.";
+    errEl2.style.display = "block";
+    return;
+  }
   var email = document.getElementById("aEmail").value.trim();
   var pass  = document.getElementById("aPass").value;
   var errEl = document.getElementById("errMsg");
