@@ -543,7 +543,10 @@ async function refreshAll() {
 async function loadUsers() {
   try {
     var r = await sb.from('profiles').select('id,name,phone,email,role,status,verified,verification_pending,ban_reason,ban_until,wallet_usd,created_at').order('created_at',{ascending:false}).limit(500);
-    if(!r.error && r.data) DATA.users = r.data;
+    if(!r.error && r.data) { DATA.users = r.data; return; }
+    // Fallback: some columns may not exist — retry with minimal set
+    var r2 = await sb.from('profiles').select('id,name,phone,email,role,status,verified,created_at').order('created_at',{ascending:false}).limit(500);
+    if(!r2.error && r2.data) DATA.users = r2.data;
   } catch(e){}
 }
 async function loadListings() {
@@ -889,7 +892,7 @@ function renderVerifications() {
   DATA.verifications.forEach(function(v){ verifMap[v.user_id]=v; });
 
   var pendingFromTable = DATA.verifications.filter(function(v){ return v.status==='pending'; });
-  var pendingFromProfiles = DATA.users.filter(function(u){ return u.verification_pending===true && !verifMap[u.id]; });
+  var pendingFromProfiles = DATA.users.filter(function(u){ return (u.verification_pending===true||u.verification_pending==='true'||u.verification_pending==1) && !verifMap[u.id]; });
   var approved = DATA.verifications.filter(function(v){ return v.status==='approved'; });
   var rejected = DATA.verifications.filter(function(v){ return v.status==='rejected'; });
 
@@ -900,6 +903,16 @@ function renderVerifications() {
   html += '</div>';
 
   html += '<div class="sec-head"><div class="sec-title">Pending Verifications</div><button class="btn-refresh" onclick="Promise.all([loadUsers(),loadVerifications()]).then(function(){updateBadges();renderVerifications();})">↻ Refresh</button></div>';
+
+  // Show note if documents are missing (verifications table might not exist)
+  if(!DATA.verifications.length && pendingFromProfiles.length) {
+    html += '<div style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--sub);line-height:1.7">';
+    html += '<strong style="color:#fbbf24">⚠ ID photos not available</strong><br>';
+    html += 'The user submitted their verification request but the <code>verifications</code> table may not exist in your Supabase database. You can still approve the profile below (they will get their verified badge), but you won\'t be able to see their ID photo.<br><br>';
+    html += '<strong style="color:var(--text)">To enable photo verification, run this SQL in your Supabase SQL editor:</strong><br>';
+    html += '<code style="display:block;margin-top:6px;padding:8px;background:rgba(0,0,0,.3);border-radius:6px;font-size:11px;white-space:pre-wrap">CREATE TABLE IF NOT EXISTS verifications (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id uuid REFERENCES profiles(id),\n  id_doc text,\n  selfie text,\n  status text DEFAULT \'pending\',\n  submitted_at timestamptz DEFAULT now(),\n  admin_note text,\n  UNIQUE(user_id)\n);\nALTER TABLE verifications ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Admin reads verifications" ON verifications FOR SELECT USING (true);\nCREATE POLICY "User inserts own" ON verifications FOR INSERT WITH CHECK (auth.uid() = user_id);\nCREATE POLICY "User upserts own" ON verifications FOR UPDATE USING (auth.uid() = user_id);</code>';
+    html += '</div>';
+  }
 
   var total = pendingFromTable.length + pendingFromProfiles.length;
   if(!total) {
@@ -949,7 +962,14 @@ function verifCard(v, u, hasPhotos) {
     html += '</div>';
     html += '</div>';
   } else if(!hasPhotos) {
-    html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--sub)">⚠️ User has pending verification flag but no documents uploaded yet. You can approve their profile directly.</div>';
+    html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;font-size:12px;color:var(--sub)">';
+    html += '<div style="font-weight:700;color:var(--text);margin-bottom:4px">⚠ No ID photos stored in database</div>';
+    html += 'This user submitted a verification request. Their ID photos are stored locally on their device but were not saved to the database (likely because the <code>verifications</code> table doesn\'t exist yet — see the SQL above to create it).<br><br>';
+    html += '<strong>User details to help you identify them:</strong><br>';
+    html += '📧 ' + esc(u.email||'no email') + '<br>';
+    html += '📞 ' + esc(u.phone||'no phone') + '<br>';
+    html += '🆔 User ID: ' + esc(u.id||'—');
+    html += '</div>';
   }
 
   html += '<div class="verif-actions">';
@@ -1152,25 +1172,51 @@ async function rejectTopup(id) {
 // ── REPORTS ───────────────────────────────────────────────
 function renderReports() {
   var filtered = DATA.reports.filter(function(r){ return _reportFilter==='all'||r.status===_reportFilter; });
-  var counts = {all:DATA.reports.length,open:DATA.reports.filter(function(r){return r.status==='open';}).length,resolved:DATA.reports.filter(function(r){return r.status==='resolved';}).length};
+  var counts = {all:DATA.reports.length,open:DATA.reports.filter(function(r){return r.status==='open';}).length,resolved:DATA.reports.filter(function(r){return r.status==='resolved';}).length,dismissed:DATA.reports.filter(function(r){return r.status==='dismissed';}).length};
 
   var html = '<div class="sec-head"><div class="sec-title">Reports</div><div class="sec-actions">';
-  ['all','open','resolved'].forEach(function(f){
+  ['all','open','resolved','dismissed'].forEach(function(f){
     html+='<button class="filter-btn'+((_reportFilter===f)?' on':'')+'" onclick="_reportFilter=\''+f+'\';renderReports()">'+f.charAt(0).toUpperCase()+f.slice(1)+' ('+counts[f]+')</button>';
   });
   html+='</div></div>';
 
-  if(!DATA.reports.length) { document.getElementById('mainContent').innerHTML=html+'<div class="empty-msg">No reports table found in database. Create a <code>reports</code> table to enable this feature.</div>'; return; }
+  // Info: explain where reports come from
+  html+='<div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:var(--sub);line-height:1.7">';
+  html+='<strong style="color:var(--text)">Where do reports come from?</strong><br>';
+  html+='Reports are submitted by users inside the app. On any listing detail page there is a <em>"Report this Listing"</em> button, and on any user profile there is a <em>"Report User"</em> button. Users select a reason (spam, fraud, inappropriate, etc.) and it appears here instantly.';
+  html+='</div>';
 
-  html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Reporter</th><th>Type</th><th>Reason</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
-  if(!filtered.length) html+='<tr><td colspan="6"><div class="empty-msg">No reports</div></td></tr>';
+  if(!DATA.reports.length) {
+    html+='<div class="empty-msg">No reports yet. Reports appear here when app users flag a listing or user as spam, fraudulent, or inappropriate.</div>';
+    document.getElementById('mainContent').innerHTML=html; return;
+  }
+
+  html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Reporter</th><th>Type</th><th>What was reported</th><th>Reason</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+  if(!filtered.length) html+='<tr><td colspan="7"><div class="empty-msg">No reports match this filter</div></td></tr>';
   filtered.forEach(function(r){
-    var reporter = DATA.users.find(function(x){ return x.id===r.reporterId; })||{};
-    html+='<tr><td style="font-size:13px">'+esc(reporter.name||r.reporterId||'—')+'</td>';
-    html+='<td><span class="badge badge-info">'+esc(r.targetType||'—')+'</span></td>';
-    html+='<td style="color:var(--sub);font-size:12px;max-width:200px">'+esc(r.reason||'—')+'</td>';
-    html+='<td><span class="badge badge-'+(r.status==='open'?'amber':'active')+'">'+esc(r.status||'—')+'</span></td>';
-    html+='<td style="color:var(--sub);font-size:12px">'+fmtDate(r.created_at)+'</td>';
+    // Look up who reported and what was reported
+    var reporter = DATA.users.find(function(x){ return x.id===r.reporter_id||x.id===r.reporterId; })||{};
+    var targetLabel = '—';
+    var targetLink = '';
+    var tId = r.target_id||r.targetId||'';
+    var tType = r.target_type||r.targetType||'';
+    if(tType==='listing'){
+      var listing = DATA.listings.find(function(x){ return x.id===tId; });
+      targetLabel = listing ? esc(listing.title||'Listing') : 'Listing '+tId.slice(0,8);
+      targetLink = listing ? ' <span style="font-size:10px;color:var(--sub)">('+esc(listing.cat||'')+' · '+esc(listing.city||'')+')</span>' : '';
+    } else if(tType==='user'){
+      var tUser = DATA.users.find(function(x){ return x.id===tId; });
+      targetLabel = tUser ? esc(tUser.name||'User') : 'User '+tId.slice(0,8);
+      targetLink = tUser ? ' <span style="font-size:10px;color:var(--sub)">('+esc(tUser.phone||tUser.email||'')+')</span>' : '';
+    }
+    var statusColor = r.status==='open'?'amber':r.status==='resolved'?'active':'rejected';
+    html+='<tr>';
+    html+='<td style="font-size:13px;font-weight:600">'+esc(reporter.name||r.reporterId||'—')+'<div style="font-size:11px;color:var(--sub)">'+esc(reporter.phone||reporter.email||'')+'</div></td>';
+    html+='<td><span class="badge badge-info">'+esc(tType||'—')+'</span></td>';
+    html+='<td style="font-size:12px;font-weight:600">'+targetLabel+targetLink+'</td>';
+    html+='<td style="color:var(--sub);font-size:12px;max-width:180px">'+esc(r.reason||'—')+'</td>';
+    html+='<td><span class="badge badge-'+statusColor+'">'+esc(r.status||'—')+'</span></td>';
+    html+='<td style="color:var(--sub);font-size:12px">'+fmtDate(r.created_at||r.t)+'</td>';
     html+='<td><div style="display:flex;gap:4px">';
     if(r.status==='open') html+='<button class="ab ab-approve" onclick="resolveReport(\''+r.id+'\')">Resolve</button>';
     html+='<button class="ab ab-delete" onclick="dismissReport(\''+r.id+'\')">Dismiss</button>';
@@ -1197,22 +1243,40 @@ async function dismissReport(id) {
 
 // ── ADS ───────────────────────────────────────────────────
 function renderAds() {
-  var html = '<div class="sec-head"><div class="sec-title">Paid Ads & Boosts</div><button class="btn-send" onclick="openCreateAd()" style="padding:8px 16px;font-size:13px">+ Create Ad</button></div>';
-  if(!DATA.ads.length) { html+='<div class="empty-msg">No paid ads yet. Create one to display banners in the app.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
-  html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Business</th><th>Type</th><th>Active</th><th>Impressions</th><th>Clicks</th><th>Dates</th><th>Actions</th></tr></thead><tbody>';
+  var html = '<div class="sec-head"><div class="sec-title">Paid Ads</div><button class="btn-send" onclick="openCreateAd()" style="padding:8px 16px;font-size:13px">+ Create Ad</button></div>';
+
+  html+='<div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:var(--sub);line-height:1.7">';
+  html+='<strong style="color:var(--text)">How paid ads work:</strong> Each ad is linked to a business/user account. The ad banner (image + headline) appears in the chosen app section. When a user taps it, it opens that business\'s listings inside the app.';
+  html+='</div>';
+
+  if(!DATA.ads.length) { html+='<div class="empty-msg">No paid ads yet.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
+
+  // Cards view for ads (shows image thumbnail)
   DATA.ads.forEach(function(a){
-    html+='<tr><td style="font-weight:600">'+esc(a.business_name||a.headline||'—')+'</td>';
-    html+='<td><span class="badge badge-info">'+esc(a.type||'banner')+'</span></td>';
-    html+='<td><span class="badge badge-'+(a.active?'active':'rejected')+'">'+( a.active?'Active':'Paused')+'</span></td>';
-    html+='<td style="font-weight:600">'+((a.impressions||0).toLocaleString())+'</td>';
-    html+='<td style="font-weight:600">'+((a.clicks||0).toLocaleString())+'</td>';
-    html+='<td style="color:var(--sub);font-size:12px">'+fmtDate(a.starts_at)+' – '+fmtDate(a.ends_at)+'</td>';
-    html+='<td><div style="display:flex;gap:4px">';
-    html+='<button class="ab '+(a.active?'ab-reject':'ab-approve')+'" onclick="toggleAd(\''+a.id+'\','+(a.active?'false':'true')+')">'+(a.active?'Pause':'Resume')+'</button>';
-    html+='<button class="ab ab-delete" onclick="deleteAd(\''+a.id+'\')">🗑</button>';
-    html+='</div></td></tr>';
+    var advertiser = DATA.users.find(function(x){ return x.id===a.advertiser_id; })||{};
+    var imgHtml = a.image ? '<img src="'+esc(a.image)+'" style="width:64px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display=\'none\'">'
+      : '<div style="width:64px;height:48px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📢</div>';
+    var sectionLabel = {home:'🏠 Home',jobs:'💼 Jobs',property:'🏠 Property',vehicles:'🚗 Vehicles',electronics:'📱 Electronics',all:'🌐 All Pages'}[a.target_section]||esc(a.target_section||'All');
+    html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px">';
+    html+='<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">';
+    html+=imgHtml;
+    html+='<div style="flex:1;min-width:0">';
+    html+='<div style="font-size:15px;font-weight:700;color:var(--text)">'+esc(a.headline||a.business_name||'Ad')+'</div>';
+    if(a.tagline) html+='<div style="font-size:12px;color:var(--sub);margin-top:2px">'+esc(a.tagline)+'</div>';
+    html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">';
+    html+='<span class="badge badge-info">'+sectionLabel+'</span>';
+    html+='<span class="badge badge-'+(a.active?'active':'rejected')+'">'+(a.active?'Active':'Paused')+'</span>';
+    if(a.type) html+='<span class="badge badge-pending">'+esc(a.type)+'</span>';
+    html+='</div></div></div>';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:10px">';
+    html+='<span>👤 Advertiser: <strong style="color:var(--text)">'+esc(advertiser.name||a.business_name||'—')+'</strong></span>';
+    html+='<span>'+fmtDate(a.starts_at)+' – '+fmtDate(a.ends_at)+'</span>';
+    html+='</div>';
+    html+='<div style="display:flex;gap:8px">';
+    html+='<button class="ab '+(a.active?'ab-reject':'ab-approve')+'" onclick="toggleAd(\''+esc(a.id)+'\','+(a.active?'false':'true')+')">'+(a.active?'Pause':'Resume')+'</button>';
+    html+='<button class="ab ab-delete" onclick="deleteAd(\''+esc(a.id)+'\')">🗑 Delete</button>';
+    html+='</div></div>';
   });
-  html+='</tbody></table></div>';
   document.getElementById('mainContent').innerHTML=html;
 }
 
@@ -1235,41 +1299,113 @@ async function deleteAd(id) {
 }
 
 function openCreateAd() {
-  openModal('<div class="modal-title">Create Paid Ad<button class="modal-close" onclick="closeModal()">×</button></div>'
-    +'<div class="form-row"><label class="form-label">Business Name</label><input class="form-input" id="adBiz" placeholder="ACME Corp"></div>'
-    +'<div class="form-row"><label class="form-label">Headline</label><input class="form-input" id="adHead" placeholder="Best deals in Zimbabwe"></div>'
-    +'<div class="form-row"><label class="form-label">Tagline</label><input class="form-input" id="adTag" placeholder="Shop now"></div>'
-    +'<div class="form-row"><label class="form-label">Link URL</label><input class="form-input" id="adUrl" placeholder="https://..."></div>'
+  // Build advertiser options from users list
+  var userOpts = '<option value="">— Select advertiser account —</option>';
+  DATA.users.slice(0,200).forEach(function(u){
+    userOpts += '<option value="'+esc(u.id)+'">'+esc(u.name||'User')+' ('+esc(u.phone||u.email||u.id.slice(0,8))+')</option>';
+  });
+  openModal(
+    '<div class="modal-title">Create Paid Ad<button class="modal-close" onclick="closeModal()">×</button></div>'
+
+    // Advertiser (links to their profile in-app)
+    +'<div class="form-row"><label class="form-label">Advertiser Account <span style="color:var(--red)">*</span></label>'
+    +'<select class="form-input" id="adAdvertiser">'+userOpts+'</select>'
+    +'<div style="font-size:11px;color:var(--sub);margin-top:4px">Tapping this ad in the app will open this user\'s listings</div></div>'
+
+    // Business name (auto-fills but editable)
+    +'<div class="form-row"><label class="form-label">Business Name <span style="color:var(--red)">*</span></label><input class="form-input" id="adBiz" placeholder="e.g. ABC Holdings Zimbabwe" oninput="_adBizManual=true"></div>'
+
+    // Ad type + target section
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +'<div class="form-row"><label class="form-label">Ad Type</label>'
+    +'<select class="form-input" id="adType">'
+    +'<option value="banner">Banner Ad</option>'
+    +'<option value="spotlight">Category Spotlight</option>'
+    +'<option value="jobs">Jobs Promotion</option>'
+    +'<option value="property">Property Feature</option>'
+    +'</select></div>'
+    +'<div class="form-row"><label class="form-label">Show In Section</label>'
+    +'<select class="form-input" id="adSection">'
+    +'<option value="all">🌐 All Pages</option>'
+    +'<option value="home">🏠 Home</option>'
+    +'<option value="jobs">💼 Jobs</option>'
+    +'<option value="property">🏠 Property</option>'
+    +'<option value="vehicles">🚗 Vehicles</option>'
+    +'<option value="electronics">📱 Electronics</option>'
+    +'</select></div>'
+    +'</div>'
+
+    // Ad image
+    +'<div class="form-row"><label class="form-label">Ad Image <span style="font-weight:400;color:var(--sub)">(company logo or banner)</span></label>'
+    +'<div style="background:var(--bg);border:2px dashed var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer;margin-bottom:8px" onclick="document.getElementById(\'adImgFile\').click()">'
+    +'<div id="adImgPreview" style="font-size:13px;color:var(--sub)">📷 Tap to upload image (logo / banner)</div></div>'
+    +'<input type="file" id="adImgFile" accept="image/*" style="display:none" onchange="_adLoadImage(event)">'
+    +'<input type="hidden" id="adImg">'
+    +'</div>'
+
+    // Headline, tagline
+    +'<div class="form-row"><label class="form-label">Headline <span style="color:var(--red)">*</span></label><input class="form-input" id="adHead" placeholder="e.g. Zimbabwe\'s Best Property Deals"></div>'
+    +'<div class="form-row"><label class="form-label">Tagline / Call-to-Action</label><input class="form-input" id="adTag" placeholder="e.g. Browse our listings now"></div>'
+
+    // Dates
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
     +'<div class="form-row"><label class="form-label">Start Date</label><input class="form-input" type="date" id="adStart"></div>'
     +'<div class="form-row"><label class="form-label">End Date</label><input class="form-input" type="date" id="adEnd"></div>'
     +'</div>'
-    +'<div class="form-row"><label class="form-label">Price Paid (USD)</label><input class="form-input" type="number" id="adPrice" placeholder="0"></div>'
-    +'<div class="form-row"><label class="form-label">Client Name</label><input class="form-input" id="adClient" placeholder="Contact name"></div>'
+
+    // Price
+    +'<div class="form-row"><label class="form-label">Price Paid (USD)</label><input class="form-input" type="number" id="adPrice" placeholder="0" min="0"></div>'
+
     +'<button class="btn-send" style="width:100%;margin-top:8px" onclick="saveNewAd()">Create Ad</button>'
   );
+
+  // Auto-fill business name when advertiser changes
+  window._adBizManual = false;
+  document.getElementById('adAdvertiser').addEventListener('change', function(){
+    if(_adBizManual) return;
+    var uid = this.value;
+    var u = DATA.users.find(function(x){ return x.id===uid; });
+    if(u && u.name) document.getElementById('adBiz').value = u.name;
+  });
 }
 
+window._adLoadImage = function(e) {
+  var f = e.target.files[0]; if(!f) return;
+  var r = new FileReader();
+  r.onload = function(ev){
+    document.getElementById('adImg').value = ev.target.result;
+    var prev = document.getElementById('adImgPreview');
+    prev.innerHTML = '<img src="'+ev.target.result+'" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:contain">';
+  };
+  r.readAsDataURL(f);
+};
+
 async function saveNewAd() {
-  var biz=document.getElementById('adBiz').value.trim();
+  var advertId = (document.getElementById('adAdvertiser')||{}).value||'';
+  var biz = (document.getElementById('adBiz')||{}).value.trim();
+  var head = (document.getElementById('adHead')||{}).value.trim();
   if(!biz){ toast('Enter business name','error'); return; }
+  if(!head){ toast('Enter a headline for the ad','error'); return; }
   try {
     var rec = {
-      id:crypto.randomUUID?crypto.randomUUID():Date.now()+'',
-      business_name:biz, headline:document.getElementById('adHead').value.trim(),
-      tagline:document.getElementById('adTag').value.trim(),
-      link_url:document.getElementById('adUrl').value.trim(),
-      starts_at:document.getElementById('adStart').value||null,
-      ends_at:document.getElementById('adEnd').value||null,
-      price_paid:parseFloat(document.getElementById('adPrice').value)||0,
-      client_name:document.getElementById('adClient').value.trim(),
-      active:true,type:'banner',impressions:0,clicks:0,
-      created_at:new Date().toISOString()
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now()+'',
+      business_name: biz,
+      advertiser_id: advertId||null,
+      headline: head,
+      tagline: (document.getElementById('adTag')||{}).value.trim(),
+      image: (document.getElementById('adImg')||{}).value||null,
+      type: (document.getElementById('adType')||{}).value||'banner',
+      target_section: (document.getElementById('adSection')||{}).value||'all',
+      starts_at: (document.getElementById('adStart')||{}).value||null,
+      ends_at: (document.getElementById('adEnd')||{}).value||null,
+      price_paid: parseFloat((document.getElementById('adPrice')||{}).value)||0,
+      active: true, impressions: 0, clicks: 0,
+      created_at: new Date().toISOString()
     };
-    var r=await sb.from('paid_ads').insert(rec);
+    var r = await sb.from('paid_ads').insert(rec);
     if(r.error) throw r.error;
     DATA.ads.unshift(rec);
-    closeModal(); renderAds(); toast('Ad created');
+    closeModal(); renderAds(); toast('Ad created ✓');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
 
