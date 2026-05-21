@@ -122,7 +122,7 @@
           title: 'Insufficient Balance',
           body: `<div style="font-size:14px;line-height:1.6">You need <strong>$${(plan.price - (u.walletUSD || 0)).toFixed(2)}</strong> more to activate this boost.<br><br>Top up via EcoCash, OneMoney or bank transfer.</div>`,
           confirmText: 'Top Up Now',
-          onConfirm: () => { H.openInner('TopUp'); }
+          onConfirm: () => { H._wallet.openTopUp(); }
         });
         return;
       }
