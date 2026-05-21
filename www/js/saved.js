@@ -64,9 +64,9 @@
           <span class="mi-badge-green">${active}</span>
           <div class="mi-arrow">›</div>
         </div>
-        <div class="mi" onclick="H.openInner('Payments')">
-          <div class="mi-icon amber-ic"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
-          <div class="mi-label">Wallet &amp; Payments</div>
+        <div class="mi" onclick="H.openInner('Ads')">
+          <div class="mi-icon blue-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg></div>
+          <div class="mi-label">Advertisements</div>
           <div class="mi-arrow">›</div>
         </div>
         <div class="mi" onclick="H.openInner('Verify')">
