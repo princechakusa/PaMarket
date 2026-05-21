@@ -403,16 +403,28 @@
         ? `<img src="${escHtml(l.photos[0])}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;flex-shrink:0">`
         : `<div style="width:50px;height:50px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--sub)">${IC.photo}</div>`;
       return `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-          ${thumb}
-          <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div>
-            <div style="font-size:11px;color:var(--sub);margin-top:3px">${escHtml(fmtPrice(l.price, l.currency))} · ${escHtml(l.city || '')}</div>
+        <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+            ${thumb}
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div>
+              <div style="font-size:11px;color:var(--sub);margin-top:3px">${escHtml(fmtPrice(l.price, l.currency))} · ${escHtml(l.city || '')}</div>
+            </div>
           </div>
-          <button onclick="H._adv.promoteFromDash('${escHtml(l.id)}')"
-            style="background:var(--blue-light);border:1px solid var(--blue-soft);color:var(--blue);font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;font-family:inherit;flex-shrink:0">
-            Promote
-          </button>
+          <div style="display:flex;gap:6px">
+            <button onclick="H.openInner('EditListing',{listingId:'${escHtml(l.id)}'})"
+              style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:11px;font-weight:700;padding:7px 8px;border-radius:8px;cursor:pointer;font-family:inherit">
+              ✏️ Edit
+            </button>
+            <button onclick="H._adv.promoteFromDash('${escHtml(l.id)}')"
+              style="flex:1;background:var(--blue-light);border:1px solid var(--blue-soft);color:var(--blue);font-size:11px;font-weight:700;padding:7px 8px;border-radius:8px;cursor:pointer;font-family:inherit">
+              Promote
+            </button>
+            <button onclick="H._adv.deleteAd('${escHtml(l.id)}')"
+              style="background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;font-size:13px;font-weight:700;padding:7px 10px;border-radius:8px;cursor:pointer;font-family:inherit;flex-shrink:0">
+              🗑
+            </button>
+          </div>
         </div>`;
     }
 
@@ -464,6 +476,14 @@
       _selIndex     = idx >= 0 ? idx : 0;
       _selBoostType = 'Sponsored Listing';
       H.openInner('AdsContact');
+    },
+    deleteAd(id) {
+      if (!window.confirm('Delete this ad permanently?')) return;
+      H.state.listings = (H.state.listings || []).filter(l => l.id !== id);
+      H.saveState();
+      if (typeof H.deleteListingFromCloud === 'function') H.deleteListingFromCloud(id);
+      H.toast('Ad deleted');
+      H.renderPage('MyAds');
     },
   };
 

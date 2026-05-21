@@ -31,6 +31,7 @@
         ${photo
           ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.onerror=null;this.style.display='none'">`
           : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;color:#ccc">📦</div>'}
+        ${l.boost && l.boost.until > Date.now() ? '<span style="position:absolute;top:6px;left:6px;background:#1A3A8F;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">SPONSORED</span>' : ''}
         ${l.negotiable ? '<span style="position:absolute;top:6px;right:6px;background:#F5A623;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">NEG</span>' : ''}
       </div>
       <div style="padding:8px 10px 11px">
