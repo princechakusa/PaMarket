@@ -127,6 +127,11 @@
           <button class="btn-sec" onclick="H.openInner('ChangePassword')">Change Password</button>
           <button class="btn-sec" onclick="H.goBack()">Cancel</button>
         </div>
+        <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Danger Zone</div>
+          <button onclick="H._editProfile.deleteCV()" style="width:100%;padding:13px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">🗑 Delete My CV / Candidate Profile</button>
+          <button onclick="H._editProfile.deleteAccount()" style="width:100%;padding:13px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">⚠️ Delete Account</button>
+        </div>
       </div>
     </div>`;
   };
@@ -169,7 +174,59 @@
         if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
         if (okEl) { okEl.style.display = ''; setTimeout(() => { if(okEl) okEl.style.display='none'; }, 2500); }
         H.toast('Profile updated!');
-      }
+      },
+      deleteCV() {
+        H.modal({
+          title: 'Delete CV / Candidate Profile?',
+          body: 'This will permanently remove your professional profile and CV from PaMarket. Your listings will not be affected.',
+          confirmText: 'Delete CV',
+          cancelText: 'Cancel',
+          danger: true,
+          onConfirm() {
+            const u = H.currentUser();
+            if (!u) return;
+            delete u.cv;
+            delete u.jobTitle;
+            delete u.skills;
+            H.saveState();
+            if (window.supabase && typeof window.supabase.from === 'function') {
+              window.supabase.from('profiles').update({ cv: null, job_title: null, skills: null }, { returning: 'minimal' }).eq('id', u.id).catch(() => {});
+            }
+            H.toast('CV deleted');
+            H.renderPage('EditProfile');
+          },
+        });
+      },
+      deleteAccount() {
+        H.modal({
+          title: 'Delete Account?',
+          body: `<div style="font-size:14px;color:var(--text);line-height:1.7">
+            <p style="margin:0 0 10px;color:#DC2626;font-weight:700">⚠️ This cannot be undone.</p>
+            <p style="margin:0 0 8px">All your listings, messages, and profile data will be permanently removed.</p>
+            <p style="margin:0">Type <strong>DELETE</strong> below to confirm:</p>
+            <input id="deleteConfirmInput" class="fi" style="margin-top:10px" placeholder="Type DELETE">
+          </div>`,
+          confirmText: 'Delete My Account',
+          cancelText: 'Cancel',
+          danger: true,
+          onConfirm() {
+            const inp = document.getElementById('deleteConfirmInput');
+            if (!inp || inp.value.trim() !== 'DELETE') { H.toast('Type DELETE to confirm'); return; }
+            const u = H.currentUser();
+            if (!u) return;
+            H.state.listings = (H.state.listings || []).filter(l => l.sellerId !== u.id);
+            H.state.conversations = (H.state.conversations || []).filter(c => !(c.members || []).includes(u.id));
+            H.state.users = (H.state.users || []).filter(x => x.id !== u.id);
+            H.state.currentUserId = null;
+            H.saveState();
+            if (window.supabase && window.supabase.auth) {
+              window.supabase.auth.signOut().catch(() => {}).finally(() => window.location.reload());
+            } else {
+              window.location.reload();
+            }
+          },
+        });
+      },
     };
   };
 
