@@ -104,20 +104,15 @@
         ${isMine ? `
           <button class="btn-pri" onclick="H.openBoostPage('${l.id}')" style="margin-bottom:8px">${S.boost} Boost this Listing</button>
           <button style="width:100%;padding:13px;background:#fee2e2;color:#dc2626;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" onclick="H.deleteListing('${l.id}')">Delete Listing</button>
-        ` : `
-          <button class="wa-btn" onclick="H.openWA('${l.id}')">
-            ${S.wa} Chat on WhatsApp
-          </button>
-          <button class="msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')">
-            ${S.message} Message in App
-          </button>
-          <button class="call-btn" onclick="H.callSeller('${sellerPhone}')">
-            ${S.phone} Call ${H.escHtml(sellerPhone||'Seller')}
-          </button>
-          <button class="report-btn" onclick="H.reportListing('${l.id}')">
-            ${S.flag} Report this Listing
-          </button>
-        `}
+        ` : (function(){
+          const cm = l.contactMethod || 'chat';
+          const waBtn   = `<button class="wa-btn" onclick="H.openWA('${l.id}')">${S.wa} Chat on WhatsApp</button>`;
+          const chatBtn = `<button class="msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')">${S.message} Message in App</button>`;
+          const callBtn = sellerPhone ? `<button class="call-btn" onclick="H.callSeller('${sellerPhone}')">${S.phone} Call ${H.escHtml(sellerPhone)}</button>` : '';
+          const rptBtn  = `<button class="report-btn" onclick="H.reportListing('${l.id}')">${S.flag} Report this Listing</button>`;
+          if (cm === 'phone') return callBtn + waBtn + chatBtn + rptBtn;
+          return chatBtn + waBtn + callBtn + rptBtn;
+        })()}
       </div>
     </div>`;
   };
