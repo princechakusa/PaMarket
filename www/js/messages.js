@@ -153,13 +153,17 @@
         + '</div></div>';
     }).join('');
 
+    const otherPhone = other.phone || '';
+    const otherIdSafe = escHtml(otherId || '');
     return '<div class="page active" style="display:flex;flex-direction:column;overflow:hidden;height:100%">'
       + '<div class="det-topbar" style="flex-shrink:0"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
-      + '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">'
+      + '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">'
       + '<div style="width:34px;height:34px;flex-shrink:0">' + otherAvatar + '</div>'
       + '<div style="min-width:0"><div class="det-topbar-title" style="margin:0;text-align:left">' + escHtml(other.name) + '</div>'
-      + (other.verified ? '<div style="font-size:10px;color:#22c55e;font-weight:600">✓ Verified</div>' : '') + '</div>'
-      + '</div></div>'
+      + (other.verified ? '<div style="font-size:10px;color:#22c55e;font-weight:600">✓ Verified</div>' : '<div style="font-size:10px;color:rgba(255,255,255,.5)">Tap to view profile</div>') + '</div>'
+      + '</div>'
+      + '<button onclick="H._chat.openMenu(\'' + otherIdSafe + '\')" style="padding:8px;background:none;border:none;color:#fff;cursor:pointer;flex-shrink:0;margin-left:4px"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
+      + '</div>'
       + (listing ? '<div style="flex-shrink:0;padding:8px 14px;background:var(--card);border-bottom:1px solid var(--border);font-size:13px;color:var(--sub)">Re: ' + escHtml(listing.title) + '</div>' : '')
       + '<div class="chat-thread" id="chatThread" style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"><div style="flex:1;min-height:0"></div>' + (msgs || '<div style="text-align:center;color:var(--sub);padding:40px 20px;font-size:14px">No messages yet. Say hello! 👋</div>') + '</div>'
       + '<div class="chat-input-bar" style="flex-shrink:0">'
@@ -411,6 +415,103 @@
     H.state.conversations = (H.state.conversations || []).filter(function (c) { return c.id !== convId; });
     H.saveState();
     if (H.currentPageName === 'Messages') H.renderPage('Messages');
+  };
+
+  // ── Chat menu: block, view profile, report ───────────────
+  H._chat = {
+    openMenu(userId) {
+      const u = H.currentUser();
+      const other = (H.state.users || []).find(x => x.id === userId);
+      const name = other ? escHtml(other.name || 'User') : 'User';
+      const isBlocked = (H.state.blockedUsers || []).includes(userId);
+      H.modal({
+        title: name,
+        body: `<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
+          <button onclick="H.closeModal();setTimeout(()=>H._chat.showProfile('${escHtml(userId)}'),80)" style="width:100%;padding:13px;background:var(--bg);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">
+            👤 View Profile &amp; Listings
+          </button>
+          <button onclick="H.closeModal();setTimeout(()=>H._chat.blockUser('${escHtml(userId)}'),80)" style="width:100%;padding:13px;background:${isBlocked?'var(--bg)':'#FEF2F2'};border:1px solid ${isBlocked?'var(--border)':'#FECACA'};border-radius:12px;font-size:15px;font-weight:600;color:${isBlocked?'var(--text)':'#DC2626'};cursor:pointer;font-family:inherit;text-align:left">
+            🚫 ${isBlocked ? 'Unblock User' : 'Block User'}
+          </button>
+          <button onclick="H.closeModal();setTimeout(()=>H._chat.reportUser('${escHtml(userId)}'),80)" style="width:100%;padding:13px;background:var(--bg);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">
+            ⚠️ Report
+          </button>
+        </div>`,
+        confirmText: null,
+        cancelText: 'Close',
+      });
+    },
+
+    showProfile(userId) {
+      const other = (H.state.users || []).find(x => x.id === userId);
+      if (!other) { H.toast('Profile not available'); return; }
+      const listings = (H.state.listings || []).filter(l => l.sellerId === userId && l.status === 'active');
+      const ini = H.initials(other.name || 'U');
+      const avatar = other.avatar
+        ? `<img src="${escHtml(other.avatar)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover">`
+        : `<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">${ini}</div>`;
+      const listingCards = listings.slice(0, 4).map(l => {
+        const ph = (l.photos && l.photos[0])
+          ? `<img src="${escHtml(l.photos[0])}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0">`
+          : `<div style="width:56px;height:56px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📦</div>`;
+        return `<div onclick="H.closeModal();setTimeout(()=>H.openListing('${l.id}'),80)" style="display:flex;gap:10px;align-items:center;padding:8px;background:var(--bg);border-radius:10px;cursor:pointer">
+          ${ph}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div>
+            <div style="font-size:12px;color:var(--blue);font-weight:700">${escHtml(H.fmtPrice(l.price, l.currency))}</div>
+          </div>
+        </div>`;
+      }).join('');
+      H.modal({
+        title: 'Profile',
+        body: `<div style="text-align:center;padding:8px 0 16px">
+          ${avatar}
+          <div style="font-size:18px;font-weight:800;color:var(--text);margin-top:10px">${escHtml(other.name || 'User')}</div>
+          ${other.verified ? '<div style="font-size:12px;color:#22c55e;font-weight:600;margin-top:4px">✓ ID Verified</div>' : ''}
+          ${other.phone ? `<div style="font-size:13px;color:var(--sub);margin-top:4px">📞 ${escHtml(other.phone)}</div>` : ''}
+          ${other.joinedAt ? `<div style="font-size:12px;color:var(--sub);margin-top:3px">Member since ${new Date(other.joinedAt).toLocaleDateString()}</div>` : ''}
+        </div>
+        ${listings.length ? `<div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Active Listings (${listings.length})</div>
+        <div style="display:flex;flex-direction:column;gap:8px">${listingCards}</div>` : '<div style="text-align:center;color:var(--sub);font-size:13px;padding:12px 0">No active listings</div>'}
+        ${other.phone ? `<div style="display:flex;gap:8px;margin-top:16px">
+          <a href="tel:${escHtml(other.phone)}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#1A3A8F;color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700">📞 Call</a>
+          <a href="https://wa.me/${escHtml(other.phone.replace(/\D/g,''))}" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700">WhatsApp</a>
+        </div>` : ''}`,
+        confirmText: null,
+        cancelText: 'Close',
+      });
+    },
+
+    blockUser(userId) {
+      if (!Array.isArray(H.state.blockedUsers)) H.state.blockedUsers = [];
+      const already = H.state.blockedUsers.includes(userId);
+      if (already) {
+        H.state.blockedUsers = H.state.blockedUsers.filter(id => id !== userId);
+        H.saveState();
+        H.toast('User unblocked');
+      } else {
+        H.state.blockedUsers.push(userId);
+        H.saveState();
+        H.toast('User blocked — you will no longer receive messages from them');
+        H.goBack();
+      }
+    },
+
+    reportUser(userId) {
+      const other = (H.state.users || []).find(x => x.id === userId);
+      if (!Array.isArray(H.state.reports)) H.state.reports = [];
+      const u = H.currentUser();
+      const rep = { id: H.uid(), reporterId: u.id, targetType: 'user', targetId: userId,
+        reason: 'Reported from chat', t: Date.now(), status: 'open' };
+      H.state.reports.push(rep);
+      H.saveState();
+      H.toast('Report submitted — our team will review within 24 hours');
+      if (window.supabase && typeof window.supabase.from === 'function') {
+        window.supabase.from('reports').insert({ id: rep.id, reporter_id: rep.reporterId,
+          target_type: 'user', target_id: userId, reason: rep.reason,
+          created_at: new Date(rep.t).toISOString(), status: 'open' }).catch(() => {});
+      }
+    },
   };
 
 })(window.H);
