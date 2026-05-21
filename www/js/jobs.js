@@ -294,8 +294,7 @@
       + (skills.length ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">' + skills.map(function (s) { return '<span style="background:#1A3A8F12;border:1px solid #1A3A8F22;font-size:11px;padding:2px 8px;border-radius:6px;color:#1A3A8F;font-weight:600">' + H.escHtml(s) + '</span>'; }).join('') + '</div>' : '')
       + (cv.summary ? '<div style="font-size:12px;color:var(--sub);line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + H.escHtml(cv.summary) + '</div>' : '')
       + '<div style="display:flex;gap:8px">'
-      + (u.phone ? '<button onclick="window.open(\'https://wa.me/' + H.escHtml(u.phone.replace(/[^\d+]/g, '')) + '\',\'_blank\')" style="flex:1;padding:9px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">WhatsApp</button>' : '')
-      + (u.email ? '<button onclick="window.location.href=\'mailto:' + H.escHtml(u.email) + '\'" style="flex:1;padding:9px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">Email</button>' : '')
+      + '<button onclick="H.startChatWith(\'' + u.id + '\')" style="flex:1;padding:9px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">💬 Message</button>'
       + '<button onclick="H.openInner(\'ViewCandidateCV\',{id:\'' + u.id + '\'})" style="flex:1;padding:9px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">View CV</button>'
       + '</div></div>';
   }
@@ -342,8 +341,7 @@
       + (expectedSal ? '<span>💰 ' + H.escHtml(expectedSal) + '</span>' : '')
       + '</div></div></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-      + (u.email ? '<a href="mailto:' + H.escHtml(u.email) + '" style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);color:#fff;text-decoration:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> ' + H.escHtml(u.email) + '</a>' : '')
-      + (u.phone ? '<a href="tel:' + H.escHtml(u.phone) + '" style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);color:#fff;text-decoration:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.29 6.29"/></svg> ' + H.escHtml(u.phone) + '</a>' : '')
+      + '<div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;color:#fff"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Contact via PaMarket Messages</div>'
       + '</div></div>'
       // ── body ──
       + '<div style="padding:16px 16px 0">'
@@ -376,7 +374,7 @@
       + '</div></div>'
       // ── fixed bottom ──
       + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200;display:flex;gap:8px">'
-      + (u.phone ? '<button onclick="window.open(\'https://wa.me/' + H.escHtml((u.phone || '').replace(/[^\d+]/g, '')) + '\',\'_blank\')" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">WhatsApp</button>' : '')
+      + '<button onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">💬 Message</button>'
       + '<button onclick="H._cvDownload(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952c8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">⬇ Download CV</button>'
       + '</div></div>';
   };
@@ -400,7 +398,6 @@
     if (cv.headline || u.jobTitle) lines.push('TITLE:     ' + (cv.headline || u.jobTitle));
     if (cv.location || u.city)    lines.push('LOCATION:  ' + (cv.location || u.city));
     if (u.email)           lines.push('EMAIL:     ' + u.email);
-    if (u.phone)           lines.push('PHONE:     ' + u.phone);
     if (cv.expectedSalary) lines.push('EXPECTED:  $' + cv.expectedSalary + '/month');
     lines.push('');
     if (cv.summary) {
@@ -638,11 +635,11 @@
       + (responsibilities ? _jb('Key Responsibilities', responsibilities) : '')
       + (requirements     ? _jb('Requirements',         requirements)     : '')
 
-      + ((applyEmail || applyPhone) ? '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border)">'
-        + '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">How to Apply</div>'
+      + '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border)">'
+        + '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px">How to Apply</div>'
+        + '<div style="font-size:13px;color:var(--sub);margin-bottom:10px">Use Easy Apply to submit your application securely through PaMarket. The employer will review your profile and message you here.</div>'
         + (applyEmail ? '<a href="mailto:' + H.escHtml(applyEmail) + '?subject=' + encodeURIComponent('Application: ' + l.title) + '" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#1A3A8F15;border-radius:10px;margin-bottom:8px;text-decoration:none"><span style="font-size:16px">📧</span><span style="font-size:13px;font-weight:600;color:#1A3A8F">' + H.escHtml(applyEmail) + '</span></a>' : '')
-        + (applyPhone ? '<button onclick="window.open(\'https://wa.me/' + H.escHtml(applyPhone) + '?text=' + encodeURIComponent('Hi, I am interested in the ' + l.title + ' position at ' + company) + '\',\'_blank\')" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#25D36615;border-radius:10px;width:100%;border:none;cursor:pointer"><span style="font-size:16px">💬</span><span style="font-size:13px;font-weight:600;color:#25D366">WhatsApp: ' + H.escHtml(applyPhone) + '</span></button>' : '')
-        + '</div>' : '')
+        + '</div>'
 
       + '<div style="height:90px"></div></div>'
 
@@ -665,7 +662,7 @@
       title: 'Apply: ' + l.title,
       body: '<div style="margin-bottom:10px;font-size:13px;color:var(--sub)">at <strong>' + H.escHtml(company) + '</strong> · ' + H.escHtml(l.city || 'Zimbabwe') + '</div>'
         + '<textarea id="applyMsg" rows="4" placeholder="Introduce yourself — your experience, why you\'re a great fit, and any relevant skills…" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif"></textarea>'
-        + '<div style="font-size:11px;color:var(--sub);margin-top:6px">Your name and contact details from your profile will be shared with the employer.</div>',
+        + '<div style="font-size:11px;color:var(--sub);margin-top:6px">Your name and application message will be reviewed by the employer. They can message you through PaMarket.</div>',
       confirmText: 'Submit Application',
       onConfirm: function() {
         var msg = (document.getElementById('applyMsg') || {}).value || '';
@@ -684,7 +681,6 @@
     var app = {
       id: H.uid(), jobId: jobId, jobTitle: l.title, company: company,
       applicantId: u.id, applicantName: u.name || 'Applicant',
-      applicantPhone: u.phone || '', applicantEmail: u.email || '',
       message: message, status: 'pending', appliedAt: Date.now(),
       employerId: l.sellerId
     };
@@ -745,13 +741,11 @@
             + '<span style="background:' + statusC + '20;color:' + statusC + ';font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px">' + statusL + '</span>'
             + '</div>'
             + '<div style="font-size:12px;color:var(--sub);margin-top:2px">' + H.timeAgo(app.appliedAt) + '</div>'
-            + (app.applicantPhone ? '<div style="font-size:12px;color:var(--sub);margin-top:2px">' + H.escHtml(app.applicantPhone) + '</div>' : '')
             + '</div></div>'
             + (app.message ? '<div style="font-size:13px;color:var(--text);line-height:1.6;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:12px">' + H.escHtml(app.message.slice(0,200)) + (app.message.length>200?'…':'') + '</div>' : '')
             + '<div style="display:flex;gap:8px">'
             + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'shortlisted\')" style="flex:1;padding:8px;background:#22c55e15;color:#15803d;border:1.5px solid #22c55e40;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Shortlist</button>'
             + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'rejected\')" style="flex:1;padding:8px;background:#ef444415;color:#dc2626;border:1.5px solid #ef444440;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Decline</button>'
-            + (app.applicantPhone ? '<button onclick="window.open(\'https://wa.me/' + app.applicantPhone.replace(/[^\d]/g,'') + '\',\'_blank\')" style="flex:1;padding:8px;background:#25D36615;color:#25D366;border:1.5px solid #25D36640;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">WhatsApp</button>' : '')
             + '<button onclick="H._openApplicationChat(\'' + app.id + '\')" style="flex:1;padding:8px;background:#1A3A8F15;color:#1A3A8F;border:1.5px solid #1A3A8F40;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Message</button>'
             + '</div></div>';
         }).join('')
