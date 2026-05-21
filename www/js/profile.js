@@ -312,17 +312,39 @@
     if (u.verificationPending) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="font-size:48px;margin-bottom:12px">⏳</div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Verification Pending</div><div style="font-size:14px;color:var(--sub)">Your request is under review. We will notify you within 24 hours.</div></div></div>`;
     return `<div class="page active">
       ${H.innerTopbar('Verify Identity')}
-      <div class="section-box" style="text-align:center;padding:24px 20px">
-        <div style="font-size:48px;margin-bottom:12px">🢻</div>
-        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Get Verified</div>
-        <div style="font-size:14px;color:var(--sub)">Build trust with buyers by verifying your identity with a valid ID.</div>
+      <div class="section-box" style="text-align:center;padding:20px 20px 14px">
+        <div style="font-size:40px;margin-bottom:10px">🛡️</div>
+        <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">Identity Verification</div>
+        <div style="font-size:13px;color:var(--sub)">Submit your ID and a selfie. Review takes up to 24 hours.</div>
       </div>
       <div class="form-wrap">
         <div class="fg"><div class="fl">ID Type</div><select class="fi" id="idType"><option>National ID</option><option>Passport</option><option>Driver&#39;s License</option></select></div>
         <div class="fg"><div class="fl">ID Number</div><input class="fi" id="idNum" placeholder="Enter your ID number"></div>
+        <div class="fg">
+          <div class="fl">Selfie Photo <span style="font-weight:400;color:var(--sub);font-size:11px">(center your face in the oval)</span></div>
+          <div style="position:relative;width:220px;height:280px;margin:0 auto 10px;border-radius:14px;overflow:hidden;background:#111">
+            <div id="selfiePH" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a2e;gap:8px">
+              <div style="font-size:40px">🤳</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.65);text-align:center;padding:0 16px">Tap Camera or Upload to add your selfie</div>
+            </div>
+            <video id="selfieVid" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)"></video>
+            <canvas id="selfieCanvas" style="display:none"></canvas>
+            <div id="selfiePrev" style="display:none;position:absolute;inset:0"><img id="selfieImg" style="width:100%;height:100%;object-fit:cover"></div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
+              <div style="width:130px;height:170px;border-radius:50%;border:3px solid rgba(255,255,255,.88);box-shadow:0 0 0 9999px rgba(0,0,0,.48)"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;max-width:220px;margin:0 auto">
+            <button id="selfieStartBtn" onclick="H._profileVerify.startCamera()" style="flex:1;padding:10px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">📸 Camera</button>
+            <button id="selfieCapBtn" onclick="H._profileVerify.captureSelfie()" style="display:none;flex:1;padding:10px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">✓ Capture</button>
+            <button id="selfieRetakeBtn" onclick="H._profileVerify.retakeSelfie()" style="display:none;flex:1;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">↺ Retake</button>
+            <label for="selfieFile" style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">📂 Upload</label>
+            <input type="file" id="selfieFile" accept="image/*" capture="user" style="display:none" onchange="H._profileVerify.handleSelfieFile(this)">
+          </div>
+        </div>
         <div class="fg"><div class="fl">ID Photo (Front)</div>
-          <label class="img-upload-zone" for="idPhotoFront"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-upload-title">Upload front of ID</div><div class="img-upload-sub">JPG or PNG</div></label>
-          <input type="file" id="idPhotoFront" accept="image/*" capture style="display:none">
+          <label class="img-upload-zone" for="idPhotoFront"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-upload-title" id="idPhotoLabel">Upload front of ID</div><div class="img-upload-sub">National ID, Passport or Driver&#39;s License</div></label>
+          <input type="file" id="idPhotoFront" accept="image/*" capture="environment" style="display:none" onchange="H._profileVerify.previewIdPhoto(this)">
         </div>
         <button class="btn-pri" onclick="H._profileVerify.submit()">Submit for Verification</button>
       </div>
@@ -331,10 +353,100 @@
 
   pages.ProfileVerify_after = function () {
     H._profileVerify = {
-      submit: () => {
+      _stream: null,
+      _selfieData: null,
+
+      startCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          H.toast('Camera not available — please upload a selfie photo.');
+          return;
+        }
+        const btn = document.getElementById('selfieStartBtn');
+        if (btn) btn.style.display = 'none';
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 640 } } })
+          .then(stream => {
+            this._stream = stream;
+            const vid = document.getElementById('selfieVid');
+            const ph  = document.getElementById('selfiePH');
+            const cap = document.getElementById('selfieCapBtn');
+            if (vid) { vid.srcObject = stream; vid.style.display = 'block'; }
+            if (ph)  ph.style.display = 'none';
+            if (cap) cap.style.display = 'flex';
+          })
+          .catch(() => {
+            H.toast('Camera permission denied — use Upload instead.');
+            const btn2 = document.getElementById('selfieStartBtn');
+            if (btn2) btn2.style.display = 'flex';
+          });
+      },
+
+      captureSelfie() {
+        const vid    = document.getElementById('selfieVid');
+        const canvas = document.getElementById('selfieCanvas');
+        if (!vid || !canvas) return;
+        canvas.width  = vid.videoWidth  || 480;
+        canvas.height = vid.videoHeight || 640;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(vid, 0, 0);
+        this._selfieData = canvas.toDataURL('image/jpeg', 0.85);
+        if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
+        vid.style.display = 'none';
+        const prev    = document.getElementById('selfiePrev');
+        const img     = document.getElementById('selfieImg');
+        const capBtn  = document.getElementById('selfieCapBtn');
+        const retake  = document.getElementById('selfieRetakeBtn');
+        if (prev)   prev.style.display = 'block';
+        if (img)    img.src = this._selfieData;
+        if (capBtn) capBtn.style.display = 'none';
+        if (retake) retake.style.display = 'flex';
+        H.toast('Selfie captured ✓');
+      },
+
+      retakeSelfie() {
+        this._selfieData = null;
+        const prev   = document.getElementById('selfiePrev');
+        const retake = document.getElementById('selfieRetakeBtn');
+        if (prev)   prev.style.display = 'none';
+        if (retake) retake.style.display = 'none';
+        this.startCamera();
+      },
+
+      handleSelfieFile(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          this._selfieData = e.target.result;
+          const ph      = document.getElementById('selfiePH');
+          const vid     = document.getElementById('selfieVid');
+          const prev    = document.getElementById('selfiePrev');
+          const img     = document.getElementById('selfieImg');
+          const startBtn = document.getElementById('selfieStartBtn');
+          const capBtn  = document.getElementById('selfieCapBtn');
+          const retake  = document.getElementById('selfieRetakeBtn');
+          if (ph)       ph.style.display = 'none';
+          if (vid)      vid.style.display = 'none';
+          if (prev)     prev.style.display = 'block';
+          if (img)      img.src = this._selfieData;
+          if (startBtn) startBtn.style.display = 'none';
+          if (capBtn)   capBtn.style.display = 'none';
+          if (retake)   retake.style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+      },
+
+      previewIdPhoto(input) {
+        const label = document.getElementById('idPhotoLabel');
+        if (input.files && input.files[0] && label) label.textContent = '✓ ID photo selected';
+      },
+
+      submit() {
         const idType = document.getElementById('idType')?.value || 'National ID';
-        const idNum  = document.getElementById('idNum')?.value.trim();
+        const idNum  = (document.getElementById('idNum')?.value || '').trim();
         if (!idNum) { H.toast('Please enter your ID number'); return; }
+        if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
         const u = H.currentUser();
         u.verificationPending = true;
         u.verificationIdType  = idType;

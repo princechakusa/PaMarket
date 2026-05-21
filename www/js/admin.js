@@ -79,13 +79,52 @@
   };
 
   pages.Admin_after = function () {
-    if (typeof H.syncReports === 'function') {
-      H.syncReports().then(function(){
-        const body = document.getElementById('adminBody');
-        if (body) body.innerHTML = renderBody();
-      });
-    }
+    const body = document.getElementById('adminBody');
+    const reRender = function () { if (body) body.innerHTML = renderBody(); };
+    const syncs = [syncVerificationsFromSupabase()];
+    if (typeof H.syncReports === 'function') syncs.push(H.syncReports());
+    Promise.all(syncs).then(reRender);
   };
+
+  function syncVerificationsFromSupabase() {
+    const sb = window.supabase;
+    if (!sb || typeof sb.from !== 'function') return Promise.resolve();
+    return sb.from('profiles')
+      .select('id,name,email,phone,verification_pending,id_type,verified,verified_at,avatar_url,role')
+      .or('verification_pending.eq.true,verified.eq.true')
+      .then(function (res) {
+        const data = res && res.data;
+        if (!data || !data.length) return;
+        if (!H.state.users) H.state.users = [];
+        data.forEach(function (p) {
+          let u = H.state.users.find(function (x) { return x.id === p.id; });
+          if (u) {
+            if (p.verification_pending !== undefined) u.verificationPending = p.verification_pending;
+            if (p.id_type) u.verificationIdType = p.id_type;
+            if (p.verified !== undefined) u.verified = p.verified;
+            if (p.verified_at) u.verifiedAt = new Date(p.verified_at).getTime();
+            if (p.name)  u.name  = p.name;
+            if (p.email) u.email = p.email;
+            if (p.phone) u.phone = p.phone;
+          } else {
+            H.state.users.push({
+              id: p.id,
+              name:  p.name  || 'Unknown',
+              email: p.email || '',
+              phone: p.phone || '',
+              avatar: p.avatar_url || '',
+              role:  p.role  || 'user',
+              verificationPending: p.verification_pending || false,
+              verificationIdType:  p.id_type || '',
+              verified:   p.verified   || false,
+              verifiedAt: p.verified_at ? new Date(p.verified_at).getTime() : null,
+              joinedAt:   Date.now()
+            });
+          }
+        });
+      })
+      .catch(function () {});
+  }
 
   function renderBody() {
     switch (_adminTab) {
@@ -613,6 +652,11 @@
       document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab===t));
       const body = document.getElementById('adminBody');
       if (body) body.innerHTML = renderBody();
+      if (t === 'verifications') {
+        syncVerificationsFromSupabase().then(function () { if (body) body.innerHTML = renderBody(); });
+      } else if (t === 'reports' && typeof H.syncReports === 'function') {
+        H.syncReports().then(function () { if (body) body.innerHTML = renderBody(); });
+      }
     },
 
     filterUsers(q) {
