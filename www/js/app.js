@@ -406,7 +406,7 @@ window.H = {
     if (_lid) { setTimeout(()=>this.openListing(_lid), 200); }
     else if (_act === 'post')   { if(this.currentUser()) setTimeout(()=>this.navTo('Post',null), 200); }
     else if (_act === 'browse') { setTimeout(()=>this.navTo('Browse',null), 200); }
-    else if (_act === 'topup')  { setTimeout(()=>{ if(this.currentUser()) this.openInner('TopUp'); else this.requireAuth('Sign in to add wallet credits'); }, 300); }
+    else if (_act === 'topup')  { setTimeout(()=>{ if(this.currentUser()) this.openInner('Ads'); else this.requireAuth('Sign in to advertise'); }, 300); }
     try {
       await this.fetchListingsFromSupabase();
       await Promise.all([this.fetchAdsFromSupabase(), this.fetchAppSettings()]);
@@ -466,12 +466,7 @@ window.H = {
 
   async openInner(name, params) {
     const H=window.H;
-    // Wallet and TopUp always go to the external wallet.html page
-    if(name==='Wallet'||name==='TopUp'){
-      if(H._wallet&&typeof H._wallet.openTopUp==='function') H._wallet.openTopUp();
-      return;
-    }
-    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Wallet','Boost','Security','SecuritySettings','DeleteAccount','TopUp','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob'];
+    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','Wallet','Boost','Security','SecuritySettings','DeleteAccount','TopUp','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob'];
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
     try {
@@ -1247,7 +1242,7 @@ window.H = {
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <div class="guest-menu-title">More on PaMarket</div>
-        ${item('Advertise',I.ads,'', '', gated('Login to advertise'))}
+        ${item('Advertisements',I.ads,'', '', gated('Login to advertise'))}
         ${item('Sell My Property','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>','', '', gated('Login to continue'))}
         ${item('Find Jobs','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>','Jobs','',publicNav('Jobs'))}
         ${item('Favourites',I.heart,'', '', gated('Login to continue'))}
@@ -1291,12 +1286,11 @@ window.H = {
       ${item('My Profile',I.user,'Profile','')}
       ${item('My Listings',I.doc,'MyListings',activeAds||'')}
       ${item('Saved & Favorites',I.heart,'Favorites',savedAds||'')}
-      ${item('Advertise',I.ads,'Wallet','')}
+      ${item('Advertisements',I.ads,'Ads','')}
       ${item('Settings',I.settings,'Settings','')}
       ${item('Security & Password','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>','SecuritySettings','')}
       ${item('Help & Support',I.help,'Help','')}
       ${item('About PaMarket','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>','About','')}
-      ${item('Advertise with Us','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>','Ads','')}
       <button class="sheet-item danger" onclick="H.closeSheet();setTimeout(()=>H.logout(),50)">
         <span class="sheet-icon">${I.logout}</span>
         <span class="sheet-label">Sign Out</span>
@@ -1361,7 +1355,7 @@ window.H = {
         </div>
         <div class="guest-menu-title">More on PaMarket</div>
         <div class="account-menu-list">
-          ${item('Advertise',I.ads,'Wallet','',true)}
+          ${item('Advertisements',I.ads,'Ads','',true)}
           ${item('Favourites',I.heart,'Favorites','',true)}
           ${item('Saved Searches',I.search,'SavedSearches','',true)}
           ${item('Find Jobs','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>','Jobs')}
