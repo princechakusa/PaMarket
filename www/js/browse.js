@@ -29,6 +29,29 @@
     lastSearch: ''
   };
 
+  function renderListingsWithSponsored(filteredList) {
+    if (!filteredList.length) return '';
+    const now = Date.now();
+    const sponsored = (H.state.listings || []).filter(l =>
+      l.status === 'active' && l.boost && l.boost.until > now
+    );
+    if (!sponsored.length) return filteredList.map(renderListCard).join('');
+    const shownIds = new Set(filteredList.map(l => l.id));
+    const pool = sponsored.filter(l => !shownIds.has(l.id));
+    if (!pool.length) return filteredList.map(renderListCard).join('');
+    const parts = [];
+    let pi = 0;
+    filteredList.forEach((l, i) => {
+      parts.push(renderListCard(l));
+      if ((i + 1) % 5 === 0) {
+        const s = pool[pi % pool.length];
+        pi++;
+        parts.push(`<div style="position:relative">${renderListCard(s)}<span style="position:absolute;top:10px;left:10px;background:#1A3A8F;color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px;pointer-events:none;z-index:1">SPONSORED</span></div>`);
+      }
+    });
+    return parts.join('');
+  }
+
   pages.Browse = function () {
     const activeListings = (state.listings || []).filter(l => l.status === 'active');
     const u = H.currentUser();
@@ -128,7 +151,7 @@
       <div class="sec-head"><div class="sec-title">Results</div></div>
       <div class="listing-list" id="listingList">
         ${activeListings.length
-          ? filterListings(activeListings, '').map(renderListCard).join('')
+          ? renderListingsWithSponsored(filterListings(activeListings, ''))
           : H.skeletonCards(6)}
       </div>
     </div>`;
@@ -142,7 +165,7 @@
         const q = document.getElementById('searchIn')?.value || '';
         const active = (state.listings || []).filter(l => l.status === 'active');
         el.innerHTML = active.length
-          ? filterListings(active, q).map(renderListCard).join('')
+          ? renderListingsWithSponsored(filterListings(active, q))
           : H.emptyState('No listings yet', 'Listings will appear here once people start posting', null, null);
       }).catch(() => {
         const el = document.getElementById('listingList');
@@ -166,7 +189,7 @@
           const filtered = filterListings(activeListings, q);
           const el = document.getElementById('listingList');
           if (el) el.innerHTML = filtered.length
-            ? filtered.map(renderListCard).join('')
+            ? renderListingsWithSponsored(filtered)
             : H.emptyState('No matches', 'Try a different search term', null, null);
           if (q.trim()) {
             const u = H.currentUser();
