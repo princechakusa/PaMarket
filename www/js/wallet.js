@@ -124,7 +124,7 @@
     const catObj = CATEGORIES.find(c => c.id === catId);
     const catEmoji = ADS_CATS.find(c => CAT_MAP[c.id] === catId || c.id === category)?.emoji || '📦';
 
-    _cs = { cat: catId, title:'', desc:'', price:'', currency:'USD',
+    _cs = { cat: catId, title:'', desc:'', price:'', currency:'USD', company:'',
             prov: PROVINCES[0], city:(CITIES_BY_PROV[PROVINCES[0]]||[])[0]||'',
             suburb:'', contact:'chat', photos:[] };
 
@@ -158,22 +158,32 @@
       </div>`
     ).join('');
 
+    const isJobs = s.cat === 'jobs';
+    const maxPhotos = isJobs ? 2 : 8;
+
     return `
+      ${isJobs ? `
       <div class="fg">
-        <div class="fl">Title <span style="color:var(--red)">*</span></div>
-        <input class="fi" id="acTitle" value="${escHtml(s.title)}" placeholder="e.g. 3 Bedroom House in Avondale" maxlength="80">
+        <div class="fl">Company Name <span style="color:var(--red)">*</span></div>
+        <input class="fi" id="acCompany" value="${escHtml(s.company)}" placeholder="e.g. ABC Holdings Zimbabwe" maxlength="80">
+      </div>
+      ` : ''}
+      <div class="fg">
+        <div class="fl">${isJobs ? 'Ad Headline' : 'Title'} <span style="color:var(--red)">*</span></div>
+        <input class="fi" id="acTitle" value="${escHtml(s.title)}" placeholder="${isJobs ? 'e.g. Now Hiring: Sales Executives — Join Our Growing Team' : 'e.g. 3 Bedroom House in Avondale'}" maxlength="80">
       </div>
       <div class="fg">
         <div class="fl">Description <span style="color:var(--red)">*</span></div>
-        <textarea class="fi" rows="4" id="acDesc" placeholder="Describe what you're advertising — condition, features, why buyers should contact you..." maxlength="2000">${escHtml(s.desc)}</textarea>
+        <textarea class="fi" rows="4" id="acDesc" placeholder="${isJobs ? 'Describe the position(s), what you offer, and why candidates should apply. Include role, salary range, requirements, and how to apply.' : 'Describe what you\'re advertising — condition, features, why buyers should contact you...'}" maxlength="2000">${escHtml(s.desc)}</textarea>
       </div>
 
       <div class="fg">
-        <div class="fl">Photos <span style="color:var(--red)">*</span> <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--sub)">(min 1, up to 8)</span></div>
+        <div class="fl">${isJobs ? 'Company Logo / Ad Banner' : 'Photos <span style="color:var(--red)">*</span>'} <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--sub)">${isJobs ? '(optional, up to 2)' : '(min 1, up to 8)'}</span></div>
+        ${isJobs ? `<div style="background:#1A3A8F0D;border:1px solid #1A3A8F22;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#1A3A8F;line-height:1.6">Upload your company logo and/or a "Now Hiring" banner. This appears alongside your ad to attract candidates.</div>` : ''}
         <label for="acPhotos" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--border);border-radius:14px;padding:20px;cursor:pointer;background:var(--bg);margin-bottom:10px">
           ${IC.photo}
-          <div style="font-size:14px;font-weight:600;color:var(--sub)">Tap to add photos</div>
-          <div style="font-size:12px;color:var(--sub)">JPG, PNG · Max 8 photos</div>
+          <div style="font-size:14px;font-weight:600;color:var(--sub)">${isJobs ? 'Tap to add logo / banner' : 'Tap to add photos'}</div>
+          <div style="font-size:12px;color:var(--sub)">JPG, PNG · Max ${maxPhotos} image${maxPhotos > 1 ? 's' : ''}</div>
         </label>
         <input type="file" id="acPhotos" accept="image/*" multiple style="display:none" onchange="H._adsCreate.onPhotos(event)">
         <div style="display:flex;flex-wrap:wrap;gap:8px" id="acPhotoGrid">${photoGrid}</div>
@@ -239,7 +249,8 @@
     },
     onPhotos(e) {
       const files = Array.from(e.target.files || []);
-      const remaining = 8 - _cs.photos.length;
+      const maxPhotos = _cs.cat === 'jobs' ? 2 : 8;
+      const remaining = maxPhotos - _cs.photos.length;
       files.slice(0, remaining).forEach(f => {
         if (!f.type.startsWith('image/')) return;
         (H.compressImage || _compressImage)(f, 1200, 0.78).then(d => {
@@ -260,19 +271,21 @@
       ).join('');
     },
     async submit() {
-      _cs.title  = (document.getElementById('acTitle')?.value  || '').trim();
-      _cs.desc   = (document.getElementById('acDesc')?.value   || '').trim();
-      _cs.price  = document.getElementById('acPrice')?.value   || '0';
-      _cs.suburb = (document.getElementById('acSuburb')?.value || '').trim();
+      _cs.title   = (document.getElementById('acTitle')?.value   || '').trim();
+      _cs.desc    = (document.getElementById('acDesc')?.value    || '').trim();
+      _cs.price   = document.getElementById('acPrice')?.value    || '0';
+      _cs.suburb  = (document.getElementById('acSuburb')?.value  || '').trim();
+      _cs.company = (document.getElementById('acCompany')?.value || '').trim();
 
       const errEl = document.getElementById('acErr');
       const btn   = document.getElementById('acBtn');
       errEl.style.display = 'none';
       const err = m => { errEl.textContent = m; errEl.style.display = 'block'; errEl.scrollIntoView({behavior:'smooth',block:'nearest'}); };
 
+      if (_cs.cat === 'jobs' && !_cs.company) { err('Company name is required'); return; }
       if (_cs.title.length < 5)  { err('Title needs at least 5 characters'); return; }
       if (_cs.desc.length < 10)  { err('Description needs at least 10 characters'); return; }
-      if (!_cs.photos.length)    { err('Please add at least one photo'); return; }
+      if (_cs.cat !== 'jobs' && !_cs.photos.length) { err('Please add at least one photo'); return; }
 
       btn.disabled = true; btn.textContent = 'Submitting…';
 
@@ -282,6 +295,7 @@
         id: H.uid(), sellerId: u.id, sellerName: u.name || '', sellerPhone: u.phone || '',
         title: _cs.title, desc: _cs.desc, price: _cs.price, currency: _cs.currency,
         cat: _cs.cat, prov: _cs.prov, city: _cs.city, suburb: _cs.suburb,
+        company: _cs.company || '',
         photos: _cs.photos, createdAt: Date.now(),
         status: 'pending',
         contactMethod: _cs.contact, boost: null, views: 0,

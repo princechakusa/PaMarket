@@ -17,10 +17,13 @@
     var seller   = (H.state.users || []).find(function(u){ return u.id === l.sellerId; });
     var coVerified = seller && (seller.companyVerified || seller.verified);
     var verBadge = coVerified ? '<span style="background:#059669;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:4px">✓</span>' : '';
+    var logoHtml = (l.photos && l.photos[0])
+      ? '<img src="' + l.photos[0] + '" style="width:46px;height:46px;border-radius:12px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)">'
+      : '<div style="width:46px;height:46px;border-radius:12px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;font-weight:800;color:#1A3A8F">' + (company.slice(0,2).toUpperCase()) + '</div>';
+
     return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + l.id + '\'})" style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:10px;border:1px solid var(--border);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
       + '<div style="display:flex;align-items:flex-start;gap:12px">'
-      + '<div style="width:46px;height:46px;border-radius:12px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;font-weight:800;color:#1A3A8F">'
-      + (company.slice(0,2).toUpperCase()) + '</div>'
+      + logoHtml
       + '<div style="flex:1;min-width:0">'
       + '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(l.title) + '</div>'
       + '<div style="font-size:13px;font-weight:600;color:#1A3A8F;margin-bottom:6px;display:flex;align-items:center">' + H.escHtml(company) + verBadge + (industry ? '<span style="color:var(--sub);font-weight:400;margin-left:4px">· ' + H.escHtml(industry) + '</span>' : '') + '</div>'
@@ -475,7 +478,15 @@
         + '</div></div>';
     }
 
-    var ZW = (H._ZW_CITIES || []);
+    var ZW = H._ZW_CITIES || [];
+    // Build city → province map for correct prov storage
+    var CITY_PROV = {};
+    Object.keys(H.CITIES_BY_PROV || {}).forEach(function (prov) {
+      (H.CITIES_BY_PROV[prov] || []).forEach(function (city) { CITY_PROV[city] = prov; });
+    });
+    // Also map main cities to their province (Harare→Harare, Bulawayo→Bulawayo, etc.)
+    (H.PROVINCES || []).forEach(function (p) { if (!CITY_PROV[p]) CITY_PROV[p] = p; });
+
     return '<div class="page active">'
       + '<div class="det-topbar"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Post a Job</div></div>'
       + '<div style="margin:12px 14px;background:#1A3A8F18;border-radius:12px;padding:12px 14px;display:flex;gap:10px">'
@@ -493,9 +504,13 @@
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Job Category *</label>'
       + '<select id="jCat" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none"><option value="">Select category…</option>'
       + JOB_CATS.map(function (c) { return '<option>' + H.escHtml(c) + '</option>'; }).join('') + '<option>Other</option></select></div>'
-      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Location *</label>'
-      + '<select id="jLocation" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none"><option value="">Select city…</option>'
-      + ZW.map(function (c) { return '<option>' + c + '</option>'; }).join('') + '<option>Remote</option><option>Multiple Locations</option></select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Province *</label>'
+      + '<select id="jProv" onchange="H._jobProvChange(this.value)" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none"><option value="">Select province…</option>'
+      + (H.PROVINCES || []).map(function (p) { return '<option>' + H.escHtml(p) + '</option>'; }).join('')
+      + '</select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">City / Town *</label>'
+      + '<select id="jLocation" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none"><option value="">Select province first…</option>'
+      + '<option>Remote</option><option>Multiple Locations</option></select></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Job Type</label>'
       + '<div style="display:flex;flex-wrap:wrap;gap:10px">' + ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'].map(function (t, i) { return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="jType" value="' + t + '"' + (i === 0 ? ' checked' : '') + ' style="accent-color:#1A3A8F"><span style="font-size:13px;font-weight:600;color:var(--text)">' + t + '</span></label>'; }).join('') + '</div></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Salary Range (USD)</label>'
@@ -525,12 +540,14 @@
     var company = (document.getElementById('jCompany') || {}).value || '';
     var title = (document.getElementById('jTitle') || {}).value || '';
     var cat = (document.getElementById('jCat') || {}).value || '';
+    var prov = (document.getElementById('jProv') || {}).value || '';
     var location = (document.getElementById('jLocation') || {}).value || '';
     var desc = (document.getElementById('jDesc') || {}).value || '';
     if (!company.trim()) { H.toast('Company name is required'); return; }
     if (!title.trim()) { H.toast('Job title is required'); return; }
     if (!cat) { H.toast('Please select a job category'); return; }
-    if (!location) { H.toast('Please select a location'); return; }
+    if (!prov && location !== 'Remote' && location !== 'Multiple Locations') { H.toast('Please select a province'); return; }
+    if (!location) { H.toast('Please select a city / town'); return; }
     if (desc.trim().length < 30) { H.toast('Please write a job description (min 30 chars)'); return; }
     var u = H.currentUser();
     if (!u) { H.toast('Please sign in first'); return; }
@@ -552,7 +569,7 @@
       + ((email || phone) ? '\n\nHOW TO APPLY:\n' + (email ? 'Email: ' + email + '\n' : '') + (phone ? 'WhatsApp: ' + phone : '') : '');
     var listing = {
       id: H.uid(), cat: 'jobs', title: title.trim(), desc: fullDesc,
-      price: salMin ? +salMin : 0, currency: 'USD', city: location, prov: location,
+      price: salMin ? +salMin : 0, currency: 'USD', city: location, prov: prov || location,
       sellerId: u.id, sellerName: anon ? company : (u.name || company),
       sellerPhone: u.phone || '', company: company,
       createdAt: Date.now(), status: 'active', photos: []
@@ -563,6 +580,15 @@
     if (typeof H.saveListingToCloud === 'function') H.saveListingToCloud(listing);
     H.toast('Job posted! Candidates can now apply.');
     H.goBack();
+  };
+
+  H._jobProvChange = function (prov) {
+    var sel = document.getElementById('jLocation');
+    if (!sel) return;
+    var cities = (H.CITIES_BY_PROV[prov] || []);
+    sel.innerHTML = '<option value="">Select city / town…</option>'
+      + cities.map(function (c) { return '<option>' + H.escHtml(c) + '</option>'; }).join('')
+      + '<option>Remote</option><option>Multiple Locations</option>';
   };
 
   H.pages.JobDetail = function (params) {
@@ -597,6 +623,9 @@
     var appCount = apps.filter(function(a){ return a.jobId === id; }).length;
 
     var companyInitials = (company || 'C').split(' ').slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();
+    var companyLogoHtml = (l.photos && l.photos[0])
+      ? '<img src="' + l.photos[0] + '" style="width:56px;height:56px;border-radius:14px;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,.3)">'
+      : '<div style="width:56px;height:56px;border-radius:14px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,.2)">' + companyInitials + '</div>';
 
     var chipStyle = 'display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;margin-right:6px;margin-bottom:6px';
 
@@ -608,7 +637,7 @@
 
       + '<div style="background:linear-gradient(160deg,#0a2558 0%,#1A3A8F 60%,#2952cc 100%);padding:20px 16px 24px">'
       + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
-      + '<div style="width:56px;height:56px;border-radius:14px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,.2)">' + companyInitials + '</div>'
+      + companyLogoHtml
       + '<div style="flex:1;min-width:0">'
       + '<div style="font-size:19px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:4px">' + H.escHtml(l.title) + '</div>'
       + '<div style="font-size:14px;color:rgba(255,255,255,.8);font-weight:600">' + H.escHtml(company) + '</div>'
@@ -905,6 +934,8 @@
     H.toast(u.openToWork ? 'Profile saved — employers can now find you!' : 'Profile saved — you are hidden from employer searches');
     H.goBack();
   };
+
+  H.pages.JobSeekerProfile = H.pages.CandidateProfile;
 
   function _ji(label, value) {
     return '<div><div style="font-size:10px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">' + label + '</div><div style="font-size:13px;font-weight:700;color:var(--text)">' + H.escHtml(String(value)) + '</div></div>';
