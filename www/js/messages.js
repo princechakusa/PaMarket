@@ -93,7 +93,7 @@
       <div>
         ${convos.length ? convos.map(c => {
           const otherId = c.members.find(m => m !== u.id);
-          const other   = users().find(x => x.id === otherId) || { name: (function(){ var lastMsg = c.messages.find(function(m){ return m.from===otherId; }); return lastMsg&&lastMsg.senderName ? lastMsg.senderName : 'User'; })() };
+          const other   = users().find(x => x.id === otherId) || { name: c.otherName || (c.messages.find(function(m){ return m.from===otherId; })||{}).senderName || 'User' };
           const last    = c.messages[c.messages.length - 1];
           const unread  = c.messages.some(m => m.from !== u.id && !m.read);
           return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item" data-cid="${escHtml(c.id)}" onclick="H.openChat('${c.id}')">
@@ -125,7 +125,7 @@
     if (!Array.isArray(c.members)) c.members = [];
     if (!Array.isArray(c.messages)) c.messages = [];
     const otherId = c.members.find(m => m !== u.id);
-    const other = users().find(x => x.id === otherId) || { name: (function(){ var m = c.messages.find(function(msg){ return msg.from===otherId; }); return m&&m.senderName ? m.senderName : 'User'; })() };
+    const other = users().find(x => x.id === otherId) || { name: c.otherName || (c.messages.find(function(msg){ return msg.from===otherId; })||{}).senderName || 'User' };
     const listing = (state.listings || []).find(l => l.id === c.listingId);
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
     H.saveState();
@@ -195,12 +195,24 @@
     // Use deterministic ID so both users get same conversation
     const ids = [u.id, otherId].sort();
     const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId||'').slice(-6);
+    // If this conv was previously deleted, un-delete it so new messages from this person show
+    if (Array.isArray(H.state.deletedConvIds) && H.state.deletedConvIds.includes(convId)) {
+      H.state.deletedConvIds = H.state.deletedConvIds.filter(function(id){ return id !== convId; });
+    }
+    // Resolve the other user's name for display before they reply
+    const otherUser = (H.state.users||[]).find(function(x){ return x.id === otherId; });
+    const listingObj = listingId ? (H.state.listings||[]).find(function(x){ return x.id === listingId; }) : null;
+    const otherName = (otherUser && otherUser.name) || (listingObj && listingObj.sellerName) || '';
     let c = conversations().find(x => x.id === convId);
     if (!c) {
-      c = { id: convId, members: [u.id, otherId], listingId: listingId||null, messages: [] };
-      conversations().push(c);
+      c = { id: convId, members: [u.id, otherId], listingId: listingId||null, messages: [], otherName: otherName };
+      if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+      H.state.conversations.push(c);
       H.saveState();
       if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c);
+    } else if (!c.otherName && otherName) {
+      c.otherName = otherName;
+      H.saveState();
     }
     H.openInner('Chat', { id: convId });
   };

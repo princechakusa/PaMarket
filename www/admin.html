@@ -303,6 +303,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
           Ads & Boosts
         </button>
+        <button class="nav-item" data-tab="chats" onclick="showTab('chats')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          User Chats
+        </button>
         <button class="nav-item" data-tab="analytics" onclick="showTab('analytics')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           Analytics
@@ -365,7 +369,7 @@ try {
 // ── State ─────────────────────────────────────────────────
 var DATA = {
   users:[], listings:[], verifications:[], reports:[],
-  topups:[], ads:[], settings:{}, notifHistory:[]
+  topups:[], ads:[], settings:{}, notifHistory:[], chats:[]
 };
 var currentTab = 'overview';
 var _listingFilter = 'pending';
@@ -443,7 +447,7 @@ function closeSidebar(){ document.getElementById('sidebar').classList.remove('op
 var TAB_TITLES = {
   overview:'Overview', listings:'Listings', users:'Users', verifications:'Verifications',
   notifications:'Send Notification', topups:'Top-ups', reports:'Reports',
-  ads:'Ads & Boosts', analytics:'Analytics', settings:'Settings'
+  ads:'Ads & Boosts', chats:'User Chats', analytics:'Analytics', settings:'Settings'
 };
 function showTab(name) {
   currentTab = name;
@@ -459,7 +463,7 @@ function renderTab() {
     overview: renderOverview, listings: renderListings, users: renderUsers,
     verifications: renderVerifications, notifications: renderNotifications,
     topups: renderTopups, reports: renderReports, ads: renderAds,
-    analytics: renderAnalytics, settings: renderSettings
+    chats: renderChats, analytics: renderAnalytics, settings: renderSettings
   }[currentTab];
   if(fn) fn();
 }
@@ -527,7 +531,7 @@ async function showDash() {
 // ── Data loading ──────────────────────────────────────────
 async function loadAllData() {
   document.getElementById('mainContent').innerHTML = '<div class="loading-msg">Loading dashboard data…</div>';
-  await Promise.allSettled([loadUsers(), loadListings(), loadVerifications(), loadReports(), loadTopups(), loadAds(), loadSettings(), loadNotifHistory()]);
+  await Promise.allSettled([loadUsers(), loadListings(), loadVerifications(), loadReports(), loadTopups(), loadAds(), loadSettings(), loadNotifHistory(), loadChats()]);
   updateBadges();
   renderTab();
 }
@@ -758,7 +762,7 @@ async function approveListing(id) {
     if(l){ l.status='active'; }
     // Notify seller
     if(l && l.sellerId) {
-      await sb.from('notifications').insert({user_id:l.sellerId,title:'Listing Approved! 🎉',body:'Your listing "'+l.title+'" is now live.',type:'info',read:false,created_at:new Date().toISOString()});
+      await sb.from('notifications').insert({user_id:l.sellerId,title:'Listing Approved! 🎉',body:'Your listing "'+l.title+'" is now live.',type:'info',read:false,created_at:Date.now()});
     }
     updateBadges(); renderTab(); toast('Listing approved and seller notified');
   } catch(e){ toast('Error: '+e.message,'error'); }
@@ -773,7 +777,7 @@ async function rejectListing(id) {
     var l = DATA.listings.find(function(x){ return x.id===id; });
     if(l){ l.status='rejected'; }
     if(l && l.sellerId) {
-      await sb.from('notifications').insert({user_id:l.sellerId,title:'Listing Not Approved',body:'Your listing "'+l.title+'" was not approved.'+(note?' Reason: '+note:''),type:'report',read:false,created_at:new Date().toISOString()});
+      await sb.from('notifications').insert({user_id:l.sellerId,title:'Listing Not Approved',body:'Your listing "'+l.title+'" was not approved.'+(note?' Reason: '+note:''),type:'report',read:false,created_at:Date.now()});
     }
     updateBadges(); renderTab(); toast('Listing rejected','info');
   } catch(e){ toast('Error: '+e.message,'error'); }
@@ -835,7 +839,7 @@ async function banUser(userId) {
     if(r.error) throw r.error;
     var u = DATA.users.find(function(x){ return x.id===userId; });
     if(u){ u.status='banned'; u.ban_reason=reason; }
-    await sb.from('notifications').insert({user_id:userId,title:'Account Suspended',body:'Your account has been suspended.'+(reason?' Reason: '+reason:''),type:'ban',read:false,created_at:new Date().toISOString()});
+    await sb.from('notifications').insert({user_id:userId,title:'Account Suspended',body:'Your account has been suspended.'+(reason?' Reason: '+reason:''),type:'ban',read:false,created_at:Date.now()});
     renderTab(); toast('User banned and notified');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
@@ -848,7 +852,7 @@ async function unbanUser(userId) {
     if(r.error) throw r.error;
     var u = DATA.users.find(function(x){ return x.id===userId; });
     if(u){ u.status='active'; u.ban_reason=null; }
-    await sb.from('notifications').insert({user_id:userId,title:'Account Reinstated',body:'Your account ban has been removed. Welcome back!',type:'info',read:false,created_at:new Date().toISOString()});
+    await sb.from('notifications').insert({user_id:userId,title:'Account Reinstated',body:'Your account ban has been removed. Welcome back!',type:'info',read:false,created_at:Date.now()});
     renderTab(); toast('User unbanned');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
@@ -861,7 +865,7 @@ async function verifyUser(userId) {
     if(r.error) throw r.error;
     var u = DATA.users.find(function(x){ return x.id===userId; });
     if(u){ u.verified=true; u.verification_pending=false; }
-    await sb.from('notifications').insert({user_id:userId,title:'Identity Verified ✓',body:'Congratulations! Your blue verified badge is now active.',type:'verify',read:false,created_at:new Date().toISOString()});
+    await sb.from('notifications').insert({user_id:userId,title:'Identity Verified ✓',body:'Congratulations! Your blue verified badge is now active.',type:'verify',read:false,created_at:Date.now()});
     renderTab(); toast('User verified and notified');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
@@ -991,7 +995,7 @@ async function approveVerification(userId, verifId) {
     if(verifId) await sb.from('verifications').update({status:'approved',admin_note:'Approved by admin'}).eq('id',verifId);
     var u = DATA.users.find(function(x){ return x.id===userId; }); if(u){ u.verified=true; u.verification_pending=false; }
     var v = DATA.verifications.find(function(x){ return x.id===verifId; }); if(v) v.status='approved';
-    await sb.from('notifications').insert({user_id:userId,title:'Identity Verified ✓',body:'Your blue verified badge is now active on all your listings.',type:'verify',read:false,created_at:new Date().toISOString()});
+    await sb.from('notifications').insert({user_id:userId,title:'Identity Verified ✓',body:'Your blue verified badge is now active on all your listings.',type:'verify',read:false,created_at:Date.now()});
     updateBadges(); renderVerifications(); toast('User verified and notified ✓');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
@@ -1004,7 +1008,7 @@ async function rejectVerification(userId, verifId) {
     if(verifId) await sb.from('verifications').update({status:'rejected',admin_note:note||'Documents unclear'}).eq('id',verifId);
     var u = DATA.users.find(function(x){ return x.id===userId; }); if(u) u.verification_pending=false;
     var v = DATA.verifications.find(function(x){ return x.id===verifId; }); if(v) v.status='rejected';
-    await sb.from('notifications').insert({user_id:userId,title:'Verification Not Approved',body:'Your ID was not approved.'+(note?' Reason: '+note+'. Please resubmit with clearer photos.':' Please resubmit.'),type:'report',read:false,created_at:new Date().toISOString()});
+    await sb.from('notifications').insert({user_id:userId,title:'Verification Not Approved',body:'Your ID was not approved.'+(note?' Reason: '+note+'. Please resubmit with clearer photos.':' Please resubmit.'),type:'report',read:false,created_at:Date.now()});
     updateBadges(); renderVerifications(); toast('Verification rejected, user notified','info');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
@@ -1087,7 +1091,7 @@ async function sendNotification() {
 
   try {
     var recipients = target==='all' ? DATA.users.map(function(u){ return u.id; }) : [target];
-    var now = new Date().toISOString();
+    var now = Date.now();
     var BATCH = 50;
     var sent = 0;
 
@@ -1156,7 +1160,7 @@ async function approveTopup(id, userId, amount) {
     await sb.from('topup_requests').update({status:'approved'}).eq('id',id);
     if(u){ u.wallet_usd=newBal; }
     var t=DATA.topups.find(function(x){return x.id===id;}); if(t) t.status='approved';
-    await sb.from('notifications').insert({user_id:userId,title:'Wallet Topped Up 💰',body:'$'+fmt(amount)+' has been added to your wallet.',type:'sale',read:false,created_at:new Date().toISOString()});
+    await sb.from('notifications').insert({user_id:userId,title:'Wallet Topped Up 💰',body:'$'+fmt(amount)+' has been added to your wallet.',type:'sale',read:false,created_at:Date.now()});
     updateBadges(); renderTopups(); toast('Top-up approved, wallet updated');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
@@ -1409,6 +1413,75 @@ async function saveNewAd() {
     DATA.ads.unshift(rec);
     closeModal(); renderAds(); toast('Ad created ✓');
   } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── CHATS ─────────────────────────────────────────────────
+async function loadChats() {
+  try {
+    var r = await sb.from('messages')
+      .select('id,conversation_id,sender_id,sender_name,text,created_at,read')
+      .order('created_at',{ascending:false})
+      .limit(600);
+    if(r.error||!r.data){ DATA.chats=[]; return; }
+    var convMap={};
+    r.data.forEach(function(m){
+      if(!convMap[m.conversation_id]) convMap[m.conversation_id]={id:m.conversation_id,messages:[],participants:{}};
+      convMap[m.conversation_id].messages.push(m);
+      if(m.sender_name) convMap[m.conversation_id].participants[m.sender_id]=m.sender_name;
+    });
+    DATA.chats = Object.values(convMap).map(function(c){
+      c.messages.sort(function(a,b){ return new Date(b.created_at)-new Date(a.created_at); });
+      c.lastMsg = c.messages[0];
+      c.participantNames = Object.values(c.participants);
+      c.unread = c.messages.filter(function(m){ return !m.read; }).length;
+      return c;
+    }).sort(function(a,b){ return new Date(b.lastMsg.created_at)-new Date(a.lastMsg.created_at); });
+  } catch(e){ DATA.chats=[]; }
+}
+
+var _openChatId = null;
+function renderChats() {
+  var html='<div class="sec-head"><div class="sec-title">User Chats</div><div class="sec-actions"><button class="filter-btn on" onclick="loadChats().then(renderChats)">↻ Refresh</button></div></div>';
+  if(!DATA.chats.length){
+    html+='<div class="empty-msg">No conversations found. Messages table may not exist yet or no chats have been sent.</div>';
+    document.getElementById('mainContent').innerHTML=html; return;
+  }
+  if(_openChatId){
+    var cv=DATA.chats.find(function(c){ return c.id===_openChatId; });
+    if(cv){
+      html+='<button onclick="_openChatId=null;renderChats()" style="margin-bottom:12px;padding:8px 16px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">← Back to all chats</button>';
+      html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px">';
+      html+='<div style="font-size:13px;font-weight:700;color:var(--sub);margin-bottom:8px">'+esc(cv.participantNames.join(' ↔ ') || cv.id)+'</div>';
+      html+='<div style="display:flex;flex-direction:column;gap:8px;max-height:500px;overflow-y:auto">';
+      var msgs=[].concat(cv.messages).reverse();
+      msgs.forEach(function(m){
+        var isRight=false;
+        var name=esc(m.sender_name||m.sender_id.slice(-6));
+        var time=fmtDateTime(m.created_at);
+        html+='<div style="display:flex;flex-direction:column;gap:2px">';
+        html+='<div style="font-size:11px;color:var(--sub)">'+name+' · '+time+'</div>';
+        html+='<div style="background:var(--bg);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--text);max-width:85%">'+esc(m.text)+'</div>';
+        html+='</div>';
+      });
+      html+='</div></div>';
+      document.getElementById('mainContent').innerHTML=html; return;
+    }
+  }
+  html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Participants</th><th>Last Message</th><th>Messages</th><th>Unread</th><th>Last Active</th><th></th></tr></thead><tbody>';
+  DATA.chats.forEach(function(c){
+    var parts=esc(c.participantNames.join(' ↔ ')||c.id.slice(0,20));
+    var preview=esc((c.lastMsg.text||'').slice(0,60)+(c.lastMsg.text&&c.lastMsg.text.length>60?'…':''));
+    html+='<tr>';
+    html+='<td style="font-weight:600;font-size:13px">'+parts+'</td>';
+    html+='<td style="color:var(--sub);font-size:12px;max-width:200px">'+preview+'</td>';
+    html+='<td style="text-align:center">'+c.messages.length+'</td>';
+    html+='<td style="text-align:center">'+(c.unread?'<span class="badge badge-pending">'+c.unread+'</span>':'—')+'</td>';
+    html+='<td style="color:var(--sub);font-size:12px">'+fmtDateTime(c.lastMsg.created_at)+'</td>';
+    html+='<td><button class="ab ab-view" onclick="_openChatId=\''+esc(c.id)+'\';renderChats()">View</button></td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML=html;
 }
 
 // ── ANALYTICS ─────────────────────────────────────────────
