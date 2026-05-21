@@ -129,6 +129,7 @@
     const listing = (state.listings || []).find(l => l.id === c.listingId);
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
     H.saveState();
+    if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
     H._activeChat = id;
 
     const otherIni = initials(other.name || 'U');
@@ -201,6 +202,19 @@
   };
 
   pages.Messages_after = function () {
+    // Mark all received messages as read when the inbox is opened
+    const _u = H.currentUser();
+    if (_u) {
+      let _dirty = false;
+      (H.state.conversations || []).forEach(function(c) {
+        if (!Array.isArray(c.members) || !c.members.includes(_u.id)) return;
+        (c.messages || []).forEach(function(m) {
+          if (m.from !== _u.id && !m.read) { m.read = true; _dirty = true; }
+        });
+      });
+      if (_dirty) H.saveState();
+      if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
+    }
     if (window._chatPoll) { clearInterval(window._chatPoll); window._chatPoll = null; }
     if (window._messagesPoll) clearInterval(window._messagesPoll);
     H._refreshMessagesPage();
@@ -262,6 +276,7 @@
       });
       thread.scrollTop = thread.scrollHeight;
       H.saveState();
+      if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
     }, 4000);
   };
 
