@@ -407,6 +407,13 @@
   // --- Blocked Users ----------------------------------------
   pages.BlockedUsers = function () {
     const u = H.currentUser();
+    // Migrate legacy blocks stored at H.state.blockedUsers (top-level) into the user object
+    if (Array.isArray(H.state.blockedUsers) && H.state.blockedUsers.length) {
+      if (!Array.isArray(u.blockedUsers)) u.blockedUsers = [];
+      H.state.blockedUsers.forEach(id => { if (!u.blockedUsers.includes(id)) u.blockedUsers.push(id); });
+      delete H.state.blockedUsers;
+      H.saveState();
+    }
     const blocked = u.blockedUsers || [];
 
     return `<div class="page active">
