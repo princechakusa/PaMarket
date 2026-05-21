@@ -423,7 +423,7 @@
       const u = H.currentUser();
       const other = (H.state.users || []).find(x => x.id === userId);
       const name = other ? escHtml(other.name || 'User') : 'User';
-      const isBlocked = (H.state.blockedUsers || []).includes(userId);
+      const isBlocked = ((H.currentUser() || {}).blockedUsers || []).includes(userId);
       H.modal({
         title: name,
         body: `<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
@@ -483,14 +483,16 @@
     },
 
     blockUser(userId) {
-      if (!Array.isArray(H.state.blockedUsers)) H.state.blockedUsers = [];
-      const already = H.state.blockedUsers.includes(userId);
+      const u = H.currentUser();
+      if (!u) return;
+      if (!Array.isArray(u.blockedUsers)) u.blockedUsers = [];
+      const already = u.blockedUsers.includes(userId);
       if (already) {
-        H.state.blockedUsers = H.state.blockedUsers.filter(id => id !== userId);
+        u.blockedUsers = u.blockedUsers.filter(id => id !== userId);
         H.saveState();
         H.toast('User unblocked');
       } else {
-        H.state.blockedUsers.push(userId);
+        u.blockedUsers.push(userId);
         H.saveState();
         H.toast('User blocked — you will no longer receive messages from them');
         H.goBack();
