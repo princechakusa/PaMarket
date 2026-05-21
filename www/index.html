@@ -298,7 +298,7 @@
   <script src="js/detail.js?v=3"></script>
   <script src="js/post.js?v=4"></script>
   <script src="js/saved.js?v=2"></script>
-  <script src="js/messages.js?v=8"></script>
+  <script src="js/messages.js?v=9"></script>
   <script src="js/notifications.js?v=1"></script>
   <script src="js/profile.js?v=3"></script>
   <script src="js/account.js?v=5"></script>
@@ -365,22 +365,22 @@
     updateOnlineStatus();
 
     // ── Message badge updater ────────────────────────────
-    function updateMsgBadge() {
+    H.updateMsgBadge = function() {
       try {
         const u = H.currentUser && H.currentUser();
-        if (!u) return;
+        const badge = document.getElementById('msgBadge');
+        if (!badge) return;
+        if (!u) { badge.style.display = 'none'; return; }
         if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
         const convos = H.state.conversations.filter(c => Array.isArray(c.members) && c.members.includes(u.id));
         const unread = convos.reduce((n, c) =>
           n + (c.messages||[]).filter(m => m.from !== u.id && !m.read).length, 0);
-        const badge = document.getElementById('msgBadge');
-        if (badge) {
-          badge.textContent = unread > 9 ? '9+' : unread;
-          badge.style.display = unread ? '' : 'none';
-        }
+        badge.textContent = unread > 9 ? '9+' : unread;
+        badge.style.display = unread ? '' : 'none';
       } catch(e) {}
-    }
-    window._msgBadgeInterval = setInterval(updateMsgBadge, 5000);
+    };
+    H.updateMsgBadge();
+    window._msgBadgeInterval = setInterval(H.updateMsgBadge, 5000);
 
     // ── Admin page local login fallback ──────────────────
     window.addEventListener('load', () => {
