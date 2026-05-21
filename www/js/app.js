@@ -465,6 +465,11 @@ window.H = {
 
   async openInner(name, params) {
     const H=window.H;
+    // On native app: Wallet and TopUp go to the external website (Google Play policy)
+    if((name==='Wallet'||name==='TopUp')&&window.Capacitor&&window.Capacitor.isNativePlatform()){
+      if(H._wallet&&typeof H._wallet.openTopUp==='function') H._wallet.openTopUp();
+      return;
+    }
     const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Wallet','Boost','Security','SecuritySettings','DeleteAccount','TopUp','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob'];
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
@@ -505,6 +510,8 @@ window.H = {
 
   async renderPage(name, params, opts) {
     const area=document.getElementById('mainArea');
+    // Always restore mainArea scroll when navigating — Chat locks it to prevent topbar from scrolling off
+    if(area) area.style.overflowY='auto';
     const scrollTo=(opts&&opts.scrollTo)||0;
     if(this.canAccessPage&&!this.canAccessPage(name)){this.toast('Access denied');await this.navTo('Home');return;}
     this.currentPageName=name; this.currentPageParams=params||{};

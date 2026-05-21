@@ -171,6 +171,10 @@
     if (window._messagesPoll) { clearInterval(window._messagesPoll); window._messagesPoll = null; }
     const t = document.getElementById('chatThread');
     if (t) t.scrollTop = t.scrollHeight;
+    // Lock #mainArea so iOS can't scroll it when the keyboard appears.
+    // The keyboard would otherwise push mainArea upward, hiding the topbar with the user's name.
+    const ma = document.getElementById('mainArea');
+    if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
     setTimeout(() => document.getElementById('chatIn')?.focus(), 200);
     if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);
   };
