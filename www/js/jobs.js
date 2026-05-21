@@ -296,9 +296,160 @@
       + '<div style="display:flex;gap:8px">'
       + (u.phone ? '<button onclick="window.open(\'https://wa.me/' + H.escHtml(u.phone.replace(/[^\d+]/g, '')) + '\',\'_blank\')" style="flex:1;padding:9px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">WhatsApp</button>' : '')
       + (u.email ? '<button onclick="window.location.href=\'mailto:' + H.escHtml(u.email) + '\'" style="flex:1;padding:9px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">Email</button>' : '')
-      + '<button onclick="H.openInner(\'Profile\',{id:\'' + u.id + '\'})" style="flex:1;padding:9px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">View Profile</button>'
+      + '<button onclick="H.openInner(\'ViewCandidateCV\',{id:\'' + u.id + '\'})" style="flex:1;padding:9px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">View CV</button>'
       + '</div></div>';
   }
+
+  function _cvSection(title, body) {
+    return '<div style="margin-bottom:20px">'
+      + '<div style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:8px">'
+      + '<span style="flex:1;height:1px;background:var(--border)"></span>' + H.escHtml(title) + '<span style="flex:1;height:1px;background:var(--border)"></span></div>'
+      + body + '</div>';
+  }
+
+  H.pages.ViewCandidateCV = function (params) {
+    var uid = params && params.id;
+    var u = uid ? (H.state.users || []).find(function (x) { return x.id === uid; }) : null;
+    if (!u) return '<div class="page active">' + H.innerTopbar('Candidate CV') + H.emptyState('Not found', 'Candidate profile unavailable', null, null) + '</div>';
+    var cv  = u.cv || {};
+    var ini = H.initials(u.name || 'U');
+    var verBadge = u.verified ? '<span style="background:#059669;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px">✓ Verified</span>' : '';
+    var expLvl = { entry: 'Entry Level (0–2 yrs)', mid: '3–5 Years', senior: '5–10 Years', expert: '10+ Years' }[u.exp || ''] || '';
+    var skills = cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean).map(function (s) { return s.trim(); }).filter(Boolean);
+    var exp   = cv.experience     || [];
+    var edu   = cv.education      || [];
+    var certs = cv.certifications || [];
+    var headline    = cv.headline || u.jobTitle || 'Open to Work';
+    var location    = cv.location || u.city || '';
+    var summary     = cv.summary  || '';
+    var expectedSal = cv.expectedSalary ? '$' + cv.expectedSalary + '/mo' : '';
+
+    return '<div class="page active">'
+      + H.innerTopbar('Candidate CV')
+      + '<div style="padding-bottom:90px">'
+      // ── header ──
+      + '<div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952c8 100%);padding:22px 18px 20px">'
+      + '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px">'
+      + '<div style="width:64px;height:64px;border-radius:50%;overflow:hidden;flex-shrink:0;border:3px solid rgba(255,255,255,.3)">'
+      + (u.avatar ? '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">' + ini + '</div>')
+      + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px"><div style="font-size:19px;font-weight:800;color:#fff">' + H.escHtml(u.name || 'Anonymous') + '</div>' + verBadge + '</div>'
+      + '<div style="font-size:13px;color:rgba(255,255,255,.9);font-weight:600;margin-bottom:5px">' + H.escHtml(headline) + '</div>'
+      + '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:rgba(255,255,255,.72)">'
+      + (location ? '<span>📍 ' + H.escHtml(location) + '</span>' : '')
+      + (expLvl   ? '<span>💼 ' + H.escHtml(expLvl)   + '</span>' : '')
+      + (expectedSal ? '<span>💰 ' + H.escHtml(expectedSal) + '</span>' : '')
+      + '</div></div></div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + (u.email ? '<a href="mailto:' + H.escHtml(u.email) + '" style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);color:#fff;text-decoration:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> ' + H.escHtml(u.email) + '</a>' : '')
+      + (u.phone ? '<a href="tel:' + H.escHtml(u.phone) + '" style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);color:#fff;text-decoration:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.29 6.29"/></svg> ' + H.escHtml(u.phone) + '</a>' : '')
+      + '</div></div>'
+      // ── body ──
+      + '<div style="padding:16px 16px 0">'
+      + (summary ? _cvSection('Professional Summary', '<p style="font-size:13px;color:var(--text);line-height:1.75;margin:0">' + H.escHtml(summary) + '</p>') : '')
+      + (exp.length ? _cvSection('Work Experience', exp.map(function (e) {
+          return '<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">'
+            + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:3px">'
+            + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(e.title || '') + '</div>'
+            + (e.duration ? '<div style="font-size:11px;color:var(--sub);white-space:nowrap;flex-shrink:0">' + H.escHtml(e.duration) + '</div>' : '')
+            + '</div>'
+            + '<div style="font-size:12px;color:#1A3A8F;font-weight:600;margin-bottom:4px">' + H.escHtml(e.company || '') + '</div>'
+            + (e.description ? '<div style="font-size:12px;color:var(--sub);line-height:1.65">' + H.escHtml(e.description) + '</div>' : '')
+            + '</div>';
+        }).join('')) : '')
+      + (edu.length ? _cvSection('Education', edu.map(function (e) {
+          return '<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">'
+            + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(e.degree || e.qualification || '') + '</div>'
+            + '<div style="font-size:12px;color:#1A3A8F;font-weight:600">' + H.escHtml(e.school || e.institution || '') + '</div>'
+            + (e.year ? '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + H.escHtml(e.year) + '</div>' : '')
+            + '</div>';
+        }).join('')) : '')
+      + (skills.length ? _cvSection('Skills', '<div style="display:flex;flex-wrap:wrap;gap:6px">' + skills.map(function (s) {
+          return '<span style="background:#1A3A8F14;border:1px solid #1A3A8F30;color:#1A3A8F;font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px">' + H.escHtml(s) + '</span>';
+        }).join('') + '</div>') : '')
+      + (certs.length ? _cvSection('Certifications', certs.map(function (c) {
+          var name = typeof c === 'string' ? c : (c.name || '');
+          return '<div style="margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:var(--text)">' + H.escHtml(name) + '</div>'
+            + (c.issuer ? '<div style="font-size:12px;color:var(--sub)">' + H.escHtml(c.issuer) + (c.year ? ' · ' + H.escHtml(c.year) : '') + '</div>' : '') + '</div>';
+        }).join('')) : '')
+      + '</div></div>'
+      // ── fixed bottom ──
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200;display:flex;gap:8px">'
+      + (u.phone ? '<button onclick="window.open(\'https://wa.me/' + H.escHtml((u.phone || '').replace(/[^\d+]/g, '')) + '\',\'_blank\')" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">WhatsApp</button>' : '')
+      + '<button onclick="H._cvDownload(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952c8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">⬇ Download CV</button>'
+      + '</div></div>';
+  };
+
+  H._cvDownload = function (userId) {
+    var u = (H.state.users || []).find(function (x) { return x.id === userId; });
+    if (!u) return;
+    var cv    = u.cv || {};
+    var skills = cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean).map(function (s) { return s.trim(); }).filter(Boolean);
+    var exp   = cv.experience     || [];
+    var edu   = cv.education      || [];
+    var certs = cv.certifications || [];
+    var line  = '─────────────────────────────────────────────────────';
+    var thick = '═════════════════════════════════════════════════════';
+    var lines = [];
+    lines.push(thick);
+    lines.push('  CURRICULUM VITAE');
+    lines.push(thick);
+    lines.push('');
+    lines.push('NAME:      ' + (u.name || ''));
+    if (cv.headline || u.jobTitle) lines.push('TITLE:     ' + (cv.headline || u.jobTitle));
+    if (cv.location || u.city)    lines.push('LOCATION:  ' + (cv.location || u.city));
+    if (u.email)           lines.push('EMAIL:     ' + u.email);
+    if (u.phone)           lines.push('PHONE:     ' + u.phone);
+    if (cv.expectedSalary) lines.push('EXPECTED:  $' + cv.expectedSalary + '/month');
+    lines.push('');
+    if (cv.summary) {
+      lines.push(line); lines.push('PROFESSIONAL SUMMARY'); lines.push(line);
+      lines.push(cv.summary); lines.push('');
+    }
+    if (exp.length) {
+      lines.push(line); lines.push('WORK EXPERIENCE'); lines.push(line);
+      exp.forEach(function (e, i) {
+        if (i) lines.push('');
+        lines.push((e.title || '') + (e.duration ? '  [' + e.duration + ']' : ''));
+        if (e.company) lines.push(e.company);
+        if (e.description) lines.push(e.description);
+      });
+      lines.push('');
+    }
+    if (edu.length) {
+      lines.push(line); lines.push('EDUCATION'); lines.push(line);
+      edu.forEach(function (e) {
+        lines.push((e.degree || e.qualification || '') + (e.year ? '  [' + e.year + ']' : ''));
+        if (e.school || e.institution) lines.push(e.school || e.institution);
+      });
+      lines.push('');
+    }
+    if (skills.length) {
+      lines.push(line); lines.push('SKILLS'); lines.push(line);
+      lines.push(skills.join(', ')); lines.push('');
+    }
+    if (certs.length) {
+      lines.push(line); lines.push('CERTIFICATIONS'); lines.push(line);
+      certs.forEach(function (c) {
+        var name = typeof c === 'string' ? c : (c.name || '');
+        lines.push(name + (c.issuer ? ' — ' + c.issuer : '') + (c.year ? ' (' + c.year + ')' : ''));
+      });
+      lines.push('');
+    }
+    lines.push(thick);
+    lines.push('Generated by PaMarket — Zimbabwe\'s Free Marketplace');
+    var blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href   = url;
+    a.download = ((u.name || 'cv').replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_') || 'cv') + '_CV.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    H.toast('CV downloaded');
+  };
 
   function _emptyTalent() {
     return '<div style="text-align:center;padding:40px 20px">'
