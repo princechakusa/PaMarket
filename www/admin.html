@@ -6,17 +6,12 @@
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PaMarket</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-// Fallback: if CDN fails, surface a clear error instead of a blank page
-window.addEventListener('error', function(e) {
-  if (e.filename && e.filename.includes('supabase')) {
-    var msg = document.getElementById('errMsg');
-    if (msg) { msg.textContent = 'Could not load Supabase library (CDN error). Please check your internet connection and reload.'; msg.style.display = 'block'; }
-    var btn = document.getElementById('loginBtn');
-    if (btn) btn.disabled = true;
-  }
-}, true);
+// Fallback to unpkg if jsDelivr fails
+if (typeof supabase === 'undefined') {
+  document.write('<scr'+'ipt src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/scr'+'ipt>');
+}
 </script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
