@@ -17,10 +17,15 @@
       H.state.conversations = [];
       H.saveState();
     }
+    const u = currentUser();
     const deleted = H.state.deletedConvIds || [];
-    return deleted.length
-      ? H.state.conversations.filter(function (c) { return !deleted.includes(c.id); })
-      : H.state.conversations;
+    return H.state.conversations.filter(function (c) {
+      if (!deleted.includes(c.id)) return true;
+      // Reappear if there is a new message since deletion
+      const lastMsg = c.messages && c.messages[c.messages.length - 1];
+      if (lastMsg && !lastMsg.read && lastMsg.from !== (u && u.id)) return true;
+      return false;
+    });
   }
 
   function users() {
@@ -187,7 +192,7 @@
 
   H.openChat = function (id) { H.openInner('Chat', { id }); };
 
-  H.startChatWith = function (otherId, listingId) {
+  H.startChatWith = function (otherId, listingId, initialMsg) {
     const u = currentUser();
     if (!u) { H.requireAuth('Sign in to message sellers'); return; }
     if (!otherId) { H.toast('Seller profile is not available yet'); return; }
@@ -208,6 +213,11 @@
       c = { id: convId, members: [u.id, otherId], listingId: listingId||null, messages: [], otherName: otherName };
       if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
       H.state.conversations.push(c);
+      if (initialMsg) {
+        const msg = { id: uid(), from: u.id, senderName: u.name||'', text: initialMsg, t: Date.now(), read: false };
+        c.messages.push(msg);
+        if (typeof H.saveMessageToCloud === 'function') H.saveMessageToCloud(c.id, msg);
+      }
       H.saveState();
       if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c);
     } else if (!c.otherName && otherName) {
@@ -423,8 +433,12 @@
   H._deleteConversation = function (convId) {
     // Mark as deleted locally — do NOT delete from Supabase so the other party keeps their messages
     if (!Array.isArray(H.state.deletedConvIds)) H.state.deletedConvIds = [];
-    if (!H.state.deletedConvIds.includes(convId)) H.state.deletedConvIds.push(convId);
-    H.state.conversations = (H.state.conversations || []).filter(function (c) { return c.id !== convId; });
+    if (!H.state.deletedConvIds.includes(convId)) {
+      H.state.deletedConvIds.push(convId);
+      // Also mark all messages as read so it doesn't immediately pop back up
+      const c = H.state.conversations.find(x => x.id === convId);
+      if (c && c.messages) c.messages.forEach(m => m.read = true);
+    }
     H.saveState();
     if (H.currentPageName === 'Messages') H.renderPage('Messages');
   };

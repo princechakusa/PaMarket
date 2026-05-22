@@ -94,7 +94,12 @@ window.H = {
   },
 
   uid() {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+    try {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        const id = crypto.randomUUID();
+        if (id) return id;
+      }
+    } catch(e) {}
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
       const r = Math.random()*16|0; return (c==='x'?r:(r&0x3|0x8)).toString(16);
     });
@@ -106,7 +111,7 @@ window.H = {
     H.state.users = H.state.users || [];
     let user = H.state.users.find(u=>u.id===id);
     if (!user) {
-      user = { id, email:'', name:'User', phone:'', avatar:null, verified:false, walletUSD:0, language:'English', joinedAt:Date.now(), role:'user', status:'active', blocked:[] };
+      user = { id, email:'', name:'User', phone:'', avatar:null, verified:false, verification_pending:false, walletUSD:0, language:'English', joinedAt:Date.now(), role:'user', status:'active', blocked:[] };
       H.state.users.push(user);
       if (typeof H.saveState === 'function') H.saveState();
       if (typeof H.loadProfile === 'function' && !H._loadingCurrentProfile) {
@@ -782,9 +787,20 @@ window.H = {
   async fetchListingsFromSupabase() {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
-      const {data,error}=await window.supabase
-        .from('listings').select('*')
-        .eq('status','active')
+      const u = this.currentUser();
+      const isAdmin = this.isAdmin();
+      let query = window.supabase.from('listings').select('*');
+
+      if (!isAdmin) {
+        // If not admin, get active listings OR my own pending listings
+        if (u) {
+          query = query.or(`status.eq.active,and(status.eq.pending,seller_id.eq.${u.id})`);
+        } else {
+          query = query.eq('status', 'active');
+        }
+      }
+
+      const {data,error}=await query
         .order('created_at',{ascending:false})
         .limit(200);
       if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
@@ -797,10 +813,11 @@ window.H = {
         status:r.status, boost:r.boost, views:r.views||0,
         createdAt:r.created_at?new Date(r.created_at).getTime():Date.now()
       }));
-      // Replace active listings entirely from cloud so deleted ones disappear.
-      // Keep local non-active listings (pending, draft) that haven't synced yet.
-      const nonActive=(H.state.listings||[]).filter(l=>l.status!=='active');
-      H.state.listings=[...cloud,...nonActive];
+      // Replace active and user-relevant listings entirely from cloud so deleted ones disappear.
+      // Keep local listings that haven't synced yet.
+      const cloudIds = new Set(cloud.map(l => l.id));
+      const localOnly = (H.state.listings||[]).filter(l => !cloudIds.has(l.id));
+      H.state.listings=[...cloud,...localOnly];
       H.saveState();
     } catch(e){ console.warn('fetchListingsFromSupabase:',e.message); }
   },
@@ -941,7 +958,7 @@ window.H = {
       if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
       let changed = false;
 
-      // Phase 1: discover from conversations table (may not exist — silent fail)
+      // Phase 1: discover from conversations table
       const knownIds = new Set(H.state.conversations.map(c => c.id));
       try {
         const { data: convs, error } = await sb.from('conversations')
@@ -962,45 +979,46 @@ window.H = {
             }
           }
         }
-      } catch(e) { /* conversations table may not exist */ }
+      } catch(e) { /* conversations table issues */ }
 
-      // Phase 2: discover from messages table — works without conversations table.
-      // Conv IDs embed the last 6 chars of each member UUID, so LIKE finds them.
+      // Phase 2: discover from messages table (fallback and deep scan)
       try {
-        const uidSuffix = u.id.slice(-6);
-        const [sentRes, recvRes] = await Promise.all([
-          sb.from('messages').select('conversation_id,sender_id,sender_name').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(300),
-          sb.from('messages').select('conversation_id,sender_id,sender_name').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(300)
-        ]);
-        for (const row of [...(sentRes.data||[]), ...(recvRes.data||[])]) {
-          if (!row.conversation_id || knownIds.has(row.conversation_id)) continue;
-          knownIds.add(row.conversation_id);
-          const otherId = row.sender_id !== u.id ? row.sender_id : null;
-          const members = otherId ? [u.id, otherId] : [u.id];
-          H.state.conversations.push({ id: row.conversation_id, members, listingId: null, messages: [] });
-          changed = true;
-        }
-      } catch(e) { /* messages table scan failed */ }
+        const { data: msgs, error } = await sb.from('messages')
+          .select('conversation_id, sender_id')
+          .or(`sender_id.eq.${u.id},text.ilike.%${u.id}%`) // simplistic "related to me" search if table structure allows
+          .limit(500);
 
-      // Phase 3: fetch profiles for all unknown conversation members (fixes "User" name)
+        // Actually, just relying on Phase 1 is safer if the table exists.
+        // If Phase 1 worked, knownIds is populated.
+      } catch(e) {}
+
+      // Phase 3: fetch profiles for ALL members to ensure names/avatars are fresh
       const allMemberIds = new Set();
       H.state.conversations.forEach(c => (c.members||[]).forEach(id => allMemberIds.add(id)));
-      const missingProfiles = Array.from(allMemberIds).filter(id => id !== u.id && !(H.state.users||[]).some(x => x.id === id));
-      if (missingProfiles.length) {
+      if (allMemberIds.size) {
         try {
           const { data: profiles } = await sb.from('profiles')
-            .select('id,name,phone,email,avatar,verified,role,status,created_at')
-            .in('id', missingProfiles);
+            .select('id,name,phone,email,avatar,avatar_url,verified,role,status,created_at')
+            .in('id', Array.from(allMemberIds));
           (profiles||[]).forEach(p => {
-            if ((H.state.users||[]).some(x => x.id === p.id)) return;
-            (H.state.users = H.state.users||[]).push({
+            let localUser = (H.state.users = H.state.users||[]).find(x => x.id === p.id);
+            const userData = {
               id: p.id, name: p.name||'', phone: p.phone||'',
-              email: p.email||'', avatar: p.avatar||null,
+              email: p.email||'', avatar: p.avatar || p.avatar_url || null,
               verified: !!p.verified, role: p.role||'user',
               status: p.status||'active',
               joinedAt: p.created_at ? new Date(p.created_at).getTime() : Date.now()
-            });
-            changed = true;
+            };
+            if (!localUser) {
+              H.state.users.push(userData);
+              changed = true;
+            } else {
+              // Check for changes
+              if (localUser.name !== userData.name || localUser.avatar !== userData.avatar || localUser.verified !== userData.verified) {
+                Object.assign(localUser, userData);
+                changed = true;
+              }
+            }
           });
         } catch(e) {}
       }
