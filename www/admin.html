@@ -762,7 +762,7 @@ async function approveListing(id) {
     if(l){ l.status='active'; }
     // Notify seller
     if(l && l.sellerId) {
-      await sb.from('notifications').insert({user_id:l.sellerId,title:'Listing Approved! 🎉',body:'Your listing "'+l.title+'" is now live.',type:'info',read:false,created_at:Date.now()});
+      var nid = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + "-" + Math.random().toString(36).substr(2, 9)); await sb.from('notifications').insert({id:nid, user_id:l.sellerId,title:'Listing Approved! 🎉',body:'Your listing "'+l.title+'" is now live.',type:'info',read:false,created_at:Date.now()});
     }
     updateBadges(); renderTab(); toast('Listing approved and seller notified');
   } catch(e){ toast('Error: '+e.message,'error'); }
@@ -777,7 +777,7 @@ async function rejectListing(id) {
     var l = DATA.listings.find(function(x){ return x.id===id; });
     if(l){ l.status='rejected'; }
     if(l && l.sellerId) {
-      await sb.from('notifications').insert({user_id:l.sellerId,title:'Listing Not Approved',body:'Your listing "'+l.title+'" was not approved.'+(note?' Reason: '+note:''),type:'report',read:false,created_at:Date.now()});
+      var nid = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + "-" + Math.random().toString(36).substr(2, 9)); await sb.from('notifications').insert({id:nid, user_id:l.sellerId,title:'Listing Not Approved',body:'Your listing "'+l.title+'" was not approved.'+(note?' Reason: '+note:''),type:'report',read:false,created_at:Date.now()});
     }
     updateBadges(); renderTab(); toast('Listing rejected','info');
   } catch(e){ toast('Error: '+e.message,'error'); }
@@ -839,7 +839,7 @@ async function banUser(userId) {
     if(r.error) throw r.error;
     var u = DATA.users.find(function(x){ return x.id===userId; });
     if(u){ u.status='banned'; u.ban_reason=reason; }
-    await sb.from('notifications').insert({user_id:userId,title:'Account Suspended',body:'Your account has been suspended.'+(reason?' Reason: '+reason:''),type:'ban',read:false,created_at:Date.now()});
+    var nid = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + "-" + Math.random().toString(36).substr(2, 9)); await sb.from('notifications').insert({id:nid, user_id:userId,title:'Account Suspended',body:'Your account has been suspended.'+(reason?' Reason: '+reason:''),type:'ban',read:false,created_at:Date.now()});
     renderTab(); toast('User banned and notified');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
@@ -852,7 +852,7 @@ async function unbanUser(userId) {
     if(r.error) throw r.error;
     var u = DATA.users.find(function(x){ return x.id===userId; });
     if(u){ u.status='active'; u.ban_reason=null; }
-    await sb.from('notifications').insert({user_id:userId,title:'Account Reinstated',body:'Your account ban has been removed. Welcome back!',type:'info',read:false,created_at:Date.now()});
+    var nid = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + "-" + Math.random().toString(36).substr(2, 9)); await sb.from('notifications').insert({id:nid, user_id:userId,title:'Account Reinstated',body:'Your account ban has been removed. Welcome back!',type:'info',read:false,created_at:Date.now()});
     renderTab(); toast('User unbanned');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
@@ -865,7 +865,7 @@ async function verifyUser(userId) {
     if(r.error) throw r.error;
     var u = DATA.users.find(function(x){ return x.id===userId; });
     if(u){ u.verified=true; u.verification_pending=false; }
-    await sb.from('notifications').insert({user_id:userId,title:'Identity Verified ✓',body:'Congratulations! Your blue verified badge is now active.',type:'verify',read:false,created_at:Date.now()});
+    var nid = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + "-" + Math.random().toString(36).substr(2, 9)); await sb.from('notifications').insert({id:nid, user_id:userId,title:'Identity Verified ✓',body:'Congratulations! Your blue verified badge is now active.',type:'verify',read:false,created_at:Date.now()});
     renderTab(); toast('User verified and notified');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
@@ -995,7 +995,7 @@ async function approveVerification(userId, verifId) {
     if(verifId) await sb.from('verifications').update({status:'approved',admin_note:'Approved by admin'}).eq('id',verifId);
     var u = DATA.users.find(function(x){ return x.id===userId; }); if(u){ u.verified=true; u.verification_pending=false; }
     var v = DATA.verifications.find(function(x){ return x.id===verifId; }); if(v) v.status='approved';
-    await sb.from('notifications').insert({user_id:userId,title:'Identity Verified ✓',body:'Your blue verified badge is now active on all your listings.',type:'verify',read:false,created_at:Date.now()});
+    var nid = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + "-" + Math.random().toString(36).substr(2, 9)); await sb.from('notifications').insert({id:nid, user_id:userId,title:'Identity Verified ✓',body:'Your blue verified badge is now active on all your listings.',type:'verify',read:false,created_at:Date.now()});
     updateBadges(); renderVerifications(); toast('User verified and notified ✓');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
@@ -1008,7 +1008,7 @@ async function rejectVerification(userId, verifId) {
     if(verifId) await sb.from('verifications').update({status:'rejected',admin_note:note||'Documents unclear'}).eq('id',verifId);
     var u = DATA.users.find(function(x){ return x.id===userId; }); if(u) u.verification_pending=false;
     var v = DATA.verifications.find(function(x){ return x.id===verifId; }); if(v) v.status='rejected';
-    await sb.from('notifications').insert({user_id:userId,title:'Verification Not Approved',body:'Your ID was not approved.'+(note?' Reason: '+note+'. Please resubmit with clearer photos.':' Please resubmit.'),type:'report',read:false,created_at:Date.now()});
+    var nid = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + "-" + Math.random().toString(36).substr(2, 9)); await sb.from('notifications').insert({id:nid, user_id:userId,title:'Verification Not Approved',body:'Your ID was not approved.'+(note?' Reason: '+note+'. Please resubmit with clearer photos.':' Please resubmit.'),type:'report',read:false,created_at:Date.now()});
     updateBadges(); renderVerifications(); toast('Verification rejected, user notified','info');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
@@ -1097,7 +1097,7 @@ async function sendNotification() {
 
     for(var i=0; i<recipients.length; i+=BATCH) {
       var batch = recipients.slice(i,i+BATCH).map(function(uid){ return {
-        user_id:uid, title:title, body:body, type:type, read:false, created_at:now
+        id: (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + "-" + Math.random().toString(36).substr(2, 9))), user_id:uid, title:title, body:body, type:type, read:false, created_at:now
       };});
       var r = await sb.from('notifications').insert(batch);
       if(r.error) throw r.error;
@@ -1160,7 +1160,7 @@ async function approveTopup(id, userId, amount) {
     await sb.from('topup_requests').update({status:'approved'}).eq('id',id);
     if(u){ u.wallet_usd=newBal; }
     var t=DATA.topups.find(function(x){return x.id===id;}); if(t) t.status='approved';
-    await sb.from('notifications').insert({user_id:userId,title:'Wallet Topped Up 💰',body:'$'+fmt(amount)+' has been added to your wallet.',type:'sale',read:false,created_at:Date.now()});
+    var nid = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + "-" + Math.random().toString(36).substr(2, 9)); await sb.from('notifications').insert({id:nid, user_id:userId,title:'Wallet Topped Up 💰',body:'$'+fmt(amount)+' has been added to your wallet.',type:'sale',read:false,created_at:Date.now()});
     updateBadges(); renderTopups(); toast('Top-up approved, wallet updated');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }

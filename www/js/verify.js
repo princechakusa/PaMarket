@@ -218,6 +218,7 @@
     async cancelPending() {
       const u = currentUser();
       u.verification_pending = false;
+      u.verificationPending = false;
       saveState();
       if (window.supabase) {
         await window.supabase.from('profiles').update({ verification_pending: false }).eq('id', u.id);
@@ -248,6 +249,7 @@
           .eq('id', u.id);
         if (pErr) throw pErr;
         u.verification_pending = true;
+        u.verificationPending = true;
         saveState();
         toast('Documents submitted! Admin will review within 24 hours.', 5000);
         renderPage('Verify');

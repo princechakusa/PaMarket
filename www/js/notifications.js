@@ -16,9 +16,11 @@
 
   // ── Push helper (called from anywhere) ────────────────────
   H.pushNotif = function (uid_, title, body, type) {
+    if (!uid_) return;
     H.state.notifs = H.state.notifs || {};
     H.state.notifs[uid_] = H.state.notifs[uid_] || [];
-    const n = { id: uid(), t: Date.now(), read: false, title, body, type: type || _inferType(title) };
+    const nid = uid();
+    const n = { id: nid, t: Date.now(), read: false, title, body, type: type || _inferType(title) };
     H.state.notifs[uid_].unshift(n);
     if (H.state.notifs[uid_].length > 100) H.state.notifs[uid_].length = 100;
     saveState();
@@ -26,9 +28,9 @@
 
     // Persist to Supabase so the user gets it on other devices
     const c = sb();
-    if (c) {
+    if (c && nid) {
       c.from('notifications').insert({
-        id: n.id, user_id: uid_, title: n.title, body: n.body,
+        id: nid, user_id: uid_, title: n.title, body: n.body,
         type: n.type, read: false, created_at: new Date(n.t).toISOString()
       }).then(r => { if (r && r.error) console.warn('notif insert failed:', r.error.message); });
     }
