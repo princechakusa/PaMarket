@@ -43,6 +43,9 @@ $$;
 -- ── 11. Saved searches ───────────────────────────────────────
 \i saved_searches.sql
 
+-- ── 12. Verifications ────────────────────────────────────────
+\i verifications.sql
+
 -- ═══════════════════════════════════════════════════════════════
 -- Realtime: enable postgres_changes for these tables in
 -- Supabase Dashboard → Database → Replication:

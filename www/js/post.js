@@ -193,7 +193,7 @@
     prev() {
       if (postState.step > 1) { postState.step--; refreshSteps(); refreshBody(); }
     },
-    submit() {
+    async submit() {
       if (H.checkBan && H.checkBan()) return;
       const s = postState;
       const u = H.currentUser();
@@ -208,10 +208,19 @@
       };
       H.state.listings.unshift(l);
       H.saveState();
-      if (typeof H.saveListingToCloud === "function") H.saveListingToCloud(l);
+      if (typeof H.saveListingToCloud === "function") await H.saveListingToCloud(l);
+
       if (needsApproval) {
         H.toast('Ad submitted! It will go live after admin review.', 5000);
-        H.openInner('MyListings');
+
+        // Open chat with admin
+        const admins = (H.state.users || []).filter(u => u.role === 'admin');
+        if (admins.length > 0) {
+          // Message the first admin found
+          H.startChatWith(admins[0].id, l.id, "Hi, I just submitted a new ad for review: " + l.title);
+        } else {
+          H.openInner('MyListings');
+        }
       } else {
         H.toast('Your ad is live! 🎉');
         H.navTo('Home', document.querySelector('[data-nav="Home"]'));
