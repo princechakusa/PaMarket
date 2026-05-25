@@ -327,25 +327,27 @@ let signinCooldown = false;
     if (!u) {
       u = {
         id: userId, email: '',
-        name:      profile.name,
-        phone:     profile.phone || '',
-        avatar:    profile.avatar || null,
-        verified:  profile.verified || false,
-        walletUSD: profile.wallet_usd || 0,
-        language:  profile.language || 'English',
-        joinedAt:  new Date(profile.created_at).getTime(),
-        role:      profile.role || 'user',
-        status:    profile.status || 'active',
+        name:                 profile.name,
+        phone:                profile.phone || '',
+        avatar:               profile.avatar || null,
+        verified:             profile.verified || false,
+        verification_pending: profile.verification_pending || false,
+        walletUSD:            profile.wallet_usd || 0,
+        language:             profile.language || 'English',
+        joinedAt:             new Date(profile.created_at).getTime(),
+        role:                 profile.role || 'user',
+        status:               profile.status || 'active',
         banReason: null, banUntil: null, blocked: []
       };
       state.users.push(u);
     } else {
-      u.name      = profile.name;
-      u.phone     = profile.phone || '';
-      u.avatar    = profile.avatar || null;
-      u.verified  = profile.verified || false;
-      u.walletUSD = profile.wallet_usd || 0;
-      u.language  = profile.language || 'English';
+      u.name                 = profile.name;
+      u.phone                = profile.phone || '';
+      u.avatar               = profile.avatar || null;
+      u.verified             = profile.verified || false;
+      u.verification_pending = profile.verification_pending || false;
+      u.walletUSD            = profile.wallet_usd || 0;
+      u.language             = profile.language || 'English';
       if (profile.role)   u.role   = profile.role;
       if (profile.status) u.status = profile.status;
     }
