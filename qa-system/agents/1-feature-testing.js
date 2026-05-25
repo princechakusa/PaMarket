@@ -32,15 +32,28 @@ const TOAST_EL         = '#toastEl';
 const AUTH_CARD        = '#authCard';
 const MODAL_BG         = '#modalBg';
 
-// Wait for splash to be removed (app booted)
-async function waitForBoot(page, timeout = 15000) {
-  // Splash either gets removed from DOM or gets class 'hiding'
+// Wait for splash to be gone AND main area to be visible
+async function waitForBoot(page, timeout = 20000) {
+  // Wait for splash to disappear (removed, hidden, or opacity 0)
   await page.waitForFunction(() => {
     const splash = document.getElementById('pamarketSplash');
-    return !splash || splash.classList.contains('hiding');
+    if (!splash) return true;
+    const style = window.getComputedStyle(splash);
+    return (
+      style.display === 'none' ||
+      style.visibility === 'hidden' ||
+      style.opacity === '0' ||
+      splash.classList.contains('hiding') ||
+      splash.classList.contains('hidden')
+    );
   }, { timeout });
-  // Give the animation a moment
-  await page.waitForTimeout(500);
+
+  // Then wait for main area to actually become visible
+  try {
+    await page.waitForSelector('#mainArea', { state: 'visible', timeout: 8000 });
+  } catch {
+    // If mainArea never appears we still proceed — the test will record the failure
+  }
 }
 
 async function run(config) {
