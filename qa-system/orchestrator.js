@@ -1,39 +1,49 @@
 'use strict';
 /**
- * PaMarket QA System — Orchestrator
+ * PaMarket QA System — Autonomous CI/CD Pipeline Orchestrator  (v2)
  *
- * Executes the 8-agent QA pipeline in the correct dependency order:
+ * 10-phase pipeline:
  *
- *   Phase 1 (parallel): Feature Testing  +  API Validation
- *   Phase 2:            Data Flow Trace  (depends on Phase 1 results)
- *   Phase 3:            Bug Diagnosis    (depends on all prior results)
- *   Phase 4 (parallel): Security Audit  +  Performance & State
- *   Phase 5:            Auto-Fix Generation (depends on Phase 3)
- *   Phase 6:            Approval Gate   (depends on Phase 5)
- *   Phase 7:            Final Report    (assembles everything)
+ *   Phase  1 — Initialize       Load issue store, generate run ID, print header
+ *   Phase  2 — QA Execution     Feature Testing + API Validation (parallel)
+ *   Phase  3 — Data Flow Trace  Trace UI → H.state → Supabase → render paths
+ *   Phase  4 — Bug Diagnosis    Root-cause classification of all findings
+ *   Phase  5 — Security+Perf    RLS Audit + Performance & State (parallel)
+ *   Phase  6 — Fix Generation   Auto-Fix Generator → Approval Gate
+ *   Phase  7 — Staging Deploy   Apply approved SQL fixes to staging (if configured)
+ *   Phase  8 — Auto-Retest      Targeted + full regression suite after staging deploy
+ *   Phase  9 — Regression Scan  Compare current run vs historical store
+ *   Phase 10 — CI Report        GitHub Step Summary, GITHUB_OUTPUT vars, final exit code
  *
  * Usage:
  *   node orchestrator.js
- *   QA_DEBUG=1 node orchestrator.js   (verbose output)
- *   AGENT=api node orchestrator.js    (run single agent)
+ *   QA_DEBUG=1 node orchestrator.js        (verbose)
+ *   AGENT=api node orchestrator.js         (single agent)
+ *   QA_SKIP_DEPLOY=1 node orchestrator.js  (skip staging deploy even if configured)
  */
 
-const path     = require('path');
-const logger   = require('./utils/logger');
-const reporter = require('./utils/report-builder');
+const logger      = require('./utils/logger');
+const reporter    = require('./utils/report-builder');
+const tracker     = require('./pipeline/issue-tracker');
+const fixExecutor = require('./pipeline/fix-executor');
+const retester    = require('./pipeline/retest-engine');
+const regDetector = require('./pipeline/regression-detector');
+const ciReporter  = require('./pipeline/ci-reporter');
 
-// Load config — falls back to example config if config.js does not exist
+// ── Config loading ────────────────────────────────────────────────────────────
+
 let config;
 try {
   config = require('./config');
   logger.info('Using config.js (custom configuration)');
 } catch {
   config = require('./config.example');
-  logger.warn('config.js not found — using config.example.js (READ-ONLY mode, no test credentials)');
-  logger.warn('Copy config.example.js to config.js and fill in TEST_USER/TEST_ADMIN to enable full testing.');
+  logger.warn('config.js not found — using config.example.js (READ-ONLY, no test credentials)');
+  logger.warn('Copy config.example.js to config.js and fill in credentials to enable full testing.');
 }
 
-// Import all agents
+// ── Agent imports ─────────────────────────────────────────────────────────────
+
 const agents = {
   featureTesting: require('./agents/1-feature-testing'),
   apiValidation:  require('./agents/2-api-validation'),
@@ -45,7 +55,9 @@ const agents = {
   approvalGate:   require('./agents/8-approval-gate'),
 };
 
-async function runWithTimeout(name, fn, ms = 120000) {
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function runWithTimeout(name, fn, ms = 120000) {
   return Promise.race([
     fn(),
     new Promise((_, reject) =>
@@ -53,44 +65,68 @@ async function runWithTimeout(name, fn, ms = 120000) {
     ),
   ]).catch(err => {
     logger.fail(`Agent ${name} failed: ${err.message}`);
-    return { agent: name, status: 'error', error: err.message, issues: [], tests: [], fixes: [], decisions: [] };
+    return {
+      agent:     name,
+      status:    'error',
+      error:     err.message,
+      issues:    [],
+      tests:     [],
+      fixes:     [],
+      decisions: [],
+    };
   });
 }
+
+function phaseHeader(n, title) {
+  logger.info(`\n╔══ PHASE ${n}: ${title} ${'═'.repeat(Math.max(0, 52 - title.length))}╗`);
+}
+
+// ── Single-agent mode ─────────────────────────────────────────────────────────
+
+async function runSingleAgent(agentKey) {
+  const agentKeys = Object.keys(agents);
+  const key = agentKeys.find(k =>
+    k.toLowerCase().includes(agentKey.toLowerCase()) || k === agentKey
+  );
+  if (!key) {
+    console.error(`Unknown agent: ${agentKey}. Available: ${agentKeys.join(', ')}`);
+    process.exit(1);
+  }
+  logger.info(`Running single agent: ${key}`);
+  const result = await agents[key].run(config);
+  console.log('\nResult:', JSON.stringify(result, null, 2));
+}
+
+// ── Main pipeline ─────────────────────────────────────────────────────────────
 
 async function main() {
   const startTime = Date.now();
 
   console.log('\n' + '═'.repeat(64));
-  console.log('  PaMarket QA System — Production-Grade Multi-Agent Pipeline');
+  console.log('  PaMarket QA — Autonomous CI/CD Pipeline  (v2)');
   console.log('  Supabase: ' + config.SUPABASE_URL);
   console.log('  App URL:  ' + config.APP_URL);
+  console.log('  Staging:  ' + (config.SUPABASE_STAGING_DB_URL ? 'configured' : 'not configured (deploy skipped)'));
   console.log('  Mode:     ' + (config.READ_ONLY ? 'READ-ONLY (safe)' : 'FULL (writes enabled)'));
   console.log('═'.repeat(64) + '\n');
 
-  const singleAgent = process.env.AGENT;
-
-  // ── Single-agent mode ─────────────────────────────────────────────────────
-  if (singleAgent) {
-    const agentKey = Object.keys(agents).find(k =>
-      k.toLowerCase().includes(singleAgent.toLowerCase()) ||
-      singleAgent === k
-    );
-    if (!agentKey) {
-      console.error(`Unknown agent: ${singleAgent}. Available: ${Object.keys(agents).join(', ')}`);
-      process.exit(1);
-    }
-    logger.info(`Running single agent: ${agentKey}`);
-    const result = await agents[agentKey].run(config);
-    console.log('\nResult:', JSON.stringify(result, null, 2));
+  // Single-agent shortcut
+  if (process.env.AGENT) {
+    await runSingleAgent(process.env.AGENT);
     return;
   }
 
-  // ── Full pipeline ─────────────────────────────────────────────────────────
+  // ── PHASE 1: Initialize ─────────────────────────────────────────────────────
+  phaseHeader(1, 'Initialize');
+  const runId = tracker.generateRunId();
+  const store = tracker.loadStore();
+  logger.info(`Run ID: ${runId}`);
+  logger.info(`Known issues in store: ${Object.keys(store.issues).length}`);
 
   const results = {};
 
-  // ── PHASE 1: Feature Testing + API Validation (parallel) ─────────────────
-  logger.info('\n╔══ PHASE 1: Feature Testing + API Validation (parallel) ═══╗');
+  // ── PHASE 2: QA Execution (parallel) ───────────────────────────────────────
+  phaseHeader(2, 'QA Execution — Feature Testing + API Validation');
   const [featureResult, apiResult] = await Promise.all([
     runWithTimeout('FeatureTesting', () => agents.featureTesting.run(config), 120000),
     runWithTimeout('APIValidation',  () => agents.apiValidation.run(config),   60000),
@@ -98,13 +134,13 @@ async function main() {
   results.featureTesting = featureResult;
   results.apiValidation  = apiResult;
 
-  // ── PHASE 2: Data Flow Trace (uses Phase 1 results) ──────────────────────
-  logger.info('\n╔══ PHASE 2: Data Flow Trace ════════════════════════════════╗');
+  // ── PHASE 3: Data Flow Trace ────────────────────────────────────────────────
+  phaseHeader(3, 'Data Flow Trace');
   const traceResult = await runWithTimeout('DataFlowTrace', () => agents.dataFlowTrace.run(config), 60000);
   results.dataFlowTrace = traceResult;
 
-  // ── PHASE 3: Bug Diagnosis (aggregates all prior results) ─────────────────
-  logger.info('\n╔══ PHASE 3: Bug Diagnosis (Root Cause Engine) ══════════════╗');
+  // ── PHASE 4: Bug Diagnosis ──────────────────────────────────────────────────
+  phaseHeader(4, 'Bug Diagnosis (Root Cause Engine)');
   const diagnosisResult = await runWithTimeout('BugDiagnosis', () =>
     agents.bugDiagnosis.run(config, {
       apiValidation:  apiResult,
@@ -114,23 +150,22 @@ async function main() {
   );
   results.bugDiagnosis = diagnosisResult;
 
-  // ── PHASE 4: Security Audit + Performance (parallel) ─────────────────────
-  logger.info('\n╔══ PHASE 4: Security & RLS Audit + Performance (parallel) ══╗');
+  // ── PHASE 5: Security + Performance (parallel) ─────────────────────────────
+  phaseHeader(5, 'Security & RLS Audit + Performance');
   const [securityResult, performanceResult] = await Promise.all([
-    runWithTimeout('SecurityAudit', () => agents.securityAudit.run(config),  60000),
-    runWithTimeout('Performance',   () => agents.performance.run(config),    60000),
+    runWithTimeout('SecurityAudit', () => agents.securityAudit.run(config), 60000),
+    runWithTimeout('Performance',   () => agents.performance.run(config),   60000),
   ]);
   results.securityAudit = securityResult;
   results.performance   = performanceResult;
 
-  // Merge security and performance issues into diagnosis
+  // Merge + deduplicate all issues
   const allIssues = [
-    ...(diagnosisResult.issues    || []),
-    ...(securityResult.issues     || []),
-    ...(performanceResult.issues  || []),
+    ...(diagnosisResult.issues   || []),
+    ...(securityResult.issues    || []),
+    ...(performanceResult.issues || []),
   ];
-  // Deduplicate
-  const seenIds   = new Set();
+  const seenIds = new Set();
   const dedupedIssues = allIssues.filter(i => {
     if (seenIds.has(i.id)) return false;
     seenIds.add(i.id);
@@ -138,29 +173,94 @@ async function main() {
   });
   const mergedDiagnosis = { ...diagnosisResult, issues: dedupedIssues };
 
-  // ── PHASE 5: Auto-Fix Generation ──────────────────────────────────────────
-  logger.info('\n╔══ PHASE 5: Auto-Fix Generation ════════════════════════════╗');
+  // Feed issues into the persistent store (before fix execution)
+  const currentIssues = tracker.extractIssuesFromResults({
+    ...results,
+    diagnosis: mergedDiagnosis,
+  });
+  for (const issue of currentIssues) {
+    tracker.upsertIssue(store, issue);
+  }
+
+  // Snapshot pre-fix results for retest comparison
+  const preFixResults = {
+    apiValidation:  apiResult,
+    dataFlowTrace:  traceResult,
+    securityAudit:  securityResult,
+    performance:    performanceResult,
+    featureTesting: featureResult,
+  };
+
+  // ── PHASE 6: Fix Generation + Approval Gate ─────────────────────────────────
+  phaseHeader(6, 'Fix Generation + Approval Gate');
   const fixResult = await runWithTimeout('AutoFix', () =>
     agents.autoFix.run(config, mergedDiagnosis), 30000
   );
   results.autoFix = fixResult;
 
-  // ── PHASE 6: Approval Gate ────────────────────────────────────────────────
-  logger.info('\n╔══ PHASE 6: Approval Gate (MANDATORY) ══════════════════════╗');
   const approvalResult = await runWithTimeout('ApprovalGate', () =>
     agents.approvalGate.run(config, fixResult), 30000
   );
   results.approval = approvalResult;
 
-  // ── PHASE 7: Final Report ─────────────────────────────────────────────────
-  logger.info('\n╔══ PHASE 7: Final Report Generation ════════════════════════╗');
+  // ── PHASE 7: Staging Fix Execution ─────────────────────────────────────────
+  phaseHeader(7, 'Staging Fix Execution');
+  let executionResult = null;
 
-  // Update issues with fix + decision data for the report
+  const skipDeploy = process.env.QA_SKIP_DEPLOY === '1';
+
+  if (skipDeploy) {
+    logger.warn('QA_SKIP_DEPLOY=1 — skipping staging deployment');
+    executionResult = { executed: [], skipped: [], failed: [], skippedReason: 'QA_SKIP_DEPLOY set' };
+  } else {
+    executionResult = await fixExecutor.applyApprovedFixes(
+      { ...approvalResult, fixes: fixResult.fixes || [] },
+      config
+    );
+  }
+
+  // Update the store with fix results
+  for (const exec of (executionResult.executed || [])) {
+    // Mark issues addressed by this fix as 'fixed'
+    for (const issue of currentIssues) {
+      const fix = (fixResult.fixes || []).find(f => f.id === exec.fixId);
+      if (fix && (fix.addresses || []).includes(issue.id)) {
+        tracker.markFixed(store, issue.id, exec.fixId);
+      }
+    }
+  }
+
+  // ── PHASE 8: Auto-Retest ────────────────────────────────────────────────────
+  phaseHeader(8, 'Auto-Retest');
+  const retestResult = await retester.run(
+    executionResult.executed || [],
+    preFixResults,
+    agents,
+    config
+  );
+
+  // ── PHASE 9: Regression Detection ──────────────────────────────────────────
+  phaseHeader(9, 'Regression Detection');
+  const freshIssues = retestResult.afterResults
+    ? tracker.extractIssuesFromResults(retestResult.afterResults)
+    : currentIssues;
+
+  const detectionResult    = regDetector.detectRegressions(freshIssues, store);
+  const regressionReport   = regDetector.generateRegressionReport(detectionResult, store);
+
+  // Escalate regressions in store
+  for (const reg of detectionResult.regressions) {
+    tracker.upsertIssue(store, reg);
+  }
+
+  // ── PHASE 10: CI Report + Final Status ─────────────────────────────────────
+  phaseHeader(10, 'CI Report + Final Status');
+
   const allResultsForReport = {
     featureTesting: featureResult,
     apiValidation:  apiResult,
     dataFlowTrace:  traceResult,
-    bugDiagnosis:   { ...mergedDiagnosis, issues: dedupedIssues },
+    bugDiagnosis:   mergedDiagnosis,
     securityAudit:  securityResult,
     performance:    performanceResult,
     autoFix:        fixResult,
@@ -169,44 +269,73 @@ async function main() {
 
   const report = reporter.buildReport(allResultsForReport, config);
 
-  let reportPaths;
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+  const pipeline = {
+    runId,
+    config,
+    report,
+    regressionReport,
+    approvalResult,
+    executionResult,
+    retestResult,
+    elapsed,
+  };
+
+  // Emit CI outputs (GitHub Step Summary + GITHUB_OUTPUT vars)
+  ciReporter.emit(pipeline);
+
+  // Save JSON + HTML reports
+  let reportPaths = { jsonPath: null, htmlPath: null };
   try {
     reportPaths = reporter.saveReport(report, config);
     logger.pass(`Report saved: ${reportPaths.jsonPath}`);
     if (reportPaths.htmlPath) logger.pass(`HTML report:  ${reportPaths.htmlPath}`);
   } catch (e) {
-    logger.warn('Could not save report to disk', e.message);
-    reportPaths = { jsonPath: null, htmlPath: null };
+    logger.warn(`Could not save report: ${e.message}`);
   }
 
-  // ── Final summary ─────────────────────────────────────────────────────────
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  // Persist updated store
+  tracker.addRunHistory(store, runId, {
+    issueCount:     freshIssues.length,
+    issueIds:       freshIssues.map(i => i.id),
+    regressions:    regressionReport.regressionCount,
+    fixesDeployed:  (executionResult.executed || []).length,
+    qaStatus:       regressionReport.hasRegressions || (report?.meta?.bySeverity?.critical > 0)
+                    ? 'failing' : 'passing',
+  });
+  tracker.saveStore(store);
 
+  // ── Final console summary ───────────────────────────────────────────────────
   console.log('\n' + '═'.repeat(64));
-  console.log('  PaMarket QA System — FINAL SUMMARY');
+  console.log('  PaMarket QA — FINAL SUMMARY');
   console.log('═'.repeat(64));
 
   const allTestResults = Object.values(results).flatMap(r => r?.tests || []);
   logger.summary(allTestResults);
 
-  console.log('  ISSUES BY SEVERITY:');
   const byS = report.meta.bySeverity;
+  console.log('  ISSUES:');
   if (byS.critical) console.log(`    🔴 Critical: ${byS.critical}`);
   if (byS.high)     console.log(`    🟠 High:     ${byS.high}`);
   if (byS.medium)   console.log(`    🟡 Medium:   ${byS.medium}`);
   if (byS.low)      console.log(`    🔵 Low:      ${byS.low}`);
 
-  console.log('\n  FIXES:');
-  const fixSummary = approvalResult.summary || {};
-  console.log(`    ✅ Approved:       ${fixSummary.approved || 0}`);
-  console.log(`    🔄 Needs Revision: ${fixSummary.needsRevision || 0}`);
-  console.log(`    ❌ Rejected:       ${fixSummary.rejected || 0}`);
+  if (regressionReport.hasRegressions) {
+    console.log(`\n  ⚠️  REGRESSIONS: ${regressionReport.regressionCount}`);
+  }
 
-  if (approvalResult.decisions && approvalResult.decisions.filter(d => d.decision === 'APPROVED').length > 0) {
-    console.log('\n  APPROVED FIXES — APPLY IN STAGING (never auto-deployed):');
-    approvalResult.decisions
-      .filter(d => d.decision === 'APPROVED')
-      .forEach(d => console.log(`    • ${d.fixId}: ${d.fixDescription}`));
+  const fx = approvalResult.summary || {};
+  console.log('\n  FIXES:');
+  console.log(`    ✅ Approved:       ${fx.approved       || 0}`);
+  console.log(`    🔄 Needs Revision: ${fx.needsRevision  || 0}`);
+  console.log(`    ❌ Rejected:       ${fx.rejected       || 0}`);
+
+  if (executionResult.executed?.length > 0) {
+    console.log(`\n  STAGING DEPLOY: ${executionResult.executed.length} fix(es) applied`);
+  }
+  if (retestResult?.verdict) {
+    console.log(`  RETEST VERDICT: ${retestResult.verdict}`);
   }
 
   console.log(`\n  Total time: ${elapsed}s`);
@@ -214,9 +343,14 @@ async function main() {
   if (reportPaths.htmlPath) console.log(`  HTML:       ${reportPaths.htmlPath}`);
   console.log('═'.repeat(64) + '\n');
 
-  // Exit with appropriate code
-  const hasCritical = (byS.critical || 0) > 0;
-  process.exit(hasCritical ? 1 : 0);
+  // Exit code: 1 if critical issues or regressions (blocks CI deployment)
+  const hasCritical     = (byS.critical || 0) > 0;
+  const hasRegressions  = regressionReport.hasRegressions;
+  const stagingFailed   = (executionResult.failed || []).length > 0;
+
+  if (hasCritical || hasRegressions || stagingFailed) {
+    process.exit(1);
+  }
 }
 
 main().catch(err => {
