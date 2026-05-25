@@ -61,13 +61,13 @@ module.exports = {
   // Secret names in GitHub Actions:  QA_USER_EMAIL, QA_USER_PASSWORD, etc.
   TEST_USER: {
     email:    e('QA_USER_EMAIL',    'qa-user@pamarket.test'),
-    password: e('QA_USER_PASSWORD', 'QAUser2026!'),
+    password: e('QA_USER_PASSWORD', ''),
     userId:   e('QA_USER_ID',       null),
     phone:    '0771234567',
   },
   TEST_ADMIN: {
     email:    e('QA_ADMIN_EMAIL',    'qa-admin@pamarket.test'),
-    password: e('QA_ADMIN_PASSWORD', 'QAAdmin2026!'),
+    password: e('QA_ADMIN_PASSWORD', ''),
     userId:   e('QA_ADMIN_ID',       null),
     phone:    '0779876543',
   },
