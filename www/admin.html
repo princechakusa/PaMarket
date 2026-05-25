@@ -548,13 +548,12 @@ async function loadUsers() {
   try {
     var r = await sb.from('profiles').select('id,name,phone,email,role,status,verified,verification_pending,ban_reason,ban_until,wallet_usd,created_at').order('created_at',{ascending:false}).limit(500);
     if(!r.error && r.data) { DATA.users = r.data; return; }
-    // Fallback: retry without optional columns that may not exist
     var r2 = await sb.from('profiles').select('id,name,phone,email,role,status,verified,verification_pending,created_at').order('created_at',{ascending:false}).limit(500);
     if(!r2.error && r2.data) { DATA.users = r2.data; return; }
-    // Last resort: bare minimum
     var r3 = await sb.from('profiles').select('id,name,phone,email,role,status,verified,created_at').order('created_at',{ascending:false}).limit(500);
-    if(!r3.error && r3.data) DATA.users = r3.data;
-  } catch(e){}
+    if(!r3.error && r3.data) { DATA.users = r3.data; return; }
+    toast('Users load error: '+(r.error?r.error.message:'unknown'),'error');
+  } catch(e){ toast('Users exception: '+e.message,'error'); }
 }
 async function loadListings() {
   try {
@@ -565,8 +564,9 @@ async function loadListings() {
 async function loadVerifications() {
   try {
     var r = await sb.from('verifications').select('id,user_id,id_doc,selfie,status,submitted_at,admin_note').order('submitted_at',{ascending:false}).limit(200);
-    if(!r.error && r.data) DATA.verifications = r.data;
-  } catch(e){}
+    if(r.error) { toast('Verifications load error: '+r.error.message,'error'); return; }
+    if(r.data) DATA.verifications = r.data;
+  } catch(e){ toast('Verifications exception: '+e.message,'error'); }
 }
 async function loadReports() {
   try {
