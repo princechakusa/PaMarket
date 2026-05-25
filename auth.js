@@ -332,6 +332,7 @@ let signinCooldown = false;
         avatar:               profile.avatar || null,
         verified:             profile.verified || false,
         verification_pending: profile.verification_pending || false,
+        verificationPending:  profile.verification_pending || false,
         walletUSD:            profile.wallet_usd || 0,
         language:             profile.language || 'English',
         joinedAt:             new Date(profile.created_at).getTime(),
@@ -346,6 +347,7 @@ let signinCooldown = false;
       u.avatar               = profile.avatar || null;
       u.verified             = profile.verified || false;
       u.verification_pending = profile.verification_pending || false;
+      u.verificationPending  = profile.verification_pending || false;
       u.walletUSD            = profile.wallet_usd || 0;
       u.language             = profile.language || 'English';
       if (profile.role)   u.role   = profile.role;
