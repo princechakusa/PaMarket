@@ -7,12 +7,12 @@ name: PaMarket QA Pipeline
 #   - Manual dispatch (for on-demand runs with custom mode)
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths-ignore:
       - '**.md'
       - '.gitignore'
   pull_request:
-    branches: [main]
+    branches: [master]
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
@@ -63,7 +63,7 @@ jobs:
           path: qa-system/reports/issue-store.json
           key: issue-store-${{ github.ref_name }}
           restore-keys: |
-            issue-store-main
+            issue-store-master
             issue-store-
 
       # ── 3. Node.js setup ─────────────────────────────────────────────────────
