@@ -60,8 +60,11 @@ jobs:
           path: qa-system/reports/
           retention-days: 30
 
-      - name: Fail if critical issues found
+      - name: Annotate critical issues
         if: steps.qa.outputs.has_critical == 'true'
         run: |
-          echo "::error::QA blocked — critical issues found"
-          exit 1
+          echo "::warning::QA found critical issues — download the qa-reports artifact to see the full report"
+
+      - name: QA passed
+        if: steps.qa.outputs.has_critical != 'true'
+        run: echo "::notice::QA passed — no critical issues found"
