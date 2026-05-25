@@ -1,0 +1,25 @@
+{
+  "name": "pamarket-qa-system",
+  "version": "1.0.0",
+  "description": "Production-grade QA automation for PaMarket — 8-agent system",
+  "main": "orchestrator.js",
+  "scripts": {
+    "qa":              "node orchestrator.js",
+    "qa:api":          "node agents/2-api-validation.js",
+    "qa:security":     "node agents/5-security-rls-audit.js",
+    "qa:performance":  "node agents/6-performance-state.js",
+    "qa:feature":      "node agents/1-feature-testing.js",
+    "qa:trace":        "node agents/3-data-flow-trace.js",
+    "qa:diagnosis":    "node agents/4-bug-diagnosis.js",
+    "qa:fix":          "node agents/7-auto-fix-generator.js",
+    "qa:approve":      "node agents/8-approval-gate.js",
+    "setup:browsers":  "npx playwright install chromium --with-deps"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.105.3",
+    "playwright": "^1.48.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
