@@ -906,6 +906,11 @@
       u.verificationPending=false;
       alog(`Verification rejected: ${u.name}`);
       pushNotif(uid_,'Verification Unsuccessful','Your ID verification could not be approved. Contact support for help.','warn');
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ verification_pending: false }).eq('id', uid_);
+        sb.from('verifications').delete().eq('user_id', uid_);
+      }
       saveState(); toast(`Verification rejected for ${u.name}`); this.setTab('verifications');
     },
 
