@@ -1,119 +1,167 @@
 -- ============================================================
--- PaMarket RLS Security Fix
--- Generated: 2026-05-25 — QA Agent 5 detected anon data leaks
+-- PaMarket RLS Security Fix  (v2 — corrected)
+-- Generated: 2026-05-25
 --
 -- Run this in: Supabase Dashboard → SQL Editor → New query
 --
+-- Root cause: migrations.sql created permissive "anon read X"
+-- policies with USING(true) on messages, conversations,
+-- profiles, and applications.
+--
 -- Issues fixed:
---   CRITICAL  messages     — 5 rows exposed to anon (BUG: no RLS)
---   HIGH      profiles     — 5 rows exposed to anon (wallet_usd, role leaked)
---   HIGH      applications — 1 row exposed to anon (PII: email, phone, name)
+--   CRITICAL  messages       — anon can read all private messages
+--   CRITICAL  conversations  — anon can read all conversations
+--   HIGH      profiles       — anon reads wallet_usd, role, email
+--   HIGH      applications   — anon reads full PII (email, phone, name)
 -- ============================================================
 
+-- Force public schema so every unqualified name resolves correctly
+SET search_path = public;
 
--- ── 1. MESSAGES — only conversation participants can read ─────────────────────
 
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+-- ── 1. MESSAGES — only conversation members can read/write ────────────────────
 
--- Drop any overly-permissive anon policy that currently exists
-DROP POLICY IF EXISTS "anon_read_messages"          ON messages;
-DROP POLICY IF EXISTS "authenticated_only_messages" ON messages;
-DROP POLICY IF EXISTS "participants_read_messages"  ON messages;
+-- Remove the permissive policies created by migrations.sql
+DROP POLICY IF EXISTS "anon read messages"             ON public.messages;
+DROP POLICY IF EXISTS "anon write messages"            ON public.messages;
+DROP POLICY IF EXISTS "participants_read_messages"     ON public.messages;
+DROP POLICY IF EXISTS "participants_insert_messages"   ON public.messages;
+DROP POLICY IF EXISTS "messages: member read"          ON public.messages;
+DROP POLICY IF EXISTS "messages: member insert"        ON public.messages;
+DROP POLICY IF EXISTS "messages: member update"        ON public.messages;
 
--- SELECT: only users who are part of the conversation
-CREATE POLICY "participants_read_messages" ON messages
+-- SELECT: only users who are in the conversation's members list
+-- (members is a jsonb array of UUID strings, e.g. ["uuid1","uuid2"])
+CREATE POLICY "messages: member read" ON public.messages
   FOR SELECT TO authenticated
   USING (
-    conversation_id IN (
-      SELECT id FROM conversations
-      WHERE buyer_id  = auth.uid()
-         OR seller_id = auth.uid()
+    EXISTS (
+      SELECT 1 FROM public.conversations c
+      WHERE c.id = conversation_id
+        AND c.members @> jsonb_build_array(auth.uid()::text)
     )
   );
 
--- INSERT: sender must be the authenticated user AND be in the conversation
-DROP POLICY IF EXISTS "participants_insert_messages" ON messages;
-CREATE POLICY "participants_insert_messages" ON messages
+-- INSERT: sender must be authenticated and a member of the conversation
+CREATE POLICY "messages: member insert" ON public.messages
   FOR INSERT TO authenticated
   WITH CHECK (
     sender_id = auth.uid()
-    AND conversation_id IN (
-      SELECT id FROM conversations
-      WHERE buyer_id  = auth.uid()
-         OR seller_id = auth.uid()
+    AND EXISTS (
+      SELECT 1 FROM public.conversations c
+      WHERE c.id = conversation_id
+        AND c.members @> jsonb_build_array(auth.uid()::text)
+    )
+  );
+
+-- UPDATE: members can mark messages as read
+CREATE POLICY "messages: member update" ON public.messages
+  FOR UPDATE TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.conversations c
+      WHERE c.id = conversation_id
+        AND c.members @> jsonb_build_array(auth.uid()::text)
     )
   );
 
 
--- ── 2. PROFILES — require authentication; no anon access ─────────────────────
---
--- NOTE: The marketplace needs sellers visible for listing display.
--- Authenticated users can read any profile (needed to show seller info).
--- Anon (not logged in) cannot read any profile data.
+-- ── 2. CONVERSATIONS — only members can read/write ────────────────────────────
 
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon read conversations"      ON public.conversations;
+DROP POLICY IF EXISTS "anon write conversations"     ON public.conversations;
+DROP POLICY IF EXISTS "conversations: member read"   ON public.conversations;
+DROP POLICY IF EXISTS "conversations: member insert" ON public.conversations;
+DROP POLICY IF EXISTS "conversations: member update" ON public.conversations;
 
-DROP POLICY IF EXISTS "anon_read_profiles"          ON profiles;
-DROP POLICY IF EXISTS "authenticated_read_profiles" ON profiles;
-DROP POLICY IF EXISTS "users_read_own_profile"      ON profiles;
-DROP POLICY IF EXISTS "users_update_own_profile"    ON profiles;
-
--- Authenticated users can read any profile (for marketplace seller display)
-CREATE POLICY "authenticated_read_profiles" ON profiles
+-- SELECT: only participants
+CREATE POLICY "conversations: member read" ON public.conversations
   FOR SELECT TO authenticated
-  USING (auth.uid() IS NOT NULL);
+  USING (members @> jsonb_build_array(auth.uid()::text));
+
+-- INSERT: user must include themselves in the members list
+CREATE POLICY "conversations: member insert" ON public.conversations
+  FOR INSERT TO authenticated
+  WITH CHECK (members @> jsonb_build_array(auth.uid()::text));
+
+-- UPDATE: only members can update (e.g. updated_at refresh)
+CREATE POLICY "conversations: member update" ON public.conversations
+  FOR UPDATE TO authenticated
+  USING (members @> jsonb_build_array(auth.uid()::text));
+
+
+-- ── 3. PROFILES — require authentication; no anon access ─────────────────────
+--
+-- The "profiles: public read" policy used USING(true), exposing:
+--   wallet_usd (balance), role (admin flag), email, phone to anyone.
+-- Fix: only authenticated users can read profiles.
+-- Note: anonymous visitors browsing listings will not see seller details
+-- until they sign in — consistent with a marketplace that requires accounts.
+
+DROP POLICY IF EXISTS "profiles: public read"         ON public.profiles;
+DROP POLICY IF EXISTS "authenticated_read_profiles"   ON public.profiles;
+
+-- Authenticated users can read any profile (needed to display seller info)
+CREATE POLICY "profiles: authenticated read" ON public.profiles
+  FOR SELECT TO authenticated
+  USING (true);
+
+-- Ensure own-insert policy exists (upserted on signup via trigger, but belt-and-suspenders)
+DROP POLICY IF EXISTS "profiles: own insert" ON public.profiles;
+CREATE POLICY "profiles: own insert" ON public.profiles
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = id);
 
 -- Users can only update their own profile
-CREATE POLICY "users_update_own_profile" ON profiles
+DROP POLICY IF EXISTS "profiles: own update" ON public.profiles;
+CREATE POLICY "profiles: own update" ON public.profiles
   FOR UPDATE TO authenticated
-  USING (id = auth.uid())
-  WITH CHECK (id = auth.uid());
-
--- Prevent anon reads explicitly (belt-and-suspenders)
--- (The absence of an anon SELECT policy already blocks anon, but this makes intent clear)
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
 
 
--- ── 3. APPLICATIONS — only employer or applicant can read ─────────────────────
+-- ── 4. APPLICATIONS — only employer or applicant can access ──────────────────
 --
--- Applications contain full PII: email, phone, name, CV content.
--- Exposed to anon = GDPR / privacy violation.
+-- The "anon read applications" policy exposed full PII:
+--   applicant_name, applicant_email, applicant_phone, message to anyone.
 
-ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon read applications"               ON public.applications;
+DROP POLICY IF EXISTS "anon write applications"              ON public.applications;
+DROP POLICY IF EXISTS "applications: read"                   ON public.applications;
+DROP POLICY IF EXISTS "applications: insert"                 ON public.applications;
+DROP POLICY IF EXISTS "applications: employer update"        ON public.applications;
+DROP POLICY IF EXISTS "employer_applicant_read_applications" ON public.applications;
+DROP POLICY IF EXISTS "applicant_insert_applications"        ON public.applications;
+DROP POLICY IF EXISTS "employer_update_application_status"   ON public.applications;
 
-DROP POLICY IF EXISTS "anon_read_applications"              ON applications;
-DROP POLICY IF EXISTS "authenticated_only_applications"     ON applications;
-DROP POLICY IF EXISTS "employer_applicant_read_applications" ON applications;
-
--- Only the employer or the applicant can see an application
-CREATE POLICY "employer_applicant_read_applications" ON applications
+-- SELECT: only the applicant or the employer can see an application
+CREATE POLICY "applications: read" ON public.applications
   FOR SELECT TO authenticated
   USING (
-    employer_id   = auth.uid()
-    OR applicant_id = auth.uid()
+    auth.uid() = applicant_id
+    OR auth.uid() = employer_id
   );
 
--- Only the applicant can insert (submit) an application
-DROP POLICY IF EXISTS "applicant_insert_applications" ON applications;
-CREATE POLICY "applicant_insert_applications" ON applications
+-- INSERT: only the applicant can submit their own application
+CREATE POLICY "applications: insert" ON public.applications
   FOR INSERT TO authenticated
-  WITH CHECK (applicant_id = auth.uid());
+  WITH CHECK (auth.uid() = applicant_id);
 
--- Only employer can update status (shortlist/reject)
-DROP POLICY IF EXISTS "employer_update_application_status" ON applications;
-CREATE POLICY "employer_update_application_status" ON applications
+-- UPDATE: only the employer can change the status (shortlist/decline)
+CREATE POLICY "applications: employer update" ON public.applications
   FOR UPDATE TO authenticated
-  USING (employer_id = auth.uid())
-  WITH CHECK (employer_id = auth.uid());
+  USING (auth.uid() = employer_id)
+  WITH CHECK (auth.uid() = employer_id);
 
 
 -- ── Verification ──────────────────────────────────────────────────────────────
--- After running, verify with these checks in the SQL editor:
-
--- Should return 0 rows (anon cannot read messages):
--- SELECT count(*) FROM messages;  -- run as anon (use anon key in REST API)
-
--- Should return 0 rows (anon cannot read profiles):
--- SELECT count(*) FROM profiles;  -- run as anon
-
--- Should return 0 rows (anon cannot read applications):
--- SELECT count(*) FROM applications;  -- run as anon
+-- After running, verify with these queries (using the anon/public REST API):
+--
+--   GET /rest/v1/messages          → should return 0 rows (or 401)
+--   GET /rest/v1/conversations     → should return 0 rows (or 401)
+--   GET /rest/v1/profiles          → should return 0 rows (or 401)
+--   GET /rest/v1/applications      → should return 0 rows (or 401)
+--
+-- You can test directly in the SQL editor by temporarily disabling your
+-- JWT (comment out auth.uid() check) or use the Supabase API with the
+-- anon key and NO Authorization header.
