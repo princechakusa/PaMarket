@@ -77,7 +77,7 @@ jobs:
       # ── 4. Install dependencies ──────────────────────────────────────────────
       - name: Install QA dependencies
         working-directory: qa-system
-        run: npm ci --prefer-offline
+        run: npm install --prefer-offline
 
       # ── 5. Install Playwright browser ────────────────────────────────────────
       - name: Install Playwright (Chromium)
