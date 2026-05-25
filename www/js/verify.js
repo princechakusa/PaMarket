@@ -241,7 +241,7 @@
           status: 'pending',
           submitted_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
-        if (vErr && !vErr.message.includes('does not exist')) throw vErr;
+        if (vErr) throw vErr;
         // Mark profile as pending
         const { error: pErr } = await window.supabase.from('profiles')
           .update({ verification_pending: true })

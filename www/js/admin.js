@@ -91,7 +91,8 @@
   function syncVerificationsFromSupabase() {
     const sb = window.supabase;
     if (!sb || typeof sb.from !== 'function') return Promise.resolve();
-    return sb.from('profiles')
+
+    const p1 = sb.from('profiles')
       .select('id,name,email,phone,verification_pending,id_type,verified,verified_at,avatar_url,role')
       .or('verification_pending.eq.true,verified.eq.true')
       .then(function (res) {
@@ -126,6 +127,18 @@
         });
       })
       .catch(function () {});
+
+    const p2 = sb.from('verifications')
+      .select('user_id,id_doc,selfie,status,submitted_at')
+      .then(function (res) {
+        const data = res && res.data;
+        if (!data) return;
+        H.state._verifications = {};
+        data.forEach(function (v) { H.state._verifications[v.user_id] = v; });
+      })
+      .catch(function () {});
+
+    return Promise.all([p1, p2]);
   }
 
   function renderBody() {
@@ -150,6 +163,7 @@
   function renderVerifications() {
     const pending = (H.state.users||[]).filter(u=>u.verificationPending && !u.verified);
     const verified = (H.state.users||[]).filter(u=>u.verified);
+    const vdocs = H.state._verifications || {};
     return `
       <div class="stats" style="margin:0 0 14px">
         <div class="stat"><div class="stat-n">${pending.length}</div><div class="stat-l">Pending</div></div>
@@ -159,7 +173,12 @@
       <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Pending Verification Requests</div>
       ${pending.length ? `
       <div class="section-card" style="margin-bottom:16px">
-        ${pending.map(u => `
+        ${pending.map(u => {
+          const vd = vdocs[u.id];
+          const idDocHtml  = vd && vd.id_doc  ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">ID Document</div><img src="${vd.id_doc}" style="width:140px;border-radius:8px;border:1px solid var(--n3);display:block"></div>` : '';
+          const selfieHtml = vd && vd.selfie   ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">Selfie</div><img src="${vd.selfie}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--n3);display:block"></div>` : '';
+          const noPhotos   = !vd ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">⚠ No photos received — verifications table may be missing</div>` : (!vd.id_doc && !vd.selfie) ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">⚠ No photos in submission</div>` : '';
+          return `
           <div class="admin-row" style="padding:14px">
             <div class="admin-row-head">
               <div style="display:flex;align-items:center;gap:10px">
@@ -172,12 +191,14 @@
               </div>
             </div>
             <div style="font-size:12px;color:var(--sub);margin:8px 0">${u.verificationIdType ? `ID Type: ${escHtml(u.verificationIdType)}` : 'Standard verification request'}</div>
+            ${noPhotos}
+            ${(idDocHtml || selfieHtml) ? `<div style="display:flex;gap:12px;margin:10px 0;flex-wrap:wrap;align-items:flex-start">${idDocHtml}${selfieHtml}</div>` : ''}
             <div class="admin-actions">
               <button class="ml-act-btn" onclick="H._admin.approveVerification('${u.id}')">${S.verify} Approve &amp; Verify</button>
               <button class="ml-act-btn red" onclick="H._admin.rejectVerification('${u.id}')">${S.reject} Reject</button>
             </div>
-          </div>
-        `).join('')}
+          </div>`;
+        }).join('')}
       </div>` : `<div style="text-align:center;padding:32px 20px;color:var(--sub);font-size:14px">No pending verification requests</div>`}
       <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Verified Users</div>
       <div class="section-card">
