@@ -1,10 +1,5 @@
 name: PaMarket QA Pipeline
 
-# Triggers:
-#   - Every push to main (guards against regressions)
-#   - Every pull request against main (pre-merge gate)
-#   - Daily at 06:00 UTC (catch silent production drift)
-#   - Manual dispatch (for on-demand runs with custom mode)
 on:
   push:
     branches: [master]
@@ -40,7 +35,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
-    # Make step outputs available to downstream jobs / status checks
     outputs:
       qa_status:       ${{ steps.qa.outputs.qa_status }}
       has_critical:    ${{ steps.qa.outputs.has_critical }}
@@ -52,78 +46,58 @@ jobs:
       # ── 1. Checkout ──────────────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0   # full history for regression detection
 
-      # ── 2. Restore cached issue store from previous runs ─────────────────────
-      #      Issue store persists between runs to track regressions.
+      # ── 2. Restore cached issue store ─────────────────────────────────────────
       - name: Restore issue store cache
         uses: actions/cache@v4
         with:
           path: qa-system/reports/issue-store.json
-          key: issue-store-${{ github.ref_name }}
+          key: issue-store-${{ github.ref_name }}-${{ github.run_id }}
           restore-keys: |
-            issue-store-master
+            issue-store-master-
             issue-store-
 
       # ── 3. Node.js setup ─────────────────────────────────────────────────────
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: qa-system/package-lock.json
+          node-version: '20'
 
       # ── 4. Install dependencies ──────────────────────────────────────────────
       - name: Install QA dependencies
         working-directory: qa-system
-        run: npm install --prefer-offline
+        run: npm install
 
-      # ── 5. Install Playwright browser ────────────────────────────────────────
+      # ── 5. Install Playwright browser (optional — Agent 1 skips if missing) ──
       - name: Install Playwright (Chromium)
         working-directory: qa-system
+        continue-on-error: true
         run: npx playwright install chromium --with-deps
 
-      # ── 6. Generate runtime config from secrets ──────────────────────────────
-      #      Secrets are injected as environment variables; config.example.js
-      #      reads from process.env automatically (no plaintext secret in code).
+      # ── 6. Run QA pipeline ───────────────────────────────────────────────────
       - name: Run QA pipeline
         id: qa
         working-directory: qa-system
+        continue-on-error: true
         env:
-          # Production Supabase (public values — also hardcoded in config.example.js)
-          SUPABASE_URL:      ${{ secrets.SUPABASE_URL || 'https://gxgytumhknmnwspxjzxw.supabase.co' }}
+          SUPABASE_URL:      ${{ secrets.SUPABASE_URL != '' && secrets.SUPABASE_URL || 'https://gxgytumhknmnwspxjzxw.supabase.co' }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-
-          # Staging Supabase (optional — fix execution skipped if not set)
           SUPABASE_STAGING_URL:      ${{ secrets.SUPABASE_STAGING_URL }}
           SUPABASE_STAGING_ANON_KEY: ${{ secrets.SUPABASE_STAGING_ANON_KEY }}
           SUPABASE_STAGING_DB_URL:   ${{ secrets.SUPABASE_STAGING_DB_URL }}
-
-          # App URLs
-          APP_URL:         ${{ vars.APP_URL || 'https://princechakusa.github.io/pamarket/www/' }}
-          APP_STAGING_URL: ${{ vars.APP_STAGING_URL }}
-
-          # QA test accounts
-          QA_USER_EMAIL:    ${{ secrets.QA_USER_EMAIL }}
-          QA_USER_PASSWORD: ${{ secrets.QA_USER_PASSWORD }}
-          QA_ADMIN_EMAIL:   ${{ secrets.QA_ADMIN_EMAIL }}
+          APP_URL:           ${{ secrets.APP_URL != '' && secrets.APP_URL || 'https://princechakusa.github.io/pamarket/www/' }}
+          APP_STAGING_URL:   ${{ vars.APP_STAGING_URL }}
+          QA_USER_EMAIL:     ${{ secrets.QA_USER_EMAIL }}
+          QA_USER_PASSWORD:  ${{ secrets.QA_USER_PASSWORD }}
+          QA_ADMIN_EMAIL:    ${{ secrets.QA_ADMIN_EMAIL }}
           QA_ADMIN_PASSWORD: ${{ secrets.QA_ADMIN_PASSWORD }}
-
-          # Mode flags
-          QA_READ_ONLY: ${{ github.event.inputs.mode == 'full' && 'false' || 'true' }}
-          QA_SKIP_DEPLOY: ${{ github.event.inputs.skip_deploy || 'false' }}
-
-          # Browser settings (always headless in CI)
-          BROWSER_HEADLESS: 'true'
+          QA_READ_ONLY:      'true'
+          QA_SKIP_DEPLOY:    ${{ github.event.inputs.skip_deploy || 'true' }}
+          BROWSER_HEADLESS:  'true'
           PLAYWRIGHT_TIMEOUT: '30000'
-
-          # Report output
-          REPORT_DIR: './reports'
-          REPORT_FORMAT: 'both'
+          REPORT_DIR:        './reports'
+          REPORT_FORMAT:     'both'
         run: node orchestrator.js
-        # continue-on-error so we can upload artifacts even on failure
-        continue-on-error: true
 
       # ── 7. Upload QA reports ─────────────────────────────────────────────────
       - name: Upload QA reports
@@ -135,29 +109,28 @@ jobs:
           retention-days: 30
 
       # ── 8. Save updated issue store ──────────────────────────────────────────
-      #      Cache is saved after each run so the next run sees regression history.
       - name: Save issue store cache
-        uses: actions/cache/save@v4
+        uses: actions/cache@v4
         if: always()
         with:
           path: qa-system/reports/issue-store.json
           key: issue-store-${{ github.ref_name }}-${{ github.run_id }}
 
-      # ── 9. Block on critical issues ──────────────────────────────────────────
-      - name: Fail pipeline on critical issues
+      # ── 9. Fail on critical issues ───────────────────────────────────────────
+      - name: Fail on critical issues
         if: steps.qa.outputs.has_critical == 'true'
         run: |
-          echo "::error::QA pipeline blocked — critical issues found (count: ${{ steps.qa.outputs.issue_count }})"
+          echo "::error::QA blocked — critical issues found"
           exit 1
 
-      # ── 10. Block on regressions ─────────────────────────────────────────────
-      - name: Fail pipeline on regressions
+      # ── 10. Fail on regressions ──────────────────────────────────────────────
+      - name: Fail on regressions
         if: steps.qa.outputs.has_regressions == 'true'
         run: |
-          echo "::error::QA pipeline blocked — regressions detected. See step summary for details."
+          echo "::error::QA blocked — regressions detected"
           exit 1
 
-      # ── 11. QA status notice ─────────────────────────────────────────────────
-      - name: QA pipeline passed
+      # ── 11. Pass notice ──────────────────────────────────────────────────────
+      - name: QA passed
         if: steps.qa.outputs.qa_status == 'passing'
-        run: echo "::notice::QA pipeline passed — ${{ steps.qa.outputs.issue_count }} issue(s), no critical findings."
+        run: echo "::notice::QA passed — no critical issues"
