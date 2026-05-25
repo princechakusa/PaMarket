@@ -348,9 +348,10 @@ async function main() {
   const hasRegressions  = regressionReport.hasRegressions;
   const stagingFailed   = (executionResult.failed || []).length > 0;
 
-  if (hasCritical || hasRegressions || stagingFailed) {
-    process.exit(1);
-  }
+  // Force-exit: the Supabase JS client keeps WebSocket connections open
+  // indefinitely, which prevents Node from exiting naturally after the pipeline
+  // completes. Using process.exit() is the correct fix here — all work is done.
+  process.exit(hasCritical || hasRegressions || stagingFailed ? 1 : 0);
 }
 
 main().catch(err => {
