@@ -29,7 +29,7 @@
     if (c) {
       c.from('notifications').insert({
         id: n.id, user_id: uid_, title: n.title, body: n.body,
-        type: n.type, read: false, created_at: new Date(n.t).toISOString()
+        type: n.type, read: false, created_at: n.t
       }).then(r => { if (r && r.error) console.warn('notif insert failed:', r.error.message); });
     }
   };
