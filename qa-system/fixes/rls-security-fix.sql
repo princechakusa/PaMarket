@@ -18,7 +18,7 @@ CREATE POLICY "messages: member read" ON public.messages
 CREATE POLICY "messages: member insert" ON public.messages
   FOR INSERT TO authenticated
   WITH CHECK (
-    sender_id = auth.uid()
+    sender_id::text = auth.uid()::text
     AND (SELECT members FROM public.conversations WHERE id = conversation_id)
         @> jsonb_build_array(auth.uid()::text)
   );
@@ -58,13 +58,13 @@ CREATE POLICY "profiles: authenticated read" ON public.profiles
 DROP POLICY IF EXISTS "profiles: own insert" ON public.profiles;
 CREATE POLICY "profiles: own insert" ON public.profiles
   FOR INSERT TO authenticated
-  WITH CHECK (auth.uid() = id);
+  WITH CHECK (id::text = auth.uid()::text);
 
 DROP POLICY IF EXISTS "profiles: own update" ON public.profiles;
 CREATE POLICY "profiles: own update" ON public.profiles
   FOR UPDATE TO authenticated
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
+  USING (id::text = auth.uid()::text)
+  WITH CHECK (id::text = auth.uid()::text);
 
 DROP POLICY IF EXISTS "anon read applications" ON public.applications;
 DROP POLICY IF EXISTS "anon write applications" ON public.applications;
@@ -78,15 +78,15 @@ DROP POLICY IF EXISTS "employer_update_application_status" ON public.application
 CREATE POLICY "applications: read" ON public.applications
   FOR SELECT TO authenticated
   USING (
-    auth.uid() = applicant_id
-    OR auth.uid() = employer_id
+    applicant_id::text = auth.uid()::text
+    OR employer_id::text = auth.uid()::text
   );
 
 CREATE POLICY "applications: insert" ON public.applications
   FOR INSERT TO authenticated
-  WITH CHECK (auth.uid() = applicant_id);
+  WITH CHECK (applicant_id::text = auth.uid()::text);
 
 CREATE POLICY "applications: employer update" ON public.applications
   FOR UPDATE TO authenticated
-  USING (auth.uid() = employer_id)
-  WITH CHECK (auth.uid() = employer_id);
+  USING (employer_id::text = auth.uid()::text)
+  WITH CHECK (employer_id::text = auth.uid()::text);
