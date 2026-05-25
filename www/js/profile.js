@@ -366,7 +366,7 @@
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
     if (u.verified) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="font-size:48px;margin-bottom:12px">✅</div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Identity Verified</div><div style="font-size:14px;color:var(--sub)">You have a verified badge on all your listings.</div><div style="font-size:12px;color:var(--sub);margin-top:8px">Verified on ${new Date(u.verifiedAt || Date.now()).toLocaleDateString()}</div></div></div>`;
-    if (u.verificationPending) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="font-size:48px;margin-bottom:12px">⏳</div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Verification Pending</div><div style="font-size:14px;color:var(--sub)">Your request is under review. We will notify you within 24 hours.</div></div></div>`;
+    if (u.verificationPending) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="font-size:48px;margin-bottom:12px">⏳</div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Verification Pending</div><div style="font-size:14px;color:var(--sub)">Your request is under review. We will notify you within 24 hours.</div><button onclick="H._profileVerify.cancelPending()" style="margin-top:18px;padding:10px 28px;background:var(--bg);color:var(--sub);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel request</button></div></div>`;
     return `<div class="page active">
       ${H.innerTopbar('Verify Identity')}
       <div class="section-box" style="text-align:center;padding:20px 20px 14px">
@@ -499,25 +499,68 @@
         if (input.files && input.files[0] && label) label.textContent = '✓ ID photo selected';
       },
 
-      submit() {
+      async submit() {
         const idType = document.getElementById('idType')?.value || 'National ID';
         const idNum  = (document.getElementById('idNum')?.value || '').trim();
         if (!idNum) { H.toast('Please enter your ID number'); return; }
+        if (!this._selfieData) { H.toast('Please take or upload a selfie photo'); return; }
         if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
+        const btn = document.querySelector('.btn-pri[onclick="H._profileVerify.submit()"]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
         const u = H.currentUser();
-        u.verificationPending = true;
-        u.verificationIdType  = idType;
-        u.verificationIdNum   = idNum;
+        const sb = window.supabase;
+
+        const doSubmit = async (idDocData) => {
+          try {
+            if (!sb) throw new Error('Not connected to server');
+            const { error: vErr } = await sb.from('verifications').upsert({
+              user_id: u.id,
+              id_doc: idDocData || null,
+              selfie: this._selfieData,
+              status: 'pending',
+              submitted_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+            if (vErr) throw vErr;
+            const { error: pErr } = await sb.from('profiles').update({
+              verification_pending: true,
+              updated_at: new Date().toISOString()
+            }).eq('id', u.id);
+            if (pErr) throw pErr;
+            u.verificationPending    = true;
+            u.verification_pending   = true;
+            u.verificationIdType     = idType;
+            u.verificationIdNum      = idNum;
+            H.saveState();
+            H.toast('Verification submitted! Admin will review within 24 hours.');
+            H.goBack();
+          } catch (e) {
+            if (btn) { btn.disabled = false; btn.textContent = 'Submit for Verification'; }
+            H.toast('Failed to submit: ' + (e.message || 'Check your connection'));
+          }
+        };
+
+        const idFile = document.getElementById('idPhotoFront');
+        if (idFile && idFile.files && idFile.files[0]) {
+          const reader = new FileReader();
+          reader.onload = e => doSubmit(e.target.result);
+          reader.readAsDataURL(idFile.files[0]);
+        } else {
+          doSubmit(null);
+        }
+      },
+
+      async cancelPending() {
+        const u = H.currentUser();
+        u.verificationPending  = false;
+        u.verification_pending = false;
         H.saveState();
         const sb = window.supabase;
-        if (sb && typeof sb.from === 'function') {
-          sb.from('profiles').upsert({
-            id: u.id, verification_pending: true,
-            id_type: idType, updated_at: new Date().toISOString()
-          });
+        if (sb) {
+          await sb.from('profiles').update({ verification_pending: false }).eq('id', u.id);
+          await sb.from('verifications').delete().eq('user_id', u.id);
         }
-        H.toast('Verification submitted. We will review within 24 hours.');
-        H.goBack();
+        H.toast('Verification request cancelled');
+        H.renderPage('ProfileVerify');
       }
     };
   };
