@@ -11,6 +11,7 @@ android/keystore.properties
 js/
 scripts/
 package-lock.json
+!qa-system/package-lock.json
 COMPLETION_REPORT.md
 DETAILED_CHANGES.md
 ENHANCEMENT_SUMMARY.md
