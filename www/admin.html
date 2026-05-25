@@ -436,6 +436,12 @@ function openModal(html) {
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('open');
 }
+function openVerifPhoto(el, isSelfie) {
+  var style = isSelfie
+    ? 'width:100%;border-radius:50%;max-width:280px;display:block;margin:0 auto'
+    : 'width:100%;border-radius:12px';
+  openModal('<img src="' + el.src + '" style="' + style + '"><button class="btn-send" style="margin-top:12px;width:100%" onclick="closeModal()">Close</button>');
+}
 document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeModal(); _confirmCancel(); }});
 document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 
@@ -960,11 +966,11 @@ function verifCard(v, u, hasPhotos) {
   if(hasPhotos && v) {
     html += '<div class="verif-docs">';
     html += '<div class="verif-doc-box"><div class="verif-doc-label">🪪 ID Document</div>';
-    if(v.id_doc) html += '<img class="verif-doc-img" src="'+esc(v.id_doc)+'" alt="ID" onclick="openModal(\'<img src=\\\'\'+this.src+\'\\\' style=\\\'width:100%;border-radius:12px\\\'><button class=\\\"btn-send\\\" style=\\\"margin-top:12px;width:100%\\\" onclick=\\\"closeModal()\\\">Close</button>\')" onerror="this.parentElement.innerHTML=\'<div style=\\\"padding:20px;text-align:center;color:var(--sub)\\\">Image not available</div>\'">';
+    if(v.id_doc) html += '<img class="verif-doc-img" src="'+esc(v.id_doc)+'" alt="ID" onclick="openVerifPhoto(this,false)" onerror="this.alt=\'Image failed to load\';this.style.opacity=\'.3\'">';
     else html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:13px">No ID uploaded</div>';
     html += '</div>';
     html += '<div class="verif-doc-box"><div class="verif-doc-label">🤳 Selfie</div>';
-    if(v.selfie) html += '<img class="verif-selfie" src="'+esc(v.selfie)+'" alt="Selfie" onclick="openModal(\'<img src=\\\'\'+this.src+\'\\\' style=\\\'width:100%;border-radius:50%;max-width:280px;display:block;margin:0 auto\\\'><button class=\\\"btn-send\\\" style=\\\"margin-top:12px;width:100%\\\" onclick=\\\"closeModal()\\\">Close</button>\')" onerror="this.parentElement.innerHTML=\'<div style=\\\"padding:20px;text-align:center;color:var(--sub)\\\">Image not available</div>\'">';
+    if(v.selfie) html += '<img class="verif-selfie" src="'+esc(v.selfie)+'" alt="Selfie" onclick="openVerifPhoto(this,true)" onerror="this.alt=\'Selfie failed to load\';this.style.opacity=\'.3\'">';
     else html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:13px">No selfie uploaded</div>';
     html += '</div>';
     html += '</div>';
