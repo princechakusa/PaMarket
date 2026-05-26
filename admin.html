@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<!-- © 2026 PaMarket. All rights reserved. Unauthorised copying or distribution is prohibited. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PaMarket Admin</title>
+<link rel="icon" type="image/png" href="img/icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>if(typeof supabase==='undefined'){document.write('<scr'+'ipt src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/scr'+'ipt>');}</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0F172A;--card:#1E293B;--card2:#263044;--border:#334155;
+  --text:#F1F5F9;--sub:#94A3B8;--sub2:#64748B;
+  --accent:#6366F1;--accent2:#4F46E5;
+  --green:#10B981;--amber:#F59E0B;--red:#EF4444;--blue:#3B82F6;
+  --sidebar-w:220px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+
+/* ── LOGIN ── */
+#loginWrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:radial-gradient(ellipse at 50% 0%,#1e1b4b 0%,var(--bg) 60%);}
+.login-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 25px 60px rgba(0,0,0,.6);}
+.login-logo{font-size:28px;font-weight:900;text-align:center;margin-bottom:6px;letter-spacing:-1px;}
+.login-logo em{font-style:normal;color:var(--accent);}
+.login-sub{font-size:13px;color:var(--sub);text-align:center;margin-bottom:28px;}
+.fg{margin-bottom:14px;}
+.fl{font-size:11px;color:var(--sub);margin-bottom:5px;display:block;font-weight:600;text-transform:uppercase;letter-spacing:.6px;}
+.fi{width:100%;padding:11px 14px;background:#0F172A;border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s;font-family:inherit;}
+.fi:focus{border-color:var(--accent);}
+.btn-login{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;transition:background .2s;font-family:inherit;}
+.btn-login:hover{background:var(--accent2);}
+.btn-login:disabled{opacity:.5;cursor:not-allowed;}
+.err-box{background:rgba(239,68,68,.15);color:#FCA5A5;border:1px solid rgba(239,68,68,.4);padding:11px 13px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;line-height:1.5;}
+
+/* ── DASHBOARD ── */
+#dash{display:none;min-height:100vh;}
+.layout{display:flex;min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .25s;}
+.sidebar-brand{padding:20px 16px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-brand-name{font-size:20px;font-weight:900;letter-spacing:-.5px;}
+.sidebar-brand-name em{font-style:normal;color:var(--accent);}
+.sidebar-badge{font-size:10px;background:rgba(99,102,241,.2);color:var(--accent);border-radius:6px;padding:2px 6px;margin-left:6px;font-weight:700;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:8px 0;}
+.nav-section{font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.8px;padding:12px 16px 4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;border-radius:0;transition:background .15s;color:var(--sub);font-size:13px;font-weight:500;position:relative;border:none;background:none;width:100%;text-align:left;font-family:inherit;}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--text);}
+.nav-item.active{background:rgba(99,102,241,.15);color:var(--accent);font-weight:700;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--accent);border-radius:0 2px 2px 0;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;}
+.nav-badge{background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:auto;}
+.nav-badge.amber{background:var(--amber);}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;}
+.sidebar-user{font-size:12px;color:var(--sub);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.btn-signout{width:100%;padding:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s;}
+.btn-signout:hover{background:rgba(239,68,68,.2);}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:50;flex-shrink:0;}
+.topbar-title{font-size:16px;font-weight:800;color:var(--text);}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+.btn-refresh{padding:7px 14px;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--sub);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s;}
+.btn-refresh:hover{background:rgba(255,255,255,.1);color:var(--text);}
+.content{padding:20px 24px 40px;flex:1;}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:22px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+.stat-label{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.stat-val{font-size:26px;font-weight:900;color:var(--text);line-height:1;}
+.stat-sub{font-size:11px;color:var(--sub);margin-top:4px;}
+.stat-card.green .stat-val{color:var(--green);}
+.stat-card.amber .stat-val{color:var(--amber);}
+.stat-card.red .stat-val{color:var(--red);}
+.stat-card.blue .stat-val{color:var(--blue);}
+.stat-card.accent .stat-val{color:var(--accent);}
+
+/* ── SECTION HEADER ── */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.sec-title{font-size:15px;font-weight:800;}
+.sec-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.filter-btn{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;}
+.filter-btn.on{background:rgba(99,102,241,.15);border-color:var(--accent);color:var(--accent);}
+.search-input{padding:7px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:inherit;width:200px;}
+.search-input:focus{border-color:var(--accent);}
+
+/* ── TABLE ── */
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{padding:10px 14px;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1px solid var(--border);background:rgba(255,255,255,.03);}
+.tbl td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(255,255,255,.03);}
+.tbl-thumb{width:40px;height:40px;border-radius:8px;object-fit:cover;}
+.tbl-thumb-ph{width:40px;height:40px;border-radius:8px;background:var(--border);display:inline-flex;align-items:center;justify-content:center;color:var(--sub);}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
+.badge-pending{background:rgba(245,158,11,.15);color:var(--amber);}
+.badge-active{background:rgba(16,185,129,.15);color:var(--green);}
+.badge-rejected{background:rgba(239,68,68,.15);color:var(--red);}
+.badge-verified{background:rgba(59,130,246,.15);color:var(--blue);}
+.badge-banned{background:rgba(239,68,68,.2);color:#FCA5A5;}
+.badge-info{background:rgba(99,102,241,.15);color:var(--accent);}
+
+/* ── ACTION BUTTONS ── */
+.ab{padding:5px 10px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:opacity .15s;white-space:nowrap;}
+.ab:hover{opacity:.8;}
+.ab-approve{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3);}
+.ab-reject{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25);}
+.ab-view{background:rgba(99,102,241,.12);color:var(--accent);border:1px solid rgba(99,102,241,.25);}
+.ab-edit{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25);}
+.ab-delete{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2);}
+.ab-ban{background:rgba(239,68,68,.12);color:#FCA5A5;border:1px solid rgba(239,68,68,.25);}
+
+/* ── VERIFICATIONS ── */
+.verif-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
+.verif-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
+.verif-user{display:flex;align-items:center;gap:12px;}
+.verif-avatar{width:48px;height:48px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0;}
+.verif-name{font-size:15px;font-weight:700;}
+.verif-meta{font-size:12px;color:var(--sub);margin-top:3px;}
+.verif-docs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.verif-doc-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.verif-doc-label{font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;border-bottom:1px solid var(--border);}
+.verif-doc-img{width:100%;height:160px;object-fit:contain;background:#000;display:block;cursor:pointer;}
+.verif-selfie{width:100%;height:160px;object-fit:cover;display:block;cursor:pointer;}
+.verif-actions{display:flex;gap:10px;}
+.btn-verif-approve{flex:1;padding:11px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .2s;}
+.btn-verif-approve:hover{opacity:.85;}
+.btn-verif-reject{flex:1;padding:11px;background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s;}
+.btn-verif-reject:hover{background:rgba(239,68,68,.25);}
+
+/* ── NOTIFICATION FORM ── */
+.notif-form{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:20px;}
+.form-row{margin-bottom:16px;}
+.form-label{display:block;font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.form-input{width:100%;padding:10px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border-color .2s;}
+.form-input:focus{border-color:var(--accent);}
+.form-select{width:100%;padding:10px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;font-family:inherit;}
+.form-textarea{width:100%;padding:10px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;font-family:inherit;resize:vertical;min-height:80px;}
+.form-textarea:focus,.form-select:focus{border-color:var(--accent);}
+.char-count{font-size:11px;color:var(--sub);text-align:right;margin-top:3px;}
+.btn-send{padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s;}
+.btn-send:hover{background:var(--accent2);}
+.btn-send:disabled{opacity:.5;cursor:not-allowed;}
+.notif-preview{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:12px;}
+.notif-preview-label{font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.notif-preview-card{background:rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;backdrop-filter:blur(8px);}
+.notif-preview-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.notif-preview-title{font-size:13px;font-weight:700;color:var(--text);}
+.notif-preview-body{font-size:12px;color:var(--sub);margin-top:2px;line-height:1.4;}
+.notif-preview-app{font-size:10px;color:var(--sub2);margin-top:4px;}
+
+/* ── SETTINGS ── */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);}
+.setting-row:last-child{border-bottom:none;}
+.setting-info{flex:1;padding-right:16px;}
+.setting-title{font-size:14px;font-weight:600;color:var(--text);}
+.setting-desc{font-size:12px;color:var(--sub);margin-top:2px;line-height:1.4;}
+.toggle{position:relative;width:46px;height:26px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:13px;cursor:pointer;transition:background .2s;}
+.toggle-slider::before{content:'';position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.toggle input:checked+.toggle-slider{background:var(--green);}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px);}
+
+/* ── MODAL ── */
+#modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;}
+#modalOverlay.open{display:flex;}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:18px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:24px;}
+.modal-title{font-size:17px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.modal-close{background:none;border:none;color:var(--sub);cursor:pointer;font-size:20px;line-height:1;padding:2px;}
+.modal-img{width:100%;border-radius:10px;margin-bottom:12px;max-height:300px;object-fit:contain;background:#000;}
+
+/* ── TOAST ── */
+#toastWrap{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toastIn .25s ease;max-width:320px;pointer-events:auto;}
+.toast.success{background:#065F46;border:1px solid var(--green);}
+.toast.error{background:#7F1D1D;border:1px solid var(--red);}
+.toast.info{background:#1E1B4B;border:1px solid var(--accent);}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+
+/* ── CONFIRM ── */
+#confirmOverlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1100;display:none;align-items:center;justify-content:center;padding:16px;}
+#confirmOverlay.open{display:flex;}
+.confirm-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:380px;width:100%;}
+.confirm-title{font-size:16px;font-weight:800;margin-bottom:8px;}
+.confirm-msg{font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:16px;}
+.confirm-input{width:100%;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;font-family:inherit;margin-bottom:14px;}
+.confirm-input:focus{border-color:var(--accent);}
+.confirm-btns{display:flex;gap:10px;}
+.confirm-ok{flex:1;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+.confirm-cancel{flex:1;padding:11px;background:rgba(255,255,255,.06);color:var(--sub);border:1px solid var(--border);border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+.confirm-ok.red{background:var(--red);}
+.confirm-ok.green{background:var(--green);}
+
+/* ── EMPTY ── */
+.empty-msg{text-align:center;padding:40px 20px;color:var(--sub);font-size:14px;}
+.empty-msg svg{display:block;margin:0 auto 12px;opacity:.3;}
+
+/* ── LOADING ── */
+.loading-msg{text-align:center;padding:30px;color:var(--sub);font-size:13px;}
+
+/* ── ANALYTICS BARS ── */
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.bar-label{font-size:12px;color:var(--sub);width:120px;text-align:right;flex-shrink:0;}
+.bar-track{flex:1;height:10px;background:rgba(255,255,255,.07);border-radius:5px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:5px;background:var(--accent);transition:width .6s ease;}
+.bar-val{font-size:12px;font-weight:700;color:var(--text);width:40px;flex-shrink:0;}
+
+/* ── HAMBURGER (mobile) ── */
+.hamburger{display:none;padding:8px;background:none;border:none;color:var(--text);cursor:pointer;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:none;}
+  .sidebar-overlay.open{display:block;}
+  .main{margin-left:0;}
+  .hamburger{display:flex;}
+  .topbar{padding:12px 16px;}
+  .content{padding:14px 14px 40px;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .verif-docs{grid-template-columns:1fr;}
+  .search-input{width:140px;}
+  .tbl-wrap{overflow-x:auto;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════ LOGIN -->
+<div id="loginWrap" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">Pa<em>Market</em></div>
+    <div class="login-sub">Admin Portal</div>
+    <div class="err-box" id="errMsg"></div>
+    <div class="fg">
+      <label class="fl">Email</label>
+      <input class="fi" id="aEmail" type="email" autocomplete="username" placeholder="admin@pamarket.co.zw">
+    </div>
+    <div class="fg">
+      <label class="fl">Password</label>
+      <input class="fi" id="aPass" type="password" autocomplete="current-password" placeholder="••••••••">
+    </div>
+    <button class="btn-login" id="loginBtn">Sign In</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════ DASHBOARD -->
+<div id="dash">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-name">Pa<em>Market</em><span class="sidebar-badge">Admin</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Main</div>
+        <button class="nav-item active" data-tab="overview" onclick="showTab('overview')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Overview
+          <span class="nav-badge amber" id="badge-overview" style="display:none">!</span>
+        </button>
+        <button class="nav-item" data-tab="listings" onclick="showTab('listings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Listings
+          <span class="nav-badge" id="badge-listings" style="display:none">0</span>
+        </button>
+        <button class="nav-item" data-tab="users" onclick="showTab('users')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Users
+        </button>
+        <button class="nav-item" data-tab="verifications" onclick="showTab('verifications')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          Verifications
+          <span class="nav-badge" id="badge-verif" style="display:none">0</span>
+        </button>
+        <div class="nav-section">Tools</div>
+        <button class="nav-item" data-tab="notifications" onclick="showTab('notifications')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Send Notification
+        </button>
+        <button class="nav-item" data-tab="topups" onclick="showTab('topups')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Top-ups
+          <span class="nav-badge amber" id="badge-topups" style="display:none">0</span>
+        </button>
+        <button class="nav-item" data-tab="reports" onclick="showTab('reports')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          Reports
+          <span class="nav-badge" id="badge-reports" style="display:none">0</span>
+        </button>
+        <button class="nav-item" data-tab="ads" onclick="showTab('ads')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+          Ads & Boosts
+        </button>
+        <button class="nav-item" data-tab="chats" onclick="showTab('chats')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          User Chats
+        </button>
+        <button class="nav-item" data-tab="analytics" onclick="showTab('analytics')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Analytics
+        </button>
+        <div class="nav-section">Config</div>
+        <button class="nav-item" data-tab="settings" onclick="showTab('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user" id="sidebarUser">—</div>
+        <button class="btn-signout" onclick="doLogout()">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="main">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="hamburger" onclick="openSidebar()">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="topbar-title" id="topbarTitle">Overview</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn-refresh" onclick="refreshAll()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button>
+        </div>
+      </div>
+      <div class="content" id="mainContent">
+        <div class="loading-msg">Loading dashboard…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ OVERLAYS -->
+<div id="modalOverlay">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+<div id="confirmOverlay">
+  <div class="confirm-box" id="confirmBox"></div>
+</div>
+<div id="toastWrap"></div>
+
+<script>
+'use strict';
+
+// ── Supabase ──────────────────────────────────────────────
+var sb;
+try {
+  sb = supabase.createClient(
+    'https://gxgytumhknmnwspxjzxw.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs'
+  );
+} catch(e) {
+  showErr('Failed to initialise: ' + e.message);
+}
+
+// ── State ─────────────────────────────────────────────────
+var DATA = {
+  users:[], listings:[], verifications:[], reports:[],
+  topups:[], ads:[], settings:{}, notifHistory:[], chats:[]
+};
+var currentTab = 'overview';
+var _listingFilter = 'pending';
+var _userSearch = '';
+var _reportFilter = 'open';
+var _topupFilter = 'pending';
+var _adminEmail = '';
+
+// ── Helpers ───────────────────────────────────────────────
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(n){ return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtDate(s){ if(!s) return '—'; try{ return new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); } catch(e){ return s; } }
+function fmtDateTime(s){ if(!s) return '—'; try{ return new Date(s).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); } catch(e){ return s; } }
+function initials(name){ return (name||'U').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+
+function toast(msg, type) {
+  var w = document.getElementById('toastWrap');
+  if(!w) return;
+  var d = document.createElement('div');
+  d.className = 'toast ' + (type||'success');
+  d.textContent = msg;
+  w.appendChild(d);
+  setTimeout(function(){ d.style.opacity='0'; d.style.transform='translateY(12px)'; d.style.transition='all .3s'; setTimeout(function(){ d.remove(); }, 300); }, 3500);
+}
+
+function showErr(msg) {
+  var el = document.getElementById('errMsg');
+  if(el){ el.textContent=msg; el.style.display='block'; }
+}
+
+// confirm2: returns Promise<string|null>
+var _confirmResolve = null;
+function confirm2(title, msg, btnLabel, btnClass, withInput, inputPlaceholder) {
+  return new Promise(function(resolve) {
+    _confirmResolve = resolve;
+    var inputHtml = withInput ? '<input class="confirm-input" id="confirmInput" placeholder="'+(inputPlaceholder||'')+'" autofocus>' : '';
+    document.getElementById('confirmBox').innerHTML =
+      '<div class="confirm-title">'+esc(title)+'</div>'+
+      '<div class="confirm-msg">'+esc(msg)+'</div>'+
+      inputHtml+
+      '<div class="confirm-btns">'+
+        '<button class="confirm-ok '+(btnClass||'')+'" onclick="_confirmOk()">'+esc(btnLabel||'Confirm')+'</button>'+
+        '<button class="confirm-cancel" onclick="_confirmCancel()">Cancel</button>'+
+      '</div>';
+    document.getElementById('confirmOverlay').classList.add('open');
+    if(withInput) setTimeout(function(){ var el=document.getElementById('confirmInput'); if(el) el.focus(); },100);
+  });
+}
+function _confirmOk() {
+  var input = document.getElementById('confirmInput');
+  var val = input ? input.value.trim() : true;
+  document.getElementById('confirmOverlay').classList.remove('open');
+  if(_confirmResolve){ _confirmResolve(val); _confirmResolve=null; }
+}
+function _confirmCancel() {
+  document.getElementById('confirmOverlay').classList.remove('open');
+  if(_confirmResolve){ _confirmResolve(null); _confirmResolve=null; }
+}
+
+function openModal(html) {
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+function openVerifPhoto(el, isSelfie) {
+  var style = isSelfie
+    ? 'width:100%;border-radius:50%;max-width:280px;display:block;margin:0 auto'
+    : 'width:100%;border-radius:12px';
+  openModal('<img src="' + el.src + '" style="' + style + '"><button class="btn-send" style="margin-top:12px;width:100%" onclick="closeModal()">Close</button>');
+}
+document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeModal(); _confirmCancel(); }});
+document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+// ── Sidebar ───────────────────────────────────────────────
+function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+
+// ── Tab navigation ────────────────────────────────────────
+var TAB_TITLES = {
+  overview:'Overview', listings:'Listings', users:'Users', verifications:'Verifications',
+  notifications:'Send Notification', topups:'Top-ups', reports:'Reports',
+  ads:'Ads & Boosts', chats:'User Chats', analytics:'Analytics', settings:'Settings'
+};
+function showTab(name) {
+  currentTab = name;
+  document.querySelectorAll('.nav-item').forEach(function(el){
+    el.classList.toggle('active', el.dataset.tab===name);
+  });
+  document.getElementById('topbarTitle').textContent = TAB_TITLES[name]||name;
+  closeSidebar();
+  renderTab();
+}
+function renderTab() {
+  var fn = {
+    overview: renderOverview, listings: renderListings, users: renderUsers,
+    verifications: renderVerifications, notifications: renderNotifications,
+    topups: renderTopups, reports: renderReports, ads: renderAds,
+    chats: renderChats, analytics: renderAnalytics, settings: renderSettings
+  }[currentTab];
+  if(fn) fn();
+}
+
+// ── Auth ──────────────────────────────────────────────────
+var LOGIN_KEY = '_adm_fl';
+var MAX_FAILS = 5;
+var LOCKOUT_MS = 15 * 60 * 1000;
+function getFailState(){ try{ return JSON.parse(sessionStorage.getItem(LOGIN_KEY)||'{"count":0,"until":0}'); } catch(e){ return {count:0,until:0}; } }
+function saveFailState(s){ sessionStorage.setItem(LOGIN_KEY, JSON.stringify(s)); }
+function recordFail(){ var s=getFailState(); s.count++; if(s.count>=MAX_FAILS) s.until=Date.now()+LOCKOUT_MS; saveFailState(s); }
+function clearFails(){ sessionStorage.removeItem(LOGIN_KEY); }
+
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('aPass').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+
+async function doLogin() {
+  if(!sb){ showErr('Supabase not loaded. Please refresh the page.'); return; }
+  var email = document.getElementById('aEmail').value.trim();
+  var pass  = document.getElementById('aPass').value;
+  var errEl = document.getElementById('errMsg');
+  errEl.style.display='none';
+  var fs = getFailState();
+  if(fs.until && Date.now()<fs.until){
+    var mins=Math.ceil((fs.until-Date.now())/60000);
+    showErr('Too many failed attempts. Try again in '+mins+' min'+(mins>1?'s':'.'));
+    return;
+  }
+  if(!email||!pass){ showErr('Enter your email and password.'); return; }
+  var btn=document.getElementById('loginBtn');
+  btn.disabled=true; btn.textContent='Signing in…';
+  try {
+    var res = await sb.auth.signInWithPassword({ email:email, password:pass });
+    if(res.error||!res.data||!res.data.user){ recordFail(); showErr((res.error?res.error.message:'Invalid credentials')+' ('+(MAX_FAILS-getFailState().count)+' attempts left)'); btn.disabled=false; btn.textContent='Sign In'; return; }
+    var pr = await sb.from('profiles').select('role,name').eq('id',res.data.user.id).single();
+    if(pr.error||!pr.data||pr.data.role!=='admin'){
+      await sb.auth.signOut(); showErr('Access denied. Admin only.');
+      btn.disabled=false; btn.textContent='Sign In'; return;
+    }
+    clearFails();
+    _adminEmail = email;
+    document.getElementById('sidebarUser').textContent = pr.data.name || email;
+    showDash();
+  } catch(e) {
+    showErr('Login error: '+e.message);
+    btn.disabled=false; btn.textContent='Sign In';
+  }
+}
+
+async function doLogout() {
+  if(sb) await sb.auth.signOut();
+  document.getElementById('dash').style.display='none';
+  document.getElementById('loginWrap').style.display='flex';
+  document.getElementById('aPass').value='';
+  var btn=document.getElementById('loginBtn');
+  btn.disabled=false; btn.textContent='Sign In';
+}
+
+async function showDash() {
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('dash').style.display='block';
+  await loadAllData();
+}
+
+// ── Data loading ──────────────────────────────────────────
+async function loadAllData() {
+  document.getElementById('mainContent').innerHTML = '<div class="loading-msg">Loading dashboard data…</div>';
+  await Promise.allSettled([loadUsers(), loadListings(), loadVerifications(), loadReports(), loadTopups(), loadAds(), loadSettings(), loadNotifHistory(), loadChats()]);
+  updateBadges();
+  renderTab();
+}
+
+async function refreshAll() {
+  var btn = document.querySelector('.btn-refresh');
+  if(btn){ btn.textContent='Loading…'; btn.disabled=true; }
+  await loadAllData();
+  if(btn){ btn.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh'; btn.disabled=false; }
+  toast('Refreshed');
+}
+
+async function loadUsers() {
+  try {
+    var r = await sb.from('profiles').select('id,name,phone,email,role,status,verified,verification_pending,ban_reason,ban_until,wallet_usd,created_at').order('created_at',{ascending:false}).limit(500);
+    if(!r.error && r.data) { DATA.users = r.data; return; }
+    var r2 = await sb.from('profiles').select('id,name,phone,email,role,status,verified,verification_pending,created_at').order('created_at',{ascending:false}).limit(500);
+    if(!r2.error && r2.data) { DATA.users = r2.data; return; }
+    var r3 = await sb.from('profiles').select('id,name,phone,email,role,status,verified,created_at').order('created_at',{ascending:false}).limit(500);
+    if(!r3.error && r3.data) { DATA.users = r3.data; return; }
+    toast('Users load error: '+(r.error?r.error.message:'unknown'),'error');
+  } catch(e){ toast('Users exception: '+e.message,'error'); }
+}
+async function loadListings() {
+  try {
+    var r = await sb.from('listings').select('id,title,price,currency,cat,prov,city,photos,status,sellerId,sellerName,createdAt,views').order('createdAt',{ascending:false}).limit(300);
+    if(!r.error && r.data) DATA.listings = r.data;
+  } catch(e){}
+}
+async function loadVerifications() {
+  try {
+    var r = await sb.from('verifications').select('id,user_id,id_doc,selfie,status,submitted_at,admin_note').order('submitted_at',{ascending:false}).limit(200);
+    if(r.error) { toast('Verifications load error: '+r.error.message,'error'); return; }
+    if(r.data) DATA.verifications = r.data;
+  } catch(e){ toast('Verifications exception: '+e.message,'error'); }
+}
+async function loadReports() {
+  try {
+    var r = await sb.from('reports').select('*').order('created_at',{ascending:false}).limit(200);
+    if(!r.error && r.data) DATA.reports = r.data;
+    else DATA.reports = [];
+  } catch(e){ DATA.reports=[]; }
+}
+async function loadTopups() {
+  try {
+    var r = await sb.from('topup_requests').select('*').order('created_at',{ascending:false}).limit(200);
+    if(!r.error && r.data) DATA.topups = r.data;
+    else DATA.topups=[];
+  } catch(e){ DATA.topups=[]; }
+}
+async function loadAds() {
+  try {
+    var r = await sb.from('paid_ads').select('*').order('created_at',{ascending:false}).limit(100);
+    if(!r.error && r.data) DATA.ads = r.data;
+    else DATA.ads=[];
+  } catch(e){ DATA.ads=[]; }
+}
+async function loadSettings() {
+  try {
+    var r = await sb.from('app_settings').select('*');
+    if(!r.error && r.data){ DATA.settings={}; r.data.forEach(function(s){ DATA.settings[s.key]=s.value; }); }
+  } catch(e){}
+}
+async function loadNotifHistory() {
+  try {
+    var r = await sb.from('notifications').select('id,user_id,title,body,type,created_at').order('created_at',{ascending:false}).limit(30);
+    if(!r.error && r.data) DATA.notifHistory = r.data;
+    else DATA.notifHistory=[];
+  } catch(e){ DATA.notifHistory=[]; }
+}
+
+function updateBadges() {
+  var pendingL = DATA.listings.filter(function(l){ return l.status==='pending'; }).length;
+  var pendingV = DATA.verifications.filter(function(v){ return v.status==='pending'; }).length
+    + DATA.users.filter(function(u){ return u.verification_pending && !DATA.verifications.find(function(v){ return v.user_id===u.id; }); }).length;
+  var openR = DATA.reports.filter(function(r){ return r.status==='open'; }).length;
+  var pendingT = DATA.topups.filter(function(t){ return t.status==='pending'; }).length;
+
+  function setBadge(id, count) {
+    var el=document.getElementById(id); if(!el) return;
+    el.textContent=count; el.style.display=count>0?'':'none';
+  }
+  setBadge('badge-listings', pendingL);
+  setBadge('badge-verif', pendingV);
+  setBadge('badge-reports', openR);
+  setBadge('badge-topups', pendingT);
+  document.getElementById('badge-overview').style.display = (pendingL||pendingV||openR||pendingT) ? '' : 'none';
+}
+
+// ════════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ════════════════════════════════════════════════════════════
+
+// ── OVERVIEW ──────────────────────────────────────────────
+function renderOverview() {
+  var total = DATA.users.length;
+  var active = DATA.listings.filter(function(l){ return l.status==='active'; }).length;
+  var pendingL = DATA.listings.filter(function(l){ return l.status==='pending'; }).length;
+  var pendingV = DATA.verifications.filter(function(v){ return v.status==='pending'; }).length
+    + DATA.users.filter(function(u){ return u.verification_pending && !DATA.verifications.find(function(v){ return v.user_id===u.id; }); }).length;
+  var openR = DATA.reports.filter(function(r){ return r.status==='open'; }).length;
+  var verified = DATA.users.filter(function(u){ return u.verified; }).length;
+
+  var alerts = '';
+  if(pendingL) alerts += alertBox('amber','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>'+pendingL+' listing'+(pendingL>1?'s':'')+' waiting for review.','listings');
+  if(pendingV) alerts += alertBox('blue','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>'+pendingV+' verification'+(pendingV>1?'s':'')+' pending.','verifications');
+  if(openR) alerts += alertBox('red','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>'+openR+' open report'+(openR>1?'s':'')+' need attention.','reports');
+
+  var recentListings = DATA.listings.filter(function(l){ return l.status==='pending'; }).slice(0,8);
+  var recentUsers = DATA.users.slice(0,8);
+
+  var html = '';
+  html += '<div class="stats-grid">';
+  html += statCard('Users','blue',total,'registered accounts');
+  html += statCard('Active Listings','green',active,'live marketplace ads');
+  html += statCard('Pending Listings','amber',pendingL,'awaiting approval');
+  html += statCard('Pending Verifications','accent',pendingV,'ID reviews needed');
+  html += statCard('Open Reports','red',openR,'need attention');
+  html += statCard('Verified Users','green',verified,'trusted sellers');
+  html += '</div>';
+
+  if(alerts) html += '<div style="margin-bottom:18px">'+alerts+'</div>';
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;flex-wrap:wrap">';
+
+  // Pending listings
+  html += '<div><div class="sec-head"><div class="sec-title"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pending Listings</div><button class="filter-btn" onclick="showTab(\'listings\')">View all →</button></div>';
+  if(recentListings.length) {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Title</th><th>Seller</th><th>Actions</th></tr></thead><tbody>';
+    recentListings.forEach(function(l){
+      html += '<tr><td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(l.title)+'</td><td>'+esc(l.sellerName||'—')+'</td><td><div style="display:flex;gap:4px"><button class="ab ab-approve" onclick="approveListing(\''+l.id+'\')" title="Approve"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></button><button class="ab ab-reject" onclick="rejectListing(\''+l.id+'\')" title="Reject"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></td></tr>';
+    });
+    html += '</tbody></table></div>';
+  } else html += '<div class="empty-msg" style="padding:16px">No pending listings <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg></div>';
+  html += '</div>';
+
+  // Recent users
+  html += '<div><div class="sec-head"><div class="sec-title"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Recent Users</div><button class="filter-btn" onclick="showTab(\'users\')">View all →</button></div>';
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Status</th><th>Joined</th></tr></thead><tbody>';
+  recentUsers.forEach(function(u){
+    html += '<tr><td>'+esc(u.name||'—')+'</td><td>'+(u.verified?'<span class="badge badge-verified"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>':'<span class="badge badge-pending">Unverified</span>')+'</td><td style="color:var(--sub);font-size:12px">'+fmtDate(u.created_at)+'</td></tr>';
+  });
+  html += '</tbody></table></div></div>';
+  html += '</div>';
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function statCard(label, cls, val, sub) {
+  return '<div class="stat-card '+cls+'"><div class="stat-label">'+esc(label)+'</div><div class="stat-val">'+val+'</div><div class="stat-sub">'+esc(sub)+'</div></div>';
+}
+function alertBox(color, msg, tab) {
+  var colors = {amber:'rgba(245,158,11,.15)',red:'rgba(239,68,68,.15)',blue:'rgba(59,130,246,.15)'};
+  var border = {amber:'rgba(245,158,11,.3)',red:'rgba(239,68,68,.3)',blue:'rgba(59,130,246,.3)'};
+  var textc = {amber:'var(--amber)',red:'var(--red)',blue:'var(--blue)'};
+  return '<div style="background:'+colors[color]+';border:1px solid '+border[color]+';border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:13px;font-weight:600;color:'+textc[color]+'">'+msg+'</span><button onclick="showTab(\''+tab+'\')" style="background:none;border:none;color:'+textc[color]+';font-size:12px;font-weight:700;cursor:pointer;text-decoration:underline">Review →</button></div>';
+}
+
+// ── LISTINGS ──────────────────────────────────────────────
+function renderListings() {
+  var filtered = DATA.listings.filter(function(l){
+    if(_listingFilter!=='all' && l.status!==_listingFilter) return false;
+    return true;
+  });
+
+  var counts = {
+    all:DATA.listings.length,
+    pending:DATA.listings.filter(function(l){return l.status==='pending';}).length,
+    active:DATA.listings.filter(function(l){return l.status==='active';}).length,
+    rejected:DATA.listings.filter(function(l){return l.status==='rejected';}).length
+  };
+
+  var html = '<div class="sec-head"><div class="sec-title">Listings</div><div class="sec-actions">';
+  ['all','pending','active','rejected'].forEach(function(f){
+    html += '<button class="filter-btn'+((_listingFilter===f)?' on':'')+'" onclick="_listingFilter=\''+f+'\';renderListings()">'+f.charAt(0).toUpperCase()+f.slice(1)+' ('+counts[f]+')</button>';
+  });
+  html += '</div></div>';
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Photo</th><th>Title</th><th>Seller</th><th>Category</th><th>Location</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+
+  if(!filtered.length) { html += '<tr><td colspan="8"><div class="empty-msg">No listings found</div></td></tr>'; }
+  filtered.forEach(function(l){
+    var thumb = (l.photos && l.photos[0]) ? '<img class="tbl-thumb" src="'+esc(l.photos[0])+'">' : '<div class="tbl-thumb-ph"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
+    var badge = '<span class="badge badge-'+(l.status||'pending')+'">'+esc(l.status||'pending')+'</span>';
+    html += '<tr>';
+    html += '<td>'+thumb+'</td>';
+    html += '<td style="max-width:180px"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">'+esc(l.title)+'</div></td>';
+    html += '<td style="color:var(--sub);font-size:12px">'+esc(l.sellerName||'—')+'</td>';
+    html += '<td><span class="badge badge-info">'+esc(l.cat||'—')+'</span></td>';
+    html += '<td style="color:var(--sub);font-size:12px">'+esc((l.city||'')+(l.prov?', '+l.prov:''))+'</td>';
+    html += '<td>'+badge+'</td>';
+    html += '<td style="color:var(--sub);font-size:12px;white-space:nowrap">'+fmtDate(l.createdAt||l.created_at)+'</td>';
+    html += '<td><div style="display:flex;gap:4px;flex-wrap:wrap">';
+    html += '<button class="ab ab-view" onclick="viewListing(\''+l.id+'\')">View</button>';
+    if(l.status==='pending'){
+      html += '<button class="ab ab-approve" onclick="approveListing(\''+l.id+'\')">Approve</button>';
+      html += '<button class="ab ab-reject" onclick="rejectListing(\''+l.id+'\')">Reject</button>';
+    }
+    if(l.status==='active') html += '<button class="ab ab-reject" onclick="rejectListing(\''+l.id+'\')">Remove</button>';
+    html += '<button class="ab ab-delete" onclick="deleteListing(\''+l.id+'\')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>';
+    html += '</div></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function viewListing(id) {
+  var l = DATA.listings.find(function(x){ return x.id===id; });
+  if(!l) return;
+  var photos = (l.photos||[]).map(function(p){ return '<img src="'+esc(p)+'" style="width:100%;border-radius:10px;margin-bottom:8px;max-height:260px;object-fit:cover">'; }).join('');
+  openModal('<div class="modal-title">'+esc(l.title)+'<button class="modal-close" onclick="closeModal()">×</button></div>'
+    + photos
+    + '<div style="font-size:13px;color:var(--sub);line-height:1.7;margin-bottom:12px">'+esc(l.desc||'')+'</div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    + '<span class="badge badge-info">'+esc(l.cat||'—')+'</span>'
+    + '<span class="badge badge-info">'+esc(l.city||'')+'</span>'
+    + '<span class="badge badge-'+(l.status||'pending')+'">'+esc(l.status||'—')+'</span>'
+    + '</div>'
+    + (l.status==='pending'?'<div style="display:flex;gap:10px;margin-top:16px"><button class="btn-verif-approve" onclick="approveListing(\''+l.id+'\');closeModal()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> Approve</button><button class="btn-verif-reject" onclick="rejectListing(\''+l.id+'\');closeModal()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Reject</button></div>':'')
+  );
+}
+
+async function approveListing(id) {
+  try {
+    var r = await sb.from('listings').update({status:'active'}).eq('id',id);
+    if(r.error) throw r.error;
+    var l = DATA.listings.find(function(x){ return x.id===id; });
+    if(l){ l.status='active'; }
+    // Notify seller
+    if(l && l.sellerId) {
+      await sb.from('notifications').insert({user_id:l.sellerId,title:'Listing Approved!',body:'Your listing "'+l.title+'" is now live.',type:'info',read:false,created_at:Date.now()});
+    }
+    updateBadges(); renderTab(); toast('Listing approved and seller notified');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function rejectListing(id) {
+  var note = await confirm2('Reject Listing','Provide a reason (optional)','Reject','red',true,'e.g. Prohibited item');
+  if(note===null) return;
+  try {
+    var r = await sb.from('listings').update({status:'rejected'}).eq('id',id);
+    if(r.error) throw r.error;
+    var l = DATA.listings.find(function(x){ return x.id===id; });
+    if(l){ l.status='rejected'; }
+    if(l && l.sellerId) {
+      await sb.from('notifications').insert({user_id:l.sellerId,title:'Listing Not Approved',body:'Your listing "'+l.title+'" was not approved.'+(note?' Reason: '+note:''),type:'report',read:false,created_at:Date.now()});
+    }
+    updateBadges(); renderTab(); toast('Listing rejected','info');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function deleteListing(id) {
+  var ok = await confirm2('Delete Listing','This cannot be undone.','Delete','red');
+  if(!ok) return;
+  try {
+    var r = await sb.from('listings').delete().eq('id',id);
+    if(r.error) throw r.error;
+    DATA.listings = DATA.listings.filter(function(x){ return x.id!==id; });
+    updateBadges(); renderTab(); toast('Listing deleted');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── USERS ─────────────────────────────────────────────────
+function renderUsers() {
+  var filtered = DATA.users.filter(function(u){
+    if(!_userSearch) return true;
+    var q = _userSearch.toLowerCase();
+    return (u.name||'').toLowerCase().includes(q)||(u.phone||'').includes(q)||(u.email||'').toLowerCase().includes(q);
+  });
+
+  var html = '<div class="sec-head"><div class="sec-title">Users</div><div class="sec-actions">';
+  html += '<input class="search-input" placeholder="Search name, phone, email…" value="'+esc(_userSearch)+'" oninput="_userSearch=this.value;renderUsers()" id="userSearch">';
+  html += '</div></div>';
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Status</th><th>Wallet</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
+  if(!filtered.length) html += '<tr><td colspan="7"><div class="empty-msg">No users found</div></td></tr>';
+  filtered.forEach(function(u){
+    var statusBadge = u.status==='banned'?'<span class="badge badge-banned">Banned</span>':u.verified?'<span class="badge badge-verified"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>':'<span class="badge badge-pending">Unverified</span>';
+    html += '<tr>';
+    html += '<td style="font-weight:600">'+esc(u.name||'—')+'</td>';
+    html += '<td style="color:var(--sub);font-size:13px">'+esc(u.phone||'—')+'</td>';
+    html += '<td style="color:var(--sub);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(u.email||'—')+'</td>';
+    html += '<td>'+statusBadge+'</td>';
+    html += '<td style="font-size:12px">$'+fmt(u.wallet_usd||0)+'</td>';
+    html += '<td style="color:var(--sub);font-size:12px">'+fmtDate(u.created_at)+'</td>';
+    html += '<td><div style="display:flex;gap:4px;flex-wrap:wrap">';
+    if(u.status==='banned') html += '<button class="ab ab-approve" onclick="unbanUser(\''+u.id+'\')">Unban</button>';
+    else html += '<button class="ab ab-ban" onclick="banUser(\''+u.id+'\')">Ban</button>';
+    if(!u.verified) html += '<button class="ab ab-approve" onclick="verifyUser(\''+u.id+'\')">Verify</button>';
+    html += '<button class="ab ab-edit" onclick="editWallet(\''+u.id+'\','+fmt(u.wallet_usd||0)+')">Wallet</button>';
+    html += '<button class="ab ab-view" onclick="msgUser(\''+u.id+'\',\''+esc(u.name||'User')+'\')">Notify</button>';
+    html += '</div></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML = html;
+  var s = document.getElementById('userSearch'); if(s) s.focus();
+}
+
+async function banUser(userId) {
+  var reason = await confirm2('Ban User','Enter reason for ban:','Ban','red',true,'e.g. Spam, fraudulent listing');
+  if(reason===null) return;
+  try {
+    var banUntil = new Date(Date.now()+30*24*3600*1000).toISOString();
+    var r = await sb.from('profiles').update({status:'banned',ban_reason:reason||'Policy violation',ban_until:banUntil}).eq('id',userId);
+    if(r.error) throw r.error;
+    var u = DATA.users.find(function(x){ return x.id===userId; });
+    if(u){ u.status='banned'; u.ban_reason=reason; }
+    await sb.from('notifications').insert({user_id:userId,title:'Account Suspended',body:'Your account has been suspended.'+(reason?' Reason: '+reason:''),type:'ban',read:false,created_at:Date.now()});
+    renderTab(); toast('User banned and notified');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function unbanUser(userId) {
+  var ok = await confirm2('Unban User','Remove ban from this user?','Unban','green');
+  if(!ok) return;
+  try {
+    var r = await sb.from('profiles').update({status:'active',ban_reason:null,ban_until:null}).eq('id',userId);
+    if(r.error) throw r.error;
+    var u = DATA.users.find(function(x){ return x.id===userId; });
+    if(u){ u.status='active'; u.ban_reason=null; }
+    await sb.from('notifications').insert({user_id:userId,title:'Account Reinstated',body:'Your account ban has been removed. Welcome back!',type:'info',read:false,created_at:Date.now()});
+    renderTab(); toast('User unbanned');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function verifyUser(userId) {
+  var ok = await confirm2('Verify User','Grant verified badge to this user?','Verify','green');
+  if(!ok) return;
+  try {
+    var r = await sb.from('profiles').update({verified:true,verification_pending:false}).eq('id',userId);
+    if(r.error) throw r.error;
+    var u = DATA.users.find(function(x){ return x.id===userId; });
+    if(u){ u.verified=true; u.verification_pending=false; }
+    await sb.from('notifications').insert({user_id:userId,title:'Identity Verified',body:'Congratulations! Your blue verified badge is now active.',type:'verify',read:false,created_at:Date.now()});
+    renderTab(); toast('User verified and notified');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function editWallet(userId, currentBal) {
+  var val = await confirm2('Adjust Wallet','Enter new USD balance (current: $'+currentBal+'):','Save','green',true,'e.g. 25.00');
+  if(val===null||val===true) return;
+  var amount = parseFloat(val);
+  if(isNaN(amount)||amount<0){ toast('Invalid amount','error'); return; }
+  try {
+    var r = await sb.from('profiles').update({wallet_usd:amount}).eq('id',userId);
+    if(r.error) throw r.error;
+    var u = DATA.users.find(function(x){ return x.id===userId; });
+    if(u) u.wallet_usd=amount;
+    renderTab(); toast('Wallet updated to $'+amount.toFixed(2));
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+function msgUser(userId, name) {
+  // Quick notify a specific user
+  currentTab = 'notifications';
+  document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.toggle('active', el.dataset.tab==='notifications'); });
+  document.getElementById('topbarTitle').textContent = 'Send Notification';
+  renderNotifications(userId);
+}
+
+// ── VERIFICATIONS ─────────────────────────────────────────
+function renderVerifications() {
+  // Merge: verifications table + profiles with verification_pending=true
+  var verifMap = {};
+  DATA.verifications.forEach(function(v){ verifMap[v.user_id]=v; });
+
+  var pendingFromTable = DATA.verifications.filter(function(v){ return v.status==='pending'; });
+  var pendingFromProfiles = DATA.users.filter(function(u){ return (u.verification_pending===true||u.verification_pending==='true'||u.verification_pending==1) && !verifMap[u.id]; });
+  var approved = DATA.verifications.filter(function(v){ return v.status==='approved'; });
+  var rejected = DATA.verifications.filter(function(v){ return v.status==='rejected'; });
+
+  var html = '<div class="stats-grid">';
+  html += statCard('Pending','amber',pendingFromTable.length+pendingFromProfiles.length,'awaiting review');
+  html += statCard('Approved','green',approved.length,'verified today');
+  html += statCard('Rejected','red',rejected.length,'declined');
+  html += '</div>';
+
+  html += '<div class="sec-head"><div class="sec-title">Pending Verifications</div><button class="btn-refresh" onclick="Promise.all([loadUsers(),loadVerifications()]).then(function(){updateBadges();renderVerifications();})"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button></div>';
+
+  // Show note if documents are missing (verifications table might not exist)
+  if(!DATA.verifications.length && pendingFromProfiles.length) {
+    html += '<div style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--sub);line-height:1.7">';
+    html += '<strong style="color:#fbbf24"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ID photos not available</strong><br>';
+    html += 'The user submitted their verification request but the <code>verifications</code> table may not exist in your Supabase database. You can still approve the profile below (they will get their verified badge), but you won\'t be able to see their ID photo.<br><br>';
+    html += '<strong style="color:var(--text)">To enable photo verification, run this SQL in your Supabase SQL editor:</strong><br>';
+    html += '<code style="display:block;margin-top:6px;padding:8px;background:rgba(0,0,0,.3);border-radius:6px;font-size:11px;white-space:pre-wrap">CREATE TABLE IF NOT EXISTS verifications (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id uuid REFERENCES profiles(id),\n  id_doc text,\n  selfie text,\n  status text DEFAULT \'pending\',\n  submitted_at timestamptz DEFAULT now(),\n  admin_note text,\n  UNIQUE(user_id)\n);\nALTER TABLE verifications ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Admin reads verifications" ON verifications FOR SELECT USING (true);\nCREATE POLICY "User inserts own" ON verifications FOR INSERT WITH CHECK (auth.uid() = user_id);\nCREATE POLICY "User upserts own" ON verifications FOR UPDATE USING (auth.uid() = user_id);</code>';
+    html += '</div>';
+  }
+
+  var total = pendingFromTable.length + pendingFromProfiles.length;
+  if(!total) {
+    html += '<div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:20px;text-align:center;color:var(--green);font-weight:700;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> No pending verification requests</div>';
+  }
+
+  // Cards with photos
+  pendingFromTable.forEach(function(v){
+    var u = DATA.users.find(function(x){ return x.id===v.user_id; }) || {};
+    html += verifCard(v, u, true);
+  });
+  pendingFromProfiles.forEach(function(u){
+    html += verifCard(null, u, false);
+  });
+
+  // Recently approved/rejected
+  if(approved.length||rejected.length) {
+    html += '<div class="sec-head" style="margin-top:24px"><div class="sec-title">Recent Reviews</div></div>';
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>User</th><th>Status</th><th>Date</th><th>Note</th></tr></thead><tbody>';
+    DATA.verifications.filter(function(v){ return v.status!=='pending'; }).slice(0,20).forEach(function(v){
+      var u = DATA.users.find(function(x){ return x.id===v.user_id; })||{};
+      html += '<tr><td style="font-weight:600">'+esc(u.name||v.user_id.slice(0,8))+'</td><td><span class="badge badge-'+(v.status==='approved'?'active':'rejected')+'">'+esc(v.status)+'</span></td><td style="color:var(--sub);font-size:12px">'+fmtDate(v.submitted_at)+'</td><td style="color:var(--sub);font-size:12px">'+esc(v.admin_note||'—')+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function verifCard(v, u, hasPhotos) {
+  var ini = initials(u.name||'U');
+  var html = '<div class="verif-card">';
+  html += '<div class="verif-header">';
+  html += '<div class="verif-user"><div class="verif-avatar">'+ini+'</div><div><div class="verif-name">'+esc(u.name||'Unknown User')+'</div><div class="verif-meta">'+esc(u.phone||u.email||'—')+(v?' · Submitted '+fmtDate(v.submitted_at):'')+'</div></div></div>';
+  if(v) html += '<span class="badge badge-pending">Pending</span>';
+  html += '</div>';
+
+  if(hasPhotos && v) {
+    html += '<div class="verif-docs">';
+    html += '<div class="verif-doc-box"><div class="verif-doc-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M10 14h4"/></svg> ID Document</div>';
+    if(v.id_doc) html += '<img class="verif-doc-img" src="'+esc(v.id_doc)+'" alt="ID" onclick="openVerifPhoto(this,false)" onerror="this.alt=\'Image failed to load\';this.style.opacity=\'.3\'">';
+    else html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:13px">No ID uploaded</div>';
+    html += '</div>';
+    html += '<div class="verif-doc-box"><div class="verif-doc-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Selfie</div>';
+    if(v.selfie) html += '<img class="verif-selfie" src="'+esc(v.selfie)+'" alt="Selfie" onclick="openVerifPhoto(this,true)" onerror="this.alt=\'Selfie failed to load\';this.style.opacity=\'.3\'">';
+    else html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:13px">No selfie uploaded</div>';
+    html += '</div>';
+    html += '</div>';
+  } else if(!hasPhotos) {
+    html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;font-size:12px;color:var(--sub)">';
+    html += '<div style="font-weight:700;color:var(--text);margin-bottom:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> No ID photos stored in database</div>';
+    html += 'This user submitted a verification request. Their ID photos are stored locally on their device but were not saved to the database (likely because the <code>verifications</code> table doesn\'t exist yet — see the SQL above to create it).<br><br>';
+    html += '<strong>User details to help you identify them:</strong><br>';
+    html += '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> ' + esc(u.email||'no email') + '<br>';
+    html += '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> ' + esc(u.phone||'no phone') + '<br>';
+    html += '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> User ID: ' + esc(u.id||'—');
+    html += '</div>';
+  }
+
+  html += '<div class="verif-actions">';
+  html += '<button class="btn-verif-approve" onclick="approveVerification(\''+esc(u.id)+'\','+(v?'\''+esc(v.id)+'\'':'null')+')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> Approve &amp; Verify</button>';
+  html += '<button class="btn-verif-reject" onclick="rejectVerification(\''+esc(u.id)+'\','+(v?'\''+esc(v.id)+'\'':'null')+')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Reject</button>';
+  html += '</div></div>';
+  return html;
+}
+
+async function approveVerification(userId, verifId) {
+  var ok = await confirm2('Approve Verification','Grant verified badge to this user?','Approve','green');
+  if(!ok) return;
+  try {
+    var r = await sb.from('profiles').update({verified:true,verification_pending:false,updated_at:new Date().toISOString()}).eq('id',userId);
+    if(r.error) throw r.error;
+    if(verifId) await sb.from('verifications').update({status:'approved',admin_note:'Approved by admin'}).eq('id',verifId);
+    var u = DATA.users.find(function(x){ return x.id===userId; }); if(u){ u.verified=true; u.verification_pending=false; }
+    var v = DATA.verifications.find(function(x){ return x.id===verifId; }); if(v) v.status='approved';
+    await sb.from('notifications').insert({user_id:userId,title:'Identity Verified',body:'Your blue verified badge is now active on all your listings.',type:'verify',read:false,created_at:Date.now()});
+    updateBadges(); renderVerifications(); toast('User verified and notified');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function rejectVerification(userId, verifId) {
+  var note = await confirm2('Reject Verification','Reason for rejection (will be sent to user):','Reject','red',true,'e.g. ID photo blurry, face not visible');
+  if(note===null) return;
+  try {
+    await sb.from('profiles').update({verification_pending:false}).eq('id',userId);
+    if(verifId) await sb.from('verifications').update({status:'rejected',admin_note:note||'Documents unclear'}).eq('id',verifId);
+    var u = DATA.users.find(function(x){ return x.id===userId; }); if(u) u.verification_pending=false;
+    var v = DATA.verifications.find(function(x){ return x.id===verifId; }); if(v) v.status='rejected';
+    await sb.from('notifications').insert({user_id:userId,title:'Verification Not Approved',body:'Your ID was not approved.'+(note?' Reason: '+note+'. Please resubmit with clearer photos.':' Please resubmit.'),type:'report',read:false,created_at:Date.now()});
+    updateBadges(); renderVerifications(); toast('Verification rejected, user notified','info');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────
+var PROVINCES = ['Harare','Bulawayo','Manicaland','Mashonaland West','Mashonaland East','Mashonaland Central','Midlands','Masvingo','Matabeleland North','Matabeleland South'];
+
+function renderNotifications(prefilledUserId) {
+  var typeOpts = ['info','verify','message','boost','ban','report','sale','review'].map(function(t){
+    return '<option value="'+t+'">'+t.charAt(0).toUpperCase()+t.slice(1)+'</option>';
+  }).join('');
+
+  var segOpts = '<option value="all">All Users ('+DATA.users.length+')</option>'
+    + '<option value="verified">Verified Users</option>'
+    + '<option value="unverified">Unverified Users</option>'
+    + '<option value="sellers">Sellers (have listings)</option>'
+    + '<option value="buyers">Buyers (no listings)</option>'
+    + '<optgroup label="── Individual ──">'
+    + DATA.users.map(function(u){ return '<option value="'+esc(u.id)+'"'+(prefilledUserId===u.id?' selected':'')+'>'+esc(u.name||u.phone||u.email||u.id.slice(0,8))+'</option>'; }).join('')
+    + '</optgroup>';
+
+  var provinceBoxes = PROVINCES.map(function(p){
+    return '<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;white-space:nowrap">'
+      +'<input type="checkbox" class="prov-cb" value="'+esc(p)+'" style="accent-color:#1A3A8F">'+esc(p)+'</label>';
+  }).join('');
+
+  var history = DATA.notifHistory.slice(0,15).map(function(n){
+    var u = DATA.users.find(function(x){ return x.id===n.user_id; });
+    return '<tr><td style="font-weight:600;font-size:13px">'+esc(n.title)+'</td><td style="font-size:12px;color:var(--sub)">'+esc(u?u.name:(n.user_id==='all'?'All Users':n.user_id.slice(0,8)))+'</td><td><span class="badge badge-info">'+esc(n.type||'info')+'</span></td><td style="font-size:12px;color:var(--sub)">'+fmtDateTime(n.created_at)+'</td></tr>';
+  }).join('');
+
+  var html = '<div class="notif-form">'
+    + '<div style="font-size:15px;font-weight:800;margin-bottom:18px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Push Notification</div>'
+
+    // Segment + Type
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+    + '<div class="form-row"><label class="form-label">Audience Segment</label><select class="form-select" id="notifTarget" onchange="onNotifTargetChange()">'+segOpts+'</select></div>'
+    + '<div class="form-row"><label class="form-label">Notification Type</label><select class="form-select" id="notifType" onchange="updateNotifPreview()">'+typeOpts+'</select></div>'
+    + '</div>'
+
+    // Province filter (hidden for individual user)
+    + '<div class="form-row" id="provinceFilterRow">'
+    + '<label class="form-label" style="margin-bottom:6px">Province Filter <span style="font-weight:400;color:var(--sub)">(optional — blank = all provinces)</span></label>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:8px 14px">'+provinceBoxes+'</div>'
+    + '</div>'
+
+    // Title + Body
+    + '<div class="form-row"><label class="form-label">Title</label><input class="form-input" id="notifTitle" maxlength="80" placeholder="e.g. New listings near you!" oninput="updateNotifPreview()"><div class="char-count" id="titleCount">0/80</div></div>'
+    + '<div class="form-row"><label class="form-label">Message</label><textarea class="form-textarea" id="notifBody" maxlength="200" placeholder="Enter the notification message…" oninput="updateNotifPreview()"></textarea><div class="char-count" id="bodyCount">0/200</div></div>'
+
+    // Deep Link
+    + '<div class="form-row"><label class="form-label">On-Tap Destination <span style="font-weight:400;color:var(--sub)">(optional)</span></label>'
+    + '<input class="form-input" id="notifDeepLink" placeholder="e.g. Jobs · Messages · listing:LISTING_ID">'
+    + '<div style="font-size:11px;color:var(--sub);margin-top:4px">Page names: Home, Jobs, Messages, Account. For a specific listing: listing:&lt;id&gt;</div></div>'
+
+    // Image URL
+    + '<div class="form-row"><label class="form-label">Notification Image URL <span style="font-weight:400;color:var(--sub)">(optional)</span></label>'
+    + '<input class="form-input" id="notifImageUrl" placeholder="https://… (shown in expanded notification on Android)">'
+    + '</div>'
+
+    // Schedule
+    + '<div class="form-row"><label class="form-label">Delivery</label>'
+    + '<div style="display:flex;gap:16px;margin-top:6px">'
+    + '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px"><input type="radio" name="notifDelivery" value="now" id="schedNow" checked onchange="onScheduleChange()"> Send Immediately</label>'
+    + '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px"><input type="radio" name="notifDelivery" value="later" id="schedLater" onchange="onScheduleChange()"> Schedule for Later</label>'
+    + '</div>'
+    + '<input type="datetime-local" class="form-input" id="notifScheduledFor" style="display:none;margin-top:8px">'
+    + '</div>'
+
+    // Preview
+    + '<div class="notif-preview"><div class="notif-preview-label">Preview</div>'
+    + '<div class="notif-preview-card">'
+    + '<div class="notif-preview-icon" id="prevIcon" style="background:rgba(99,102,241,.2);color:var(--accent)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>'
+    + '<div><div class="notif-preview-title" id="prevTitle">Notification Title</div><div class="notif-preview-body" id="prevBody">Message body will appear here</div><div class="notif-preview-app">PaMarket · now</div></div>'
+    + '</div></div>'
+
+    // Send button
+    + '<div style="display:flex;align-items:center;gap:12px;margin-top:18px">'
+    + '<button class="btn-send" id="sendNotifBtn" onclick="sendNotification()">Send Notification</button>'
+    + '<span id="sendStatus" style="font-size:12px;color:var(--sub)"></span>'
+    + '</div>'
+    + '</div>';
+
+  if(history) {
+    html += '<div class="sec-head"><div class="sec-title">Recent Notifications Sent</div></div>';
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Title</th><th>Recipient</th><th>Type</th><th>Sent</th></tr></thead><tbody>'+history+'</tbody></table></div>';
+  }
+
+  document.getElementById('mainContent').innerHTML = html;
+
+  var tf = document.getElementById('notifTitle');
+  var bf = document.getElementById('notifBody');
+  if(tf) tf.addEventListener('input', function(){ document.getElementById('titleCount').textContent=this.value.length+'/80'; });
+  if(bf) bf.addEventListener('input', function(){ document.getElementById('bodyCount').textContent=this.value.length+'/200'; });
+  if(prefilledUserId) {
+    var sel = document.getElementById('notifTarget');
+    if(sel){ sel.value=prefilledUserId; onNotifTargetChange(); updateNotifPreview(); }
+  }
+}
+
+function onNotifTargetChange() {
+  var target = (document.getElementById('notifTarget')||{}).value;
+  var row = document.getElementById('provinceFilterRow');
+  // Hide province filter for individual user targets (UUIDs are 36 chars)
+  if(row) row.style.display = (target && target.length === 36) ? 'none' : '';
+}
+
+function onScheduleChange() {
+  var later = document.getElementById('schedLater');
+  var picker = document.getElementById('notifScheduledFor');
+  var btn = document.getElementById('sendNotifBtn');
+  if(!later || !picker) return;
+  picker.style.display = later.checked ? '' : 'none';
+  if(btn) btn.textContent = later.checked ? 'Schedule Notification' : 'Send Notification';
+}
+
+var NOTIF_ICONS = {
+  info:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>',
+  verify:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>',
+  message:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+  boost:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  ban:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+  report:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  sale:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+  review:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>'
+};
+var NOTIF_COLORS = {info:'rgba(99,102,241,.2)',verify:'rgba(59,130,246,.2)',message:'rgba(16,185,129,.2)',boost:'rgba(245,158,11,.2)',ban:'rgba(239,68,68,.2)',report:'rgba(249,115,22,.2)',sale:'rgba(59,130,246,.2)',review:'rgba(139,92,246,.2)'};
+var NOTIF_TEXT = {info:'var(--accent)',verify:'var(--blue)',message:'var(--green)',boost:'var(--amber)',ban:'var(--red)',report:'#FB923C',sale:'var(--blue)',review:'#A78BFA'};
+
+function updateNotifPreview() {
+  var title = (document.getElementById('notifTitle')||{}).value||'Notification Title';
+  var body = (document.getElementById('notifBody')||{}).value||'Message body will appear here';
+  var type = (document.getElementById('notifType')||{}).value||'info';
+  var pi = document.getElementById('prevIcon');
+  var pt = document.getElementById('prevTitle');
+  var pb = document.getElementById('prevBody');
+  if(pi){ pi.innerHTML=NOTIF_ICONS[type]||NOTIF_ICONS['info']; pi.style.background=NOTIF_COLORS[type]; pi.style.color=NOTIF_TEXT[type]; }
+  if(pt) pt.textContent=title;
+  if(pb) pb.textContent=body;
+}
+
+var SUPABASE_URL = 'https://gxgytumhknmnwspxjzxw.supabase.co';
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
+
+async function sendNotification() {
+  var target       = document.getElementById('notifTarget').value;
+  var title        = document.getElementById('notifTitle').value.trim();
+  var body         = document.getElementById('notifBody').value.trim();
+  var type         = document.getElementById('notifType').value;
+  var deepLink     = (document.getElementById('notifDeepLink')||{}).value||'';
+  var imageUrl     = (document.getElementById('notifImageUrl')||{}).value||'';
+  var schedLater   = document.getElementById('schedLater');
+  var scheduledFor = (schedLater && schedLater.checked)
+    ? (document.getElementById('notifScheduledFor')||{}).value || '' : '';
+
+  if(!title){ toast('Enter a notification title','error'); return; }
+  if(!body){  toast('Enter a message','error'); return; }
+  if(schedLater && schedLater.checked && !scheduledFor){ toast('Select a date and time to schedule','error'); return; }
+
+  // Collect province checkboxes
+  var provinces = [];
+  document.querySelectorAll('.prov-cb:checked').forEach(function(cb){ provinces.push(cb.value); });
+
+  var btn = document.getElementById('sendNotifBtn');
+  var status = document.getElementById('sendStatus');
+  btn.disabled = true;
+  btn.textContent = scheduledFor ? 'Scheduling…' : 'Sending…';
+
+  try {
+    var sess = await sb.auth.getSession();
+    var jwt = sess && sess.data && sess.data.session && sess.data.session.access_token;
+    if(!jwt) throw new Error('Not authenticated — please sign in again');
+
+    var payload = {
+      target:       target,
+      title:        title,
+      body:         body,
+      type:         type,
+      deepLink:     deepLink  || null,
+      imageUrl:     imageUrl  || null,
+      provinces:    provinces.length ? provinces : null,
+      scheduledFor: scheduledFor || null,
+    };
+
+    if(status) status.textContent = 'Calling FCM…';
+    var res = await fetch(SUPABASE_URL + '/functions/v1/send-push', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + jwt,
+        'Content-Type':  'application/json',
+        'apikey':        SUPABASE_ANON,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    var result = await res.json();
+    if(!res.ok) throw new Error(result.error || ('HTTP ' + res.status));
+
+    btn.disabled = false;
+    btn.textContent = schedLater && schedLater.checked ? 'Schedule Notification' : 'Send Notification';
+    if(status) status.textContent = '';
+
+    // Clear form
+    document.getElementById('notifTitle').value = '';
+    document.getElementById('notifBody').value  = '';
+    if(document.getElementById('notifDeepLink'))  document.getElementById('notifDeepLink').value  = '';
+    if(document.getElementById('notifImageUrl'))  document.getElementById('notifImageUrl').value  = '';
+    document.querySelectorAll('.prov-cb:checked').forEach(function(cb){ cb.checked = false; });
+    updateNotifPreview();
+
+    if(result.scheduled) {
+      toast('Scheduled for '+new Date(scheduledFor).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'}));
+    } else {
+      var msg = 'Sent to '+result.total_users+' user'+(result.total_users!==1?'s':'');
+      if(result.fcm_sent  > 0) msg += ' · '+result.fcm_sent+' FCM delivered';
+      if(result.no_token  > 0) msg += ' · '+result.no_token+' no device token';
+      if(result.fcm_failed> 0) msg += ' · '+result.fcm_failed+' FCM failed';
+      toast(msg);
+    }
+
+    await loadNotifHistory();
+    renderNotifications();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Send Notification';
+    if(status) status.textContent = '';
+    toast('Error: '+e.message,'error');
+  }
+}
+
+// ── TOP-UPS ───────────────────────────────────────────────
+function renderTopups() {
+  var filtered = DATA.topups.filter(function(t){ return _topupFilter==='all'||t.status===_topupFilter; });
+  var counts = {all:DATA.topups.length,pending:DATA.topups.filter(function(t){return t.status==='pending';}).length,approved:DATA.topups.filter(function(t){return t.status==='approved';}).length,rejected:DATA.topups.filter(function(t){return t.status==='rejected';}).length};
+
+  var html = '<div class="sec-head"><div class="sec-title">Top-up Requests</div><div class="sec-actions">';
+  ['all','pending','approved','rejected'].forEach(function(f){
+    html+='<button class="filter-btn'+((_topupFilter===f)?' on':'')+'" onclick="_topupFilter=\''+f+'\';renderTopups()">'+f.charAt(0).toUpperCase()+f.slice(1)+' ('+counts[f]+')</button>';
+  });
+  html += '</div></div>';
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>User</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+  if(!filtered.length) html+='<tr><td colspan="6"><div class="empty-msg">No top-up requests</div></td></tr>';
+  filtered.forEach(function(t){
+    var u = DATA.users.find(function(x){ return x.id===(t.userId||t.user_id); })||{};
+    html+='<tr><td style="font-weight:600">'+esc(u.name||t.userId||'—')+'</td>';
+    html+='<td style="font-weight:700;color:var(--green)">$'+fmt(t.amount)+' '+esc(t.currency||'USD')+'</td>';
+    html+='<td style="color:var(--sub);font-size:12px">'+esc(t.method||'—')+'</td>';
+    html+='<td><span class="badge badge-'+(t.status==='approved'?'active':t.status==='pending'?'pending':'rejected')+'">'+esc(t.status)+'</span></td>';
+    html+='<td style="color:var(--sub);font-size:12px">'+fmtDate(t.created_at)+'</td>';
+    html+='<td><div style="display:flex;gap:4px">';
+    if(t.status==='pending'){
+      html+='<button class="ab ab-approve" onclick="approveTopup(\''+t.id+'\',\''+(t.userId||t.user_id)+'\','+t.amount+')">Approve</button>';
+      html+='<button class="ab ab-reject" onclick="rejectTopup(\''+t.id+'\')">Reject</button>';
+    }
+    html+='</div></td></tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+async function approveTopup(id, userId, amount) {
+  var ok = await confirm2('Approve Top-up','Add $'+fmt(amount)+' to user wallet?','Approve','green');
+  if(!ok) return;
+  try {
+    var u = DATA.users.find(function(x){ return x.id===userId; });
+    var newBal = parseFloat(u?u.wallet_usd||0:0)+parseFloat(amount);
+    await sb.from('profiles').update({wallet_usd:newBal}).eq('id',userId);
+    await sb.from('topup_requests').update({status:'approved'}).eq('id',id);
+    if(u){ u.wallet_usd=newBal; }
+    var t=DATA.topups.find(function(x){return x.id===id;}); if(t) t.status='approved';
+    await sb.from('notifications').insert({user_id:userId,title:'Wallet Topped Up',body:'$'+fmt(amount)+' has been added to your wallet.',type:'sale',read:false,created_at:Date.now()});
+    updateBadges(); renderTopups(); toast('Top-up approved, wallet updated');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function rejectTopup(id) {
+  var ok = await confirm2('Reject Top-up','Reject this payment request?','Reject','red');
+  if(!ok) return;
+  try {
+    await sb.from('topup_requests').update({status:'rejected'}).eq('id',id);
+    var t=DATA.topups.find(function(x){return x.id===id;}); if(t) t.status='rejected';
+    updateBadges(); renderTopups(); toast('Top-up rejected','info');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── REPORTS ───────────────────────────────────────────────
+function renderReports() {
+  var filtered = DATA.reports.filter(function(r){ return _reportFilter==='all'||r.status===_reportFilter; });
+  var counts = {all:DATA.reports.length,open:DATA.reports.filter(function(r){return r.status==='open';}).length,resolved:DATA.reports.filter(function(r){return r.status==='resolved';}).length,dismissed:DATA.reports.filter(function(r){return r.status==='dismissed';}).length};
+
+  var html = '<div class="sec-head"><div class="sec-title">Reports</div><div class="sec-actions">';
+  ['all','open','resolved','dismissed'].forEach(function(f){
+    html+='<button class="filter-btn'+((_reportFilter===f)?' on':'')+'" onclick="_reportFilter=\''+f+'\';renderReports()">'+f.charAt(0).toUpperCase()+f.slice(1)+' ('+counts[f]+')</button>';
+  });
+  html+='</div></div>';
+
+  // Info: explain where reports come from
+  html+='<div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:var(--sub);line-height:1.7">';
+  html+='<strong style="color:var(--text)">Where do reports come from?</strong><br>';
+  html+='Reports are submitted by users inside the app. On any listing detail page there is a <em>"Report this Listing"</em> button, and on any user profile there is a <em>"Report User"</em> button. Users select a reason (spam, fraud, inappropriate, etc.) and it appears here instantly.';
+  html+='</div>';
+
+  if(!DATA.reports.length) {
+    html+='<div class="empty-msg">No reports yet. Reports appear here when app users flag a listing or user as spam, fraudulent, or inappropriate.</div>';
+    document.getElementById('mainContent').innerHTML=html; return;
+  }
+
+  html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Reporter</th><th>Type</th><th>What was reported</th><th>Reason</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+  if(!filtered.length) html+='<tr><td colspan="7"><div class="empty-msg">No reports match this filter</div></td></tr>';
+  filtered.forEach(function(r){
+    // Look up who reported and what was reported
+    var reporter = DATA.users.find(function(x){ return x.id===r.reporter_id||x.id===r.reporterId; })||{};
+    var targetLabel = '—';
+    var targetLink = '';
+    var tId = r.target_id||r.targetId||'';
+    var tType = r.target_type||r.targetType||'';
+    if(tType==='listing'){
+      var listing = DATA.listings.find(function(x){ return x.id===tId; });
+      targetLabel = listing ? esc(listing.title||'Listing') : 'Listing '+tId.slice(0,8);
+      targetLink = listing ? ' <span style="font-size:10px;color:var(--sub)">('+esc(listing.cat||'')+' · '+esc(listing.city||'')+')</span>' : '';
+    } else if(tType==='user'){
+      var tUser = DATA.users.find(function(x){ return x.id===tId; });
+      targetLabel = tUser ? esc(tUser.name||'User') : 'User '+tId.slice(0,8);
+      targetLink = tUser ? ' <span style="font-size:10px;color:var(--sub)">('+esc(tUser.phone||tUser.email||'')+')</span>' : '';
+    }
+    var statusColor = r.status==='open'?'amber':r.status==='resolved'?'active':'rejected';
+    html+='<tr>';
+    html+='<td style="font-size:13px;font-weight:600">'+esc(reporter.name||r.reporterId||'—')+'<div style="font-size:11px;color:var(--sub)">'+esc(reporter.phone||reporter.email||'')+'</div></td>';
+    html+='<td><span class="badge badge-info">'+esc(tType||'—')+'</span></td>';
+    html+='<td style="font-size:12px;font-weight:600">'+targetLabel+targetLink+'</td>';
+    html+='<td style="color:var(--sub);font-size:12px;max-width:180px">'+esc(r.reason||'—')+'</td>';
+    html+='<td><span class="badge badge-'+statusColor+'">'+esc(r.status||'—')+'</span></td>';
+    html+='<td style="color:var(--sub);font-size:12px">'+fmtDate(r.created_at||r.t)+'</td>';
+    html+='<td><div style="display:flex;gap:4px">';
+    if(r.status==='open') html+='<button class="ab ab-approve" onclick="resolveReport(\''+r.id+'\')">Resolve</button>';
+    html+='<button class="ab ab-delete" onclick="dismissReport(\''+r.id+'\')">Dismiss</button>';
+    html+='</div></td></tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+async function resolveReport(id) {
+  try {
+    await sb.from('reports').update({status:'resolved'}).eq('id',id);
+    var r=DATA.reports.find(function(x){return x.id===id;}); if(r) r.status='resolved';
+    updateBadges(); renderReports(); toast('Report resolved');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function dismissReport(id) {
+  try {
+    await sb.from('reports').update({status:'dismissed'}).eq('id',id);
+    DATA.reports=DATA.reports.filter(function(x){return x.id!==id;});
+    updateBadges(); renderReports(); toast('Report dismissed','info');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── ADS ───────────────────────────────────────────────────
+function renderAds() {
+  var html = '<div class="sec-head"><div class="sec-title">Paid Ads</div><button class="btn-send" onclick="openCreateAd()" style="padding:8px 16px;font-size:13px">+ Create Ad</button></div>';
+
+  html+='<div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:var(--sub);line-height:1.7">';
+  html+='<strong style="color:var(--text)">How paid ads work:</strong> Each ad is linked to a business/user account. The ad banner (image + headline) appears in the chosen app section. When a user taps it, it opens that business\'s listings inside the app.';
+  html+='</div>';
+
+  if(!DATA.ads.length) { html+='<div class="empty-msg">No paid ads yet.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
+
+  // Cards view for ads (shows image thumbnail)
+  DATA.ads.forEach(function(a){
+    var advertiser = DATA.users.find(function(x){ return x.id===a.advertiser_id; })||{};
+    var imgHtml = (a.image_url||a.image) ? '<img src="'+esc(a.image_url||a.image)+'" style="width:64px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display=\'none\'">'
+      : '<div style="width:64px;height:48px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg></div>';
+    var sectionLabel = {home:'Home',jobs:'Jobs',property:'Property',vehicles:'Vehicles',electronics:'Electronics',all:'All Pages'}[a.target_section]||esc(a.target_section||'All');
+    html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px">';
+    html+='<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">';
+    html+=imgHtml;
+    html+='<div style="flex:1;min-width:0">';
+    html+='<div style="font-size:15px;font-weight:700;color:var(--text)">'+esc(a.headline||a.business_name||'Ad')+'</div>';
+    if(a.tagline) html+='<div style="font-size:12px;color:var(--sub);margin-top:2px">'+esc(a.tagline)+'</div>';
+    html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">';
+    html+='<span class="badge badge-info">'+sectionLabel+'</span>';
+    html+='<span class="badge badge-'+(a.active?'active':'rejected')+'">'+(a.active?'Active':'Paused')+'</span>';
+    if(a.type) html+='<span class="badge badge-pending">'+esc(a.type)+'</span>';
+    html+='</div></div></div>';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:10px">';
+    html+='<span><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Advertiser: <strong style="color:var(--text)">'+esc(advertiser.name||a.business_name||'—')+'</strong></span>';
+    html+='<span>'+fmtDate(a.starts_at)+' – '+fmtDate(a.ends_at)+'</span>';
+    html+='</div>';
+    html+='<div style="display:flex;gap:8px">';
+    html+='<button class="ab '+(a.active?'ab-reject':'ab-approve')+'" onclick="toggleAd(\''+esc(a.id)+'\','+(a.active?'false':'true')+')">'+(a.active?'Pause':'Resume')+'</button>';
+    html+='<button class="ab ab-delete" onclick="deleteAd(\''+esc(a.id)+'\')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg> Delete</button>';
+    html+='</div></div>';
+  });
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+async function toggleAd(id, active) {
+  try {
+    await sb.from('paid_ads').update({active:active==='true'||active===true}).eq('id',id);
+    var a=DATA.ads.find(function(x){return x.id===id;}); if(a) a.active=active==='true'||active===true;
+    renderAds(); toast(active?'Ad activated':'Ad paused','info');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function deleteAd(id) {
+  var ok = await confirm2('Delete Ad','Remove this ad permanently?','Delete','red');
+  if(!ok) return;
+  try {
+    await sb.from('paid_ads').delete().eq('id',id);
+    DATA.ads=DATA.ads.filter(function(x){return x.id!==id;});
+    renderAds(); toast('Ad deleted');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+function openCreateAd() {
+  // Build advertiser options from users list
+  var userOpts = '<option value="">— Select advertiser account —</option>';
+  DATA.users.slice(0,200).forEach(function(u){
+    userOpts += '<option value="'+esc(u.id)+'">'+esc(u.name||'User')+' ('+esc(u.phone||u.email||u.id.slice(0,8))+')</option>';
+  });
+  openModal(
+    '<div class="modal-title">Create Paid Ad<button class="modal-close" onclick="closeModal()">×</button></div>'
+
+    // Advertiser (links to their profile in-app)
+    +'<div class="form-row"><label class="form-label">Advertiser Account <span style="color:var(--red)">*</span></label>'
+    +'<select class="form-input" id="adAdvertiser">'+userOpts+'</select>'
+    +'<div style="font-size:11px;color:var(--sub);margin-top:4px">Tapping this ad in the app will open this user\'s listings</div></div>'
+
+    // Business name (auto-fills but editable)
+    +'<div class="form-row"><label class="form-label">Business Name <span style="color:var(--red)">*</span></label><input class="form-input" id="adBiz" placeholder="e.g. ABC Holdings Zimbabwe" oninput="_adBizManual=true"></div>'
+
+    // Ad type + target section
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +'<div class="form-row"><label class="form-label">Ad Type</label>'
+    +'<select class="form-input" id="adType">'
+    +'<option value="banner">Banner Ad</option>'
+    +'<option value="spotlight">Category Spotlight</option>'
+    +'<option value="jobs">Jobs Promotion</option>'
+    +'<option value="property">Property Feature</option>'
+    +'</select></div>'
+    +'<div class="form-row"><label class="form-label">Show In Section</label>'
+    +'<select class="form-input" id="adSection">'
+    +'<option value="all">All Pages</option>'
+    +'<option value="home">Home</option>'
+    +'<option value="jobs">Jobs</option>'
+    +'<option value="property">Property</option>'
+    +'<option value="vehicles">Vehicles</option>'
+    +'<option value="electronics">Electronics</option>'
+    +'</select></div>'
+    +'</div>'
+
+    // Ad image
+    +'<div class="form-row"><label class="form-label">Ad Image <span style="font-weight:400;color:var(--sub)">(company logo or banner)</span></label>'
+    +'<div style="background:var(--bg);border:2px dashed var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer;margin-bottom:8px" onclick="document.getElementById(\'adImgFile\').click()">'
+    +'<div id="adImgPreview" style="font-size:13px;color:var(--sub)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Tap to upload image (logo / banner)</div></div>'
+    +'<input type="file" id="adImgFile" accept="image/*" style="display:none" onchange="_adLoadImage(event)">'
+    +'<input type="hidden" id="adImg">'
+    +'</div>'
+
+    // Headline, tagline
+    +'<div class="form-row"><label class="form-label">Headline <span style="color:var(--red)">*</span></label><input class="form-input" id="adHead" placeholder="e.g. Zimbabwe\'s Best Property Deals"></div>'
+    +'<div class="form-row"><label class="form-label">Tagline / Call-to-Action</label><input class="form-input" id="adTag" placeholder="e.g. Browse our listings now"></div>'
+
+    // Dates
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +'<div class="form-row"><label class="form-label">Start Date</label><input class="form-input" type="date" id="adStart"></div>'
+    +'<div class="form-row"><label class="form-label">End Date</label><input class="form-input" type="date" id="adEnd"></div>'
+    +'</div>'
+
+    // Price
+    +'<div class="form-row"><label class="form-label">Price Paid (USD)</label><input class="form-input" type="number" id="adPrice" placeholder="0" min="0"></div>'
+
+    +'<button class="btn-send" style="width:100%;margin-top:8px" onclick="saveNewAd()">Create Ad</button>'
+  );
+
+  // Auto-fill business name when advertiser changes
+  window._adBizManual = false;
+  document.getElementById('adAdvertiser').addEventListener('change', function(){
+    if(_adBizManual) return;
+    var uid = this.value;
+    var u = DATA.users.find(function(x){ return x.id===uid; });
+    if(u && u.name) document.getElementById('adBiz').value = u.name;
+  });
+}
+
+window._adLoadImage = function(e) {
+  var f = e.target.files[0]; if(!f) return;
+  var r = new FileReader();
+  r.onload = function(ev){
+    document.getElementById('adImg').value = ev.target.result;
+    var prev = document.getElementById('adImgPreview');
+    prev.innerHTML = '<img src="'+ev.target.result+'" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:contain">';
+  };
+  r.readAsDataURL(f);
+};
+
+async function saveNewAd() {
+  var advertId = (document.getElementById('adAdvertiser')||{}).value||'';
+  var biz = (document.getElementById('adBiz')||{}).value.trim();
+  var head = (document.getElementById('adHead')||{}).value.trim();
+  if(!biz){ toast('Enter business name','error'); return; }
+  if(!head){ toast('Enter a headline for the ad','error'); return; }
+  try {
+    var rec = {
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now()+'',
+      business_name: biz,
+      advertiser_id: advertId||null,
+      headline: head,
+      tagline: (document.getElementById('adTag')||{}).value.trim(),
+      image_url: (document.getElementById('adImg')||{}).value||null,
+      type: (document.getElementById('adType')||{}).value||'banner',
+      target_section: (document.getElementById('adSection')||{}).value||'all',
+      starts_at: (document.getElementById('adStart')||{}).value||null,
+      ends_at: (document.getElementById('adEnd')||{}).value||null,
+      price_paid: parseFloat((document.getElementById('adPrice')||{}).value)||0,
+      active: true, impressions: 0, clicks: 0,
+      created_at: new Date().toISOString()
+    };
+    var r = await sb.from('paid_ads').insert(rec);
+    if(r.error) throw r.error;
+    DATA.ads.unshift(rec);
+    closeModal(); renderAds(); toast('Ad created');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── CHATS ─────────────────────────────────────────────────
+async function loadChats() {
+  try {
+    var r = await sb.from('messages')
+      .select('id,conversation_id,sender_id,sender_name,text,created_at,read')
+      .order('created_at',{ascending:false})
+      .limit(600);
+    if(r.error||!r.data){ DATA.chats=[]; return; }
+    var convMap={};
+    r.data.forEach(function(m){
+      if(!convMap[m.conversation_id]) convMap[m.conversation_id]={id:m.conversation_id,messages:[],participants:{}};
+      convMap[m.conversation_id].messages.push(m);
+      if(m.sender_name) convMap[m.conversation_id].participants[m.sender_id]=m.sender_name;
+    });
+    DATA.chats = Object.values(convMap).map(function(c){
+      c.messages.sort(function(a,b){ return new Date(b.created_at)-new Date(a.created_at); });
+      c.lastMsg = c.messages[0];
+      c.participantNames = Object.values(c.participants);
+      c.unread = c.messages.filter(function(m){ return !m.read; }).length;
+      return c;
+    }).sort(function(a,b){ return new Date(b.lastMsg.created_at)-new Date(a.lastMsg.created_at); });
+  } catch(e){ DATA.chats=[]; }
+}
+
+var _openChatId = null;
+function renderChats() {
+  var html='<div class="sec-head"><div class="sec-title">User Chats</div><div class="sec-actions"><button class="filter-btn on" onclick="loadChats().then(renderChats)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button></div></div>';
+  if(!DATA.chats.length){
+    html+='<div class="empty-msg">No conversations found. Messages table may not exist yet or no chats have been sent.</div>';
+    document.getElementById('mainContent').innerHTML=html; return;
+  }
+  if(_openChatId){
+    var cv=DATA.chats.find(function(c){ return c.id===_openChatId; });
+    if(cv){
+      html+='<button onclick="_openChatId=null;renderChats()" style="margin-bottom:12px;padding:8px 16px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">← Back to all chats</button>';
+      html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px">';
+      html+='<div style="font-size:13px;font-weight:700;color:var(--sub);margin-bottom:8px">'+esc(cv.participantNames.join(' ↔ ') || cv.id)+'</div>';
+      html+='<div style="display:flex;flex-direction:column;gap:8px;max-height:500px;overflow-y:auto">';
+      var msgs=[].concat(cv.messages).reverse();
+      msgs.forEach(function(m){
+        var isRight=false;
+        var name=esc(m.sender_name||m.sender_id.slice(-6));
+        var time=fmtDateTime(m.created_at);
+        html+='<div style="display:flex;flex-direction:column;gap:2px">';
+        html+='<div style="font-size:11px;color:var(--sub)">'+name+' · '+time+'</div>';
+        html+='<div style="background:var(--bg);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--text);max-width:85%">'+esc(m.text)+'</div>';
+        html+='</div>';
+      });
+      html+='</div></div>';
+      document.getElementById('mainContent').innerHTML=html; return;
+    }
+  }
+  html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Participants</th><th>Last Message</th><th>Messages</th><th>Unread</th><th>Last Active</th><th></th></tr></thead><tbody>';
+  DATA.chats.forEach(function(c){
+    var parts=esc(c.participantNames.join(' ↔ ')||c.id.slice(0,20));
+    var preview=esc((c.lastMsg.text||'').slice(0,60)+(c.lastMsg.text&&c.lastMsg.text.length>60?'…':''));
+    html+='<tr>';
+    html+='<td style="font-weight:600;font-size:13px">'+parts+'</td>';
+    html+='<td style="color:var(--sub);font-size:12px;max-width:200px">'+preview+'</td>';
+    html+='<td style="text-align:center">'+c.messages.length+'</td>';
+    html+='<td style="text-align:center">'+(c.unread?'<span class="badge badge-pending">'+c.unread+'</span>':'—')+'</td>';
+    html+='<td style="color:var(--sub);font-size:12px">'+fmtDateTime(c.lastMsg.created_at)+'</td>';
+    html+='<td><button class="ab ab-view" onclick="_openChatId=\''+esc(c.id)+'\';renderChats()">View</button></td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+// ── ANALYTICS ─────────────────────────────────────────────
+function renderAnalytics() {
+  var catCounts = {};
+  DATA.listings.forEach(function(l){ catCounts[l.cat||'other']=(catCounts[l.cat||'other']||0)+1; });
+  var cats = Object.keys(catCounts).sort(function(a,b){ return catCounts[b]-catCounts[a]; });
+  var maxCat = cats.length ? catCounts[cats[0]] : 1;
+
+  var provCounts = {};
+  DATA.listings.forEach(function(l){ provCounts[l.prov||'Unknown']=(provCounts[l.prov||'Unknown']||0)+1; });
+  var provs = Object.keys(provCounts).sort(function(a,b){ return provCounts[b]-provCounts[a]; }).slice(0,10);
+  var maxProv = provs.length ? provCounts[provs[0]] : 1;
+
+  var now = Date.now();
+  var days = [0,1,2,3,4,5,6].map(function(i){
+    var d = new Date(now - i*86400000);
+    return d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit'});
+  }).reverse();
+  var dayCounts = days.map(function(label, i){
+    var dayStart = new Date(now - (6-i)*86400000); dayStart.setHours(0,0,0,0);
+    var dayEnd = new Date(dayStart); dayEnd.setHours(23,59,59,999);
+    return DATA.users.filter(function(u){
+      var t=new Date(u.created_at).getTime();
+      return t>=dayStart.getTime()&&t<=dayEnd.getTime();
+    }).length;
+  });
+  var maxDay = Math.max.apply(null, dayCounts.concat([1]));
+
+  var totalRevenue = DATA.topups.filter(function(t){return t.status==='approved';}).reduce(function(s,t){return s+parseFloat(t.amount||0);},0);
+  var totalAdsRev = DATA.ads.reduce(function(s,a){return s+parseFloat(a.price_paid||0);},0);
+
+  var html = '<div class="stats-grid">';
+  html+=statCard('Total Users','blue',DATA.users.length,'');
+  html+=statCard('Total Listings','green',DATA.listings.length,'');
+  html+=statCard('Wallet Revenue','accent','$'+fmt(totalRevenue),'from top-ups');
+  html+=statCard('Ads Revenue','amber','$'+fmt(totalAdsRev),'from paid ads');
+  html+='</div>';
+
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">';
+
+  // Cat chart
+  html+='<div class="tbl-wrap" style="padding:18px"><div style="font-size:13px;font-weight:800;margin-bottom:14px">Listings by Category</div>';
+  cats.forEach(function(c){ html+='<div class="bar-row"><div class="bar-label">'+esc(c)+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(catCounts[c]/maxCat*100)+'%"></div></div><div class="bar-val">'+catCounts[c]+'</div></div>'; });
+  if(!cats.length) html+='<div style="color:var(--sub);font-size:13px">No data</div>';
+  html+='</div>';
+
+  // Province chart
+  html+='<div class="tbl-wrap" style="padding:18px"><div style="font-size:13px;font-weight:800;margin-bottom:14px">Listings by Province</div>';
+  provs.forEach(function(p){ html+='<div class="bar-row"><div class="bar-label">'+esc(p)+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(provCounts[p]/maxProv*100)+'%;background:var(--green)"></div></div><div class="bar-val">'+provCounts[p]+'</div></div>'; });
+  if(!provs.length) html+='<div style="color:var(--sub);font-size:13px">No data</div>';
+  html+='</div>';
+
+  // User growth
+  html+='<div class="tbl-wrap" style="padding:18px"><div style="font-size:13px;font-weight:800;margin-bottom:14px">New Users (Last 7 Days)</div>';
+  days.forEach(function(d,i){ html+='<div class="bar-row"><div class="bar-label" style="font-size:11px">'+d+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(dayCounts[i]/maxDay*100)+'%;background:var(--amber)"></div></div><div class="bar-val">'+dayCounts[i]+'</div></div>'; });
+  html+='</div>';
+
+  // Verification stats
+  var vPending=DATA.verifications.filter(function(v){return v.status==='pending';}).length;
+  var vApproved=DATA.verifications.filter(function(v){return v.status==='approved';}).length;
+  var vRejected=DATA.verifications.filter(function(v){return v.status==='rejected';}).length;
+  var vMax=Math.max(vPending,vApproved,vRejected,1);
+  html+='<div class="tbl-wrap" style="padding:18px"><div style="font-size:13px;font-weight:800;margin-bottom:14px">Verification Status</div>';
+  [['Pending',vPending,'var(--amber)'],['Approved',vApproved,'var(--green)'],['Rejected',vRejected,'var(--red)']].forEach(function(row){
+    html+='<div class="bar-row"><div class="bar-label">'+row[0]+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(row[1]/vMax*100)+'%;background:'+row[2]+'"></div></div><div class="bar-val">'+row[1]+'</div></div>';
+  });
+  html+='</div>';
+
+  html+='</div>';
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+// ── SETTINGS ──────────────────────────────────────────────
+function renderSettings() {
+  var s = DATA.settings;
+  var rows = [
+    ['requireListingApproval','Require Listing Approval','New listings go to pending until admin approves them'],
+    ['allowNewRegistrations','Allow New Registrations','Users can create new accounts'],
+    ['maintenanceMode','Maintenance Mode','Shows a maintenance banner in the app to all users'],
+    ['autoApproveVerified','Auto-approve Verified Users','Skip review for listings from verified sellers'],
+    ['enableWallet','Enable Wallet','Show wallet and top-up features in the app'],
+    ['showSponsoredAds','Show Sponsored Ads','Display sponsored listing injection in browse feed'],
+  ];
+
+  var html = '<div class="tbl-wrap" style="padding:0 18px"><div style="padding:18px 0 12px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border)">Platform Settings</div>';
+  rows.forEach(function(r){
+    var checked = s[r[0]]===true||s[r[0]]==='true';
+    html+='<div class="setting-row"><div class="setting-info"><div class="setting-title">'+esc(r[1])+'</div><div class="setting-desc">'+esc(r[2])+'</div></div>';
+    html+='<label class="toggle"><input type="checkbox" id="set_'+r[0]+'" '+(checked?'checked':'')+' onchange="saveSetting(\''+r[0]+'\',this.checked)"><span class="toggle-slider"></span></label>';
+    html+='</div>';
+  });
+  html+='</div>';
+
+  html+='<div class="tbl-wrap" style="padding:18px;margin-top:14px">';
+  html+='<div style="font-size:14px;font-weight:800;margin-bottom:14px">App Info</div>';
+  html+='<div style="font-size:13px;color:var(--sub);line-height:2">';
+  html+='<div>Total Users: <strong style="color:var(--text)">'+DATA.users.length+'</strong></div>';
+  html+='<div>Total Listings: <strong style="color:var(--text)">'+DATA.listings.length+'</strong></div>';
+  html+='<div>Verified Users: <strong style="color:var(--text)">'+DATA.users.filter(function(u){return u.verified;}).length+'</strong></div>';
+  html+='<div>Admin Email: <strong style="color:var(--text)">'+esc(_adminEmail)+'</strong></div>';
+  html+='</div></div>';
+
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+async function saveSetting(key, value) {
+  try {
+    await sb.from('app_settings').upsert({key:key,value:value,updated_at:new Date().toISOString()},{onConflict:'key'});
+    DATA.settings[key]=value;
+    toast('Setting saved');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── Session init ──────────────────────────────────────────
+(async function init(){
+  if(!sb){ document.getElementById('loginWrap').style.display='flex'; return; }
+  try {
+    var res = await sb.auth.getSession();
+    if(res.data && res.data.session && res.data.session.user) {
+      var uid = res.data.session.user.id;
+      var pr = await sb.from('profiles').select('role,name,email').eq('id',uid).single();
+      if(!pr.error && pr.data && pr.data.role==='admin') {
+        _adminEmail = res.data.session.user.email || pr.data.email || '';
+        document.getElementById('sidebarUser').textContent = pr.data.name || _adminEmail;
+        showDash();
+        return;
+      } else {
+        await sb.auth.signOut();
+      }
+    }
+  } catch(e){}
+  document.getElementById('loginWrap').style.display='flex';
+})();
+</script>
+</body>
+</html>
