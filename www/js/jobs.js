@@ -1230,6 +1230,20 @@
       u.cvFileData = H._cpResumeData;
     }
 
+    // Bridge flat fields into u.cv so ViewCandidateCV shows real data
+    var prevCv = u.cv || {};
+    u.cv = {
+      headline:       u.jobTitle       || prevCv.headline       || '',
+      location:       u.city           || prevCv.location       || '',
+      summary:        u.bio            || prevCv.summary        || '',
+      skills:         (u.skills || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean),
+      expectedSalary: u.expectedSalary || prevCv.expectedSalary || '',
+      visible:        !!u.openToWork,
+      experience:     prevCv.experience     || [],
+      education:      prevCv.education      || [],
+      certifications: prevCv.certifications || []
+    };
+
     H.saveState();
 
     var _sb = window.supabase;
@@ -1255,6 +1269,7 @@
         upsertData.github_url          = u.githubUrl           || null;
         upsertData.website_url         = u.websiteUrl          || null;
         upsertData.cv_file_name        = u.cvFileName          || null;
+        upsertData.cv                  = u.cv                  || null;
       } catch(e) { /* columns may not exist yet */ }
       _sb.from('profiles').upsert(upsertData).then(function (res) {
         if (res && res.error) console.warn('Candidate profile sync:', res.error.message);
