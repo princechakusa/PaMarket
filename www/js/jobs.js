@@ -416,7 +416,10 @@
   H._cvDownload = function (userId) {
     var u = (H.state.users || []).find(function (x) { return x.id === userId; });
     if (!u) return;
-    var cv    = u.cv || {};
+    var cv = u.cv || {};
+    // Open the uploaded file directly if available
+    var fileUrl = cv.cvFileUrl || u.cvFileUrl || '';
+    if (fileUrl) { window.open(fileUrl, '_blank'); return; }
     var skills = cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean).map(function (s) { return s.trim(); }).filter(Boolean);
     var exp   = cv.experience     || [];
     var edu   = cv.education      || [];
@@ -916,19 +919,25 @@
     }).join('');
   }
 
-  function _cpRenderResumeZone(fileName) {
-    if (fileName) {
-      return '<div style="display:flex;align-items:center;gap:8px;background:#22c55e18;border-radius:10px;padding:10px 12px;border:1.5px solid #22c55e40">'
-        + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#15803d" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>'
-        + '<span style="flex:1;font-size:13px;font-weight:600;color:#15803d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(fileName) + '</span>'
-        + '<button onclick="H._cpClearResume()" style="background:none;border:none;color:#15803d;font-size:16px;cursor:pointer;padding:0;font-family:inherit">×</button>'
+  function _cpRenderResumeZone(fileName, uploading) {
+    if (uploading) {
+      return '<div style="display:flex;align-items:center;gap:8px;background:#1A3A8F14;border-radius:10px;padding:10px 12px;border:1.5px solid #1A3A8F30">'
+        + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#1A3A8F" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>'
+        + '<span style="font-size:13px;font-weight:600;color:#1A3A8F">Uploading…</span>'
         + '</div>';
     }
-    return '<label for="cpResumeFile" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:2px dashed var(--border);border-radius:10px;padding:20px;cursor:pointer;text-align:center">'
+    if (fileName) {
+      return '<div style="display:flex;align-items:center;gap:8px;background:#22c55e18;border-radius:10px;padding:10px 12px;border:1.5px solid #22c55e40">'
+        + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#15803d" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+        + '<span style="flex:1;font-size:13px;font-weight:600;color:#15803d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(fileName) + '</span>'
+        + '<button onclick="event.stopPropagation();H._cpClearResume()" style="background:none;border:none;color:#15803d;font-size:16px;cursor:pointer;padding:0;font-family:inherit">×</button>'
+        + '</div>';
+    }
+    return '<div onclick="document.getElementById(\'cpResumeFile\').click()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:2px dashed var(--border);border-radius:10px;padding:20px;cursor:pointer;text-align:center">'
       + '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
       + '<span style="font-size:13px;font-weight:600;color:var(--sub)">Tap to upload Resume / CV</span>'
       + '<span style="font-size:11px;color:var(--sub2)">PDF, DOC, DOCX · Max 3 MB</span>'
-      + '</label>';
+      + '</div>';
   }
 
   H.pages.CandidateProfile = function () {
@@ -1002,7 +1011,7 @@
       + '<div id="cpJobTypeWrap" style="display:flex;flex-wrap:wrap;gap:8px">'
       + jobTypesList.map(function(t) {
           var sel = selectedJobTypes.indexOf(t) !== -1;
-          return '<button onclick="H._cpToggleJobType(this)" data-jt="' + H.escHtml(t) + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + ';background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--sub)') + ';font-family:inherit">' + H.escHtml(t) + '</button>';
+          return '<button onclick="H._cpToggleJobType(this)" data-jt="' + H.escHtml(t) + '" data-selected="' + (sel ? '1' : '0') + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + ';background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--sub)') + ';font-family:inherit">' + H.escHtml(t) + '</button>';
         }).join('')
       + '</div></div>'
 
@@ -1027,7 +1036,7 @@
       + '<div id="cpContactMethodWrap" style="display:flex;gap:8px">'
       + [['<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp','whatsapp'],['<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call','call'],['<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Both','both']].map(function(cm){
           var sel = contactMethod === cm[1];
-          return '<button onclick="H._cpSetContact(this)" data-cm="' + cm[1] + '" style="flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + ';background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--sub)') + ';font-family:inherit">' + cm[0] + '</button>';
+          return '<button onclick="H._cpSetContact(this)" data-cm="' + cm[1] + '" data-selected="' + (sel ? '1' : '0') + '" style="flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + ';background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--sub)') + ';font-family:inherit">' + cm[0] + '</button>';
         }).join('')
       + '</div></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Best Time to Contact</label>'
@@ -1047,7 +1056,7 @@
       // ── Section 7: Resume / CV ──
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>', 'Resume / CV')
       + '<div id="cpResumeZone" style="margin-bottom:20px">' + _cpRenderResumeZone(cvFileName) + '</div>'
-      + '<input type="file" id="cpResumeFile" accept=".pdf,.doc,.docx" style="display:none">'
+      + '<input type="file" id="cpResumeFile" accept=".pdf,.doc,.docx" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">'
 
       + '</div>'
       + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
@@ -1102,29 +1111,33 @@
       });
     }
 
-    // Job type toggle
+    // Job type toggle — use data-selected so reads are browser-agnostic
     H._cpToggleJobType = function(btn) {
-      var sel = btn.style.background === '#1A3A8F' || btn.style.backgroundColor === 'rgb(26, 58, 143)';
+      var sel = btn.dataset.selected === '1';
       if (sel) {
+        btn.dataset.selected = '0';
         btn.style.background = 'var(--card)';
         btn.style.color = 'var(--sub)';
         btn.style.borderColor = 'var(--border)';
       } else {
+        btn.dataset.selected = '1';
         btn.style.background = '#1A3A8F';
         btn.style.color = '#fff';
         btn.style.borderColor = '#1A3A8F';
       }
     };
 
-    // Contact method segment
+    // Contact method segment — same data-selected approach
     H._cpSetContact = function(btn) {
       var wrap = document.getElementById('cpContactMethodWrap');
       if (!wrap) return;
       [].forEach.call(wrap.querySelectorAll('button'), function(b) {
+        b.dataset.selected = '0';
         b.style.background = 'var(--card)';
         b.style.color = 'var(--sub)';
         b.style.borderColor = 'var(--border)';
       });
+      btn.dataset.selected = '1';
       btn.style.background = '#1A3A8F';
       btn.style.color = '#fff';
       btn.style.borderColor = '#1A3A8F';
@@ -1188,7 +1201,7 @@
     var jtArr = [];
     if (jtWrap) {
       [].forEach.call(jtWrap.querySelectorAll('button'), function(b) {
-        if (b.style.background === '#1A3A8F' || b.style.backgroundColor === 'rgb(26, 58, 143)') jtArr.push(b.dataset.jt);
+        if (b.dataset.selected === '1') jtArr.push(b.dataset.jt);
       });
     }
     u.jobTypes = jtArr.join(',');
@@ -1208,13 +1221,9 @@
     var cmWrap = document.getElementById('cpContactMethodWrap');
     var contactMethod = '';
     if (cmWrap) {
-      var cmSel = cmWrap.querySelector('button[style*="background: #1A3A8F"], button[style*="background:#1A3A8F"]');
-      if (!cmSel) {
-        [].forEach.call(cmWrap.querySelectorAll('button'), function(b) {
-          if (b.style.backgroundColor === 'rgb(26, 58, 143)') cmSel = b;
-        });
-      }
-      if (cmSel) contactMethod = cmSel.dataset.cm || '';
+      [].forEach.call(cmWrap.querySelectorAll('button'), function(b) {
+        if (b.dataset.selected === '1') contactMethod = b.dataset.cm || '';
+      });
     }
     u.contactMethod = contactMethod;
     u.contactAvail  = (document.getElementById('cpAvail') || {}).value || 'Anytime';
@@ -1224,10 +1233,9 @@
     u.githubUrl   = ((document.getElementById('cpGithub')  || {}).value || '').trim();
     u.websiteUrl  = ((document.getElementById('cpWebsite') || {}).value || '').trim();
 
-    // Resume
+    // Resume filename tracking
     if (H._cpResumeFileName) {
       u.cvFileName = H._cpResumeFileName;
-      u.cvFileData = H._cpResumeData;
     }
 
     // Bridge flat fields into u.cv so ViewCandidateCV shows real data
@@ -1241,13 +1249,15 @@
       visible:        !!u.openToWork,
       experience:     prevCv.experience     || [],
       education:      prevCv.education      || [],
-      certifications: prevCv.certifications || []
+      certifications: prevCv.certifications || [],
+      cvFileUrl:      prevCv.cvFileUrl      || u.cvFileUrl || ''
     };
 
     H.saveState();
 
-    var _sb = window.supabase;
-    if (_sb && typeof _sb.from === 'function') {
+    var _doUpsert = function(cvFileUrl) {
+      var _sb = window.supabase;
+      if (!_sb || typeof _sb.from !== 'function') return;
       var upsertData = {
         id: u.id,
         open_to_work: u.openToWork,
@@ -1258,22 +1268,58 @@
         city: u.city || null
       };
       try {
-        upsertData.bio                 = u.bio                 || null;
-        upsertData.job_types           = u.jobTypes            || null;
-        upsertData.expected_salary     = u.expectedSalary      || null;
-        upsertData.whatsapp_number     = u.whatsappFull        || null;
-        upsertData.phone_for_calls     = u.phoneForCalls       || null;
-        upsertData.contact_method      = u.contactMethod       || null;
-        upsertData.contact_availability = u.contactAvail       || null;
-        upsertData.linkedin_url        = u.linkedinUrl         || null;
-        upsertData.github_url          = u.githubUrl           || null;
-        upsertData.website_url         = u.websiteUrl          || null;
-        upsertData.cv_file_name        = u.cvFileName          || null;
-        upsertData.cv                  = u.cv                  || null;
-      } catch(e) { /* columns may not exist yet */ }
-      _sb.from('profiles').upsert(upsertData).then(function (res) {
+        upsertData.bio                  = u.bio                 || null;
+        upsertData.job_types            = u.jobTypes            || null;
+        upsertData.expected_salary      = u.expectedSalary      || null;
+        upsertData.whatsapp_number      = u.whatsappFull        || null;
+        upsertData.phone_for_calls      = u.phoneForCalls       || null;
+        upsertData.contact_method       = u.contactMethod       || null;
+        upsertData.contact_availability = u.contactAvail        || null;
+        upsertData.linkedin_url         = u.linkedinUrl         || null;
+        upsertData.github_url           = u.githubUrl           || null;
+        upsertData.website_url          = u.websiteUrl          || null;
+        upsertData.cv_file_name         = u.cvFileName          || null;
+        upsertData.cv                   = u.cv                  || null;
+        if (cvFileUrl) upsertData.cv_file_url = cvFileUrl;
+      } catch(e) {}
+      _sb.from('profiles').upsert(upsertData).then(function(res) {
         if (res && res.error) console.warn('Candidate profile sync:', res.error.message);
       });
+    };
+
+    // Upload resume file to Supabase Storage if a new file was selected
+    if (H._cpResumeData && H._cpResumeFileName && window.supabase) {
+      var zone = document.getElementById('cpResumeZone');
+      if (zone) zone.innerHTML = _cpRenderResumeZone(null, true);
+      var base64 = H._cpResumeData.split(',')[1] || '';
+      var mimeMatch = H._cpResumeData.match(/data:([^;]+);/);
+      var mimeType = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+      try {
+        var byteStr = atob(base64);
+        var byteArr = new Uint8Array(byteStr.length);
+        for (var k = 0; k < byteStr.length; k++) byteArr[k] = byteStr.charCodeAt(k);
+        var blob = new Blob([byteArr], { type: mimeType });
+        var filePath = u.id + '/' + Date.now() + '_' + H._cpResumeFileName;
+        window.supabase.storage.from('cv-files').upload(filePath, blob, { upsert: true })
+          .then(function(uploadRes) {
+            var pubUrl = '';
+            if (!uploadRes.error) {
+              var pubRes = window.supabase.storage.from('cv-files').getPublicUrl(filePath);
+              pubUrl = pubRes.data && pubRes.data.publicUrl ? pubRes.data.publicUrl : '';
+            }
+            if (pubUrl) {
+              u.cvFileUrl = pubUrl;
+              u.cv.cvFileUrl = pubUrl;
+              H.saveState();
+            }
+            _doUpsert(pubUrl);
+          });
+      } catch(uploadErr) {
+        console.warn('Resume upload error:', uploadErr.message);
+        _doUpsert('');
+      }
+    } else {
+      _doUpsert('');
     }
 
     H.toast(u.openToWork ? 'Profile saved — employers can now find you!' : 'Profile saved — you are hidden from employer searches');
