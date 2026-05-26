@@ -437,3 +437,2144 @@ footer{background:var(--primary-dark);color:rgba(255,255,255,.8);padding:48px 0 
 </style>
 </head>
 <body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════════════════ -->
+<header id="site-header">
+  <div class="header-inner">
+    <a href="#home" class="logo" onclick="navigate('home')">
+      <span class="logo-text">Pa<span>Market</span></span>
+    </a>
+    <div class="header-search-wrap">
+      <input type="text" id="headerSearch" placeholder="Search for anything..." autocomplete="off">
+      <button onclick="doSearch()">Search</button>
+    </div>
+    <nav class="header-nav">
+      <a class="nav-link" onclick="navigate('home')" href="#home">Home</a>
+      <a class="nav-link" onclick="navigate('browse')" href="#browse">Browse</a>
+      <a class="nav-link" onclick="navigate('advertise')" href="#advertise">Advertise</a>
+      <a class="nav-link" onclick="navigate('messages')" href="#messages">Messages</a>
+      <a class="btn-post-ad" onclick="navigate('post')" href="#post">+ Post Ad</a>
+      <div id="headerUser" style="display:none">
+        <button class="avatar-btn" id="headerAvatarBtn" onclick="navigate('dashboard')"></button>
+      </div>
+      <div id="headerAuth">
+        <button class="btn btn-ghost btn-sm" onclick="showAuthModal('login')">Sign In</button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MOBILE BOTTOM NAV
+═══════════════════════════════════════════════════════════ -->
+<nav id="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bnav-item active" id="bnav-home" onclick="navigate('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </button>
+    <button class="bnav-item" id="bnav-browse" onclick="navigate('browse')">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Browse
+    </button>
+    <button class="bnav-item bnav-post" onclick="navigate('post')">
+      <svg viewBox="0 0 24 24" style="width:24px;height:24px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Post
+    </button>
+    <button class="bnav-item" id="bnav-messages" onclick="navigate('messages')">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Messages
+    </button>
+    <button class="bnav-item" id="bnav-account" onclick="handleAccountTap()">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Account
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN CONTENT AREA
+═══════════════════════════════════════════════════════════ -->
+<main id="main-content">
+
+<!-- ── HOME PAGE ── -->
+<div id="page-home" class="page">
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Buy &amp; Sell Anything in <span>Zimbabwe</span></h1>
+      <p>Zimbabwe's #1 free classified marketplace. Millions of listings, zero fees.</p>
+      <div class="hero-search">
+        <input type="text" id="heroSearch" placeholder="What are you looking for?" autocomplete="off" onkeydown="if(event.key==='Enter')doSearch()">
+        <button onclick="doSearch()">Search Free</button>
+      </div>
+      <div class="hero-tags" id="heroTags">
+        <span class="hero-tag" onclick="browseCategory('Property')">🏠 Property</span>
+        <span class="hero-tag" onclick="browseCategory('Vehicles')">🚗 Vehicles</span>
+        <span class="hero-tag" onclick="browseCategory('Electronics')">📱 Electronics</span>
+        <span class="hero-tag" onclick="browseCategory('Jobs')">💼 Jobs</span>
+        <span class="hero-tag" onclick="browseCategory('Fashion')">👗 Fashion</span>
+        <span class="hero-tag" onclick="browseCategory('Services')">🔧 Services</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="stats-inner">
+      <div class="stat-item"><strong id="statTotal">50,000+</strong> Listings</div>
+      <div class="stat-divider"></div>
+      <div class="stat-item"><strong>25+</strong> Cities</div>
+      <div class="stat-divider"></div>
+      <div class="stat-item"><strong>100%</strong> Free to Post</div>
+      <div class="stat-divider"></div>
+      <div class="stat-item"><strong>Trusted</strong> by Zimbabweans</div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Categories -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Browse by Category</h2>
+        <a class="section-link" onclick="navigate('browse')" href="#browse">See all →</a>
+      </div>
+      <div class="cat-grid" id="homeCatGrid">
+        <!-- filled by JS -->
+      </div>
+    </section>
+
+    <!-- Featured Ads -->
+    <section class="section" id="featuredSection">
+      <div class="section-header">
+        <h2 class="section-title">⭐ Featured Ads</h2>
+        <a class="section-link" onclick="navigate('browse')" href="#browse">View all →</a>
+      </div>
+      <div class="featured-scroll" id="featuredAds">
+        <!-- filled by JS -->
+      </div>
+    </section>
+
+    <!-- Latest Ads -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Latest Ads</h2>
+        <a class="section-link" onclick="navigate('browse')" href="#browse">View all →</a>
+      </div>
+      <div class="ads-grid" id="homeLatestAds">
+        <!-- filled by JS -->
+      </div>
+    </section>
+
+    <!-- CTA Banner -->
+    <section class="section">
+      <div class="cta-banner">
+        <div class="cta-text">
+          <h2>Post Your Ad Free Today</h2>
+          <p>Reach thousands of buyers across Zimbabwe. It's 100% free!</p>
+        </div>
+        <button class="btn btn-lg" onclick="navigate('post')">Post Free Ad →</button>
+      </div>
+    </section>
+
+    <!-- App Download -->
+    <section class="section">
+      <div class="app-section">
+        <div class="app-text">
+          <h2>Get the PaMarket App</h2>
+          <p>Buy and sell on the go. Get notified instantly when someone contacts you. Available on Android and iOS.</p>
+          <div class="app-badges">
+            <div class="app-badge">
+              <div class="app-badge-icon">🤖</div>
+              <div class="app-badge-text"><small>GET IT ON</small><strong>Google Play</strong></div>
+            </div>
+            <div class="app-badge">
+              <div class="app-badge-icon">🍎</div>
+              <div class="app-badge-text"><small>Download on the</small><strong>App Store</strong></div>
+            </div>
+          </div>
+        </div>
+        <div class="app-phone">📱</div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ── BROWSE PAGE ── -->
+<div id="page-browse" class="page">
+  <!-- Mobile filter chips -->
+  <div class="mobile-filter-bar" id="mobileFilterBar">
+    <button class="filter-chip" id="mfc-all" onclick="setMobileFilter('all')">All</button>
+    <button class="filter-chip" id="mfc-Property" onclick="setMobileFilter('Property')">🏠 Property</button>
+    <button class="filter-chip" id="mfc-Vehicles" onclick="setMobileFilter('Vehicles')">🚗 Vehicles</button>
+    <button class="filter-chip" id="mfc-Electronics" onclick="setMobileFilter('Electronics')">📱 Electronics</button>
+    <button class="filter-chip" id="mfc-Jobs" onclick="setMobileFilter('Jobs')">💼 Jobs</button>
+    <button class="filter-chip" id="mfc-Services" onclick="setMobileFilter('Services')">🔧 Services</button>
+    <button class="filter-chip" id="mfc-Fashion" onclick="setMobileFilter('Fashion')">👗 Fashion</button>
+    <button class="filter-chip" id="mfc-Furniture" onclick="setMobileFilter('Furniture')">🛋️ Furniture</button>
+    <button class="filter-chip" id="mfc-Other" onclick="setMobileFilter('Other')">📦 Other</button>
+  </div>
+  <div class="browse-layout">
+    <!-- Sidebar filters (desktop) -->
+    <aside class="filter-sidebar" id="filterSidebar">
+      <div class="filter-group">
+        <label>Category</label>
+        <select class="filter-select" id="filterCat" onchange="applyBrowseFilters()">
+          <option value="">All Categories</option>
+          <option value="Property">🏠 Property</option>
+          <option value="Vehicles">🚗 Vehicles</option>
+          <option value="Electronics">📱 Electronics</option>
+          <option value="Jobs">💼 Jobs</option>
+          <option value="Services">🔧 Services</option>
+          <option value="Fashion">👗 Fashion</option>
+          <option value="Furniture">🛋️ Furniture</option>
+          <option value="Other">📦 Other</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Location</label>
+        <select class="filter-select" id="filterLoc" onchange="applyBrowseFilters()">
+          <option value="">All Locations</option>
+          <option>Harare</option><option>Bulawayo</option><option>Chitungwiza</option>
+          <option>Mutare</option><option>Gweru</option><option>Kwekwe</option>
+          <option>Kadoma</option><option>Masvingo</option><option>Hwange</option>
+          <option>Chinhoyi</option><option>Norton</option><option>Marondera</option>
+          <option>Ruwa</option><option>Chegutu</option><option>Zvishavane</option>
+          <option>Bindura</option><option>Beitbridge</option><option>Redcliff</option>
+          <option>Victoria Falls</option><option>Kariba</option><option>Karoi</option>
+          <option>Chipinge</option><option>Shurugwi</option><option>Chiredzi</option>
+          <option>Gokwe</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Price Range</label>
+        <div class="price-row">
+          <input type="number" class="price-input" id="filterMinPrice" placeholder="Min" onchange="applyBrowseFilters()">
+          <span style="color:var(--sub)">–</span>
+          <input type="number" class="price-input" id="filterMaxPrice" placeholder="Max" onchange="applyBrowseFilters()">
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Sort By</label>
+        <select class="filter-select" id="filterSort" onchange="applyBrowseFilters()">
+          <option value="newest">Newest First</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="featured">Featured First</option>
+        </select>
+      </div>
+      <button class="btn btn-ghost btn-full" onclick="clearBrowseFilters()">Clear Filters</button>
+    </aside>
+
+    <!-- Main results -->
+    <div class="browse-main">
+      <div class="browse-topbar">
+        <div class="results-count" id="browseResultsCount"><span>Loading...</span></div>
+        <select class="sort-select" id="browseSortMobile" onchange="applyBrowseFilters()">
+          <option value="newest">Newest First</option>
+          <option value="price_asc">Price ↑</option>
+          <option value="price_desc">Price ↓</option>
+        </select>
+      </div>
+      <div class="ads-grid" id="browseResults">
+        <!-- skeletons while loading -->
+      </div>
+      <div class="load-more-wrap" id="browseLoadMore" style="display:none">
+        <button class="btn btn-outline btn-lg" onclick="loadMoreBrowse()">Load More Ads</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── AD DETAIL PAGE ── -->
+<div id="page-detail" class="page">
+  <div class="container">
+    <div id="detailContent">
+      <div class="page-loader"><div class="loading-spinner"></div><span>Loading listing...</span></div>
+    </div>
+  </div>
+  <!-- Mobile sticky buttons -->
+  <div class="detail-sticky-bottom" id="detailStickyBottom" style="display:none">
+    <button class="contact-btn btn-whatsapp" id="stickyWABtn" style="flex:1">
+      <svg viewBox="0 0 24 24" fill="#fff" stroke="none" width="20" height="20"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      WhatsApp
+    </button>
+    <button class="contact-btn btn-call" id="stickyCallBtn" style="flex:1;background:var(--primary);color:#fff">
+      📞 Call
+    </button>
+  </div>
+</div>
+
+<!-- ── POST AD PAGE ── -->
+<div id="page-post" class="page">
+  <div class="post-container">
+    <div class="step-indicator" id="postSteps">
+      <div class="step active" id="step-1"><div class="step-num">1</div><div class="step-label">Category</div></div>
+      <div class="step" id="step-2"><div class="step-num">2</div><div class="step-label">Details</div></div>
+      <div class="step" id="step-3"><div class="step-num">3</div><div class="step-label">Ad Info</div></div>
+      <div class="step" id="step-4"><div class="step-num">4</div><div class="step-label">Review</div></div>
+    </div>
+    <div id="postContent"><!-- filled by JS --></div>
+  </div>
+</div>
+
+<!-- ── ADVERTISE PAGE ── -->
+<div id="page-advertise" class="page">
+  <div class="advertise-hero">
+    <div class="container">
+      <h1>Advertise with PaMarket</h1>
+      <p>Reach millions of Zimbabweans actively searching to buy. Grow your business today.</p>
+      <button class="btn btn-accent btn-lg" onclick="navigate('advertise-start')">Start Advertising →</button>
+    </div>
+  </div>
+  <div class="container">
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Who We Help</h2>
+      </div>
+      <div class="adv-cards">
+        <div class="adv-card">
+          <div class="adv-card-icon">🏢</div>
+          <h3>For Businesses</h3>
+          <p>Promote your products and services to thousands of active buyers across Zimbabwe. Get featured placement and sponsored listings.</p>
+          <button class="btn btn-outline btn-full" onclick="navigate('advertise-learn')">Learn More</button>
+        </div>
+        <div class="adv-card">
+          <div class="adv-card-icon">💼</div>
+          <h3>For Job Advertisers</h3>
+          <p>Find the right talent fast. Post job listings with premium placement and reach qualified candidates in your city.</p>
+          <button class="btn btn-outline btn-full" onclick="navigate('advertise-learn')">Learn More</button>
+        </div>
+        <div class="adv-card">
+          <div class="adv-card-icon">🏠</div>
+          <h3>Property &amp; Services</h3>
+          <p>Sell or rent properties faster with featured placements. Get maximum visibility for real estate and professional services.</p>
+          <button class="btn btn-outline btn-full" onclick="navigate('advertise-learn')">Learn More</button>
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="adv-stats">
+        <div><div class="adv-stat-num">50K+</div><div class="adv-stat-label">Active Listings</div></div>
+        <div><div class="adv-stat-num">25+</div><div class="adv-stat-label">Cities Covered</div></div>
+        <div><div class="adv-stat-num">10K+</div><div class="adv-stat-label">Monthly Users</div></div>
+        <div><div class="adv-stat-num">100%</div><div class="adv-stat-label">Zimbabwe Focused</div></div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="cta-banner">
+        <div class="cta-text">
+          <h2>Ready to Grow Your Business?</h2>
+          <p>Contact our sales team today and start reaching your customers.</p>
+        </div>
+        <button class="btn btn-lg" onclick="navigate('advertise-start')">Start Advertising</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ── ADVERTISE LEARN MORE PAGE ── -->
+<div id="page-advertise-learn" class="page">
+  <div class="container" style="max-width:800px">
+    <div style="padding:48px 0">
+      <button class="btn btn-ghost btn-sm" onclick="navigate('advertise')" style="margin-bottom:24px">← Back</button>
+      <h1 style="font-size:36px;font-weight:900;margin-bottom:16px">How PaMarket Advertising Works</h1>
+      <p style="font-size:18px;color:var(--sub);margin-bottom:40px">Two powerful ways to get more visibility for your listings.</p>
+      <div style="display:grid;gap:24px;margin-bottom:48px">
+        <div class="form-section">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+            <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-size:24px">⭐</div>
+            <div><h2 style="font-size:22px;margin:0">Featured Listings</h2><p style="margin:0;color:var(--sub)">Maximum visibility at the top</p></div>
+          </div>
+          <ul style="list-style:none;display:grid;gap:10px;margin-bottom:16px">
+            <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--success);font-size:18px">✓</span><span>Pinned at the very top of all search results and category pages</span></li>
+            <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--success);font-size:18px">✓</span><span>Gold "Featured" badge for instant recognition</span></li>
+            <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--success);font-size:18px">✓</span><span>Highlighted section on the homepage</span></li>
+            <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--success);font-size:18px">✓</span><span>Up to 10x more views than regular listings</span></li>
+          </ul>
+          <div class="promo-preview featured-preview">
+            <strong>⭐ Featured</strong> — Your ad appears here, above all others, with a gold badge
+          </div>
+        </div>
+        <div class="form-section">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+            <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#F5A623,#C47D0A);display:flex;align-items:center;justify-content:center;font-size:24px">📢</div>
+            <div><h2 style="font-size:22px;margin:0">Sponsored Listings</h2><p style="margin:0;color:var(--sub)">Reach more buyers organically</p></div>
+          </div>
+          <ul style="list-style:none;display:grid;gap:10px;margin-bottom:16px">
+            <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--success);font-size:18px">✓</span><span>Inserted every 5th position in browse results — high visibility</span></li>
+            <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--success);font-size:18px">✓</span><span>Amber "Sponsored" badge — buyers trust sponsored content</span></li>
+            <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--success);font-size:18px">✓</span><span>Amber border highlighting to stand out from regular ads</span></li>
+            <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--success);font-size:18px">✓</span><span>Consistent exposure throughout browsing sessions</span></li>
+          </ul>
+          <div class="promo-preview sponsored-preview">
+            <strong>📢 Sponsored</strong> — Your ad appears naturally within results, clearly labeled
+          </div>
+        </div>
+      </div>
+      <div class="form-section" style="text-align:center">
+        <h2 style="font-size:24px;margin-bottom:8px">Pricing</h2>
+        <p style="color:var(--sub);margin-bottom:24px">Flexible pricing tailored to your budget and goals. Contact us for a custom quote.</p>
+        <p style="font-size:18px;font-weight:700;color:var(--primary);margin-bottom:24px">Contact us for pricing →</p>
+        <button class="btn btn-primary btn-lg" onclick="navigate('advertise-start')">Start Advertising Now</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADVERTISE START FLOW PAGE ── -->
+<div id="page-advertise-start" class="page">
+  <div class="post-container">
+    <div id="advStartContent"><!-- filled by JS --></div>
+  </div>
+</div>
+
+<!-- ── DASHBOARD PAGE ── -->
+<div id="page-dashboard" class="page">
+  <!-- Mobile tabs -->
+  <div class="dash-tabs" id="dashTabs">
+    <div class="dash-tab-item active" onclick="showDashSection('myads',this)">My Ads</div>
+    <div class="dash-tab-item" onclick="showDashSection('promotions',this)">Promotions</div>
+    <div class="dash-tab-item" onclick="showDashSection('saved',this)">Saved</div>
+    <div class="dash-tab-item" onclick="showDashSection('messages2',this)">Messages</div>
+    <div class="dash-tab-item" onclick="showDashSection('profile',this)">Profile</div>
+  </div>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <nav class="dash-sidebar">
+      <div style="padding:16px 24px 20px;border-bottom:1px solid var(--border)">
+        <div id="dashUserInfo" style="display:flex;align-items:center;gap:12px">
+          <div class="avatar-btn" id="dashAvatar">?</div>
+          <div>
+            <div style="font-size:15px;font-weight:700" id="dashName">Loading...</div>
+            <div style="font-size:12px;color:var(--sub)" id="dashEmail"></div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 0">
+        <div class="dash-nav-item active" id="dnav-myads" onclick="showDashSection('myads',this)">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          My Ads
+        </div>
+        <div class="dash-nav-item" id="dnav-promotions" onclick="showDashSection('promotions',this)">
+          <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Promotions
+        </div>
+        <div class="dash-nav-item" id="dnav-saved" onclick="showDashSection('saved',this)">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          Saved Ads
+        </div>
+        <div class="dash-nav-item" id="dnav-messages2" onclick="navigate('messages')">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Messages
+        </div>
+        <div class="dash-nav-item" id="dnav-profile" onclick="showDashSection('profile',this)">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile Settings
+        </div>
+        <div class="dash-nav-item" onclick="logout()" style="margin-top:24px">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </div>
+      </div>
+    </nav>
+    <div class="dash-content" id="dashContent">
+      <div class="page-loader"><div class="loading-spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MESSAGES PAGE ── -->
+<div id="page-messages" class="page">
+  <div class="msg-layout">
+    <div class="conv-list" id="convList">
+      <div class="conv-header">Messages</div>
+      <div id="convListInner">
+        <div class="page-loader"><div class="loading-spinner"></div></div>
+      </div>
+    </div>
+    <div class="chat-window" id="chatWindow">
+      <div class="chat-empty">
+        <div style="font-size:48px;margin-bottom:12px">💬</div>
+        <span>Select a conversation to start chatting</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN PAGE ── -->
+<div id="page-admin" class="page">
+  <div class="container" style="padding:32px 24px">
+    <h1 style="font-size:28px;font-weight:900;margin-bottom:8px">Admin Panel</h1>
+    <p style="color:var(--sub);margin-bottom:32px">Manage listings, users and reports</p>
+    <div class="admin-stats" id="adminStats">
+      <div class="admin-stat-card"><div class="admin-stat-num" id="astat-total">—</div><div class="admin-stat-label">Total Listings</div></div>
+      <div class="admin-stat-card"><div class="admin-stat-num" id="astat-pending">—</div><div class="admin-stat-label">Pending Review</div></div>
+      <div class="admin-stat-card"><div class="admin-stat-num" id="astat-users">—</div><div class="admin-stat-label">Total Users</div></div>
+      <div class="admin-stat-card"><div class="admin-stat-num" id="astat-active">—</div><div class="admin-stat-label">Active Listings</div></div>
+    </div>
+    <div class="admin-tabs" id="adminTabsBar">
+      <div class="admin-tab active" onclick="showAdminTab('pending',this)">Pending Ads</div>
+      <div class="admin-tab" onclick="showAdminTab('all',this)">All Ads</div>
+      <div class="admin-tab" onclick="showAdminTab('users',this)">Users</div>
+    </div>
+    <div id="adminContent">
+      <div class="page-loader"><div class="loading-spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+</main><!-- end #main-content -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     AUTH MODAL
+═══════════════════════════════════════════════════════════ -->
+<div id="authModal" class="modal-overlay hidden" onclick="if(event.target===this)closeAuthModal()">
+  <div class="modal-box" style="position:relative">
+    <button class="modal-close" onclick="closeAuthModal()">✕</button>
+    <h2 id="authModalTitle">Welcome Back</h2>
+    <p id="authModalSub">Sign in to your PaMarket account</p>
+    <div class="modal-tabs">
+      <div class="modal-tab active" id="loginTab" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="modal-tab" id="registerTab" onclick="switchAuthTab('register')">Register</div>
+    </div>
+    <div id="loginForm">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="loginEmail" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()" id="loginBtn">Sign In</button>
+    </div>
+    <div id="registerForm" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" id="regName" placeholder="John Doe">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="regEmail" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="tel" class="form-input" id="regPhone" placeholder="+263 77 123 4567">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="regPassword" placeholder="Min 6 characters">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doRegister()" id="registerBtn">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TOAST CONTAINER
+═══════════════════════════════════════════════════════════ -->
+<div id="toast-container"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════ -->
+<footer id="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo-text">Pa<span>Market</span></div>
+        <p>Zimbabwe's #1 free classified marketplace. Buy and sell anything, anywhere in Zimbabwe.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Marketplace</h4>
+        <a onclick="navigate('browse')" href="#browse">Browse Ads</a>
+        <a onclick="navigate('post')" href="#post">Post Free Ad</a>
+        <a onclick="browseCategory('Property')" href="#browse">Property</a>
+        <a onclick="browseCategory('Vehicles')" href="#browse">Vehicles</a>
+        <a onclick="browseCategory('Electronics')" href="#browse">Electronics</a>
+      </div>
+      <div class="footer-col">
+        <h4>Business</h4>
+        <a onclick="navigate('advertise')" href="#advertise">Advertise</a>
+        <a onclick="navigate('advertise-learn')" href="#advertise-learn">How It Works</a>
+        <a onclick="navigate('advertise-start')" href="#advertise-start">Start Advertising</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#">About Us</a>
+        <a href="#">Contact</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="#">Help Center</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 PaMarket Zimbabwe. All rights reserved.</span>
+      <span>Made with ❤️ for Zimbabwe</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════
+const SB_URL = 'https://gxgytumhknmnwspxjzxw.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
+const CATS = [
+  {name:'Property',icon:'🏠'},
+  {name:'Vehicles',icon:'🚗'},
+  {name:'Electronics',icon:'📱'},
+  {name:'Jobs',icon:'💼'},
+  {name:'Services',icon:'🔧'},
+  {name:'Fashion',icon:'👗'},
+  {name:'Furniture',icon:'🛋️'},
+  {name:'Other',icon:'📦'}
+];
+const ZIM_CITIES = ['Harare','Bulawayo','Chitungwiza','Mutare','Gweru','Kwekwe','Kadoma','Masvingo','Hwange','Chinhoyi','Norton','Marondera','Ruwa','Chegutu','Zvishavane','Bindura','Beitbridge','Redcliff','Victoria Falls','Kariba','Karoi','Chipinge','Shurugwi','Chiredzi','Gokwe'];
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let session = null;
+let currentUser = null;
+let savedAds = JSON.parse(localStorage.getItem('savedAds') || '[]');
+let browseOffset = 0;
+let browseHasMore = false;
+let browseFilters = {cat:'',loc:'',minPrice:'',maxPrice:'',sort:'newest',q:''};
+let postStep = 1;
+let postData = {category:'',type:'new',title:'',description:'',price:'',currency:'USD',location:'',contact:'both',whatsapp:'',images:[]};
+let advStep = 1;
+let advData = {category:'',listingId:'',listingTitle:'',type:''};
+let currentDetailId = null;
+let activePage = 'home';
+let chatListenerInterval = null;
+let activeConvId = null;
+
+// ═══════════════════════════════════════════════════════════
+// SUPABASE HELPERS
+// ═══════════════════════════════════════════════════════════
+function sbHeaders(auth=false) {
+  const tok = auth && session ? session.access_token : SB_KEY;
+  return {
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + tok,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  };
+}
+
+async function sbGet(table, query='') {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}?${query}`, {headers: sbHeaders()});
+    if (!r.ok) throw new Error(await r.text());
+    return await r.json();
+  } catch(e) { console.error('sbGet',e); return null; }
+}
+
+async function sbPost(table, body) {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}`, {
+      method:'POST', headers: sbHeaders(true), body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return await r.json();
+  } catch(e) { console.error('sbPost',e); return null; }
+}
+
+async function sbPatch(table, query, body) {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}?${query}`, {
+      method:'PATCH', headers: sbHeaders(true), body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return await r.json();
+  } catch(e) { console.error('sbPatch',e); return null; }
+}
+
+async function sbDelete(table, query) {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}?${query}`, {
+      method:'DELETE', headers: sbHeaders(true)
+    });
+    return r.ok;
+  } catch(e) { return false; }
+}
+
+async function sbAuth(email, password, action='login') {
+  const endpoint = action === 'login'
+    ? `${SB_URL}/auth/v1/token?grant_type=password`
+    : `${SB_URL}/auth/v1/signup`;
+  const r = await fetch(endpoint, {
+    method:'POST',
+    headers: {'apikey': SB_KEY, 'Content-Type': 'application/json'},
+    body: JSON.stringify({email, password})
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error_description || data.msg || 'Auth failed');
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════
+function toast(msg, type='') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast' + (type ? ' '+type : '');
+  t.textContent = msg;
+  c.appendChild(t);
+  requestAnimationFrame(() => { t.classList.add('show'); });
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3200);
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════
+function loadSession() {
+  const s = localStorage.getItem('pamarket_session');
+  if (s) { session = JSON.parse(s); loadUserProfile(); }
+  updateAuthUI();
+}
+
+async function loadUserProfile() {
+  if (!session) return;
+  const data = await sbGet('profiles', `id=eq.${session.user.id}&select=*`);
+  if (data && data[0]) {
+    currentUser = {...session.user, ...data[0]};
+  } else {
+    currentUser = session.user;
+  }
+  updateAuthUI();
+}
+
+function updateAuthUI() {
+  const headerUser = document.getElementById('headerUser');
+  const headerAuth = document.getElementById('headerAuth');
+  const avatarBtn = document.getElementById('headerAvatarBtn');
+  if (session && currentUser) {
+    headerUser.style.display = 'block';
+    headerAuth.style.display = 'none';
+    const name = currentUser.name || currentUser.email || '?';
+    avatarBtn.textContent = name.charAt(0).toUpperCase();
+    document.getElementById('dashName').textContent = name;
+    document.getElementById('dashEmail').textContent = currentUser.email || '';
+    document.getElementById('dashAvatar').textContent = name.charAt(0).toUpperCase();
+  } else {
+    headerUser.style.display = 'none';
+    headerAuth.style.display = 'block';
+  }
+}
+
+function showAuthModal(tab='login') {
+  document.getElementById('authModal').classList.remove('hidden');
+  switchAuthTab(tab);
+}
+
+function closeAuthModal() {
+  document.getElementById('authModal').classList.add('hidden');
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('loginTab').classList.toggle('active', tab==='login');
+  document.getElementById('registerTab').classList.toggle('active', tab==='register');
+  document.getElementById('loginForm').style.display = tab==='login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = tab==='register' ? 'block' : 'none';
+  document.getElementById('authModalTitle').textContent = tab==='login' ? 'Welcome Back' : 'Create Account';
+  document.getElementById('authModalSub').textContent = tab==='login' ? 'Sign in to your PaMarket account' : 'Join thousands of buyers & sellers in Zimbabwe';
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!email || !password) { toast('Please fill in all fields','error'); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+  try {
+    const data = await sbAuth(email, password, 'login');
+    session = data;
+    localStorage.setItem('pamarket_session', JSON.stringify(data));
+    await loadUserProfile();
+    closeAuthModal();
+    toast('Welcome back! 👋', 'success');
+    if (activePage === 'post') renderPostStep(1);
+    else if (activePage === 'dashboard') loadDashboard();
+  } catch(e) {
+    toast(e.message || 'Login failed', 'error');
+  } finally { btn.textContent = 'Sign In'; btn.disabled = false; }
+}
+
+async function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const password = document.getElementById('regPassword').value;
+  if (!name || !email || !password) { toast('Please fill required fields','error'); return; }
+  if (password.length < 6) { toast('Password must be at least 6 characters','error'); return; }
+  const btn = document.getElementById('registerBtn');
+  btn.textContent = 'Creating account...'; btn.disabled = true;
+  try {
+    const data = await sbAuth(email, password, 'register');
+    session = data;
+    localStorage.setItem('pamarket_session', JSON.stringify(data));
+    // Create profile
+    await sbPost('profiles', {id: data.user.id, name, phone, role:'user'});
+    await loadUserProfile();
+    closeAuthModal();
+    toast('Account created! Welcome to PaMarket 🎉', 'success');
+    if (activePage === 'post') renderPostStep(1);
+    else if (activePage === 'dashboard') loadDashboard();
+  } catch(e) {
+    toast(e.message || 'Registration failed', 'error');
+  } finally { btn.textContent = 'Create Account'; btn.disabled = false; }
+}
+
+function logout() {
+  session = null; currentUser = null;
+  localStorage.removeItem('pamarket_session');
+  updateAuthUI();
+  navigate('home');
+  toast('Signed out successfully');
+}
+
+function handleAccountTap() {
+  if (session) navigate('dashboard');
+  else showAuthModal('login');
+}
+
+// ═══════════════════════════════════════════════════════════
+// ROUTING
+// ═══════════════════════════════════════════════════════════
+function navigate(page, params={}) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  // Hide footer on some pages
+  const noFooter = ['messages'];
+  document.getElementById('site-footer').style.display = noFooter.includes(page) ? 'none' : 'block';
+
+  activePage = page;
+  updateNavActive(page);
+
+  const pageEl = document.getElementById('page-' + page);
+  if (!pageEl) { navigate('home'); return; }
+  pageEl.classList.add('active');
+
+  window.scrollTo(0, 0);
+
+  // Update hash
+  if (page === 'detail' && params.id) {
+    history.pushState(null, '', '#detail/' + params.id);
+  } else {
+    history.pushState(null, '', '#' + page);
+  }
+
+  // Page-specific init
+  if (page === 'home') initHome();
+  else if (page === 'browse') initBrowse(params);
+  else if (page === 'detail') initDetail(params.id);
+  else if (page === 'post') initPost();
+  else if (page === 'dashboard') { if (!session) { showAuthModal('login'); return; } loadDashboard(); }
+  else if (page === 'messages') { if (!session) { showAuthModal('login'); return; } loadMessages(); }
+  else if (page === 'admin') { if (!session) { showAuthModal('login'); return; } loadAdmin(); }
+  else if (page === 'advertise-start') initAdvStart();
+}
+
+function updateNavActive(page) {
+  document.querySelectorAll('.nav-link,.bnav-item').forEach(el => el.classList.remove('active'));
+  const map = {home:'bnav-home',browse:'bnav-browse',messages:'bnav-messages',dashboard:'bnav-account'};
+  if (map[page]) document.getElementById(map[page])?.classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(el => {
+    if (el.getAttribute('href') === '#' + page) el.classList.add('active');
+  });
+}
+
+function handleHash() {
+  const hash = window.location.hash.slice(1) || 'home';
+  if (hash.startsWith('detail/')) {
+    navigate('detail', {id: hash.slice(7)});
+  } else if (hash.startsWith('browse')) {
+    const params = {};
+    const qPart = hash.replace('browse','').replace('?','');
+    if (qPart) {
+      qPart.split('&').forEach(p => { const [k,v] = p.split('='); if(k&&v) params[k] = decodeURIComponent(v); });
+    }
+    navigate('browse', params);
+  } else {
+    navigate(hash || 'home');
+  }
+}
+
+window.addEventListener('popstate', handleHash);
+
+function doSearch() {
+  const q = (document.getElementById('headerSearch').value || document.getElementById('heroSearch').value || '').trim();
+  browseFilters.q = q;
+  if (q) { browseFilters.q = q; }
+  navigate('browse', {q});
+}
+
+function browseCategory(cat) {
+  browseFilters = {cat, loc:'', minPrice:'', maxPrice:'', sort:'newest', q:''};
+  navigate('browse', {cat});
+}
+
+// ═══════════════════════════════════════════════════════════
+// HOME PAGE
+// ═══════════════════════════════════════════════════════════
+async function initHome() {
+  renderCatGrid();
+  loadFeatured();
+  loadLatest();
+}
+
+function renderCatGrid() {
+  const grid = document.getElementById('homeCatGrid');
+  grid.innerHTML = CATS.map(c => `
+    <div class="cat-card" onclick="browseCategory('${c.name}')">
+      <div class="cat-icon">${c.icon}</div>
+      <div class="cat-name">${c.name}</div>
+    </div>
+  `).join('');
+}
+
+async function loadFeatured() {
+  const section = document.getElementById('featuredSection');
+  const container = document.getElementById('featuredAds');
+  container.innerHTML = skeletonCards(4, true);
+  const data = await sbGet('listings', 'select=*&featured=eq.true&status=eq.active&order=created_at.desc&limit=8');
+  if (!data || data.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  container.innerHTML = data.map(l => adCardHTML(l)).join('');
+}
+
+async function loadLatest() {
+  const container = document.getElementById('homeLatestAds');
+  container.innerHTML = skeletonCards(8);
+  const data = await sbGet('listings', 'select=*&status=eq.active&order=created_at.desc&limit=16');
+  if (!data || data.length === 0) { container.innerHTML = '<p style="color:var(--sub);padding:24px;grid-column:1/-1">No listings yet. <a href="#post" onclick="navigate(\'post\')" style="color:var(--primary)">Be the first to post!</a></p>'; return; }
+  document.getElementById('statTotal').textContent = data.length >= 16 ? '50,000+' : data.length + '+';
+  // Interleave sponsored
+  const sponsored = data.filter(l => l.sponsored);
+  const regular = data.filter(l => !l.sponsored);
+  const mixed = [];
+  regular.forEach((item, i) => {
+    mixed.push(item);
+    if ((i+1) % 4 === 0 && sponsored.length > 0) mixed.push(sponsored.shift());
+  });
+  container.innerHTML = mixed.map(l => adCardHTML(l)).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// AD CARD
+// ═══════════════════════════════════════════════════════════
+function adCardHTML(l) {
+  const img = getFirstImage(l.images);
+  const badge = l.featured ? '<span class="ad-badge badge-featured">⭐ Featured</span>' : l.sponsored ? '<span class="ad-badge badge-sponsored">📢 Sponsored</span>' : '';
+  const isSaved = savedAds.includes(l.id);
+  const price = formatPrice(l.price, l.currency);
+  const time = timeAgo(l.created_at);
+  const loc = l.location || '—';
+  return `
+  <div class="ad-card${l.featured?' featured':''}${l.sponsored?' sponsored':''}" onclick="navigate('detail',{id:'${l.id}'})">
+    <div class="ad-img-wrap">
+      ${img ? `<img src="${escHtml(img)}" alt="${escHtml(l.title)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="ad-img-placeholder">${catIcon(l.category)}</div>`}
+      ${badge}
+      <button class="save-btn${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${l.id}',this)" title="${isSaved?'Remove from saved':'Save ad'}">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      </button>
+    </div>
+    <div class="ad-info">
+      <div class="ad-title">${escHtml(l.title)}</div>
+      <div class="ad-price">${price}</div>
+      <div class="ad-meta"><span>${escHtml(loc)}</span><span class="ad-meta-dot">·</span><span>${time}</span></div>
+    </div>
+  </div>`;
+}
+
+function getFirstImage(images) {
+  if (!images) return null;
+  if (typeof images === 'string') {
+    try { images = JSON.parse(images); } catch(e) { return images.startsWith('http') ? images : null; }
+  }
+  if (Array.isArray(images) && images.length > 0) return images[0];
+  return null;
+}
+
+function catIcon(cat) {
+  const c = CATS.find(x => x.name === cat);
+  return c ? c.icon : '📦';
+}
+
+function formatPrice(price, currency) {
+  if (!price && price !== 0) return 'Contact for Price';
+  const cur = currency || 'USD';
+  if (cur === 'USD') return '$' + Number(price).toLocaleString();
+  return 'ZWL ' + Number(price).toLocaleString();
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr), now = new Date();
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  if (diff < 604800) return Math.floor(diff/86400) + 'd ago';
+  return d.toLocaleDateString('en-ZW', {day:'numeric',month:'short'});
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function skeletonCards(n, horizontal=false) {
+  return Array(n).fill(0).map(() => `
+    <div class="skel-card">
+      <div class="skel-img skeleton"></div>
+      <div class="skel-line skeleton"></div>
+      <div class="skel-line skeleton short"></div>
+    </div>`).join('');
+}
+
+function toggleSave(id, btn) {
+  const idx = savedAds.indexOf(id);
+  if (idx === -1) { savedAds.push(id); btn.classList.add('saved'); toast('Ad saved ❤️'); }
+  else { savedAds.splice(idx,1); btn.classList.remove('saved'); toast('Removed from saved'); }
+  localStorage.setItem('savedAds', JSON.stringify(savedAds));
+}
+
+// ═══════════════════════════════════════════════════════════
+// BROWSE PAGE
+// ═══════════════════════════════════════════════════════════
+async function initBrowse(params={}) {
+  // Apply params to filters
+  if (params.cat) { browseFilters.cat = params.cat; document.getElementById('filterCat').value = params.cat; }
+  if (params.loc) { browseFilters.loc = params.loc; document.getElementById('filterLoc').value = params.loc; }
+  if (params.q) { browseFilters.q = params.q; document.getElementById('headerSearch').value = params.q; }
+  // Sync filter sidebar from browseFilters
+  if (browseFilters.cat) document.getElementById('filterCat').value = browseFilters.cat;
+  if (browseFilters.loc) document.getElementById('filterLoc').value = browseFilters.loc;
+  if (browseFilters.sort) document.getElementById('filterSort').value = browseFilters.sort;
+  browseOffset = 0;
+  updateMobileFilterChips();
+  await applyBrowseFilters();
+}
+
+function updateMobileFilterChips() {
+  document.querySelectorAll('#mobileFilterBar .filter-chip').forEach(c => c.classList.remove('active'));
+  const active = browseFilters.cat || 'all';
+  const el = document.getElementById('mfc-' + active);
+  if (el) el.classList.add('active');
+}
+
+function setMobileFilter(cat) {
+  browseFilters.cat = cat === 'all' ? '' : cat;
+  if (document.getElementById('filterCat')) document.getElementById('filterCat').value = browseFilters.cat;
+  browseOffset = 0;
+  updateMobileFilterChips();
+  applyBrowseFilters();
+}
+
+async function applyBrowseFilters() {
+  // Sync filter values
+  const catEl = document.getElementById('filterCat');
+  const locEl = document.getElementById('filterLoc');
+  const sortEl = document.getElementById('filterSort') || document.getElementById('browseSortMobile');
+  const minEl = document.getElementById('filterMinPrice');
+  const maxEl = document.getElementById('filterMaxPrice');
+  if (catEl) browseFilters.cat = catEl.value;
+  if (locEl) browseFilters.loc = locEl.value;
+  if (sortEl) browseFilters.sort = sortEl.value;
+  if (minEl) browseFilters.minPrice = minEl.value;
+  if (maxEl) browseFilters.maxPrice = maxEl.value;
+
+  browseOffset = 0;
+  const container = document.getElementById('browseResults');
+  container.innerHTML = skeletonCards(8);
+
+  const {data, total} = await fetchBrowseListings(0, 20);
+  if (data === null) { container.innerHTML = '<p style="grid-column:1/-1;color:var(--danger);padding:24px">Error loading listings. Please try again.</p>'; return; }
+
+  browseOffset = data.length;
+  browseHasMore = data.length === 20;
+  document.getElementById('browseLoadMore').style.display = browseHasMore ? 'block' : 'none';
+
+  const count = document.getElementById('browseResultsCount');
+  count.innerHTML = `<strong>${data.length}${browseHasMore?'+':''}</strong> <span>listing${data.length!==1?'s':''} found${browseFilters.cat?' in '+browseFilters.cat:''}${browseFilters.q?' for "'+escHtml(browseFilters.q)+'"':''}</span>`;
+
+  if (data.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-state-icon">🔍</div>
+      <h3>No Ads Found</h3>
+      <p>Try adjusting your filters or <a href="#post" onclick="navigate('post')" style="color:var(--primary)">post your ad</a> to let buyers find you.</p>
+      <button class="btn btn-ghost mt-16" onclick="clearBrowseFilters()">Clear Filters</button>
+    </div>`;
+    return;
+  }
+
+  // Featured first, then sponsored every 5th
+  const featured = data.filter(l => l.featured);
+  const sponsored = data.filter(l => !l.featured && l.sponsored);
+  const regular = data.filter(l => !l.featured && !l.sponsored);
+  const mixed = [...featured];
+  let sIdx = 0;
+  regular.forEach((item, i) => {
+    mixed.push(item);
+    if ((i+1) % 4 === 0 && sIdx < sponsored.length) mixed.push(sponsored[sIdx++]);
+  });
+  container.innerHTML = mixed.map(l => adCardHTML(l)).join('');
+}
+
+async function fetchBrowseListings(offset=0, limit=20) {
+  let q = `select=*&status=eq.active&limit=${limit}&offset=${offset}`;
+  const f = browseFilters;
+  if (f.q) q += `&title=ilike.*${encodeURIComponent(f.q)}*`;
+  if (f.cat) q += `&category=eq.${encodeURIComponent(f.cat)}`;
+  if (f.loc) q += `&location=eq.${encodeURIComponent(f.loc)}`;
+  if (f.minPrice) q += `&price=gte.${f.minPrice}`;
+  if (f.maxPrice) q += `&price=lte.${f.maxPrice}`;
+  if (f.sort === 'newest') q += '&order=created_at.desc';
+  else if (f.sort === 'price_asc') q += '&order=price.asc';
+  else if (f.sort === 'price_desc') q += '&order=price.desc';
+  else if (f.sort === 'featured') q += '&order=featured.desc,created_at.desc';
+  else q += '&order=created_at.desc';
+  const data = await sbGet('listings', q);
+  return {data: data || [], total: (data||[]).length};
+}
+
+async function loadMoreBrowse() {
+  const btn = document.querySelector('#browseLoadMore button');
+  btn.textContent = 'Loading...'; btn.disabled = true;
+  const {data} = await fetchBrowseListings(browseOffset, 20);
+  if (data && data.length > 0) {
+    browseOffset += data.length;
+    browseHasMore = data.length === 20;
+    const container = document.getElementById('browseResults');
+    container.insertAdjacentHTML('beforeend', data.map(l => adCardHTML(l)).join(''));
+  }
+  document.getElementById('browseLoadMore').style.display = browseHasMore ? 'block' : 'none';
+  btn.textContent = 'Load More Ads'; btn.disabled = false;
+}
+
+function clearBrowseFilters() {
+  browseFilters = {cat:'',loc:'',minPrice:'',maxPrice:'',sort:'newest',q:''};
+  ['filterCat','filterLoc','filterSort','filterMinPrice','filterMaxPrice','browseSortMobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = el.tagName === 'SELECT' ? el.options[0].value : '';
+  });
+  document.getElementById('headerSearch').value = '';
+  updateMobileFilterChips();
+  applyBrowseFilters();
+}
+
+// ═══════════════════════════════════════════════════════════
+// AD DETAIL
+// ═══════════════════════════════════════════════════════════
+async function initDetail(id) {
+  if (!id) { navigate('home'); return; }
+  currentDetailId = id;
+  const container = document.getElementById('detailContent');
+  const sticky = document.getElementById('detailStickyBottom');
+  container.innerHTML = '<div class="page-loader"><div class="loading-spinner"></div><span>Loading listing...</span></div>';
+  sticky.style.display = 'none';
+
+  // Increment views
+  sbPatch('listings', `id=eq.${id}`, {views: null}); // Will use RPC in production
+
+  const [listData, _] = await Promise.all([
+    sbGet('listings', `id=eq.${id}&select=*`),
+    new Promise(r => setTimeout(r, 0))
+  ]);
+
+  if (!listData || !listData[0]) { container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><h3>Listing Not Found</h3><p>This ad may have been removed.</p><button class="btn btn-primary mt-16" onclick="navigate(\'home\')">Go Home</button></div>'; return; }
+
+  const l = listData[0];
+
+  // Load seller
+  let seller = null;
+  if (l.seller_id) {
+    const sData = await sbGet('profiles', `id=eq.${l.seller_id}&select=*`);
+    if (sData && sData[0]) seller = sData[0];
+  }
+
+  // Load related
+  const relData = await sbGet('listings', `category=eq.${encodeURIComponent(l.category)}&status=eq.active&id=neq.${id}&select=*&limit=4&order=created_at.desc`);
+  const related = relData || [];
+
+  // Build images array
+  let images = [];
+  if (l.images) {
+    if (typeof l.images === 'string') { try { images = JSON.parse(l.images); } catch(e) { if (l.images.startsWith('http')) images = [l.images]; } }
+    else if (Array.isArray(l.images)) images = l.images;
+  }
+
+  const badge = l.featured ? '<span class="ad-badge badge-featured" style="position:static;display:inline-flex">⭐ Featured</span>' : l.sponsored ? '<span class="ad-badge badge-sponsored" style="position:static;display:inline-flex">📢 Sponsored</span>' : '';
+  const sellerName = seller ? (seller.name || 'Anonymous') : 'Anonymous';
+  const sellerInit = sellerName.charAt(0).toUpperCase();
+  const joinDate = seller && seller.created_at ? new Date(seller.created_at).toLocaleDateString('en-ZW', {month:'long',year:'numeric'}) : '';
+  const waNum = l.whatsapp_number || (seller && seller.phone) || '';
+  const waMsg = encodeURIComponent(`Hi, I'm interested in your listing "${l.title}" on PaMarket.`);
+  const waLink = waNum ? `https://wa.me/${waNum.replace(/[^0-9]/g,'')}?text=${waMsg}` : '#';
+
+  container.innerHTML = `
+    <nav class="breadcrumb" style="padding-top:24px">
+      <a onclick="navigate('home')" href="#home">Home</a><span class="breadcrumb-sep">›</span>
+      <a onclick="browseCategory('${escHtml(l.category)}')" href="#browse">${escHtml(l.category)}</a><span class="breadcrumb-sep">›</span>
+      <span style="color:var(--text)">${escHtml(l.title.substring(0,40))}${l.title.length>40?'...':''}</span>
+    </nav>
+    <div class="detail-layout">
+      <div>
+        <div class="detail-gallery" id="mainGallery">
+          ${images.length > 0
+            ? `<img src="${escHtml(images[0])}" alt="${escHtml(l.title)}" id="mainImg" loading="lazy" style="cursor:zoom-in">`
+            : `<div class="ad-img-placeholder" style="height:100%;font-size:80px">${catIcon(l.category)}</div>`}
+        </div>
+        ${images.length > 1 ? `<div class="gallery-thumbs" id="galleryThumbs">
+          ${images.map((img, i) => `<div class="gallery-thumb${i===0?' active':''}" onclick="setMainImage('${escHtml(img)}',this)"><img src="${escHtml(img)}" alt="img ${i+1}" loading="lazy"></div>`).join('')}
+        </div>` : ''}
+        <div style="margin-top:24px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+            ${badge}
+            <span class="status-badge status-${l.status||'active'}">${l.status||'active'}</span>
+          </div>
+          <h1 class="detail-title">${escHtml(l.title)}</h1>
+          <div class="detail-price">${formatPrice(l.price, l.currency)}</div>
+          <div class="detail-meta">
+            <div class="detail-meta-item">
+              <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              ${escHtml(l.location||'Zimbabwe')}
+            </div>
+            <div class="detail-meta-item">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              ${timeAgo(l.created_at)}
+            </div>
+            <div class="detail-meta-item">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              ${l.views || 0} views
+            </div>
+          </div>
+          <div class="detail-section-title">Description</div>
+          <div class="detail-desc">${escHtml(l.description || 'No description provided.')}</div>
+          ${related.length > 0 ? `
+            <div class="detail-section-title">Related Ads in ${escHtml(l.category)}</div>
+            <div class="ads-grid" style="margin-bottom:32px">
+              ${related.map(r => adCardHTML(r)).join('')}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+      <div>
+        <div class="seller-card">
+          <h3 class="detail-section-title">Seller Information</h3>
+          <div class="seller-header">
+            <div class="seller-avatar">${seller && seller.avatar ? `<img src="${escHtml(seller.avatar)}" alt="${sellerName}">` : sellerInit}</div>
+            <div>
+              <div class="seller-name">${escHtml(sellerName)}</div>
+              ${seller && seller.verified ? '<div class="verified-badge">✓ Verified Seller</div>' : ''}
+              ${joinDate ? `<div class="seller-joined">Member since ${joinDate}</div>` : ''}
+            </div>
+          </div>
+          <div class="divider" style="margin:12px 0"></div>
+          <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">Contact Seller</h3>
+          ${waNum ? `<a href="${waLink}" target="_blank" style="display:block;text-decoration:none"><button class="contact-btn btn-whatsapp">
+            <svg viewBox="0 0 24 24" fill="#fff" stroke="none" width="20" height="20"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp Seller
+          </button></a>` : ''}
+          ${waNum ? `<a href="tel:${waNum}" style="display:block;text-decoration:none"><button class="contact-btn btn-call">📞 Call Seller</button></a>` : ''}
+          <button class="contact-btn btn-chat" onclick="startChat('${l.id}','${sellerName}')">💬 Chat on Site</button>
+          <a class="report-link" onclick="toast('Report submitted. Thank you.')">🚩 Report this ad</a>
+        </div>
+      </div>
+    </div>`;
+
+  // Setup mobile sticky
+  sticky.style.display = 'flex';
+  const sWA = document.getElementById('stickyWABtn');
+  const sCall = document.getElementById('stickyCallBtn');
+  if (waNum) {
+    sWA.onclick = () => window.open(waLink, '_blank');
+    sCall.onclick = () => window.location.href = 'tel:' + waNum;
+  } else {
+    sWA.style.display = 'none';
+    sCall.style.display = 'none';
+  }
+}
+
+function setMainImage(src, thumb) {
+  document.getElementById('mainImg').src = src;
+  document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+  thumb.classList.add('active');
+}
+
+function startChat(listingId, sellerName) {
+  if (!session) { showAuthModal('login'); return; }
+  navigate('messages');
+  toast('Opening chat with ' + sellerName);
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// POST AD
+// ═══════════════════════════════════════════════════════════
+function initPost() {
+  if (!session) { showAuthModal('login'); return; }
+  postStep = 1;
+  postData = {category:'',type:'new',title:'',description:'',price:'',currency:'USD',location:'',contact:'both',whatsapp:'',images:[]};
+  renderPostStep(1);
+}
+
+function renderPostStep(step) {
+  postStep = step;
+  // Update step indicator
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('step-' + i);
+    if (!el) continue;
+    el.classList.remove('active','completed');
+    if (i < step) el.classList.add('completed');
+    else if (i === step) el.classList.add('active');
+  }
+  const c = document.getElementById('postContent');
+
+  if (step === 1) {
+    c.innerHTML = `
+      <div class="form-section">
+        <h2>Choose a Category</h2>
+        <p>What are you selling?</p>
+        <div class="cat-select-grid">
+          ${CATS.map(cat => `
+            <div class="cat-select-item${postData.category===cat.name?' selected':''}" onclick="selectPostCat('${cat.name}',this)">
+              <div class="cat-icon">${cat.icon}</div>
+              <div class="cat-name">${cat.name}</div>
+            </div>`).join('')}
+        </div>
+        <div class="form-nav">
+          <span></span>
+          <button class="btn btn-primary" onclick="if(postData.category){renderPostStep(2)}else{toast('Please select a category','error')}">Next →</button>
+        </div>
+      </div>`;
+  }
+  else if (step === 2) {
+    c.innerHTML = `
+      <div class="form-section">
+        <h2>What would you like to do?</h2>
+        <p>Post a new ad or promote an existing one?</p>
+        <div class="post-option-cards">
+          <div class="post-option-card${postData.type==='new'?' selected':''}" onclick="postData.type='new';document.querySelectorAll('.post-option-card').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')">
+            <div style="font-size:40px;margin-bottom:12px">✏️</div>
+            <h3>Post New Ad</h3>
+            <p>Create a brand new listing for free</p>
+          </div>
+          <div class="post-option-card${postData.type==='promote'?' selected':''}" onclick="postData.type='promote';document.querySelectorAll('.post-option-card').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')">
+            <div style="font-size:40px;margin-bottom:12px">⭐</div>
+            <h3>Promote Existing Ad</h3>
+            <p>Boost an ad you already posted</p>
+          </div>
+        </div>
+        <div class="form-nav">
+          <button class="btn btn-ghost" onclick="renderPostStep(1)">← Back</button>
+          <button class="btn btn-primary" onclick="if(postData.type==='promote'){navigate('advertise-start')}else{renderPostStep(3)}">Next →</button>
+        </div>
+      </div>`;
+  }
+  else if (step === 3) {
+    const citiesOpts = ZIM_CITIES.map(c => `<option${postData.location===c?' selected':''}>${c}</option>`).join('');
+    c.innerHTML = `
+      <div class="form-section">
+        <h2>Ad Details</h2>
+        <p>Fill in the information about what you're selling.</p>
+        <div class="form-group">
+          <label class="form-label">Ad Title <span>*</span></label>
+          <input type="text" class="form-input" id="pTitle" value="${escHtml(postData.title)}" placeholder="e.g. iPhone 14 Pro Max 256GB Black" maxlength="120">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description <span>*</span></label>
+          <textarea class="form-textarea" id="pDesc" placeholder="Describe your item in detail — condition, features, why you're selling...">${escHtml(postData.description)}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price</label>
+          <div class="price-input-wrap">
+            <select class="currency-sel" id="pCurrency">
+              <option value="USD"${postData.currency==='USD'?' selected':''}>USD $</option>
+              <option value="ZWL"${postData.currency==='ZWL'?' selected':''}>ZWL</option>
+            </select>
+            <input type="number" class="form-input" id="pPrice" value="${postData.price}" placeholder="0.00" min="0" style="flex:1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location <span>*</span></label>
+          <select class="form-select" id="pLocation">
+            <option value="">Select city...</option>
+            ${citiesOpts}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Method</label>
+          <div style="display:flex;gap:8px">
+            ${['whatsapp','call','both'].map(m => `
+              <button onclick="postData.contact='${m}';document.querySelectorAll('.contact-method-btn').forEach(b=>b.classList.remove('btn-primary','btn-outline'));this.classList.add('btn-primary')" 
+                class="btn contact-method-btn ${postData.contact===m?'btn-primary':'btn-outline'}">${m==='whatsapp'?'📱 WhatsApp':m==='call'?'📞 Call':'📱+📞 Both'}</button>`).join('')}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">WhatsApp Number <span>*</span></label>
+          <input type="tel" class="form-input" id="pWhatsapp" value="${escHtml(postData.whatsapp)}" placeholder="+263 77 123 4567">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Photos (up to 8)</label>
+          <div class="img-upload-area" onclick="document.getElementById('pImgInput').click()">
+            <div style="font-size:40px;margin-bottom:8px">📷</div>
+            <p style="font-weight:600">Click to add photos</p>
+            <p style="color:var(--sub);font-size:13px">JPG, PNG — max 5MB each</p>
+            <input type="file" id="pImgInput" accept="image/*" multiple onchange="handleImgUpload(this)" style="display:none">
+          </div>
+          <div class="img-previews" id="imgPreviews">
+            ${postData.images.map((url,i) => `
+              <div class="img-preview-item">
+                <img src="${url}" alt="preview">
+                <button class="img-remove" onclick="removeImg(${i})">✕</button>
+              </div>`).join('')}
+          </div>
+        </div>
+        <div class="form-nav">
+          <button class="btn btn-ghost" onclick="renderPostStep(2)">← Back</button>
+          <button class="btn btn-primary" onclick="validateStep3()">Review →</button>
+        </div>
+      </div>`;
+  }
+  else if (step === 4) {
+    const catObj = CATS.find(x => x.name === postData.category);
+    c.innerHTML = `
+      <div class="form-section">
+        <h2>Review Your Ad</h2>
+        <p>Looks good? Submit your ad for review.</p>
+        <div style="background:var(--bg);border-radius:var(--r);padding:20px;margin-bottom:20px">
+          <table style="width:100%;border-collapse:collapse">
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:10px 0;color:var(--sub);font-size:14px;width:140px">Category</td><td style="padding:10px 0;font-weight:600">${catObj?catObj.icon:''} ${escHtml(postData.category)}</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:10px 0;color:var(--sub);font-size:14px">Title</td><td style="padding:10px 0;font-weight:600">${escHtml(postData.title)}</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:10px 0;color:var(--sub);font-size:14px">Price</td><td style="padding:10px 0;font-weight:600">${formatPrice(postData.price, postData.currency)}</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:10px 0;color:var(--sub);font-size:14px">Location</td><td style="padding:10px 0;font-weight:600">${escHtml(postData.location)}</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:10px 0;color:var(--sub);font-size:14px">WhatsApp</td><td style="padding:10px 0;font-weight:600">${escHtml(postData.whatsapp)}</td></tr>
+            <tr><td style="padding:10px 0;color:var(--sub);font-size:14px">Photos</td><td style="padding:10px 0;font-weight:600">${postData.images.length} photo(s)</td></tr>
+          </table>
+        </div>
+        ${postData.images.length > 0 ? `<div class="img-previews">${postData.images.slice(0,4).map(url => `<div class="img-preview-item"><img src="${url}" alt="preview"></div>`).join('')}</div><br>` : ''}
+        <p style="color:var(--sub);font-size:14px;margin-bottom:20px">Your ad will be reviewed by our team before going live. This usually takes less than 24 hours.</p>
+        <div class="form-nav">
+          <button class="btn btn-ghost" onclick="renderPostStep(3)">← Edit</button>
+          <button class="btn btn-primary btn-lg" id="submitAdBtn" onclick="submitAd()">Submit Ad 🚀</button>
+        </div>
+      </div>`;
+  }
+  else if (step === 5) {
+    c.innerHTML = `
+      <div class="success-screen">
+        <div class="success-icon">🎉</div>
+        <h2>Ad Submitted!</h2>
+        <p>Your ad has been submitted for review. We'll publish it within 24 hours. You'll be able to see it in your dashboard.</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px">
+          <button class="btn btn-primary btn-lg" onclick="navigate('dashboard')">View My Ads</button>
+          <button class="btn btn-outline btn-lg" onclick="initPost()">Post Another Ad</button>
+        </div>
+      </div>`;
+  }
+}
+
+function selectPostCat(name, el) {
+  postData.category = name;
+  document.querySelectorAll('.cat-select-item').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function validateStep3() {
+  postData.title = document.getElementById('pTitle').value.trim();
+  postData.description = document.getElementById('pDesc').value.trim();
+  postData.price = document.getElementById('pPrice').value;
+  postData.currency = document.getElementById('pCurrency').value;
+  postData.location = document.getElementById('pLocation').value;
+  postData.whatsapp = document.getElementById('pWhatsapp').value.trim();
+  if (!postData.title) { toast('Please enter a title','error'); return; }
+  if (!postData.description) { toast('Please enter a description','error'); return; }
+  if (!postData.location) { toast('Please select a location','error'); return; }
+  if (!postData.whatsapp) { toast('Please enter your WhatsApp number','error'); return; }
+  renderPostStep(4);
+}
+
+function handleImgUpload(input) {
+  const files = Array.from(input.files).slice(0, 8 - postData.images.length);
+  files.forEach(file => {
+    if (file.size > 5 * 1024 * 1024) { toast('Image too large (max 5MB)','error'); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      postData.images.push(e.target.result);
+      const prev = document.getElementById('imgPreviews');
+      if (prev) {
+        const idx = postData.images.length - 1;
+        const div = document.createElement('div');
+        div.className = 'img-preview-item';
+        div.innerHTML = `<img src="${e.target.result}" alt="preview"><button class="img-remove" onclick="removeImg(${idx})">✕</button>`;
+        prev.appendChild(div);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeImg(idx) {
+  postData.images.splice(idx, 1);
+  const prev = document.getElementById('imgPreviews');
+  if (prev) prev.innerHTML = postData.images.map((url,i) => `
+    <div class="img-preview-item">
+      <img src="${url}" alt="preview">
+      <button class="img-remove" onclick="removeImg(${i})">✕</button>
+    </div>`).join('');
+}
+
+async function submitAd() {
+  const btn = document.getElementById('submitAdBtn');
+  btn.textContent = 'Submitting...'; btn.disabled = true;
+  try {
+    const payload = {
+      title: postData.title,
+      description: postData.description,
+      price: postData.price ? parseFloat(postData.price) : null,
+      currency: postData.currency,
+      category: postData.category,
+      location: postData.location,
+      images: postData.images.filter(i => i.startsWith('http')), // Only URLs in DB
+      status: 'pending',
+      featured: false,
+      sponsored: false,
+      seller_id: session.user.id,
+      whatsapp_number: postData.whatsapp,
+      contact_method: postData.contact
+    };
+    const result = await sbPost('listings', payload);
+    if (result) { renderPostStep(5); toast('Ad submitted!', 'success'); }
+    else { toast('Failed to submit. Please try again.','error'); btn.textContent = 'Submit Ad 🚀'; btn.disabled = false; }
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+    btn.textContent = 'Submit Ad 🚀'; btn.disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// ADVERTISE START FLOW
+// ═══════════════════════════════════════════════════════════
+function initAdvStart() {
+  advStep = 1;
+  advData = {category:'',listingId:'',listingTitle:'',type:''};
+  renderAdvStep(1);
+}
+
+function renderAdvStep(step) {
+  advStep = step;
+  const c = document.getElementById('advStartContent');
+
+  if (step === 1) {
+    c.innerHTML = `
+      <div style="padding:24px 0">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('advertise')" style="margin-bottom:24px">← Back</button>
+        <h1 style="font-size:32px;font-weight:900;margin-bottom:8px">Start Advertising</h1>
+        <p style="color:var(--sub);margin-bottom:32px">Step 1 of 4: Choose your category</p>
+        <div class="form-section">
+          <h2>Which category is your business?</h2>
+          <p>We'll match you with the right audience.</p>
+          <div class="cat-select-grid">
+            ${CATS.map(cat => `
+              <div class="cat-select-item${advData.category===cat.name?' selected':''}" onclick="advData.category='${cat.name}';document.querySelectorAll('.cat-select-item').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')">
+                <div class="cat-icon">${cat.icon}</div>
+                <div class="cat-name">${cat.name}</div>
+              </div>`).join('')}
+          </div>
+          <div class="form-nav"><span></span>
+            <button class="btn btn-primary" onclick="if(advData.category){renderAdvStep(2)}else{toast('Select a category','error')}">Next →</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  else if (step === 2) {
+    c.innerHTML = `
+      <div style="padding:24px 0">
+        <p style="color:var(--sub);margin-bottom:24px">Step 2 of 4: Your listing</p>
+        <div class="form-section">
+          <h2>Which listing to promote?</h2>
+          <p>Create a new listing or use an existing one.</p>
+          <div class="post-option-cards">
+            <div class="post-option-card${advData.listingId==='new'?' selected':''}" onclick="advData.listingId='new';advData.listingTitle='New Listing';document.querySelectorAll('.post-option-card').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')">
+              <div style="font-size:40px;margin-bottom:12px">✏️</div>
+              <h3>Create New Listing</h3>
+              <p>Write a new ad to promote</p>
+            </div>
+            <div class="post-option-card${advData.listingId&&advData.listingId!=='new'?' selected':''}" onclick="selectExistingListing()">
+              <div style="font-size:40px;margin-bottom:12px">📋</div>
+              <h3>Use Existing Ad</h3>
+              <p>Promote an ad you already posted</p>
+            </div>
+          </div>
+          ${advData.listingTitle && advData.listingId !== 'new' ? `<p style="margin-top:12px;color:var(--success);font-weight:600">✓ Selected: ${escHtml(advData.listingTitle)}</p>` : ''}
+          <div class="form-group mt-16">
+            <label class="form-label">Or enter listing title manually</label>
+            <input type="text" class="form-input" id="advTitle" value="${escHtml(advData.listingTitle)}" placeholder="Your listing title...">
+          </div>
+          <div class="form-nav">
+            <button class="btn btn-ghost" onclick="renderAdvStep(1)">← Back</button>
+            <button class="btn btn-primary" onclick="advData.listingTitle=document.getElementById('advTitle').value||advData.listingTitle;if(advData.listingTitle){renderAdvStep(3)}else{toast('Please enter or select a listing','error')}">Next →</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  else if (step === 3) {
+    c.innerHTML = `
+      <div style="padding:24px 0">
+        <p style="color:var(--sub);margin-bottom:24px">Step 3 of 4: Choose promotion type</p>
+        <div class="form-section">
+          <h2>How would you like to promote?</h2>
+          <div style="display:grid;gap:16px;margin-bottom:24px">
+            <div class="promo-type-card${advData.type==='featured'?' selected':''}" onclick="advData.type='featured';document.querySelectorAll('.promo-type-card').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+                <span style="font-size:28px">⭐</span>
+                <div><h3 style="margin:0">Featured Listing</h3><p style="margin:0;color:var(--sub);font-size:13px">Pinned to top of results</p></div>
+              </div>
+              <ul style="list-style:none;font-size:13px;color:var(--sub);padding-left:8px;display:grid;gap:4px">
+                <li>✓ Top of every search result page</li>
+                <li>✓ Gold ⭐ Featured badge</li>
+                <li>✓ Featured section on homepage</li>
+                <li>✓ Up to 10x more views</li>
+              </ul>
+              <div class="promo-preview featured-preview" style="margin-top:12px;font-size:13px"><strong>⭐ Featured</strong> — Preview of how your ad will look</div>
+            </div>
+            <div class="promo-type-card sponsored-card${advData.type==='sponsored'?' selected':''}" onclick="advData.type='sponsored';document.querySelectorAll('.promo-type-card').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+                <span style="font-size:28px">📢</span>
+                <div><h3 style="margin:0">Sponsored Listing</h3><p style="margin:0;color:var(--sub);font-size:13px">Natural placement every 5 ads</p></div>
+              </div>
+              <ul style="list-style:none;font-size:13px;color:var(--sub);padding-left:8px;display:grid;gap:4px">
+                <li>✓ Shown every 5th position in results</li>
+                <li>✓ Amber 📢 Sponsored badge</li>
+                <li>✓ Amber border highlighting</li>
+                <li>✓ Consistent exposure throughout browsing</li>
+              </ul>
+              <div class="promo-preview sponsored-preview" style="margin-top:12px;font-size:13px"><strong>📢 Sponsored</strong> — Preview of how your ad will look</div>
+            </div>
+          </div>
+          <div class="form-nav">
+            <button class="btn btn-ghost" onclick="renderAdvStep(2)">← Back</button>
+            <button class="btn btn-primary" onclick="if(advData.type){renderAdvStep(4)}else{toast('Please select a promotion type','error')}">Next →</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  else if (step === 4) {
+    const autoMsg = encodeURIComponent(`Hello PaMarket team, I want to promote my ${advData.category} ad: "${advData.listingTitle}" as a ${advData.type} listing.`);
+    c.innerHTML = `
+      <div style="padding:24px 0">
+        <p style="color:var(--sub);margin-bottom:24px">Step 4 of 4: Contact Sales</p>
+        <div class="form-section" style="text-align:center">
+          <div style="font-size:64px;margin-bottom:16px">🎯</div>
+          <h2>Almost There!</h2>
+          <p style="margin-bottom:32px">Contact our sales team to finalise your <strong>${advData.type}</strong> promotion for your <strong>${escHtml(advData.category)}</strong> listing.</p>
+          <div style="display:grid;gap:12px;max-width:400px;margin:0 auto 32px">
+            <a href="https://wa.me/263712345678?text=${autoMsg}" target="_blank" style="text-decoration:none">
+              <button class="contact-btn btn-whatsapp">
+                <svg viewBox="0 0 24 24" fill="#fff" stroke="none" width="20" height="20"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp Sales Team
+              </button>
+            </a>
+            <a href="mailto:ads@pamarket.co.zw?subject=Advertising Enquiry&body=${autoMsg}" style="text-decoration:none">
+              <button class="contact-btn btn-call" style="background:#6366f1">✉️ Email: ads@pamarket.co.zw</button>
+            </a>
+            <a href="tel:+263712345678" style="text-decoration:none">
+              <button class="contact-btn btn-chat">📞 Call: +263 71 234 5678</button>
+            </a>
+          </div>
+          <div style="background:var(--bg);border-radius:var(--r);padding:16px;text-align:left;max-width:400px;margin:0 auto 24px;font-size:13px">
+            <strong>Your promotion summary:</strong><br>
+            📦 Category: ${escHtml(advData.category)}<br>
+            📋 Listing: ${escHtml(advData.listingTitle)}<br>
+            ✨ Type: ${advData.type === 'featured' ? '⭐ Featured' : '📢 Sponsored'}
+          </div>
+          <button class="btn btn-outline" onclick="renderAdvStep(3)">← Change Type</button>
+        </div>
+      </div>`;
+  }
+}
+
+async function selectExistingListing() {
+  if (!session) { showAuthModal('login'); return; }
+  const data = await sbGet('listings', `seller_id=eq.${session.user.id}&status=eq.active&select=id,title&order=created_at.desc&limit=20`);
+  if (!data || data.length === 0) { toast('No active listings found. Post an ad first.'); return; }
+  // Simple inline selector
+  const sel = prompt('Enter listing title (or pick from your recent ads):\n' + data.map((l,i) => `${i+1}. ${l.title}`).join('\n'));
+  if (sel) {
+    const idx = parseInt(sel) - 1;
+    if (!isNaN(idx) && data[idx]) { advData.listingId = data[idx].id; advData.listingTitle = data[idx].title; }
+    else { advData.listingTitle = sel; advData.listingId = 'custom'; }
+    renderAdvStep(2);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════
+async function loadDashboard() {
+  if (!session) return;
+  showDashSection('myads', document.getElementById('dnav-myads'));
+}
+
+async function showDashSection(section, clickedEl) {
+  if (!session) { showAuthModal('login'); return; }
+  // Update active state
+  document.querySelectorAll('.dash-nav-item,.dash-tab-item').forEach(el => el.classList.remove('active'));
+  if (clickedEl) clickedEl.classList.add('active');
+  const sidebarNavEl = document.getElementById('dnav-' + section);
+  if (sidebarNavEl) sidebarNavEl.classList.add('active');
+
+  const c = document.getElementById('dashContent');
+  c.innerHTML = '<div class="page-loader"><div class="loading-spinner"></div></div>';
+
+  if (section === 'myads') {
+    const data = await sbGet('listings', `seller_id=eq.${session.user.id}&select=*&order=created_at.desc`);
+    const listings = data || [];
+    const active = listings.filter(l => l.status === 'active');
+    const pending = listings.filter(l => l.status === 'pending');
+    const sold = listings.filter(l => l.status === 'sold');
+
+    c.innerHTML = `
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">My Ads</h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div class="my-ads-header">
+          <div class="ads-tab active" onclick="filterMyAds('active',this)">Active (${active.length})</div>
+          <div class="ads-tab" onclick="filterMyAds('pending',this)">Pending (${pending.length})</div>
+          <div class="ads-tab" onclick="filterMyAds('sold',this)">Sold (${sold.length})</div>
+        </div>
+        <button class="btn btn-primary" onclick="navigate('post')">+ Post New Ad</button>
+      </div>
+      <div id="myAdsList">
+        ${active.length === 0 ? '<div class="empty-state"><div class="empty-state-icon">📦</div><h3>No active ads</h3><p>Post your first ad for free!</p><button class="btn btn-primary mt-16" onclick="navigate(\'post\')">Post Ad</button></div>' : active.map(l => myAdItemHTML(l)).join('')}
+      </div>`;
+
+    window._myAdsAll = listings;
+  }
+  else if (section === 'promotions') {
+    const data = await sbGet('listings', `seller_id=eq.${session.user.id}&or=(featured.eq.true,sponsored.eq.true)&select=*`);
+    const promos = data || [];
+    c.innerHTML = `
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Active Promotions</h2>
+      ${promos.length === 0 ? `
+        <div class="empty-state">
+          <div class="empty-state-icon">⭐</div>
+          <h3>No Active Promotions</h3>
+          <p>Promote your ads to reach more buyers.</p>
+          <button class="btn btn-primary mt-16" onclick="navigate('advertise-start')">Start Advertising</button>
+        </div>` : promos.map(l => `
+        <div class="my-ad-item">
+          <div class="my-ad-img">${getFirstImage(l.images) ? `<img src="${escHtml(getFirstImage(l.images))}" alt="${escHtml(l.title)}" loading="lazy">` : `<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:28px">${catIcon(l.category)}</div>`}</div>
+          <div class="my-ad-info">
+            <div class="my-ad-title">${escHtml(l.title)}</div>
+            <div class="my-ad-price">${formatPrice(l.price,l.currency)}</div>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              ${l.featured ? '<span class="ad-badge badge-featured" style="position:static;display:inline-flex">⭐ Featured</span>' : ''}
+              ${l.sponsored ? '<span class="ad-badge badge-sponsored" style="position:static;display:inline-flex">📢 Sponsored</span>' : ''}
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="navigate('advertise-start')">Renew</button>
+        </div>`).join('')}`;
+  }
+  else if (section === 'saved') {
+    let savedListings = [];
+    if (savedAds.length > 0) {
+      const data = await sbGet('listings', `id=in.(${savedAds.join(',')})&select=*`);
+      savedListings = data || [];
+    }
+    c.innerHTML = `
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Saved Ads</h2>
+      ${savedListings.length === 0 ? `
+        <div class="empty-state">
+          <div class="empty-state-icon">❤️</div>
+          <h3>No Saved Ads</h3>
+          <p>Tap the heart icon on any ad to save it.</p>
+          <button class="btn btn-primary mt-16" onclick="navigate('browse')">Browse Ads</button>
+        </div>` : `<div class="saved-grid">${savedListings.map(l => adCardHTML(l)).join('')}</div>`}`;
+  }
+  else if (section === 'profile') {
+    const u = currentUser || {};
+    c.innerHTML = `
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Profile Settings</h2>
+      <div class="profile-form">
+        <div class="form-section">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" id="profName" value="${escHtml(u.name||'')}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" value="${escHtml(u.email||u.email||'')}" disabled style="background:var(--bg);color:var(--sub)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" class="form-input" id="profPhone" value="${escHtml(u.phone||'')}">
+          </div>
+          <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+        </div>
+        <div class="form-section mt-24">
+          <h3 style="font-size:18px;font-weight:700;margin-bottom:16px">Change Password</h3>
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <input type="password" class="form-input" id="newPass" placeholder="Min 6 characters">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" class="form-input" id="confPass" placeholder="Repeat password">
+          </div>
+          <button class="btn btn-outline" onclick="changePassword()">Update Password</button>
+        </div>
+        <div style="margin-top:24px">
+          <button class="btn btn-danger" onclick="logout()">Sign Out</button>
+        </div>
+      </div>`;
+  }
+}
+
+function myAdItemHTML(l) {
+  const img = getFirstImage(l.images);
+  return `
+    <div class="my-ad-item">
+      <div class="my-ad-img">${img ? `<img src="${escHtml(img)}" alt="${escHtml(l.title)}" loading="lazy">` : `<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:#f1f5f9">${catIcon(l.category)}</div>`}</div>
+      <div class="my-ad-info">
+        <div class="my-ad-title">${escHtml(l.title)}</div>
+        <div class="my-ad-price">${formatPrice(l.price,l.currency)}</div>
+        <div class="my-ad-meta">${escHtml(l.location||'')} · ${timeAgo(l.created_at)} · ${l.views||0} views</div>
+        <div style="margin-top:6px"><span class="status-badge status-${l.status||'active'}">${l.status||'active'}</span></div>
+      </div>
+      <div class="my-ad-actions">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('detail',{id:'${l.id}'})">View</button>
+        <button class="btn btn-outline btn-sm" onclick="navigate('advertise-start')">Promote</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteMyAd('${l.id}',this)">Delete</button>
+      </div>
+    </div>`;
+}
+
+function filterMyAds(status, el) {
+  document.querySelectorAll('.ads-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const all = window._myAdsAll || [];
+  const filtered = status === 'all' ? all : all.filter(l => l.status === status);
+  const c = document.getElementById('myAdsList');
+  c.innerHTML = filtered.length === 0
+    ? `<div class="empty-state"><div class="empty-state-icon">📦</div><h3>No ${status} ads</h3></div>`
+    : filtered.map(l => myAdItemHTML(l)).join('');
+}
+
+async function deleteMyAd(id, btn) {
+  if (!confirm('Delete this ad? This cannot be undone.')) return;
+  btn.disabled = true;
+  const ok = await sbDelete('listings', `id=eq.${id}`);
+  if (ok) { toast('Ad deleted'); btn.closest('.my-ad-item').remove(); }
+  else { toast('Failed to delete','error'); btn.disabled = false; }
+}
+
+async function saveProfile() {
+  const name = document.getElementById('profName').value.trim();
+  const phone = document.getElementById('profPhone').value.trim();
+  const ok = await sbPatch('profiles', `id=eq.${session.user.id}`, {name, phone});
+  if (ok !== null) {
+    if (currentUser) { currentUser.name = name; currentUser.phone = phone; }
+    toast('Profile updated!', 'success');
+    updateAuthUI();
+  } else toast('Failed to save profile', 'error');
+}
+
+async function changePassword() {
+  const p1 = document.getElementById('newPass').value;
+  const p2 = document.getElementById('confPass').value;
+  if (!p1 || p1.length < 6) { toast('Password must be at least 6 characters','error'); return; }
+  if (p1 !== p2) { toast('Passwords do not match','error'); return; }
+  try {
+    const r = await fetch(`${SB_URL}/auth/v1/user`, {
+      method:'PUT',
+      headers: {'apikey':SB_KEY, 'Authorization':'Bearer '+session.access_token, 'Content-Type':'application/json'},
+      body: JSON.stringify({password: p1})
+    });
+    if (r.ok) toast('Password updated!', 'success');
+    else toast('Failed to update password','error');
+  } catch(e) { toast('Error','error'); }
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// MESSAGES
+// ═══════════════════════════════════════════════════════════
+async function loadMessages() {
+  if (!session) return;
+  const container = document.getElementById('convListInner');
+  container.innerHTML = '<div class="page-loader"><div class="loading-spinner"></div></div>';
+
+  const data = await sbGet('conversations', `or=(buyer_id.eq.${session.user.id},seller_id.eq.${session.user.id})&select=*,listing:listing_id(title),buyer:buyer_id(name),seller:seller_id(name)&order=updated_at.desc&limit=30`);
+  const convs = data || [];
+
+  if (convs.length === 0) {
+    container.innerHTML = `<div style="padding:32px;text-align:center;color:var(--sub)">
+      <div style="font-size:48px;margin-bottom:12px">💬</div>
+      <p>No conversations yet.</p>
+      <p style="font-size:13px;margin-top:8px">Browse ads and contact sellers to start chatting.</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = convs.map(conv => {
+    const isBuyer = conv.buyer_id === session.user.id;
+    const otherName = isBuyer ? (conv.seller && conv.seller.name || 'Seller') : (conv.buyer && conv.buyer.name || 'Buyer');
+    const listTitle = conv.listing && conv.listing.title || 'Listing';
+    return `
+      <div class="conv-item${conv.id === activeConvId ? ' active' : ''}" onclick="openConversation('${conv.id}','${escHtml(otherName)}','${escHtml(listTitle)}')">
+        <div class="conv-avatar">${otherName.charAt(0).toUpperCase()}</div>
+        <div class="conv-info">
+          <div class="conv-name">${escHtml(otherName)}</div>
+          <div class="conv-preview">${escHtml(listTitle)}</div>
+        </div>
+        <div class="conv-time">${timeAgo(conv.updated_at||conv.created_at)}</div>
+      </div>`;
+  }).join('');
+}
+
+async function openConversation(convId, otherName, listTitle) {
+  activeConvId = convId;
+  const chatWin = document.getElementById('chatWindow');
+  chatWin.classList.add('mobile-open');
+  chatWin.innerHTML = `
+    <div class="chat-header">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('chatWindow').classList.remove('mobile-open')" style="display:none" id="chatBackBtn">←</button>
+      <div class="conv-avatar" style="width:36px;height:36px;font-size:14px">${otherName.charAt(0).toUpperCase()}</div>
+      <div>
+        <div style="font-size:15px;font-weight:700">${escHtml(otherName)}</div>
+        <div style="font-size:12px;color:var(--sub)">${escHtml(listTitle)}</div>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="page-loader"><div class="loading-spinner"></div></div>
+    </div>
+    <div class="chat-input-wrap">
+      <textarea class="chat-input" id="chatMsgInput" placeholder="Type a message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage('${convId}')}"></textarea>
+      <button class="btn btn-primary" onclick="sendMessage('${convId}')">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>`;
+
+  // Show back btn on mobile
+  if (window.innerWidth <= 768) document.getElementById('chatBackBtn').style.display = 'block';
+
+  await loadChatMessages(convId);
+
+  // Poll for new messages
+  if (chatListenerInterval) clearInterval(chatListenerInterval);
+  chatListenerInterval = setInterval(() => loadChatMessages(convId), 5000);
+}
+
+async function loadChatMessages(convId) {
+  const data = await sbGet('messages', `conversation_id=eq.${convId}&select=*,sender:sender_id(name)&order=created_at.asc&limit=100`);
+  const msgs = data || [];
+  const container = document.getElementById('chatMessages');
+  if (!container) return;
+  const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+  container.innerHTML = msgs.length === 0
+    ? '<div style="text-align:center;color:var(--sub);padding:32px">No messages yet. Say hello! 👋</div>'
+    : msgs.map(m => {
+        const isMine = m.sender_id === session.user.id;
+        return `<div class="msg-bubble-wrap${isMine?' mine':''}">
+          <div class="msg-bubble${isMine?' mine':' theirs'}">${escHtml(m.content||'')}</div>
+          <div class="msg-time">${timeAgo(m.created_at)}</div>
+        </div>`;
+      }).join('');
+  if (wasAtBottom) container.scrollTop = container.scrollHeight;
+}
+
+async function sendMessage(convId) {
+  const input = document.getElementById('chatMsgInput');
+  if (!input) return;
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = '';
+  await sbPost('messages', {conversation_id: convId, sender_id: session.user.id, content});
+  await loadChatMessages(convId);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ADMIN PANEL
+// ═══════════════════════════════════════════════════════════
+async function loadAdmin() {
+  if (!currentUser || currentUser.role !== 'admin') {
+    document.getElementById('adminContent').innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔒</div><h3>Access Denied</h3><p>Admin access required.</p></div>';
+    return;
+  }
+  // Load stats
+  const [allData, pendingData, usersData] = await Promise.all([
+    sbGet('listings', 'select=id,status&limit=1000'),
+    sbGet('listings', 'status=eq.pending&select=id&limit=1000'),
+    sbGet('profiles', 'select=id&limit=1000')
+  ]);
+  const all = allData || [];
+  const pending = pendingData || [];
+  const users = usersData || [];
+  const active = all.filter(l => l.status === 'active');
+
+  document.getElementById('astat-total').textContent = all.length;
+  document.getElementById('astat-pending').textContent = pending.length;
+  document.getElementById('astat-users').textContent = users.length;
+  document.getElementById('astat-active').textContent = active.length;
+
+  showAdminTab('pending', document.querySelector('.admin-tab'));
+}
+
+async function showAdminTab(tab, el) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  const c = document.getElementById('adminContent');
+  c.innerHTML = '<div class="page-loader"><div class="loading-spinner"></div></div>';
+
+  if (tab === 'pending') {
+    const data = await sbGet('listings', 'status=eq.pending&select=*,seller:seller_id(name)&order=created_at.asc&limit=50');
+    const listings = data || [];
+    c.innerHTML = `<h3 style="font-size:18px;font-weight:700;margin-bottom:16px">Pending Ads (${listings.length})</h3>
+      ${listings.length === 0 ? '<div class="empty-state"><div class="empty-state-icon">✅</div><h3>All Clear!</h3><p>No pending ads.</p></div>' : listings.map(l => `
+      <div class="admin-listing-card" id="alcard-${l.id}">
+        <div class="admin-listing-img">${getFirstImage(l.images)?`<img src="${escHtml(getFirstImage(l.images))}" alt="${escHtml(l.title)}" loading="lazy">`:`<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:28px">${catIcon(l.category)}</div>`}</div>
+        <div class="admin-listing-info">
+          <div style="font-size:15px;font-weight:700">${escHtml(l.title)}</div>
+          <div style="font-size:13px;color:var(--sub);margin-top:4px">${escHtml(l.category)} · ${escHtml(l.location||'')} · ${formatPrice(l.price,l.currency)}</div>
+          <div style="font-size:12px;color:var(--sub);margin-top:2px">By: ${l.seller&&l.seller.name?escHtml(l.seller.name):'Unknown'} · ${timeAgo(l.created_at)}</div>
+        </div>
+        <div class="admin-actions">
+          <button class="btn btn-success btn-sm" onclick="adminApprove('${l.id}')">✓ Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="adminReject('${l.id}')">✗ Reject</button>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('detail',{id:'${l.id}'})">View</button>
+        </div>
+      </div>`).join('')}`;
+  }
+  else if (tab === 'all') {
+    const data = await sbGet('listings', 'select=*,seller:seller_id(name)&order=created_at.desc&limit=50');
+    const listings = data || [];
+    c.innerHTML = `<h3 style="font-size:18px;font-weight:700;margin-bottom:16px">All Ads (${listings.length}+)</h3>
+      ${listings.map(l => `
+      <div class="admin-listing-card">
+        <div class="admin-listing-img">${getFirstImage(l.images)?`<img src="${escHtml(getFirstImage(l.images))}" alt="${escHtml(l.title)}" loading="lazy">`:`<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:28px">${catIcon(l.category)}</div>`}</div>
+        <div class="admin-listing-info" style="flex:1">
+          <div style="font-size:15px;font-weight:700">${escHtml(l.title)}</div>
+          <div style="font-size:13px;color:var(--sub);margin-top:4px">${escHtml(l.category)} · ${escHtml(l.location||'')} · ${formatPrice(l.price,l.currency)}</div>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <span class="status-badge status-${l.status||'active'}">${l.status}</span>
+            ${l.featured?'<span class="ad-badge badge-featured" style="position:static;display:inline-flex">⭐</span>':''}
+            ${l.sponsored?'<span class="ad-badge badge-sponsored" style="position:static;display:inline-flex">📢</span>':''}
+          </div>
+        </div>
+        <div class="admin-actions">
+          ${l.status!=='active'?`<button class="btn btn-success btn-sm" onclick="adminSetStatus('${l.id}','active')">Activate</button>`:''}
+          ${l.status!=='pending'?`<button class="btn btn-ghost btn-sm" onclick="adminSetStatus('${l.id}','pending')">Pending</button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="adminDeleteListing('${l.id}')">Delete</button>
+          <button class="btn btn-outline btn-sm" onclick="adminToggleFeatured('${l.id}',${l.featured})">${l.featured?'Unfeature':'Feature'}</button>
+        </div>
+      </div>`).join('')}`;
+  }
+  else if (tab === 'users') {
+    const data = await sbGet('profiles', 'select=*&order=created_at.desc&limit=50');
+    const users = data || [];
+    c.innerHTML = `<h3 style="font-size:18px;font-weight:700;margin-bottom:16px">Users (${users.length})</h3>
+      ${users.map(u => `
+      <div class="user-row">
+        <div class="user-avatar-sm">${(u.name||'?').charAt(0).toUpperCase()}</div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">${escHtml(u.name||'Anonymous')}</div>
+          <div style="font-size:13px;color:var(--sub)">${escHtml(u.phone||'')} · Joined ${timeAgo(u.created_at)}</div>
+          <div style="margin-top:4px"><span class="status-badge ${u.role==='admin'?'status-active':u.banned?'status-sold':'status-active'}">${u.role||'user'}${u.banned?' (banned)':''}</span></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          ${!u.banned ? `<button class="btn btn-danger btn-sm" onclick="adminBanUser('${u.id}',true)">Ban</button>` : `<button class="btn btn-success btn-sm" onclick="adminBanUser('${u.id}',false)">Unban</button>`}
+          ${u.role!=='admin'?`<button class="btn btn-outline btn-sm" onclick="adminMakeAdmin('${u.id}')">Make Admin</button>`:''}
+        </div>
+      </div>`).join('')}`;
+  }
+}
+
+async function adminApprove(id) {
+  await sbPatch('listings', `id=eq.${id}`, {status:'active'});
+  const card = document.getElementById('alcard-' + id);
+  if (card) { card.style.opacity = '0.5'; setTimeout(() => card.remove(), 300); }
+  toast('Ad approved ✓', 'success');
+}
+
+async function adminReject(id) {
+  if (!confirm('Reject and delete this listing?')) return;
+  await sbDelete('listings', `id=eq.${id}`);
+  const card = document.getElementById('alcard-' + id);
+  if (card) { card.style.opacity = '0.5'; setTimeout(() => card.remove(), 300); }
+  toast('Ad rejected');
+}
+
+async function adminSetStatus(id, status) {
+  await sbPatch('listings', `id=eq.${id}`, {status});
+  toast(`Listing set to ${status}`, 'success');
+  showAdminTab('all', document.querySelectorAll('.admin-tab')[1]);
+}
+
+async function adminDeleteListing(id) {
+  if (!confirm('Delete this listing permanently?')) return;
+  await sbDelete('listings', `id=eq.${id}`);
+  toast('Listing deleted');
+  showAdminTab('all', document.querySelectorAll('.admin-tab')[1]);
+}
+
+async function adminToggleFeatured(id, isFeatured) {
+  await sbPatch('listings', `id=eq.${id}`, {featured: !isFeatured});
+  toast((!isFeatured ? 'Marked as Featured' : 'Removed Featured'), 'success');
+  showAdminTab('all', document.querySelectorAll('.admin-tab')[1]);
+}
+
+async function adminBanUser(id, ban) {
+  await sbPatch('profiles', `id=eq.${id}`, {banned: ban});
+  toast(ban ? 'User banned' : 'User unbanned', 'success');
+  showAdminTab('users', document.querySelectorAll('.admin-tab')[2]);
+}
+
+async function adminMakeAdmin(id) {
+  if (!confirm('Grant admin access to this user?')) return;
+  await sbPatch('profiles', `id=eq.${id}`, {role:'admin'});
+  toast('User is now admin', 'success');
+  showAdminTab('users', document.querySelectorAll('.admin-tab')[2]);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SEARCH SYNC
+// ═══════════════════════════════════════════════════════════
+document.getElementById('headerSearch').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+document.getElementById('heroSearch').addEventListener('input', e => {
+  document.getElementById('headerSearch').value = e.target.value;
+});
+document.getElementById('headerSearch').addEventListener('input', e => {
+  document.getElementById('heroSearch').value = e.target.value;
+});
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+loadSession();
+handleHash();
+
+// ═══════════════════════════════════════════════════════════
+// MOBILE RESPONSIVENESS
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768 && document.getElementById('chatWindow').classList.contains('mobile-open')) {
+    document.getElementById('chatWindow').classList.remove('mobile-open');
+  }
+});
+
+</script>
+</body>
+</html>
