@@ -416,6 +416,26 @@
       H.state.users.push(u);
     } else {
       u.name=profile.name||u.name; u.phone=profile.phone||u.phone; u.avatar=profile.avatar||u.avatar; u.verified=profile.verified||false; u.role=profile.role||u.role||'user';
+      // Merge job profile fields from Supabase if they exist (after migrations are run)
+      if (profile.job_title    != null) u.jobTitle       = profile.job_title;
+      if (profile.job_types    != null) u.jobTypes        = profile.job_types;
+      if (profile.sector       != null) u.sector          = profile.sector;
+      if (profile.exp          != null) u.exp             = profile.exp;
+      if (profile.city         != null) u.city            = profile.city;
+      if (profile.bio          != null) u.bio             = profile.bio;
+      if (profile.skills       != null) u.skills          = profile.skills;
+      if (profile.open_to_work != null) u.openToWork      = profile.open_to_work;
+      if (profile.expected_salary   != null) u.expectedSalary  = profile.expected_salary;
+      if (profile.whatsapp_number   != null) u.whatsappFull    = profile.whatsapp_number;
+      if (profile.phone_for_calls   != null) u.phoneForCalls   = profile.phone_for_calls;
+      if (profile.contact_method    != null) u.contactMethod   = profile.contact_method;
+      if (profile.contact_availability != null) u.contactAvail = profile.contact_availability;
+      if (profile.linkedin_url  != null) u.linkedinUrl    = profile.linkedin_url;
+      if (profile.github_url    != null) u.githubUrl      = profile.github_url;
+      if (profile.website_url   != null) u.websiteUrl     = profile.website_url;
+      if (profile.cv_file_url   != null) u.cvFileUrl      = profile.cv_file_url;
+      if (profile.cv_file_name  != null) u.cvFileName     = profile.cv_file_name;
+      if (profile.cv            != null) u.cv             = profile.cv;
     }
     H.saveState();
   };

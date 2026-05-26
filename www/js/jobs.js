@@ -1584,7 +1584,7 @@
 
     // Close immediately — server sync happens in background
     H.toast(u.openToWork ? 'Profile saved — employers can now find you!' : 'Profile saved');
-    H.goBack();
+    try { H.goBack(); } catch(e) { try { H.navTo('Account'); } catch(e2) {} }
 
     // Background Supabase sync
     var _syncToCloud = function(cvFileUrl) {
