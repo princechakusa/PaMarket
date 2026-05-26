@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post a Free Ad — PaMarket Zimbabwe</title>
+<meta name="description" content="Post your free classified ad on PaMarket — Zimbabwe's #1 free marketplace.">
+<link rel="icon" href="img/icon-192.png" type="image/png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1A3A8F;--primary-dark:#0f2460;--primary-mid:#2550C0;--primary-light:#EEF2FF;
+  --accent:#F5A623;--accent-dark:#D4891A;
+  --bg:#F5F7FA;--text:#1A1A2E;--sub:#667085;--border:#E4E8F0;--white:#ffffff;
+  --success:#10b981;--danger:#ef4444;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-pill:999px;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06);--shadow-md:0 4px 16px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.12);
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
+button{cursor:pointer;font-family:var(--font);border:none;background:none}
+input,select,textarea{font-family:var(--font)}
+.hidden{display:none!important}
+.container{max-width:1280px;margin:0 auto;padding:0 24px}
+@media(max-width:768px){.container{padding:0 16px}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-mid)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:var(--accent-dark)}
+.btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--primary)}.btn-outline:hover{background:var(--primary-light)}
+.btn-ghost{background:transparent;color:var(--sub);border:1.5px solid var(--border)}.btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+.btn-sm{padding:8px 16px;font-size:13px}
+.btn-lg{padding:14px 32px;font-size:16px}
+
+/* HEADER */
+#site-header{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.header-inner{display:flex;align-items:center;gap:20px;height:68px;padding:0 24px;max-width:1280px;margin:0 auto}
+.logo-text{font-size:24px;font-weight:900;color:var(--primary);letter-spacing:-0.5px;text-decoration:none;display:inline-block}
+.logo-accent{color:var(--accent)}
+.header-nav{display:flex;gap:4px;margin-left:8px}
+.nav-link{padding:8px 14px;font-size:14px;font-weight:600;color:var(--sub);border-radius:var(--r-sm);transition:all .2s;text-decoration:none;white-space:nowrap}
+.nav-link:hover,.nav-link.active{color:var(--primary);background:var(--primary-light)}
+.header-search{flex:1;max-width:360px;display:flex;align-items:center;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-pill);overflow:hidden;transition:border-color .2s}
+.header-search:focus-within{border-color:var(--primary)}
+.header-search input{flex:1;border:none;background:transparent;padding:0 16px;height:40px;font-size:14px;color:var(--text);outline:none}
+.header-search input::placeholder{color:var(--sub);opacity:.7}
+.header-search button{width:44px;height:40px;border:none;background:transparent;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s}
+.header-search button:hover{color:var(--primary)}
+.header-actions{display:flex;gap:10px;flex-shrink:0;margin-left:auto}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--text);align-items:center;justify-content:center}
+.mobile-nav{position:absolute;top:68px;left:0;right:0;background:#fff;border-bottom:1px solid var(--border);padding:16px 24px;box-shadow:var(--shadow-md);z-index:999;display:flex;flex-direction:column;gap:4px}
+.mobile-nav.hidden{display:none}
+.mobile-nav a{padding:12px 16px;font-size:15px;font-weight:600;color:var(--text);border-radius:var(--r-sm);text-decoration:none;display:block}
+.mobile-nav a:hover{background:var(--bg)}
+.mobile-nav-actions{display:flex;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.mobile-nav-actions .btn{flex:1;justify-content:center}
+@media(max-width:900px){.header-nav{display:none}.header-search{max-width:220px}}
+@media(max-width:600px){.header-search{display:none}.hamburger{display:flex}.header-actions{display:none}}
+
+/* POST FORM */
+.post-wrap{max-width:740px;margin:40px auto;padding:0 24px 80px}
+@media(max-width:768px){.post-wrap{padding:0 16px 80px;margin-top:24px}}
+.post-wrap h1{font-size:clamp(22px,4vw,32px);font-weight:900;color:var(--text);margin-bottom:6px}
+.post-wrap .subtitle{font-size:15px;color:var(--sub);margin-bottom:32px}
+
+.notice-bar{background:var(--primary-light);border:1.5px solid var(--primary);border-radius:var(--r-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:28px;font-size:14px;color:var(--primary)}
+.notice-bar a{font-weight:700;color:var(--primary);text-decoration:underline}
+
+.form-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);padding:32px;margin-bottom:20px;box-shadow:var(--shadow-sm)}
+.form-card h2{font-size:18px;font-weight:800;color:var(--text);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.form-group{margin-bottom:20px}
+.form-label{display:block;font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px}
+.form-label .req{color:var(--danger)}
+.form-input,.form-select,.form-textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:15px;color:var(--text);background:#fff;outline:none;transition:border-color .2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--primary)}
+.form-textarea{min-height:140px;resize:vertical}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--sub);opacity:.7}
+.form-hint{font-size:12px;color:var(--sub);margin-top:5px}
+
+/* CATEGORY GRID */
+.cat-pick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:480px){.cat-pick-grid{grid-template-columns:repeat(3,1fr)}}
+.cat-pick{border:2px solid var(--border);border-radius:var(--r-md);padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;background:#fff}
+.cat-pick:hover{border-color:var(--primary);background:var(--primary-light)}
+.cat-pick.selected{border-color:var(--primary);background:var(--primary-light)}
+.cat-pick-icon{width:40px;height:40px;border-radius:var(--r-sm);background:var(--primary-light);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;color:var(--primary)}
+.cat-pick.selected .cat-pick-icon{background:var(--primary);color:#fff}
+.cat-pick-name{font-size:12px;font-weight:700;color:var(--text)}
+
+/* PRICE */
+.price-row{display:flex;gap:10px;align-items:stretch}
+.currency-toggle{display:flex;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-sm);overflow:hidden;flex-shrink:0}
+.currency-btn{padding:12px 14px;font-size:14px;font-weight:600;color:var(--sub);cursor:pointer;border:none;background:transparent;transition:all .2s}
+.currency-btn.active{background:var(--primary);color:#fff}
+
+/* IMAGES */
+.img-upload-zone{border:2px dashed var(--border);border-radius:var(--r-lg);padding:36px 24px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.img-upload-zone:hover{border-color:var(--primary);background:var(--primary-light)}
+.img-upload-zone input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.img-upload-zone p{font-size:14px;color:var(--sub);margin-top:10px}
+.img-upload-zone strong{color:var(--primary)}
+.img-previews{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.img-prev-item{position:relative;width:100px;height:80px;border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border)}
+.img-prev-item img{width:100%;height:100%;object-fit:cover}
+.img-remove{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;line-height:1}
+
+/* SUBMIT */
+.submit-section{margin-top:24px}
+.submit-btn{width:100%;padding:16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r-sm);font-size:16px;font-weight:800;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.submit-btn:hover{background:var(--accent-dark)}
+.submit-btn:disabled{opacity:.6;cursor:not-allowed}
+.terms-note{font-size:12px;color:var(--sub);text-align:center;margin-top:12px}
+.terms-note a{color:var(--primary)}
+
+/* SUCCESS */
+.success-screen{text-align:center;padding:64px 24px}
+.success-icon-circle{width:80px;height:80px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:var(--success)}
+.success-screen h2{font-size:28px;font-weight:900;margin-bottom:10px}
+.success-screen p{font-size:16px;color:var(--sub);margin-bottom:32px}
+
+/* FOOTER */
+footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin-top:0}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
+.footer-logo{font-size:22px;font-weight:900;color:#fff;margin-bottom:12px}
+.footer-logo span{color:var(--accent)}
+.footer-brand p{font-size:14px;line-height:1.7;max-width:260px;color:rgba(255,255,255,.65)}
+.footer-col h4{font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px}
+.footer-col a{display:block;font-size:14px;color:rgba(255,255,255,.65);margin-bottom:10px;text-decoration:none;transition:color .2s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:24px;display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.5)}
+@media(max-width:900px){.footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.footer-grid{grid-template-columns:1fr}.footer-bottom{flex-direction:column;gap:8px}}
+
+#toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--text);color:#fff;padding:12px 20px;border-radius:var(--r-pill);font-size:14px;font-weight:500;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:auto;max-width:320px;text-align:center}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:var(--success)}.toast.error{background:var(--danger)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header">
+  <div class="header-inner">
+    <a href="website.html" class="logo-text">Pa<span class="logo-accent">Market</span></a>
+    <nav class="header-nav">
+      <a href="browse.html" class="nav-link">Browse</a>
+      <a href="jobs.html" class="nav-link">Jobs</a>
+      <a href="services.html" class="nav-link">Services</a>
+      <a href="advertise.html" class="nav-link">Advertise</a>
+    </nav>
+    <div class="header-search">
+      <input type="text" id="headerSearchInput" placeholder="Search listings…" onkeydown="if(event.key==='Enter')doSearch()">
+      <button onclick="doSearch()" aria-label="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+    </div>
+    <div class="header-actions">
+      <a href="#" onclick="return false" class="btn btn-outline btn-sm">Sign In</a>
+      <a href="post-ad.html" class="btn btn-accent btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Post Ad
+      </a>
+    </div>
+    <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div id="mobileNav" class="mobile-nav hidden">
+    <a href="website.html">Home</a>
+    <a href="browse.html">Browse All</a>
+    <a href="jobs.html">Jobs</a>
+    <a href="services.html">Services</a>
+    <a href="advertise.html">Advertise</a>
+    <div class="mobile-nav-actions">
+      <a href="#" onclick="return false" class="btn btn-outline">Sign In</a>
+      <a href="post-ad.html" class="btn btn-accent">Post Ad</a>
+    </div>
+  </div>
+</header>
+
+<div class="post-wrap" id="postWrap">
+  <h1>Post a Free Ad</h1>
+  <p class="subtitle">Reach thousands of buyers across Zimbabwe — completely free.</p>
+
+  <div class="notice-bar">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span><a href="#" onclick="return false">Sign in</a> to post faster and manage your ads from a dashboard.</span>
+  </div>
+
+  <!-- CATEGORY -->
+  <div class="form-card">
+    <h2>1. Choose a Category</h2>
+    <div class="cat-pick-grid" id="catPickGrid"></div>
+    <input type="hidden" id="selectedCat" value="">
+  </div>
+
+  <!-- AD DETAILS -->
+  <div class="form-card">
+    <h2>2. Ad Details</h2>
+    <div class="form-group">
+      <label class="form-label">Title <span class="req">*</span></label>
+      <input type="text" class="form-input" id="adTitle" placeholder="e.g. iPhone 14 Pro Max 256GB — Excellent Condition" maxlength="100">
+      <p class="form-hint">Be specific and descriptive. Max 100 characters.</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Location <span class="req">*</span></label>
+      <select class="form-select" id="adLocation">
+        <option value="">Select your city…</option>
+        <option>Harare</option><option>Bulawayo</option><option>Chitungwiza</option>
+        <option>Mutare</option><option>Gweru</option><option>Kwekwe</option>
+        <option>Kadoma</option><option>Masvingo</option><option>Hwange</option>
+        <option>Chinhoyi</option><option>Norton</option><option>Marondera</option>
+        <option>Ruwa</option><option>Victoria Falls</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Price</label>
+      <div class="price-row">
+        <div class="currency-toggle">
+          <button class="currency-btn active" id="btnUSD" onclick="setCurrency('USD')">USD $</button>
+          <button class="currency-btn" id="btnZIG" onclick="setCurrency('ZiG')">ZiG</button>
+        </div>
+        <input type="number" class="form-input" id="adPrice" placeholder="0.00" min="0">
+      </div>
+      <p class="form-hint">Leave blank to show "Contact for price"</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description <span class="req">*</span></label>
+      <textarea class="form-textarea" id="adDesc" placeholder="Describe your item in detail — condition, features, reason for selling, any defects…"></textarea>
+      <p class="form-hint">Good descriptions get more responses. Include condition, brand, model, etc.</p>
+    </div>
+  </div>
+
+  <!-- PHOTOS -->
+  <div class="form-card">
+    <h2>3. Add Photos</h2>
+    <div class="img-upload-zone" id="uploadZone">
+      <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotos(this)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+      <p><strong>Click to upload photos</strong> or drag and drop</p>
+      <p style="font-size:12px;margin-top:4px">Up to 8 photos · JPG, PNG · Max 5MB each</p>
+    </div>
+    <div class="img-previews" id="imgPreviews"></div>
+  </div>
+
+  <!-- CONTACT -->
+  <div class="form-card">
+    <h2>4. Your Contact Details</h2>
+    <div class="form-group">
+      <label class="form-label">Your Name <span class="req">*</span></label>
+      <input type="text" class="form-input" id="sellerName" placeholder="Your full name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Phone Number <span class="req">*</span></label>
+      <input type="tel" class="form-input" id="sellerPhone" placeholder="+263 7XX XXX XXX">
+      <p class="form-hint">Buyers will contact you on this number.</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input type="email" class="form-input" id="sellerEmail" placeholder="Optional — for account notifications">
+    </div>
+  </div>
+
+  <div class="submit-section">
+    <button class="submit-btn" id="submitBtn" onclick="submitAd()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      Post Your Free Ad
+    </button>
+    <p class="terms-note">By posting, you agree to our <a href="terms.html">Terms of Service</a> and <a href="privacy.html">Privacy Policy</a>.</p>
+  </div>
+</div>
+
+<!-- SUCCESS STATE (hidden) -->
+<div id="successScreen" class="post-wrap hidden" style="text-align:center;padding-top:80px">
+  <div class="success-icon-circle">
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+  </div>
+  <h2>Ad Submitted!</h2>
+  <p>Thank you! Your ad is under review and will go live within 24 hours.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a href="website.html" class="btn btn-outline btn-lg">Back to Home</a>
+    <a href="browse.html" class="btn btn-primary btn-lg">Browse Listings</a>
+    <a href="post-ad.html" class="btn btn-accent btn-lg">Post Another Ad</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">Pa<span>Market</span></div>
+        <p>Zimbabwe's #1 free classified marketplace. Buy and sell anything, anywhere.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Marketplace</h4>
+        <a href="browse.html">Browse All</a>
+        <a href="browse.html?cat=Property">Property</a>
+        <a href="browse.html?cat=Vehicles">Vehicles</a>
+        <a href="browse.html?cat=Electronics">Electronics</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="services.html">Services</a>
+      </div>
+      <div class="footer-col">
+        <h4>Business</h4>
+        <a href="advertise.html">Advertise</a>
+        <a href="post-ad.html">Post Free Ad</a>
+        <a href="advertise.html#pricing">Pricing</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="about.html">About Us</a>
+        <a href="contact.html">Contact</a>
+        <a href="help.html">Help Center</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2025 PaMarket Zimbabwe. All rights reserved.</span>
+      <span>Made for Zimbabwe</span>
+    </div>
+  </div>
+</footer>
+
+<div id="toast-container"></div>
+
+<script>
+const SB_URL='https://gxgytumhknmnwspxjzxw.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
+
+const CATS_DEF=[
+  {name:'Property',icon:'home'},{name:'Vehicles',icon:'car'},{name:'Electronics',icon:'smartphone'},
+  {name:'Jobs',icon:'briefcase'},{name:'Services',icon:'wrench'},{name:'Fashion',icon:'shirt'},
+  {name:'Furniture',icon:'sofa'},{name:'Agriculture',icon:'leaf'},{name:'Other',icon:'package'}
+];
+const ICONS={
+  home:`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+  car:`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17H5v-5l2-6h10l2 6v5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>`,
+  smartphone:`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>`,
+  briefcase:`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
+  wrench:`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+  shirt:`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>`,
+  sofa:`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H6v-2a2 2 0 0 0-4 0z"/><path d="M4 18v2"/><path d="M20 18v2"/><path d="M12 4v9"/></svg>`,
+  leaf:`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`,
+  package:`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>`
+};
+
+let selectedCurrency='USD';
+let photoDataUrls=[];
+
+function doSearch(){const q=document.getElementById('headerSearchInput')?.value?.trim();if(q)window.location.href='browse.html?q='+encodeURIComponent(q)}
+function toggleMobileNav(){document.getElementById('mobileNav').classList.toggle('hidden')}
+document.addEventListener('click',function(e){const nav=document.getElementById('mobileNav');const hdr=document.getElementById('site-header');if(!nav.classList.contains('hidden')&&!hdr.contains(e.target))nav.classList.add('hidden')});
+function showToast(msg,type=''){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className='toast '+(type||'');t.textContent=msg;c.appendChild(t);requestAnimationFrame(()=>{requestAnimationFrame(()=>{t.classList.add('show')})});setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3000)}
+
+function setCurrency(cur){
+  selectedCurrency=cur;
+  document.getElementById('btnUSD').classList.toggle('active',cur==='USD');
+  document.getElementById('btnZIG').classList.toggle('active',cur==='ZiG');
+}
+
+// Build category grid
+document.getElementById('catPickGrid').innerHTML=CATS_DEF.map(c=>`
+  <div class="cat-pick" onclick="selectCat('${c.name}')" id="cp-${c.name}">
+    <div class="cat-pick-icon">${ICONS[c.icon]||''}</div>
+    <div class="cat-pick-name">${c.name}</div>
+  </div>`).join('');
+
+// Pre-select from URL
+const urlCat=new URLSearchParams(location.search).get('cat');
+if(urlCat) selectCat(urlCat);
+
+function selectCat(name){
+  document.querySelectorAll('.cat-pick').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('cp-'+name)?.classList.add('selected');
+  document.getElementById('selectedCat').value=name;
+}
+
+function handlePhotos(input){
+  const files=Array.from(input.files).slice(0,8-photoDataUrls.length);
+  files.forEach(file=>{
+    if(!file.type.startsWith('image/')) return;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      photoDataUrls.push(e.target.result);
+      renderPreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviews(){
+  const cont=document.getElementById('imgPreviews');
+  cont.innerHTML=photoDataUrls.map((src,i)=>`
+    <div class="img-prev-item">
+      <img src="${src}" alt="Photo ${i+1}">
+      <button class="img-remove" onclick="removePhoto(${i})">×</button>
+    </div>`).join('');
+}
+
+function removePhoto(idx){
+  photoDataUrls.splice(idx,1);
+  renderPreviews();
+}
+
+async function submitAd(){
+  const title=document.getElementById('adTitle').value.trim();
+  const cat=document.getElementById('selectedCat').value;
+  const loc=document.getElementById('adLocation').value;
+  const price=document.getElementById('adPrice').value;
+  const desc=document.getElementById('adDesc').value.trim();
+  const name=document.getElementById('sellerName').value.trim();
+  const phone=document.getElementById('sellerPhone').value.trim();
+
+  if(!title){showToast('Please enter a title.','error');return}
+  if(!cat){showToast('Please select a category.','error');return}
+  if(!loc){showToast('Please select your city.','error');return}
+  if(!desc){showToast('Please add a description.','error');return}
+  if(!name){showToast('Please enter your name.','error');return}
+  if(!phone){showToast('Please enter your phone number.','error');return}
+
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true;
+  btn.innerHTML='<div style="width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite"></div> Submitting…';
+
+  const payload={
+    title,category:cat,location:loc,description:desc,
+    price:price?parseFloat(price):null,currency:selectedCurrency,
+    seller_name:name,phone,status:'pending',created_at:new Date().toISOString()
+  };
+
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/listings`,{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify(payload)
+    });
+    if(r.ok||r.status===201){
+      document.getElementById('postWrap').classList.add('hidden');
+      document.getElementById('successScreen').classList.remove('hidden');
+      window.scrollTo({top:0,behavior:'smooth'});
+    } else {
+      throw new Error('Submit failed');
+    }
+  } catch(e){
+    showToast('Something went wrong. Please try again.','error');
+    btn.disabled=false;
+    btn.innerHTML='Post Your Free Ad';
+  }
+}
+</script>
+</body>
+</html>
