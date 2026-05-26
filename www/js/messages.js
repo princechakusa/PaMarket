@@ -160,12 +160,12 @@
       + '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">'
       + '<div style="width:34px;height:34px;flex-shrink:0">' + otherAvatar + '</div>'
       + '<div style="min-width:0"><div class="det-topbar-title" style="margin:0;text-align:left">' + escHtml(other.name) + '</div>'
-      + (other.verified ? '<div style="font-size:10px;color:#22c55e;font-weight:600">✓ Verified</div>' : '<div style="font-size:10px;color:rgba(255,255,255,.5)">Tap to view profile</div>') + '</div>'
+      + (other.verified ? '<div style="font-size:10px;color:#22c55e;font-weight:600;display:flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Verified</div>' : '<div style="font-size:10px;color:rgba(255,255,255,.5)">Tap to view profile</div>') + '</div>'
       + '</div>'
       + '<button onclick="H._chat.openMenu(\'' + otherIdSafe + '\')" style="padding:8px;background:none;border:none;color:#fff;cursor:pointer;flex-shrink:0;margin-left:4px"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
       + '</div>'
       + (listing ? '<div style="flex-shrink:0;padding:8px 14px;background:var(--card);border-bottom:1px solid var(--border);font-size:13px;color:var(--sub)">Re: ' + escHtml(listing.title) + '</div>' : '')
-      + '<div class="chat-thread" id="chatThread" style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"><div style="flex:1;min-height:0"></div>' + (msgs || '<div style="text-align:center;color:var(--sub);padding:40px 20px;font-size:14px">No messages yet. Say hello! 👋</div>') + '</div>'
+      + '<div class="chat-thread" id="chatThread" style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"><div style="flex:1;min-height:0"></div>' + (msgs || '<div style="text-align:center;color:var(--sub);padding:40px 20px;font-size:14px">No messages yet. Say hello!</div>') + '</div>'
       + '<div class="chat-input-bar" style="flex-shrink:0">'
       + '<input id="chatIn" placeholder="Type a message..." onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}" style="flex:1">'
       + '<button class="chat-send" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
@@ -440,13 +440,13 @@
         title: name,
         body: `<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
           <button onclick="H.closeModal();setTimeout(()=>H._chat.showProfile('${escHtml(userId)}'),80)" style="width:100%;padding:13px;background:var(--bg);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">
-            👤 View Profile &amp; Listings
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:7px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>View Profile &amp; Listings
           </button>
           <button onclick="H.closeModal();setTimeout(()=>H._chat.blockUser('${escHtml(userId)}'),80)" style="width:100%;padding:13px;background:${isBlocked?'var(--bg)':'#FEF2F2'};border:1px solid ${isBlocked?'var(--border)':'#FECACA'};border-radius:12px;font-size:15px;font-weight:600;color:${isBlocked?'var(--text)':'#DC2626'};cursor:pointer;font-family:inherit;text-align:left">
-            🚫 ${isBlocked ? 'Unblock User' : 'Block User'}
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:7px"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>${isBlocked ? 'Unblock User' : 'Block User'}
           </button>
           <button onclick="H.closeModal();setTimeout(()=>H._chat.reportUser('${escHtml(userId)}'),80)" style="width:100%;padding:13px;background:var(--bg);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">
-            ⚠️ Report
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:7px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Report
           </button>
         </div>`,
         confirmText: null,
@@ -465,7 +465,7 @@
       const listingCards = listings.slice(0, 4).map(l => {
         const ph = (l.photos && l.photos[0])
           ? `<img src="${escHtml(l.photos[0])}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0">`
-          : `<div style="width:56px;height:56px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📦</div>`;
+          : `<div style="width:56px;height:56px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--sub)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>`;
         return `<div onclick="H.closeModal();setTimeout(()=>H.openListing('${l.id}'),80)" style="display:flex;gap:10px;align-items:center;padding:8px;background:var(--bg);border-radius:10px;cursor:pointer">
           ${ph}
           <div style="flex:1;min-width:0">
@@ -479,14 +479,14 @@
         body: `<div style="text-align:center;padding:8px 0 16px">
           ${avatar}
           <div style="font-size:18px;font-weight:800;color:var(--text);margin-top:10px">${escHtml(other.name || 'User')}</div>
-          ${other.verified ? '<div style="font-size:12px;color:#22c55e;font-weight:600;margin-top:4px">✓ ID Verified</div>' : ''}
-          ${other.phone ? `<div style="font-size:13px;color:var(--sub);margin-top:4px">📞 ${escHtml(other.phone)}</div>` : ''}
+          ${other.verified ? '<div style="font-size:12px;color:#22c55e;font-weight:600;margin-top:4px;display:flex;align-items:center;gap:4px;justify-content:center"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>ID Verified</div>' : ''}
+          ${other.phone ? `<div style="font-size:13px;color:var(--sub);margin-top:4px;display:flex;align-items:center;gap:4px;justify-content:center"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.86a16 16 0 0 0 6.29 6.29l.91-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>${escHtml(other.phone)}</div>` : ''}
           ${other.joinedAt ? `<div style="font-size:12px;color:var(--sub);margin-top:3px">Member since ${new Date(other.joinedAt).toLocaleDateString()}</div>` : ''}
         </div>
         ${listings.length ? `<div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Active Listings (${listings.length})</div>
         <div style="display:flex;flex-direction:column;gap:8px">${listingCards}</div>` : '<div style="text-align:center;color:var(--sub);font-size:13px;padding:12px 0">No active listings</div>'}
         ${other.phone ? `<div style="display:flex;gap:8px;margin-top:16px">
-          <a href="tel:${escHtml(other.phone)}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#1A3A8F;color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700">📞 Call</a>
+          <a href="tel:${escHtml(other.phone)}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#1A3A8F;color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.86a16 16 0 0 0 6.29 6.29l.91-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Call</a>
           <a href="https://wa.me/${escHtml(other.phone.replace(/\D/g,''))}" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700">WhatsApp</a>
         </div>` : ''}`,
         confirmText: null,

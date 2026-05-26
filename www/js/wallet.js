@@ -27,13 +27,13 @@
   };
 
   const ADS_CATS = [
-    { id:'listing',     emoji:'📋', title:'A specific listing',    desc:'Boost or feature one of your existing ads' },
-    { id:'property',    emoji:'🏠', title:'Property',              desc:'Homes, land, rentals and commercial spaces' },
-    { id:'vehicles',    emoji:'🚗', title:'Vehicles',              desc:'Cars, trucks, motorbikes and more' },
-    { id:'electronics', emoji:'📱', title:'Electronics & Gadgets', desc:'Phones, laptops and appliances' },
-    { id:'business',    emoji:'💼', title:'Business / Services',   desc:'Promote your services to active buyers' },
-    { id:'jobs',        emoji:'👔', title:'Jobs',                  desc:'Find the best talent for your company' },
-    { id:'other',       emoji:'📦', title:'Other',                 desc:'Everything else' },
+    { id:'listing',     icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>', title:'A specific listing',    desc:'Boost or feature one of your existing ads' },
+    { id:'property',    icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>', title:'Property',              desc:'Homes, land, rentals and commercial spaces' },
+    { id:'vehicles',    icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>', title:'Vehicles',              desc:'Cars, trucks, motorbikes and more' },
+    { id:'electronics', icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>', title:'Electronics & Gadgets', desc:'Phones, laptops and appliances' },
+    { id:'business',    icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>', title:'Business / Services',   desc:'Promote your services to active buyers' },
+    { id:'jobs',        icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', title:'Jobs',                  desc:'Find the best talent for your company' },
+    { id:'other',       icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>', title:'Other',                 desc:'Everything else' },
   ];
 
   // Module-level state
@@ -66,7 +66,7 @@
         ${ADS_CATS.map(c => `
           <div onclick="H._adv.pickCategory('${c.id}')"
               style="display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
-            <div style="width:46px;height:46px;background:var(--bg);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${c.emoji}</div>
+            <div style="width:46px;height:46px;background:var(--bg);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text)">${c.icon}</div>
             <div style="flex:1;min-width:0">
               <div style="font-size:15px;font-weight:700;color:var(--text)">${c.title}</div>
               <div style="font-size:12px;color:var(--sub);margin-top:2px;line-height:1.4">${c.desc}</div>
@@ -122,19 +122,19 @@
 
     const catId  = CAT_MAP[category] || category || '';
     const catObj = CATEGORIES.find(c => c.id === catId);
-    const catEmoji = ADS_CATS.find(c => CAT_MAP[c.id] === catId || c.id === category)?.emoji || '📦';
+    const catIcon = ADS_CATS.find(c => CAT_MAP[c.id] === catId || c.id === category)?.icon || '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
 
     _cs = { cat: catId, title:'', desc:'', price:'', currency:'USD', company:'',
             prov: PROVINCES[0], city:(CITIES_BY_PROV[PROVINCES[0]]||[])[0]||'',
             suburb:'', contact:'chat', photos:[] };
 
-    return renderCreateShell(catEmoji, catObj?.name || category || 'Other');
+    return renderCreateShell(catIcon, catObj?.name || category || 'Other');
   };
 
-  function renderCreateShell(emoji, catName) {
+  function renderCreateShell(catIcon, catName) {
     return `<div class="page active">${H.innerTopbar('Create Advertisement')}
       <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px;background:var(--card);border-bottom:1px solid var(--border)">
-        <span style="font-size:24px">${emoji}</span>
+        <span style="color:var(--text)">${catIcon}</span>
         <div>
           <div style="font-size:15px;font-weight:800;color:var(--text)">${escHtml(catName)}</div>
           <div style="font-size:12px;color:var(--sub)">Fill in the details below</div>

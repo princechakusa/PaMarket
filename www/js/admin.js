@@ -177,7 +177,7 @@
           const vd = vdocs[u.id];
           const idDocHtml  = vd && vd.id_doc  ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">ID Document</div><img src="${vd.id_doc}" style="width:140px;border-radius:8px;border:1px solid var(--n3);display:block"></div>` : '';
           const selfieHtml = vd && vd.selfie   ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">Selfie</div><img src="${vd.selfie}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--n3);display:block"></div>` : '';
-          const noPhotos   = !vd ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">⚠ No photos received — verifications table may be missing</div>` : (!vd.id_doc && !vd.selfie) ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">⚠ No photos in submission</div>` : '';
+          const noPhotos   = !vd ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">No photos received — verifications table may be missing</div>` : (!vd.id_doc && !vd.selfie) ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">No photos in submission</div>` : '';
           return `
           <div class="admin-row" style="padding:14px">
             <div class="admin-row-head">

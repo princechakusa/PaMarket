@@ -333,7 +333,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
           <div class="topbar-title" id="topbarTitle">Overview</div>
         </div>
         <div class="topbar-actions">
-          <button class="btn-refresh" onclick="refreshAll()">↻ Refresh</button>
+          <button class="btn-refresh" onclick="refreshAll()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button>
         </div>
       </div>
       <div class="content" id="mainContent">
@@ -546,7 +546,7 @@ async function refreshAll() {
   var btn = document.querySelector('.btn-refresh');
   if(btn){ btn.textContent='Loading…'; btn.disabled=true; }
   await loadAllData();
-  if(btn){ btn.textContent='↻ Refresh'; btn.disabled=false; }
+  if(btn){ btn.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh'; btn.disabled=false; }
   toast('Refreshed');
 }
 
@@ -915,7 +915,7 @@ function renderVerifications() {
   html += statCard('Rejected','red',rejected.length,'declined');
   html += '</div>';
 
-  html += '<div class="sec-head"><div class="sec-title">Pending Verifications</div><button class="btn-refresh" onclick="Promise.all([loadUsers(),loadVerifications()]).then(function(){updateBadges();renderVerifications();})">↻ Refresh</button></div>';
+  html += '<div class="sec-head"><div class="sec-title">Pending Verifications</div><button class="btn-refresh" onclick="Promise.all([loadUsers(),loadVerifications()]).then(function(){updateBadges();renderVerifications();})"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button></div>';
 
   // Show note if documents are missing (verifications table might not exist)
   if(!DATA.verifications.length && pendingFromProfiles.length) {
@@ -1456,7 +1456,7 @@ async function loadChats() {
 
 var _openChatId = null;
 function renderChats() {
-  var html='<div class="sec-head"><div class="sec-title">User Chats</div><div class="sec-actions"><button class="filter-btn on" onclick="loadChats().then(renderChats)">↻ Refresh</button></div></div>';
+  var html='<div class="sec-head"><div class="sec-title">User Chats</div><div class="sec-actions"><button class="filter-btn on" onclick="loadChats().then(renderChats)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button></div></div>';
   if(!DATA.chats.length){
     html+='<div class="empty-msg">No conversations found. Messages table may not exist yet or no chats have been sent.</div>';
     document.getElementById('mainContent').innerHTML=html; return;
