@@ -337,11 +337,17 @@
     var headline    = cv.headline || u.jobTitle || 'Open to Work';
     var location    = cv.location || u.city || '';
     var summary     = cv.summary  || '';
-    var expectedSal = cv.expectedSalary ? '$' + cv.expectedSalary + '/mo' : '';
+    var expectedSal = cv.expectedSalary ? '$' + cv.expectedSalary + '/mo' : (u.expectedSalary || '');
+    var waFull  = u.whatsappFull || '';
+    var callNum = u.phoneForCalls || waFull;
+    var canWa   = !!waFull   && (u.contactMethod !== 'call');
+    var canCall = !!callNum  && (u.contactMethod !== 'whatsapp');
+    var waUrl   = 'https://wa.me/' + waFull + '?text=' + encodeURIComponent('Hi ' + (u.name || '') + ', I saw your profile on PaMarket and I have a job opportunity for you.');
+    var jobTypes = (u.jobTypes || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
 
     return '<div class="page active">'
       + H.innerTopbar('Candidate CV')
-      + '<div style="padding-bottom:90px">'
+      + '<div style="padding-bottom:100px">'
       // ── header ──
       + '<div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952c8 100%);padding:22px 18px 20px">'
       + '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px">'
@@ -355,13 +361,23 @@
       + (location ? '<span>📍 ' + H.escHtml(location) + '</span>' : '')
       + (expLvl   ? '<span>💼 ' + H.escHtml(expLvl)   + '</span>' : '')
       + (expectedSal ? '<span>💰 ' + H.escHtml(expectedSal) + '</span>' : '')
+      + '</div>'
+      + (jobTypes.length ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">' + jobTypes.map(function(t){ return '<span style="background:rgba(255,255,255,.2);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px">' + H.escHtml(t) + '</span>'; }).join('') + '</div>' : '')
+      + ((u.linkedinUrl || u.githubUrl || u.websiteUrl) ? '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:11px">'
+          + (u.linkedinUrl ? '<a href="' + H.escHtml(u.linkedinUrl) + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none">🔗 LinkedIn</a>' : '')
+          + (u.githubUrl   ? '<a href="' + H.escHtml(u.githubUrl)   + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none">🐙 GitHub</a>'   : '')
+          + (u.websiteUrl  ? '<a href="' + H.escHtml(u.websiteUrl)  + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none">🌐 Portfolio</a>'  : '')
+          + '</div>' : '')
       + '</div></div></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-      + '<div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;color:#fff"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Contact via PaMarket Messages</div>'
+      + (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="display:flex;align-items:center;gap:5px;background:#25D366;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;text-decoration:none">💬 Chat on WhatsApp</a>' : '')
+      + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="display:flex;align-items:center;gap:5px;background:#1A3A8F;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;text-decoration:none">📞 Call Candidate</a>' : '')
+      + '<div onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#fff;cursor:pointer"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</div>'
       + '</div></div>'
       // ── body ──
       + '<div style="padding:16px 16px 0">'
-      + (summary ? _cvSection('Professional Summary', '<p style="font-size:13px;color:var(--text);line-height:1.75;margin:0">' + H.escHtml(summary) + '</p>') : '')
+      + (summary ? _cvSection('Professional Summary', '<p style="font-size:13px;color:var(--text);line-height:1.75;margin:0">' + H.escHtml(summary) + '</p>')
+          : (u.bio ? _cvSection('Professional Summary', '<p style="font-size:13px;color:var(--text);line-height:1.75;margin:0">' + H.escHtml(u.bio) + '</p>') : ''))
       + (exp.length ? _cvSection('Work Experience', exp.map(function (e) {
           return '<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">'
             + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:3px">'
@@ -390,8 +406,10 @@
       + '</div></div>'
       // ── fixed bottom ──
       + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200;display:flex;gap:8px">'
-      + '<button onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">💬 Message</button>'
-      + '<button onclick="H._cvDownload(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952c8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">⬇ Download CV</button>'
+      + (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;font-family:inherit">💬 WhatsApp</a>' : '')
+      + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;font-family:inherit">📞 Call</a>' : '')
+      + '<button onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;' + (canWa || canCall ? 'background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;' : 'background:#1A3A8F;color:#fff;border:none;') + 'border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">💬 Message</button>'
+      + '<button onclick="H._cvDownload(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952c8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">⬇ CV</button>'
       + '</div></div>';
   };
 
@@ -879,6 +897,40 @@
       + '</div></div>';
   };
 
+  var inStyle = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit';
+
+  function _cpSectionHead(icon, title) {
+    return '<div style="display:flex;align-items:center;gap:10px;margin:20px 0 10px">'
+      + '<span style="font-size:13px">' + icon + '</span>'
+      + '<span style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px">' + title + '</span>'
+      + '<span style="flex:1;height:1px;background:var(--border)"></span>'
+      + '</div>';
+  }
+
+  function _cpRenderSkillChips(skills) {
+    return skills.map(function(s, i) {
+      return '<span style="display:inline-flex;align-items:center;gap:4px;background:#1A3A8F;color:#fff;font-size:12px;font-weight:600;padding:4px 8px;border-radius:8px">'
+        + H.escHtml(s.trim())
+        + '<button onclick="H._cpRemoveSkill(' + i + ')" style="background:none;border:none;color:#fff;font-size:13px;cursor:pointer;padding:0;line-height:1;font-family:inherit">×</button>'
+        + '</span>';
+    }).join('');
+  }
+
+  function _cpRenderResumeZone(fileName) {
+    if (fileName) {
+      return '<div style="display:flex;align-items:center;gap:8px;background:#22c55e18;border-radius:10px;padding:10px 12px;border:1.5px solid #22c55e40">'
+        + '<span style="font-size:13px">📄</span>'
+        + '<span style="flex:1;font-size:13px;font-weight:600;color:#15803d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(fileName) + '</span>'
+        + '<button onclick="H._cpClearResume()" style="background:none;border:none;color:#15803d;font-size:16px;cursor:pointer;padding:0;font-family:inherit">×</button>'
+        + '</div>';
+    }
+    return '<label for="cpResumeFile" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:2px dashed var(--border);border-radius:10px;padding:20px;cursor:pointer;text-align:center">'
+      + '<span style="font-size:24px">📤</span>'
+      + '<span style="font-size:13px;font-weight:600;color:var(--sub)">Tap to upload Resume / CV</span>'
+      + '<span style="font-size:11px;color:var(--sub2)">PDF, DOC, DOCX · Max 3 MB</span>'
+      + '</label>';
+  }
+
   H.pages.CandidateProfile = function () {
     var u = H.currentUser();
     if (!u) return '<div class="page active">' + H.innerTopbar('Job Seeker Profile') + H.emptyState('Sign in required', 'Sign in to set up your job seeker profile', 'Sign In', "H.requireAuth('Job seeker profile')") + '</div>';
@@ -887,6 +939,16 @@
     var on = u.openToWork ? '1' : '0';
     var togBg = u.openToWork ? '#22c55e' : 'var(--border)';
     var togLeft = u.openToWork ? '23px' : '3px';
+    var existingSkills = (u.skills || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    var jobTypesList = ['Full-Time','Part-Time','Contract','Casual / Day Labor','Remote'];
+    var selectedJobTypes = (u.jobTypes || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    var waCC = u.whatsappCC || '263';
+    var waNum = u.whatsappNum || '';
+    var samePhone = u.samePhone ? true : false;
+    var phoneForCalls = u.phoneForCalls || '';
+    var contactMethod = u.contactMethod || '';
+    var waCCOptions = [['263','🇿🇼 +263'],['27','🇿🇦 +27'],['267','🇧🇼 +267'],['260','🇿🇲 +260'],['255','🇹🇿 +255'],['254','🇰🇪 +254'],['234','🇳🇬 +234'],['44','🇬🇧 +44'],['1','🇺🇸 +1']];
+    var cvFileName = H._cpResumeFileName || u.cvFileName || '';
 
     return '<div class="page active">'
       + H.innerTopbar('Job Seeker Profile')
@@ -895,55 +957,310 @@
       + '<div style="font-size:12px;color:#15803d;font-weight:600;line-height:1.6">Employers in Hire Talent can find and contact you when you turn on Open to Work.</div>'
       + '</div>'
       + '<div style="padding:0 14px 100px">'
+
+      // ── Open to Work toggle ──
       + '<div style="margin-bottom:16px;background:var(--card);border-radius:12px;padding:16px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">'
       + '<div><div style="font-size:15px;font-weight:700;color:var(--text)">Open to Work</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Appear in employer searches</div></div>'
       + '<div id="otwTog" onclick="var o=this.dataset.on===\'1\'?\'0\':\'1\';this.dataset.on=o;this.style.background=o===\'1\'?\'#22c55e\':\'var(--border)\';this.querySelector(\'div\').style.left=o===\'1\'?\'23px\':\'3px\'" data-on="' + on + '" style="width:46px;height:26px;border-radius:13px;background:' + togBg + ';position:relative;cursor:pointer;transition:background .2s;flex-shrink:0">'
       + '<div style="position:absolute;top:3px;left:' + togLeft + ';width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div></div>'
       + '</div>'
+
+      // ── Section 2: Basic Details ──
+      + _cpSectionHead('📋', 'Basic Details')
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Current / Desired Job Title</label>'
-      + '<input id="cpTitle" placeholder="e.g. Accountant, Driver, Teacher" value="' + H.escHtml(u.jobTitle || '') + '" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"></div>'
-      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Skills <span style="font-weight:400;text-transform:none">(comma-separated)</span></label>'
-      + '<input id="cpSkills" placeholder="e.g. Excel, Driving, Sales, Customer Service" value="' + H.escHtml(u.skills || '') + '" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"></div>'
+      + '<input id="cpTitle" placeholder="e.g. Accountant, Driver, Teacher" value="' + H.escHtml(u.jobTitle || '') + '" style="' + inStyle + '"></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Industry / Sector</label>'
-      + '<select id="cpSector" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none"><option value="">Select sector…</option>'
+      + '<select id="cpSector" style="' + inStyle + '"><option value="">Select sector…</option>'
       + JOB_CATS.map(function (c) { return '<option value="' + H.escHtml(c) + '"' + (u.sector === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
       + '</select></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Experience Level</label>'
-      + '<select id="cpExp" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none"><option value="">Select level…</option>'
+      + '<select id="cpExp" style="' + inStyle + '"><option value="">Select level…</option>'
       + expLevels.map(function (e) { return '<option value="' + e[0] + '"' + (u.exp === e[0] ? ' selected' : '') + '>' + H.escHtml(e[1]) + '</option>'; }).join('')
       + '</select></div>'
-      + '<div style="margin-bottom:20px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">City</label>'
-      + '<select id="cpCity" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none"><option value="">Select city…</option>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">City</label>'
+      + '<select id="cpCity" style="' + inStyle + '"><option value="">Select city…</option>'
       + ZW.map(function (c) { return '<option value="' + H.escHtml(c) + '"' + (u.city === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
       + '<option value="Remote"' + (u.city === 'Remote' ? ' selected' : '') + '>Remote / Any</option>'
       + '</select></div>'
+
+      // ── Section 3: Professional Background ──
+      + _cpSectionHead('🎯', 'Professional Background')
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Bio / About Me</label>'
+      + '<textarea id="cpBio" maxlength="300" placeholder="Tell employers a bit about yourself, your strengths and what you\'re looking for…" style="' + inStyle + 'height:90px;resize:vertical">' + H.escHtml(u.bio || '') + '</textarea>'
+      + '<div style="text-align:right;font-size:11px;color:var(--sub);margin-top:3px"><span id="cpBioCount">' + (u.bio || '').length + '</span>/300</div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Skills</label>'
+      + '<div id="cpSkillsChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' + _cpRenderSkillChips(existingSkills) + '</div>'
+      + '<input id="cpSkillsInput" placeholder="Type a skill and press comma or Enter…" style="' + inStyle + '">'
+      + '<input type="hidden" id="cpSkillsVal" value="' + H.escHtml(existingSkills.join(',')) + '">'
+      + '</div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Expected Salary / Rate <span style="font-weight:400;text-transform:none">(optional)</span></label>'
+      + '<input id="cpSalary" placeholder="e.g. $500/mo, $20/hr or Negotiable" value="' + H.escHtml(u.expectedSalary || '') + '" style="' + inStyle + '"></div>'
+
+      // ── Section 4: Job Preferences ──
+      + _cpSectionHead('⚡', 'Job Preferences')
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Job Type / Availability</label>'
+      + '<div id="cpJobTypeWrap" style="display:flex;flex-wrap:wrap;gap:8px">'
+      + jobTypesList.map(function(t) {
+          var sel = selectedJobTypes.indexOf(t) !== -1;
+          return '<button onclick="H._cpToggleJobType(this)" data-jt="' + H.escHtml(t) + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + ';background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--sub)') + ';font-family:inherit">' + H.escHtml(t) + '</button>';
+        }).join('')
+      + '</div></div>'
+
+      // ── Section 5: Contact & Reach ──
+      + _cpSectionHead('📞', 'Contact & Reach')
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">WhatsApp Number</label>'
+      + '<div style="display:flex;gap:8px">'
+      + '<select id="cpWaCC" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;flex-shrink:0;font-family:inherit">'
+      + waCCOptions.map(function(o){ return '<option value="' + o[0] + '"' + (waCC === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('')
+      + '</select>'
+      + '<input id="cpWaNum" type="tel" placeholder="712 345 678" value="' + H.escHtml(waNum) + '" style="' + inStyle + '">'
+      + '</div>'
+      + '<div style="font-size:11px;color:var(--sub);margin-top:5px">Employers can message you directly on WhatsApp</div>'
+      + '</div>'
+      + '<div style="margin-bottom:14px;display:flex;align-items:center;gap:8px">'
+      + '<input type="checkbox" id="cpSamePhone"' + (samePhone ? ' checked' : '') + ' onchange="H._cpToggleSamePhone(this)" style="width:16px;height:16px;cursor:pointer">'
+      + '<label for="cpSamePhone" style="font-size:13px;font-weight:600;color:var(--text);cursor:pointer">Same number for calls as WhatsApp</label>'
+      + '</div>'
+      + '<div id="cpPhoneRow" style="margin-bottom:14px;' + (samePhone ? 'display:none' : '') + '"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Phone for Calls</label>'
+      + '<input id="cpPhone" type="tel" placeholder="e.g. 0712 345 678" value="' + H.escHtml(samePhone ? '' : phoneForCalls) + '" style="' + inStyle + '"></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Preferred Contact Method</label>'
+      + '<div id="cpContactMethodWrap" style="display:flex;gap:8px">'
+      + [['💬 WhatsApp','whatsapp'],['📞 Call','call'],['✅ Both','both']].map(function(cm){
+          var sel = contactMethod === cm[1];
+          return '<button onclick="H._cpSetContact(this)" data-cm="' + cm[1] + '" style="flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + ';background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--sub)') + ';font-family:inherit">' + cm[0] + '</button>';
+        }).join('')
+      + '</div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Best Time to Contact</label>'
+      + '<select id="cpAvail" style="' + inStyle + '">'
+      + ['Anytime','Morning (8am–12pm)','Afternoon (12pm–5pm)','Evening (5pm–8pm)'].map(function(t){ return '<option value="' + H.escHtml(t) + '"' + ((u.contactAvail || 'Anytime') === t ? ' selected' : '') + '>' + H.escHtml(t) + '</option>'; }).join('')
+      + '</select></div>'
+
+      // ── Section 6: Professional Links ──
+      + _cpSectionHead('🔗', 'Professional Links')
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">LinkedIn <span style="font-weight:400;text-transform:none">(optional)</span></label>'
+      + '<input id="cpLinkedin" type="url" placeholder="linkedin.com/in/your-name" value="' + H.escHtml(u.linkedinUrl || '') + '" style="' + inStyle + '"></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">GitHub <span style="font-weight:400;text-transform:none">(optional)</span></label>'
+      + '<input id="cpGithub" type="url" placeholder="github.com/username" value="' + H.escHtml(u.githubUrl || '') + '" style="' + inStyle + '"></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Portfolio / Website <span style="font-weight:400;text-transform:none">(optional)</span></label>'
+      + '<input id="cpWebsite" type="url" placeholder="yourportfolio.com" value="' + H.escHtml(u.websiteUrl || '') + '" style="' + inStyle + '"></div>'
+
+      // ── Section 7: Resume / CV ──
+      + _cpSectionHead('📄', 'Resume / CV')
+      + '<div id="cpResumeZone" style="margin-bottom:20px">' + _cpRenderResumeZone(cvFileName) + '</div>'
+      + '<input type="file" id="cpResumeFile" accept=".pdf,.doc,.docx" style="display:none">'
+
       + '</div>'
       + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
-      + '<button id="cpSaveBtn" onclick="H._saveCandidateProfile()" style="width:100%;padding:15px;background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">Save Profile</button>'
+      + '<button id="cpSaveBtn" onclick="H._saveCandidateProfile()" style="width:100%;padding:15px;background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Save Profile</button>'
       + '</div></div>';
+  };
+
+  H.pages.CandidateProfile_after = function () {
+    // Bio character counter
+    var bioEl = document.getElementById('cpBio');
+    if (bioEl) {
+      bioEl.addEventListener('input', function() {
+        var cnt = document.getElementById('cpBioCount');
+        if (cnt) cnt.textContent = this.value.length;
+      });
+    }
+
+    // Skills chip logic
+    H._cpSkillsArr = (document.getElementById('cpSkillsVal') || {value:''}).value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+
+    function _cpSyncSkills() {
+      var chipsEl = document.getElementById('cpSkillsChips');
+      var valEl   = document.getElementById('cpSkillsVal');
+      if (chipsEl) chipsEl.innerHTML = _cpRenderSkillChips(H._cpSkillsArr);
+      if (valEl)   valEl.value = H._cpSkillsArr.join(',');
+    }
+
+    H._cpRemoveSkill = function(i) {
+      H._cpSkillsArr.splice(i, 1);
+      _cpSyncSkills();
+    };
+
+    var skillInput = document.getElementById('cpSkillsInput');
+    if (skillInput) {
+      skillInput.addEventListener('keydown', function(e) {
+        if (e.key === ',' || e.key === 'Enter') {
+          e.preventDefault();
+          var val = this.value.replace(/,/g, '').trim();
+          if (val && H._cpSkillsArr.indexOf(val) === -1) {
+            H._cpSkillsArr.push(val);
+            _cpSyncSkills();
+          }
+          this.value = '';
+        }
+      });
+      skillInput.addEventListener('blur', function() {
+        var parts = this.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        parts.forEach(function(p) {
+          if (p && H._cpSkillsArr.indexOf(p) === -1) H._cpSkillsArr.push(p);
+        });
+        if (parts.length) { _cpSyncSkills(); skillInput.value = ''; }
+      });
+    }
+
+    // Job type toggle
+    H._cpToggleJobType = function(btn) {
+      var sel = btn.style.background === '#1A3A8F' || btn.style.backgroundColor === 'rgb(26, 58, 143)';
+      if (sel) {
+        btn.style.background = 'var(--card)';
+        btn.style.color = 'var(--sub)';
+        btn.style.borderColor = 'var(--border)';
+      } else {
+        btn.style.background = '#1A3A8F';
+        btn.style.color = '#fff';
+        btn.style.borderColor = '#1A3A8F';
+      }
+    };
+
+    // Contact method segment
+    H._cpSetContact = function(btn) {
+      var wrap = document.getElementById('cpContactMethodWrap');
+      if (!wrap) return;
+      [].forEach.call(wrap.querySelectorAll('button'), function(b) {
+        b.style.background = 'var(--card)';
+        b.style.color = 'var(--sub)';
+        b.style.borderColor = 'var(--border)';
+      });
+      btn.style.background = '#1A3A8F';
+      btn.style.color = '#fff';
+      btn.style.borderColor = '#1A3A8F';
+    };
+
+    // Same-as-WhatsApp checkbox
+    H._cpToggleSamePhone = function(el) {
+      var row = document.getElementById('cpPhoneRow');
+      if (row) row.style.display = el.checked ? 'none' : '';
+    };
+
+    // Resume upload
+    H._cpResumeData = H._cpResumeData || null;
+    H._cpResumeFileName = H._cpResumeFileName || null;
+
+    var fileInput = document.getElementById('cpResumeFile');
+    if (fileInput) {
+      fileInput.addEventListener('change', function() {
+        var file = this.files && this.files[0];
+        if (!file) return;
+        if (file.size > 3 * 1024 * 1024) { H.toast('File too large — max 3 MB'); this.value = ''; return; }
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          H._cpResumeData = ev.target.result;
+          H._cpResumeFileName = file.name;
+          var zone = document.getElementById('cpResumeZone');
+          if (zone) zone.innerHTML = _cpRenderResumeZone(file.name);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    H._cpClearResume = function() {
+      H._cpResumeData = null;
+      H._cpResumeFileName = null;
+      var fileInput2 = document.getElementById('cpResumeFile');
+      if (fileInput2) fileInput2.value = '';
+      var zone = document.getElementById('cpResumeZone');
+      if (zone) zone.innerHTML = _cpRenderResumeZone('');
+    };
   };
 
   H._saveCandidateProfile = function () {
     var u = H.currentUser(); if (!u) return;
     var btn = document.getElementById('cpSaveBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
-    u.openToWork = (document.getElementById('otwTog') || {}).dataset && document.getElementById('otwTog').dataset.on === '1';
-    u.jobTitle   = ((document.getElementById('cpTitle')  || {}).value || '').trim();
-    u.skills     = ((document.getElementById('cpSkills') || {}).value || '').trim();
-    u.sector     = (document.getElementById('cpSector')  || {}).value || '';
-    u.exp        = (document.getElementById('cpExp')     || {}).value || '';
-    u.city       = (document.getElementById('cpCity')    || {}).value || '';
+
+    u.openToWork = !!(document.getElementById('otwTog') && document.getElementById('otwTog').dataset.on === '1');
+    u.jobTitle   = ((document.getElementById('cpTitle')   || {}).value || '').trim();
+    u.sector     = (document.getElementById('cpSector')   || {}).value || '';
+    u.exp        = (document.getElementById('cpExp')      || {}).value || '';
+    u.city       = (document.getElementById('cpCity')     || {}).value || '';
+    u.bio        = ((document.getElementById('cpBio')     || {}).value || '').trim();
+    u.expectedSalary = ((document.getElementById('cpSalary') || {}).value || '').trim();
+
+    // Skills from chip array
+    u.skills = (H._cpSkillsArr || []).join(',');
+
+    // Job types from selected buttons
+    var jtWrap = document.getElementById('cpJobTypeWrap');
+    var jtArr = [];
+    if (jtWrap) {
+      [].forEach.call(jtWrap.querySelectorAll('button'), function(b) {
+        if (b.style.background === '#1A3A8F' || b.style.backgroundColor === 'rgb(26, 58, 143)') jtArr.push(b.dataset.jt);
+      });
+    }
+    u.jobTypes = jtArr.join(',');
+
+    // WhatsApp & phone
+    var waCC  = (document.getElementById('cpWaCC')  || {}).value || '263';
+    var waNum = ((document.getElementById('cpWaNum') || {}).value || '').trim();
+    var samePhone = !!(document.getElementById('cpSamePhone') && document.getElementById('cpSamePhone').checked);
+    var phoneForCalls = samePhone ? waNum : ((document.getElementById('cpPhone') || {}).value || '').trim();
+    u.whatsappCC  = waCC;
+    u.whatsappNum = waNum;
+    u.samePhone   = samePhone;
+    u.phoneForCalls = phoneForCalls;
+    u.whatsappFull  = waCC + waNum.replace(/^0/, '').replace(/\s/g, '');
+
+    // Contact method
+    var cmWrap = document.getElementById('cpContactMethodWrap');
+    var contactMethod = '';
+    if (cmWrap) {
+      var cmSel = cmWrap.querySelector('button[style*="background: #1A3A8F"], button[style*="background:#1A3A8F"]');
+      if (!cmSel) {
+        [].forEach.call(cmWrap.querySelectorAll('button'), function(b) {
+          if (b.style.backgroundColor === 'rgb(26, 58, 143)') cmSel = b;
+        });
+      }
+      if (cmSel) contactMethod = cmSel.dataset.cm || '';
+    }
+    u.contactMethod = contactMethod;
+    u.contactAvail  = (document.getElementById('cpAvail') || {}).value || 'Anytime';
+
+    // Professional links
+    u.linkedinUrl = ((document.getElementById('cpLinkedin') || {}).value || '').trim();
+    u.githubUrl   = ((document.getElementById('cpGithub')  || {}).value || '').trim();
+    u.websiteUrl  = ((document.getElementById('cpWebsite') || {}).value || '').trim();
+
+    // Resume
+    if (H._cpResumeFileName) {
+      u.cvFileName = H._cpResumeFileName;
+      u.cvFileData = H._cpResumeData;
+    }
+
     H.saveState();
+
     var _sb = window.supabase;
     if (_sb && typeof _sb.from === 'function') {
-      _sb.from('profiles').upsert({
-        id: u.id, open_to_work: u.openToWork,
-        job_title: u.jobTitle || null, skills: u.skills || null,
-        sector: u.sector || null, exp: u.exp || null, city: u.city || null
-      }).then(function (res) {
+      var upsertData = {
+        id: u.id,
+        open_to_work: u.openToWork,
+        job_title: u.jobTitle || null,
+        skills: u.skills || null,
+        sector: u.sector || null,
+        exp: u.exp || null,
+        city: u.city || null
+      };
+      try {
+        upsertData.bio                 = u.bio                 || null;
+        upsertData.job_types           = u.jobTypes            || null;
+        upsertData.expected_salary     = u.expectedSalary      || null;
+        upsertData.whatsapp_number     = u.whatsappFull        || null;
+        upsertData.phone_for_calls     = u.phoneForCalls       || null;
+        upsertData.contact_method      = u.contactMethod       || null;
+        upsertData.contact_availability = u.contactAvail       || null;
+        upsertData.linkedin_url        = u.linkedinUrl         || null;
+        upsertData.github_url          = u.githubUrl           || null;
+        upsertData.website_url         = u.websiteUrl          || null;
+        upsertData.cv_file_name        = u.cvFileName          || null;
+      } catch(e) { /* columns may not exist yet */ }
+      _sb.from('profiles').upsert(upsertData).then(function (res) {
         if (res && res.error) console.warn('Candidate profile sync:', res.error.message);
       });
     }
+
     H.toast(u.openToWork ? 'Profile saved — employers can now find you!' : 'Profile saved — you are hidden from employer searches');
     H.goBack();
   };
