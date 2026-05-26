@@ -1156,6 +1156,7 @@ window.H = {
       PP.addListener('pushNotificationActionPerformed',({notification:{data}})=>{
         if(data&&data.type==='message'&&data.convId) H.openInner('Chat',{id:data.convId});
         else if(data&&data.type==='listing'&&data.id) H.openListing(data.id);
+        else if(data&&data.deepLink) H._handleDeepLink(data.deepLink);
       });
     } catch(e){console.warn('Push setup:',e);}
   },

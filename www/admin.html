@@ -1020,12 +1020,26 @@ async function rejectVerification(userId, verifId) {
 }
 
 // ── NOTIFICATIONS ─────────────────────────────────────────
+var PROVINCES = ['Harare','Bulawayo','Manicaland','Mashonaland West','Mashonaland East','Mashonaland Central','Midlands','Masvingo','Matabeleland North','Matabeleland South'];
+
 function renderNotifications(prefilledUserId) {
   var typeOpts = ['info','verify','message','boost','ban','report','sale','review'].map(function(t){
     return '<option value="'+t+'">'+t.charAt(0).toUpperCase()+t.slice(1)+'</option>';
   }).join('');
-  var userOpts = '<option value="all">All Users ('+DATA.users.length+')</option>'
-    + DATA.users.map(function(u){ return '<option value="'+esc(u.id)+'"'+(prefilledUserId===u.id?' selected':'')+'>'+esc(u.name||u.phone||u.email||u.id.slice(0,8))+'</option>'; }).join('');
+
+  var segOpts = '<option value="all">All Users ('+DATA.users.length+')</option>'
+    + '<option value="verified">Verified Users</option>'
+    + '<option value="unverified">Unverified Users</option>'
+    + '<option value="sellers">Sellers (have listings)</option>'
+    + '<option value="buyers">Buyers (no listings)</option>'
+    + '<optgroup label="── Individual ──">'
+    + DATA.users.map(function(u){ return '<option value="'+esc(u.id)+'"'+(prefilledUserId===u.id?' selected':'')+'>'+esc(u.name||u.phone||u.email||u.id.slice(0,8))+'</option>'; }).join('')
+    + '</optgroup>';
+
+  var provinceBoxes = PROVINCES.map(function(p){
+    return '<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;white-space:nowrap">'
+      +'<input type="checkbox" class="prov-cb" value="'+esc(p)+'" style="accent-color:#1A3A8F">'+esc(p)+'</label>';
+  }).join('');
 
   var history = DATA.notifHistory.slice(0,15).map(function(n){
     var u = DATA.users.find(function(x){ return x.id===n.user_id; });
@@ -1034,15 +1048,50 @@ function renderNotifications(prefilledUserId) {
 
   var html = '<div class="notif-form">'
     + '<div style="font-size:15px;font-weight:800;margin-bottom:18px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Push Notification</div>'
+
+    // Segment + Type
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
-    + '<div class="form-row"><label class="form-label">Target Recipient</label><select class="form-select" id="notifTarget">'+userOpts+'</select></div>'
+    + '<div class="form-row"><label class="form-label">Audience Segment</label><select class="form-select" id="notifTarget" onchange="onNotifTargetChange()">'+segOpts+'</select></div>'
     + '<div class="form-row"><label class="form-label">Notification Type</label><select class="form-select" id="notifType" onchange="updateNotifPreview()">'+typeOpts+'</select></div>'
     + '</div>'
-    + '<div class="form-row"><label class="form-label">Title</label><input class="form-input" id="notifTitle" maxlength="80" placeholder="e.g. Your listing is now live!" oninput="updateNotifPreview()"><div class="char-count" id="titleCount">0/80</div></div>'
-    + '<div class="form-row"><label class="form-label">Message</label><textarea class="form-textarea" id="notifBody" maxlength="200" placeholder="Enter the notification message…" oninput="updateNotifPreview()"></textarea><div class="char-count" id="bodyCount">0/200</div></div>'
-    + '<div class="notif-preview"><div class="notif-preview-label">Preview</div>'
-    + '<div class="notif-preview-card"><div class="notif-preview-icon" id="prevIcon" style="background:rgba(99,102,241,.2);color:var(--accent)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div><div><div class="notif-preview-title" id="prevTitle">Notification Title</div><div class="notif-preview-body" id="prevBody">Message body will appear here</div><div class="notif-preview-app">PaMarket · now</div></div></div>'
+
+    // Province filter (hidden for individual user)
+    + '<div class="form-row" id="provinceFilterRow">'
+    + '<label class="form-label" style="margin-bottom:6px">Province Filter <span style="font-weight:400;color:var(--sub)">(optional — blank = all provinces)</span></label>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:8px 14px">'+provinceBoxes+'</div>'
     + '</div>'
+
+    // Title + Body
+    + '<div class="form-row"><label class="form-label">Title</label><input class="form-input" id="notifTitle" maxlength="80" placeholder="e.g. New listings near you!" oninput="updateNotifPreview()"><div class="char-count" id="titleCount">0/80</div></div>'
+    + '<div class="form-row"><label class="form-label">Message</label><textarea class="form-textarea" id="notifBody" maxlength="200" placeholder="Enter the notification message…" oninput="updateNotifPreview()"></textarea><div class="char-count" id="bodyCount">0/200</div></div>'
+
+    // Deep Link
+    + '<div class="form-row"><label class="form-label">On-Tap Destination <span style="font-weight:400;color:var(--sub)">(optional)</span></label>'
+    + '<input class="form-input" id="notifDeepLink" placeholder="e.g. Jobs · Messages · listing:LISTING_ID">'
+    + '<div style="font-size:11px;color:var(--sub);margin-top:4px">Page names: Home, Jobs, Messages, Account. For a specific listing: listing:&lt;id&gt;</div></div>'
+
+    // Image URL
+    + '<div class="form-row"><label class="form-label">Notification Image URL <span style="font-weight:400;color:var(--sub)">(optional)</span></label>'
+    + '<input class="form-input" id="notifImageUrl" placeholder="https://… (shown in expanded notification on Android)">'
+    + '</div>'
+
+    // Schedule
+    + '<div class="form-row"><label class="form-label">Delivery</label>'
+    + '<div style="display:flex;gap:16px;margin-top:6px">'
+    + '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px"><input type="radio" name="notifDelivery" value="now" id="schedNow" checked onchange="onScheduleChange()"> Send Immediately</label>'
+    + '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px"><input type="radio" name="notifDelivery" value="later" id="schedLater" onchange="onScheduleChange()"> Schedule for Later</label>'
+    + '</div>'
+    + '<input type="datetime-local" class="form-input" id="notifScheduledFor" style="display:none;margin-top:8px">'
+    + '</div>'
+
+    // Preview
+    + '<div class="notif-preview"><div class="notif-preview-label">Preview</div>'
+    + '<div class="notif-preview-card">'
+    + '<div class="notif-preview-icon" id="prevIcon" style="background:rgba(99,102,241,.2);color:var(--accent)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>'
+    + '<div><div class="notif-preview-title" id="prevTitle">Notification Title</div><div class="notif-preview-body" id="prevBody">Message body will appear here</div><div class="notif-preview-app">PaMarket · now</div></div>'
+    + '</div></div>'
+
+    // Send button
     + '<div style="display:flex;align-items:center;gap:12px;margin-top:18px">'
     + '<button class="btn-send" id="sendNotifBtn" onclick="sendNotification()">Send Notification</button>'
     + '<span id="sendStatus" style="font-size:12px;color:var(--sub)"></span>'
@@ -1056,15 +1105,30 @@ function renderNotifications(prefilledUserId) {
 
   document.getElementById('mainContent').innerHTML = html;
 
-  // Wire up char counts
   var tf = document.getElementById('notifTitle');
   var bf = document.getElementById('notifBody');
   if(tf) tf.addEventListener('input', function(){ document.getElementById('titleCount').textContent=this.value.length+'/80'; });
   if(bf) bf.addEventListener('input', function(){ document.getElementById('bodyCount').textContent=this.value.length+'/200'; });
   if(prefilledUserId) {
     var sel = document.getElementById('notifTarget');
-    if(sel){ sel.value=prefilledUserId; updateNotifPreview(); }
+    if(sel){ sel.value=prefilledUserId; onNotifTargetChange(); updateNotifPreview(); }
   }
+}
+
+function onNotifTargetChange() {
+  var target = (document.getElementById('notifTarget')||{}).value;
+  var row = document.getElementById('provinceFilterRow');
+  // Hide province filter for individual user targets (UUIDs are 36 chars)
+  if(row) row.style.display = (target && target.length === 36) ? 'none' : '';
+}
+
+function onScheduleChange() {
+  var later = document.getElementById('schedLater');
+  var picker = document.getElementById('notifScheduledFor');
+  var btn = document.getElementById('sendNotifBtn');
+  if(!later || !picker) return;
+  picker.style.display = later.checked ? '' : 'none';
+  if(btn) btn.textContent = later.checked ? 'Schedule Notification' : 'Send Notification';
 }
 
 var NOTIF_ICONS = {
@@ -1092,44 +1156,91 @@ function updateNotifPreview() {
   if(pb) pb.textContent=body;
 }
 
+var SUPABASE_URL = 'https://gxgytumhknmnwspxjzxw.supabase.co';
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
+
 async function sendNotification() {
-  var target = document.getElementById('notifTarget').value;
-  var title = document.getElementById('notifTitle').value.trim();
-  var body = document.getElementById('notifBody').value.trim();
-  var type = document.getElementById('notifType').value;
+  var target       = document.getElementById('notifTarget').value;
+  var title        = document.getElementById('notifTitle').value.trim();
+  var body         = document.getElementById('notifBody').value.trim();
+  var type         = document.getElementById('notifType').value;
+  var deepLink     = (document.getElementById('notifDeepLink')||{}).value||'';
+  var imageUrl     = (document.getElementById('notifImageUrl')||{}).value||'';
+  var schedLater   = document.getElementById('schedLater');
+  var scheduledFor = (schedLater && schedLater.checked)
+    ? (document.getElementById('notifScheduledFor')||{}).value || '' : '';
+
   if(!title){ toast('Enter a notification title','error'); return; }
-  if(!body){ toast('Enter a message','error'); return; }
+  if(!body){  toast('Enter a message','error'); return; }
+  if(schedLater && schedLater.checked && !scheduledFor){ toast('Select a date and time to schedule','error'); return; }
+
+  // Collect province checkboxes
+  var provinces = [];
+  document.querySelectorAll('.prov-cb:checked').forEach(function(cb){ provinces.push(cb.value); });
 
   var btn = document.getElementById('sendNotifBtn');
   var status = document.getElementById('sendStatus');
-  btn.disabled=true; btn.textContent='Sending…';
+  btn.disabled = true;
+  btn.textContent = scheduledFor ? 'Scheduling…' : 'Sending…';
 
   try {
-    var recipients = target==='all' ? DATA.users.map(function(u){ return u.id; }) : [target];
-    var now = Date.now();
-    var BATCH = 50;
-    var sent = 0;
+    var sess = await sb.auth.getSession();
+    var jwt = sess && sess.data && sess.data.session && sess.data.session.access_token;
+    if(!jwt) throw new Error('Not authenticated — please sign in again');
 
-    for(var i=0; i<recipients.length; i+=BATCH) {
-      var batch = recipients.slice(i,i+BATCH).map(function(uid){ return {
-        user_id:uid, title:title, body:body, type:type, read:false, created_at:now
-      };});
-      var r = await sb.from('notifications').insert(batch);
-      if(r.error) throw r.error;
-      sent += batch.length;
-      if(status) status.textContent = 'Sent to '+sent+'/'+recipients.length+'…';
+    var payload = {
+      target:       target,
+      title:        title,
+      body:         body,
+      type:         type,
+      deepLink:     deepLink  || null,
+      imageUrl:     imageUrl  || null,
+      provinces:    provinces.length ? provinces : null,
+      scheduledFor: scheduledFor || null,
+    };
+
+    if(status) status.textContent = 'Calling FCM…';
+    var res = await fetch(SUPABASE_URL + '/functions/v1/send-push', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + jwt,
+        'Content-Type':  'application/json',
+        'apikey':        SUPABASE_ANON,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    var result = await res.json();
+    if(!res.ok) throw new Error(result.error || ('HTTP ' + res.status));
+
+    btn.disabled = false;
+    btn.textContent = schedLater && schedLater.checked ? 'Schedule Notification' : 'Send Notification';
+    if(status) status.textContent = '';
+
+    // Clear form
+    document.getElementById('notifTitle').value = '';
+    document.getElementById('notifBody').value  = '';
+    if(document.getElementById('notifDeepLink'))  document.getElementById('notifDeepLink').value  = '';
+    if(document.getElementById('notifImageUrl'))  document.getElementById('notifImageUrl').value  = '';
+    document.querySelectorAll('.prov-cb:checked').forEach(function(cb){ cb.checked = false; });
+    updateNotifPreview();
+
+    if(result.scheduled) {
+      toast('Scheduled for '+new Date(scheduledFor).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'}));
+    } else {
+      var msg = 'Sent to '+result.total_users+' user'+(result.total_users!==1?'s':'');
+      if(result.fcm_sent  > 0) msg += ' · '+result.fcm_sent+' FCM delivered';
+      if(result.no_token  > 0) msg += ' · '+result.no_token+' no device token';
+      if(result.fcm_failed> 0) msg += ' · '+result.fcm_failed+' FCM failed';
+      toast(msg);
     }
 
     await loadNotifHistory();
-    btn.disabled=false; btn.textContent='Send Notification';
-    if(status) status.textContent='';
-    document.getElementById('notifTitle').value='';
-    document.getElementById('notifBody').value='';
-    updateNotifPreview();
-    toast('Sent to '+sent+' user'+(sent>1?'s':''));
     renderNotifications();
   } catch(e) {
-    btn.disabled=false; btn.textContent='Send Notification';
+    btn.disabled = false;
+    btn.textContent = 'Send Notification';
+    if(status) status.textContent = '';
     toast('Error: '+e.message,'error');
   }
 }

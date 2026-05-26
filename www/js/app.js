@@ -1458,4 +1458,17 @@ window.H = {
 window.pushNotif=(uid,title,body)=>H.pushNotif&&H.pushNotif(uid,title,body);
 window.openListing=id=>H.openListing(id);
 
+// Deep link router — called when user taps a push notification
+H._handleDeepLink = function(route) {
+  if (!route) return;
+  if (route.startsWith('listing:')) {
+    H.openListing(route.split(':')[1]);
+  } else if (route.startsWith('chat:')) {
+    H.openInner('Chat', { id: route.split(':')[1] });
+  } else {
+    // Named pages: Home, Jobs, Messages, Account, Ads, etc.
+    H.navTo(route);
+  }
+};
+
 H.init();
