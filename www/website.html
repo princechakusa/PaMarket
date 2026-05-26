@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaMarket Zimbabwe — Buy, Sell, Rent &amp; Find Jobs | Zimbabwe's #1 Free Marketplace</title>
+  <meta name="description" content="Zimbabwe's free online marketplace. Buy and sell anything — property, cars, electronics, fashion, furniture, jobs and more across all provinces. Post ads for free.">
+  <meta name="keywords" content="Zimbabwe classifieds, buy sell Zimbabwe, Zimbabwe marketplace, jobs Zimbabwe, property Zimbabwe, cars Zimbabwe, Harare classifieds">
+  <meta property="og:title" content="PaMarket Zimbabwe — Buy, Sell, Rent &amp; Find Jobs">
+  <meta property="og:description" content="Zimbabwe's free online marketplace. Buy and sell anything across all 10 provinces.">
+  <meta property="og:image" content="img/icon-512.png">
+  <meta property="og:url" content="https://princechakusa.github.io/PaMarket/website.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="img/icon-192.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --blue:#1A3A8F;--blue-mid:#2550C0;--blue-dark:#0f2460;--blue-light:#EEF2FF;
+      --gold:#F5A623;--gold-dark:#C47D0A;--gold-light:#FEF3C7;
+      --bg:#F5F6FA;--card:#fff;--border:#E4E8F0;--border-mid:#C5CFDF;
+      --text:#101828;--sub:#667085;--hint:#9AA3B2;
+      --green:#12B76A;--red:#D92D20;
+      --font:'Inter',sans-serif;
+      --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+      --shadow-md:0 4px 16px rgba(0,0,0,.10);
+      --shadow-lg:0 8px 32px rgba(0,0,0,.14);
+      --r:12px;--r-sm:8px;--r-lg:16px;--r-pill:999px;
+    }
+    body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+    a{text-decoration:none;color:inherit}
+    img{display:block;max-width:100%}
+    button{cursor:pointer;font-family:var(--font);border:none;background:none;touch-action:manipulation}
+
+    /* ─── HEADER ───────────────────────────────────────────────────── */
+    #site-header{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm)}
+    .header-top{display:flex;align-items:center;gap:16px;padding:0 24px;height:64px;max-width:1400px;margin:0 auto}
+    .logo{display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0}
+    .logo-text{font-size:22px;font-weight:900;color:var(--blue);letter-spacing:-0.5px}
+    .logo-text span{color:var(--gold)}
+    .header-search{flex:1;max-width:560px;display:flex;align-items:center;gap:0;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-pill);overflow:hidden;transition:border-color .2s}
+    .header-search:focus-within{border-color:var(--blue)}
+    .header-search select{border:none;background:transparent;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);padding:0 12px;height:44px;cursor:pointer;outline:none;border-right:1px solid var(--border);flex-shrink:0}
+    .header-search input{flex:1;border:none;background:transparent;font-family:var(--font);font-size:14px;color:var(--text);padding:0 14px;height:44px;outline:none}
+    .header-search input::placeholder{color:var(--hint)}
+    .header-search button{background:var(--blue);color:#fff;padding:0 18px;height:44px;font-size:13px;font-weight:700;flex-shrink:0;transition:background .2s}
+    .header-search button:hover{background:var(--blue-mid)}
+    .header-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:auto}
+    .btn-signin{padding:9px 18px;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:13px;font-weight:600;color:var(--text);background:#fff;transition:all .2s}
+    .btn-signin:hover{border-color:var(--blue);color:var(--blue)}
+    .btn-post{padding:9px 18px;border-radius:var(--r-pill);font-size:13px;font-weight:700;color:#fff;background:var(--gold);transition:background .2s;display:flex;align-items:center;gap:5px}
+    .btn-post:hover{background:var(--gold-dark)}
+    .header-cats{background:var(--blue);overflow-x:auto;scrollbar-width:none}
+    .header-cats::-webkit-scrollbar{display:none}
+    .cats-nav{display:flex;align-items:center;gap:0;padding:0 24px;max-width:1400px;margin:0 auto}
+    .cats-nav a{display:flex;align-items:center;gap:7px;padding:11px 16px;font-size:12px;font-weight:600;color:rgba(255,255,255,.8);white-space:nowrap;transition:all .2s;border-bottom:2px solid transparent}
+    .cats-nav a:hover,.cats-nav a.active{color:#fff;border-bottom-color:var(--gold)}
+    .cats-nav a svg{opacity:.8}
+    .cats-nav a:hover svg,.cats-nav a.active svg{opacity:1}
+
+    /* ─── HERO ─────────────────────────────────────────────────────── */
+    .hero{background:linear-gradient(135deg,var(--blue) 0%,var(--blue-dark) 100%);padding:56px 24px 48px;text-align:center}
+    .hero h1{font-size:clamp(28px,5vw,44px);font-weight:900;color:#fff;line-height:1.15;margin-bottom:10px}
+    .hero h1 span{color:var(--gold)}
+    .hero p{font-size:clamp(14px,2vw,17px);color:rgba(255,255,255,.82);margin-bottom:32px;max-width:560px;margin-left:auto;margin-right:auto}
+    .hero-search{max-width:760px;margin:0 auto 28px;background:#fff;border-radius:var(--r);box-shadow:var(--shadow-lg);display:flex;overflow:hidden}
+    .hero-search select{border:none;border-right:1px solid var(--border);font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);padding:0 16px;height:56px;cursor:pointer;outline:none;background:#fff;flex-shrink:0}
+    .hero-search input{flex:1;border:none;font-family:var(--font);font-size:15px;color:var(--text);padding:0 18px;height:56px;outline:none}
+    .hero-search input::placeholder{color:var(--hint)}
+    .hero-search button{background:var(--gold);color:#fff;padding:0 28px;font-size:15px;font-weight:800;height:56px;flex-shrink:0;transition:background .2s}
+    .hero-search button:hover{background:var(--gold-dark)}
+    .hero-stats{display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap}
+    .hero-stat{text-align:center}
+    .hero-stat-num{font-size:22px;font-weight:900;color:#fff}
+    .hero-stat-lbl{font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+    /* ─── CONTAINER ────────────────────────────────────────────────── */
+    .container{max-width:1400px;margin:0 auto;padding:0 24px}
+    .section{padding:40px 0}
+    .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .section-title{font-size:20px;font-weight:800;color:var(--text)}
+    .section-title span{color:var(--blue)}
+    .see-all{font-size:13px;font-weight:600;color:var(--blue);display:flex;align-items:center;gap:4px}
+    .see-all:hover{text-decoration:underline}
+
+    /* ─── CATEGORIES ───────────────────────────────────────────────── */
+    .cats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+    @media(max-width:1100px){.cats-grid{grid-template-columns:repeat(4,1fr)}}
+    @media(max-width:700px){.cats-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:440px){.cats-grid{grid-template-columns:repeat(2,1fr)}}
+    .cat-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:all .2s;text-align:center}
+    .cat-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+    .cat-icon{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+    .cat-name{font-size:13px;font-weight:700;color:var(--text)}
+    .cat-count{font-size:11px;color:var(--sub);margin-top:-4px}
+
+    /* ─── LISTINGS GRID ────────────────────────────────────────────── */
+    .listings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    @media(max-width:1100px){.listings-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:740px){.listings-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:420px){.listings-grid{grid-template-columns:1fr}}
+    .listing-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .2s;display:flex;flex-direction:column}
+    .listing-card:hover{box-shadow:var(--shadow-md);border-color:var(--border-mid);transform:translateY(-2px)}
+    .listing-img{width:100%;aspect-ratio:4/3;object-fit:cover;background:linear-gradient(135deg,#e8eef8,#d0d9f0)}
+    .listing-img-placeholder{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:32px}
+    .listing-body{padding:12px;flex:1;display:flex;flex-direction:column;gap:4px}
+    .listing-price{font-size:18px;font-weight:800;color:var(--blue)}
+    .listing-price.negotiable{font-size:14px;color:var(--sub);font-weight:600}
+    .listing-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .listing-meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
+    .listing-loc{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:3px}
+    .listing-time{font-size:11px;color:var(--hint);margin-left:auto}
+    .listing-badges{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap}
+    .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--r-pill)}
+    .badge-verified{background:#12B76A20;color:#12B76A}
+    .badge-boosted{background:var(--gold-light);color:var(--gold-dark)}
+    .badge-new{background:var(--blue-light);color:var(--blue)}
+    .skeleton{background:linear-gradient(90deg,#f0f2f5 25%,#e6e9ef 50%,#f0f2f5 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+    @keyframes shimmer{to{background-position:-200% 0}}
+    .skeleton-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+    .skeleton-img{aspect-ratio:4/3;background:inherit}
+    .skeleton-body{padding:12px;display:flex;flex-direction:column;gap:8px}
+    .skeleton-line{height:14px;border-radius:4px;background:inherit}
+
+    /* ─── TABS ─────────────────────────────────────────────────────── */
+    .filter-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+    .filter-tab{padding:8px 16px;border-radius:var(--r-pill);font-size:13px;font-weight:600;border:1.5px solid var(--border);color:var(--sub);background:#fff;transition:all .2s}
+    .filter-tab:hover,.filter-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+    /* ─── JOBS ─────────────────────────────────────────────────────── */
+    .jobs-section{background:#fff;border-radius:var(--r-lg);border:1px solid var(--border);overflow:hidden}
+    .jobs-head{background:linear-gradient(90deg,var(--blue),var(--blue-mid));padding:20px 24px;display:flex;align-items:center;justify-content:space-between}
+    .jobs-head h2{font-size:18px;font-weight:800;color:#fff}
+    .jobs-head a{font-size:13px;font-weight:600;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:4px}
+    .jobs-head a:hover{color:#fff}
+    .jobs-list{padding:8px 0}
+    .job-item{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer}
+    .job-item:last-child{border-bottom:none}
+    .job-item:hover{background:var(--bg)}
+    .job-icon{width:44px;height:44px;border-radius:var(--r-sm);background:var(--gold-light);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .job-info{flex:1;min-width:0}
+    .job-title{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .job-company{font-size:12px;color:var(--sub);margin-top:2px}
+    .job-tags{display:flex;gap:6px;margin-top:6px}
+    .job-tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);background:var(--bg);color:var(--sub);border:1px solid var(--border)}
+    .job-time{font-size:11px;color:var(--hint);flex-shrink:0}
+
+    /* ─── CTA BANNER ───────────────────────────────────────────────── */
+    .cta-banner{background:linear-gradient(135deg,var(--blue) 0%,var(--blue-dark) 100%);border-radius:var(--r-lg);padding:48px 40px;display:flex;align-items:center;justify-content:space-between;gap:32px}
+    .cta-banner-text h2{font-size:28px;font-weight:900;color:#fff;margin-bottom:8px}
+    .cta-banner-text p{font-size:15px;color:rgba(255,255,255,.82);max-width:420px}
+    .cta-banner-actions{display:flex;gap:12px;flex-wrap:wrap;flex-shrink:0}
+    .btn-cta-primary{padding:14px 28px;background:var(--gold);color:#fff;border-radius:var(--r-pill);font-size:15px;font-weight:800;transition:background .2s;display:inline-flex;align-items:center;gap:8px}
+    .btn-cta-primary:hover{background:var(--gold-dark)}
+    .btn-cta-outline{padding:14px 28px;background:transparent;color:#fff;border:2px solid rgba(255,255,255,.45);border-radius:var(--r-pill);font-size:15px;font-weight:700;transition:all .2s}
+    .btn-cta-outline:hover{background:rgba(255,255,255,.12);border-color:#fff}
+
+    /* ─── APP DOWNLOAD ─────────────────────────────────────────────── */
+    .app-section{background:#fff;border-radius:var(--r-lg);border:1px solid var(--border);padding:48px 40px;display:flex;align-items:center;gap:48px}
+    .app-text{flex:1}
+    .app-text h2{font-size:26px;font-weight:900;color:var(--text);margin-bottom:8px}
+    .app-text p{font-size:15px;color:var(--sub);margin-bottom:28px;line-height:1.7;max-width:480px}
+    .app-badges{display:flex;gap:12px;flex-wrap:wrap}
+    .app-badge{display:inline-flex;align-items:center;gap:10px;background:var(--text);color:#fff;border-radius:12px;padding:10px 20px;transition:opacity .2s;cursor:pointer}
+    .app-badge:hover{opacity:.85}
+    .app-badge-icon{font-size:22px;line-height:1}
+    .app-badge-text{display:flex;flex-direction:column}
+    .app-badge-text small{font-size:10px;opacity:.75;font-weight:500}
+    .app-badge-text strong{font-size:15px;font-weight:700}
+    .app-badge.pwa{background:linear-gradient(135deg,var(--blue),var(--blue-mid))}
+    .app-mockup{flex-shrink:0;width:200px}
+
+    /* ─── TRUST ─────────────────────────────────────────────────────── */
+    .trust-bar{background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:24px}
+    .trust-items{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap;max-width:900px;margin:0 auto}
+    .trust-item{display:flex;align-items:center;gap:12px}
+    .trust-icon{width:40px;height:40px;background:var(--blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .trust-text strong{font-size:14px;font-weight:700;color:var(--text);display:block}
+    .trust-text span{font-size:12px;color:var(--sub)}
+
+    /* ─── PROVINCES ─────────────────────────────────────────────────── */
+    .provinces-grid{display:flex;flex-wrap:wrap;gap:10px}
+    .province-btn{padding:8px 16px;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:13px;font-weight:600;color:var(--sub);background:#fff;transition:all .2s;cursor:pointer}
+    .province-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+    .province-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+    /* ─── FOOTER ─────────────────────────────────────────────────────── */
+    footer{background:var(--blue-dark);color:rgba(255,255,255,.85);padding:48px 0 0}
+    .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;padding:0 24px 40px;max-width:1400px;margin:0 auto}
+    @media(max-width:900px){.footer-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.footer-grid{grid-template-columns:1fr}}
+    .footer-brand .logo-text{font-size:24px}
+    .footer-brand p{font-size:13px;color:rgba(255,255,255,.6);margin-top:10px;line-height:1.7;max-width:280px}
+    .footer-col h3{font-size:12px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+    .footer-col a{display:block;font-size:13px;color:rgba(255,255,255,.75);margin-bottom:9px;transition:color .2s}
+    .footer-col a:hover{color:#fff}
+    .footer-bottom{border-top:1px solid rgba(255,255,255,.1);padding:20px 24px;max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    .footer-bottom p{font-size:12px;color:rgba(255,255,255,.5)}
+
+    /* ─── LISTING MODAL ─────────────────────────────────────────────── */
+    #listing-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .25s}
+    #listing-modal.open{opacity:1;pointer-events:auto}
+    .modal-box{background:#fff;border-radius:var(--r-lg);width:100%;max-width:860px;overflow:hidden;margin:auto;box-shadow:var(--shadow-lg);transform:translateY(20px);transition:transform .25s}
+    #listing-modal.open .modal-box{transform:translateY(0)}
+    .modal-images{position:relative;background:#e8eef8}
+    .modal-main-img{width:100%;max-height:420px;object-fit:cover;display:block}
+    .modal-img-placeholder{width:100%;height:320px;display:flex;align-items:center;justify-content:center;font-size:64px;background:linear-gradient(135deg,#e8eef8,#d0d9f0)}
+    .modal-close{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+    .modal-close:hover{background:rgba(0,0,0,.75)}
+    .modal-body{padding:24px}
+    .modal-price{font-size:28px;font-weight:900;color:var(--blue);margin-bottom:6px}
+    .modal-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:12px}
+    .modal-meta-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+    .modal-meta-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub)}
+    .modal-desc{font-size:14px;color:var(--text);line-height:1.8;white-space:pre-wrap;word-break:break-word;margin-bottom:20px}
+    .modal-contact{display:flex;gap:12px;flex-wrap:wrap}
+    .modal-btn{flex:1;min-width:140px;padding:13px 20px;border-radius:12px;font-size:14px;font-weight:700;text-align:center;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px}
+    .modal-btn-whatsapp{background:#25D366;color:#fff}
+    .modal-btn-whatsapp:hover{background:#1da851}
+    .modal-btn-app{background:var(--blue);color:#fff}
+    .modal-btn-app:hover{background:var(--blue-mid)}
+
+    /* ─── LOAD MORE ─────────────────────────────────────────────────── */
+    .load-more-wrap{text-align:center;padding:24px 0}
+    .btn-load-more{padding:12px 32px;border-radius:var(--r-pill);border:1.5px solid var(--border);font-size:14px;font-weight:700;color:var(--blue);background:#fff;cursor:pointer;transition:all .2s}
+    .btn-load-more:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+    /* ─── RESPONSIVE TWEAKS ─────────────────────────────────────────── */
+    @media(max-width:768px){
+      .header-top{padding:0 16px;gap:10px}
+      .header-search .header-cat-select{display:none}
+      .cta-banner{flex-direction:column;text-align:center;padding:32px 24px}
+      .cta-banner-text p{margin:0 auto}
+      .app-section{flex-direction:column;text-align:center;padding:32px 24px;align-items:center}
+      .app-mockup{display:none}
+      .footer-grid{padding:0 16px 32px}
+      .container{padding:0 16px}
+      .hero{padding:36px 16px 32px}
+      .hero-stats{gap:20px}
+    }
+    @media(max-width:480px){
+      .header-actions .btn-signin{display:none}
+      .hero-search{flex-direction:column;border-radius:var(--r)}
+      .hero-search select,.hero-search input,.hero-search button{width:100%;height:48px;border-right:none;border-bottom:1px solid var(--border)}
+      .hero-search button{border-bottom:none;border-radius:0 0 var(--r) var(--r)}
+    }
+    .empty-state{text-align:center;padding:48px 24px;color:var(--sub)}
+    .empty-state p{font-size:15px;margin-top:8px}
+    .toast-web{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:12px 24px;border-radius:var(--r-pill);font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;box-shadow:var(--shadow-lg)}
+    .toast-web.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  </style>
+</head>
+<body>
+
+<!-- ══ HEADER ═══════════════════════════════════════════════════════════ -->
+<header id="site-header">
+  <div class="header-top">
+    <a href="website.html" class="logo">
+      <svg viewBox="0 0 36 36" width="32" height="32" fill="none">
+        <rect width="36" height="36" rx="9" fill="#1A3A8F"/>
+        <text x="6" y="26" font-family="Inter,sans-serif" font-weight="900" font-size="18" fill="#F5A623">Pa</text>
+      </svg>
+      <span class="logo-text">Pa<span>Market</span></span>
+    </a>
+    <div class="header-search">
+      <select id="hdrCatSel" class="header-cat-select">
+        <option value="">All Categories</option>
+        <option value="property">Property</option>
+        <option value="vehicles">Vehicles</option>
+        <option value="rooms">Rooms</option>
+        <option value="electronics">Electronics</option>
+        <option value="furniture">Furniture</option>
+        <option value="fashion">Fashion</option>
+        <option value="services">Services</option>
+        <option value="agriculture">Agriculture</option>
+        <option value="pets">Pets</option>
+        <option value="kids">Baby &amp; Kids</option>
+        <option value="jobs">Jobs</option>
+        <option value="other">Other</option>
+      </select>
+      <input type="text" id="hdrSearchInput" placeholder="Search cars, houses, jobs…" autocomplete="off">
+      <button onclick="runSearch()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Search
+      </button>
+    </div>
+    <div class="header-actions">
+      <a href="index.html" class="btn-signin">Sign In</a>
+      <a href="index.html" class="btn-post">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Post Free Ad
+      </a>
+    </div>
+  </div>
+  <nav class="header-cats">
+    <div class="cats-nav" id="catNav">
+      <a href="#" data-cat="" class="active" onclick="filterByCat('',this)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        All
+      </a>
+      <a href="#" data-cat="property" onclick="filterByCat('property',this)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="10" width="18" height="11" rx="1"/><polyline points="3 10 12 3 21 10"/></svg>
+        Property
+      </a>
+      <a href="#" data-cat="vehicles" onclick="filterByCat('vehicles',this)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        Vehicles
+      </a>
+      <a href="#" data-cat="rooms" onclick="filterByCat('rooms',this)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Rooms
+      </a>
+      <a href="#" data-cat="electronics" onclick="filterByCat('electronics',this)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Electronics
+      </a>
+      <a href="#" data-cat="furniture" onclick="filterByCat('furniture',this)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 9V6a2 2 0 00-2-2H4a2 2 0 00-2 2v3"/><path d="M2 11a2 2 0 012-2h16a2 2 0 012 2v3a2 2 0 01-2 2H4a2 2 0 01-2-2v-3z"/><line x1="6" y1="19" x2="6" y2="16"/><line x1="18" y1="19" x2="18" y2="16"/></svg>
+        Furniture
+      </a>
+      <a href="#" data-cat="fashion" onclick="filterByCat('fashion',this)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.57a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.57a2 2 0 00-1.34-2.23z"/></svg>
+        Fashion
+      </a>
+      <a href="#" data-cat="services" onclick="filterByCat('services',this)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        Services
+      </a>
+      <a href="#" data-cat="agriculture" onclick="filterByCat('agriculture',this)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V12M7 7c0 2.76 2.24 5 5 5s5-2.24 5-5c0-3.87-5-9-5-9S7 3.13 7 7z"/></svg>
+        Agriculture
+      </a>
+      <a href="#" data-cat="pets" onclick="filterByCat('pets',this)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 2.115M14.5 5.173C14.5 3.782 16.077 2.679 18 3c2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 2.115M8.5 11.5c-.55.765-.5 1.642-.3 2.2.595 1.6 2.547 3.136 3.8 3.8 1.253-.664 3.205-2.2 3.8-3.8.2-.558.25-1.435-.3-2.2"/></svg>
+        Pets
+      </a>
+      <a href="#" data-cat="kids" onclick="filterByCat('kids',this)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M3 21v-1a9 9 0 0118 0v1"/></svg>
+        Baby &amp; Kids
+      </a>
+      <a href="#" data-cat="jobs" onclick="filterByCat('jobs',this)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+        Jobs
+      </a>
+    </div>
+  </nav>
+</header>
+
+<!-- ══ HERO ══════════════════════════════════════════════════════════════ -->
+<section class="hero" id="heroSection">
+  <h1>Zimbabwe's Free<br><span>Buy, Sell, Hire &amp; Get Hired</span></h1>
+  <p>Post ads for free, message sellers instantly, find jobs and hire talent — across all 10 provinces.</p>
+  <div class="hero-search">
+    <select id="heroCatSel">
+      <option value="">All Categories</option>
+      <option value="property">Property</option>
+      <option value="vehicles">Vehicles</option>
+      <option value="rooms">Rooms</option>
+      <option value="electronics">Electronics</option>
+      <option value="furniture">Furniture</option>
+      <option value="fashion">Fashion</option>
+      <option value="services">Services</option>
+      <option value="agriculture">Agriculture</option>
+      <option value="pets">Pets</option>
+      <option value="kids">Baby &amp; Kids</option>
+      <option value="jobs">Jobs</option>
+      <option value="other">Other</option>
+    </select>
+    <input type="text" id="heroSearchInput" placeholder="What are you looking for?" autocomplete="off" onkeydown="if(event.key==='Enter')runSearch()">
+    <button onclick="runSearch()">Search</button>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-num" id="statAds">—</div><div class="hero-stat-lbl">Active Ads</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">12</div><div class="hero-stat-lbl">Categories</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">10</div><div class="hero-stat-lbl">Provinces</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">Free</div><div class="hero-stat-lbl">To Post</div></div>
+  </div>
+</section>
+
+<!-- ══ TRUST BAR ═════════════════════════════════════════════════════════ -->
+<div class="trust-bar">
+  <div class="trust-items">
+    <div class="trust-item">
+      <div class="trust-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div class="trust-text"><strong>Verified Sellers</strong><span>ID-checked profiles you can trust</span></div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+      <div class="trust-text"><strong>Real-Time Chat</strong><span>Message buyers &amp; sellers instantly</span></div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+      <div class="trust-text"><strong>100% Free to Post</strong><span>No listing fees, ever</span></div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg></div>
+      <div class="trust-text"><strong>All 10 Provinces</strong><span>Buy &amp; sell across Zimbabwe</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN CONTENT ═══════════════════════════════════════════════════════ -->
+<main>
+
+  <!-- Categories -->
+  <div class="container section">
+    <div class="section-head">
+      <h2 class="section-title">Browse <span>Categories</span></h2>
+    </div>
+    <div class="cats-grid" id="catsGrid">
+      <div class="cat-card skeleton" style="height:110px"></div>
+      <div class="cat-card skeleton" style="height:110px"></div>
+      <div class="cat-card skeleton" style="height:110px"></div>
+      <div class="cat-card skeleton" style="height:110px"></div>
+      <div class="cat-card skeleton" style="height:110px"></div>
+      <div class="cat-card skeleton" style="height:110px"></div>
+    </div>
+  </div>
+
+  <!-- Province Filter -->
+  <div class="container" style="padding-bottom:24px">
+    <div class="provinces-grid" id="provinceBtns">
+      <button class="province-btn active" onclick="filterByProv('',this)">All Zimbabwe</button>
+      <button class="province-btn" onclick="filterByProv('Harare',this)">Harare</button>
+      <button class="province-btn" onclick="filterByProv('Bulawayo',this)">Bulawayo</button>
+      <button class="province-btn" onclick="filterByProv('Manicaland',this)">Manicaland</button>
+      <button class="province-btn" onclick="filterByProv('Midlands',this)">Midlands</button>
+      <button class="province-btn" onclick="filterByProv('Masvingo',this)">Masvingo</button>
+      <button class="province-btn" onclick="filterByProv('Mashonaland East',this)">Mash East</button>
+      <button class="province-btn" onclick="filterByProv('Mashonaland West',this)">Mash West</button>
+      <button class="province-btn" onclick="filterByProv('Mashonaland Central',this)">Mash Central</button>
+      <button class="province-btn" onclick="filterByProv('Matabeleland North',this)">Mat North</button>
+      <button class="province-btn" onclick="filterByProv('Matabeleland South',this)">Mat South</button>
+    </div>
+  </div>
+
+  <!-- Latest Listings -->
+  <div class="container section" style="padding-top:0">
+    <div class="section-head">
+      <h2 class="section-title" id="listingsTitle">Latest <span>Listings</span></h2>
+      <a href="index.html" class="see-all">View all in app <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></a>
+    </div>
+    <div class="filter-tabs" id="filterTabs">
+      <button class="filter-tab active" onclick="filterByType('',this)" type="button">All Listings</button>
+      <button class="filter-tab" onclick="filterByType('for-sale',this)" type="button">For Sale</button>
+      <button class="filter-tab" onclick="filterByType('jobs',this)" type="button">Jobs</button>
+      <button class="filter-tab" onclick="filterByType('property',this)" type="button">Property</button>
+      <button class="filter-tab" onclick="filterByType('vehicles',this)" type="button">Vehicles</button>
+    </div>
+    <div class="listings-grid" id="listingsGrid">
+      <!-- skeleton -->
+      <div class="skeleton-card"><div class="skeleton-img skeleton"></div><div class="skeleton-body"><div class="skeleton-line skeleton" style="width:60%"></div><div class="skeleton-line skeleton" style="width:90%"></div><div class="skeleton-line skeleton" style="width:45%"></div></div></div>
+      <div class="skeleton-card"><div class="skeleton-img skeleton"></div><div class="skeleton-body"><div class="skeleton-line skeleton" style="width:60%"></div><div class="skeleton-line skeleton" style="width:90%"></div><div class="skeleton-line skeleton" style="width:45%"></div></div></div>
+      <div class="skeleton-card"><div class="skeleton-img skeleton"></div><div class="skeleton-body"><div class="skeleton-line skeleton" style="width:60%"></div><div class="skeleton-line skeleton" style="width:90%"></div><div class="skeleton-line skeleton" style="width:45%"></div></div></div>
+      <div class="skeleton-card"><div class="skeleton-img skeleton"></div><div class="skeleton-body"><div class="skeleton-line skeleton" style="width:60%"></div><div class="skeleton-line skeleton" style="width:90%"></div><div class="skeleton-line skeleton" style="width:45%"></div></div></div>
+    </div>
+    <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+      <button class="btn-load-more" onclick="loadMore()" type="button">Load more listings</button>
+    </div>
+  </div>
+
+  <!-- Jobs Section -->
+  <div class="container section" id="jobsSection" style="display:none">
+    <div class="jobs-section">
+      <div class="jobs-head">
+        <h2>Latest Jobs in Zimbabwe</h2>
+        <a href="index.html">View all jobs <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></a>
+      </div>
+      <div id="jobsList"></div>
+    </div>
+  </div>
+
+  <!-- CTA Banner -->
+  <div class="container section">
+    <div class="cta-banner">
+      <div class="cta-banner-text">
+        <h2>Ready to sell something?</h2>
+        <p>Post your ad for FREE in under 2 minutes. Reach thousands of buyers across Zimbabwe — no fees, no contracts.</p>
+      </div>
+      <div class="cta-banner-actions">
+        <a href="index.html" class="btn-cta-primary">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Post Free Ad
+        </a>
+        <a href="index.html" class="btn-cta-outline">Open App</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Download -->
+  <div class="container section">
+    <div class="app-section">
+      <div class="app-text">
+        <h2>Get the PaMarket App</h2>
+        <p>Buy, sell, rent and find jobs on the go. Get instant notifications when someone messages you, real-time chat with buyers and sellers, and post ads in seconds — all from your phone.</p>
+        <div class="app-badges">
+          <div class="app-badge pwa" onclick="window.open('index.html','_blank')">
+            <div class="app-badge-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2.5"/></svg>
+            </div>
+            <div class="app-badge-text"><small>Open as</small><strong>Web App (PWA)</strong></div>
+          </div>
+          <div class="app-badge" onclick="showToast('Android APK coming soon!')">
+            <div class="app-badge-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3l14 9-14 9V3z"/></svg>
+            </div>
+            <div class="app-badge-text"><small>Get it on</small><strong>Google Play</strong></div>
+          </div>
+          <div class="app-badge" onclick="showToast('iOS app coming soon!')">
+            <div class="app-badge-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2C9 2 6.5 4.5 6.5 7.5c0 1.1.3 2.2.9 3.1C5.6 12 4 14.4 4 17c0 2.8 2.2 5 5 5h6c2.8 0 5-2.2 5-5 0-2.6-1.6-5-3.4-6.4.6-.9.9-2 .9-3.1C17.5 4.5 15 2 12 2z"/></svg>
+            </div>
+            <div class="app-badge-text"><small>Download on the</small><strong>App Store</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="app-mockup">
+        <svg viewBox="0 0 180 320" width="180" height="320">
+          <rect x="10" y="0" width="160" height="320" rx="24" fill="#1A3A8F" opacity=".12"/>
+          <rect x="18" y="8" width="144" height="304" rx="20" fill="#1A3A8F"/>
+          <rect x="26" y="20" width="128" height="280" rx="14" fill="#F5F6FA"/>
+          <rect x="26" y="20" width="128" height="40" rx="14" fill="#1A3A8F"/>
+          <text x="38" y="46" font-family="Inter,sans-serif" font-weight="900" font-size="15" fill="#F5A623">Pa</text>
+          <text x="60" y="46" font-family="Inter,sans-serif" font-weight="900" font-size="15" fill="#fff">Market</text>
+          <rect x="34" y="72" width="116" height="64" rx="8" fill="#fff"/>
+          <rect x="34" y="72" width="116" height="18" rx="8" fill="#E4E8F0"/>
+          <rect x="34" y="148" width="54" height="64" rx="8" fill="#fff"/>
+          <rect x="96" y="148" width="54" height="64" rx="8" fill="#fff"/>
+          <rect x="34" y="220" width="54" height="64" rx="8" fill="#fff"/>
+          <rect x="96" y="220" width="54" height="64" rx="8" fill="#fff"/>
+          <rect x="26" y="284" width="128" height="36" rx="0" fill="#fff"/>
+          <rect x="26" y="284" width="128" height="36" rx="0" fill="#1A3A8F" opacity=".06"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══ FOOTER ══════════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="website.html" class="logo" style="margin-bottom:12px">
+        <svg viewBox="0 0 36 36" width="32" height="32" fill="none">
+          <rect width="36" height="36" rx="9" fill="rgba(255,255,255,.15)"/>
+          <text x="6" y="26" font-family="Inter,sans-serif" font-weight="900" font-size="18" fill="#F5A623">Pa</text>
+        </svg>
+        <span class="logo-text" style="color:#fff">Pa<span style="color:#F5A623">Market</span></span>
+      </a>
+      <p>Zimbabwe's free online marketplace. Buy, sell, rent, and find jobs across all 10 provinces. Post ads for free and connect with buyers and sellers instantly.</p>
+    </div>
+    <div class="footer-col">
+      <h3>Categories</h3>
+      <a href="#" onclick="filterByCat('property')">Property</a>
+      <a href="#" onclick="filterByCat('vehicles')">Vehicles</a>
+      <a href="#" onclick="filterByCat('rooms')">Rooms &amp; Rentals</a>
+      <a href="#" onclick="filterByCat('electronics')">Electronics</a>
+      <a href="#" onclick="filterByCat('jobs')">Jobs</a>
+      <a href="#" onclick="filterByCat('services')">Services</a>
+    </div>
+    <div class="footer-col">
+      <h3>Provinces</h3>
+      <a href="#" onclick="filterByProv('Harare')">Harare</a>
+      <a href="#" onclick="filterByProv('Bulawayo')">Bulawayo</a>
+      <a href="#" onclick="filterByProv('Manicaland')">Manicaland</a>
+      <a href="#" onclick="filterByProv('Midlands')">Midlands</a>
+      <a href="#" onclick="filterByProv('Masvingo')">Masvingo</a>
+      <a href="#" onclick="filterByProv('Matabeleland North')">Matabeleland North</a>
+    </div>
+    <div class="footer-col">
+      <h3>Company</h3>
+      <a href="index.html">Open App</a>
+      <a href="terms.html" target="_blank">Terms of Service</a>
+      <a href="privacy-policy.html" target="_blank">Privacy Policy</a>
+      <a href="index.html">Help &amp; Support</a>
+      <a href="index.html">Contact Us</a>
+      <a href="index.html">Advertise</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 PaMarket Zimbabwe. All rights reserved.</p>
+    <p>Made with ❤ for Zimbabwe</p>
+  </div>
+</footer>
+
+<!-- ══ LISTING MODAL ═══════════════════════════════════════════════════════ -->
+<div id="listing-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast-web" id="webToast"></div>
+
+<script>
+'use strict';
+const SB_URL = 'https://gxgytumhknmnwspxjzxw.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
+const HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+
+const CAT_META = {
+  property:    { name:'Property',       color:'#1E88E5', bg:'#E3F2FD', icon:'🏠' },
+  vehicles:    { name:'Vehicles',       color:'#e53935', bg:'#FFEBEE', icon:'🚗' },
+  rooms:       { name:'Rooms',          color:'#00838F', bg:'#E0F7FA', icon:'🛏' },
+  electronics: { name:'Electronics',    color:'#8E24AA', bg:'#F3E5F5', icon:'💻' },
+  furniture:   { name:'Furniture',      color:'#6D4C41', bg:'#EFEBE9', icon:'🪑' },
+  fashion:     { name:'Fashion',        color:'#F06292', bg:'#FCE4EC', icon:'👗' },
+  services:    { name:'Services',       color:'#00897B', bg:'#E0F2F1', icon:'🔧' },
+  agriculture: { name:'Agriculture',    color:'#558B2F', bg:'#F1F8E9', icon:'🌱' },
+  pets:        { name:'Pets',           color:'#FB8C00', bg:'#FFF3E0', icon:'🐾' },
+  kids:        { name:'Baby & Kids',    color:'#E91E63', bg:'#FCE4EC', icon:'🧸' },
+  jobs:        { name:'Jobs',           color:'#F5A623', bg:'#FEF3C7', icon:'💼' },
+  other:       { name:'Other',          color:'#546E7A', bg:'#ECEFF1', icon:'📦' },
+};
+
+let allListings = [];
+let filteredListings = [];
+let displayedCount = 0;
+const PAGE_SIZE = 20;
+let activeProvince = '';
+let activeCat = '';
+let activeType = '';
+let searchQuery = '';
+let catCounts = {};
+
+async function sbGet(table, params) {
+  try {
+    let url = SB_URL + '/rest/v1/' + table + '?' + params;
+    const r = await fetch(url, { headers: HEADERS });
+    if (!r.ok) return [];
+    return await r.json();
+  } catch(e) { return []; }
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtPrice(p, cur) {
+  if (!p && p !== 0) return 'Contact for price';
+  if (p === 0) return 'Free';
+  const n = Number(p);
+  if (isNaN(n)) return String(p);
+  const f = n >= 1000 ? (n >= 1000000 ? (n/1000000).toFixed(1).replace(/\.0$/,'')+'M' : (n/1000).toFixed(0)+'k') : n.toLocaleString();
+  return (cur === 'ZiG' ? 'ZiG ' : '$') + f;
+}
+
+function timeAgo(t) {
+  if (!t) return '';
+  const s = Math.floor((Date.now() - (typeof t === 'number' ? t : new Date(t).getTime())) / 1000);
+  if (s < 60) return 'Just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  if (s < 604800) return Math.floor(s/86400) + 'd ago';
+  return Math.floor(s/604800) + 'w ago';
+}
+
+function getFirstImage(l) {
+  try {
+    let imgs = l.images;
+    if (typeof imgs === 'string') imgs = JSON.parse(imgs);
+    if (Array.isArray(imgs) && imgs.length > 0) return imgs[0];
+  } catch(e) {}
+  return null;
+}
+
+function renderListingCard(l) {
+  const img = getFirstImage(l);
+  const cat = CAT_META[l.cat] || CAT_META.other;
+  const price = (l.price === 0 || l.price === '0') ? 'Free' : (l.negotiable ? 'Negotiable' : fmtPrice(l.price, l.currency));
+  const priceClass = l.negotiable ? 'listing-price negotiable' : 'listing-price';
+  return '<div class="listing-card" onclick="openListing(' + JSON.stringify(JSON.stringify(l)) + ')">'
+    + (img
+      ? '<img class="listing-img" src="' + escHtml(img) + '" alt="' + escHtml(l.title) + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        + '<div class="listing-img-placeholder" style="display:none;background:' + cat.bg + '">' + cat.icon + '</div>'
+      : '<div class="listing-img-placeholder" style="background:' + cat.bg + '">' + cat.icon + '</div>')
+    + '<div class="listing-body">'
+    + '<div class="' + priceClass + '">' + escHtml(price) + '</div>'
+    + '<div class="listing-title">' + escHtml(l.title || 'Untitled') + '</div>'
+    + '<div class="listing-meta">'
+    + (l.city ? '<span class="listing-loc"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escHtml(l.city) + '</span>' : '')
+    + '<span class="listing-time">' + timeAgo(l.created_at) + '</span>'
+    + '</div>'
+    + '<div class="listing-badges">'
+    + (l.verified ? '<span class="badge badge-verified">✓ Verified</span>' : '')
+    + (l.boosted ? '<span class="badge badge-boosted">★ Featured</span>' : '')
+    + (l.condition === 'new' ? '<span class="badge badge-new">New</span>' : '')
+    + '</div>'
+    + '</div></div>';
+}
+
+function renderSkeletons(n) {
+  return Array(n).fill('<div class="skeleton-card"><div class="skeleton-img skeleton"></div><div class="skeleton-body"><div class="skeleton-line skeleton" style="width:55%"></div><div class="skeleton-line skeleton" style="width:88%"></div><div class="skeleton-line skeleton" style="width:42%"></div></div></div>').join('');
+}
+
+function applyFilters() {
+  filteredListings = allListings.filter(function(l) {
+    if (l.status && l.status !== 'active' && l.status !== 'approved') return false;
+    if (activeCat && l.cat !== activeCat) return false;
+    if (activeProvince && l.province !== activeProvince) return false;
+    if (activeType === 'for-sale') { if (l.cat === 'jobs' || l.cat === 'property' || l.cat === 'rooms') return false; }
+    else if (activeType === 'jobs') { if (l.cat !== 'jobs') return false; }
+    else if (activeType === 'property') { if (l.cat !== 'property' && l.cat !== 'rooms') return false; }
+    else if (activeType === 'vehicles') { if (l.cat !== 'vehicles') return false; }
+    if (searchQuery) {
+      var q = searchQuery.toLowerCase();
+      var hay = ((l.title||'') + ' ' + (l.desc||'') + ' ' + (l.city||'')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  displayedCount = 0;
+  document.getElementById('listingsGrid').innerHTML = '';
+  document.getElementById('loadMoreWrap').style.display = 'none';
+  loadMore();
+}
+
+function loadMore() {
+  var slice = filteredListings.slice(displayedCount, displayedCount + PAGE_SIZE);
+  if (!slice.length && displayedCount === 0) {
+    document.getElementById('listingsGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#9AA3B2" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>No listings found. Try a different search.</p></div>';
+    return;
+  }
+  var html = '';
+  slice.forEach(function(l) { html += renderListingCard(l); });
+  document.getElementById('listingsGrid').insertAdjacentHTML('beforeend', html);
+  displayedCount += slice.length;
+  var wrap = document.getElementById('loadMoreWrap');
+  wrap.style.display = displayedCount < filteredListings.length ? 'block' : 'none';
+}
+
+function filterByCat(cat, el) {
+  activeCat = cat;
+  activeType = '';
+  document.querySelectorAll('.cats-nav a').forEach(function(a) { a.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.filter-tab').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelector('.filter-tab').classList.add('active');
+  var title = cat ? (CAT_META[cat] ? CAT_META[cat].name : cat) : 'Latest';
+  document.getElementById('listingsTitle').innerHTML = escHtml(title) + ' <span>Listings</span>';
+  applyFilters();
+  document.getElementById('heroSection').scrollIntoView({ behavior:'smooth', block:'end' });
+  return false;
+}
+
+function filterByProv(prov, btn) {
+  activeProvince = prov;
+  document.querySelectorAll('.province-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  else {
+    document.querySelectorAll('.province-btn').forEach(function(b) {
+      if ((b.textContent.trim() === prov) || (!prov && b.textContent.trim() === 'All Zimbabwe')) b.classList.add('active');
+    });
+  }
+  applyFilters();
+  return false;
+}
+
+function filterByType(type, btn) {
+  activeType = type;
+  document.querySelectorAll('.filter-tab').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  applyFilters();
+}
+
+function runSearch() {
+  var q1 = document.getElementById('heroSearchInput').value.trim();
+  var q2 = document.getElementById('hdrSearchInput').value.trim();
+  searchQuery = q1 || q2;
+  var cat1 = document.getElementById('heroCatSel').value;
+  var cat2 = document.getElementById('hdrCatSel').value;
+  if (cat1 || cat2) { activeCat = cat1 || cat2; }
+  applyFilters();
+  document.getElementById('listingsTitle').innerHTML = searchQuery ? 'Results for <span>"' + escHtml(searchQuery) + '"</span>' : 'Latest <span>Listings</span>';
+  document.querySelector('.listings-grid').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function openListing(jsonStr) {
+  var l;
+  try { l = JSON.parse(jsonStr); } catch(e) { return; }
+  var img = getFirstImage(l);
+  var cat = CAT_META[l.cat] || CAT_META.other;
+  var price = (l.price === 0 || l.price === '0') ? 'Free' : (l.negotiable ? 'Negotiable' : fmtPrice(l.price, l.currency));
+  var waNum = l.whatsapp || l.phone || '';
+  var waUrl = waNum ? 'https://wa.me/' + waNum.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi, I\'m interested in your listing: ' + (l.title||'')) : '';
+  document.getElementById('modalBox').innerHTML =
+    '<div class="modal-images">'
+    + (img
+      ? '<img class="modal-main-img" src="' + escHtml(img) + '" alt="' + escHtml(l.title||'') + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        + '<div class="modal-img-placeholder" style="display:none;background:' + cat.bg + '">' + cat.icon + '</div>'
+      : '<div class="modal-img-placeholder" style="background:' + cat.bg + '">' + cat.icon + '</div>')
+    + '<button class="modal-close" onclick="closeModal()">✕</button>'
+    + '</div>'
+    + '<div class="modal-body">'
+    + '<div class="modal-price">' + escHtml(price) + '</div>'
+    + '<div class="modal-title">' + escHtml(l.title || 'Untitled') + '</div>'
+    + '<div class="modal-meta-row">'
+    + (l.cat ? '<span class="modal-meta-item"><span style="background:' + cat.bg + ';color:' + cat.color + ';padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">' + cat.icon + ' ' + escHtml(cat.name) + '</span></span>' : '')
+    + (l.city ? '<span class="modal-meta-item"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escHtml(l.city + (l.province ? ', ' + l.province : '')) + '</span>' : '')
+    + (l.condition ? '<span class="modal-meta-item">' + escHtml(l.condition.charAt(0).toUpperCase() + l.condition.slice(1)) + '</span>' : '')
+    + '<span class="modal-meta-item" style="margin-left:auto">' + timeAgo(l.created_at) + '</span>'
+    + '</div>'
+    + (l.desc ? '<div class="modal-desc">' + escHtml(l.desc) + '</div>' : '')
+    + '<div class="modal-contact">'
+    + (waUrl ? '<a href="' + escHtml(waUrl) + '" target="_blank" class="modal-btn modal-btn-whatsapp"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp Seller</a>' : '')
+    + '<a href="index.html" class="modal-btn modal-btn-app"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3"/></svg> Open in App</a>'
+    + '</div>'
+    + '</div>';
+  document.getElementById('listing-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('listing-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderCatsGrid(counts) {
+  var html = Object.entries(CAT_META).map(function(entry) {
+    var id = entry[0], m = entry[1];
+    var cnt = counts[id] || 0;
+    return '<div class="cat-card" onclick="filterByCat(\'' + id + '\')" title="Browse ' + m.name + '">'
+      + '<div class="cat-icon" style="background:' + m.bg + ';color:' + m.color + '">'
+      + '<span style="font-size:22px">' + m.icon + '</span>'
+      + '</div>'
+      + '<div class="cat-name">' + escHtml(m.name) + '</div>'
+      + (cnt ? '<div class="cat-count">' + cnt + ' ads</div>' : '')
+      + '</div>';
+  }).join('');
+  document.getElementById('catsGrid').innerHTML = html;
+}
+
+function renderJobsSection(jobs) {
+  if (!jobs || !jobs.length) return;
+  document.getElementById('jobsSection').style.display = '';
+  var html = jobs.map(function(l) {
+    var lines = (l.desc || '').split('\n');
+    function parseLine(k) { var f=lines.find(function(ln){return ln.startsWith(k+':');}); return f?f.slice(k.length+1).trim():''; }
+    var company = l.company || l.sellerName || parseLine('COMPANY') || 'Company';
+    var jobType = parseLine('JOB TYPE') || '';
+    var city = l.city || '';
+    return '<div class="job-item" onclick="openListing(' + JSON.stringify(JSON.stringify(l)) + ')">'
+      + '<div class="job-icon"><span style="font-size:20px">💼</span></div>'
+      + '<div class="job-info">'
+      + '<div class="job-title">' + escHtml(l.title || 'Job Opening') + '</div>'
+      + '<div class="job-company">' + escHtml(company) + (city ? ' · ' + escHtml(city) : '') + '</div>'
+      + '<div class="job-tags">'
+      + (jobType ? '<span class="job-tag">' + escHtml(jobType) + '</span>' : '')
+      + (l.salary || parseLine('SALARY') ? '<span class="job-tag">' + escHtml(l.salary || parseLine('SALARY')) + '</span>' : '')
+      + '</div>'
+      + '</div>'
+      + '<div class="job-time">' + timeAgo(l.created_at) + '</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('jobsList').innerHTML = html;
+}
+
+function showToast(msg) {
+  var el = document.getElementById('webToast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 3000);
+}
+
+async function init() {
+  // Fetch all active listings
+  var data = await sbGet('listings', 'select=id,title,desc,price,currency,cat,city,province,images,condition,negotiable,boosted,verified,status,created_at,phone,whatsapp&status=eq.active&order=created_at.desc&limit=500');
+  if (!Array.isArray(data)) data = [];
+  allListings = data;
+
+  // Count per category
+  allListings.forEach(function(l) { catCounts[l.cat] = (catCounts[l.cat] || 0) + 1; });
+
+  // Update stats
+  document.getElementById('statAds').textContent = allListings.length.toLocaleString() + '+';
+
+  // Render categories
+  renderCatsGrid(catCounts);
+
+  // Render listings
+  applyFilters();
+
+  // Render jobs section
+  var jobs = allListings.filter(function(l) { return l.cat === 'jobs'; }).slice(0, 8);
+  renderJobsSection(jobs);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
+});
+
+document.getElementById('hdrSearchInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') runSearch();
+});
+
+document.getElementById('heroSearchInput').addEventListener('input', function() {
+  document.getElementById('hdrSearchInput').value = this.value;
+});
+document.getElementById('hdrSearchInput').addEventListener('input', function() {
+  document.getElementById('heroSearchInput').value = this.value;
+});
+
+init();
+</script>
+</body>
+</html>
