@@ -851,6 +851,7 @@ window.H = {
         company: r.company, applicantId: r.applicant_id,
         applicantName: r.applicant_name, applicantPhone: r.applicant_phone,
         applicantEmail: r.applicant_email, message: r.message,
+        answers: r.answers || [],
         status: r.status, employerId: r.employer_id,
         appliedAt: r.applied_at ? new Date(r.applied_at).getTime() : Date.now()
       }));
@@ -918,6 +919,7 @@ window.H = {
         company: app.company || '', applicant_id: app.applicantId,
         applicant_name: app.applicantName, applicant_phone: app.applicantPhone,
         applicant_email: app.applicantEmail, message: app.message,
+        answers: app.answers || [],
         status: app.status || 'pending', employer_id: app.employerId,
         applied_at: app.appliedAt ? new Date(app.appliedAt).toISOString() : new Date().toISOString()
       });
