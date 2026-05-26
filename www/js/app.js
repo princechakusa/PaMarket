@@ -485,6 +485,10 @@ window.H = {
     if(H.state._backToAccount){
       H.state._backToAccount=false;
       this.pageStack.pop();
+      document.getElementById('bottomNav').style.display='flex';
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+      const acctBtn=document.querySelector('[data-nav="Account"]'); if(acctBtn) acctBtn.classList.add('active');
+      await this.renderPage('Account');
       H.showAccountMenu();
       return;
     }
