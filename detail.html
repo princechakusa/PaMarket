@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Listing Detail — PaMarket Zimbabwe</title>
+<meta name="description" content="View listing details on PaMarket — Zimbabwe's #1 free classified marketplace.">
+<link rel="icon" href="img/icon-192.png" type="image/png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1A3A8F;--primary-dark:#0f2460;--primary-mid:#2550C0;--primary-light:#EEF2FF;
+  --accent:#F5A623;--accent-dark:#D4891A;
+  --bg:#F5F7FA;--text:#1A1A2E;--sub:#667085;--border:#E4E8F0;--white:#ffffff;
+  --success:#10b981;--danger:#ef4444;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-pill:999px;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06);--shadow-md:0 4px 16px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.12);
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
+button{cursor:pointer;font-family:var(--font);border:none;background:none}
+input,select,textarea{font-family:var(--font)}
+.hidden{display:none!important}
+.container{max-width:1280px;margin:0 auto;padding:0 24px}
+@media(max-width:768px){.container{padding:0 16px}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-mid)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:var(--accent-dark)}
+.btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--primary)}.btn-outline:hover{background:var(--primary-light)}
+.btn-ghost{background:transparent;color:var(--sub);border:1.5px solid var(--border)}.btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+.btn-sm{padding:8px 16px;font-size:13px}
+.btn-lg{padding:14px 32px;font-size:16px}
+
+/* HEADER */
+#site-header{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.header-inner{display:flex;align-items:center;gap:20px;height:68px;padding:0 24px;max-width:1280px;margin:0 auto}
+.logo-text{font-size:24px;font-weight:900;color:var(--primary);letter-spacing:-0.5px;text-decoration:none;display:inline-block}
+.logo-accent{color:var(--accent)}
+.header-nav{display:flex;gap:4px;margin-left:8px}
+.nav-link{padding:8px 14px;font-size:14px;font-weight:600;color:var(--sub);border-radius:var(--r-sm);transition:all .2s;text-decoration:none;white-space:nowrap}
+.nav-link:hover,.nav-link.active{color:var(--primary);background:var(--primary-light)}
+.header-search{flex:1;max-width:360px;display:flex;align-items:center;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-pill);overflow:hidden;transition:border-color .2s}
+.header-search:focus-within{border-color:var(--primary)}
+.header-search input{flex:1;border:none;background:transparent;padding:0 16px;height:40px;font-size:14px;color:var(--text);outline:none}
+.header-search input::placeholder{color:var(--sub);opacity:.7}
+.header-search button{width:44px;height:40px;border:none;background:transparent;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s}
+.header-search button:hover{color:var(--primary)}
+.header-actions{display:flex;gap:10px;flex-shrink:0;margin-left:auto}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--text);align-items:center;justify-content:center}
+.mobile-nav{position:absolute;top:68px;left:0;right:0;background:#fff;border-bottom:1px solid var(--border);padding:16px 24px;box-shadow:var(--shadow-md);z-index:999;display:flex;flex-direction:column;gap:4px}
+.mobile-nav.hidden{display:none}
+.mobile-nav a{padding:12px 16px;font-size:15px;font-weight:600;color:var(--text);border-radius:var(--r-sm);text-decoration:none;display:block}
+.mobile-nav a:hover{background:var(--bg)}
+.mobile-nav-actions{display:flex;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.mobile-nav-actions .btn{flex:1;justify-content:center}
+@media(max-width:900px){.header-nav{display:none}.header-search{max-width:220px}}
+@media(max-width:600px){.header-search{display:none}.hamburger{display:flex}.header-actions{display:none}}
+
+/* BREADCRUMB */
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub);padding:20px 0 16px}
+.breadcrumb a{color:var(--sub);transition:color .2s}.breadcrumb a:hover{color:var(--primary)}
+.breadcrumb-sep{color:var(--border)}
+
+/* DETAIL LAYOUT */
+.detail-layout{display:grid;grid-template-columns:1fr 360px;gap:32px;align-items:start;padding-bottom:60px}
+@media(max-width:960px){.detail-layout{grid-template-columns:1fr}}
+
+/* GALLERY */
+.gallery-main{border-radius:var(--r-lg);overflow:hidden;background:#f1f5f9;aspect-ratio:16/10;margin-bottom:12px;position:relative;cursor:zoom-in}
+.gallery-main img{width:100%;height:100%;object-fit:cover}
+.gallery-thumbs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.gallery-thumbs::-webkit-scrollbar{display:none}
+.gallery-thumb{width:80px;height:60px;border-radius:var(--r-sm);overflow:hidden;flex-shrink:0;cursor:pointer;border:2.5px solid transparent;transition:border-color .2s}
+.gallery-thumb.active,.gallery-thumb:hover{border-color:var(--primary)}
+.gallery-thumb img{width:100%;height:100%;object-fit:cover}
+
+/* DETAIL CONTENT */
+.detail-cat-badge{display:inline-block;padding:4px 12px;border-radius:var(--r-pill);background:var(--primary-light);color:var(--primary);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px}
+.detail-title{font-size:clamp(20px,3vw,28px);font-weight:800;color:var(--text);margin-bottom:10px;line-height:1.25}
+.detail-price{font-size:clamp(24px,4vw,36px);font-weight:900;color:var(--primary);margin-bottom:16px}
+.detail-meta{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.detail-meta-item{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--sub)}
+.detail-section-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.detail-desc{font-size:15px;line-height:1.85;color:var(--text);white-space:pre-wrap;margin-bottom:24px}
+.report-link{display:block;font-size:13px;color:var(--sub);text-align:center;margin-top:16px;cursor:pointer;transition:color .2s}
+.report-link:hover{color:var(--danger)}
+
+/* SELLER CARD */
+.seller-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);padding:24px;position:sticky;top:84px}
+.seller-card-top{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.seller-avatar{width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.seller-avatar img{width:100%;height:100%;object-fit:cover}
+.seller-name{font-size:16px;font-weight:700;color:var(--text)}
+.seller-member{font-size:12px;color:var(--sub);margin-top:3px}
+.verified-badge{display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:var(--success);padding:3px 8px;border-radius:var(--r-pill);font-size:11px;font-weight:700;margin-top:6px}
+
+.contact-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;border-radius:var(--r-sm);font-size:15px;font-weight:700;cursor:pointer;border:none;transition:all .2s;margin-bottom:10px;font-family:var(--font)}
+.btn-whatsapp{background:#25D366;color:#fff}.btn-whatsapp:hover{background:#1ebe5d}
+.btn-call{background:var(--primary);color:#fff}.btn-call:hover{background:var(--primary-mid)}
+.btn-message{background:#fff;color:var(--text);border:1.5px solid var(--border)}.btn-message:hover{border-color:var(--primary);color:var(--primary)}
+
+.safety-box{background:var(--primary-light);border-radius:var(--r-md);padding:16px;margin-top:20px}
+.safety-box h4{font-size:13px;font-weight:700;color:var(--primary);margin-bottom:8px}
+.safety-box ul{padding-left:16px;font-size:12px;color:var(--sub);line-height:1.8}
+
+/* SIMILAR */
+.similar-section{padding:48px 0}
+.similar-section h2{font-size:22px;font-weight:800;margin-bottom:24px}
+.ads-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media(max-width:1100px){.ads-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.ads-grid{grid-template-columns:repeat(2,1fr);gap:12px}}
+.ad-card{background:#fff;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:all .25s;position:relative;box-shadow:var(--shadow-sm);text-decoration:none;display:block;color:inherit}
+.ad-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--primary)}
+.ad-img-wrap{position:relative;aspect-ratio:16/10;overflow:hidden;background:#f1f5f9}
+.ad-img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.ad-card:hover .ad-img-wrap img{transform:scale(1.04)}
+.ad-badge{position:absolute;top:8px;left:8px;padding:3px 10px;border-radius:var(--r-pill);font-size:11px;font-weight:700;text-transform:uppercase;background:rgba(26,58,143,.85);color:#fff;backdrop-filter:blur(4px)}
+.ad-info{padding:14px}
+.ad-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
+.ad-price{font-size:17px;font-weight:800;color:var(--primary);margin-bottom:6px}
+.ad-meta{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)}
+.ad-meta-dot{opacity:.4}
+
+/* MOBILE STICKY */
+.mobile-contact-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);padding:12px 16px;gap:10px;z-index:100}
+@media(max-width:960px){.mobile-contact-bar{display:flex}}
+
+/* LOADER */
+.page-loader{display:flex;align-items:center;justify-content:center;padding:80px;flex-direction:column;gap:16px;color:var(--sub)}
+.loading-spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* FOOTER */
+footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin-top:0}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
+.footer-logo{font-size:22px;font-weight:900;color:#fff;margin-bottom:12px}
+.footer-logo span{color:var(--accent)}
+.footer-brand p{font-size:14px;line-height:1.7;max-width:260px;color:rgba(255,255,255,.65)}
+.footer-col h4{font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px}
+.footer-col a{display:block;font-size:14px;color:rgba(255,255,255,.65);margin-bottom:10px;text-decoration:none;transition:color .2s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:24px;display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.5)}
+@media(max-width:900px){.footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.footer-grid{grid-template-columns:1fr}.footer-bottom{flex-direction:column;gap:8px}}
+
+/* TOAST */
+#toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--text);color:#fff;padding:12px 20px;border-radius:var(--r-pill);font-size:14px;font-weight:500;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:auto;max-width:320px;text-align:center}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:var(--success)}.toast.error{background:var(--danger)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header">
+  <div class="header-inner">
+    <a href="website.html" class="logo-text">Pa<span class="logo-accent">Market</span></a>
+    <nav class="header-nav">
+      <a href="browse.html" class="nav-link">Browse</a>
+      <a href="jobs.html" class="nav-link">Jobs</a>
+      <a href="services.html" class="nav-link">Services</a>
+      <a href="advertise.html" class="nav-link">Advertise</a>
+    </nav>
+    <div class="header-search">
+      <input type="text" id="headerSearchInput" placeholder="Search listings…" onkeydown="if(event.key==='Enter')doSearch()">
+      <button onclick="doSearch()" aria-label="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+    </div>
+    <div class="header-actions">
+      <a href="#" onclick="return false" class="btn btn-outline btn-sm">Sign In</a>
+      <a href="post-ad.html" class="btn btn-accent btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Post Ad
+      </a>
+    </div>
+    <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div id="mobileNav" class="mobile-nav hidden">
+    <a href="website.html">Home</a>
+    <a href="browse.html">Browse All</a>
+    <a href="jobs.html">Jobs</a>
+    <a href="services.html">Services</a>
+    <a href="advertise.html">Advertise</a>
+    <div class="mobile-nav-actions">
+      <a href="#" onclick="return false" class="btn btn-outline">Sign In</a>
+      <a href="post-ad.html" class="btn btn-accent">Post Ad</a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <!-- breadcrumb -->
+  <div class="breadcrumb" id="breadcrumb">
+    <a href="website.html">Home</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="browse.html">Browse</a>
+    <span class="breadcrumb-sep">›</span>
+    <span id="bcTitle">Listing</span>
+  </div>
+
+  <!-- content -->
+  <div id="detailContent">
+    <div class="page-loader"><div class="loading-spinner"></div><span>Loading listing…</span></div>
+  </div>
+
+  <!-- similar listings -->
+  <div class="similar-section" id="similarSection" style="display:none">
+    <h2>Similar Listings</h2>
+    <div class="ads-grid" id="similarGrid"></div>
+  </div>
+</main>
+
+<!-- MOBILE CONTACT BAR -->
+<div class="mobile-contact-bar" id="mobileContactBar" style="display:none">
+  <button class="contact-btn btn-whatsapp" id="mobileWA" style="flex:1">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    WhatsApp
+  </button>
+  <button class="contact-btn btn-call" id="mobileCall" style="flex:1">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.09 6.09l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    Call Seller
+  </button>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">Pa<span>Market</span></div>
+        <p>Zimbabwe's #1 free classified marketplace. Buy and sell anything, anywhere.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Marketplace</h4>
+        <a href="browse.html">Browse All</a>
+        <a href="browse.html?cat=Property">Property</a>
+        <a href="browse.html?cat=Vehicles">Vehicles</a>
+        <a href="browse.html?cat=Electronics">Electronics</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="services.html">Services</a>
+      </div>
+      <div class="footer-col">
+        <h4>Business</h4>
+        <a href="advertise.html">Advertise</a>
+        <a href="post-ad.html">Post Free Ad</a>
+        <a href="advertise.html#pricing">Pricing</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="about.html">About Us</a>
+        <a href="contact.html">Contact</a>
+        <a href="help.html">Help Center</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2025 PaMarket Zimbabwe. All rights reserved.</span>
+      <span>Made for Zimbabwe</span>
+    </div>
+  </div>
+</footer>
+
+<div id="toast-container"></div>
+
+<script>
+const SB_URL='https://gxgytumhknmnwspxjzxw.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
+async function sbGet(table,query=''){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}?${query}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  return r.ok?r.json():[];
+}
+
+const PLACEHOLDER="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='500' viewBox='0 0 800 500'%3E%3Crect fill='%23f1f5f9' width='800' height='500'/%3E%3Ctext x='50%25' y='50%25' fill='%23cbd5e1' font-size='60' text-anchor='middle' dy='.3em'%3E%F0%9F%96%BC%3C/text%3E%3C/svg%3E";
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function formatPrice(p,c='USD'){if(!p)return'Contact for price';return(c==='USD'?'$':'ZiG ')+Number(p).toLocaleString()}
+function timeAgo(d){if(!d)return'';const diff=Date.now()-new Date(d);const m=Math.floor(diff/60000);if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';const days=Math.floor(h/24);if(days<30)return days+'d ago';return new Date(d).toLocaleDateString('en-ZW',{day:'numeric',month:'short',year:'numeric'})}
+function doSearch(){const q=document.getElementById('headerSearchInput')?.value?.trim();if(q)window.location.href='browse.html?q='+encodeURIComponent(q)}
+function toggleMobileNav(){document.getElementById('mobileNav').classList.toggle('hidden')}
+document.addEventListener('click',function(e){const nav=document.getElementById('mobileNav');const hdr=document.getElementById('site-header');if(!nav.classList.contains('hidden')&&!hdr.contains(e.target))nav.classList.add('hidden')});
+function showToast(msg,type=''){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className='toast '+(type||'');t.textContent=msg;c.appendChild(t);requestAnimationFrame(()=>{requestAnimationFrame(()=>{t.classList.add('show')})});setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3000)}
+
+let currentImg=0;
+let listing=null;
+
+function setGalleryImg(idx,imgs){
+  currentImg=idx;
+  const main=document.getElementById('galleryMain');
+  main.src=imgs[idx]||PLACEHOLDER;
+  document.querySelectorAll('.gallery-thumb').forEach((t,i)=>t.classList.toggle('active',i===idx));
+}
+
+function makeSimCard(ad){
+  const img=ad.images&&ad.images[0]?escHtml(ad.images[0]):PLACEHOLDER;
+  return `<a class="ad-card" href="detail.html?id=${ad.id}">
+    <div class="ad-img-wrap"><img src="${img}" alt="${escHtml(ad.title)}" loading="lazy" onerror="this.src='${PLACEHOLDER}'"><span class="ad-badge">${escHtml(ad.category||'')}</span></div>
+    <div class="ad-info">
+      <div class="ad-title">${escHtml(ad.title)}</div>
+      <div class="ad-price">${formatPrice(ad.price,ad.currency)}</div>
+      <div class="ad-meta">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${escHtml(ad.location||'Zimbabwe')}<span class="ad-meta-dot">·</span>${timeAgo(ad.created_at)}
+      </div>
+    </div>
+  </a>`;
+}
+
+async function loadDetail(){
+  const id=new URLSearchParams(location.search).get('id');
+  if(!id){
+    document.getElementById('detailContent').innerHTML='<p style="text-align:center;padding:80px;color:var(--sub)">Listing not found. <a href="browse.html" style="color:var(--primary)">Browse all listings</a></p>';
+    return;
+  }
+
+  const [ad]=await sbGet('listings','id=eq.'+id+'&select=*');
+  if(!ad){
+    document.getElementById('detailContent').innerHTML='<p style="text-align:center;padding:80px;color:var(--sub)">Listing not found or removed. <a href="browse.html" style="color:var(--primary)">Browse all listings</a></p>';
+    return;
+  }
+
+  listing=ad;
+  document.title=`${ad.title} — PaMarket Zimbabwe`;
+  document.getElementById('bcTitle').textContent=ad.category||'Listing';
+
+  const imgs=ad.images&&ad.images.length?ad.images:[PLACEHOLDER];
+  const phone=escHtml(ad.phone||ad.contact_phone||'');
+  const sellerName=escHtml(ad.seller_name||ad.name||'Seller');
+  const sellerInit=(sellerName[0]||'S').toUpperCase();
+  const joined=ad.created_at?new Date(ad.created_at).toLocaleDateString('en-ZW',{month:'long',year:'numeric'}):'';
+
+  document.getElementById('detailContent').innerHTML=`
+    <div class="detail-layout">
+      <!-- LEFT COLUMN -->
+      <div>
+        <div class="gallery-main"><img id="galleryMain" src="${escHtml(imgs[0])}" alt="${escHtml(ad.title)}" onerror="this.src='${PLACEHOLDER}'"></div>
+        ${imgs.length>1?`<div class="gallery-thumbs">${imgs.map((src,i)=>`<div class="gallery-thumb ${i===0?'active':''}" onclick="setGalleryImg(${i},imgArr)"><img src="${escHtml(src)}" alt="Image ${i+1}" onerror="this.src='${PLACEHOLDER}'"></div>`).join('')}</div>`:''}
+
+        <div style="margin-top:24px">
+          <span class="detail-cat-badge">${escHtml(ad.category||'')}</span>
+          <h1 class="detail-title">${escHtml(ad.title)}</h1>
+          <div class="detail-price">${formatPrice(ad.price,ad.currency)}</div>
+          <div class="detail-meta">
+            <div class="detail-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              ${escHtml(ad.location||'Zimbabwe')}
+            </div>
+            <div class="detail-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              ${timeAgo(ad.created_at)}
+            </div>
+            ${ad.views?`<div class="detail-meta-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>${ad.views} views</div>`:''}
+          </div>
+
+          <div class="detail-section-title">Description</div>
+          <div class="detail-desc">${escHtml(ad.description||'No description provided.')}</div>
+          <a class="report-link" onclick="showToast('Report submitted. Our team will review it shortly.','success')">Report this listing</a>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div>
+        <div class="seller-card">
+          <div class="seller-card-top">
+            <div class="seller-avatar">${sellerInit}</div>
+            <div>
+              <div class="seller-name">${sellerName}</div>
+              <div class="seller-member">${joined?'Member since '+joined:''}</div>
+              <div class="verified-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                Verified Seller
+              </div>
+            </div>
+          </div>
+
+          ${phone?`<button class="contact-btn btn-whatsapp" onclick="window.open('https://wa.me/+263${phone.replace(/\D/g,'').replace(/^0/,'')}?text=Hi, I saw your listing on PaMarket: ${encodeURIComponent(ad.title)}')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp Seller
+          </button>
+          <button class="contact-btn btn-call" onclick="window.location.href='tel:${phone}'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.09 6.09l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Call Seller
+          </button>`:`<button class="contact-btn btn-message" onclick="showToast('Sign in to message this seller')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Message Seller
+          </button>`}
+
+          <div class="safety-box">
+            <h4>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Safety Tips
+            </h4>
+            <ul>
+              <li>Meet in a public place</li>
+              <li>Never pay in advance</li>
+              <li>Inspect before buying</li>
+              <li>Trust your instincts</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  // Set up gallery JS
+  window.imgArr=imgs;
+
+  // Set up mobile contact bar
+  if(phone){
+    document.getElementById('mobileWA').onclick=()=>window.open(`https://wa.me/+263${phone.replace(/\D/g,'').replace(/^0/,'')}?text=Hi, I saw your listing on PaMarket: ${encodeURIComponent(ad.title)}`);
+    document.getElementById('mobileCall').onclick=()=>window.location.href=`tel:${phone}`;
+    document.getElementById('mobileContactBar').style.display='flex';
+    document.querySelector('footer').style.marginBottom='70px';
+  }
+
+  // Load similar
+  const similar=await sbGet('listings','select=*&status=eq.active&category=eq.'+encodeURIComponent(ad.category||'')+'&id=neq.'+id+'&order=created_at.desc&limit=4');
+  if(similar.length){
+    document.getElementById('similarSection').style.display='block';
+    document.getElementById('similarGrid').innerHTML=similar.map(makeSimCard).join('');
+  }
+}
+
+loadDetail();
+</script>
+</body>
+</html>

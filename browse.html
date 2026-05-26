@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browse Listings — PaMarket Zimbabwe</title>
+<meta name="description" content="Browse all classified listings in Zimbabwe. Find property, vehicles, electronics, jobs and more on PaMarket.">
+<link rel="icon" href="img/icon-192.png" type="image/png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1A3A8F;--primary-dark:#0f2460;--primary-mid:#2550C0;--primary-light:#EEF2FF;
+  --accent:#F5A623;--accent-dark:#D4891A;
+  --bg:#F5F7FA;--text:#1A1A2E;--sub:#667085;--border:#E4E8F0;--white:#ffffff;
+  --success:#10b981;--danger:#ef4444;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-pill:999px;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06);--shadow-md:0 4px 16px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.12);
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
+button{cursor:pointer;font-family:var(--font);border:none;background:none}
+input,select,textarea{font-family:var(--font)}
+.hidden{display:none!important}
+.container{max-width:1280px;margin:0 auto;padding:0 24px}
+@media(max-width:768px){.container{padding:0 16px}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-mid)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:var(--accent-dark)}
+.btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--primary)}.btn-outline:hover{background:var(--primary-light)}
+.btn-ghost{background:transparent;color:var(--sub);border:1.5px solid var(--border)}.btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+.btn-sm{padding:8px 16px;font-size:13px}
+.btn-lg{padding:14px 32px;font-size:16px}
+
+/* HEADER */
+#site-header{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.header-inner{display:flex;align-items:center;gap:20px;height:68px;padding:0 24px;max-width:1280px;margin:0 auto}
+.logo-text{font-size:24px;font-weight:900;color:var(--primary);letter-spacing:-0.5px;text-decoration:none;display:inline-block}
+.logo-accent{color:var(--accent)}
+.header-nav{display:flex;gap:4px;margin-left:8px}
+.nav-link{padding:8px 14px;font-size:14px;font-weight:600;color:var(--sub);border-radius:var(--r-sm);transition:all .2s;text-decoration:none;white-space:nowrap}
+.nav-link:hover,.nav-link.active{color:var(--primary);background:var(--primary-light)}
+.header-search{flex:1;max-width:360px;display:flex;align-items:center;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-pill);overflow:hidden;transition:border-color .2s}
+.header-search:focus-within{border-color:var(--primary)}
+.header-search input{flex:1;border:none;background:transparent;padding:0 16px;height:40px;font-size:14px;color:var(--text);outline:none}
+.header-search input::placeholder{color:var(--sub);opacity:.7}
+.header-search button{width:44px;height:40px;border:none;background:transparent;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s}
+.header-search button:hover{color:var(--primary)}
+.header-actions{display:flex;gap:10px;flex-shrink:0;margin-left:auto}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--text);align-items:center;justify-content:center}
+.mobile-nav{position:absolute;top:68px;left:0;right:0;background:#fff;border-bottom:1px solid var(--border);padding:16px 24px;box-shadow:var(--shadow-md);z-index:999;display:flex;flex-direction:column;gap:4px}
+.mobile-nav.hidden{display:none}
+.mobile-nav a{padding:12px 16px;font-size:15px;font-weight:600;color:var(--text);border-radius:var(--r-sm);text-decoration:none;display:block}
+.mobile-nav a:hover{background:var(--bg)}
+.mobile-nav-actions{display:flex;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.mobile-nav-actions .btn{flex:1;justify-content:center}
+@media(max-width:900px){.header-nav{display:none}.header-search{max-width:220px}}
+@media(max-width:600px){.header-search{display:none}.hamburger{display:flex}.header-actions{display:none}}
+
+/* BROWSE LAYOUT */
+.browse-wrap{display:flex;gap:0;min-height:70vh;max-width:1280px;margin:0 auto}
+.filter-sidebar{width:272px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);padding:28px 24px;position:sticky;top:68px;height:calc(100vh - 68px);overflow-y:auto}
+.browse-main{flex:1;min-width:0;padding:28px 28px 48px}
+@media(max-width:900px){.filter-sidebar{display:none}.browse-main{padding:20px 16px 48px}}
+
+/* SIDEBAR */
+.filter-sidebar h3{font-size:16px;font-weight:800;color:var(--text);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.filter-group{margin-bottom:24px}
+.filter-group label{display:block;font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+.filter-select,.filter-input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text);background:#fff;outline:none;cursor:pointer;transition:border-color .2s}
+.filter-select:focus,.filter-input:focus{border-color:var(--primary)}
+.filter-input::placeholder{color:var(--sub);opacity:.7}
+.price-row{display:flex;gap:8px;align-items:center}
+.price-row input{flex:1}
+.price-row span{color:var(--sub);font-size:14px;flex-shrink:0}
+.apply-btn{width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:var(--r-sm);font-size:14px;font-weight:700;cursor:pointer;transition:background .2s;margin-top:8px}
+.apply-btn:hover{background:var(--primary-mid)}
+.clear-btn{width:100%;padding:10px;background:transparent;color:var(--sub);border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:8px}
+.clear-btn:hover{border-color:var(--danger);color:var(--danger)}
+
+/* CAT RADIO */
+.cat-radio-list{display:flex;flex-direction:column;gap:2px}
+.cat-radio{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-sm);cursor:pointer;transition:background .15s;font-size:14px;color:var(--sub)}
+.cat-radio:hover{background:var(--bg);color:var(--text)}
+.cat-radio.active{background:var(--primary-light);color:var(--primary);font-weight:600}
+.cat-radio input{display:none}
+
+/* TOPBAR */
+.browse-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub)}
+.breadcrumb a{color:var(--sub);transition:color .2s}.breadcrumb a:hover{color:var(--primary)}
+.breadcrumb-sep{color:var(--border)}
+.results-count{font-size:15px;font-weight:700;color:var(--text)}
+.results-count span{font-weight:400;color:var(--sub)}
+.sort-wrap{display:flex;align-items:center;gap:8px}
+.sort-wrap label{font-size:13px;color:var(--sub);white-space:nowrap}
+.sort-select{padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text);background:#fff;outline:none;cursor:pointer}
+
+/* ACTIVE FILTERS */
+.active-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.filter-tag{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--primary-light);color:var(--primary);border-radius:var(--r-pill);font-size:13px;font-weight:600}
+.filter-tag button{background:none;border:none;color:var(--primary);cursor:pointer;display:flex;line-height:1;padding:0;opacity:.7}
+.filter-tag button:hover{opacity:1}
+
+/* MOBILE FILTER BAR */
+.mobile-filter-bar{display:none;background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;gap:8px;overflow-x:auto;scrollbar-width:none}
+.mobile-filter-bar::-webkit-scrollbar{display:none}
+.filter-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;white-space:nowrap;background:#fff;transition:all .2s;flex-shrink:0}
+.filter-chip.active,.filter-chip:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+@media(max-width:900px){.mobile-filter-bar{display:flex}}
+
+/* AD GRID */
+.ads-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:1100px){.ads-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.ads-grid{grid-template-columns:repeat(2,1fr);gap:12px}}
+@media(max-width:380px){.ads-grid{grid-template-columns:1fr}}
+
+.ad-card{background:#fff;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:all .25s;position:relative;box-shadow:var(--shadow-sm);text-decoration:none;display:block;color:inherit}
+.ad-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--primary)}
+.ad-img-wrap{position:relative;aspect-ratio:16/10;overflow:hidden;background:#f1f5f9}
+.ad-img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.ad-card:hover .ad-img-wrap img{transform:scale(1.04)}
+.ad-badge{position:absolute;top:8px;left:8px;padding:3px 10px;border-radius:var(--r-pill);font-size:11px;font-weight:700;text-transform:uppercase}
+.badge-cat{background:rgba(26,58,143,.85);color:#fff;backdrop-filter:blur(4px)}
+.fav-btn{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;transition:all .2s;color:var(--sub)}
+.fav-btn:hover{color:var(--danger);transform:scale(1.1)}
+.ad-info{padding:14px}
+.ad-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
+.ad-price{font-size:17px;font-weight:800;color:var(--primary);margin-bottom:6px}
+.ad-meta{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)}
+.ad-meta-dot{opacity:.4}
+@media(max-width:480px){.ad-info{padding:10px}.ad-title{font-size:13px}.ad-price{font-size:15px}}
+
+/* EMPTY / LOAD MORE */
+.empty-state{text-align:center;padding:80px 24px;color:var(--sub);grid-column:1/-1}
+.empty-state svg{margin:0 auto 16px;opacity:.3}
+.empty-state h3{font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px}
+.empty-state p{font-size:15px}
+.load-more-wrap{text-align:center;padding:32px 0}
+.skel{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:var(--r-sm)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-card{background:#fff;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--border)}
+.skel-img{width:100%;aspect-ratio:16/10}
+.skel-line{height:13px;margin:8px 12px}
+.skel-line.short{width:55%;margin-top:4px}
+
+/* FOOTER */
+footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin-top:0}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
+.footer-logo{font-size:22px;font-weight:900;color:#fff;margin-bottom:12px}
+.footer-logo span{color:var(--accent)}
+.footer-brand p{font-size:14px;line-height:1.7;max-width:260px;color:rgba(255,255,255,.65)}
+.footer-col h4{font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px}
+.footer-col a{display:block;font-size:14px;color:rgba(255,255,255,.65);margin-bottom:10px;text-decoration:none;transition:color .2s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:24px;display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.5)}
+@media(max-width:900px){.footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.footer-grid{grid-template-columns:1fr}.footer-bottom{flex-direction:column;gap:8px}}
+
+/* TOAST */
+#toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--text);color:#fff;padding:12px 20px;border-radius:var(--r-pill);font-size:14px;font-weight:500;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:auto;max-width:320px;text-align:center}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:var(--success)}.toast.error{background:var(--danger)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header">
+  <div class="header-inner">
+    <a href="website.html" class="logo-text">Pa<span class="logo-accent">Market</span></a>
+    <nav class="header-nav">
+      <a href="browse.html" class="nav-link active">Browse</a>
+      <a href="jobs.html" class="nav-link">Jobs</a>
+      <a href="services.html" class="nav-link">Services</a>
+      <a href="advertise.html" class="nav-link">Advertise</a>
+    </nav>
+    <div class="header-search">
+      <input type="text" id="headerSearchInput" placeholder="Search listings…" onkeydown="if(event.key==='Enter')doSearch()">
+      <button onclick="doSearch()" aria-label="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+    </div>
+    <div class="header-actions">
+      <a href="#" onclick="return false" class="btn btn-outline btn-sm">Sign In</a>
+      <a href="post-ad.html" class="btn btn-accent btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Post Ad
+      </a>
+    </div>
+    <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div id="mobileNav" class="mobile-nav hidden">
+    <a href="website.html">Home</a>
+    <a href="browse.html">Browse All</a>
+    <a href="jobs.html">Jobs</a>
+    <a href="services.html">Services</a>
+    <a href="advertise.html">Advertise</a>
+    <div class="mobile-nav-actions">
+      <a href="#" onclick="return false" class="btn btn-outline">Sign In</a>
+      <a href="post-ad.html" class="btn btn-accent">Post Ad</a>
+    </div>
+  </div>
+</header>
+
+<!-- MOBILE FILTER CHIPS -->
+<div class="mobile-filter-bar" id="mobileFilterBar">
+  <button class="filter-chip active" onclick="setMobileCat('')" id="mfc-all">All</button>
+  <button class="filter-chip" onclick="setMobileCat('Property')" id="mfc-Property">Property</button>
+  <button class="filter-chip" onclick="setMobileCat('Vehicles')" id="mfc-Vehicles">Vehicles</button>
+  <button class="filter-chip" onclick="setMobileCat('Electronics')" id="mfc-Electronics">Electronics</button>
+  <button class="filter-chip" onclick="setMobileCat('Jobs')" id="mfc-Jobs">Jobs</button>
+  <button class="filter-chip" onclick="setMobileCat('Services')" id="mfc-Services">Services</button>
+  <button class="filter-chip" onclick="setMobileCat('Fashion')" id="mfc-Fashion">Fashion</button>
+  <button class="filter-chip" onclick="setMobileCat('Furniture')" id="mfc-Furniture">Furniture</button>
+  <button class="filter-chip" onclick="setMobileCat('Agriculture')" id="mfc-Agriculture">Agriculture</button>
+  <button class="filter-chip" onclick="setMobileCat('Other')" id="mfc-Other">Other</button>
+</div>
+
+<div class="browse-wrap">
+  <!-- SIDEBAR -->
+  <aside class="filter-sidebar">
+    <h3>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filters
+    </h3>
+
+    <div class="filter-group">
+      <label>Search</label>
+      <div style="position:relative">
+        <input type="text" class="filter-input" id="sbSearch" placeholder="Keywords…">
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label>Category</label>
+      <div class="cat-radio-list" id="catRadioList">
+        <div class="cat-radio active" onclick="selectCat('')" id="cr-all">All Categories</div>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label>Location</label>
+      <select class="filter-select" id="sbLoc">
+        <option value="">All Locations</option>
+        <option>Harare</option><option>Bulawayo</option><option>Chitungwiza</option>
+        <option>Mutare</option><option>Gweru</option><option>Kwekwe</option>
+        <option>Kadoma</option><option>Masvingo</option><option>Hwange</option>
+        <option>Chinhoyi</option><option>Norton</option><option>Marondera</option>
+        <option>Ruwa</option><option>Victoria Falls</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Price Range (USD)</label>
+      <div class="price-row">
+        <input type="number" class="filter-input" id="sbMin" placeholder="Min">
+        <span>—</span>
+        <input type="number" class="filter-input" id="sbMax" placeholder="Max">
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label>Sort By</label>
+      <select class="filter-select" id="sbSort">
+        <option value="newest">Newest First</option>
+        <option value="price_asc">Price: Low to High</option>
+        <option value="price_desc">Price: High to Low</option>
+      </select>
+    </div>
+
+    <button class="apply-btn" onclick="applyFilters()">Apply Filters</button>
+    <button class="clear-btn" onclick="clearFilters()">Clear All</button>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="browse-main">
+    <!-- Breadcrumb + topbar -->
+    <div class="browse-topbar">
+      <div>
+        <div class="breadcrumb" id="breadcrumb">
+          <a href="website.html">Home</a>
+          <span class="breadcrumb-sep">›</span>
+          <span>Browse</span>
+        </div>
+        <div class="results-count" id="resultsCount"><span>Loading…</span></div>
+      </div>
+      <div class="sort-wrap">
+        <label for="topSort">Sort:</label>
+        <select class="sort-select" id="topSort" onchange="sortChanged()">
+          <option value="newest">Newest</option>
+          <option value="price_asc">Price ↑</option>
+          <option value="price_desc">Price ↓</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Active filter tags -->
+    <div class="active-filters" id="activeFilters"></div>
+
+    <!-- Results grid -->
+    <div class="ads-grid" id="resultsGrid"></div>
+
+    <!-- Load more -->
+    <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+      <button class="btn btn-ghost btn-lg" onclick="loadMore()">Load More Ads</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">Pa<span>Market</span></div>
+        <p>Zimbabwe's #1 free classified marketplace. Buy and sell anything, anywhere.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Marketplace</h4>
+        <a href="browse.html">Browse All</a>
+        <a href="browse.html?cat=Property">Property</a>
+        <a href="browse.html?cat=Vehicles">Vehicles</a>
+        <a href="browse.html?cat=Electronics">Electronics</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="services.html">Services</a>
+      </div>
+      <div class="footer-col">
+        <h4>Business</h4>
+        <a href="advertise.html">Advertise</a>
+        <a href="post-ad.html">Post Free Ad</a>
+        <a href="advertise.html#pricing">Pricing</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="about.html">About Us</a>
+        <a href="contact.html">Contact</a>
+        <a href="help.html">Help Center</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2025 PaMarket Zimbabwe. All rights reserved.</span>
+      <span>Made for Zimbabwe</span>
+    </div>
+  </div>
+</footer>
+
+<div id="toast-container"></div>
+
+<script>
+const SB_URL='https://gxgytumhknmnwspxjzxw.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
+async function sbGet(table,query=''){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}?${query}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  return r.ok?r.json():[];
+}
+
+const CATS=['Property','Vehicles','Electronics','Jobs','Services','Fashion','Furniture','Agriculture','Other'];
+const PLACEHOLDER="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='250' viewBox='0 0 400 250'%3E%3Crect fill='%23f1f5f9' width='400' height='250'/%3E%3Ctext x='50%25' y='50%25' fill='%23cbd5e1' font-size='40' text-anchor='middle' dy='.3em'%3E%F0%9F%96%BC%3C/text%3E%3C/svg%3E";
+
+let filters={q:'',cat:'',loc:'',min:'',max:'',sort:'newest'};
+let allData=[];
+let displayed=24;
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function formatPrice(p,c='USD'){if(!p)return'Contact for price';return(c==='USD'?'$':'ZiG ')+Number(p).toLocaleString()}
+function timeAgo(d){if(!d)return'';const diff=Date.now()-new Date(d);const m=Math.floor(diff/60000);if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago'}
+function doSearch(){const q=document.getElementById('headerSearchInput')?.value?.trim();if(q)window.location.href='browse.html?q='+encodeURIComponent(q)}
+function toggleMobileNav(){document.getElementById('mobileNav').classList.toggle('hidden')}
+document.addEventListener('click',function(e){const nav=document.getElementById('mobileNav');const hdr=document.getElementById('site-header');if(!nav.classList.contains('hidden')&&!hdr.contains(e.target))nav.classList.add('hidden')});
+
+function makeAdCard(ad){
+  const img=ad.images&&ad.images[0]?escHtml(ad.images[0]):PLACEHOLDER;
+  const price=formatPrice(ad.price,ad.currency);
+  const loc=escHtml(ad.location||'Zimbabwe');
+  const ago=timeAgo(ad.created_at);
+  const cat=escHtml(ad.category||'');
+  return `<a class="ad-card" href="detail.html?id=${ad.id}">
+    <div class="ad-img-wrap">
+      <img src="${img}" alt="${escHtml(ad.title)}" loading="lazy" onerror="this.src='${PLACEHOLDER}'">
+      <span class="ad-badge badge-cat">${cat}</span>
+      <button class="fav-btn" onclick="event.preventDefault()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+      </button>
+    </div>
+    <div class="ad-info">
+      <div class="ad-title">${escHtml(ad.title)}</div>
+      <div class="ad-price">${price}</div>
+      <div class="ad-meta">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${loc}<span class="ad-meta-dot">·</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ${ago}
+      </div>
+    </div>
+  </a>`;
+}
+
+function renderSkel(n){
+  return Array(n).fill(0).map(()=>`<div class="skel-card"><div class="skel skel-img"></div><div class="skel skel-line" style="width:80%"></div><div class="skel skel-line short"></div><div class="skel skel-line" style="width:40%;height:18px;margin-bottom:12px"></div></div>`).join('');
+}
+
+function renderResults(){
+  const grid=document.getElementById('resultsGrid');
+  const visible=allData.slice(0,displayed);
+  if(!allData.length){
+    grid.innerHTML=`<div class="empty-state"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><h3>No listings found</h3><p>Try adjusting your filters or search terms.</p></div>`;
+    document.getElementById('resultsCount').innerHTML=`<span>0 listings found</span>`;
+    document.getElementById('loadMoreWrap').style.display='none';
+    return;
+  }
+  grid.innerHTML=visible.map(makeAdCard).join('');
+  document.getElementById('resultsCount').innerHTML=`<strong>${allData.length.toLocaleString()}</strong> <span>listing${allData.length!==1?'s':''} found</span>`;
+  document.getElementById('loadMoreWrap').style.display=allData.length>displayed?'block':'none';
+}
+
+function loadMore(){
+  displayed+=24;
+  renderResults();
+}
+
+function updateBreadcrumb(){
+  const bc=document.getElementById('breadcrumb');
+  let html=`<a href="website.html">Home</a><span class="breadcrumb-sep">›</span><a href="browse.html">Browse</a>`;
+  if(filters.cat) html+=`<span class="breadcrumb-sep">›</span><span>${escHtml(filters.cat)}</span>`;
+  bc.innerHTML=html;
+}
+
+function updateActiveFilters(){
+  const af=document.getElementById('activeFilters');
+  const tags=[];
+  if(filters.q) tags.push({label:`"${filters.q}"`,key:'q'});
+  if(filters.cat) tags.push({label:filters.cat,key:'cat'});
+  if(filters.loc) tags.push({label:filters.loc,key:'loc'});
+  if(filters.min) tags.push({label:`Min $${filters.min}`,key:'min'});
+  if(filters.max) tags.push({label:`Max $${filters.max}`,key:'max'});
+  af.innerHTML=tags.map(t=>`<div class="filter-tag">${escHtml(t.label)}<button onclick="removeFilter('${t.key}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>`).join('');
+}
+
+function removeFilter(key){
+  filters[key]='';
+  syncUI();
+  loadListings();
+}
+
+function applyFilters(){
+  filters.q=document.getElementById('sbSearch').value.trim();
+  filters.cat=document.getElementById('catRadioList').querySelector('.active')?.dataset.cat||'';
+  filters.loc=document.getElementById('sbLoc').value;
+  filters.min=document.getElementById('sbMin').value;
+  filters.max=document.getElementById('sbMax').value;
+  filters.sort=document.getElementById('sbSort').value;
+  displayed=24;
+  updateURL();
+  loadListings();
+}
+
+function clearFilters(){
+  filters={q:'',cat:'',loc:'',min:'',max:'',sort:'newest'};
+  syncUI();
+  updateURL();
+  loadListings();
+}
+
+function sortChanged(){
+  filters.sort=document.getElementById('topSort').value;
+  document.getElementById('sbSort').value=filters.sort;
+  loadListings();
+}
+
+function selectCat(cat){
+  filters.cat=cat;
+  document.querySelectorAll('.cat-radio').forEach(r=>{
+    r.classList.toggle('active',r.dataset.cat===cat);
+  });
+  updateMobileChips();
+  loadListings();
+}
+
+function setMobileCat(cat){
+  filters.cat=cat;
+  updateMobileChips();
+  document.querySelectorAll('.cat-radio').forEach(r=>r.classList.toggle('active',r.dataset.cat===cat));
+  loadListings();
+}
+
+function updateMobileChips(){
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  const key=filters.cat?`mfc-${filters.cat}`:'mfc-all';
+  document.getElementById(key)?.classList.add('active');
+}
+
+function syncUI(){
+  document.getElementById('sbSearch').value=filters.q;
+  document.getElementById('sbLoc').value=filters.loc;
+  document.getElementById('sbMin').value=filters.min;
+  document.getElementById('sbMax').value=filters.max;
+  document.getElementById('sbSort').value=filters.sort;
+  document.getElementById('topSort').value=filters.sort;
+  document.querySelectorAll('.cat-radio').forEach(r=>r.classList.toggle('active',r.dataset.cat===filters.cat));
+  document.getElementById('headerSearchInput').value=filters.q;
+  updateMobileChips();
+}
+
+function updateURL(){
+  const p=new URLSearchParams();
+  if(filters.q) p.set('q',filters.q);
+  if(filters.cat) p.set('cat',filters.cat);
+  if(filters.loc) p.set('loc',filters.loc);
+  if(filters.min) p.set('min',filters.min);
+  if(filters.max) p.set('max',filters.max);
+  if(filters.sort&&filters.sort!=='newest') p.set('sort',filters.sort);
+  const qs=p.toString();
+  history.replaceState(null,'',qs?'?'+qs:location.pathname);
+}
+
+async function loadListings(){
+  document.getElementById('resultsGrid').innerHTML=renderSkel(6);
+  document.getElementById('resultsCount').innerHTML='<span>Loading…</span>';
+  updateBreadcrumb();
+  updateActiveFilters();
+
+  let q='select=*&status=eq.active';
+  if(filters.cat) q+='&category=eq.'+encodeURIComponent(filters.cat);
+  if(filters.loc) q+='&location=eq.'+encodeURIComponent(filters.loc);
+  if(filters.min) q+='&price=gte.'+filters.min;
+  if(filters.max) q+='&price=lte.'+filters.max;
+  if(filters.q) q+='&title=ilike.*'+encodeURIComponent(filters.q)+'*';
+
+  if(filters.sort==='price_asc') q+='&order=price.asc';
+  else if(filters.sort==='price_desc') q+='&order=price.desc';
+  else q+='&order=created_at.desc';
+
+  q+='&limit=200';
+  allData=await sbGet('listings',q);
+  displayed=24;
+  renderResults();
+}
+
+function buildCatList(){
+  const list=document.getElementById('catRadioList');
+  list.innerHTML=`<div class="cat-radio active" data-cat="" onclick="selectCat('')">All Categories</div>`+
+    CATS.map(c=>`<div class="cat-radio" data-cat="${c}" onclick="selectCat('${c}')">${c}</div>`).join('');
+}
+
+// Init
+buildCatList();
+const p=new URLSearchParams(location.search);
+filters.q=p.get('q')||'';
+filters.cat=p.get('cat')||'';
+filters.loc=p.get('loc')||'';
+filters.min=p.get('min')||'';
+filters.max=p.get('max')||'';
+filters.sort=p.get('sort')||'newest';
+syncUI();
+loadListings();
+
+function showToast(msg,type=''){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className='toast '+(type||'');t.textContent=msg;c.appendChild(t);requestAnimationFrame(()=>{requestAnimationFrame(()=>{t.classList.add('show')})});setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3000)}
+</script>
+</body>
+</html>
