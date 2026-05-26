@@ -52,7 +52,7 @@
           <div class="verify-badge-preview">
             <div class="vbp-icon" style="color:#22c55e">${I.check}</div>
             <div>
-              <div style="font-size:15px;font-weight:700;color:#22c55e">You are verified ✓</div>
+              <div style="font-size:15px;font-weight:700;color:#22c55e">You are verified <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#22c55e" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg></div>
               <div style="font-size:12px;color:var(--sub);margin-top:2px">Buyers trust verified sellers more.</div>
             </div>
           </div>
@@ -67,7 +67,7 @@
       return `<div class="page active">${innerTopbar('Verify Identity')}
         <div class="inner-content">
           <div style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.4);border-radius:16px;padding:20px;text-align:center;margin-bottom:18px">
-            <div style="font-size:32px;margin-bottom:8px">⏳</div>
+            <div style="margin-bottom:8px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
             <div style="font-size:15px;font-weight:700;color:#fbbf24">Verification Pending</div>
             <div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.5">
               Your ID and selfie have been submitted.<br>An admin will review your documents and approve your badge — usually within 24 hours.
@@ -75,7 +75,7 @@
           </div>
           <div class="tip-box">
             <div class="tip-title">${I.lock} What happens next?</div>
-            <div class="tip-body">Once approved you will get a notification and your blue ✓ badge will appear on all your listings automatically.</div>
+            <div class="tip-body">Once approved you will get a notification and your blue <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg> badge will appear on all your listings automatically.</div>
           </div>
           <button class="ml-act-btn" style="width:100%;padding:12px;margin-top:12px" onclick="H._verify.cancelPending()">Cancel request</button>
         </div>
@@ -200,7 +200,7 @@
       }
       const faceDetected = (skinPx / total) > 0.30; // 30% skin coverage required
       const el = document.getElementById('camState');
-      if (el) el.textContent = faceDetected ? '✓ Face detected — tap Take Photo' : 'Position your face in the oval';
+      if (el) el.textContent = faceDetected ? 'Face detected — tap Take Photo' : 'Position your face in the oval';
     }, 400);
   }
 
@@ -278,7 +278,7 @@
       ctx.drawImage(v, (v.videoWidth - sz) / 2, (v.videoHeight - sz) / 2, sz, sz, 0, 0, 480, 480);
       const dataUrl = c.toDataURL('image/jpeg', 0.85);
 
-      document.getElementById('camState').textContent = '✓ Photo taken';
+      document.getElementById('camState').textContent = 'Photo taken';
       document.getElementById('camInstr').textContent = 'Saving selfie…';
       await new Promise(r => setTimeout(r, 600));
 
