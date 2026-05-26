@@ -1582,9 +1582,10 @@
 
     H.saveState();
 
-    // Close immediately — server sync happens in background
+    // Navigate to profile VIEW (not goBack) so user sees their saved profile
     H.toast(u.openToWork ? 'Profile saved — employers can now find you!' : 'Profile saved');
-    try { H.goBack(); } catch(e) { try { H.navTo('Account'); } catch(e2) {} }
+    H.state._backToAccount = false;
+    try { H.renderPage('JobSeekerProfile'); } catch(e) { try { H.navTo('Account'); } catch(e2) {} }
 
     // Background Supabase sync
     var _syncToCloud = function(cvFileUrl) {
@@ -1639,8 +1640,6 @@
       _syncToCloud('');
     }
   };
-
-  H.pages.JobSeekerProfile = H.pages.CandidateProfile;
 
   function _ji(label, value) {
     return '<div><div style="font-size:10px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">' + label + '</div><div style="font-size:13px;font-weight:700;color:var(--text)">' + H.escHtml(String(value)) + '</div></div>';

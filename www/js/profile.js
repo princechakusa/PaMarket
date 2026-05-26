@@ -661,101 +661,133 @@
 
   H._openAppliedJobs = function () { H.openInner('AppliedJobs'); };
 
-  // ── JOB SEEKER CV PROFILE ─────────────────────────────────
+  // ── JOB SEEKER PROFILE — READ-ONLY VIEW (LinkedIn-style) ──
   pages.JobSeekerProfile = function () {
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
-    const cv = u.cv || {};
-    const exp  = cv.experience || [];
-    const edu  = cv.education  || [];
-    const skills = cv.skills   || [];
-    const certs  = cv.certs    || [];
 
-    const expHtml = exp.map((e, i) => `
-      <div style="background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);position:relative">
+    const cv       = u.cv || {};
+    const exp      = cv.experience || [];
+    const edu      = cv.education  || [];
+    const skills   = (u.skills || (cv.skills || []).join(',') || '').split(',').map(s => s.trim()).filter(Boolean);
+    const headline = u.jobTitle || cv.headline || '';
+    const bio      = u.bio || cv.summary || '';
+    const location = u.city || cv.location || '';
+    const jobTypes = (u.jobTypes || '').split(',').map(s => s.trim()).filter(Boolean);
+    const salary   = u.expectedSalary || cv.expectedSalary || '';
+    const hasProfile = !!(headline || bio || skills.length || exp.length || edu.length);
+
+    const sec = (title, icon, content) => `
+      <div style="background:#fff;border-radius:16px;margin-bottom:12px;border:1px solid #E4E8F0;overflow:hidden">
+        <div style="padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #F0F4FF">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.5px">${icon}${title}</div>
+          ${title==='Experience'?`<button onclick="H._cvProfile.addExp()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>`:''}
+          ${title==='Education'?`<button onclick="H._cvProfile.addEdu()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>`:''}
+        </div>
+        <div style="padding:14px 16px">${content}</div>
+      </div>`;
+
+    const expHtml = exp.length ? exp.map((e, i) => `
+      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #F0F4FF">
         <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(e.title||'')}</div>
-        <div style="font-size:12px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.company||'')}</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:2px">${H.escHtml(e.duration||'')}${e.current?' · Current':''}</div>
-        ${e.desc?`<div style="font-size:12px;color:var(--sub);margin-top:6px;line-height:1.5">${H.escHtml(e.desc)}</div>`:''}
+        <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.company||'')}</div>
+        <div style="font-size:12px;color:#667085;margin-top:2px">${H.escHtml(e.duration||'')}${e.current?' · Current':''}</div>
+        ${e.desc?`<div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.55">${H.escHtml(e.desc)}</div>`:''}
         <div style="display:flex;gap:8px;margin-top:8px">
           <button onclick="H._cvProfile.editExp(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
-          <button onclick="H._cvProfile.delExp(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
+          <button onclick="H._cvProfile.delExp(${i})"  style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
         </div>
-      </div>`).join('') || '<div style="color:var(--sub);font-size:13px;padding:8px 0">No experience added yet</div>';
+      </div>`).join('')
+      : '<div style="color:#667085;font-size:13px">No experience added yet</div>';
 
-    const eduHtml = edu.map((e, i) => `
-      <div style="background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border)">
+    const eduHtml = edu.length ? edu.map((e, i) => `
+      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #F0F4FF">
         <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(e.degree||'')}</div>
-        <div style="font-size:12px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.school||'')}</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:2px">${H.escHtml(e.year||'')}</div>
+        <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.school||'')}</div>
+        <div style="font-size:12px;color:#667085;margin-top:2px">${H.escHtml(e.year||'')}</div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button onclick="H._cvProfile.editEdu(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
-          <button onclick="H._cvProfile.delEdu(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
+          <button onclick="H._cvProfile.delEdu(${i})"  style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
         </div>
-      </div>`).join('') || '<div style="color:var(--sub);font-size:13px;padding:8px 0">No education added yet</div>';
+      </div>`).join('')
+      : '<div style="color:#667085;font-size:13px">No education added yet</div>';
 
-    const verBadge = u.verified
-      ? `<div style="display:flex;align-items:center;gap:6px;background:#ECFDF5;border:1.5px solid #6EE7B7;border-radius:10px;padding:8px 12px;margin-bottom:12px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;font-weight:700;color:#059669">Identity Verified</span></div>`
-      : u.verificationPending
-        ? `<div style="display:flex;align-items:center;gap:6px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:8px 12px;margin-bottom:12px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#92400E" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span style="font-size:13px;font-weight:600;color:#92400E">Verification pending — under review</span></div>`
-        : `<button onclick="H.openInner('ProfileVerify')" style="width:100%;padding:10px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;color:#1A3A8F;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:12px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Request Identity Verification</button>`;
+    const skillsHtml = skills.length
+      ? skills.map(s => `<span style="display:inline-block;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">${H.escHtml(s)}</span>`).join('')
+      : '<div style="color:#667085;font-size:13px">No skills added yet</div>';
+
+    const jtHtml = jobTypes.length
+      ? jobTypes.map(t => `<span style="display:inline-block;background:#F0FDF4;color:#15803d;border:1px solid #BBF7D0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">${H.escHtml(t)}</span>`).join('')
+      : '<div style="color:#667085;font-size:13px">Not set</div>';
+
+    const contactHtml = (() => {
+      const rows = [];
+      if (u.whatsappFull || u.whatsappNum) rows.push(`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span style="font-size:13px;color:var(--text)">+${H.escHtml(u.whatsappFull||u.whatsappNum||'')}</span></div>`);
+      if (u.contactMethod) rows.push(`<div style="font-size:13px;color:#667085">Preferred: <strong style="color:var(--text)">${H.escHtml(u.contactMethod)}</strong></div>`);
+      if (u.linkedinUrl)   rows.push(`<div style="margin-top:6px;font-size:13px"><a href="${H.escHtml(u.linkedinUrl)}" target="_blank" style="color:#1A3A8F;font-weight:600">LinkedIn Profile</a></div>`);
+      if (u.websiteUrl)    rows.push(`<div style="margin-top:4px;font-size:13px"><a href="${H.escHtml(u.websiteUrl)}" target="_blank" style="color:#1A3A8F;font-weight:600">Portfolio / Website</a></div>`);
+      return rows.length ? rows.join('') : '<div style="color:#667085;font-size:13px">No contact info added yet</div>';
+    })();
+
+    const resumeHtml = (u.cvFileUrl || u.cvFileName)
+      ? `<div style="display:flex;align-items:center;gap:10px;background:#F8FAFF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 14px">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${H.escHtml(u.cvFileName||'Resume')}</div></div>
+          ${u.cvFileUrl?`<a href="${H.escHtml(u.cvFileUrl)}" target="_blank" style="font-size:12px;font-weight:700;color:#1A3A8F;text-decoration:none;flex-shrink:0">View</a>`:''}
+        </div>`
+      : '<div style="color:#667085;font-size:13px">No resume uploaded yet</div>';
+
+    if (!hasProfile) {
+      return `<div class="page active">
+        ${H.innerTopbar('My Job Profile')}
+        <div style="padding:40px 24px;text-align:center">
+          <div style="width:72px;height:72px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#1A3A8F" stroke-width="1.5"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+          </div>
+          <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">You don't have a job profile yet</div>
+          <div style="font-size:13px;color:#667085;line-height:1.6;margin-bottom:24px">Create your profile so employers in Hire Talent can find and contact you.</div>
+          <button onclick="H.openInner('CandidateProfile')" style="width:100%;max-width:280px;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Create Job Profile</button>
+        </div>
+      </div>`;
+    }
 
     return `<div class="page active">
       ${H.innerTopbar('My Job Profile')}
-      <div class="form-wrap" style="padding-bottom:80px">
-        ${verBadge}
+      <div style="padding:0 14px 100px">
 
-        <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Profile Headline</div>
-        <div class="fg" style="margin-top:0">
-          <input class="fi" id="cvHeadline" placeholder="e.g. Senior Software Engineer" value="${H.escHtml(cv.headline||'')}">
+        <!-- Profile Header Card -->
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:20px;padding:20px;margin:14px 0;display:flex;gap:14px;align-items:flex-start">
+          <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;font-weight:800;color:#fff;border:2.5px solid rgba(255,255,255,.4)">
+            ${u.avatar?`<img src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:H.initials(u.name)}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:17px;font-weight:800;color:#fff">${H.escHtml(u.name||'')}</div>
+            ${headline?`<div style="font-size:13px;color:rgba(255,255,255,.9);font-weight:600;margin-top:3px">${H.escHtml(headline)}</div>`:''}
+            ${location?`<div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:2px;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${H.escHtml(location)}</div>`:''}
+            ${u.openToWork?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.25);border:1px solid rgba(34,197,94,.5);border-radius:20px;padding:3px 10px;margin-top:6px"><svg viewBox="0 0 24 24" width="10" height="10" fill="#22c55e" stroke="none"><circle cx="12" cy="12" r="12"/></svg><span style="font-size:11px;font-weight:700;color:#86efac">Open to Work</span></div>`:''}
+          </div>
         </div>
 
-        <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin:12px 0 8px">Summary</div>
-        <div class="fg" style="margin-top:0">
-          <textarea class="fi" id="cvSummary" rows="3" placeholder="Brief professional summary...">${H.escHtml(cv.summary||'')}</textarea>
-        </div>
+        ${u.verified?`<div style="display:flex;align-items:center;gap:6px;background:#ECFDF5;border:1.5px solid #6EE7B7;border-radius:10px;padding:10px 14px;margin-bottom:12px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;font-weight:700;color:#059669">Identity Verified</span></div>`:''}
 
-        <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px">
-          <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px">Work Experience</div>
-          <button onclick="H._cvProfile.addExp()" style="font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>
-        </div>
-        <div id="cvExpList">${expHtml}</div>
+        ${bio?sec('About','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg> ',`<div style="font-size:13px;color:var(--text);line-height:1.65">${H.escHtml(bio)}</div>`):''}
 
-        <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px">
-          <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px">Education</div>
-          <button onclick="H._cvProfile.addEdu()" style="font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>
-        </div>
-        <div id="cvEduList">${eduHtml}</div>
+        ${sec('Skills','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> ', skillsHtml)}
+        ${jobTypes.length?sec('Job Type / Availability','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> ', jtHtml):''}
+        ${salary?sec('Expected Salary','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> ',`<div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(String(salary))}</div>`):''}
+        ${sec('Work Experience','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> ', expHtml)}
+        ${sec('Education','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> ', eduHtml)}
+        ${sec('Contact & Links','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> ', contactHtml)}
+        ${sec('Resume / CV','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ', resumeHtml)}
 
-        <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin:16px 0 8px">Skills</div>
-        <div class="fg" style="margin-top:0">
-          <input class="fi" id="cvSkills" placeholder="e.g. JavaScript, React, Node.js, Python" value="${H.escHtml(skills.join(', '))}">
-          <div style="font-size:11px;color:var(--sub);margin-top:4px">Separate skills with commas</div>
-        </div>
+      </div>
 
-        <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin:12px 0 8px">Certifications</div>
-        <div class="fg" style="margin-top:0">
-          <textarea class="fi" id="cvCerts" rows="2" placeholder="e.g. AWS Certified, Google Analytics, PMP">${H.escHtml(certs.join('\n'))}</textarea>
-          <div style="font-size:11px;color:var(--sub);margin-top:4px">One per line</div>
-        </div>
-
-        <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin:12px 0 8px">Expected Salary (USD/month)</div>
-        <div class="fg" style="margin-top:0">
-          <input class="fi" id="cvSalary" type="number" min="0" placeholder="e.g. 800" value="${H.escHtml(String(cv.expectedSalary||''))}">
-        </div>
-
-        <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin:12px 0 8px">Preferred Location</div>
-        <div class="fg" style="margin-top:0">
-          <input class="fi" id="cvLocation" placeholder="e.g. Harare, Bulawayo, Remote" value="${H.escHtml(cv.location||'')}">
-        </div>
-
-        <label style="display:flex;gap:10px;align-items:center;font-size:13px;color:var(--text);margin-bottom:14px;cursor:pointer">
-          <input type="checkbox" id="cvVisible" ${cv.visible !== false ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
-          <span>Show my profile to employers in <strong>Hire Candidates</strong></span>
-        </label>
-
-        <button id="cvSaveBtn" class="btn-pri" onclick="H._cvProfile.save()">Save Job Profile</button>
-        <button class="btn-sec" onclick="H.goBack()">Cancel</button>
+      <!-- Fixed bottom Edit button -->
+      <div style="position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #E4E8F0;z-index:200">
+        <button onclick="H.openInner('CandidateProfile')" style="width:100%;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Profile
+        </button>
       </div>
     </div>`;
   };
