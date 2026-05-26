@@ -525,6 +525,81 @@
       + '</div>';
   }
 
+  // ── Screening question builder (shared by PostJob + EditJob) ────
+  var _jqInStyle = 'width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit;margin-top:4px';
+
+  function _jqSectionHtml() {
+    return '<div style="margin-top:6px;margin-bottom:20px">'
+      + '<div style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      + '<span style="flex:1;height:1px;background:var(--border)"></span>Screening Questions<span style="flex:1;height:1px;background:var(--border)"></span></div>'
+      + '<div style="font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.5">Candidates must answer these when applying. Answers appear in your applications inbox.</div>'
+      + '<div id="jqList" style="margin-bottom:10px"></div>'
+      + '<button onclick="H._jqAddModal()" type="button" style="width:100%;padding:12px;border:2px dashed var(--border);border-radius:12px;background:transparent;color:#1A3A8F;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">'
+      + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Screening Question</button>'
+      + '</div>';
+  }
+
+  H._jqRender = function () {
+    var el = document.getElementById('jqList'); if (!el) return;
+    var arr = H._jobQuestionsArr || [];
+    if (!arr.length) { el.innerHTML = ''; return; }
+    var typeLabels = { text: 'Short text', yesno: 'Yes / No', select: 'Multiple choice' };
+    el.innerHTML = arr.map(function (q, i) {
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px">'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;line-height:1.4">' + H.escHtml(q.question) + '</div>'
+        + '<div style="font-size:11px;color:var(--sub);display:flex;flex-wrap:wrap;gap:5px;align-items:center">'
+        + '<span style="background:var(--bg);padding:1px 7px;border-radius:5px">' + (typeLabels[q.type] || q.type) + '</span>'
+        + (q.required ? '<span style="color:#ef4444;font-weight:700">Required</span>' : '<span>Optional</span>')
+        + (q.type === 'select' && q.options && q.options.length ? '<span style="color:var(--sub2)">· ' + H.escHtml(q.options.join(', ')) + '</span>' : '')
+        + '</div></div>'
+        + '<button onclick="H._jqRemove(' + i + ')" type="button" style="background:none;border:none;color:var(--sub);cursor:pointer;padding:2px;flex-shrink:0">'
+        + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>'
+        + '</button></div>';
+    }).join('');
+  };
+
+  H._jqRemove = function (idx) {
+    if (!H._jobQuestionsArr) return;
+    H._jobQuestionsArr.splice(idx, 1);
+    H._jqRender();
+  };
+
+  H._jqAddModal = function () {
+    H.modal({
+      title: 'Add Screening Question',
+      body: '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text)">Question *</label>'
+        + '<input id="jqQText" placeholder="e.g. Do you have a valid driver\'s licence?" style="' + _jqInStyle + '"></div>'
+        + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text);display:block;margin-bottom:6px">Answer Type</label>'
+        + '<div style="display:flex;flex-direction:column;gap:8px">'
+        + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="radio" name="jqType" value="text" checked style="accent-color:#1A3A8F" onchange="document.getElementById(\'jqOptsWrap\').style.display=\'none\'"> Short text answer</label>'
+        + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="radio" name="jqType" value="yesno" style="accent-color:#1A3A8F" onchange="document.getElementById(\'jqOptsWrap\').style.display=\'none\'"> Yes or No</label>'
+        + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="radio" name="jqType" value="select" style="accent-color:#1A3A8F" onchange="document.getElementById(\'jqOptsWrap\').style.display=\'\'"> Multiple choice</label>'
+        + '</div></div>'
+        + '<div id="jqOptsWrap" style="display:none;margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text)">Choices (comma-separated) *</label>'
+        + '<input id="jqOpts" placeholder="e.g. 0-1 years, 2-5 years, 5+ years" style="' + _jqInStyle + '"></div>'
+        + '<div style="display:flex;align-items:center;gap:8px">'
+        + '<input type="checkbox" id="jqReq" style="width:16px;height:16px;accent-color:#1A3A8F;cursor:pointer">'
+        + '<label for="jqReq" style="font-size:13px;font-weight:600;color:var(--text);cursor:pointer">Required</label></div>',
+      confirmText: 'Add Question',
+      onConfirm: function () {
+        var q = ((document.getElementById('jqQText') || {}).value || '').trim();
+        if (!q) { H.toast('Please enter a question'); return false; }
+        var type = 'text';
+        document.querySelectorAll('input[name="jqType"]').forEach(function (r) { if (r.checked) type = r.value; });
+        var opts = [];
+        if (type === 'select') {
+          opts = ((document.getElementById('jqOpts') || {}).value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+          if (!opts.length) { H.toast('Please add at least one choice'); return false; }
+        }
+        var required = !!((document.getElementById('jqReq') || {}).checked);
+        H._jobQuestionsArr = H._jobQuestionsArr || [];
+        H._jobQuestionsArr.push({ id: H.uid(), question: q, type: type, options: opts, required: required });
+        H._jqRender();
+      }
+    });
+  };
+
   H.pages.PostJob = function () {
     var u = H.currentUser();
     if (!u) return '<div class="page active">' + H.innerTopbar('Post a Job') + H.emptyState('Sign in required', 'You must sign in to post a job', 'Sign In', "H.requireAuth('Post a job')") + '</div>';
@@ -585,10 +660,16 @@
       + _textarea('jResp', 'Key Responsibilities', 'List the main duties and responsibilities…', 4)
       + _field('jEmail', 'Application Email', 'email', 'Email to receive applications', H.escHtml(u.email || ''))
       + _field('jPhone', 'WhatsApp Number', 'tel', 'e.g. +263771234567', H.escHtml(u.phone || ''))
+      + _jqSectionHtml()
       + '</div>'
       + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
       + '<button onclick="H._submitJob()" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#0f2460);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">Post Job Now →</button>'
       + '</div></div>';
+  };
+
+  H.pages.PostJob_after = function () {
+    H._jobQuestionsArr = [];
+    H._jqRender();
   };
 
   function _field(id, label, type, placeholder, value) {
@@ -637,7 +718,8 @@
       price: salMin ? +salMin : 0, currency: 'USD', city: location, prov: prov || location,
       sellerId: u.id, sellerName: anon ? company : (u.name || company),
       sellerPhone: u.phone || '', company: company,
-      createdAt: Date.now(), status: 'active', photos: []
+      createdAt: Date.now(), status: 'active', photos: [],
+      custom_questions: H._jobQuestionsArr && H._jobQuestionsArr.length ? H._jobQuestionsArr.slice() : []
     };
     H.state.listings = H.state.listings || [];
     H.state.listings.push(listing);
@@ -733,10 +815,18 @@
       + _textareaVal('jResp', 'Key Responsibilities', 'List the main duties and responsibilities…', 4, responsibilities)
       + _field('jEmail', 'Application Email', 'email', 'Email to receive applications', H.escHtml(applyEmail))
       + _field('jPhone', 'WhatsApp Number', 'tel', 'e.g. +263771234567', H.escHtml(applyPhone))
+      + _jqSectionHtml()
       + '</div>'
       + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
       + '<button id="ejSaveBtn" onclick="H._updateJob(\'' + H.escHtml(id) + '\')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#0f2460);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">Save Changes →</button>'
       + '</div></div>';
+  };
+
+  H.pages.EditJob_after = function (params) {
+    var id = params && params.listingId;
+    var l = id ? (H.state.listings || []).find(function (x) { return x.id === id; }) : null;
+    H._jobQuestionsArr = (l && l.custom_questions) ? l.custom_questions.slice() : [];
+    H._jqRender();
   };
 
   H._updateJob = function (id) {
@@ -776,6 +866,7 @@
 
     l.title = title; l.company = company; l.desc = fullDesc;
     l.price = salMin ? +salMin : 0; l.city = location; l.prov = prov || location;
+    l.custom_questions = H._jobQuestionsArr ? H._jobQuestionsArr.slice() : [];
     l.updatedAt = Date.now();
     H.saveState();
 
@@ -783,7 +874,8 @@
     if (_sb && typeof _sb.from === 'function') {
       _sb.from('listings').update({
         title: l.title, company: l.company, desc: fullDesc, description: fullDesc,
-        price: l.price, city: l.city, prov: l.prov, updated_at: l.updatedAt
+        price: l.price, city: l.city, prov: l.prov,
+        custom_questions: l.custom_questions, updated_at: l.updatedAt
       }).eq('id', id).then(function(r){ if(r&&r.error) console.warn('Job update error:', r.error.message); });
     }
     H.toast('Job updated!');
@@ -885,21 +977,88 @@
     if (!H.currentUser()) { H.requireAuth('Sign in to apply for jobs'); return; }
     var l = (H.state.listings || []).find(function(x){ return x.id === jobId; });
     if (!l) { H.toast('Job not found'); return; }
-    var company = l.company || l.sellerName || 'Company';
-    H.modal({
-      title: 'Apply: ' + l.title,
-      body: '<div style="margin-bottom:10px;font-size:13px;color:var(--sub)">at <strong>' + H.escHtml(company) + '</strong> · ' + H.escHtml(l.city || 'Zimbabwe') + '</div>'
-        + '<textarea id="applyMsg" rows="4" placeholder="Introduce yourself — your experience, why you\'re a great fit, and any relevant skills…" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif"></textarea>'
-        + '<div style="font-size:11px;color:var(--sub);margin-top:6px">Your name and application message will be reviewed by the employer. They can message you through PaMarket.</div>',
-      confirmText: 'Submit Application',
-      onConfirm: function() {
-        var msg = (document.getElementById('applyMsg') || {}).value || '';
-        H._submitJobApplication(jobId, msg);
-      }
-    });
+    H.openInner('ApplyJob', { jobId: jobId });
   };
 
-  H._submitJobApplication = function (jobId, message) {
+  H.pages.ApplyJob = function (params) {
+    var jobId = params && params.jobId;
+    var l = (H.state.listings || []).find(function(x){ return x.id === jobId; });
+    if (!l) return '<div class="page active">' + H.innerTopbar('Apply') + H.emptyState('Job not found', '', null, null) + '</div>';
+    var company = l.company || l.sellerName || 'Company';
+    var questions = l.custom_questions || [];
+    var inS = 'width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit';
+
+    var questionsHtml = questions.map(function (q, i) {
+      var lbl = '<label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:8px;line-height:1.5">'
+        + (q.required ? '<span style="color:#ef4444;margin-right:2px">*</span>' : '')
+        + H.escHtml(q.question) + '</label>';
+      var inp = '';
+      if (q.type === 'yesno') {
+        inp = '<div id="applyQ_' + i + '" data-value="" style="display:flex;gap:8px">'
+          + '<button type="button" onclick="var p=this.parentElement;p.dataset.value=\'Yes\';this.style.background=\'#1A3A8F\';this.style.color=\'#fff\';this.style.borderColor=\'#1A3A8F\';this.nextElementSibling.style.background=\'var(--card)\';this.nextElementSibling.style.color=\'var(--text)\';this.nextElementSibling.style.borderColor=\'var(--border)\'" style="flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--card);color:var(--text);font-family:inherit">Yes</button>'
+          + '<button type="button" onclick="var p=this.parentElement;p.dataset.value=\'No\';this.style.background=\'#1A3A8F\';this.style.color=\'#fff\';this.style.borderColor=\'#1A3A8F\';this.previousElementSibling.style.background=\'var(--card)\';this.previousElementSibling.style.color=\'var(--text)\';this.previousElementSibling.style.borderColor=\'var(--border)\'" style="flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--card);color:var(--text);font-family:inherit">No</button>'
+          + '</div>';
+      } else if (q.type === 'select') {
+        inp = '<select id="applyQ_' + i + '" style="' + inS + '">'
+          + '<option value="">Select an option…</option>'
+          + (q.options || []).map(function(o){ return '<option>' + H.escHtml(o) + '</option>'; }).join('')
+          + '</select>';
+      } else {
+        inp = '<textarea id="applyQ_' + i + '" rows="2" placeholder="Your answer…" style="' + inS + ';resize:vertical"></textarea>';
+      }
+      return '<div style="margin-bottom:16px">' + lbl + inp + '</div>';
+    }).join('');
+
+    return '<div class="page active">'
+      + H.innerTopbar('Apply for ' + H.escHtml(l.title))
+      + '<div style="padding:14px 14px 100px">'
+      + '<div style="background:#1A3A8F14;border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;gap:12px;align-items:center">'
+      + '<div style="width:42px;height:42px;border-radius:10px;background:#1A3A8F;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0">' + H.escHtml(company.slice(0, 2).toUpperCase()) + '</div>'
+      + '<div><div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(l.title) + '</div>'
+      + '<div style="font-size:12px;color:var(--sub)">' + H.escHtml(company) + ' · ' + H.escHtml(l.city || 'Zimbabwe') + '</div></div>'
+      + '</div>'
+      + '<div style="margin-bottom:16px">'
+      + '<label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:8px">Cover Message</label>'
+      + '<textarea id="applyMsg" rows="4" placeholder="Introduce yourself — your experience, why you\'re a great fit…" style="' + inS + ';resize:vertical"></textarea>'
+      + '<div style="font-size:11px;color:var(--sub);margin-top:5px">Your profile is shared with the employer. They may message you through PaMarket.</div>'
+      + '</div>'
+      + (questions.length
+        ? '<div style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:8px"><span style="flex:1;height:1px;background:var(--border)"></span>Application Questions<span style="flex:1;height:1px;background:var(--border)"></span></div>'
+          + questionsHtml
+        : '')
+      + '</div>'
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
+      + '<button onclick="H._submitApplyJob(\'' + H.escHtml(jobId) + '\')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">'
+      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg> Submit Application</button>'
+      + '</div></div>';
+  };
+
+  H._submitApplyJob = function (jobId) {
+    var u = H.currentUser(); if (!u) return;
+    var l = (H.state.listings || []).find(function(x){ return x.id === jobId; }); if (!l) return;
+    var msg = ((document.getElementById('applyMsg') || {}).value || '').trim();
+    var questions = l.custom_questions || [];
+    var answers = [];
+    var valid = true;
+    questions.forEach(function (q, i) {
+      var el = document.getElementById('applyQ_' + i);
+      var val = '';
+      if (q.type === 'yesno') {
+        val = el ? (el.dataset.value || '') : '';
+      } else {
+        val = el ? ((el.value || '').trim()) : '';
+      }
+      if (q.required && !val) {
+        H.toast('Please answer: ' + q.question.slice(0, 60));
+        valid = false;
+      }
+      answers.push({ questionId: q.id, question: q.question, answer: val });
+    });
+    if (!valid) return;
+    H._submitJobApplication(jobId, msg, answers);
+  };
+
+  H._submitJobApplication = function (jobId, message, answers) {
     var u = H.currentUser(); if (!u) return;
     var l = (H.state.listings || []).find(function(x){ return x.id === jobId; }); if (!l) return;
     var company = l.company || l.sellerName || 'Company';
@@ -909,7 +1068,7 @@
     var app = {
       id: H.uid(), jobId: jobId, jobTitle: l.title, company: company,
       applicantId: u.id, applicantName: u.name || 'Applicant',
-      message: message, status: 'pending', appliedAt: Date.now(),
+      message: message, answers: answers || [], status: 'pending', appliedAt: Date.now(),
       employerId: l.sellerId
     };
     H.state.applications.push(app);
@@ -934,7 +1093,7 @@
       } else if (message && typeof H.saveMessageToCloud === 'function') H.saveMessageToCloud(convId, conv.messages[0]);
     }
     H.toast('Application submitted! The employer will be in touch.');
-    H.renderPage('JobDetail', {id: jobId});
+    H.goBack();
   };
 
   H.pages.JobApplications = function (params) {
@@ -970,7 +1129,18 @@
             + '</div>'
             + '<div style="font-size:12px;color:var(--sub);margin-top:2px">' + H.timeAgo(app.appliedAt) + '</div>'
             + '</div></div>'
-            + (app.message ? '<div style="font-size:13px;color:var(--text);line-height:1.6;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:12px">' + H.escHtml(app.message.slice(0,200)) + (app.message.length>200?'…':'') + '</div>' : '')
+            + (app.message ? '<div style="font-size:13px;color:var(--text);line-height:1.6;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:10px">' + H.escHtml(app.message.slice(0,200)) + (app.message.length>200?'…':'') + '</div>' : '')
+            + (app.answers && app.answers.length
+              ? '<div style="margin-bottom:12px">'
+                + '<div style="font-size:10px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Screening Answers</div>'
+                + app.answers.map(function(a) {
+                    return '<div style="border-left:3px solid #1A3A8F30;padding:5px 8px;margin-bottom:5px">'
+                      + '<div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:1px">' + H.escHtml(a.question || '') + '</div>'
+                      + '<div style="font-size:13px;font-weight:600;color:' + (a.answer ? 'var(--text)' : 'var(--sub2)') + '">' + H.escHtml(a.answer || 'No answer') + '</div>'
+                      + '</div>';
+                  }).join('')
+                + '</div>'
+              : '')
             + '<div style="display:flex;gap:8px">'
             + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'shortlisted\')" style="flex:1;padding:8px;background:#22c55e15;color:#15803d;border:1.5px solid #22c55e40;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Shortlist</button>'
             + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'rejected\')" style="flex:1;padding:8px;background:#ef444415;color:#dc2626;border:1.5px solid #ef444440;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Decline</button>'
