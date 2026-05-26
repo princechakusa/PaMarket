@@ -85,19 +85,19 @@
         const t = new Date(r.created_at).getTime();
         const existing = local.find(n => n.id === r.id);
         if (existing) {
-          // Cloud read state wins if true (don't unread something the user read on another device)
           if (r.read && !existing.read) existing.read = true;
         } else if (!localIds.has(r.id)) {
           local.unshift({ id: r.id, t, read: !!r.read, title: r.title || '', body: r.body || '', type: r.type || _inferType(r.title) });
         }
       });
-      // sort newest first, cap at 100
-      local.sort((a, b) => b.t - a.t);
-      if (local.length > 100) local.length = 100;
-      H.state.notifs[u.id] = local;
+      // Remove items deleted on server (or another device)
+      const serverIds = new Set(res.data.map(r => r.id));
+      const pruned = local.filter(n => serverIds.has(n.id));
+      pruned.sort((a, b) => b.t - a.t);
+      if (pruned.length > 100) pruned.length = 100;
+      H.state.notifs[u.id] = pruned;
       saveState();
       H._updateNotifBadge();
-      // Re-render only if the notification list actually changed
       _maybeRenderNotifs(u.id);
     } catch (e) {
       console.warn('syncNotifications error:', e.message);
@@ -127,6 +127,21 @@
             type: r.type || _inferType(r.title)
           });
           if (list.length > 100) list.length = 100;
+          saveState();
+          H._updateNotifBadge();
+          _maybeRenderNotifs(u.id);
+        }
+      })
+      .on('postgres_changes', {
+        event: 'DELETE', schema: 'public', table: 'notifications',
+        filter: 'user_id=eq.' + u.id
+      }, payload => {
+        const oldId = payload.old && payload.old.id; if (!oldId) return;
+        H.state.notifs = H.state.notifs || {};
+        const list = H.state.notifs[u.id] = H.state.notifs[u.id] || [];
+        const idx = list.findIndex(n => n.id === oldId);
+        if (idx !== -1) {
+          list.splice(idx, 1);
           saveState();
           H._updateNotifBadge();
           _maybeRenderNotifs(u.id);
@@ -166,6 +181,41 @@
     if (c) {
       c.from('notifications').update({ read: true }).eq('user_id', u.id).eq('read', false)
         .then(r => { if (r && r.error) console.warn('mark-all update failed:', r.error.message); });
+    }
+  };
+
+  // ── Delete single notification ────────────────────────────
+  H.deleteNotif = async function (notifId) {
+    const u = H.currentUser(); if (!u) return;
+    const list = H.state.notifs[u.id] || [];
+    const idx = list.findIndex(n => n.id === notifId);
+    if (idx === -1) return;
+    list.splice(idx, 1);
+    saveState();
+    H._updateNotifBadge();
+    H.renderPage('Notifications');
+    const c = sb();
+    if (c) {
+      c.from('notifications').delete().eq('id', notifId)
+        .then(r => { if (r && r.error) console.warn('notif delete failed:', r.error.message); });
+    }
+  };
+
+  // ── Clear all notifications ───────────────────────────────
+  H.clearAllNotifs = async function () {
+    const u = H.currentUser(); if (!u) return;
+    const list = H.state.notifs[u.id] || [];
+    if (!list.length) { toast('No notifications to clear'); return; }
+    const ids = list.map(n => n.id);
+    H.state.notifs[u.id] = [];
+    saveState();
+    H._updateNotifBadge();
+    H.renderPage('Notifications');
+    toast('Cleared all notifications');
+    const c = sb();
+    if (c) {
+      c.from('notifications').delete().eq('user_id', u.id).in('id', ids)
+        .then(r => { if (r && r.error) console.warn('notif clear failed:', r.error.message); });
     }
   };
 
@@ -242,7 +292,13 @@
       </button>
       <div class="inner-topbar-title">Notifications${unreadCount ? ` <span style="background:#F5A623;color:#1A3A8F;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:800;margin-left:6px">${unreadCount}</span>` : ''}</div>
       ${unreadCount ? '<button onclick="H.markAllNotifsRead()" style="background:none;border:none;color:#1A3A8F;font-size:13px;font-weight:600;cursor:pointer;padding:6px 10px">Mark all read</button>' : '<div style="width:34px"></div>'}
-    </div>`;
+    </div>
+    ${list.length ? `<div style="display:flex;justify-content:flex-end;padding:8px 16px;border-bottom:1px solid var(--border)">
+      <button onclick="H.clearAllNotifs()" style="background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 6px">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Clear all
+      </button>
+    </div>` : ''}`;
 
     return `<div class="page active">${headerBar}
       <div id="notifList" style="padding-bottom:90px">
@@ -250,7 +306,7 @@
           const type = n.type || _inferType(n.title);
           const color = _notifColor(type);
           return `<div onclick="H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)'"
-              style="background:${n.read ? 'var(--card)' : 'rgba(26,58,143,.04)'};border-bottom:1px solid var(--border);padding:14px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;position:relative">
+              style="background:${n.read ? 'var(--card)' : 'rgba(26,58,143,.04)'};border-bottom:1px solid var(--border);padding:14px 40px 14px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;position:relative">
             <div style="width:38px;height:38px;border-radius:50%;background:${_notifBg(type)};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${color}">
               ${_notifIcon(type)}
             </div>
@@ -260,6 +316,10 @@
               <div style="font-size:11px;color:var(--sub2);font-weight:500">${timeAgo(n.t)}</div>
             </div>
             ${n.read ? '' : `<span data-unread-dot style="width:9px;height:9px;border-radius:50%;background:${color};margin-top:6px;flex-shrink:0"></span>`}
+            <button onclick="event.stopPropagation();H.deleteNotif('${n.id}')" aria-label="Delete notification"
+              style="position:absolute;top:50%;right:10px;transform:translateY(-50%);background:none;border:none;padding:6px;cursor:pointer;color:var(--sub);border-radius:6px;display:flex;align-items:center;justify-content:center;opacity:0.55">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
           </div>`;
         }).join('') : H.emptyState('All caught up', 'New notifications about your listings and messages will appear here.', null, null)}
       </div>
