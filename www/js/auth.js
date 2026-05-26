@@ -172,7 +172,7 @@
     H._otpEmail = email;
     card.innerHTML = ''
       + '<div style="text-align:center;margin-bottom:20px">'
-      + '<div style="font-size:42px;margin-bottom:10px">📧</div>'
+      + '<div style="margin-bottom:10px;color:#1A3A8F"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>'
       + '<div style="font-size:20px;font-weight:700;color:var(--text)">Verify Your Email</div>'
       + '<div style="font-size:13px;color:var(--sub);margin-top:8px;line-height:1.6">We sent a 6-digit code to<br><strong style="color:var(--text)">' + H.escHtml(email) + '</strong></div>'
       + '</div>'

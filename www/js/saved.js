@@ -138,7 +138,7 @@
           const statusClass = l.status === 'active' ? 'status-active' : l.status === 'banned' ? 'status-banned' : 'status-pending';
           return `<div class="my-listing-card">
             <div class="ml-thumb">
-              ${l.photos && l.photos[0] ? `<img src="${l.photos[0]}">` : (CATEGORIES.find(c => c.id === l.cat) || {}).icon || '📦'}
+              ${l.photos && l.photos[0] ? `<img src="${l.photos[0]}">` : ((CATEGORIES.find(c => c.id === l.cat) || {}).icon || '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#ccc"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>')}
             </div>
             <div class="ml-body">
               <div class="ml-title">${escHtml(l.title)}</div>
