@@ -326,6 +326,8 @@
     var uid = params && params.id;
     var u = uid ? (H.state.users || []).find(function (x) { return x.id === uid; }) : null;
     if (!u) return '<div class="page active">' + H.innerTopbar('Candidate CV') + H.emptyState('Not found', 'Candidate profile unavailable', null, null) + '</div>';
+    var me = H.currentUser();
+    var isMine = !!(me && me.id === uid);
     var cv  = u.cv || {};
     var ini = H.initials(u.name || 'U');
     var verBadge = u.verified ? '<span style="background:#059669;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>' : '';
@@ -406,10 +408,14 @@
       + '</div></div>'
       // ── fixed bottom ──
       + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200;display:flex;gap:8px">'
-      + (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
-      + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
-      + '<button onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;' + (canWa || canCall ? 'background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;' : 'background:#1A3A8F;color:#fff;border:none;') + 'border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'
-      + '<button onclick="H._cvDownload(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952c8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CV</button>'
+      + (isMine
+        ? '<button onclick="H.openInner(\'CandidateProfile\')" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>'
+          + '<button onclick="H._deleteJobProfile()" style="flex:1;padding:13px;background:var(--bg);color:#ef4444;border:1.5px solid #fecaca;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Delete Profile</button>'
+        : (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
+          + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
+          + '<button onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;' + (canWa || canCall ? 'background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;' : 'background:#1A3A8F;color:#fff;border:none;') + 'border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'
+          + '<button onclick="H._cvDownload(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952c8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CV</button>'
+      )
       + '</div></div>';
   };
 
@@ -483,6 +489,31 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     H.toast('CV downloaded');
+  };
+
+  H._deleteJobProfile = function () {
+    var u = H.currentUser(); if (!u) return;
+    H.modal({
+      title: 'Delete Job Profile',
+      body: '<div style="font-size:13px;color:var(--sub);line-height:1.6">This will remove you from Hire Talent and hide your CV from employers. Your PaMarket account is kept.</div>',
+      confirmText: 'Delete Profile',
+      danger: true,
+      onConfirm: function () {
+        u.openToWork = false;
+        u.cv = null;
+        u.jobTitle = '';
+        u.cvFileName = '';
+        u.cvFileUrl = '';
+        H.saveState();
+        var _sb = window.supabase;
+        if (_sb && typeof _sb.from === 'function') {
+          _sb.from('profiles').update({ open_to_work: false, cv: null, job_title: null, cv_file_name: null, cv_file_url: null })
+            .eq('id', u.id).then(function(r){ if(r&&r.error) console.warn('profile delete cv:', r.error.message); });
+        }
+        H.toast('Job profile removed');
+        H.goBack();
+      }
+    });
   };
 
   function _emptyTalent() {
@@ -618,11 +649,145 @@
 
   H._jobProvChange = function (prov) {
     var sel = document.getElementById('jLocation');
+    var existingCity = sel && sel.dataset.prefill ? sel.dataset.prefill : '';
     if (!sel) return;
     var cities = (H.CITIES_BY_PROV[prov] || []);
     sel.innerHTML = '<option value="">Select city / town…</option>'
-      + cities.map(function (c) { return '<option>' + H.escHtml(c) + '</option>'; }).join('')
-      + '<option>Remote</option><option>Multiple Locations</option>';
+      + cities.map(function (c) { return '<option' + (c === existingCity ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
+      + '<option' + (existingCity === 'Remote' ? ' selected' : '') + '>Remote</option>'
+      + '<option' + (existingCity === 'Multiple Locations' ? ' selected' : '') + '>Multiple Locations</option>';
+    sel.dataset.prefill = '';
+  };
+
+  function _textareaVal(id, label, placeholder, rows, val) {
+    return '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">' + label + '</label>'
+      + '<textarea id="' + id + '" placeholder="' + H.escHtml(placeholder) + '" rows="' + rows + '" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif">' + H.escHtml(val || '') + '</textarea></div>';
+  }
+
+  H.pages.EditJob = function (params) {
+    var id = params && params.listingId;
+    var l = id ? (H.state.listings || []).find(function (x) { return x.id === id; }) : null;
+    if (!l) return '<div class="page active">' + H.innerTopbar('Edit Job') + H.emptyState('Not found', '', null, null) + '</div>';
+
+    var lines = (l.desc || '').split('\n');
+    var company  = l.company || parseLine(lines, 'COMPANY') || l.sellerName || '';
+    var jobType  = parseLine(lines, 'JOB TYPE') || 'Full-time';
+    var category = parseLine(lines, 'INDUSTRY') || l.subcat || '';
+    var salaryStr = parseLine(lines, 'SALARY') || '';
+    var prov = l.prov || '';
+    var city = l.city || '';
+    var selStyle = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none';
+
+    var salMin = '', salMax = '';
+    var salMatch = salaryStr.match(/\$(\d+)\s*-\s*\$(\d+)/);
+    if (salMatch) { salMin = salMatch[1]; salMax = salMatch[2]; }
+    else { var fromMatch = salaryStr.match(/From\s*\$(\d+)/i); if (fromMatch) salMin = fromMatch[1]; }
+
+    var d = l.desc || '';
+    function _nextAfter(pos) {
+      return [d.indexOf('\nRESPONSIBILITIES:\n'), d.indexOf('\nREQUIREMENTS:\n'), d.indexOf('\nHOW TO APPLY:'), d.length]
+        .filter(function(x){ return x > pos; }).sort(function(a,b){ return a-b; })[0];
+    }
+    var descS = d.indexOf('\nDESCRIPTION:\n');
+    var respS = d.indexOf('\nRESPONSIBILITIES:\n');
+    var reqS  = d.indexOf('\nREQUIREMENTS:\n');
+    var applyS = d.indexOf('\nHOW TO APPLY:');
+    var description      = descS  > -1 ? d.slice(descS + 14, _nextAfter(descS)).trim()  : '';
+    var responsibilities = respS  > -1 ? d.slice(respS + 19, [reqS, applyS, d.length].filter(function(x){ return x > respS; }).sort(function(a,b){return a-b;})[0]).trim() : '';
+    var requirements     = reqS   > -1 ? d.slice(reqS  + 15, [applyS, d.length].filter(function(x){ return x > reqS; }).sort(function(a,b){return a-b;})[0]).trim()  : '';
+    var applySection     = applyS > -1 ? d.slice(applyS + 14).trim() : '';
+    var em = applySection.match(/Email:\s*(.+)/);
+    var ph = applySection.match(/WhatsApp:\s*(.+)/);
+    var applyEmail = em ? em[1].trim() : '';
+    var applyPhone = ph ? ph[1].trim() : '';
+
+    var citiesForProv = prov && H.CITIES_BY_PROV ? (H.CITIES_BY_PROV[prov] || []) : [];
+    var cityOptions = '<option value="">Select city / town…</option>'
+      + (prov ? citiesForProv.map(function(c){ return '<option' + (c === city ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('') : '')
+      + '<option' + (city === 'Remote' ? ' selected' : '') + '>Remote</option>'
+      + '<option' + (city === 'Multiple Locations' ? ' selected' : '') + '>Multiple Locations</option>';
+
+    return '<div class="page active">'
+      + '<div class="det-topbar"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Edit Job</div></div>'
+      + '<div style="padding:0 14px 100px">'
+      + _field('jCompany', 'Company Name *', 'text', 'Your company or organisation name', H.escHtml(company))
+      + _field('jTitle', 'Job Title *', 'text', 'e.g. Accountant, Driver, Sales Representative', H.escHtml(l.title || ''))
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Job Category *</label>'
+      + '<select id="jCat" style="' + selStyle + '"><option value="">Select category…</option>'
+      + JOB_CATS.map(function(c){ return '<option' + (c === category ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
+      + '<option' + (category === 'Other' ? ' selected' : '') + '>Other</option></select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Province *</label>'
+      + '<select id="jProv" onchange="H._jobProvChange(this.value)" style="' + selStyle + '"><option value="">Select province…</option>'
+      + (H.PROVINCES || []).map(function(p){ return '<option' + (p === prov ? ' selected' : '') + '>' + H.escHtml(p) + '</option>'; }).join('')
+      + '</select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">City / Town *</label>'
+      + '<select id="jLocation" data-prefill="' + H.escHtml(city) + '" style="' + selStyle + '">' + cityOptions + '</select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Job Type</label>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:10px">'
+      + ['Full-time','Part-time','Contract','Freelance','Internship'].map(function(t){ return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="jType" value="' + t + '"' + (t === jobType ? ' checked' : '') + ' style="accent-color:#1A3A8F"><span style="font-size:13px;font-weight:600;color:var(--text)">' + t + '</span></label>'; }).join('')
+      + '</div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Salary Range (USD)</label>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input id="jSalMin" type="number" placeholder="Min" value="' + H.escHtml(salMin) + '" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"><input id="jSalMax" type="number" placeholder="Max" value="' + H.escHtml(salMax) + '" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"></div></div>'
+      + _textareaVal('jDesc', 'Job Description *', 'Describe the role, responsibilities, company culture…', 6, description)
+      + _textareaVal('jReqs', 'Requirements & Qualifications', 'List qualifications, experience, skills required…', 4, requirements)
+      + _textareaVal('jResp', 'Key Responsibilities', 'List the main duties and responsibilities…', 4, responsibilities)
+      + _field('jEmail', 'Application Email', 'email', 'Email to receive applications', H.escHtml(applyEmail))
+      + _field('jPhone', 'WhatsApp Number', 'tel', 'e.g. +263771234567', H.escHtml(applyPhone))
+      + '</div>'
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
+      + '<button id="ejSaveBtn" onclick="H._updateJob(\'' + H.escHtml(id) + '\')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#0f2460);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">Save Changes →</button>'
+      + '</div></div>';
+  };
+
+  H._updateJob = function (id) {
+    var company  = ((document.getElementById('jCompany')  || {}).value || '').trim();
+    var title    = ((document.getElementById('jTitle')    || {}).value || '').trim();
+    var cat      = (document.getElementById('jCat')       || {}).value || '';
+    var prov     = (document.getElementById('jProv')      || {}).value || '';
+    var location = (document.getElementById('jLocation')  || {}).value || '';
+    var desc     = ((document.getElementById('jDesc')     || {}).value || '').trim();
+    if (!company)               { H.toast('Company name is required'); return; }
+    if (!title)                 { H.toast('Job title is required'); return; }
+    if (!cat)                   { H.toast('Please select a job category'); return; }
+    if (!location)              { H.toast('Please select a city / town'); return; }
+    if (desc.length < 30)       { H.toast('Please write a job description (min 30 chars)'); return; }
+
+    var jobType = 'Full-time';
+    document.querySelectorAll('input[name="jType"]').forEach(function(r){ if (r.checked) jobType = r.value; });
+    var salMin = (document.getElementById('jSalMin') || {}).value || '';
+    var salMax = (document.getElementById('jSalMax') || {}).value || '';
+    var salary = salMin && salMax ? '$' + salMin + ' - $' + salMax : salMin ? 'From $' + salMin : 'Negotiable';
+    var reqs  = (document.getElementById('jReqs')  || {}).value || '';
+    var resp  = (document.getElementById('jResp')  || {}).value || '';
+    var email = ((document.getElementById('jEmail') || {}).value || '').trim();
+    var phone = ((document.getElementById('jPhone') || {}).value || '').trim();
+
+    var fullDesc = 'COMPANY: ' + company + '\nJOB TYPE: ' + jobType + '\nINDUSTRY: ' + cat + '\nSALARY: ' + salary
+      + '\n\nDESCRIPTION:\n' + desc
+      + (resp  ? '\n\nRESPONSIBILITIES:\n' + resp  : '')
+      + (reqs  ? '\n\nREQUIREMENTS:\n'      + reqs  : '')
+      + ((email || phone) ? '\n\nHOW TO APPLY:\n' + (email ? 'Email: ' + email + '\n' : '') + (phone ? 'WhatsApp: ' + phone : '') : '');
+
+    var l = (H.state.listings || []).find(function (x) { return x.id === id; });
+    if (!l) { H.toast('Job not found'); return; }
+
+    var btn = document.getElementById('ejSaveBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+    l.title = title; l.company = company; l.desc = fullDesc;
+    l.price = salMin ? +salMin : 0; l.city = location; l.prov = prov || location;
+    l.updatedAt = Date.now();
+    H.saveState();
+
+    var _sb = window.supabase;
+    if (_sb && typeof _sb.from === 'function') {
+      _sb.from('listings').update({
+        title: l.title, company: l.company, desc: fullDesc, description: fullDesc,
+        price: l.price, city: l.city, prov: l.prov, updated_at: l.updatedAt
+      }).eq('id', id).then(function(r){ if(r&&r.error) console.warn('Job update error:', r.error.message); });
+    }
+    H.toast('Job updated!');
+    H.goBack();
   };
 
   H.pages.JobDetail = function (params) {
