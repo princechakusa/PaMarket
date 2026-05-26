@@ -1346,7 +1346,7 @@
       + '<div id="cpJobTypeWrap" style="display:flex;flex-wrap:wrap;gap:8px">'
       + jobTypesList.map(function(t) {
           var sel = selectedJobTypes.indexOf(t) !== -1;
-          return '<button type="button" data-jt="' + H.escHtml(t) + '" data-selected="' + (sel ? '1' : '0') + '" class="cp-toggle-btn' + (sel ? ' cp-selected' : '') + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + ';background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--sub)') + ';font-family:inherit">' + H.escHtml(t) + '</button>';
+          return '<button type="button" data-jt="' + H.escHtml(t) + '" data-selected="' + (sel ? '1' : '0') + '" class="cp-toggle-btn' + (sel ? ' cp-selected' : '') + '">' + H.escHtml(t) + '</button>';
         }).join('')
       + '</div></div>'
 
@@ -1371,7 +1371,7 @@
       + '<div id="cpContactMethodWrap" style="display:flex;gap:8px">'
       + [['<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp','whatsapp'],['<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call','call'],['<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Both','both']].map(function(cm){
           var sel = contactMethod === cm[1];
-          return '<button type="button" data-cm="' + cm[1] + '" data-selected="' + (sel ? '1' : '0') + '" class="cp-toggle-btn' + (sel ? ' cp-selected' : '') + '" style="flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + ';background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--sub)') + ';font-family:inherit">' + cm[0] + '</button>';
+          return '<button type="button" data-cm="' + cm[1] + '" data-selected="' + (sel ? '1' : '0') + '" class="cp-contact-btn' + (sel ? ' cp-selected' : '') + '">' + cm[0] + '</button>';
         }).join('')
       + '</div></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Best Time to Contact</label>'
@@ -1472,9 +1472,6 @@
         });
       });
     }
-
-    H._cpToggleJobType = function(btn) { btn.click(); };
-    H._cpSetContact    = function(btn) { btn.click(); };
 
     // Same-as-WhatsApp checkbox
     H._cpToggleSamePhone = function(el) {
