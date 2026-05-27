@@ -1,4 +1,4 @@
-/* Hostly bundle — built 2026-05-27T18:22:38Z */
+/* Hostly bundle — built 2026-05-27T18:26:32Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -649,10 +649,14 @@ window.H = {
     document.getElementById('ptr-ind')?.remove();
     document.getElementById('ptr-css')?.remove();
 
-    // ── Spinner: simple ring with one coloured segment (browser-style) ─
+    // iOS-style starburst spinner: 12 spokes stepping like the native OS indicator
     const ind = document.createElement('div');
     ind.id = 'ptr-ind';
-    ind.innerHTML = '<div id="ptr-ring"></div>';
+    ind.innerHTML =
+      '<svg id="ptr-star" viewBox="0 0 30 30" width="30" height="30"'
+      + ' stroke="#5a7fd4" stroke-width="2.2" style="display:block">'
+      + '<line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.08" transform="rotate(0 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.17" transform="rotate(30 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.25" transform="rotate(60 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.33" transform="rotate(90 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.42" transform="rotate(120 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.5" transform="rotate(150 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.58" transform="rotate(180 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.67" transform="rotate(210 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.75" transform="rotate(240 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.83" transform="rotate(270 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.92" transform="rotate(300 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="1.0" transform="rotate(330 15 15)"/>'
+      + '</svg>';
     ind.style.cssText =
       'position:fixed;top:env(safe-area-inset-top,0px);left:50%;' +
       'width:' + IND_SIZE + 'px;height:' + IND_SIZE + 'px;' +
@@ -660,16 +664,15 @@ window.H = {
       'background:var(--card,#1a2540);border-radius:50%;' +
       'display:flex;align-items:center;justify-content:center;' +
       'z-index:9999;pointer-events:none;opacity:0;' +
-      'box-shadow:0 2px 12px rgba(0,0,0,.35);';
+      'box-shadow:0 3px 14px rgba(0,0,0,.4);';
     document.body.appendChild(ind);
 
     const styleEl = document.createElement('style');
     styleEl.id = 'ptr-css';
+    // steps(12,end) gives the native iOS tick: each frame jumps exactly 30 degrees
     styleEl.textContent =
-      '#ptr-ring{width:30px;height:30px;border-radius:50%;' +
-        'border:3.5px solid rgba(26,58,143,.2);border-top-color:#1A3A8F;' +
-        'animation:ptr-spin .65s linear infinite;}' +
-      '@keyframes ptr-spin{to{transform:rotate(360deg)}}';
+      '@keyframes ptr-spin{to{transform:rotate(360deg)}}' +
+      '#ptr-star{animation:ptr-spin .9s steps(12,end) infinite;transform-origin:15px 15px;}';
     document.head.appendChild(styleEl);
 
 
@@ -10374,19 +10377,16 @@ H.init();
   // --- Privacy Settings --------------------------------------
   pages.PrivacySettings = function () {
     const u = H.currentUser();
-    const privacy = u.privacySettings || {
-      profilePublic: true,
-      showPhoneInListings: false,
-      allowMessages: true,
-      showActivity: false
-    };
+    // Merge stored settings over defaults so missing keys always have a value
+    const defaults = { profilePublic: true, showPhoneInListings: false, allowMessages: true, showActivity: false };
+    const privacy = Object.assign({}, defaults, u.privacySettings || {});
 
     return `<div class="page active">
       ${H.innerTopbar('Privacy Settings')}
       <div class="form-wrap">
         <div class="privacy-section">
           <div class="section-title">Profile Visibility</div>
-          
+
           <div class="toggle-item">
             <div class="toggle-label">
               <span class="toggle-icon">${I.eye}</span>
@@ -10394,7 +10394,7 @@ H.init();
               <span class="toggle-desc">Others can view your profile</span>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox" ${privacy.profilePublic ? 'checked' : ''} onchange="H._privacySettings.toggle('profilePublic')">
+              <input type="checkbox" ${privacy.profilePublic ? 'checked' : ''} onchange="H._privacySettings.toggle('profilePublic', this.checked)">
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -10406,7 +10406,7 @@ H.init();
               <span class="toggle-desc">Sellers can see your phone number</span>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox" ${privacy.showPhoneInListings ? 'checked' : ''} onchange="H._privacySettings.toggle('showPhoneInListings')">
+              <input type="checkbox" ${privacy.showPhoneInListings ? 'checked' : ''} onchange="H._privacySettings.toggle('showPhoneInListings', this.checked)">
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -10418,7 +10418,7 @@ H.init();
               <span class="toggle-desc">Others can message you directly</span>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox" ${privacy.allowMessages ? 'checked' : ''} onchange="H._privacySettings.toggle('allowMessages')">
+              <input type="checkbox" ${privacy.allowMessages ? 'checked' : ''} onchange="H._privacySettings.toggle('allowMessages', this.checked)">
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -10430,7 +10430,7 @@ H.init();
               <span class="toggle-desc">Others can see when you're online</span>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox" ${privacy.showActivity ? 'checked' : ''} onchange="H._privacySettings.toggle('showActivity')">
+              <input type="checkbox" ${privacy.showActivity ? 'checked' : ''} onchange="H._privacySettings.toggle('showActivity', this.checked)">
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -10440,12 +10440,48 @@ H.init();
   };
 
   pages.PrivacySettings_after = function () {
+    const DEFAULTS = { profilePublic: true, showPhoneInListings: false, allowMessages: true, showActivity: false };
+    const LABELS = {
+      profilePublic:       { on: 'Profile is now public',              off: 'Profile is now private' },
+      showPhoneInListings: { on: 'Phone number visible in listings',    off: 'Phone number hidden from listings' },
+      allowMessages:       { on: 'Direct messages allowed',            off: 'Direct messages are blocked' },
+      showActivity:        { on: 'Activity status is visible',         off: 'Activity status is hidden' }
+    };
+
     H._privacySettings = {
-      toggle: (key) => {
+      toggle: function(key, newValue) {
         const u = H.currentUser();
-        if (!u.privacySettings) u.privacySettings = {};
-        u.privacySettings[key] = !u.privacySettings[key];
+        if (!u) return;
+        // Always initialise with full defaults so no key goes missing
+        if (!u.privacySettings) u.privacySettings = Object.assign({}, DEFAULTS);
+        // Use the checkbox's actual checked state — avoids !undefined mismatch on first toggle
+        u.privacySettings[key] = !!newValue;
         H.saveState();
+
+        // Feedback
+        const label = LABELS[key];
+        if (label) H.toast(newValue ? label.on : label.off);
+
+        // Apply visible effects immediately
+        if (key === 'showPhoneInListings') {
+          // Update own listings in state so detail pages reflect the change
+          const uid = u.id;
+          (H.state.listings || []).forEach(function(l) {
+            if (l.sellerId === uid) {
+              l._hidePhone = !newValue;
+            }
+          });
+          H.saveState();
+        }
+
+        // Persist to Supabase profiles table so other devices pick it up
+        if (window.supabase && typeof window.supabase.from === 'function') {
+          window.supabase.from('profiles')
+            .update({ privacy: u.privacySettings })
+            .eq('id', u.id)
+            .then(function() {})
+            .catch(function() {});
+        }
       }
     };
   };
