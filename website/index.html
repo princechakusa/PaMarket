@@ -256,7 +256,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.75);padding:56px 0 0}
       <a href="advertise.html" class="nav-a">Advertise</a>
     </nav>
     <div class="hdr-actions">
-      <button class="btn btn-outline btn-sm" onclick="showModal()">Sign In</button>
+      <div id="headerAuth"></div>
       <a href="post-ad.html" class="btn btn-accent btn-sm">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Post Free Ad
@@ -274,7 +274,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.75);padding:56px 0 0}
     <a href="about.html">About</a>
     <a href="advertise.html">Advertise</a>
     <div class="mob-nav-btns">
-      <button class="btn btn-outline" onclick="showModal()">Sign In</button>
+      <div id="mobileNavAuth"></div>
       <a href="post-ad.html" class="btn btn-accent">Post Free Ad</a>
     </div>
   </nav>
@@ -745,7 +745,7 @@ function switchTab(tab,el){
 // Live counts from Supabase
 async function loadLiveCounts(){
   try{
-    const r=await fetch(`${SB_URL}/rest/v1/listings?select=category&status=eq.active`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+    const r=await fetch(`${SB_URL}/rest/v1/listings?select=cat&status=eq.active`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
     if(!r.ok)return;
     const data=await r.json();
     if(!Array.isArray(data)||!data.length)return;
