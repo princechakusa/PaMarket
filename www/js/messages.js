@@ -93,7 +93,12 @@
       <div>
         ${convos.length ? convos.map(c => {
           const otherId = c.members.find(m => m !== u.id);
-          const other   = users().find(x => x.id === otherId) || { name: c.otherName || (c.messages.find(function(m){ return m.from===otherId; })||{}).senderName || 'User' };
+          // Backfill c.otherName from any message senderName we have
+          if (!c.otherName) {
+            const sn = (c.messages.find(function(m){ return m.from===otherId && m.senderName; })||{}).senderName;
+            if (sn) { c.otherName = sn; H.saveState(); }
+          }
+          const other   = users().find(x => x.id === otherId) || { name: c.otherName || 'Unknown User' };
           const last    = c.messages[c.messages.length - 1];
           const unread  = c.messages.some(m => m.from !== u.id && !m.read);
           return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item" data-cid="${escHtml(c.id)}" onclick="H.openChat('${c.id}')">
@@ -125,7 +130,12 @@
     if (!Array.isArray(c.members)) c.members = [];
     if (!Array.isArray(c.messages)) c.messages = [];
     const otherId = c.members.find(m => m !== u.id);
-    const other = users().find(x => x.id === otherId) || { name: c.otherName || (c.messages.find(function(msg){ return msg.from===otherId; })||{}).senderName || 'User' };
+    // Backfill c.otherName from any message senderName we have
+    if (!c.otherName) {
+      const sn = (c.messages.find(function(msg){ return msg.from===otherId && msg.senderName; })||{}).senderName;
+      if (sn) { c.otherName = sn; H.saveState(); }
+    }
+    const other = users().find(x => x.id === otherId) || { name: c.otherName || 'Unknown User' };
     const listing = (state.listings || []).find(l => l.id === c.listingId);
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
     H.saveState();
