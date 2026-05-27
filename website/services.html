@@ -132,10 +132,11 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px}
 <header id="site-header">
   <div class="header-inner">
     <a href="index.html" class="logo-text">Pa<span class="logo-accent">Market</span></a>
-    <nav class="header-nav">
+        <nav class="header-nav">
       <a href="browse.html" class="nav-link">Browse</a>
       <a href="jobs.html" class="nav-link">Jobs</a>
       <a href="services.html" class="nav-link active">Services</a>
+      <a href="about.html" class="nav-link">About</a>
       <a href="advertise.html" class="nav-link">Advertise</a>
     </nav>
     <div class="header-search">
@@ -156,10 +157,11 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px}
     </button>
   </div>
   <div id="mobileNav" class="mobile-nav hidden">
-    <a href="index.html">Home</a>
+        <a href="index.html">Home</a>
     <a href="browse.html">Browse All</a>
     <a href="jobs.html">Jobs</a>
     <a href="services.html">Services</a>
+    <a href="about.html">About</a>
     <a href="advertise.html">Advertise</a>
     <div class="mobile-nav-actions">
       <div id="mobileNavAuth"></div>
@@ -289,18 +291,18 @@ function filterSvcCat(cat,el){
 }
 
 function makeSvcCard(ad){
-  const img=ad.images&&ad.images[0]?escHtml(ad.images[0]):PLACEHOLDER;
+  const img=ad.photos&&ad.photos[0]?escHtml(ad.photos[0]):PLACEHOLDER;
   const price=formatPrice(ad.price,ad.currency);
   return `<a class="svc-card" href="detail.html?id=${ad.id}">
     <img class="svc-card-img" src="${img}" alt="${escHtml(ad.title)}" loading="lazy" onerror="this.src='${PLACEHOLDER}'">
     <div class="svc-card-body">
       <div class="svc-card-cat">Services</div>
       <div class="svc-card-title">${escHtml(ad.title)}</div>
-      <div class="svc-card-desc">${escHtml(ad.description||'Contact for details.')}</div>
+      <div class="svc-card-desc">${escHtml(ad.desc||ad.description||'Contact for details.')}</div>
       <div class="svc-card-meta">
         <div class="svc-card-loc">
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-          ${escHtml(ad.location||'Zimbabwe')}
+          ${escHtml(ad.city||ad.prov||'Zimbabwe')}
         </div>
         <div class="svc-card-price">${price}</div>
       </div>
@@ -310,8 +312,8 @@ function makeSvcCard(ad){
 
 function renderSvcs(){
   let svcs=allSvcs;
-  if(searchQ) svcs=svcs.filter(s=>(s.title+' '+(s.description||'')).toLowerCase().includes(searchQ.toLowerCase()));
-  if(activeCat) svcs=svcs.filter(s=>(s.title+' '+(s.description||'')).toLowerCase().includes(activeCat.toLowerCase()));
+  if(searchQ) svcs=svcs.filter(s=>(s.title+' '+(s.desc||s.description||'')).toLowerCase().includes(searchQ.toLowerCase()));
+  if(activeCat) svcs=svcs.filter(s=>(s.title+' '+(s.desc||s.description||'')).toLowerCase().includes(activeCat.toLowerCase()));
   const vis=svcs.slice(0,displayed);
   const grid=document.getElementById('svcGrid');
   if(!svcs.length){
@@ -329,7 +331,7 @@ function loadMore(){displayed+=12;renderSvcs()}
 
 async function init(){
   document.getElementById('svcGrid').innerHTML=`<div class="skel" style="height:200px;border-radius:var(--r-lg)"></div><div class="skel" style="height:200px;border-radius:var(--r-lg)"></div><div class="skel" style="height:200px;border-radius:var(--r-lg)"></div>`;
-  allSvcs=await sbGet('listings','select=*&status=eq.active&category=eq.Services&order=created_at.desc&limit=200');
+  allSvcs=await sbGet('listings','select=*&status=eq.active&cat=eq.Services&order=createdAt.desc&limit=200');
   displayed=12;
   renderSvcs();
 }
