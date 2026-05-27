@@ -580,6 +580,15 @@
         <div class="fl">Message</div>
         <textarea class="fi" rows="4" id="bcastMsg" placeholder="Write your message to all selected users..."></textarea>
       </div>
+      <div class="fg">
+        <div class="fl">Image URL <span style="font-size:11px;color:var(--sub)">(optional — shown in notification card)</span></div>
+        <input class="fi" id="bcastImage" placeholder="https://... image to display with notification">
+        <div style="font-size:11px;color:var(--sub);margin-top:4px">Tip: upload image to Supabase Storage and paste the public URL here</div>
+      </div>
+      <div class="fg">
+        <div class="fl">Tap Destination URL <span style="font-size:11px;color:var(--sub)">(optional — where to go when user taps)</span></div>
+        <input class="fi" id="bcastLink" placeholder="https://... or listing URL (e.g. detail?id=abc123)">
+      </div>
       <button class="btn-pri" id="bcastSendBtn" onclick="H._admin.broadcast()">${S.broadcast} Send Broadcast</button>
     </div>`;
   }
@@ -1012,9 +1021,11 @@
     },
 
     async broadcast() {
-      const title  = (document.getElementById('bcastTitle')?.value  || '').trim();
-      const msg    = (document.getElementById('bcastMsg')?.value    || '').trim();
-      const target = document.getElementById('bcastTarget')?.value  || 'all';
+      const title    = (document.getElementById('bcastTitle')?.value  || '').trim();
+      const msg      = (document.getElementById('bcastMsg')?.value    || '').trim();
+      const target   = document.getElementById('bcastTarget')?.value  || 'all';
+      const imageUrl = (document.getElementById('bcastImage')?.value  || '').trim() || null;
+      const deepLink = (document.getElementById('bcastLink')?.value   || '').trim() || null;
       if (!title || !msg) { toast('Enter title and message'); return; }
 
       const btn = document.getElementById('bcastSendBtn');
@@ -1062,12 +1073,14 @@
         return;
       }
 
-      userIds.forEach(id => H.pushNotif(id, title, msg, 'system'));
+      userIds.forEach(id => H.pushNotif(id, title, msg, 'system', imageUrl, deepLink));
       alog(`Broadcast (${target}) to ${userIds.length} users: ${msg.slice(0,50)}`);
       saveState();
       toast(`✓ Broadcast sent to ${userIds.length} user${userIds.length!==1?'s':''}`);
       document.getElementById('bcastTitle').value = '';
       document.getElementById('bcastMsg').value = '';
+      if (document.getElementById('bcastImage')) document.getElementById('bcastImage').value = '';
+      if (document.getElementById('bcastLink'))  document.getElementById('bcastLink').value = '';
       if (btn) { btn.disabled = false; btn.textContent = 'Send Broadcast'; }
     },
 

@@ -360,7 +360,7 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin
 const SB_URL='https://gxgytumhknmnwspxjzxw.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
 async function sbGet(table,query=''){
-  const r=await fetch(`${SB_URL}/rest/v1/${table}?${query}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  const r=await fetch(`${SB_URL}/rest/v1/${table}?${query}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Accept':'application/json','Content-Type':'application/json'}});
   return r.ok?r.json():[];
 }
 
@@ -554,7 +554,7 @@ async function loadListings(){
 
   if(filters.sort==='price_asc') q+='&order=price.asc';
   else if(filters.sort==='price_desc') q+='&order=price.desc';
-  else q+='&order=createdAt.desc';
+  else q+='&order=created_at.desc';
 
   q+='&limit=200';
   allData=await sbGet('listings',q);
