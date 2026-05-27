@@ -171,7 +171,7 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin
 <!-- HEADER -->
 <header id="site-header">
   <div class="header-inner">
-    <a href="website.html" class="logo-text">Pa<span class="logo-accent">Market</span></a>
+    <a href="index.html" class="logo-text">Pa<span class="logo-accent">Market</span></a>
     <nav class="header-nav">
       <a href="browse.html" class="nav-link active">Browse</a>
       <a href="jobs.html" class="nav-link">Jobs</a>
@@ -196,7 +196,7 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin
     </button>
   </div>
   <div id="mobileNav" class="mobile-nav hidden">
-    <a href="website.html">Home</a>
+    <a href="index.html">Home</a>
     <a href="browse.html">Browse All</a>
     <a href="jobs.html">Jobs</a>
     <a href="services.html">Services</a>
@@ -284,7 +284,7 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin
     <div class="browse-topbar">
       <div>
         <div class="breadcrumb" id="breadcrumb">
-          <a href="website.html">Home</a>
+          <a href="index.html">Home</a>
           <span class="breadcrumb-sep">›</span>
           <span>Browse</span>
         </div>
@@ -428,7 +428,7 @@ function loadMore(){
 
 function updateBreadcrumb(){
   const bc=document.getElementById('breadcrumb');
-  let html=`<a href="website.html">Home</a><span class="breadcrumb-sep">›</span><a href="browse.html">Browse</a>`;
+  let html=`<a href="index.html">Home</a><span class="breadcrumb-sep">›</span><a href="browse.html">Browse</a>`;
   if(filters.cat) html+=`<span class="breadcrumb-sep">›</span><span>${escHtml(filters.cat)}</span>`;
   bc.innerHTML=html;
 }
