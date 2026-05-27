@@ -1,4 +1,4 @@
-/* Hostly bundle — built 2026-05-27T17:39:01Z */
+/* Hostly bundle — built 2026-05-27T17:50:01Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -634,76 +634,179 @@ window.H = {
   },
 
   _initPullToRefresh() {
-    const el=document.getElementById('mainArea'); if(!el) return;
-    if(el._ptrCleanup) el._ptrCleanup();
-    let startY=0, curY=0, pulling=false, refreshing=false;
-    let ind=document.getElementById('ptr-ind');
-    if(!ind){
-      ind=document.createElement('div');
-      ind.id='ptr-ind';
-      ind.innerHTML='<div class="ptr-arc"></div><span class="ptr-txt">Pull to refresh</span>';
-      ind.style.cssText='position:fixed;top:56px;left:50%;transform:translateX(-50%) translateY(-60px);background:#1A3A8F;color:#fff;padding:9px 18px;border-radius:24px;font-family:Inter,sans-serif;font-size:13px;font-weight:600;z-index:9000;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(26,58,143,.35);pointer-events:none;transition:transform .2s,opacity .2s;opacity:0;';
-      document.body.appendChild(ind);
+    const el = document.getElementById('mainArea');
+    if (!el) return;
+    if (el._ptrCleanup) el._ptrCleanup();
+
+    // ── Constants ──────────────────────────────────────────────────
+    const THRESHOLD  = 80;   // raw px before refresh triggers
+    const MAX_TRAVEL = 64;   // max content movement (px)
+    const IND        = 44;   // indicator circle diameter (px)
+    const CIRC       = +(2 * Math.PI * 14).toFixed(2); // r=14 → ~87.96px
+
+    // ── Remove any old indicator / styles ──────────────────────────
+    document.getElementById('ptr-ind') ?.remove();
+    document.getElementById('ptr-css') ?.remove();
+
+    // ── Build circular indicator (X / Facebook / Dubizzle style) ───
+    const ind = document.createElement('div');
+    ind.id = 'ptr-ind';
+    // SVG: faint track + coloured progress arc
+    ind.innerHTML =
+      `<svg id="ptr-svg" viewBox="0 0 34 34" width="34" height="34" style="display:block;overflow:visible">` +
+        `<circle cx="17" cy="17" r="14" fill="none" stroke="rgba(26,58,143,.18)" stroke-width="2.5"/>` +
+        `<circle class="ptr-arc" cx="17" cy="17" r="14" fill="none" stroke="#1A3A8F" stroke-width="2.5"` +
+          ` stroke-linecap="round" stroke-dasharray="${CIRC}" stroke-dashoffset="${CIRC}"` +
+          ` transform="rotate(-90 17 17)"/>` +
+      `</svg>`;
+    // Positioned at the very top of the app content area; starts hidden above fold
+    ind.style.cssText =
+      `position:fixed;top:env(safe-area-inset-top,0px);left:50%;` +
+      `width:${IND}px;height:${IND}px;` +
+      `transform:translateX(-50%) translateY(-${IND}px);` +
+      `background:var(--card,#1e2840);border-radius:50%;` +
+      `display:flex;align-items:center;justify-content:center;` +
+      `z-index:9999;pointer-events:none;` +
+      `box-shadow:0 2px 14px rgba(0,0,0,.28);`;
+    document.body.appendChild(ind);
+
+    // ── Keyframe + spinning helper ─────────────────────────────────
+    const css = document.createElement('style');
+    css.id = 'ptr-css';
+    css.textContent =
+      `@keyframes ptr-spin{to{transform:rotate(360deg)}}` +
+      `#ptr-svg.ptr-spinning{animation:ptr-spin .75s linear infinite;transform-origin:17px 17px;}` +
+      `#ptr-svg.ptr-spinning .ptr-arc{stroke-dashoffset:${(CIRC * .22).toFixed(2)}!important;}`;
+    document.head.appendChild(css);
+
+    const arc = ind.querySelector('.ptr-arc');
+    const svg = ind.querySelector('#ptr-svg');
+
+    // ── Helpers ────────────────────────────────────────────────────
+    // Rubber-band damping: fast at start, plateaus toward MAX_TRAVEL
+    function damp(dist) {
+      return MAX_TRAVEL * (1 - Math.exp(-dist / 100));
     }
-    if(!document.getElementById('ptr-css')){
-      const s=document.createElement('style'); s.id='ptr-css';
-      s.textContent=`.ptr-arc{width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;}.ptr-arc.spin{animation:ptrspin .7s linear infinite;}@keyframes ptrspin{to{transform:rotate(360deg)}}`;
-      document.head.appendChild(s);
+
+    function setArc(ratio) {
+      if (arc) arc.style.strokeDashoffset = (CIRC * (1 - Math.min(ratio, 1))).toFixed(2);
     }
-    function show(state, dist=0){
-      const y=Math.min(Math.max(dist-50,0),28);
-      ind.style.transform=`translateX(-50%) translateY(${y}px)`;
-      ind.style.opacity='1';
-      const arc=ind.querySelector('.ptr-arc');
-      const txt=ind.querySelector('.ptr-txt');
-      if(state==='pulling'){ arc.classList.remove('spin'); txt.textContent='Pull to refresh'; }
-      else if(state==='release'){ arc.classList.remove('spin'); txt.textContent='Release to refresh ✓'; }
-      else if(state==='refreshing'){ arc.classList.add('spin'); txt.textContent='Refreshing…'; ind.style.transform='translateX(-50%) translateY(0px)'; }
+
+    // Move the live page element down (physical scroll-down feel)
+    function setContent(px) {
+      const page = el.firstElementChild;
+      if (!page) return;
+      page.style.transition = 'none';
+      page.style.transform   = px > 0 ? `translateY(${px}px)` : '';
+      page.style.willChange  = px > 0 ? 'transform' : '';
     }
-    function hide(){ ind.style.opacity='0'; ind.style.transform='translateX(-50%) translateY(-60px)'; }
-    async function doRefresh(){
-      if(refreshing) return; refreshing=true;
-      show('refreshing');
-      try{
-        const pageName=H.currentPageName;
-        if(typeof H.fetchListingsFromSupabase==='function') await H.fetchListingsFromSupabase();
-        if(H.currentUser()) {
-          if(typeof H.syncConversations==='function') await H.syncConversations();
-          if(typeof H.syncApplications==='function') H.syncApplications();
+
+    function snapContentBack(animated) {
+      const page = el.firstElementChild;
+      if (!page) return;
+      if (animated) {
+        page.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)';
+        page.style.transform  = '';
+        // Clean up after animation
+        setTimeout(() => { page.style.transition = ''; page.style.willChange = ''; }, 320);
+      } else {
+        page.style.transition = '';
+        page.style.transform  = '';
+        page.style.willChange = '';
+      }
+    }
+
+    // Move indicator: centers it in the gap opened by content movement
+    // gap=visual → indicator center at visual/2 → translateY = visual/2 - IND/2
+    function setIndicator(visual) {
+      const y = visual / 2 - IND / 2;
+      ind.style.transition = 'none';
+      ind.style.transform  = `translateX(-50%) translateY(${y}px)`;
+      ind.style.opacity    = Math.min(visual / (IND * 0.6), 1).toFixed(2);
+    }
+
+    function showRefreshing() {
+      // Content snaps back, indicator stays pinned at top edge (peeking from top)
+      snapContentBack(true);
+      ind.style.transition = 'transform .3s cubic-bezier(.34,1.4,.64,1)';
+      ind.style.transform  = `translateX(-50%) translateY(-${IND / 4}px)`;  // peek 33px visible
+      ind.style.opacity    = '1';
+      if (svg) svg.classList.add('ptr-spinning');
+    }
+
+    function hide() {
+      snapContentBack(true);
+      ind.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1),opacity .3s';
+      ind.style.transform  = `translateX(-50%) translateY(-${IND}px)`;
+      ind.style.opacity    = '0';
+      if (svg) svg.classList.remove('ptr-spinning');
+      setArc(0);
+    }
+
+    // ── Refresh logic ──────────────────────────────────────────────
+    let refreshing = false;
+    async function doRefresh() {
+      if (refreshing) return;
+      refreshing = true;
+      if (navigator.vibrate) navigator.vibrate(12);
+      showRefreshing();
+      try {
+        const pageName = H.currentPageName;
+        if (typeof H.fetchListingsFromSupabase === 'function') await H.fetchListingsFromSupabase();
+        if (H.currentUser()) {
+          if (typeof H.syncConversations    === 'function') await H.syncConversations();
+          if (typeof H.syncNotifications    === 'function') await H.syncNotifications();
+          if (typeof H.syncApplications     === 'function') H.syncApplications();
         }
         await H.renderPage(pageName, H.currentPageParams);
-        H.toast('Updated');
-      } catch(e){ console.warn('Pull refresh error:',e); }
-      setTimeout(()=>{ hide(); refreshing=false; },500);
+      } catch (e) { console.warn('PTR error:', e); }
+      setTimeout(() => { hide(); refreshing = false; }, 500);
     }
-    function onStart(e){
-      if(el.scrollTop>0) return;
-      startY=e.touches[0].clientY; curY=startY; pulling=true;
+
+    // ── Touch handlers ─────────────────────────────────────────────
+    let startY = 0, curY = 0, pulling = false;
+
+    function onStart(e) {
+      if (refreshing || el.scrollTop > 0) return;
+      startY = e.touches[0].clientY;
+      curY   = startY;
+      pulling = true;
     }
-    function onMove(e){
-      if(!pulling) return;
-      curY=e.touches[0].clientY;
-      const dist=curY-startY;
-      if(dist<0){ if(dist<-10) cleanup(); return; }
-      if(dist>8) e.preventDefault();
-      show(dist>80?'release':'pulling', dist);
+
+    function onMove(e) {
+      if (!pulling) return;
+      curY = e.touches[0].clientY;
+      const dist = curY - startY;
+      if (dist <= 0) { if (dist < -10) { pulling = false; hide(); } return; }
+      e.preventDefault();  // block native scroll while pulling down
+      const visual = damp(dist);
+      setContent(visual);
+      setIndicator(visual);
+      setArc(dist / THRESHOLD);
+      // Subtle haptic exactly at threshold
+      if (dist >= THRESHOLD && dist < THRESHOLD + 4 && navigator.vibrate) navigator.vibrate(8);
     }
-    function onEnd(){
-      if(!pulling) return; pulling=false;
-      const dist=curY-startY;
-      if(dist>80&&!refreshing){ doRefresh(); }
+
+    function onEnd() {
+      if (!pulling) return;
+      pulling = false;
+      const dist = curY - startY;
+      if (dist >= THRESHOLD) { doRefresh(); }
       else { hide(); }
     }
-    function cleanup(){ pulling=false; hide(); }
-    el.addEventListener('touchstart',onStart,{passive:true});
-    el.addEventListener('touchmove', onMove,{passive:false});
-    el.addEventListener('touchend',  onEnd, {passive:true});
-    el.addEventListener('touchcancel',cleanup,{passive:true});
-    el._ptrCleanup=function(){
-      el.removeEventListener('touchstart',onStart);
-      el.removeEventListener('touchmove', onMove);
-      el.removeEventListener('touchend',  onEnd);
-      el.removeEventListener('touchcancel',cleanup);
+
+    function onCancel() { pulling = false; hide(); }
+
+    el.addEventListener('touchstart',  onStart,  { passive: true  });
+    el.addEventListener('touchmove',   onMove,   { passive: false });
+    el.addEventListener('touchend',    onEnd,    { passive: true  });
+    el.addEventListener('touchcancel', onCancel, { passive: true  });
+
+    el._ptrCleanup = function () {
+      el.removeEventListener('touchstart',  onStart);
+      el.removeEventListener('touchmove',   onMove);
+      el.removeEventListener('touchend',    onEnd);
+      el.removeEventListener('touchcancel', onCancel);
     };
   },
 
