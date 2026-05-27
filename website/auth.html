@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">Sign In — PaMarket Zimbabwe</title>
+<meta name="description" content="Sign in or create your free PaMarket account to buy, sell and find work across Zimbabwe.">
+<link rel="icon" href="img/icon-192.png" type="image/png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1A3A8F;--blue-dark:#0f2460;--blue-mid:#2550C0;--blue-light:#EEF2FF;
+  --gold:#F5A623;--gold-dark:#D4891A;
+  --bg:#F5F7FA;--text:#1A1A2E;--sub:#667085;--border:#E4E8F0;
+  --success:#10b981;--danger:#ef4444;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--r-pill:999px;
+  --shadow-blue:0 4px 20px rgba(26,58,143,.3);
+  --shadow-gold:0 4px 16px rgba(245,166,35,.35);
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+body{font-family:var(--font);background:var(--blue-dark);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;font-family:var(--font);border:none;background:none}
+input,select,textarea{font-family:var(--font)}
+.hidden{display:none!important}
+
+/* PAGE BACKGROUND */
+.auth-page{
+  min-height:100vh;
+  background:linear-gradient(160deg,#0f2460 0%,#1A3A8F 45%,#1e40af 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px 16px 40px;
+  position:relative;overflow:hidden;
+}
+.auth-page::before{
+  content:'';position:absolute;top:-120px;right:-120px;width:500px;height:500px;
+  border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+.auth-page::after{
+  content:'';position:absolute;bottom:-80px;left:-80px;width:400px;height:400px;
+  border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+/* BACK LINK */
+.auth-back{
+  position:absolute;top:20px;left:20px;display:flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:600;color:rgba(255,255,255,.6);transition:color .2s;z-index:10;
+}
+.auth-back:hover{color:#fff}
+.auth-back svg{flex-shrink:0}
+
+/* BRAND */
+.auth-brand-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:28px;position:relative;z-index:1}
+.auth-brand{
+  font-size:36px;font-weight:900;letter-spacing:-1px;color:#fff;
+  display:inline-flex;align-items:center;gap:0;line-height:1;
+}
+.auth-brand em{color:var(--gold);font-style:normal}
+.auth-tagline{font-size:14px;color:rgba(255,255,255,.6);margin-top:6px;font-weight:500;letter-spacing:.2px}
+
+/* ILLUSTRATION (shown on landing screen only) */
+.auth-illustration{display:flex;justify-content:center;margin-bottom:20px;position:relative;z-index:1}
+.auth-illustration svg{filter:drop-shadow(0 8px 24px rgba(0,0,0,.3))}
+
+/* CARD */
+.auth-card-wrap{width:100%;max-width:400px;position:relative;z-index:1}
+.auth-card{
+  background:#fff;border-radius:24px;padding:32px 28px 28px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3),0 0 0 .5px rgba(255,255,255,.1);
+  width:100%;
+}
+@media(max-width:440px){.auth-card{padding:24px 20px 20px;border-radius:20px}}
+
+/* FORM ELEMENTS */
+.fg{margin-bottom:16px}
+.fg:last-of-type{margin-bottom:0}
+.fl{font-size:11px;font-weight:700;color:var(--sub);margin-bottom:5px;text-transform:uppercase;letter-spacing:.6px;display:block}
+.fi{
+  width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--r-md);
+  font-size:15px;color:var(--text);background:#fff;outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.fi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,58,143,.12)}
+.fi::placeholder{color:var(--sub);opacity:.6}
+.fi-wrap{position:relative}
+.fi-wrap .fi{padding-right:44px}
+.fi-toggle{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--sub);padding:4px;line-height:1;
+  display:flex;align-items:center;transition:color .2s;
+}
+.fi-toggle:hover{color:var(--blue)}
+
+/* PASS STRENGTH */
+.pass-strength-bar-wrap{height:4px;background:var(--border);border-radius:2px;margin-top:6px}
+.pass-strength-bar{height:100%;border-radius:2px;transition:all .3s;width:0}
+.pass-strength-lbl{font-size:11px;margin-top:3px;text-align:right;height:14px;color:var(--sub)}
+
+/* BUTTONS */
+.auth-btn{
+  width:100%;background:var(--blue);color:#fff;border:none;border-radius:var(--r-md);
+  padding:15px;font-size:15px;font-weight:800;cursor:pointer;margin-top:12px;
+  box-shadow:var(--shadow-blue);transition:all .2s;font-family:var(--font);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.auth-btn:hover{background:var(--blue-mid)}
+.auth-btn:active{transform:scale(.98);opacity:.9}
+.auth-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.auth-btn.secondary{
+  background:var(--bg);color:var(--sub);box-shadow:none;
+  border:1.5px solid var(--border);font-weight:700;
+}
+.auth-btn.secondary:hover{border-color:var(--blue);color:var(--blue);background:#fff}
+.auth-btn.gold{background:var(--gold);color:#fff;box-shadow:var(--shadow-gold)}
+.auth-btn.gold:hover{background:var(--gold-dark)}
+
+/* SOCIAL AUTH BUTTONS */
+.social-btn{
+  width:100%;min-height:52px;border:1.5px solid var(--border);border-radius:var(--r-md);
+  background:#fff;display:flex;align-items:center;justify-content:center;gap:10px;
+  font-size:15px;font-weight:700;color:var(--text);cursor:pointer;margin-bottom:10px;
+  transition:all .2s;font-family:var(--font);padding:12px 16px;
+}
+.social-btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.1);border-color:#ccc}
+.social-btn:active{transform:scale(.98)}
+
+/* DIVIDER */
+.auth-divider{
+  display:flex;align-items:center;gap:12px;margin:10px 0;
+  color:var(--sub);font-size:13px;font-weight:500;
+}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* SCREEN HEADER */
+.screen-hd{text-align:center;margin-bottom:22px}
+.screen-hd h2{font-size:22px;font-weight:900;color:var(--text);letter-spacing:-.3px;margin-bottom:4px}
+.screen-hd p{font-size:14px;color:var(--sub);line-height:1.5}
+
+/* LINKS */
+.auth-link{color:var(--blue);font-weight:700;cursor:pointer;text-decoration:none}
+.auth-link:hover{text-decoration:underline}
+.auth-link.gold{color:var(--gold)}
+
+/* FOOTER UNDER CARD */
+.auth-foot{
+  margin-top:24px;text-align:center;font-size:12px;color:rgba(255,255,255,.45);
+  line-height:1.8;position:relative;z-index:1;
+}
+.auth-foot a{color:rgba(255,255,255,.55);font-weight:600;transition:color .2s}
+.auth-foot a:hover{color:#fff}
+.auth-foot .sep{margin:0 6px;opacity:.4}
+
+/* REGISTER LINK ROW */
+.auth-switch{text-align:center;margin-top:16px;font-size:14px;color:var(--sub)}
+
+/* CONSENT CHECKBOX */
+.consent-row{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--sub);margin-bottom:14px;cursor:pointer;line-height:1.5}
+.consent-row input[type=checkbox]{margin-top:2px;width:15px;height:15px;flex-shrink:0;accent-color:var(--blue);cursor:pointer}
+
+/* FORGOT PASS ROW */
+.forgot-row{display:flex;justify-content:flex-end;margin-bottom:6px}
+
+/* OTP INPUT */
+.otp-input-wrap{display:flex;gap:8px;margin:14px 0}
+.otp-digit{
+  flex:1;text-align:center;font-size:26px;font-weight:800;
+  padding:12px 0;border:1.5px solid var(--border);border-radius:var(--r-md);
+  outline:none;color:var(--text);background:#fff;letter-spacing:0;
+  transition:border-color .2s,box-shadow .2s;font-family:var(--font);
+}
+.otp-digit:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,58,143,.12)}
+
+/* SUCCESS SCREEN */
+.auth-success{text-align:center;padding:12px 8px}
+.auth-success-icon{
+  width:72px;height:72px;border-radius:50%;background:#dcfce7;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
+}
+
+/* ERROR MESSAGE */
+.auth-error{
+  background:#fef2f2;border:1.5px solid #fecaca;border-radius:var(--r-sm);
+  padding:10px 14px;font-size:13px;color:#dc2626;margin-bottom:14px;line-height:1.5;
+}
+
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{
+  width:18px;height:18px;border:2px solid rgba(255,255,255,.4);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;
+}
+.spinner.dark{border-color:rgba(26,58,143,.25);border-top-color:var(--blue)}
+
+/* TOAST */
+#toastC{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--text);color:#fff;padding:12px 20px;border-radius:var(--r-pill);font-size:14px;font-weight:500;opacity:0;transform:translateY(8px);transition:all .3s;max-width:320px;text-align:center}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:var(--success)}.toast.error{background:var(--danger)}
+
+/* SLIDE TRANSITIONS */
+@keyframes slideIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes slideBack{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+.slide-in{animation:slideIn .22s ease}
+.slide-back{animation:slideBack .22s ease}
+</style>
+</head>
+<body>
+
+<div class="auth-page" id="authPage">
+
+  <!-- Back to site -->
+  <a href="index.html" class="auth-back">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    Back to site
+  </a>
+
+  <!-- Brand -->
+  <div class="auth-brand-wrap">
+    <a href="index.html" class="auth-brand">Pa<em>Market</em></a>
+    <p class="auth-tagline">Zimbabwe's Free Marketplace</p>
+  </div>
+
+  <!-- Illustration (landing screen only) -->
+  <div class="auth-illustration" id="authIllustration">
+    <svg width="160" height="110" viewBox="0 0 160 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Stall / market structure -->
+      <rect x="10" y="38" width="140" height="60" rx="4" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+      <!-- Roof -->
+      <path d="M4 40 L80 8 L156 40" stroke="rgba(245,166,35,.7)" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M4 40 L80 8 L156 40" fill="rgba(245,166,35,.12)"/>
+      <!-- Shelves -->
+      <rect x="22" y="56" width="36" height="28" rx="3" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+      <rect x="62" y="56" width="36" height="28" rx="3" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+      <rect x="102" y="56" width="36" height="28" rx="3" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+      <!-- Items on shelves -->
+      <circle cx="40" cy="66" r="5" fill="rgba(245,166,35,.6)"/>
+      <rect x="30" y="74" width="20" height="6" rx="2" fill="rgba(245,166,35,.4)"/>
+      <rect x="68" y="62" width="22" height="16" rx="2" fill="rgba(245,166,35,.5)"/>
+      <circle cx="120" cy="67" r="6" fill="rgba(245,166,35,.55)"/>
+      <rect x="110" y="76" width="22" height="5" rx="2" fill="rgba(245,166,35,.35)"/>
+      <!-- People / figures -->
+      <circle cx="55" cy="46" r="4" fill="rgba(255,255,255,.55)"/>
+      <path d="M55 50 L55 60" stroke="rgba(255,255,255,.55)" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="105" cy="44" r="4" fill="rgba(255,255,255,.55)"/>
+      <path d="M105 48 L105 58" stroke="rgba(255,255,255,.55)" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Zimbabwe flag colours strip at bottom -->
+      <rect x="10" y="94" width="28" height="3" rx="1.5" fill="#009a44"/>
+      <rect x="40" y="94" width="28" height="3" rx="1.5" fill="#ffe000"/>
+      <rect x="70" y="94" width="28" height="3" rx="1.5" fill="#d40000"/>
+      <rect x="100" y="94" width="28" height="3" rx="1.5" fill="rgba(0,0,0,.4)"/>
+      <!-- Phone icon -->
+      <rect x="128" y="25" width="18" height="28" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+      <circle cx="137" cy="49" r="1.5" fill="rgba(255,255,255,.4)"/>
+      <!-- Signal bars on phone -->
+      <rect x="132" y="34" width="2" height="6" rx="1" fill="var(--gold)" opacity=".7"/>
+      <rect x="135.5" y="32" width="2" height="8" rx="1" fill="var(--gold)" opacity=".7"/>
+      <rect x="139" y="30" width="2" height="10" rx="1" fill="var(--gold)" opacity=".7"/>
+    </svg>
+  </div>
+
+  <!-- Auth Card -->
+  <div class="auth-card-wrap">
+    <div class="auth-card" id="authCard">
+      <!-- JS populates this -->
+    </div>
+  </div>
+
+  <!-- Page footer -->
+  <div class="auth-foot">
+    <div>&copy; 2026 PaMarket &nbsp;&middot;&nbsp; Made in Zimbabwe &#127487;&#127484;</div>
+    <div><a href="terms.html">Terms of Service</a><span class="sep">|</span><a href="privacy.html">Privacy Policy</a></div>
+  </div>
+
+</div>
+
+<div id="toastC"></div>
+
+<script>
+const SB_URL='https://gxgytumhknmnwspxjzxw.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
+
+const GOOGLE_SVG=`<svg viewBox="0 0 24 24" width="22" height="22" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>`;
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+/* ---- TOAST ---- */
+function toast(msg,type=''){
+  const c=document.getElementById('toastC');
+  const t=document.createElement('div');
+  t.className='toast '+(type||'');t.textContent=msg;c.appendChild(t);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3500);
+}
+
+/* ---- PASS STRENGTH ---- */
+function passStrength(p){
+  let s=0;
+  if(p.length>=8)s++;if(p.length>=12)s++;
+  if(/[A-Z]/.test(p))s++;if(/[0-9]/.test(p))s++;if(/[^A-Za-z0-9]/.test(p))s++;
+  if(s<=1)return{label:'Weak',color:'#ef4444',w:'25%'};
+  if(s<=2)return{label:'Fair',color:'#f97316',w:'50%'};
+  if(s<=3)return{label:'Good',color:'#eab308',w:'75%'};
+  return{label:'Strong',color:'#22c55e',w:'100%'};
+}
+function updatePassStrength(){
+  const p=document.getElementById('newPass');
+  const bar=document.getElementById('passStrengthBar');
+  const lbl=document.getElementById('passStrengthLbl');
+  if(!p||!bar||!lbl)return;
+  if(!p.value){bar.style.width='0';lbl.textContent='';return}
+  const s=passStrength(p.value);
+  bar.style.width=s.w;bar.style.background=s.color;
+  lbl.textContent=s.label;lbl.style.color=s.color;
+}
+
+/* ---- EYE TOGGLE ---- */
+function togglePw(id){
+  const inp=document.getElementById(id);
+  const eye=document.getElementById(id+'_eye');
+  if(!inp)return;
+  const show=inp.type==='password';
+  inp.type=show?'text':'password';
+  if(eye)eye.innerHTML=show
+    ?'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    :'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+}
+
+/* ---- ILLUSTRATION TOGGLE ---- */
+function showIllustration(show){
+  const el=document.getElementById('authIllustration');
+  if(el)el.style.display=show?'':'none';
+}
+
+/* ---- REDIRECT AFTER AUTH ---- */
+function getReturnUrl(){
+  const q=new URLSearchParams(location.search);
+  const pm=sessionStorage.getItem('pm_return_url');
+  const url=q.get('return')||pm||'index.html';
+  // Never redirect back to auth.html
+  if(url.includes('auth.html')||url.includes('auth-callback.html'))return'index.html';
+  return url;
+}
+
+/* ---- SESSION ---- */
+function saveSession(data){
+  // data = { access_token, refresh_token, expires_in, user }
+  const session={
+    access_token:data.access_token,
+    refresh_token:data.refresh_token,
+    expires_at:Math.floor(Date.now()/1000)+(data.expires_in||3600),
+    user:data.user
+  };
+  localStorage.setItem('pm_session',JSON.stringify(session));
+}
+function getSession(){
+  try{
+    const s=localStorage.getItem('pm_session');
+    if(!s)return null;
+    const session=JSON.parse(s);
+    if(session.expires_at&&Date.now()/1000>session.expires_at+60){
+      localStorage.removeItem('pm_session');return null;
+    }
+    return session;
+  }catch{return null}
+}
+
+/* ---- CHECK IF ALREADY SIGNED IN ---- */
+(function checkExisting(){
+  const s=getSession();
+  if(s&&s.access_token){
+    // Already signed in — redirect
+    const returnUrl=getReturnUrl();
+    window.location.href=returnUrl;
+  }
+})();
+
+/* ---- STATE ---- */
+let otpEmail='';
+let busy=false;
+function setBusy(v){
+  busy=v;
+  document.querySelectorAll('.auth-card .auth-btn').forEach(b=>b.disabled=v);
+}
+
+/* ---- SUPABASE REST HELPERS ---- */
+async function sbPost(path,body,token){
+  const headers={'apikey':SB_KEY,'Content-Type':'application/json'};
+  if(token)headers['Authorization']='Bearer '+token;
+  const r=await fetch(SB_URL+path,{method:'POST',headers,body:JSON.stringify(body)});
+  const json=await r.json().catch(()=>({}));
+  return{ok:r.ok,status:r.status,data:json};
+}
+
+/* ---- SCREEN: LANDING ---- */
+function showLanding(anim){
+  showIllustration(true);
+  document.getElementById('pageTitle').textContent='Sign In — PaMarket Zimbabwe';
+  const card=document.getElementById('authCard');
+  card.className='auth-card'+(anim?' slide-back':'');
+  card.innerHTML=`
+    <button class="social-btn" onclick="doGoogle()">
+      ${GOOGLE_SVG}
+      Continue with Google
+    </button>
+    <div class="auth-divider"><span>or</span></div>
+    <button class="social-btn" onclick="showSignIn('in')" style="background:var(--bg);color:var(--blue);border-color:var(--blue)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Continue with Email
+    </button>
+    <div class="auth-switch">
+      Don't have an account? <span class="auth-link" onclick="showSignUp('in')">Create one</span>
+    </div>`;
+}
+
+/* ---- SCREEN: SIGN IN ---- */
+function showSignIn(anim){
+  showIllustration(false);
+  document.getElementById('pageTitle').textContent='Sign In — PaMarket Zimbabwe';
+  const card=document.getElementById('authCard');
+  card.className='auth-card slide-'+anim;
+  card.innerHTML=`
+    <div class="screen-hd">
+      <h2>Sign In</h2>
+      <p>Welcome back to PaMarket</p>
+    </div>
+    <div id="signInError"></div>
+    <div class="fg">
+      <label class="fl" for="siEmail">Email Address</label>
+      <input class="fi" id="siEmail" type="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')focusId('siPass')">
+    </div>
+    <div class="fg">
+      <div class="forgot-row"><span class="auth-link gold" onclick="showForgot('in')" style="font-size:12px">Forgot password?</span></div>
+      <div class="fi-wrap">
+        <input class="fi" id="siPass" type="password" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doSignIn()">
+        <button class="fi-toggle" type="button" onclick="togglePw('siPass')">
+          <svg id="siPass_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <button class="auth-btn" id="signInBtn" onclick="doSignIn()">Sign In</button>
+    <button class="auth-btn secondary" onclick="showLanding('back')">Back</button>
+    <div class="auth-switch" style="margin-top:14px">
+      No account? <span class="auth-link" onclick="showSignUp('in')">Create one free</span>
+    </div>`;
+  setTimeout(()=>focusId('siEmail'),80);
+}
+
+/* ---- SCREEN: SIGN UP ---- */
+function showSignUp(anim){
+  showIllustration(false);
+  document.getElementById('pageTitle').textContent='Create Account — PaMarket Zimbabwe';
+  const card=document.getElementById('authCard');
+  card.className='auth-card slide-'+anim;
+  card.innerHTML=`
+    <div class="screen-hd">
+      <h2>Create Account</h2>
+      <p>Join PaMarket — Zimbabwe's free marketplace</p>
+    </div>
+    <div id="signUpError"></div>
+    <div class="fg">
+      <label class="fl" for="newName">Full Name</label>
+      <input class="fi" id="newName" type="text" placeholder="e.g. Tendai Moyo" autocomplete="name" onkeydown="if(event.key==='Enter')focusId('newEmail')">
+    </div>
+    <div class="fg">
+      <label class="fl" for="newEmail">Email Address</label>
+      <input class="fi" id="newEmail" type="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')focusId('newPhone')">
+    </div>
+    <div class="fg">
+      <label class="fl" for="newPhone">Phone Number <span style="font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input class="fi" id="newPhone" type="tel" placeholder="+263 77 123 4567" autocomplete="tel" onkeydown="if(event.key==='Enter')focusId('newPass')">
+    </div>
+    <div class="fg">
+      <label class="fl" for="newPass">Password</label>
+      <div class="fi-wrap">
+        <input class="fi" id="newPass" type="password" placeholder="8+ chars, uppercase and number" autocomplete="new-password" oninput="updatePassStrength()" onkeydown="if(event.key==='Enter')focusId('newPass2')">
+        <button class="fi-toggle" type="button" onclick="togglePw('newPass')">
+          <svg id="newPass_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div class="pass-strength-bar-wrap"><div id="passStrengthBar" class="pass-strength-bar"></div></div>
+      <div id="passStrengthLbl" class="pass-strength-lbl"></div>
+    </div>
+    <div class="fg">
+      <label class="fl" for="newPass2">Confirm Password</label>
+      <div class="fi-wrap">
+        <input class="fi" id="newPass2" type="password" placeholder="Re-enter your password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignUp()">
+        <button class="fi-toggle" type="button" onclick="togglePw('newPass2')">
+          <svg id="newPass2_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <label class="consent-row">
+      <input type="checkbox" id="ageConsent">
+      <span>I am 18 or older and agree to the <a class="auth-link" href="terms.html" target="_blank">Terms of Service</a> and <a class="auth-link" href="privacy.html" target="_blank">Privacy Policy</a></span>
+    </label>
+    <button class="auth-btn" id="signUpBtn" onclick="doSignUp()">Create Account</button>
+    <button class="auth-btn secondary" onclick="showLanding('back')">Back to Sign In</button>`;
+  setTimeout(()=>focusId('newName'),80);
+}
+
+/* ---- SCREEN: OTP ---- */
+function showOtp(email){
+  otpEmail=email;
+  showIllustration(false);
+  document.getElementById('pageTitle').textContent='Verify Email — PaMarket Zimbabwe';
+  const card=document.getElementById('authCard');
+  card.className='auth-card slide-in';
+  card.innerHTML=`
+    <div class="screen-hd">
+      <div style="color:var(--blue);margin-bottom:12px;display:flex;justify-content:center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </div>
+      <h2>Verify Your Email</h2>
+      <p>We sent a 6-digit code to<br><strong style="color:var(--text)">${esc(email)}</strong></p>
+    </div>
+    <div id="otpError"></div>
+    <div class="fg">
+      <label class="fl" style="text-align:center;display:block">Verification Code</label>
+      <input class="fi" id="otpIn" type="text" inputmode="numeric" maxlength="6" placeholder="123456"
+        style="text-align:center;font-size:26px;font-weight:800;letter-spacing:8px"
+        onkeydown="if(event.key==='Enter')doVerifyOtp()">
+    </div>
+    <button class="auth-btn" id="otpBtn" onclick="doVerifyOtp()">Verify and Continue</button>
+    <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--sub)">
+      Didn't get it? <span class="auth-link gold" onclick="doResendOtp()">Resend code</span>
+    </div>
+    <div style="text-align:center;margin-top:4px;font-size:12px;color:var(--sub)">Check your spam folder if not received</div>
+    <button class="auth-btn secondary" style="margin-top:12px" onclick="showLanding('back')">Back to Sign In</button>`;
+  setTimeout(()=>focusId('otpIn'),80);
+}
+
+/* ---- SCREEN: FORGOT PASSWORD ---- */
+function showForgot(anim){
+  showIllustration(false);
+  document.getElementById('pageTitle').textContent='Reset Password — PaMarket Zimbabwe';
+  const card=document.getElementById('authCard');
+  card.className='auth-card slide-'+anim;
+  card.innerHTML=`
+    <div class="screen-hd">
+      <h2>Reset Password</h2>
+      <p>Enter your email and we will send you a reset link</p>
+    </div>
+    <div id="forgotError"></div>
+    <div class="fg">
+      <label class="fl" for="fpEmail">Email Address</label>
+      <input class="fi" id="fpEmail" type="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')doForgot()">
+    </div>
+    <button class="auth-btn" id="forgotBtn" onclick="doForgot()">Send Reset Link</button>
+    <button class="auth-btn secondary" onclick="showSignIn('back')">Back to Sign In</button>`;
+  setTimeout(()=>focusId('fpEmail'),80);
+}
+
+/* ---- SCREEN: RESET SENT ---- */
+function showResetSent(email){
+  showIllustration(false);
+  const card=document.getElementById('authCard');
+  card.className='auth-card slide-in';
+  card.innerHTML=`
+    <div style="text-align:center;padding:8px 0">
+      <div style="font-size:52px;margin-bottom:14px">&#9993;&#65039;</div>
+      <h2 style="font-size:20px;font-weight:900;color:var(--text);margin-bottom:8px">Check Your Email</h2>
+      <p style="font-size:14px;color:var(--sub);line-height:1.7;margin-bottom:24px">
+        A password reset link was sent to<br>
+        <strong style="color:var(--text)">${esc(email)}</strong><br><br>
+        Click the link in the email to set a new password. Check your spam folder if you don't see it within a few minutes.
+      </p>
+    </div>
+    <button class="auth-btn secondary" onclick="showSignIn('back')">Back to Sign In</button>`;
+}
+
+/* ---- SCREEN: SUCCESS ---- */
+function showSuccess(name,mode){
+  showIllustration(false);
+  const card=document.getElementById('authCard');
+  card.className='auth-card slide-in';
+  const msg=mode==='signup'
+    ?`Welcome to PaMarket, ${esc(name||'there')}! Your account is ready.`
+    :`Welcome back, ${esc(name||'there')}! You are now signed in.`;
+  card.innerHTML=`
+    <div class="auth-success">
+      <div class="auth-success-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+      <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">
+        ${mode==='signup'?'Account Created!':'Signed In!'}
+      </h2>
+      <p style="font-size:14px;color:var(--sub);line-height:1.6;margin-bottom:20px">${msg}</p>
+      <div style="font-size:13px;color:var(--sub)">Redirecting you now…</div>
+    </div>`;
+  setTimeout(()=>{
+    const returnUrl=getReturnUrl();
+    window.location.href=returnUrl;
+  },1600);
+}
+
+/* ---- HELPERS ---- */
+function focusId(id){const el=document.getElementById(id);if(el)el.focus()}
+function showError(elId,msg){const el=document.getElementById(elId);if(el)el.innerHTML=msg?`<div class="auth-error">${esc(msg)}</div>`:''}
+
+/* ---- ACTION: GOOGLE SIGN IN ---- */
+function doGoogle(){
+  sessionStorage.setItem('pm_return_url',getReturnUrl());
+  const cb=location.href.replace(/\/[^/]*(\?.*)?$/,'/')+'/auth-callback.html';
+  // Fix: build correct callback URL
+  const base=location.href.replace(/auth\.html.*/,'');
+  const callbackUrl=base+'auth-callback.html';
+  window.location.href=`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
+}
+
+/* ---- ACTION: SIGN IN ---- */
+async function doSignIn(){
+  if(busy)return;
+  const email=(document.getElementById('siEmail')?.value||'').trim();
+  const pass=document.getElementById('siPass')?.value||'';
+  showError('signInError','');
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){showError('signInError','Please enter a valid email address.');return}
+  if(!pass){showError('signInError','Please enter your password.');return}
+  setBusy(true);
+  const btn=document.getElementById('signInBtn');
+  btn.innerHTML='<div class="spinner"></div> Signing in…';
+  try{
+    const res=await sbPost('/auth/v1/token?grant_type=password',{email,password:pass});
+    if(!res.ok){
+      let msg=res.data?.error_description||res.data?.msg||res.data?.error||'Sign in failed';
+      if(msg.toLowerCase().includes('invalid login'))msg='Wrong email or password. Please try again.';
+      if(msg.toLowerCase().includes('email not confirmed'))msg='Please verify your email first. Check your inbox.';
+      showError('signInError',msg);
+      btn.innerHTML='Sign In';
+      setBusy(false);return;
+    }
+    saveSession(res.data);
+    const name=res.data.user?.user_metadata?.full_name||res.data.user?.user_metadata?.name||res.data.user?.email||'';
+    showSuccess(name.split(' ')[0],'signin');
+  }catch(err){
+    showError('signInError','Connection error. Please check your internet and try again.');
+    btn.innerHTML='Sign In';
+    setBusy(false);
+  }
+}
+
+/* ---- ACTION: SIGN UP ---- */
+async function doSignUp(){
+  if(busy)return;
+  const name=(document.getElementById('newName')?.value||'').trim();
+  const email=(document.getElementById('newEmail')?.value||'').trim();
+  const phone=(document.getElementById('newPhone')?.value||'').trim();
+  const pass=document.getElementById('newPass')?.value||'';
+  const pass2=document.getElementById('newPass2')?.value||'';
+  const consent=document.getElementById('ageConsent')?.checked;
+  showError('signUpError','');
+
+  if(name.length<2){showError('signUpError','Please enter your full name.');focusId('newName');return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){showError('signUpError','Please enter a valid email address.');focusId('newEmail');return}
+  if(phone&&!/^(\+263|0)[0-9]{9}$/.test(phone.replace(/\s/g,''))){showError('signUpError','Enter a valid Zimbabwe phone number (e.g. +263 77 123 4567 or 077 123 4567).');focusId('newPhone');return}
+  if(pass.length<8){showError('signUpError','Password must be at least 8 characters.');focusId('newPass');return}
+  if(!/[A-Z]/.test(pass)){showError('signUpError','Password must include at least one uppercase letter.');focusId('newPass');return}
+  if(!/[0-9]/.test(pass)&&!/[^A-Za-z0-9]/.test(pass)){showError('signUpError','Password must include a number or special character.');focusId('newPass');return}
+  if(pass!==pass2){showError('signUpError','Passwords do not match.');focusId('newPass2');return}
+  if(!consent){showError('signUpError','Please confirm you are 18 or older and agree to our Terms and Privacy Policy.');return}
+
+  setBusy(true);
+  const btn=document.getElementById('signUpBtn');
+  btn.innerHTML='<div class="spinner"></div> Creating account…';
+  try{
+    const res=await sbPost('/auth/v1/signup',{
+      email,password:pass,
+      data:{full_name:name},
+      options:{data:{full_name:name}}
+    });
+    if(!res.ok){
+      let msg=res.data?.error_description||res.data?.msg||res.data?.error||'Sign up failed';
+      if(msg.toLowerCase().includes('already registered')||msg.toLowerCase().includes('already exists')||msg.toLowerCase().includes('unique constraint')){
+        msg='This email is already registered. <span class="auth-link" onclick="showSignIn(\'in\')">Sign in instead</span>';
+      }
+      document.getElementById('signUpError').innerHTML=`<div class="auth-error">${msg}</div>`;
+      btn.innerHTML='Create Account';
+      setBusy(false);return;
+    }
+    // Save phone to profiles if provided (best-effort, non-blocking)
+    if(phone&&res.data?.user?.id){
+      sbPost('/rest/v1/profiles',{id:res.data.user.id,name,phone:phone||null},{}).catch(()=>{});
+    }
+    if(res.data?.session?.access_token){
+      // Email auto-confirmed (no OTP needed)
+      saveSession(res.data.session);
+      showSuccess(name.split(' ')[0],'signup');
+    } else {
+      // Email confirmation required — show OTP
+      showOtp(email);
+    }
+  }catch(err){
+    showError('signUpError','Connection error. Please check your internet and try again.');
+    btn.innerHTML='Create Account';
+    setBusy(false);
+  }
+}
+
+/* ---- ACTION: VERIFY OTP ---- */
+async function doVerifyOtp(){
+  if(busy)return;
+  const otp=(document.getElementById('otpIn')?.value||'').trim().replace(/\s/g,'');
+  showError('otpError','');
+  if(otp.length!==6||!/^\d{6}$/.test(otp)){showError('otpError','Enter the 6-digit code from your email.');return}
+  setBusy(true);
+  const btn=document.getElementById('otpBtn');
+  btn.innerHTML='<div class="spinner"></div> Verifying…';
+  try{
+    const res=await sbPost('/auth/v1/verify',{email:otpEmail,token:otp,type:'signup'});
+    if(!res.ok){
+      showError('otpError','Invalid or expired code. Try resending.');
+      btn.innerHTML='Verify and Continue';
+      setBusy(false);return;
+    }
+    if(res.data?.access_token){saveSession(res.data)}
+    toast('Email verified! Welcome to PaMarket','success');
+    showSuccess('','signup');
+  }catch{
+    showError('otpError','Connection error. Please try again.');
+    btn.innerHTML='Verify and Continue';
+    setBusy(false);
+  }
+}
+
+/* ---- ACTION: RESEND OTP ---- */
+let otpResendTimes=[];
+async function doResendOtp(){
+  const now=Date.now();
+  otpResendTimes=otpResendTimes.filter(t=>now-t<10*60*1000);
+  if(otpResendTimes.length>=3){toast('Too many resends. Please wait a few minutes.','error');return}
+  otpResendTimes.push(now);
+  try{
+    const res=await sbPost('/auth/v1/resend',{type:'signup',email:otpEmail});
+    toast(res.ok?'Code resent — check your inbox':'Could not resend. Try again.',res.ok?'success':'error');
+  }catch{toast('Connection error','error')}
+}
+
+/* ---- ACTION: FORGOT PASSWORD ---- */
+async function doForgot(){
+  if(busy)return;
+  const email=(document.getElementById('fpEmail')?.value||'').trim();
+  showError('forgotError','');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){showError('forgotError','Please enter a valid email address.');return}
+  setBusy(true);
+  const btn=document.getElementById('forgotBtn');
+  btn.innerHTML='<div class="spinner"></div> Sending…';
+  try{
+    // Use the auth-callback page as the redirect for password reset
+    const base=location.href.replace(/auth\.html.*/,'');
+    const redirectTo=base+'auth-callback.html?type=recovery';
+    const res=await sbPost('/auth/v1/recover',{email,options:{redirectTo}});
+    // Supabase always returns 200 for security (even if email not found)
+    showResetSent(email);
+  }catch{
+    showError('forgotError','Connection error. Please try again.');
+    btn.innerHTML='Send Reset Link';
+    setBusy(false);
+  }
+}
+
+/* ---- SCREEN: SET NEW PASSWORD (from password reset email) ---- */
+function showResetPassword(){
+  showIllustration(false);
+  document.getElementById('pageTitle').textContent='Set New Password — PaMarket Zimbabwe';
+  const card=document.getElementById('authCard');
+  card.className='auth-card slide-in';
+  card.innerHTML=`
+    <div class="screen-hd">
+      <h2>Set New Password</h2>
+      <p>Choose a strong new password for your account</p>
+    </div>
+    <div id="resetPwError"></div>
+    <div class="fg">
+      <label class="fl" for="rpPass">New Password</label>
+      <div class="fi-wrap">
+        <input class="fi" id="rpPass" type="password" placeholder="8+ chars, uppercase and number" autocomplete="new-password" oninput="updatePassStrength()" onkeydown="if(event.key==='Enter')focusId('rpPass2')">
+        <button class="fi-toggle" type="button" onclick="togglePw('rpPass')">
+          <svg id="rpPass_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div class="pass-strength-bar-wrap"><div id="passStrengthBar" class="pass-strength-bar"></div></div>
+      <div id="passStrengthLbl" class="pass-strength-lbl"></div>
+    </div>
+    <div class="fg">
+      <label class="fl" for="rpPass2">Confirm Password</label>
+      <div class="fi-wrap">
+        <input class="fi" id="rpPass2" type="password" placeholder="Re-enter new password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doResetPassword()">
+        <button class="fi-toggle" type="button" onclick="togglePw('rpPass2')">
+          <svg id="rpPass2_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <button class="auth-btn" id="resetPwBtn" onclick="doResetPassword()">Save New Password</button>`;
+  setTimeout(()=>focusId('rpPass'),80);
+}
+
+/* ---- ACTION: SAVE NEW PASSWORD ---- */
+async function doResetPassword(){
+  if(busy)return;
+  const pass=document.getElementById('rpPass')?.value||'';
+  const pass2=document.getElementById('rpPass2')?.value||'';
+  const token=sessionStorage.getItem('pm_recovery_token')||'';
+  showError('resetPwError','');
+  if(!token){showError('resetPwError','Reset link expired. Please request a new one.');return}
+  if(pass.length<8){showError('resetPwError','Password must be at least 8 characters.');return}
+  if(!/[A-Z]/.test(pass)){showError('resetPwError','Password must include at least one uppercase letter.');return}
+  if(!/[0-9]/.test(pass)&&!/[^A-Za-z0-9]/.test(pass)){showError('resetPwError','Password must include a number or special character.');return}
+  if(pass!==pass2){showError('resetPwError','Passwords do not match.');return}
+  setBusy(true);
+  const btn=document.getElementById('resetPwBtn');
+  btn.innerHTML='<div class="spinner"></div> Saving…';
+  try{
+    const r=await fetch(`${SB_URL}/auth/v1/user`,{
+      method:'PUT',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({password:pass})
+    });
+    if(!r.ok){
+      const err=await r.json().catch(()=>({}));
+      let msg=err.error_description||err.msg||err.error||'Failed to update password';
+      if(msg.includes('expired'))msg='Reset link has expired. Please request a new one.';
+      showError('resetPwError',msg);
+      btn.innerHTML='Save New Password';setBusy(false);return;
+    }
+    sessionStorage.removeItem('pm_recovery_token');
+    toast('Password updated! Please sign in with your new password.','success');
+    setTimeout(()=>showSignIn('in'),1200);
+  }catch{
+    showError('resetPwError','Connection error. Please try again.');
+    btn.innerHTML='Save New Password';setBusy(false);
+  }
+}
+
+/* ---- CHECK URL PARAMS for initial screen ---- */
+(function init(){
+  const q=new URLSearchParams(location.search);
+  const mode=q.get('mode')||'';
+  if(mode==='reset')showResetPassword();
+  else if(mode==='signup')showSignUp('in');
+  else if(mode==='signin')showSignIn('in');
+  else showLanding(false);
+})();
+</script>
+</body>
+</html>

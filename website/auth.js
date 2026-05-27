@@ -43,6 +43,13 @@ const paAuth={
     window.location.href=`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(getCallbackUrl())}`;
   },
 
+  goToSignIn(){
+    // Save current page so auth.html can redirect back after sign-in
+    sessionStorage.setItem('pm_return_url',location.href);
+    const base=location.href.replace(/\/[^/]*(\?.*)?$/,'/');
+    window.location.href=base+'auth.html?return='+encodeURIComponent(location.href);
+  },
+
   async signOut(){
     try{
       if(this.session?.access_token){
@@ -94,9 +101,10 @@ const paAuth={
         <button onclick="paAuth.signOut()" style="font-size:12px;color:#667085;background:none;border:1.5px solid #E4E8F0;border-radius:6px;cursor:pointer;padding:4px 10px;white-space:nowrap;font-family:inherit">Sign Out</button>
       </div>`;
     }else{
-      el.innerHTML=`<button onclick="paAuth.signInWithGoogle()" style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:#fff;color:#1A1A2E;border:1.5px solid #E4E8F0;font-family:inherit;white-space:nowrap;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow='none'">
-        ${this._googleSvg()} Sign in with Google
-      </button>`;
+      el.innerHTML=`<a href="javascript:void(0)" onclick="paAuth.goToSignIn()" style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:#fff;color:#1A1A2E;border:1.5px solid #E4E8F0;font-family:inherit;white-space:nowrap;transition:box-shadow .2s;text-decoration:none" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow='none'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A3A8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Sign In
+      </a>`;
     }
   },
 
@@ -113,9 +121,10 @@ const paAuth={
       </div>`;
     }else{
       el.innerHTML=`<div style="padding:12px 0 4px">
-        <button onclick="paAuth.signInWithGoogle()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;background:#1A3A8F;color:#fff;border:none;font-family:inherit">
-          ${this._googleSvg().replace('fill="#4285F4"','fill="#fff"').replace('fill="#34A853"','fill="#fff"').replace('fill="#FBBC05"','fill="#fff"').replace('fill="#EA4335"','fill="#fff"')} Sign in with Google
-        </button>
+        <a href="javascript:void(0)" onclick="paAuth.goToSignIn()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;background:#1A3A8F;color:#fff;border:none;font-family:inherit;text-decoration:none">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Sign In / Create Account
+        </a>
       </div>`;
     }
   }
