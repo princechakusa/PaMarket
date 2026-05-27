@@ -635,133 +635,120 @@ window.H = {
     if (!el) return;
     if (el._ptrCleanup) el._ptrCleanup();
 
-    // ── Constants ──────────────────────────────────────────────────
-    const THRESHOLD  = 80;   // raw px before refresh triggers
-    const MAX_TRAVEL = 64;   // max content movement (px)
-    const IND        = 44;   // indicator circle diameter (px)
-    const CIRC       = +(2 * Math.PI * 14).toFixed(2); // r=14 → ~87.96px
+    // Stop the native browser PTR from firing inside the WebView
+    el.style.overscrollBehaviorY = 'contain';
 
-    // ── Remove any old indicator / styles ──────────────────────────
-    document.getElementById('ptr-ind') ?.remove();
-    document.getElementById('ptr-css') ?.remove();
+    const THRESHOLD = 75;   // raw finger distance (px) that triggers a refresh
+    const MAX_VIS   = 90;   // maximum visual content travel (px)
+    const IND_SIZE  = 44;   // spinner circle diameter (px)
 
-    // ── Build circular indicator (X / Facebook / Dubizzle style) ───
+    // ── Clean up any old indicator from a previous init ────────────
+    document.getElementById('ptr-ind')?.remove();
+    document.getElementById('ptr-css')?.remove();
+
+    // ── Spinner: simple ring with one coloured segment (browser-style) ─
     const ind = document.createElement('div');
     ind.id = 'ptr-ind';
-    // SVG: faint track + coloured progress arc
-    ind.innerHTML =
-      `<svg id="ptr-svg" viewBox="0 0 34 34" width="34" height="34" style="display:block;overflow:visible">` +
-        `<circle cx="17" cy="17" r="14" fill="none" stroke="rgba(26,58,143,.18)" stroke-width="2.5"/>` +
-        `<circle class="ptr-arc" cx="17" cy="17" r="14" fill="none" stroke="#1A3A8F" stroke-width="2.5"` +
-          ` stroke-linecap="round" stroke-dasharray="${CIRC}" stroke-dashoffset="${CIRC}"` +
-          ` transform="rotate(-90 17 17)"/>` +
-      `</svg>`;
-    // Positioned at the very top of the app content area; starts hidden above fold
+    ind.innerHTML = '<div id="ptr-ring"></div>';
     ind.style.cssText =
-      `position:fixed;top:env(safe-area-inset-top,0px);left:50%;` +
-      `width:${IND}px;height:${IND}px;` +
-      `transform:translateX(-50%) translateY(-${IND}px);` +
-      `background:var(--card,#1e2840);border-radius:50%;` +
-      `display:flex;align-items:center;justify-content:center;` +
-      `z-index:9999;pointer-events:none;` +
-      `box-shadow:0 2px 14px rgba(0,0,0,.28);`;
+      'position:fixed;top:env(safe-area-inset-top,0px);left:50%;' +
+      'width:' + IND_SIZE + 'px;height:' + IND_SIZE + 'px;' +
+      'transform:translateX(-50%) translateY(-' + IND_SIZE + 'px);' +
+      'background:var(--card,#1a2540);border-radius:50%;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'z-index:9999;pointer-events:none;opacity:0;' +
+      'box-shadow:0 2px 12px rgba(0,0,0,.35);';
     document.body.appendChild(ind);
 
-    // ── Keyframe + spinning helper ─────────────────────────────────
-    const css = document.createElement('style');
-    css.id = 'ptr-css';
-    css.textContent =
-      `@keyframes ptr-spin{to{transform:rotate(360deg)}}` +
-      `#ptr-svg.ptr-spinning{animation:ptr-spin .75s linear infinite;transform-origin:17px 17px;}` +
-      `#ptr-svg.ptr-spinning .ptr-arc{stroke-dashoffset:${(CIRC * .22).toFixed(2)}!important;}`;
-    document.head.appendChild(css);
+    const styleEl = document.createElement('style');
+    styleEl.id = 'ptr-css';
+    styleEl.textContent =
+      '#ptr-ring{width:26px;height:26px;border-radius:50%;' +
+        'border:3px solid rgba(26,58,143,.22);border-top-color:#1A3A8F;}' +
+      '@keyframes ptr-spin{to{transform:rotate(360deg)}}' +
+      '#ptr-ring.ptr-spin{animation:ptr-spin .65s linear infinite;}';
+    document.head.appendChild(styleEl);
 
-    const arc = ind.querySelector('.ptr-arc');
-    const svg = ind.querySelector('#ptr-svg');
+    const ring = document.getElementById('ptr-ring');
 
-    // ── Helpers ────────────────────────────────────────────────────
-    // Rubber-band damping: fast at start, plateaus toward MAX_TRAVEL
+    // ── Damping ────────────────────────────────────────────────────
+    // Near 1:1 with finger for first 60 px (feels physical like the browser),
+    // then heavy rubber-band to cap at MAX_VIS.
     function damp(dist) {
-      return MAX_TRAVEL * (1 - Math.exp(-dist / 100));
+      if (dist <= 60) return dist * 0.85;
+      return 51 + (dist - 60) * 0.18;
     }
 
-    function setArc(ratio) {
-      if (arc) arc.style.strokeDashoffset = (CIRC * (1 - Math.min(ratio, 1))).toFixed(2);
-    }
-
-    // Move the live page element down (physical scroll-down feel)
-    function setContent(px) {
+    // ── Content movement ───────────────────────────────────────────
+    function moveContent(px) {
       const page = el.firstElementChild;
       if (!page) return;
       page.style.transition = 'none';
-      page.style.transform   = px > 0 ? `translateY(${px}px)` : '';
-      page.style.willChange  = px > 0 ? 'transform' : '';
+      page.style.transform  = 'translateY(' + px + 'px)';
+      page.style.willChange = 'transform';
     }
 
-    function snapContentBack(animated) {
+    function snapBack() {
       const page = el.firstElementChild;
       if (!page) return;
-      if (animated) {
-        page.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)';
-        page.style.transform  = '';
-        // Clean up after animation
-        setTimeout(() => { page.style.transition = ''; page.style.willChange = ''; }, 320);
-      } else {
-        page.style.transition = '';
-        page.style.transform  = '';
-        page.style.willChange = '';
-      }
+      page.style.transition = 'transform .32s cubic-bezier(.4,0,.2,1)';
+      page.style.transform  = 'translateY(0px)';
+      setTimeout(function() {
+        if (page) { page.style.transition = ''; page.style.transform = ''; page.style.willChange = ''; }
+      }, 340);
     }
 
-    // Move indicator: centers it in the gap opened by content movement
-    // gap=visual → indicator center at visual/2 → translateY = visual/2 - IND/2
-    function setIndicator(visual) {
-      const y = visual / 2 - IND / 2;
+    // ── Indicator movement ─────────────────────────────────────────
+    // Indicator slides down into the gap created by the content moving away.
+    // It is centred in the gap: indY = visual/2 - IND_SIZE/2
+    // Starts hidden (y < 0), becomes fully visible around visual = IND_SIZE.
+    function moveIndicator(visual) {
+      var y = (visual / 2) - (IND_SIZE / 2);
       ind.style.transition = 'none';
-      ind.style.transform  = `translateX(-50%) translateY(${y}px)`;
-      ind.style.opacity    = Math.min(visual / (IND * 0.6), 1).toFixed(2);
+      ind.style.transform  = 'translateX(-50%) translateY(' + y + 'px)';
+      ind.style.opacity    = Math.min(Math.max((visual - 16) / 28, 0), 1).toFixed(2);
     }
 
+    // During refresh the content snaps back so the gap closes.
+    // The indicator then floats at the very top edge of the content, overlaying it.
     function showRefreshing() {
-      // Content snaps back, indicator stays pinned at top edge (peeking from top)
-      snapContentBack(true);
-      ind.style.transition = 'transform .3s cubic-bezier(.34,1.4,.64,1)';
-      ind.style.transform  = `translateX(-50%) translateY(-${IND / 4}px)`;  // peek 33px visible
+      snapBack();
+      ind.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1),opacity .2s';
+      ind.style.transform  = 'translateX(-50%) translateY(6px)'; // hovers just inside content top
       ind.style.opacity    = '1';
-      if (svg) svg.classList.add('ptr-spinning');
+      if (ring) ring.classList.add('ptr-spin');
     }
 
-    function hide() {
-      snapContentBack(true);
-      ind.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1),opacity .3s';
-      ind.style.transform  = `translateX(-50%) translateY(-${IND}px)`;
+    function hideIndicator() {
+      ind.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1),opacity .25s';
+      ind.style.transform  = 'translateX(-50%) translateY(-' + IND_SIZE + 'px)';
       ind.style.opacity    = '0';
-      if (svg) svg.classList.remove('ptr-spinning');
-      setArc(0);
+      if (ring) ring.classList.remove('ptr-spin');
     }
 
-    // ── Refresh logic ──────────────────────────────────────────────
-    let refreshing = false;
+    // ── Refresh ────────────────────────────────────────────────────
+    var refreshing = false;
+
     async function doRefresh() {
       if (refreshing) return;
       refreshing = true;
       if (navigator.vibrate) navigator.vibrate(12);
       showRefreshing();
       try {
-        const pageName = H.currentPageName;
+        var pageName = H.currentPageName;
         if (typeof H.fetchListingsFromSupabase === 'function') await H.fetchListingsFromSupabase();
         if (H.currentUser()) {
-          if (typeof H.syncConversations    === 'function') await H.syncConversations();
-          if (typeof H.syncNotifications    === 'function') await H.syncNotifications();
-          if (typeof H.syncApplications     === 'function') H.syncApplications();
+          if (typeof H.syncConversations === 'function') await H.syncConversations();
+          if (typeof H.syncNotifications === 'function') await H.syncNotifications();
+          if (typeof H.syncApplications  === 'function') H.syncApplications();
         }
         await H.renderPage(pageName, H.currentPageParams);
-      } catch (e) { console.warn('PTR error:', e); }
-      setTimeout(() => { hide(); refreshing = false; }, 500);
+      } catch(e) { console.warn('PTR:', e); }
+      setTimeout(function() { hideIndicator(); refreshing = false; }, 500);
     }
 
     // ── Touch handlers ─────────────────────────────────────────────
-    let startY = 0, curY = 0, pulling = false;
+    var startY = 0, curY = 0, pulling = false;
 
     function onStart(e) {
       if (refreshing || el.scrollTop > 0) return;
@@ -773,37 +760,37 @@ window.H = {
     function onMove(e) {
       if (!pulling) return;
       curY = e.touches[0].clientY;
-      const dist = curY - startY;
-      if (dist <= 0) { if (dist < -10) { pulling = false; hide(); } return; }
-      e.preventDefault();  // block native scroll while pulling down
-      const visual = damp(dist);
-      setContent(visual);
-      setIndicator(visual);
-      setArc(dist / THRESHOLD);
-      // Subtle haptic exactly at threshold
-      if (dist >= THRESHOLD && dist < THRESHOLD + 4 && navigator.vibrate) navigator.vibrate(8);
+      var dist = curY - startY;
+      if (dist <= 0) { if (dist < -10) { pulling = false; snapBack(); hideIndicator(); } return; }
+      e.preventDefault(); // block native overscroll while we handle the pull
+      var visual = Math.min(damp(dist), MAX_VIS);
+      moveContent(visual);
+      moveIndicator(visual);
+      // One-shot haptic exactly when the threshold is crossed
+      if (dist >= THRESHOLD && dist < THRESHOLD + 5 && navigator.vibrate) navigator.vibrate(10);
     }
 
     function onEnd() {
       if (!pulling) return;
       pulling = false;
-      const dist = curY - startY;
+      var dist = curY - startY;
       if (dist >= THRESHOLD) { doRefresh(); }
-      else { hide(); }
+      else { snapBack(); hideIndicator(); }
     }
 
-    function onCancel() { pulling = false; hide(); }
+    function onCancel() { pulling = false; snapBack(); hideIndicator(); }
 
     el.addEventListener('touchstart',  onStart,  { passive: true  });
     el.addEventListener('touchmove',   onMove,   { passive: false });
     el.addEventListener('touchend',    onEnd,    { passive: true  });
     el.addEventListener('touchcancel', onCancel, { passive: true  });
 
-    el._ptrCleanup = function () {
+    el._ptrCleanup = function() {
       el.removeEventListener('touchstart',  onStart);
       el.removeEventListener('touchmove',   onMove);
       el.removeEventListener('touchend',    onEnd);
       el.removeEventListener('touchcancel', onCancel);
+      el.style.overscrollBehaviorY = '';
     };
   },
 
