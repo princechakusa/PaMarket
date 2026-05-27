@@ -1,4 +1,4 @@
-/* Hostly bundle — built 2026-05-27T18:26:32Z */
+/* Hostly bundle — built 2026-05-27T18:34:35Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -10390,8 +10390,10 @@ H.init();
           <div class="toggle-item">
             <div class="toggle-label">
               <span class="toggle-icon">${I.eye}</span>
-              <span>Public Profile</span>
-              <span class="toggle-desc">Others can view your profile</span>
+              <div class="toggle-text">
+                <span class="toggle-name">Public Profile</span>
+                <span class="toggle-desc">Others can view your profile</span>
+              </div>
             </div>
             <label class="toggle-switch">
               <input type="checkbox" ${privacy.profilePublic ? 'checked' : ''} onchange="H._privacySettings.toggle('profilePublic', this.checked)">
@@ -10402,8 +10404,10 @@ H.init();
           <div class="toggle-item">
             <div class="toggle-label">
               <span class="toggle-icon">${I.phone}</span>
-              <span>Show Phone in Listings</span>
-              <span class="toggle-desc">Sellers can see your phone number</span>
+              <div class="toggle-text">
+                <span class="toggle-name">Show Phone in Listings</span>
+                <span class="toggle-desc">Sellers can see your phone number</span>
+              </div>
             </div>
             <label class="toggle-switch">
               <input type="checkbox" ${privacy.showPhoneInListings ? 'checked' : ''} onchange="H._privacySettings.toggle('showPhoneInListings', this.checked)">
@@ -10414,8 +10418,10 @@ H.init();
           <div class="toggle-item">
             <div class="toggle-label">
               <span class="toggle-icon">${I.message}</span>
-              <span>Allow Direct Messages</span>
-              <span class="toggle-desc">Others can message you directly</span>
+              <div class="toggle-text">
+                <span class="toggle-name">Allow Direct Messages</span>
+                <span class="toggle-desc">Others can message you directly</span>
+              </div>
             </div>
             <label class="toggle-switch">
               <input type="checkbox" ${privacy.allowMessages ? 'checked' : ''} onchange="H._privacySettings.toggle('allowMessages', this.checked)">
@@ -10426,8 +10432,10 @@ H.init();
           <div class="toggle-item">
             <div class="toggle-label">
               <span class="toggle-icon">${I.clock}</span>
-              <span>Show Activity Status</span>
-              <span class="toggle-desc">Others can see when you're online</span>
+              <div class="toggle-text">
+                <span class="toggle-name">Show Activity Status</span>
+                <span class="toggle-desc">Others can see when you are online</span>
+              </div>
             </div>
             <label class="toggle-switch">
               <input type="checkbox" ${privacy.showActivity ? 'checked' : ''} onchange="H._privacySettings.toggle('showActivity', this.checked)">
