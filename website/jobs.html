@@ -416,9 +416,26 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px}
             <input class="form-input" id="pfPhone" type="tel" placeholder="+263 7X XXX XXXX">
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="pfEmail">Email (optional)</label>
+            <input class="form-input" id="pfEmail" type="email" placeholder="your@email.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pfExp">Years of Experience <span>*</span></label>
+            <select class="form-input" id="pfExp">
+              <option value="">Select experience</option>
+              <option value="Less than 1 year">Less than 1 year</option>
+              <option value="1-2 years">1-2 years</option>
+              <option value="3-5 years">3-5 years</option>
+              <option value="6-10 years">6-10 years</option>
+              <option value="10+ years">10+ years</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group">
-          <label class="form-label" for="pfEmail">Email (optional)</label>
-          <input class="form-input" id="pfEmail" type="email" placeholder="your@email.com">
+          <label class="form-label" for="pfExpDetail">Work Experience</label>
+          <textarea class="form-input form-textarea" id="pfExpDetail" style="min-height:80px" placeholder="e.g. Worked as a cashier at OK Zimbabwe for 3 years. Managed accounts at ABC Company for 2 years…"></textarea>
         </div>
         <div class="form-group">
           <label class="form-label">Your Skills</label>
@@ -653,6 +670,7 @@ function makeTalentCard(p){
   const role=escHtml(p.job_title||p.role||p.profession||'Looking for opportunities');
   const loc=escHtml(p.location||p.city||'Zimbabwe');
   const bio=escHtml(p.bio||p.description||'');
+  const exp=escHtml(p.experience||'');
   const skills=(p.skills||[]).slice(0,5).map(s=>`<span class="skill-tag">${escHtml(s)}</span>`).join('');
   const avatarHtml=p.avatar_url
     ?`<img src="${escHtml(p.avatar_url)}" alt="${name}" onerror="this.style.display='none';this.parentNode.textContent='${name[0]||'?'}'">`:name[0]||'?';
@@ -668,6 +686,7 @@ function makeTalentCard(p){
         </div>
       </div>
     </div>
+    ${exp?`<div style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--sub)"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>${exp}</div>`:''}
     ${bio?`<div class="talent-bio">${bio}</div>`:''}
     ${skills?`<div class="talent-skills">${skills}</div>`:''}
     <div class="talent-footer">
@@ -727,8 +746,9 @@ function openProfileModal(){
   renderSkillPills();
   renderSkillSuggestions('');
   // Reset form
-  ['pfName','pfRole','pfPhone','pfEmail','pfBio'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  ['pfName','pfRole','pfPhone','pfEmail','pfExpDetail','pfBio'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
   document.getElementById('pfLocation').value='';
+  document.getElementById('pfExp').value='';
   selectedSkills=[];
   renderSkillPills();
   document.getElementById('profileSuccess').classList.add('hidden');
@@ -792,12 +812,15 @@ async function submitProfile(){
   const location=document.getElementById('pfLocation').value.trim();
   const phone=document.getElementById('pfPhone').value.trim();
   const email=document.getElementById('pfEmail').value.trim();
+  const exp=document.getElementById('pfExp').value.trim();
+  const expDetail=document.getElementById('pfExpDetail').value.trim();
   const bio=document.getElementById('pfBio').value.trim();
 
   if(!name){showToast('Please enter your full name','error');document.getElementById('pfName').focus();return}
   if(!role){showToast('Please enter your job title or role','error');document.getElementById('pfRole').focus();return}
   if(!location){showToast('Please select your city','error');document.getElementById('pfLocation').focus();return}
   if(!phone){showToast('Please enter your phone number','error');document.getElementById('pfPhone').focus();return}
+  if(!exp){showToast('Please select your years of experience','error');document.getElementById('pfExp').focus();return}
 
   const btn=document.getElementById('submitProfileBtn');
   const label=document.getElementById('submitBtnLabel');
@@ -812,6 +835,8 @@ async function submitProfile(){
     location:location,
     phone:phone,
     email:email||null,
+    experience:exp||null,
+    experience_detail:expDetail||null,
     bio:bio||null,
     skills:selectedSkills,
     open_to_work:true,

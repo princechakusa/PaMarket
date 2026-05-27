@@ -297,8 +297,19 @@ function setGalleryImg(idx,imgs){
   document.querySelectorAll('.gallery-thumb').forEach((t,i)=>t.classList.toggle('active',i===idx));
 }
 
+function getImgs(ad){
+  let raw=ad.images||ad.image_url||ad.photo_url||ad.photos||null;
+  if(!raw)return null;
+  if(typeof raw==='string'){try{raw=JSON.parse(raw)}catch{raw=[raw]}}
+  if(typeof raw==='string')raw=[raw];
+  if(!Array.isArray(raw))raw=[];
+  raw=raw.filter(Boolean).map(u=>u.startsWith('http')?u:`${SB_URL}/storage/v1/object/public/${u}`);
+  return raw.length?raw:null;
+}
+
 function makeSimCard(ad){
-  const img=ad.images&&ad.images[0]?escHtml(ad.images[0]):PLACEHOLDER;
+  const imgs=getImgs(ad);
+  const img=imgs?escHtml(imgs[0]):PLACEHOLDER;
   return `<a class="ad-card" href="detail.html?id=${ad.id}">
     <div class="ad-img-wrap"><img src="${img}" alt="${escHtml(ad.title)}" loading="lazy" onerror="this.src='${PLACEHOLDER}'"><span class="ad-badge">${escHtml(ad.category||'')}</span></div>
     <div class="ad-info">
@@ -329,7 +340,7 @@ async function loadDetail(){
   document.title=`${ad.title} — PaMarket Zimbabwe`;
   document.getElementById('bcTitle').textContent=ad.category||'Listing';
 
-  const imgs=ad.images&&ad.images.length?ad.images:[PLACEHOLDER];
+  const imgs=getImgs(ad)||[PLACEHOLDER];
   const phone=escHtml(ad.phone||ad.contact_phone||'');
   const sellerName=escHtml(ad.seller_name||ad.name||'Seller');
   const sellerInit=(sellerName[0]||'S').toUpperCase();
