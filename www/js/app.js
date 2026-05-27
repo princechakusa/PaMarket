@@ -646,10 +646,14 @@ window.H = {
     document.getElementById('ptr-ind')?.remove();
     document.getElementById('ptr-css')?.remove();
 
-    // ── Spinner: simple ring with one coloured segment (browser-style) ─
+    // iOS-style starburst spinner: 12 spokes stepping like the native OS indicator
     const ind = document.createElement('div');
     ind.id = 'ptr-ind';
-    ind.innerHTML = '<div id="ptr-ring"></div>';
+    ind.innerHTML =
+      '<svg id="ptr-star" viewBox="0 0 30 30" width="30" height="30"'
+      + ' stroke="#5a7fd4" stroke-width="2.2" style="display:block">'
+      + '<line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.08" transform="rotate(0 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.17" transform="rotate(30 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.25" transform="rotate(60 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.33" transform="rotate(90 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.42" transform="rotate(120 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.5" transform="rotate(150 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.58" transform="rotate(180 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.67" transform="rotate(210 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.75" transform="rotate(240 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.83" transform="rotate(270 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="0.92" transform="rotate(300 15 15)"/><line x1="15" y1="4" x2="15" y2="8.5" stroke-linecap="round" opacity="1.0" transform="rotate(330 15 15)"/>'
+      + '</svg>';
     ind.style.cssText =
       'position:fixed;top:env(safe-area-inset-top,0px);left:50%;' +
       'width:' + IND_SIZE + 'px;height:' + IND_SIZE + 'px;' +
@@ -657,16 +661,15 @@ window.H = {
       'background:var(--card,#1a2540);border-radius:50%;' +
       'display:flex;align-items:center;justify-content:center;' +
       'z-index:9999;pointer-events:none;opacity:0;' +
-      'box-shadow:0 2px 12px rgba(0,0,0,.35);';
+      'box-shadow:0 3px 14px rgba(0,0,0,.4);';
     document.body.appendChild(ind);
 
     const styleEl = document.createElement('style');
     styleEl.id = 'ptr-css';
+    // steps(12,end) gives the native iOS tick: each frame jumps exactly 30 degrees
     styleEl.textContent =
-      '#ptr-ring{width:30px;height:30px;border-radius:50%;' +
-        'border:3.5px solid rgba(26,58,143,.2);border-top-color:#1A3A8F;' +
-        'animation:ptr-spin .65s linear infinite;}' +
-      '@keyframes ptr-spin{to{transform:rotate(360deg)}}';
+      '@keyframes ptr-spin{to{transform:rotate(360deg)}}' +
+      '#ptr-star{animation:ptr-spin .9s steps(12,end) infinite;transform-origin:15px 15px;}';
     document.head.appendChild(styleEl);
 
 

@@ -232,19 +232,16 @@
   // --- Privacy Settings --------------------------------------
   pages.PrivacySettings = function () {
     const u = H.currentUser();
-    const privacy = u.privacySettings || {
-      profilePublic: true,
-      showPhoneInListings: false,
-      allowMessages: true,
-      showActivity: false
-    };
+    // Merge stored settings over defaults so missing keys always have a value
+    const defaults = { profilePublic: true, showPhoneInListings: false, allowMessages: true, showActivity: false };
+    const privacy = Object.assign({}, defaults, u.privacySettings || {});
 
     return `<div class="page active">
       ${H.innerTopbar('Privacy Settings')}
       <div class="form-wrap">
         <div class="privacy-section">
           <div class="section-title">Profile Visibility</div>
-          
+
           <div class="toggle-item">
             <div class="toggle-label">
               <span class="toggle-icon">${I.eye}</span>
@@ -252,7 +249,7 @@
               <span class="toggle-desc">Others can view your profile</span>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox" ${privacy.profilePublic ? 'checked' : ''} onchange="H._privacySettings.toggle('profilePublic')">
+              <input type="checkbox" ${privacy.profilePublic ? 'checked' : ''} onchange="H._privacySettings.toggle('profilePublic', this.checked)">
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -264,7 +261,7 @@
               <span class="toggle-desc">Sellers can see your phone number</span>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox" ${privacy.showPhoneInListings ? 'checked' : ''} onchange="H._privacySettings.toggle('showPhoneInListings')">
+              <input type="checkbox" ${privacy.showPhoneInListings ? 'checked' : ''} onchange="H._privacySettings.toggle('showPhoneInListings', this.checked)">
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -276,7 +273,7 @@
               <span class="toggle-desc">Others can message you directly</span>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox" ${privacy.allowMessages ? 'checked' : ''} onchange="H._privacySettings.toggle('allowMessages')">
+              <input type="checkbox" ${privacy.allowMessages ? 'checked' : ''} onchange="H._privacySettings.toggle('allowMessages', this.checked)">
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -288,7 +285,7 @@
               <span class="toggle-desc">Others can see when you're online</span>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox" ${privacy.showActivity ? 'checked' : ''} onchange="H._privacySettings.toggle('showActivity')">
+              <input type="checkbox" ${privacy.showActivity ? 'checked' : ''} onchange="H._privacySettings.toggle('showActivity', this.checked)">
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -298,12 +295,48 @@
   };
 
   pages.PrivacySettings_after = function () {
+    const DEFAULTS = { profilePublic: true, showPhoneInListings: false, allowMessages: true, showActivity: false };
+    const LABELS = {
+      profilePublic:       { on: 'Profile is now public',              off: 'Profile is now private' },
+      showPhoneInListings: { on: 'Phone number visible in listings',    off: 'Phone number hidden from listings' },
+      allowMessages:       { on: 'Direct messages allowed',            off: 'Direct messages are blocked' },
+      showActivity:        { on: 'Activity status is visible',         off: 'Activity status is hidden' }
+    };
+
     H._privacySettings = {
-      toggle: (key) => {
+      toggle: function(key, newValue) {
         const u = H.currentUser();
-        if (!u.privacySettings) u.privacySettings = {};
-        u.privacySettings[key] = !u.privacySettings[key];
+        if (!u) return;
+        // Always initialise with full defaults so no key goes missing
+        if (!u.privacySettings) u.privacySettings = Object.assign({}, DEFAULTS);
+        // Use the checkbox's actual checked state — avoids !undefined mismatch on first toggle
+        u.privacySettings[key] = !!newValue;
         H.saveState();
+
+        // Feedback
+        const label = LABELS[key];
+        if (label) H.toast(newValue ? label.on : label.off);
+
+        // Apply visible effects immediately
+        if (key === 'showPhoneInListings') {
+          // Update own listings in state so detail pages reflect the change
+          const uid = u.id;
+          (H.state.listings || []).forEach(function(l) {
+            if (l.sellerId === uid) {
+              l._hidePhone = !newValue;
+            }
+          });
+          H.saveState();
+        }
+
+        // Persist to Supabase profiles table so other devices pick it up
+        if (window.supabase && typeof window.supabase.from === 'function') {
+          window.supabase.from('profiles')
+            .update({ privacy: u.privacySettings })
+            .eq('id', u.id)
+            .then(function() {})
+            .catch(function() {});
+        }
       }
     };
   };
