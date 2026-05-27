@@ -674,7 +674,7 @@ function renderTalentFilters(){
 
 /* ---- JOBS ---- */
 function getJobType(ad){
-  const d=((ad.description||'')+(ad.title||'')).toLowerCase();
+  const d=((ad.desc||ad.description||'')+(ad.title||'')).toLowerCase();
   if(d.includes('part-time')||d.includes('part time'))return'Part-time';
   if(d.includes('contract'))return'Contract';
   if(d.includes('intern'))return'Internship';
