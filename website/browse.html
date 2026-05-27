@@ -387,7 +387,7 @@ function getImgs(ad){
   if(!Array.isArray(raw))raw=[];
   raw=raw.filter(u=>u&&typeof u==='string').map(u=>{
     u=u.trim();
-    if(u.startsWith('http'))return u;
+    if(u.startsWith('http')||u.startsWith('data:'))return u;
     return`${SB_URL}/storage/v1/object/public/${u}`;
   });
   return raw.length?raw:null;
