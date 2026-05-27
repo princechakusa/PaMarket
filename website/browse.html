@@ -376,8 +376,21 @@ function doSearch(){const q=document.getElementById('headerSearchInput')?.value?
 function toggleMobileNav(){document.getElementById('mobileNav').classList.toggle('hidden')}
 document.addEventListener('click',function(e){const nav=document.getElementById('mobileNav');const hdr=document.getElementById('site-header');if(!nav.classList.contains('hidden')&&!hdr.contains(e.target))nav.classList.add('hidden')});
 
+function getImgs(ad){
+  let raw=ad.images||ad.image_url||ad.photo_url||ad.photos||null;
+  if(!raw)return null;
+  // Parse if JSON string e.g. '["https://..."]'
+  if(typeof raw==='string'){try{raw=JSON.parse(raw)}catch{raw=[raw]}}
+  // Single string url
+  if(typeof raw==='string')raw=[raw];
+  if(!Array.isArray(raw))raw=[];
+  raw=raw.filter(Boolean).map(u=>u.startsWith('http')?u:`${SB_URL}/storage/v1/object/public/${u}`);
+  return raw.length?raw:null;
+}
+
 function makeAdCard(ad){
-  const img=ad.images&&ad.images[0]?escHtml(ad.images[0]):PLACEHOLDER;
+  const imgs=getImgs(ad);
+  const img=imgs?escHtml(imgs[0]):PLACEHOLDER;
   const price=formatPrice(ad.price,ad.currency);
   const loc=escHtml(ad.location||'Zimbabwe');
   const ago=timeAgo(ad.created_at);
