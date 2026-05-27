@@ -988,25 +988,37 @@ window.H = {
         }
       } catch(e) { /* messages table scan failed */ }
 
-      // Phase 3: fetch profiles for all unknown conversation members (fixes "User" name)
+      // Phase 3: fetch profiles for all unknown or nameless conversation members (fixes "Unknown User")
       const allMemberIds = new Set();
       H.state.conversations.forEach(c => (c.members||[]).forEach(id => allMemberIds.add(id)));
-      const missingProfiles = Array.from(allMemberIds).filter(id => id !== u.id && !(H.state.users||[]).some(x => x.id === id));
-      if (missingProfiles.length) {
+      // Include IDs missing from state OR cached but with an empty name — so names are backfilled
+      const profilesNeeded = Array.from(allMemberIds).filter(id => {
+        if (id === u.id) return false;
+        const cached = (H.state.users||[]).find(x => x.id === id);
+        return !cached || !cached.name;
+      });
+      if (profilesNeeded.length) {
         try {
           const { data: profiles } = await sb.from('profiles')
             .select('id,name,phone,email,avatar,verified,role,status,created_at')
-            .in('id', missingProfiles);
+            .in('id', profilesNeeded);
           (profiles||[]).forEach(p => {
-            if ((H.state.users||[]).some(x => x.id === p.id)) return;
-            (H.state.users = H.state.users||[]).push({
-              id: p.id, name: p.name||'', phone: p.phone||'',
-              email: p.email||'', avatar: p.avatar||null,
-              verified: !!p.verified, role: p.role||'user',
-              status: p.status||'active',
-              joinedAt: p.created_at ? new Date(p.created_at).getTime() : Date.now()
-            });
-            changed = true;
+            const existing = (H.state.users||[]).find(x => x.id === p.id);
+            if (existing) {
+              // Update entry — especially fill in the name if we now have one
+              if (p.name && !existing.name) { existing.name = p.name; changed = true; }
+              if (p.avatar && !existing.avatar) { existing.avatar = p.avatar; changed = true; }
+              if (p.verified && !existing.verified) { existing.verified = true; changed = true; }
+            } else {
+              (H.state.users = H.state.users||[]).push({
+                id: p.id, name: p.name||'', phone: p.phone||'',
+                email: p.email||'', avatar: p.avatar||null,
+                verified: !!p.verified, role: p.role||'user',
+                status: p.status||'active',
+                joinedAt: p.created_at ? new Date(p.created_at).getTime() : Date.now()
+              });
+              changed = true;
+            }
           });
         } catch(e) {}
       }
@@ -1037,6 +1049,30 @@ window.H = {
         });
         local.messages.sort((a,b) => (a.t||0) - (b.t||0));
       }
+
+      // Phase 4.5: backfill profile names from message sender_name where name is still empty
+      // This covers cases where the profiles table is unavailable or the entry has no name
+      H.state.conversations.forEach(function(conv) {
+        (conv.members||[]).forEach(function(memberId) {
+          if (memberId === u.id) return;
+          const existingUser = (H.state.users||[]).find(function(x){ return x.id === memberId; });
+          if (existingUser && existingUser.name) return; // already resolved
+          // Find the first message from this member that carries a non-empty sender_name
+          const nameFromMsg = ((conv.messages||[]).find(function(m){ return m.from === memberId && m.senderName; })||{}).senderName;
+          if (!nameFromMsg) return;
+          if (existingUser) {
+            existingUser.name = nameFromMsg;
+          } else {
+            (H.state.users = H.state.users||[]).push({
+              id: memberId, name: nameFromMsg, phone: '', email: '',
+              avatar: null, verified: false, role: 'user', status: 'active',
+              joinedAt: Date.now()
+            });
+          }
+          if (!conv.otherName) { conv.otherName = nameFromMsg; }
+          changed = true;
+        });
+      });
 
       if (changed) H.saveState();
       return changed;
