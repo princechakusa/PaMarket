@@ -1,12 +1,16 @@
-/* Hostly bundle — built 2026-05-18T14:42:19Z */
+/* Hostly bundle — built 2026-05-27T17:39:01Z */
 
 ;/* === www/js/app.js === */
-﻿'use strict';
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
+'use strict';
 window.H = {
-  KEY:          'hostly.v2',
-  ADMIN_PHONES: ['+263770000000', '+971589772645'],
+  KEY:          'pamarket.v2',
 
-  // ── Provinces & Cities ───────────────────────────────────
   PROVINCES: ['Harare','Bulawayo','Manicaland','Mashonaland West','Mashonaland East','Mashonaland Central','Midlands','Masvingo','Matabeleland North','Matabeleland South'],
   CITIES_BY_PROV: {
     'Harare':             ['Harare CBD','Borrowdale','Avondale','Mabelreign','Marlborough','Belvedere','Greendale','Hatfield','Highfield','Mbare','Glen View','Budiriro','Kuwadzana','Warren Park','Chitungwiza','Epworth','Norton','Ruwa'],
@@ -21,13 +25,13 @@ window.H = {
     'Matabeleland South': ['Beitbridge','Gwanda','Plumtree','Filabusi']
   },
 
-  // ── Icons ────────────────────────────────────────────────
   ICONS: {
     search:   `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
     user:     `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
     doc:      `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
     heart:    `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
     wallet:   `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`,
+    ads:      `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`,
     settings: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
     help:     `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
     logout:   `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
@@ -38,7 +42,6 @@ window.H = {
     share:    `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`,
   },
 
-  // ── Categories ───────────────────────────────────────────
   CATEGORIES: [
     {id:'property',    name:'Property',    icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},
     {id:'vehicles',    name:'Vehicles',    icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>'},
@@ -60,7 +63,6 @@ window.H = {
     {id:'mega',     name:'Mega Boost',     price:10, days:30, desc:'30 days of maximum visibility across all sections.', badgeText:'Best Value'}
   ],
 
-  // ── App State ────────────────────────────────────────────
   state:            {},
   pageStack:        [],
   currentPageName:  'Home',
@@ -68,18 +70,15 @@ window.H = {
   _activeChat:      null,
   camStream:        null,
   livenessTimer:    null,
-  logoTaps:         0,
-  logoTapsTimer:    null,
   pages:            {},
 
   defaultState: {
     users:[], listings:[], conversations:[], reports:[], txns:[],
-    saves:{}, notifs:{}, savedSearches:{}, currentUserId:null, cityFilter:'All Zimbabwe',
+    saves:{}, notifs:{}, currentUserId:null, cityFilter:'All Zimbabwe',
     _sortMode:'newest', _priceMin:'', _priceMax:'',
-    adminLogs:[], supportTickets:[], adminSession:null, topupRequests:[]
+    adminLogs:[], supportTickets:[], topupRequests:[], paidAds:[]
   },
 
-  // ── Persistence ──────────────────────────────────────────
   loadState() {
     try {
       const raw = localStorage.getItem(this.KEY);
@@ -90,7 +89,6 @@ window.H = {
 
   saveState() {
     try {
-      // Strip sensitive fields before persisting — passwords must never live in localStorage
       const safe = JSON.parse(JSON.stringify(this.state));
       if (safe.users) safe.users.forEach(u => { delete u._localPassword; });
       localStorage.setItem(this.KEY, JSON.stringify(safe));
@@ -98,7 +96,6 @@ window.H = {
     catch(e) { if(e.name==='QuotaExceededError') this.toast('Storage full — try deleting old listings'); }
   },
 
-  // ── Utilities ────────────────────────────────────────────
   uid() {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -107,7 +104,20 @@ window.H = {
   },
   currentUser() {
     const H = window.H || this;
-    return ((H.state&&H.state.users)||[]).find(u=>u.id===(H.state&&H.state.currentUserId)) || null;
+    const id = H.state && H.state.currentUserId;
+    if (!id) return null;
+    H.state.users = H.state.users || [];
+    let user = H.state.users.find(u=>u.id===id);
+    if (!user) {
+      user = { id, email:'', name:'User', phone:'', avatar:null, verified:false, walletUSD:0, language:'English', joinedAt:Date.now(), role:'user', status:'active', blocked:[] };
+      H.state.users.push(user);
+      if (typeof H.saveState === 'function') H.saveState();
+      if (typeof H.loadProfile === 'function' && !H._loadingCurrentProfile) {
+        H._loadingCurrentProfile = true;
+        H.loadProfile(id).finally(()=>{ H._loadingCurrentProfile = false; });
+      }
+    }
+    return user;
   },
   isAdmin() { const u=this.currentUser(); return !!(u&&u.role==='admin'); },
   escHtml(s) {
@@ -132,7 +142,6 @@ window.H = {
     return c==='USD' ? '$'+n : n+' ZiG';
   },
 
-  // ── Filtering ────────────────────────────────────────────
   filterListings(list, q) {
     const _s   = window.H ? window.H.state : {};
     const qry  = (q!==undefined ? q : (document.getElementById('searchIn')?.value||'')).toLowerCase().trim();
@@ -159,32 +168,60 @@ window.H = {
     });
   },
 
-  // ── UI Components ────────────────────────────────────────
-  toast(msg, duration=2600) {
+  toast(msg, duration=4000, isError=false) {
     const el = document.getElementById('toastEl'); if(!el) return;
+    el.setAttribute('aria-live', isError ? 'assertive' : 'polite');
     el.textContent=msg; el.classList.add('show');
     clearTimeout(window._toastTimer);
     window._toastTimer = setTimeout(()=>el.classList.remove('show'), duration);
   },
 
+  shareListing(id) {
+    const l = (this.state.listings||[]).find(x=>x.id===id); if(!l) return;
+    const url = window.location.origin + window.location.pathname + '?listing=' + id;
+    const title = l.title || 'PaMarket Listing';
+    const text  = (l.title||'') + (l.price ? ' — $' + l.price : '') + ' on PaMarket Zimbabwe';
+    if (navigator.share) {
+      navigator.share({ title, text, url }).catch(()=>{});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(()=>this.toast('Link copied!')).catch(()=>this.toast('Copy the URL from your address bar'));
+    } else {
+      this.toast('Share: ' + url, 6000);
+    }
+  },
+
   modal({ title, body, confirmText='OK', cancelText='Cancel', danger=false, onConfirm }) {
     const bg  = document.getElementById('modalBg');
     const box = document.getElementById('modalBox');
+    box.classList.remove('login-modal');
     box.innerHTML = `
-      <h3>${this.escHtml(title)}</h3>
-      <div style="font-size:14px;color:var(--sub);line-height:1.6;margin-bottom:4px">${body||''}</div>
-      <div class="modal-btns">
-        ${cancelText?`<button class="modal-btn cancel" onclick="H.closeModal()">${cancelText}</button>`:''}
-        <button class="modal-btn ${danger?'danger':'confirm'}" id="mConfirm">${confirmText}</button>
+      <div class="modal-header">
+        <h3>${this.escHtml(title)}</h3>
+      </div>
+      <div class="modal-body-scroll">
+        <div style="font-size:14px;color:var(--sub);line-height:1.6;padding-top:8px">${body||''}</div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-btns">
+          ${cancelText?`<button class="modal-btn cancel" onclick="H.closeModal()">${cancelText}</button>`:''}
+          <button class="modal-btn ${danger?'danger':'confirm'}" id="mConfirm">${confirmText}</button>
+        </div>
       </div>`;
     bg.classList.add('open');
     document.getElementById('mConfirm').onclick = () => {
       if (onConfirm && onConfirm()===false) return;
       H.closeModal();
     };
-    setTimeout(()=>document.getElementById('mConfirm')?.focus(), 50);
+    setTimeout(()=>document.getElementById('mConfirm')?.focus({preventScroll:true}), 50);
   },
   closeModal() { document.getElementById('modalBg').classList.remove('open'); },
+  closeLoginModal() {
+    const bg = document.getElementById('modalBg');
+    if (!bg) return;
+    bg.classList.remove('open');
+    const box = document.getElementById('modalBox');
+    if (box) box.classList.remove('login-modal');
+  },
   closeSheet() {
     document.getElementById('actionSheet').classList.remove('open');
     document.getElementById('sheetBg').classList.remove('open');
@@ -212,7 +249,7 @@ window.H = {
   errorState(title, sub, retryFn) {
     const fn = retryFn ? `onclick="${retryFn}"` : '';
     return `<div class="error-state">
-      <div class="error-icon">⚠️</div>
+      <div class="error-icon"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
       <div class="error-title">${this.escHtml(title)}</div>
       <div class="error-sub">${this.escHtml(sub)}</div>
       ${retryFn ? `<button class="error-retry" ${fn}>Try Again</button>` : ''}
@@ -272,13 +309,11 @@ window.H = {
     </div>`;
   },
 
-  // ── Camera ───────────────────────────────────────────────
   stopCam() {
     if (this.camStream)     { this.camStream.getTracks().forEach(t=>t.stop()); this.camStream=null; }
     if (this.livenessTimer) { clearInterval(this.livenessTimer); this.livenessTimer=null; }
   },
 
-  // ── Image Compression ────────────────────────────────────
   compressImage(file, maxDim=1200, q=0.8) {
     return new Promise(res => {
       const r = new FileReader();
@@ -298,7 +333,6 @@ window.H = {
     });
   },
 
-  // ── Ban System ───────────────────────────────────────────
   checkBan() {
     const u=this.currentUser();
     if(!u||u.role==='admin'){document.getElementById('banScreen').classList.remove('show');return false;}
@@ -319,7 +353,7 @@ window.H = {
       countdown=`Lifted in ${d>0?d+'d ':''}${h>0?h+'h ':''}${m}m`;
     }
     document.getElementById('banScreen').innerHTML=`
-      <div class="ic">${isTemp?'⏳':'🚫'}</div>
+      <div class="ic">${isTemp?'<svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>':'<svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>'}</div>
       <h1>${isTemp?'Account Suspended':'Account Banned'}</h1>
       <p>${isTemp?'Your account has been temporarily suspended.':'Your account has been permanently banned.'} Contact support if you believe this is in error.</p>
       <div class="reason"><strong>Reason:</strong> ${this.escHtml(u.banReason||'Policy violation')}</div>
@@ -357,7 +391,6 @@ window.H = {
     this.saveState();
   },
 
-  // ── Navigation ───────────────────────────────────────────
   authLogoTap() { window.location.href='admin.html'; },
 
   async boot() {
@@ -370,28 +403,40 @@ window.H = {
     if(this.state.currentUserId&&this.checkBan()) return;
     document.getElementById('bottomNav').style.display='flex';
     await this.navTo('Home');
+    // Handle deep links: ?listing=ID  or  ?action=post|browse
+    const _qs = new URLSearchParams(window.location.search);
+    const _lid = _qs.get('listing'), _act = _qs.get('action');
+    if (_lid) { setTimeout(()=>this.openListing(_lid), 200); }
+    else if (_act === 'post')   { if(this.currentUser()) setTimeout(()=>this.navTo('Post',null), 200); }
+    else if (_act === 'browse') { setTimeout(()=>this.navTo('Browse',null), 200); }
+    else if (_act === 'topup')  { setTimeout(()=>{ if(this.currentUser()) this.openInner('Ads'); else this.requireAuth('Sign in to advertise'); }, 300); }
     try {
       await this.fetchListingsFromSupabase();
+      await Promise.all([this.fetchAdsFromSupabase(), this.fetchAppSettings()]);
       await this.renderPage(this.currentPageName, this.currentPageParams);
     } catch(e) { console.warn('Boot fetch failed:', e); }
     if(typeof H._setupRealtimeMessages==='function') H._setupRealtimeMessages();
+    if(typeof H.syncReports==='function') H.syncReports();
     if(typeof H.syncConversations==='function') H.syncConversations();
     if(typeof H.syncApplications==='function') H.syncApplications();
     if(typeof H.syncNotifications==='function') H.syncNotifications();
     if(typeof H._setupRealtimeNotifs==='function') H._setupRealtimeNotifs();
+    if(typeof H.startRealtime==='function') H.startRealtime();
     this._initPullToRefresh();
-    this._initOfflineDetection();
-    this._initPushNotifications();
-    this.checkSavedSearches();
+    if(typeof window._hideSplash==='function') window._hideSplash();
   },
 
   authPage() {
+    this.requireAuth('Login to continue');
+  },
+
+  authPageFull() {
     document.getElementById('bottomNav').style.display='none';
     document.getElementById('mainArea').innerHTML=`
       <div class="auth-wrap">
         <div class="auth-logo">
-          <img src="img/icon-192.png" alt="Hostly" onclick="H.logoTap()" style="width:90px;height:90px;border-radius:22px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.3);cursor:pointer">
-          <div>Host<em>ly</em></div>
+          <img src="img/icon-192.png" alt="PaMarket" style="width:90px;height:90px;border-radius:22px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.3)">
+          <div>Pa<em>Market</em></div>
         </div>
         <div class="auth-tag">Zimbabwe&#39;s Free Marketplace</div>
         <div class="auth-card" id="authCard"></div>
@@ -407,19 +452,24 @@ window.H = {
   async navTo(name, btn) {
     const H=window.H;
     if(['Post'].includes(name)&&!H.currentUser()){H.requireAuth('Log in to post an ad');return;}
-    if(name==='Account'&&!H.currentUser()){H.requireAuth('Sign in to your account');return;}
+    if(['Messages'].includes(name)&&!H.currentUser()){H.requireAuth('Sign in to view messages');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
-    H.pageStack=[];
-    document.getElementById('bottomNav').style.display='flex';
-    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-    const target=btn||document.querySelector('[data-nav="'+name+'"]');
-    if(target)target.classList.add('active');
-    await H.renderPage(name);
+    try {
+      H.pageStack=[];
+      document.getElementById('bottomNav').style.display='flex';
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+      const target=btn||document.querySelector('[data-nav="'+name+'"]');
+      if(target)target.classList.add('active');
+      await H.renderPage(name);
+    } catch(e) {
+      console.error('navTo error:', e);
+      H.toast('Could not open this page. Please try again.', 4000, true);
+    }
   },
 
   async openInner(name, params) {
     const H=window.H;
-    const gated=['Messages','Chat','MyListings','Favorites','Profile','Settings','Wallet','Boost','Notifications','Security'];
+    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsBoost','AdsContact','MyAds','Wallet','Boost','Security','SecuritySettings','DeleteAccount','TopUp','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob'];
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
     try {
@@ -438,13 +488,17 @@ window.H = {
     if(H.state._backToAccount){
       H.state._backToAccount=false;
       this.pageStack.pop();
+      document.getElementById('bottomNav').style.display='flex';
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+      const acctBtn=document.querySelector('[data-nav="Account"]'); if(acctBtn) acctBtn.classList.add('active');
+      await this.renderPage('Account');
       H.showAccountMenu();
       return;
     }
     this.stopCam();
     if(this.pageStack.length){
       const p=this.pageStack.pop();
-      const isRoot=['Home','Browse','Messages','Post'].includes(p.name);
+      const isRoot=['Home','Browse','Messages','Post','Account'].includes(p.name);
       if(isRoot){
         document.getElementById('bottomNav').style.display='flex';
         document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -459,6 +513,8 @@ window.H = {
 
   async renderPage(name, params, opts) {
     const area=document.getElementById('mainArea');
+    // Always restore mainArea scroll when navigating — Chat locks it to prevent topbar from scrolling off
+    if(area) area.style.overflowY='auto';
     const scrollTo=(opts&&opts.scrollTo)||0;
     if(this.canAccessPage&&!this.canAccessPage(name)){this.toast('Access denied');await this.navTo('Home');return;}
     this.currentPageName=name; this.currentPageParams=params||{};
@@ -468,7 +524,7 @@ window.H = {
     if(res instanceof Promise) {
       area.style.opacity='0';
       const html=await res;
-      if(this.currentPageName!==name) return; // navigated away while loading
+      if(this.currentPageName!==name) return;
       area.innerHTML=html;
       area.scrollTop=scrollTo;
       requestAnimationFrame(()=>{ area.style.opacity='1'; });
@@ -484,14 +540,13 @@ window.H = {
   openListing(id) {
     const l=this.state.listings.find(x=>x.id===id); if(!l) return;
     l.views=(l.views||0)+1;
-    const rv=JSON.parse(localStorage.getItem('hostly_rv')||'[]');
+    const rv=JSON.parse(localStorage.getItem('pamarket_rv')||'[]');
     const filtered=[...new Set([id,...rv.filter(x=>x!==id)])].slice(0,10);
-    localStorage.setItem('hostly_rv',JSON.stringify(filtered));
+    localStorage.setItem('pamarket_rv',JSON.stringify(filtered));
     this.saveState();
     this.openInner('Detail',{id});
   },
 
-  // ── Category Navigation ──────────────────────────────────
   filterByCat(cid) {
     const map = {
       vehicles:    'Vehicles',
@@ -508,7 +563,6 @@ window.H = {
     else { this.openInner('CategoryView', {cid}); }
   },
 
-  // ── Sort & Filter ────────────────────────────────────────
   toggleSort() {
     const sheet=document.getElementById('actionSheet');
     const bg=document.getElementById('sheetBg');
@@ -554,45 +608,31 @@ window.H = {
     this.navTo('Home');
   },
 
-  // ── Theme / Language ─────────────────────────────────────
   applyTheme() {
     const u=this.currentUser();
-    const stored=localStorage.getItem('hostly_theme');
-    const theme=(u&&u.settings&&u.settings.theme)||stored||'light';
+    const theme=(u&&u.settings&&u.settings.theme)||'light';
     document.documentElement.setAttribute('data-theme', theme);
-  },
-  toggleDarkMode() {
-    const cur=document.documentElement.getAttribute('data-theme')||'light';
-    const next=cur==='dark'?'light':'dark';
-    localStorage.setItem('hostly_theme',next);
-    const u=H.currentUser();
-    if(u){u.settings=u.settings||{};u.settings.theme=next;H.saveState();}
-    document.documentElement.setAttribute('data-theme',next);
-    const toggle=document.getElementById('darkModeToggle');
-    if(toggle) toggle.textContent=next==='dark'?'On':'Off';
-  },
-  isExpired(l) { return !!(l.expiresAt && Date.now() > l.expiresAt); },
-  renewListing(id) {
-    const l=(H.state.listings||[]).find(x=>x.id===id); if(!l) return;
-    l.expiresAt=Date.now()+(30*24*60*60*1000);
-    H.saveState();
-    if(typeof H.saveListingToCloud==='function') H.saveListingToCloud(l);
-    H.toast('Listing renewed for 30 days');
-    H.renderPage('MyListings');
   },
   applyLanguage() {
     const u=this.currentUser();
-    if(u&&u.language) document.querySelectorAll('.current-lang').forEach(el=>el.textContent=u.language);
+    const lang=(u&&u.language)||this.state.language||'English';
+    document.querySelectorAll('.current-lang').forEach(el=>el.textContent=lang);
+  },
+  getLanguage() {
+    const u=this.currentUser();
+    return (u&&u.language)||this.state.language||'English';
+  },
+  setLanguage(lang) {
+    const clean=lang||'English';
+    const u=this.currentUser();
+    if(u) u.language=clean;
+    this.state.language=clean;
+    this.saveState();
+    this.applyLanguage();
+    this.toast('Language saved');
+    this.renderPage(this.currentPageName, this.currentPageParams);
   },
 
-  logoTap() {
-    this.logoTaps++;
-    clearTimeout(this.logoTapsTimer);
-    this.logoTapsTimer=setTimeout(()=>{this.logoTaps=0;},4000);
-    if(this.logoTaps>=7){this.logoTaps=0;window.location.href='admin.html';}
-  },
-
-  // ── Pull-to-Refresh ──────────────────────────────────────
   _initPullToRefresh() {
     const el=document.getElementById('mainArea'); if(!el) return;
     if(el._ptrCleanup) el._ptrCleanup();
@@ -667,7 +707,6 @@ window.H = {
     };
   },
 
-  // ── Supabase Cloud Sync ──────────────────────────────────
   async saveListingToCloud(listing) {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
@@ -680,8 +719,7 @@ window.H = {
         city:listing.city||'', suburb:listing.suburb||'',
         photos:listing.photos||[], status:listing.status||'active',
         boost:listing.boost||null, views:listing.views||0,
-        created_at:listing.createdAt?new Date(listing.createdAt).toISOString():new Date().toISOString(),
-        expires_at:listing.expiresAt?new Date(listing.expiresAt).toISOString():null
+        created_at:listing.createdAt?new Date(listing.createdAt).toISOString():new Date().toISOString()
       });
       if(error) console.warn('Cloud save failed:',error.message);
     } catch(e){ console.warn('saveListingToCloud:',e.message); }
@@ -694,20 +732,58 @@ window.H = {
     } catch(e){ console.warn('deleteListingFromCloud:',e.message); }
   },
 
-  async uploadPhotoToStorage(blob) {
+  async fetchAdsFromSupabase() {
     try {
-      const sb = window.supabase;
-      if (!sb || typeof sb.storage === 'undefined') return null;
-      const u = H.currentUser();
-      if (!u) return null;
-      const path = `listings/${u.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
-      const { error } = await sb.storage.from('listings-photos').upload(path, blob, {
-        contentType: 'image/jpeg', cacheControl: '31536000', upsert: false
-      });
-      if (error) { console.warn('uploadPhotoToStorage:', error.message); return null; }
-      const { data } = sb.storage.from('listings-photos').getPublicUrl(path);
-      return data.publicUrl || null;
-    } catch(e) { console.warn('uploadPhotoToStorage:', e.message); return null; }
+      if(!window.supabase||typeof window.supabase.from!=='function') return;
+      const {data,error} = await window.supabase
+        .from('paid_ads')
+        .select('id,type,business_name,headline,tagline,image_url,bg_color,link_url,target_cat,starts_at,ends_at,active,priority,impressions,clicks,listing_id')
+        .eq('active',true)
+        .order('priority',{ascending:false});
+      if(error||!data) return;
+      H.state.paidAds = data.map(r=>({
+        id:r.id, type:r.type,
+        businessName:r.business_name, headline:r.headline,
+        tagline:r.tagline, imageUrl:r.image_url,
+        bgColor:r.bg_color, linkUrl:r.link_url, targetCat:r.target_cat,
+        startsAt:r.starts_at?new Date(r.starts_at).getTime():0,
+        endsAt:r.ends_at?new Date(r.ends_at).getTime():9999999999999,
+        active:r.active, priority:r.priority||0,
+        impressions:r.impressions||0, clicks:r.clicks||0,
+        listingId:r.listing_id||null
+      }));
+    } catch(e){ console.warn('fetchAdsFromSupabase:',e.message); }
+  },
+
+  async fetchAppSettings() {
+    try {
+      if(!window.supabase||typeof window.supabase.from!=='function') return;
+      const {data,error} = await window.supabase
+        .from('app_settings').select('settings').eq('id',1).single();
+      if(error||!data) return;
+      const s = data.settings||{};
+      Object.assign(H.state, s);
+      H.saveState();
+    } catch(e){ console.warn('fetchAppSettings:',e.message); }
+  },
+
+  trackAdImpression(id) {
+    if(!id||!window.supabase||typeof window.supabase.from!=='function') return;
+    const a = (H.state.paidAds||[]).find(x=>x.id===id); if(!a) return;
+    a.impressions = (a.impressions||0)+1;
+    window.supabase.from('paid_ads').update({impressions:a.impressions}).eq('id',id).then(()=>{});
+  },
+
+  trackAdClick(id, url) {
+    if(id&&window.supabase&&typeof window.supabase.from==='function'){
+      const a = (H.state.paidAds||[]).find(x=>x.id===id);
+      if(a){ a.clicks=(a.clicks||0)+1; window.supabase.from('paid_ads').update({clicks:a.clicks}).eq('id',id).then(()=>{}); }
+    }
+    const a = (H.state.paidAds||[]).find(x=>x.id===id);
+    // Listing link takes priority over external URL
+    if(a && a.listingId) { H.openListing(a.listingId); return; }
+    if(url) { window.open(url,'_blank','noopener'); return; }
+    if(a) H.toast((a.businessName||'Sponsored') + (a.tagline ? ' · ' + a.tagline : ''), 3000);
   },
 
   async fetchListingsFromSupabase() {
@@ -718,25 +794,20 @@ window.H = {
         .eq('status','active')
         .order('created_at',{ascending:false})
         .limit(200);
-      if(error||!data||!data.length) return;
-      const cloud=data.map(r=>({
+      if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
+      const cloud=(data||[]).map(r=>({
         id:r.id, sellerId:r.seller_id, sellerName:r.seller_name||'',
         sellerPhone:r.seller_phone||'', title:r.title, desc:r.description,
         price:r.price, currency:r.currency, cat:r.category,
         prov:r.province, city:r.city, suburb:r.suburb,
         photos:Array.isArray(r.photos)?r.photos:(r.photos?[r.photos]:[]),
         status:r.status, boost:r.boost, views:r.views||0,
-        createdAt:r.created_at?new Date(r.created_at).getTime():Date.now(),
-        expiresAt:r.expires_at?new Date(r.expires_at).getTime():null
+        createdAt:r.created_at?new Date(r.created_at).getTime():Date.now()
       }));
-      const ids=new Set((H.state.listings||[]).map(l=>l.id));
-      cloud.forEach(cl=>{
-        if(!ids.has(cl.id)) H.state.listings.push(cl);
-        else {
-          const i=H.state.listings.findIndex(l=>l.id===cl.id);
-          if(i!==-1) H.state.listings[i]=Object.assign(H.state.listings[i],cl);
-        }
-      });
+      // Replace active listings entirely from cloud so deleted ones disappear.
+      // Keep local non-active listings (pending, draft) that haven't synced yet.
+      const nonActive=(H.state.listings||[]).filter(l=>l.status!=='active');
+      H.state.listings=[...cloud,...nonActive];
       H.saveState();
     } catch(e){ console.warn('fetchListingsFromSupabase:',e.message); }
   },
@@ -748,22 +819,30 @@ window.H = {
       window._msgChannel=window.supabase.channel('messages-rt')
         .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
           const msg=payload.new; if(!msg) return;
-          const conv=(H.state.conversations||[]).find(c=>c.id===msg.conversation_id);
+          if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+          const conv=H.state.conversations.find(c=>c.id===msg.conversation_id);
           if(conv){
+            if (!Array.isArray(conv.messages)) conv.messages = [];
             const ex=conv.messages.find(m=>m.id===msg.id);
             if(!ex){
-              conv.messages.push({id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,t:new Date(msg.created_at).getTime(),read:false});
+              const localMsg = {id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,t:new Date(msg.created_at).getTime(),read:false};
+              conv.messages.push(localMsg);
               H.saveState();
-              if(H.currentPageName==='Chat'&&H.currentPageParams&&H.currentPageParams.id===msg.conversation_id)
-                H.renderPage('Chat',{id:msg.conversation_id});
+              if(H.currentPageName==='Chat'&&H.currentPageParams&&H.currentPageParams.id===msg.conversation_id&&typeof H._appendChatMessages==='function')
+                H._appendChatMessages(msg.conversation_id,[localMsg]);
+              else if(H.currentPageName==='Messages'&&typeof H._refreshMessagesPage==='function')
+                H._refreshMessagesPage({ skipSync:true });
               H.pushNotif&&H.pushNotif(H.state.currentUserId,'New message',msg.text||'');
             }
+          } else if (typeof H.syncConversations === 'function') {
+            H.syncConversations().then(function(){
+              if (H.currentPageName === 'Messages' && typeof H._refreshMessagesPage === 'function') H._refreshMessagesPage({ skipSync:true });
+            });
           }
         }).subscribe();
     } catch(e){ console.warn('Realtime setup failed:',e.message); }
   },
 
-  // ── Sync job applications from Supabase ──────────────────
   async syncApplications() {
     try {
       const sb = window.supabase;
@@ -779,6 +858,7 @@ window.H = {
         company: r.company, applicantId: r.applicant_id,
         applicantName: r.applicant_name, applicantPhone: r.applicant_phone,
         applicantEmail: r.applicant_email, message: r.message,
+        answers: r.answers || [],
         status: r.status, employerId: r.employer_id,
         appliedAt: r.applied_at ? new Date(r.applied_at).getTime() : Date.now()
       }));
@@ -794,6 +874,49 @@ window.H = {
     } catch(e) { console.warn('syncApplications:', e.message); }
   },
 
+  async syncReports() {
+    try {
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') return;
+      const { data, error } = await sb.from('reports')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(300);
+      if (error || !data) return;
+
+      H.state.reports = H.state.reports || [];
+      H.state.supportTickets = H.state.supportTickets || [];
+      data.forEach(r => {
+        const createdAt = r.created_at ? new Date(r.created_at).getTime() : Date.now();
+        if (r.target_type === 'support') {
+          const txt = (r.reason || '').replace(/^\[Support\]\s*/, '');
+          const parts = txt.split('\n\n');
+          const subject = (parts[0] || 'Support request').trim();
+          const message = parts.slice(1).join('\n\n').trim() || txt;
+          const ticket = {
+            id: r.id, userId: r.reporter_id || null, subject, message,
+            createdAt, status: r.status === 'resolved' ? 'closed' : 'open',
+            reportId: r.id
+          };
+          const i = H.state.supportTickets.findIndex(t => t.id === ticket.id || t.reportId === ticket.reportId);
+          if (i === -1) H.state.supportTickets.push(ticket);
+          else H.state.supportTickets[i] = Object.assign(H.state.supportTickets[i], ticket);
+        } else {
+          const report = {
+            id: r.id, reporterId: r.reporter_id || r.reported_by || null,
+            targetType: r.target_type || 'listing', targetId: r.target_id,
+            reason: r.reason || '', status: r.status || 'open',
+            t: createdAt, createdAt
+          };
+          const i = H.state.reports.findIndex(x => x.id === report.id);
+          if (i === -1) H.state.reports.push(report);
+          else H.state.reports[i] = Object.assign(H.state.reports[i], report);
+        }
+      });
+      H.saveState();
+    } catch(e) { console.warn('syncReports:', e.message); }
+  },
+
   async saveApplicationToCloud(app) {
     try {
       const sb = window.supabase;
@@ -803,6 +926,7 @@ window.H = {
         company: app.company || '', applicant_id: app.applicantId,
         applicant_name: app.applicantName, applicant_phone: app.applicantPhone,
         applicant_email: app.applicantEmail, message: app.message,
+        answers: app.answers || [],
         status: app.status || 'pending', employer_id: app.employerId,
         applied_at: app.appliedAt ? new Date(app.appliedAt).toISOString() : new Date().toISOString()
       });
@@ -818,71 +942,176 @@ window.H = {
     } catch(e) { console.warn('updateApplicationStatusCloud:', e.message); }
   },
 
-  // ── Sync conversations from Supabase ─────────────────────
   async syncConversations() {
     try {
       const sb = window.supabase;
-      if (!sb || typeof sb.from !== 'function') return;
-      const u = H.currentUser(); if (!u) return;
-      const { data: convs, error } = await sb.from('conversations')
-        .select('id, members, listing_id, created_at, updated_at')
-        .contains('members', [u.id])
-        .order('updated_at', { ascending: false })
-        .limit(100);
-      if (error || !convs) return;
-      for (const c of convs) {
-        let local = (H.state.conversations || []).find(x => x.id === c.id);
-        if (!local) {
-          local = { id: c.id, members: c.members, listingId: c.listing_id, messages: [] };
-          (H.state.conversations = H.state.conversations || []).push(local);
+      if (!sb || typeof sb.from !== 'function') return false;
+      const u = H.currentUser(); if (!u) return false;
+      if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+      let changed = false;
+
+      // Phase 1: discover from conversations table (may not exist — silent fail)
+      const knownIds = new Set(H.state.conversations.map(c => c.id));
+      try {
+        const { data: convs, error } = await sb.from('conversations')
+          .select('id, members, listing_id')
+          .contains('members', [u.id])
+          .limit(100);
+        if (!error && convs) {
+          for (const c of convs) {
+            knownIds.add(c.id);
+            let local = H.state.conversations.find(x => x.id === c.id);
+            if (!local) {
+              local = { id: c.id, members: c.members || [], listingId: c.listing_id || null, messages: [] };
+              H.state.conversations.push(local);
+              changed = true;
+            } else {
+              const m = Array.isArray(c.members) ? c.members : [];
+              if (JSON.stringify(local.members||[]) !== JSON.stringify(m)) { local.members = m; changed = true; }
+            }
+          }
         }
-        // fetch recent messages for this conversation
-        const { data: msgs } = await sb.from('messages')
-          .select('id, sender_id, sender_name, text, read, created_at')
-          .eq('conversation_id', c.id)
-          .order('created_at', { ascending: true })
-          .limit(200);
-        if (msgs) {
-          const existing = new Set(local.messages.map(m => m.id));
-          msgs.forEach(m => {
-            if (!existing.has(m.id)) {
-              local.messages.push({
-                id: m.id, from: m.sender_id, senderName: m.sender_name || '',
-                text: m.text, t: new Date(m.created_at).getTime(), read: m.read
+      } catch(e) { /* conversations table may not exist */ }
+
+      // Phase 2: discover from messages table — works without conversations table.
+      // Conv IDs embed the last 6 chars of each member UUID, so LIKE finds them.
+      try {
+        const uidSuffix = u.id.slice(-6);
+        const [sentRes, recvRes] = await Promise.all([
+          sb.from('messages').select('conversation_id,sender_id,sender_name').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(300),
+          sb.from('messages').select('conversation_id,sender_id,sender_name').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(300)
+        ]);
+        for (const row of [...(sentRes.data||[]), ...(recvRes.data||[])]) {
+          if (!row.conversation_id || knownIds.has(row.conversation_id)) continue;
+          knownIds.add(row.conversation_id);
+          const otherId = row.sender_id !== u.id ? row.sender_id : null;
+          const members = otherId ? [u.id, otherId] : [u.id];
+          H.state.conversations.push({ id: row.conversation_id, members, listingId: null, messages: [] });
+          changed = true;
+        }
+      } catch(e) { /* messages table scan failed */ }
+
+      // Phase 3: fetch profiles for all unknown or nameless conversation members (fixes "Unknown User")
+      const allMemberIds = new Set();
+      H.state.conversations.forEach(c => (c.members||[]).forEach(id => allMemberIds.add(id)));
+      // Include IDs missing from state OR cached but with an empty name — so names are backfilled
+      const profilesNeeded = Array.from(allMemberIds).filter(id => {
+        if (id === u.id) return false;
+        const cached = (H.state.users||[]).find(x => x.id === id);
+        return !cached || !cached.name;
+      });
+      if (profilesNeeded.length) {
+        try {
+          const { data: profiles } = await sb.from('profiles')
+            .select('id,name,phone,email,avatar,verified,role,status,created_at')
+            .in('id', profilesNeeded);
+          (profiles||[]).forEach(p => {
+            const existing = (H.state.users||[]).find(x => x.id === p.id);
+            if (existing) {
+              // Update entry — especially fill in the name if we now have one
+              if (p.name && !existing.name) { existing.name = p.name; changed = true; }
+              if (p.avatar && !existing.avatar) { existing.avatar = p.avatar; changed = true; }
+              if (p.verified && !existing.verified) { existing.verified = true; changed = true; }
+            } else {
+              (H.state.users = H.state.users||[]).push({
+                id: p.id, name: p.name||'', phone: p.phone||'',
+                email: p.email||'', avatar: p.avatar||null,
+                verified: !!p.verified, role: p.role||'user',
+                status: p.status||'active',
+                joinedAt: p.created_at ? new Date(p.created_at).getTime() : Date.now()
               });
+              changed = true;
             }
           });
-        }
+        } catch(e) {}
       }
-      H.saveState();
+
+      // Phase 4: sync messages for EVERY known conversation
+      for (const local of H.state.conversations) {
+        if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
+        const { data: msgs, error: msgErr } = await sb.from('messages')
+          .select('id, sender_id, sender_name, text, read, created_at')
+          .eq('conversation_id', local.id)
+          .order('created_at', { ascending: true })
+          .limit(200);
+        if (msgErr || !msgs) continue;
+        const existing = new Map(local.messages.map(m => [m.id, m]));
+        msgs.forEach(m => {
+          const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
+          const found = existing.get(m.id);
+          const read = found && found.read ? true : !!m.read;
+          if (!found) {
+            local.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, t, read });
+            changed = true;
+          } else if (found.read !== read || found.from !== m.sender_id || found.senderName !== (m.sender_name||'')) {
+            found.from = m.sender_id;
+            found.senderName = m.sender_name || found.senderName || '';
+            found.read = read;
+            changed = true;
+          }
+        });
+        local.messages.sort((a,b) => (a.t||0) - (b.t||0));
+      }
+
+      // Phase 4.5: backfill profile names from message sender_name where name is still empty
+      // This covers cases where the profiles table is unavailable or the entry has no name
+      H.state.conversations.forEach(function(conv) {
+        (conv.members||[]).forEach(function(memberId) {
+          if (memberId === u.id) return;
+          const existingUser = (H.state.users||[]).find(function(x){ return x.id === memberId; });
+          if (existingUser && existingUser.name) return; // already resolved
+          // Find the first message from this member that carries a non-empty sender_name
+          const nameFromMsg = ((conv.messages||[]).find(function(m){ return m.from === memberId && m.senderName; })||{}).senderName;
+          if (!nameFromMsg) return;
+          if (existingUser) {
+            existingUser.name = nameFromMsg;
+          } else {
+            (H.state.users = H.state.users||[]).push({
+              id: memberId, name: nameFromMsg, phone: '', email: '',
+              avatar: null, verified: false, role: 'user', status: 'active',
+              joinedAt: Date.now()
+            });
+          }
+          if (!conv.otherName) { conv.otherName = nameFromMsg; }
+          changed = true;
+        });
+      });
+
+      if (changed) H.saveState();
+      return changed;
     } catch(e) { console.warn('syncConversations:', e.message); }
+    return false;
   },
+
 
   async saveMessageToCloud(convId, msg) {
     try {
       const sb = window.supabase;
-      if (!sb || typeof sb.from !== 'function') return;
-      await sb.from('messages').upsert({
+      if (!sb || typeof sb.from !== 'function') return { ok:false, error:'Connection unavailable' };
+      const { error } = await sb.from('messages').upsert({
         id: msg.id, conversation_id: convId,
         sender_id: msg.from, sender_name: msg.senderName || '',
         text: msg.text, read: msg.read || false,
         created_at: new Date(msg.t || Date.now()).toISOString()
       });
-    } catch(e) { console.warn('saveMessageToCloud:', e.message); }
+      if (error) { console.warn('saveMessageToCloud:', error.message); return { ok:false, error:error.message }; }
+      return { ok:true };
+    } catch(e) { console.warn('saveMessageToCloud:', e.message); return { ok:false, error:e.message }; }
   },
 
   async ensureConversationInCloud(conv) {
     try {
       const sb = window.supabase;
-      if (!sb || typeof sb.from !== 'function') return;
-      await sb.from('conversations').upsert({
+      if (!sb || typeof sb.from !== 'function') return { ok:false, error:'Connection unavailable' };
+      const { error } = await sb.from('conversations').upsert({
         id: conv.id, members: conv.members,
         listing_id: conv.listingId || null
       });
-    } catch(e) { console.warn('ensureConversationInCloud:', e.message); }
+      if (error) { console.warn('ensureConversationInCloud:', error.message); return { ok:false, error:error.message }; }
+      return { ok:true };
+    } catch(e) { console.warn('ensureConversationInCloud:', e.message); return { ok:false, error:e.message }; }
   },
 
-  // ── Category View (fallback for unmapped categories) ─────
   _registerCategoryView() {
     this.pages.CategoryView=function({cid}){
       const cat=H.CATEGORIES.find(c=>c.id===cid)||{name:'Category',icon:''};
@@ -895,29 +1124,28 @@ window.H = {
     };
   },
 
-  // ── About & Ads Pages ────────────────────────────────────
   _registerExtraPages() {
     H.pages.About=function(){
-      return '<div class="page active">'+H.innerTopbar('About Hostly')
+      return '<div class="page active">'+H.innerTopbar('About PaMarket')
         +'<div class="about-wrap">'
-        +'<div class="about-hero"><div class="about-brand">Host<em>ly</em></div><div class="about-tag">Free Zimbabwean Online Marketplace</div></div>'
-        +'<div class="about-card"><div class="about-sec-title">What is Hostly?</div><div class="about-body">Hostly is a free Zimbabwean online marketplace connecting buyers and sellers. Whether you are looking for goods, services, vehicles, property, or jobs, Hostly makes it easy to post, browse, and connect with people in your province and across Zimbabwe.</div></div>'
-        +'<div class="about-card"><div class="about-sec-title">Who is it for?</div><div class="about-body">Hostly is for anyone in Zimbabwe — individuals selling personal items, small businesses promoting services, employers posting vacancies, and buyers searching for the best local deals. The app is free to download and free to use.</div></div>'
+        +'<div class="about-hero"><div class="about-brand">Pa<em>Market</em></div><div class="about-tag">Free Zimbabwean Online Marketplace</div></div>'
+        +'<div class="about-card"><div class="about-sec-title">What is PaMarket?</div><div class="about-body">PaMarket is a free Zimbabwean online marketplace connecting buyers and sellers. Whether you are looking for goods, services, vehicles, property, or jobs, PaMarket makes it easy to post, browse, and connect with people in your province and across Zimbabwe.</div></div>'
+        +'<div class="about-card"><div class="about-sec-title">Who is it for?</div><div class="about-body">PaMarket is for anyone in Zimbabwe — individuals selling personal items, small businesses promoting services, employers posting vacancies, and buyers searching for the best local deals. The app is free to download and free to use.</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Key Features</div><div class="about-grid">'
         +['Free Listings','Secure Messaging','WhatsApp Connect','All Categories','Province Filters','Boost Your Ads','Job Board','Photo Uploads'].map(f=>'<div class="about-feat">'+f+'</div>').join('')
         +'</div></div>'
-        +'<div class="about-card"><div class="about-sec-title">Legal &amp; Compliance</div><div class="about-body">Hostly operates as a platform for user-generated listings. We do not own, sell, or warrant any items listed. Users are responsible for ensuring their listings comply with applicable Zimbabwean law. Prohibited content (counterfeit goods, illegal services, misleading listings) will be removed and accounts suspended. By using Hostly you agree to our Terms of Service and Privacy Policy.</div></div>'
+        +'<div class="about-card"><div class="about-sec-title">Legal &amp; Compliance</div><div class="about-body">PaMarket operates as a platform for user-generated listings. We do not own, sell, or warrant any items listed. Users are responsible for ensuring their listings comply with applicable Zimbabwean law. Prohibited content (counterfeit goods, illegal services, misleading listings) will be removed and accounts suspended. By using PaMarket you agree to our Terms of Service and Privacy Policy.</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Contact Us</div>'
         +'<div class="about-contact-row" onclick="window.location.href=\'mailto:chakusaprince@gmail.com\'"><div class="about-contact-ic email-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><div><div class="about-contact-label">Support Email</div><div class="about-contact-val">chakusaprince@gmail.com</div></div></div>'
         +'<div class="about-contact-row" onclick="window.open(\'https://wa.me/971589772645\')"><div class="about-contact-ic wa-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg></div><div><div class="about-contact-label">WhatsApp Support</div><div class="about-contact-val">+971 589 772 645</div></div></div>'
         +'</div>'
-        +'<div class="about-ads-banner"><div class="about-ads-title">Advertise with Hostly</div><div class="about-ads-sub">Reach active buyers across all provinces of Zimbabwe</div><button class="about-ads-btn" onclick="H.openInner(\'Ads\')">Get in Touch</button></div>'
-        +'<div style="text-align:center;font-size:12px;color:var(--text-muted,#999);padding:16px 0 4px">Hostly © 2026 · Made in Zimbabwe</div>'
+        +'<div class="about-ads-banner"><div class="about-ads-title">Advertise with PaMarket</div><div class="about-ads-sub">Reach active buyers across all provinces of Zimbabwe</div><button class="about-ads-btn" onclick="H.openInner(\'Ads\')">Get in Touch</button></div>'
+        +'<div style="text-align:center;font-size:12px;color:var(--text-muted,#999);padding:16px 0 4px">PaMarket © 2026 · Made in Zimbabwe</div>'
         +'</div></div>';
     };
 
     H.pages.Ads=function(){
-      return '<div class="page active">'+H.innerTopbar('Advertise with Hostly')
+      return '<div class="page active">'+H.innerTopbar('Advertise with PaMarket')
         +'<div class="about-wrap">'
         +'<div class="ads-hero"><div class="ads-hero-title">Grow Your Business</div><div class="ads-hero-sub">Connect with active buyers across all provinces of Zimbabwe. Tell us about your goals and we\'ll find the right fit for you.</div></div>'
         +'<div class="about-card"><div class="about-sec-title">What We Offer</div>'
@@ -937,7 +1165,7 @@ window.H = {
         +'<div class="about-card" style="text-align:center">'
         +'<div class="about-sec-title">Prefer WhatsApp?</div>'
         +'<div class="about-body" style="margin-bottom:12px">Chat with us directly on WhatsApp and we\'ll get back to you quickly.</div>'
-        +'<button onclick="window.open(\'https://wa.me/971589772645?text=Hi%2C%20I\'m%20interested%20in%20advertising%20on%20Hostly\')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>Chat on WhatsApp</button>'
+        +'<button onclick="window.open(\'https://wa.me/971589772645?text=Hi%2C%20I\'m%20interested%20in%20advertising%20on%20PaMarket\')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>Chat on WhatsApp</button>'
         +'</div>'
         +'</div></div>';
     };
@@ -949,13 +1177,12 @@ window.H = {
       if(!biz){H.toast('Please enter your business name');return;}
       if(!email){H.toast('Please enter your contact email');return;}
       if(!msg){H.toast('Please add a message');return;}
-      const subject=encodeURIComponent('Hostly Advertising Enquiry – '+type);
+      const subject=encodeURIComponent('PaMarket Advertising Enquiry – '+type);
       const body=encodeURIComponent('Business: '+biz+'\nContact Email: '+email+'\nAd Type: '+type+'\n\nMessage:\n'+msg);
       window.location.href='mailto:chakusaprince@gmail.com?subject='+subject+'&body='+body;
     };
   },
 
-  // ── Job Page ─────────────────────────────────────────────
   _registerJobPage() {
     H.pages.PostJob=function(){
       const u=H.currentUser();
@@ -982,7 +1209,7 @@ window.H = {
         +'<div class="fg"><div class="fl">How to Apply</div><select class="fi" id="jApplyType" onchange="H._toggleApplyFields()"><option value="email">Via Email</option><option value="whatsapp">Via WhatsApp</option><option value="both">Both</option></select></div>'
         +'<div class="fg" id="jEmailWrap"><div class="fl">Contact Email</div><input class="fi" id="jEmail" type="email" value="'+H.escHtml(u.email||'')+'"></div>'
         +'<div class="fg" id="jPhoneWrap" style="display:none"><div class="fl">WhatsApp Number</div><input class="fi" id="jPhone" type="tel" value="'+H.escHtml(u.phone||'')+'"></div>'
-        +'<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:12px;padding:14px;margin:16px 0;font-size:13px;color:#856404">&#9888; Fraudulent job postings will result in a permanent ban.</div>'
+        +'<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:12px;padding:14px;margin:16px 0;font-size:13px;color:#856404;display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Fraudulent job postings will result in a permanent ban.</div>'
         +'<button onclick="H._submitJob()" style="width:100%;padding:15px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">Submit for Review</button>'
         +'</div></div>';
     };
@@ -1035,21 +1262,52 @@ window.H = {
     };
   },
 
-  // ── Account Menu ─────────────────────────────────────────
   showAccountMenu(btn) {
-    const u=this.currentUser(); if(!u) return;
+    const u=this.currentUser();
     const sheet=document.getElementById('actionSheet');
     const bg=document.getElementById('sheetBg');
     const I=this.ICONS;
     const nav=(page)=>`H.closeSheet();H.state._backToAccount=true;setTimeout(()=>H.openInner('${page}'),50)`;
-    const item=(label,icon,page,badge)=>`<button class="sheet-item" onclick="${nav(page)}"><span class="sheet-icon">${icon}</span><span class="sheet-label">${label}</span>${badge?`<span style="margin-left:auto;background:#F5A623;color:#1A3A8F;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:800">${badge}</span>`:''}</button>`;
+    const item=(label,icon,page,badge,extra)=>`<button class="sheet-item" onclick="${extra||nav(page)}"><span class="sheet-icon">${icon}</span><span class="sheet-label">${label}</span>${badge?`<span style="margin-left:auto;background:#F5A623;color:#1A3A8F;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:800">${badge}</span>`:''}<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text-primary)" stroke-width="2" style="margin-left:auto;opacity:.7"><polyline points="9 18 15 12 9 6"/></svg></button>`;
+
+    if(!u){
+      const publicNav=(page)=>`H.closeSheet();setTimeout(()=>H.openInner('${page}'),50)`;
+      const gated=msg=>`H.closeSheet();setTimeout(()=>H.requireAuth('${msg}'),50)`;
+      sheet.innerHTML=`
+        <div class="guest-account-head">
+          <img src="img/icon-192.png" alt="PaMarket">
+          <div class="guest-account-card">
+            <div>Login to continue</div>
+            <button onclick="H.closeSheet();setTimeout(()=>H.requireAuth('Login to continue'),50)">SIGN IN / SIGN UP</button>
+          </div>
+        </div>
+        <div class="guest-account-activity" onclick="${gated('Login to continue')}">
+          <span class="sheet-icon">${I.search}</span>
+          <div><strong>My Activity</strong><small>View your recent searches and activities</small></div>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="guest-menu-title">More on PaMarket</div>
+        ${item('Advertisements',I.ads,'', '', gated('Login to advertise'))}
+        ${item('Sell My Property','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>','', '', gated('Login to continue'))}
+        ${item('Find Jobs','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>','Jobs','',publicNav('Jobs'))}
+        ${item('Favourites',I.heart,'', '', gated('Login to continue'))}
+        ${item('Saved Searches',I.search,'', '', gated('Login to continue'))}
+        ${item('Language','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 0 20"/><path d="M12 2a15.3 15.3 0 0 0 0 20"/></svg>','LanguageSettings',this.getLanguage(),publicNav('LanguageSettings'))}
+        ${item('Notification Center','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>','Notifications','',publicNav('Notifications'))}
+        ${item('Help & Support',I.help,'Help','',publicNav('Help'))}
+        ${item('About Us','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>','About','',publicNav('About'))}
+        ${item('Privacy Policy','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>','HelpPrivacy','',publicNav('HelpPrivacy'))}
+        <button class="sheet-close" onclick="H.closeSheet()">${I.close} Close</button>`;
+      sheet.classList.add('open'); bg.classList.add('open');
+      return;
+    }
 
     const activeAds=(this.state.listings||[]).filter(l=>l.sellerId===u.id&&l.status==='active').length;
     const savedAds=((this.state.saves||{})[u.id]||[]).length;
-    const unread=(this.state.conversations||[]).reduce((n,c)=>c.members.includes(u.id)?n+(c.messages||[]).filter(m=>m.from!==u.id&&!m.read).length:n,0);
+    if (!Array.isArray(this.state.conversations)) this.state.conversations = [];
+    const unread=this.state.conversations.reduce((n,c)=>Array.isArray(c.members)&&c.members.includes(u.id)?n+(c.messages||[]).filter(m=>m.from!==u.id&&!m.read).length:n,0);
 
     sheet.innerHTML=`
-      <!-- User info header -->
       <div onclick="${nav('Profile')}" style="display:flex;align-items:center;gap:14px;padding:16px 18px 14px;border-bottom:1px solid var(--border);cursor:pointer">
         <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;font-weight:800;color:#1A3A8F;border:2px solid #1A3A8F22">
           ${u.avatar?`<img src="${this.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover">`:this.initials(u.name)}
@@ -1062,7 +1320,6 @@ window.H = {
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
 
-      <!-- Quick stats -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)">
         ${[['Ads',activeAds,'MyListings'],['Saved',savedAds,'Favorites'],['Inbox',unread,'Messages']].map(([l,v,p])=>`
           <div onclick="${p==='Messages'?'H.closeSheet();setTimeout(()=>H.navTo(\'Messages\'),50)':nav(p)}" style="padding:12px 4px;text-align:center;cursor:pointer;border-right:1px solid var(--border)">
@@ -1074,12 +1331,11 @@ window.H = {
       ${item('My Profile',I.user,'Profile','')}
       ${item('My Listings',I.doc,'MyListings',activeAds||'')}
       ${item('Saved & Favorites',I.heart,'Favorites',savedAds||'')}
-      ${item('Wallet & Payments',I.wallet,'Wallet','')}
+      ${item('Advertisements',I.ads,'Ads','')}
       ${item('Settings',I.settings,'Settings','')}
       ${item('Security & Password','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>','SecuritySettings','')}
       ${item('Help & Support',I.help,'Help','')}
-      ${item('About Hostly','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>','About','')}
-      ${item('Advertise with Us','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>','Ads','')}
+      ${item('About PaMarket','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>','About','')}
       <button class="sheet-item danger" onclick="H.closeSheet();setTimeout(()=>H.logout(),50)">
         <span class="sheet-icon">${I.logout}</span>
         <span class="sheet-label">Sign Out</span>
@@ -1088,104 +1344,78 @@ window.H = {
     sheet.classList.add('open'); bg.classList.add('open');
   },
 
-  // ── Auth Gate ────────────────────────────────────────────
   requireAuth(msg) {
-    const sheet=document.getElementById('actionSheet');
-    const bg=document.getElementById('sheetBg');
-    sheet.innerHTML='<div style="text-align:center;padding:8px 0 16px">'
-      +'<div style="width:56px;height:56px;background:#1A3A8F;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
-      +'<div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px">'+(msg||'Sign in to continue')+'</div>'
-      +'<div style="font-size:13px;color:var(--sub);margin-bottom:24px">Join Zimbabwe&#39;s free marketplace</div>'
-      +'<button onclick="H.closeSheet();setTimeout(()=>H.authPage(),50)" style="display:block;width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px">Sign In</button>'
-      +'<button onclick="H.closeSheet()" style="display:block;width:100%;padding:12px;background:transparent;color:var(--sub);border:none;font-size:14px;cursor:pointer">Browse as Guest</button>'
-      +'</div>';
-    sheet.classList.add('open'); bg.classList.add('open');
+    this.closeSheet();
+    const bg=document.getElementById('modalBg');
+    const box=document.getElementById('modalBox');
+    if(!bg||!box) return;
+    box.classList.add('login-modal');
+    box.innerHTML=`
+      <button class="login-modal-close" onclick="H.closeLoginModal()" aria-label="Close">&times;</button>
+      <div class="login-modal-brand">
+        <div>Pa<em>Market</em></div>
+      </div>
+      <div class="login-modal-illustration">
+        <svg viewBox="0 0 120 90" fill="none" aria-hidden="true">
+          <path d="M24 76V38l36-26 36 26v38" fill="#EEF2FF"/>
+          <path d="M32 76V42l28-20 28 20v34" stroke="#1A3A8F" stroke-width="5" stroke-linejoin="round"/>
+          <path d="M53 76V56h16v20M43 49h12M65 49h12" stroke="#F5A623" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="87" cy="27" r="14" fill="#fff" stroke="#1A3A8F" stroke-width="5"/>
+          <path d="M98 38l13 13" stroke="#1A3A8F" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="auth-card" id="authCard"></div>
+      <div class="login-modal-foot">
+        By continuing you agree to our
+        <span onclick="H.authShowDoc('terms')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Terms &amp; Conditions</span>
+        and
+        <span onclick="H.authShowDoc('privacy')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Privacy Policy</span>
+      </div>`;
+    bg.classList.add('open');
+    bg.scrollTop = 0;
+    if(typeof H.authStepEmail==='function') H.authStepEmail();
   },
 
-  // ── Onboarding ───────────────────────────────────────────
-  // ── Offline Detection (#7) ───────────────────────────────
-  _initOfflineDetection() {
-    const show=()=>{
-      if(document.getElementById('offlineBanner')) return;
-      const b=document.createElement('div');
-      b.id='offlineBanner'; b.className='offline-banner';
-      b.innerHTML='<span>&#9888;&#65039; No internet connection</span>';
-      (document.getElementById('app')||document.body).prepend(b);
-    };
-    const hide=()=>{const b=document.getElementById('offlineBanner');if(b)b.remove();};
-    window.addEventListener('online',hide);
-    window.addEventListener('offline',show);
-    if(!navigator.onLine) show();
-  },
-
-  // ── Error Tracking (#13) ─────────────────────────────────
-  _initErrorTracking() {
-    window.onerror=(msg,src,line,col,err)=>{H._logError({type:'js',msg:String(msg),src,line,col,stack:err&&err.stack});};
-    window.addEventListener('unhandledrejection',e=>{H._logError({type:'promise',msg:String(e.reason),stack:e.reason&&e.reason.stack});});
-  },
-  _logError(data) {
-    try {
-      console.warn('[Hostly]',data.type,data.msg);
-      if(!window.supabase||typeof window.supabase.from!=='function') return;
-      window.supabase.from('error_logs').insert({
-        type:data.type, message:String(data.msg||'').slice(0,500),
-        source:String(data.src||'').slice(0,200),
-        stack:String(data.stack||'').slice(0,1000),
-        user_id:(H.state&&H.state.currentUserId)||null,
-        user_agent:navigator.userAgent.slice(0,300),
-        created_at:new Date().toISOString()
-      }).then(()=>{}).catch(()=>{});
-    } catch(_){}
-  },
-
-  // ── Push Notifications (#3) ──────────────────────────────
-  async _initPushNotifications() {
-    if(typeof Capacitor==='undefined'||!Capacitor.isNativePlatform()) return;
-    try {
-      const PP=Capacitor.Plugins&&Capacitor.Plugins.PushNotifications;
-      if(!PP) return;
-      const perm=await PP.requestPermissions();
-      if(perm.receive!=='granted') return;
-      await PP.register();
-      PP.addListener('registration',async({value:token})=>{
-        const u=H.currentUser(); if(!u) return;
-        u.pushToken=token; H.saveState();
-        if(window.supabase) await window.supabase.from('profiles').update({push_token:token}).eq('id',u.id).catch(()=>{});
-      });
-      PP.addListener('pushNotificationReceived',n=>{H.toast((n.title||'')+(n.body?': '+n.body:''));});
-      PP.addListener('pushNotificationActionPerformed',({notification:{data}})=>{
-        if(data&&data.type==='message'&&data.convId) H.openInner('Chat',{id:data.convId});
-        else if(data&&data.type==='listing'&&data.id) H.openListing(data.id);
-        else if(data&&data.deepLink) H._handleDeepLink(data.deepLink);
-      });
-    } catch(e){console.warn('Push setup:',e);}
-  },
-
-  // ── Saved Searches check (#10) ───────────────────────────
-  checkSavedSearches() {
-    const u=H.currentUser(); if(!u) return;
-    const searches=((H.state.savedSearches||{})[u.id]||[]);
-    if(!searches.length) return;
-    const listings=(H.state.listings||[]).filter(l=>l.status==='active'&&!H.isExpired(l));
-    searches.forEach(s=>{
-      const key='hostly_ss_'+s.id;
-      const last=parseInt(localStorage.getItem(key)||'0',10);
-      if(!last){localStorage.setItem(key,Date.now());return;}
-      const q=(s.query||'').toLowerCase();
-      const matches=listings.filter(l=>l.createdAt>last&&
-        (!q||l.title.toLowerCase().includes(q)||(l.desc||'').toLowerCase().includes(q))&&
-        (!s.cat||l.cat===s.cat));
-      if(matches.length){
-        const label=s.query||s.cat||'your search';
-        H.pushNotif(u.id,`${matches.length} new match${matches.length>1?'es':''} for "${label}"`,
-          matches[0].title+' and more');
-      }
-      localStorage.setItem(key,Date.now());
-    });
+  guestAccountPage() {
+    const I=this.ICONS;
+    const item=(label,icon,page,badge,restricted)=>`<button class="account-menu-row" onclick="${restricted?`H.requireAuth('Login to continue')`:`H.openInner('${page}')`}">
+      <span class="sheet-icon">${icon}</span>
+      <span class="sheet-label">${label}</span>
+      ${badge?`<span class="account-row-badge">${badge}</span>`:''}
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>`;
+    return `<div class="page active account-page">
+      <div class="guest-account-head">
+        <div class="guest-account-mark">Pa<em>Market</em></div>
+        <div class="guest-account-card">
+          <div>Login to continue</div>
+          <button onclick="H.requireAuth('Login to continue')">SIGN IN / SIGN UP</button>
+        </div>
+      </div>
+      <div class="guest-account-body">
+        <div class="guest-account-activity" onclick="H.requireAuth('Login to continue')">
+          <span class="sheet-icon">${I.search}</span>
+          <div><strong>My Activity</strong><small>View your recent searches and activities</small></div>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="guest-menu-title">More on PaMarket</div>
+        <div class="account-menu-list">
+          ${item('Advertisements',I.ads,'Ads','',true)}
+          ${item('Favourites',I.heart,'Favorites','',true)}
+          ${item('Saved Searches',I.search,'SavedSearches','',true)}
+          ${item('Find Jobs','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>','Jobs')}
+          ${item('Notification Center','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>','Notifications')}
+          ${item('Language','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 0 20"/><path d="M12 2a15.3 15.3 0 0 0 0 20"/></svg>','LanguageSettings',this.getLanguage())}
+          ${item('Help & Support',I.help,'Help')}
+          ${item('About Us','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>','About')}
+          ${item('Privacy Policy','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>','HelpPrivacy')}
+        </div>
+      </div>
+    </div>`;
   },
 
   _showOnboarding() {
-    if(localStorage.getItem('hostly_onboarded')) return;
+    if(localStorage.getItem('pamarket_onboarded')) return;
     const slides=[
       {icon:'🏪',title:'Zimbabwe\'s Free Marketplace',sub:'Buy and sell anything across all provinces'},
       {icon:'📱',title:'Browse Without Signing Up',sub:'Explore listings freely. Sign in only when ready'},
@@ -1212,33 +1442,9 @@ window.H = {
         }`;
     };
     window._onboardNext=()=>{cur++;render();};
-    window._onboardSkip=()=>{localStorage.setItem('hostly_onboarded','1');ov.remove();};
+    window._onboardSkip=()=>{localStorage.setItem('pamarket_onboarded','1');ov.remove();};
     document.body.appendChild(ov);
     render();
-  },
-
-  // ── Demo Data ────────────────────────────────────────────
-  _seedDemoData() {
-    this.state.listings=(this.state.listings||[]).filter(l=>!l.id.startsWith('demo'));
-    const now=Date.now();
-    this.state.listings.push(
-      {id:'demo1',title:'iPhone 14 Pro Max 256GB',photos:[],desc:'Excellent condition, bought 6 months ago. Comes with original box.',price:850,currency:'USD',cat:'electronics',prov:'Harare',city:'Harare CBD',suburb:'Avondale',sellerId:'demo_seller1',status:'active',createdAt:now-3600000,views:24,sellerName:'Tafadzwa Moyo',sellerPhone:'+263771234567'},
-      {id:'demo2',title:'Toyota Vitz 2018 Low Mileage',photos:[],desc:'Well maintained, full service history. Fuel efficient.',price:7500,currency:'USD',cat:'vehicles',prov:'Harare',city:'Harare CBD',suburb:'Borrowdale',sellerId:'demo_seller2',status:'active',createdAt:now-7200000,views:56,sellerName:'Rumbidzai Ncube',sellerPhone:'+263772345678'},
-      {id:'demo3',title:'3 Bed House for Rent — Borrowdale',photos:[],desc:'Spacious 3 bed house with garden, garage, solar and borehole.',price:1200,currency:'USD',cat:'property',prov:'Harare',city:'Harare CBD',suburb:'Borrowdale',sellerId:'demo_seller3',status:'active',createdAt:now-86400000,views:103,sellerName:'Tatenda Dube',sellerPhone:'+263773456789'},
-      {id:'demo4',title:'Samsung 55" Smart TV 4K',photos:[],desc:'Barely used Samsung QLED TV with remote and stand.',price:450,currency:'USD',cat:'electronics',prov:'Bulawayo',city:'Bulawayo CBD',suburb:'Hillside',sellerId:'demo_seller1',status:'active',createdAt:now-172800000,views:31,sellerName:'Tafadzwa Moyo',sellerPhone:'+263771234567'},
-      {id:'demo5',title:'Sofa Set 7 Seater L-Shape',photos:[],desc:'Modern L-shape sofa in grey fabric. Selling due to relocation.',price:320,currency:'USD',cat:'furniture',prov:'Harare',city:'Harare CBD',suburb:'Greendale',sellerId:'demo_seller2',status:'active',createdAt:now-259200000,views:18,sellerName:'Rumbidzai Ncube',sellerPhone:'+263772345678'},
-      {id:'demo6',title:'Room to Rent — Warren Park',photos:[],desc:'Furnished single room, all utilities included.',price:120,currency:'USD',cat:'rooms',prov:'Harare',city:'Harare CBD',suburb:'Warren Park',sellerId:'demo_seller3',status:'active',createdAt:now-108000000,views:44,sellerName:'Tatenda Dube',sellerPhone:'+263773456789'}
-    );
-    const hasDemoUsers=(this.state.users||[]).some(u=>u.id==='demo_seller1');
-    if(!hasDemoUsers){
-      this.state.users=this.state.users||[];
-      this.state.users.push(
-        {id:'demo_seller1',name:'Tafadzwa Moyo',phone:'+263771234567',email:'tafadzwa@demo.com',role:'user',status:'active',verified:true,joinedAt:now-2592000000,settings:{theme:'light'}},
-        {id:'demo_seller2',name:'Rumbidzai Ncube',phone:'+263772345678',email:'rumbi@demo.com',role:'user',status:'active',verified:false,joinedAt:now-5184000000,settings:{theme:'light'}},
-        {id:'demo_seller3',name:'Tatenda Dube',phone:'+263773456789',email:'tatenda@demo.com',role:'user',status:'active',verified:true,joinedAt:now-7776000000,settings:{theme:'light'}}
-      );
-    }
-    this.saveState();
   },
 
   openPhotoViewer(photos,idx=0){
@@ -1251,14 +1457,24 @@ window.H = {
     ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
   },
 
-  // ── Bootstrap ────────────────────────────────────────────
   init() {
     this.state=this.loadState();
-    this._initErrorTracking();
+    var hadDemo = (this.state.listings||[]).some(l=>String(l.id).startsWith('demo')) ||
+                  (this.state.users||[]).some(u=>String(u.id).startsWith('demo'));
+    this.state.listings=(this.state.listings||[]).filter(l=>!String(l.id).startsWith('demo'));
+    this.state.users=(this.state.users||[]).filter(u=>!String(u.id).startsWith('demo'));
+    if (hadDemo) this.saveState();
+    window.onerror = function(msg, src, line, col, err) {
+      try {
+        var sb = window.supabase;
+        if (sb && typeof sb.from === 'function') {
+          sb.from('error_logs').insert({ message: String(msg), source: src+':'+line, stack: err ? String(err.stack||'').slice(0,500) : null, created_at: new Date().toISOString() }).then(function(){});
+        }
+      } catch(e) {}
+    };
     this._registerCategoryView();
     this._registerJobPage();
     this._registerExtraPages();
-    this._seedDemoData();
     setTimeout(()=>this._showOnboarding(),800);
 
     document.addEventListener('DOMContentLoaded',()=>{
@@ -1268,7 +1484,7 @@ window.H = {
           const btn=e.target.closest('[data-nav]'); if(!btn) return;
           const name=btn.dataset.nav;
           if(name==='Post')    {if(!H.currentUser()){H.requireAuth('Log in to post an ad');return;}H.navTo('Post',btn);}
-          else if(name==='Account'){if(!H.currentUser()){H.requireAuth('Sign in to your account');return;}H.showAccountMenu(btn);}
+          else if(name==='Account'){H.navTo('Account',btn);}
           else if(name==='Messages'){if(!H.currentUser()){H.requireAuth('Sign in to view messages');return;}H.navTo(name,btn);}
           else H.navTo(name,btn);
         });
@@ -1281,18 +1497,36 @@ window.H = {
   }
 };
 
-// ── Global shortcuts ──────────────────────────────────────
 ['navTo','openInner','goBack','toast','closeModal','closeSheet'].forEach(fn=>{
   window[fn]=(...a)=>H[fn](...a);
 });
 window.pushNotif=(uid,title,body)=>H.pushNotif&&H.pushNotif(uid,title,body);
 window.openListing=id=>H.openListing(id);
 
+// Deep link router — called when user taps a push notification
+H._handleDeepLink = function(route) {
+  if (!route) return;
+  if (route.startsWith('listing:')) {
+    H.openListing(route.split(':')[1]);
+  } else if (route.startsWith('chat:')) {
+    H.openInner('Chat', { id: route.split(':')[1] });
+  } else {
+    // Named pages: Home, Jobs, Messages, Account, Ads, etc.
+    H.navTo(route);
+  }
+};
+
 H.init();
+
 ;/* === www/js/auth.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 (function(H) {
-  const state = H.state;
   let authBusy = false;
 
   // Rate limiting — max 5 failed attempts then 30s lockout
@@ -1366,22 +1600,20 @@ H.init();
   }
   H._updatePassStrength = updatePassStrength;
 
-  // ── LOGO TAP → ADMIN ─────────────────────────────
   H.authLogoTap = function() {
     H.logoTap && H.logoTap();
   };
 
-  // ── MAIN AUTH PAGE ───────────────────────────────
   H.authStepEmail = function() {
     var card = document.getElementById('authCard');
     if (!card) return;
+    var ill = document.querySelector('.login-modal-illustration');
+    if (ill) ill.style.display = '';
     card.innerHTML = ''
-      + '<div style="text-align:center;margin-bottom:20px"><div style="font-size:22px;font-weight:700;color:var(--text)">Welcome</div><div style="font-size:14px;color:var(--sub);margin-top:4px">Sign in to buy and sell across Zimbabwe</div></div>'
       + '<button class="social-auth-btn google" onclick="H.authGoogle()"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Continue with Google</button>'
-      + '<button class="social-auth-btn facebook" onclick="H.authFacebook()"><svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>Continue with Facebook</button>'
       + '<div class="auth-divider"><span>or</span></div>'
-      + '<button class="social-auth-btn email" onclick="H.authShowEmailForm()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Continue with Email</button>'
-      + '<div style="text-align:center;margin-top:16px;font-size:13px;color:var(--sub)">Don\'t have an account? <span onclick="H.authShowRegister()" style="color:#F5A623;font-weight:600;cursor:pointer">Create one</span></div>';
+      + '<button class="social-auth-btn email" onclick="H.authShowEmailForm()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Login with email</button>'
+      + '<div style="text-align:center;margin-top:16px;font-size:13px;color:var(--text-sub)">Don\'t have an account? <span onclick="H.authShowRegister()" style="color:#1A3A8F;font-weight:700;cursor:pointer">Create one</span></div>';
   };
 
   H.authShowEmailForm = function() {
@@ -1390,7 +1622,7 @@ H.init();
     card.innerHTML = ''
       + '<div style="text-align:center;margin-bottom:16px"><div style="font-size:20px;font-weight:700;color:var(--text)">Sign In</div></div>'
       + '<div class="fg"><div class="fl">Email</div><input class="fi" id="emailIn" type="email" placeholder="you@example.com" autocomplete="email"></div>'
-      + '<div class="fg"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span class="fl" style="margin-bottom:0">Password</span><span onclick="H.authForgotPassword()" style="font-size:12px;color:#F5A623;cursor:pointer;font-weight:500">Forgot password?</span></div><input class="fi" id="passIn" type="password" placeholder="Password" onkeydown="if(event.key===\'Enter\')H.authSignIn()" autocomplete="current-password"></div>'
+      + '<div class="fg"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span class="fl" style="margin-bottom:0">Password</span><span onclick="H.authForgotPassword()" style="font-size:12px;color:#F5A623;cursor:pointer;font-weight:500">Forgot password?</span></div><div style="position:relative"><input class="fi" id="passIn" type="password" placeholder="Password" onkeydown="if(event.key===\'Enter\')H.authSignIn()" autocomplete="current-password" style="padding-right:44px"><button type="button" onclick="H._togglePw(\'passIn\')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-hint);padding:4px;line-height:1"><svg id="passIn_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>'
       + '<button class="auth-btn" onclick="H.authSignIn()">Sign In</button>'
       + '<button class="auth-btn secondary" onclick="H.authStepEmail()">&larr; Back</button>';
     setTimeout(function(){ var e=document.getElementById('emailIn'); if(e) e.focus(); }, 100);
@@ -1398,30 +1630,70 @@ H.init();
 
   H.authShowRegister = function() { H.authStepSignUp(); };
 
+  H.authShow2FA = function(userId) {
+    H._pendingTwoFactorUserId = userId;
+    var card = document.getElementById('authCard');
+    if (!card) {
+      H.requireAuth && H.requireAuth('Two-factor authentication');
+      card = document.getElementById('authCard');
+    }
+    if (!card) return;
+    card.innerHTML = ''
+      + '<div style="text-align:center;margin-bottom:16px"><div style="font-size:20px;font-weight:800;color:var(--text-primary)">Enter authentication code</div><div style="font-size:13px;color:var(--text-sub);margin-top:6px;line-height:1.5">Open your authenticator app and enter the 6-digit code for PaMarket.</div></div>'
+      + '<div class="fg"><div class="fl">6-digit code</div><input class="fi" id="twoFactorLoginCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456"></div>'
+      + '<button class="auth-btn" onclick="H.authVerify2FA()">Verify & Continue</button>'
+      + '<button class="auth-btn secondary" onclick="H.authCancel2FA()">Cancel</button>';
+    setTimeout(function(){ var e=document.getElementById('twoFactorLoginCode'); if(e) e.focus(); }, 100);
+  };
+
+  H.authCancel2FA = async function() {
+    H._pendingTwoFactorUserId = null;
+    H.state.currentUserId = null;
+    H.saveState();
+    try { if (window.supabase && window.supabase.auth) await window.supabase.auth.signOut(); } catch(e) {}
+    if (H.closeLoginModal) H.closeLoginModal();
+  };
+
+  H.authVerify2FA = async function() {
+    var userId = H._pendingTwoFactorUserId;
+    var u = (H.state.users || []).find(function(x){ return x.id === userId; });
+    var code = ((document.getElementById('twoFactorLoginCode') || {}).value || '').trim();
+    if (!u || !u.twoFactorEnabled || !u.twoFactorSecret) { H.toast('2FA setup not found'); return; }
+    if (!H._twoFactorVerify || !await H._twoFactorVerify(u.twoFactorSecret, code)) {
+      H.toast('Invalid authentication code');
+      return;
+    }
+    H._pendingTwoFactorUserId = null;
+    H.state.currentUserId = userId;
+    H.saveState();
+    if (H.closeLoginModal) H.closeLoginModal();
+    H.boot();
+  };
+
   H.authStepSignUp = function() {
     var card = document.getElementById('authCard');
     if (!card) return;
+    var ill = document.querySelector('.login-modal-illustration');
+    if (ill) ill.style.display = 'none';
     card.innerHTML = ''
-      + '<div style="text-align:center;margin-bottom:16px"><div style="font-size:20px;font-weight:700;color:var(--text)">Create Account</div><div style="font-size:13px;color:var(--sub);margin-top:2px">Join Zimbabwe\'s marketplace</div></div>'
       + '<div class="fg"><div class="fl">Full Name</div><input class="fi" id="newName" placeholder="e.g. Tendai Moyo" autocomplete="name"></div>'
       + '<div class="fg"><div class="fl">Email</div><input class="fi" id="newEmail" type="email" placeholder="you@example.com" autocomplete="email"></div>'
       + '<div class="fg"><div class="fl">Phone (optional)</div><input class="fi" id="newPhone" type="tel" placeholder="+263 77 123 4567" autocomplete="tel"></div>'
-      + '<div class="fg"><div class="fl">Password</div><input class="fi" id="newPass" type="password" placeholder="8+ chars, uppercase &amp; number" oninput="H._updatePassStrength()" autocomplete="new-password"><div style="height:4px;background:rgba(255,255,255,.12);border-radius:2px;margin-top:6px"><div id="passStrengthBar" style="height:100%;border-radius:2px;transition:all .3s;width:0"></div></div><div id="passStrengthLabel" style="font-size:11px;margin-top:3px;text-align:right;height:14px"></div></div>'
-      + '<div class="fg"><div class="fl">Confirm Password</div><input class="fi" id="newPass2" type="password" placeholder="re-enter password" autocomplete="new-password"></div>'
-      + '<label style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:rgba(255,255,255,.75);margin-bottom:10px;cursor:pointer"><input id="ageConsent" type="checkbox" style="margin-top:2px"><span>I am 18+ and agree to <span onclick="event.stopPropagation();H.authShowDoc(\'terms\')" style="color:#F5A623;text-decoration:underline;cursor:pointer">Terms</span> &amp; <span onclick="event.stopPropagation();H.authShowDoc(\'privacy\')" style="color:#F5A623;text-decoration:underline;cursor:pointer">Privacy Policy</span></span></label>'
+      + '<div class="fg"><div class="fl">Password</div><div style="position:relative"><input class="fi" id="newPass" type="password" placeholder="8+ chars, uppercase &amp; number" oninput="H._updatePassStrength()" autocomplete="new-password" style="padding-right:44px"><button type="button" onclick="H._togglePw(\'newPass\')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-hint);padding:4px;line-height:1"><svg id="newPass_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div><div style="height:4px;background:var(--border);border-radius:2px;margin-top:6px"><div id="passStrengthBar" style="height:100%;border-radius:2px;transition:all .3s;width:0"></div></div><div id="passStrengthLabel" style="font-size:11px;margin-top:3px;text-align:right;height:14px;color:var(--text-sub)"></div></div>'
+      + '<div class="fg"><div class="fl">Confirm Password</div><div style="position:relative"><input class="fi" id="newPass2" type="password" placeholder="re-enter password" autocomplete="new-password" style="padding-right:44px"><button type="button" onclick="H._togglePw(\'newPass2\')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-hint);padding:4px;line-height:1"><svg id="newPass2_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>'
+      + '<label style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#667085;margin-bottom:10px;cursor:pointer"><input id="ageConsent" type="checkbox" style="margin-top:2px"><span>I am 18+ and agree to <span onclick="event.stopPropagation();H.authShowDoc(\'terms\')" style="color:#1A3A8F;text-decoration:underline;cursor:pointer">Terms &amp; Conditions</span> and <span onclick="event.stopPropagation();H.authShowDoc(\'privacy\')" style="color:#1A3A8F;text-decoration:underline;cursor:pointer">Privacy Policy</span></span></label>'
       + '<button class="auth-btn" onclick="H.authSignUp()">Create Account</button>'
       + '<button class="auth-btn secondary" onclick="H.authStepEmail()">&larr; Back to Sign In</button>';
     setTimeout(function(){ var e=document.getElementById('newName'); if(e) e.focus(); }, 100);
   };
 
-  // ── OTP VERIFICATION ─────────────────────────────
   H.authShowOtp = function(email) {
     var card = document.getElementById('authCard');
     if (!card) return;
     H._otpEmail = email;
     card.innerHTML = ''
       + '<div style="text-align:center;margin-bottom:20px">'
-      + '<div style="font-size:42px;margin-bottom:10px">📧</div>'
+      + '<div style="margin-bottom:10px;color:#1A3A8F"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>'
       + '<div style="font-size:20px;font-weight:700;color:var(--text)">Verify Your Email</div>'
       + '<div style="font-size:13px;color:var(--sub);margin-top:8px;line-height:1.6">We sent a 6-digit code to<br><strong style="color:var(--text)">' + H.escHtml(email) + '</strong></div>'
       + '</div>'
@@ -1441,23 +1713,31 @@ H.init();
     setAuthBusy(true);
     var res = await c.auth.verifyOtp({ email: H._otpEmail, token: otp, type: 'signup' });
     if (res.error) { H.toast('Invalid or expired code. Try resending.'); setAuthBusy(false); return; }
-    state.currentUserId = res.data.user.id;
+    H.state.currentUserId = res.data.user.id;
     await H.loadProfile(res.data.user.id);
     H.saveState();
     setAuthBusy(false);
-    H.toast('Email verified! Welcome to Hostly');
+    H.toast('Email verified! Welcome to PaMarket');
+    if (H.closeLoginModal) H.closeLoginModal();
     H.boot();
   };
 
   H.authResendOtp = async function() {
     if (!H._otpEmail) return;
+    var now = Date.now();
+    H._otpResendTimes = (H._otpResendTimes || []).filter(function(t){ return now - t < 10 * 60 * 1000; });
+    if (H._otpResendTimes.length >= 3) {
+      var waitSec = Math.ceil((10 * 60 * 1000 - (now - H._otpResendTimes[0])) / 1000);
+      H.toast('Too many resends — try again in ' + waitSec + 's', 4000, true);
+      return;
+    }
+    H._otpResendTimes.push(now);
     var c = sb();
-    if (!c) { H.toast('Connection error'); return; }
+    if (!c) { H.toast('Connection error', 4000, true); return; }
     var res = await c.auth.resend({ type: 'signup', email: H._otpEmail });
     H.toast(res.error ? res.error.message : 'Code resent — check your inbox');
   };
 
-  // ── FORGOT PASSWORD ──────────────────────────────
   H.authForgotPassword = function() {
     var card = document.getElementById('authCard');
     if (!card) return;
@@ -1489,7 +1769,6 @@ H.init();
       + '<button class="auth-btn secondary" onclick="H.authShowEmailForm()">&larr; Back to Sign In</button>';
   };
 
-  // ── SIGN IN ──────────────────────────────────────
   H.authSignIn = async function() {
     if (authBusy) return;
     if (isLocked()) return;
@@ -1508,24 +1787,45 @@ H.init();
         recordFailure();
         H.toast(msg); setAuthBusy(false); return;
       }
-      state.currentUserId = res.data.user.id;
+      H.state.currentUserId = res.data.user.id;
       await H.loadProfile(res.data.user.id);
+      var su = H.currentUser();
+      if (su && su.twoFactorEnabled && su.twoFactorSecret) {
+        H._pendingTwoFactorUserId = res.data.user.id;
+        H.state.currentUserId = null;
+        H.saveState();
+        setAuthBusy(false);
+        H.authShow2FA(res.data.user.id);
+        return;
+      }
       recordSuccess();
       H.saveState();
       setAuthBusy(false);
+      if (H.closeLoginModal) H.closeLoginModal();
       H.boot();
       return;
     }
-    var user = (state.users||[]).find(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase() && u._localPassword===password; });
+    var user = (H.state.users||[]).find(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase() && u._localPassword===password; });
     if (!user) { recordFailure(); H.toast('Wrong email or password'); setAuthBusy(false); return; }
     recordSuccess();
-    state.currentUserId = user.id;
-    H.saveState(); setAuthBusy(false); H.boot();
+    if (user.twoFactorEnabled && user.twoFactorSecret) {
+      H._pendingTwoFactorUserId = user.id;
+      H.state.currentUserId = null;
+      H.saveState();
+      setAuthBusy(false);
+      H.authShow2FA(user.id);
+      return;
+    }
+    H.state.currentUserId = user.id;
+    H.saveState(); setAuthBusy(false); if (H.closeLoginModal) H.closeLoginModal(); H.boot();
   };
 
-  // ── SIGN UP ──────────────────────────────────────
   H.authSignUp = async function() {
     if (authBusy) return;
+    if (H.state && H.state.signupPaused) {
+      H.toast('New sign-ups are temporarily paused. Please try again later.', 5000, true);
+      return;
+    }
     var name      = document.getElementById('newName').value.trim();
     var email     = document.getElementById('newEmail').value.trim();
     var phone     = document.getElementById('newPhone').value.trim();
@@ -1547,8 +1847,7 @@ H.init();
     setAuthBusy(true);
     var c = sb();
     if (c) {
-      var redirectTo = 'https://princechakusa.github.io/Hostly/www/';
-      var res = await c.auth.signUp({email:email, password:password, options:{data:{full_name:name}, emailRedirectTo:redirectTo}});
+      var res = await c.auth.signUp({email:email, password:password, options:{data:{full_name:name}}});
       if (res.error) {
         var msg = res.error.message;
         if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('unique constraint')) {
@@ -1559,29 +1858,30 @@ H.init();
       var userId = res.data.user.id;
       await c.from('profiles').upsert({id:userId, name:name, phone:phone||null, verified:false});
       var u = {id:userId,email:email,name:name,phone:phone||'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]};
-      (state.users = state.users||[]).push(u);
-      state.currentUserId = userId;
+      (H.state.users = H.state.users||[]).push(u);
+      H.state.currentUserId = userId;
       H.saveState();
       setAuthBusy(false);
       if (res.data.session) {
-        H.toast('Account created! Welcome to Hostly');
+        H.toast('Account created! Welcome to PaMarket');
+        if (H.closeLoginModal) H.closeLoginModal();
         H.boot();
       } else {
         H.authShowOtp(email);
       }
       return;
     }
-    var exists = (state.users||[]).some(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase(); });
+    var exists = (H.state.users||[]).some(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase(); });
     if (exists) { H.toast('Email already registered. Sign in instead.'); setAuthBusy(false); return; }
     var uid2 = H.uid();
-    (state.users = state.users||[]).push({id:uid2,email:email,name:name,phone:phone||'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[],_localPassword:password});
-    state.currentUserId = uid2;
+    (H.state.users = H.state.users||[]).push({id:uid2,email:email,name:name,phone:phone||'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[],_localPassword:password});
+    H.state.currentUserId = uid2;
     H.saveState(); setAuthBusy(false);
-    H.toast('Account created! Welcome to Hostly');
+    H.toast('Account created! Welcome to PaMarket');
+    if (H.closeLoginModal) H.closeLoginModal();
     H.boot();
   };
 
-  // ── ADMIN LOGIN ──────────────────────────────────
   H.authAdminPage = function() {
     var card = document.getElementById('authCard');
     if (!card) return;
@@ -1604,205 +1904,262 @@ H.init();
     H.toast('Signing in...');
     var res = await c.auth.signInWithPassword({email:email, password:pass});
     if (res.error) { recordFailure(); H.toast('Invalid credentials'); return; }
-    state.currentUserId = res.data.user.id;
+    H.state.currentUserId = res.data.user.id;
     await H.loadProfile(res.data.user.id);
     var cu = H.currentUser();
     if (!cu || cu.role !== 'admin') {
       if (c) { try { await c.auth.signOut(); } catch(e) {} }
-      state.currentUserId = null;
+      H.state.currentUserId = null;
       recordFailure();
       H.toast('Access denied. Not an admin account.');
       return;
     }
     recordSuccess();
-    state.adminSession = {at:Date.now(),via:'supabase'};
+    H.state.adminSession = {at:Date.now(),via:'supabase'};
     H.saveState();
     H.toast('Welcome Admin!');
+    if (H.closeLoginModal) H.closeLoginModal();
     H.boot();
   };
 
-  // ── LOAD PROFILE ─────────────────────────────────
   H.loadProfile = async function(userId) {
     var c = sb(); if (!c) return;
     var res = await c.from('profiles').select('*').eq('id',userId).single();
     if (res.error||!res.data) {
-      var u = (state.users||[]).find(function(x){return x.id===userId;});
-      if (!u) { u={id:userId,email:'',name:'User',phone:'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]}; state.users.push(u); }
+      var u = (H.state.users||[]).find(function(x){return x.id===userId;});
+      if (!u) { u={id:userId,email:'',name:'User',phone:'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]}; H.state.users.push(u); }
       return;
     }
     var profile = res.data;
-    var u = (state.users||[]).find(function(x){return x.id===userId;});
+    var u = (H.state.users||[]).find(function(x){return x.id===userId;});
     if (!u) {
       u = {id:userId,email:'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,walletUSD:profile.wallet_usd||0,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
-      state.users.push(u);
+      H.state.users.push(u);
     } else {
       u.name=profile.name||u.name; u.phone=profile.phone||u.phone; u.avatar=profile.avatar||u.avatar; u.verified=profile.verified||false; u.role=profile.role||u.role||'user';
+      // Merge job profile fields from Supabase if they exist (after migrations are run)
+      if (profile.job_title    != null) u.jobTitle       = profile.job_title;
+      if (profile.job_types    != null) u.jobTypes        = profile.job_types;
+      if (profile.sector       != null) u.sector          = profile.sector;
+      if (profile.exp          != null) u.exp             = profile.exp;
+      if (profile.city         != null) u.city            = profile.city;
+      if (profile.bio          != null) u.bio             = profile.bio;
+      if (profile.skills       != null) u.skills          = profile.skills;
+      if (profile.open_to_work != null) u.openToWork      = profile.open_to_work;
+      if (profile.expected_salary   != null) u.expectedSalary  = profile.expected_salary;
+      if (profile.whatsapp_number   != null) u.whatsappFull    = profile.whatsapp_number;
+      if (profile.phone_for_calls   != null) u.phoneForCalls   = profile.phone_for_calls;
+      if (profile.contact_method    != null) u.contactMethod   = profile.contact_method;
+      if (profile.contact_availability != null) u.contactAvail = profile.contact_availability;
+      if (profile.linkedin_url  != null) u.linkedinUrl    = profile.linkedin_url;
+      if (profile.github_url    != null) u.githubUrl      = profile.github_url;
+      if (profile.website_url   != null) u.websiteUrl     = profile.website_url;
+      if (profile.cv_file_url   != null) u.cvFileUrl      = profile.cv_file_url;
+      if (profile.cv_file_name  != null) u.cvFileName     = profile.cv_file_name;
+      if (profile.cv            != null) u.cv             = profile.cv;
     }
     H.saveState();
   };
 
-  // ── LOGOUT ───────────────────────────────────────
-  H.logout = async function() {
-    var c = sb();
-    if (c) { try { await c.auth.signOut(); } catch(e) {} }
-    state.currentUserId = null;
-    state.adminSession = null;
-    H.saveState();
-    var ban = document.getElementById('banScreen');
-    if (ban) ban.classList.remove('show');
-    H.pageStack = [];
-    H.authPage();
+  H.logout = function() {
+    H.modal({
+      title: 'Sign Out',
+      body: 'Are you sure you want to sign out?',
+      confirmText: 'Sign Out',
+      cancelText: 'Cancel',
+      danger: true,
+      onConfirm: function() {
+        H.state.currentUserId = null;
+        H.state.adminSession = null;
+        H.saveState();
+        if (window._msgBadgeInterval) { clearInterval(window._msgBadgeInterval); window._msgBadgeInterval = null; }
+        var reload = function() { window.location.reload(); };
+        try {
+          var sc = window.supabase;
+          if (sc) {
+            if (window._msgChannel) { sc.removeChannel(window._msgChannel); window._msgChannel = null; }
+            if (H._notifChannel)    { sc.removeChannel(H._notifChannel);    H._notifChannel    = null; }
+            if (sc.auth) {
+              // Wait for signOut to clear Supabase session from localStorage before reloading
+              sc.auth.signOut().then(reload).catch(reload);
+              return;
+            }
+          }
+        } catch(e) {}
+        reload();
+      }
+    });
   };
-
-  // ── SOCIAL AUTH ───────────────────────────────────
-  var OAUTH_REDIRECT = 'https://princechakusa.github.io/Hostly/www/';
 
   H.authGoogle = async function() {
     const c = sb();
     if (!c) { H.toast('Sign-in service unavailable'); return; }
+    const redirectTo = window.location.origin + window.location.pathname;
     const { error } = await c.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: OAUTH_REDIRECT }
+      options: { redirectTo }
     });
     if (error) H.toast(error.message || 'Google sign-in failed');
   };
 
-  H.authFacebook = async function() {
+  H.authApple = async function() {
     const c = sb();
     if (!c) { H.toast('Sign-in service unavailable'); return; }
+    const redirectTo = window.location.origin + window.location.pathname;
     const { error } = await c.auth.signInWithOAuth({
-      provider: 'facebook',
-      options: { redirectTo: OAUTH_REDIRECT }
+      provider: 'apple',
+      options: { redirectTo }
     });
-    if (error) H.toast(error.message || 'Facebook sign-in failed');
+    if (error) H.toast(error.message || 'Apple sign-in failed');
   };
 
-  // ── LEGAL DOCS ───────────────────────────────────
-  // Opens a full-screen slide-up sheet with the actual legal document content.
-  // Uses the same content as HelpTerms / HelpPrivacy pages so it's always in sync.
-  H.authShowDoc = function(which) {
-    ['legalDocSheet','ldsFooterFixed'].forEach(function(id){
-      var el = document.getElementById(id); if (el) el.remove();
-    });
-
-    var isTerms = which === 'terms';
-    var title   = isTerms ? 'Terms of Service' : 'Privacy Policy';
-    var content = isTerms ? H._fullTermsHTML() : H._fullPrivacyHTML();
-
-    function closeSheet() {
-      // Restore body scroll lock before removing sheet
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      ['legalDocSheet','ldsFooterFixed'].forEach(function(id){
-        var el = document.getElementById(id); if (el) el.remove();
-      });
+  H._togglePw = function(id) {
+    var inp = document.getElementById(id);
+    var eye = document.getElementById(id + '_eye');
+    if (!inp) return;
+    var show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    if (eye) {
+      eye.innerHTML = show
+        ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+        : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
     }
+  };
 
-    // Lift the global overflow:hidden so iOS Safari allows scroll inside the sheet
-    document.body.style.overflow = 'auto';
-    document.documentElement.style.overflow = 'auto';
-
-    // The sheet IS the scroll container — most reliable on iOS Safari
-    var sheet = document.createElement('div');
-    sheet.id = 'legalDocSheet';
-    sheet.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9990;overflow-y:scroll;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;background:var(--bg,#F4F1EA);animation:slideUp .28s ease';
-
-    sheet.innerHTML = ''
-      // Sticky header — stays at top as content scrolls beneath it
-      + '<div style="position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 14px;background:linear-gradient(135deg,#1A3A8F,#2952cc)">'
-      +   '<div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px">' + title + '</div>'
-      +   '<button id="ldsCloseBtn" style="background:rgba(255,255,255,.18);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">'
-      +     '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-      +   '</button>'
+  H.authShowSetPassword = function() {
+    // Called when user arrives via password reset email link
+    var bg  = document.getElementById('modalBg');
+    var box = document.getElementById('modalBox');
+    if (!bg || !box) return;
+    box.classList.remove('login-modal');
+    box.innerHTML = '<div class="modal-header"><h3>Set New Password</h3></div>'
+      + '<div class="modal-body-scroll">'
+      + '<div class="fg" style="padding-top:8px"><div class="fl">New Password</div>'
+      + '<div style="position:relative"><input class="fi" id="rpNewPass" type="password" placeholder="8+ chars, uppercase &amp; number" oninput="H._updatePassStrength()" style="padding-right:44px">'
+      + '<button type="button" onclick="H._togglePw(\'rpNewPass\')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-hint);padding:4px"><svg id="rpNewPass_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>'
+      + '<div style="height:4px;background:var(--border);border-radius:2px;margin-top:6px"><div id="passStrengthBar" style="height:100%;border-radius:2px;transition:all .3s;width:0"></div></div>'
+      + '<div id="passStrengthLabel" style="font-size:11px;margin-top:3px;text-align:right;height:14px;color:var(--text-sub)"></div></div>'
+      + '<div class="fg"><div class="fl">Confirm Password</div>'
+      + '<div style="position:relative"><input class="fi" id="rpNewPass2" type="password" placeholder="re-enter password" style="padding-right:44px">'
+      + '<button type="button" onclick="H._togglePw(\'rpNewPass2\')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-hint);padding:4px"><svg id="rpNewPass2_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>'
       + '</div>'
-      // Content — extra bottom padding so nothing hides behind the fixed footer
-      + '<div class="doc-content" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 96px)">' + content + '</div>';
-
-    // Footer as separate fixed element so it never interferes with scroll
-    var footer = document.createElement('div');
-    footer.id = 'ldsFooterFixed';
-    footer.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9991;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);background:var(--card,#fff);border-top:1px solid var(--border,#e5e0d6)';
-    footer.innerHTML = '<button id="ldsGotItBtn" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Got it</button>';
-
-    document.body.appendChild(sheet);
-    document.body.appendChild(footer);
-
-    document.getElementById('ldsCloseBtn').onclick = closeSheet;
-    document.getElementById('ldsGotItBtn').onclick = closeSheet;
+      + '<div class="modal-footer"><div class="modal-btns">'
+      + '<button class="modal-btn confirm" onclick="H.authDoSetPassword()">Save Password</button>'
+      + '</div></div>';
+    bg.classList.add('open');
+    setTimeout(function(){ var e = document.getElementById('rpNewPass'); if(e) e.focus({preventScroll:true}); }, 100);
   };
 
-  H._fullTermsHTML = function() {
-    return ''
-      + '<h2>1. Agreement to Terms</h2>'
-      + '<p>By downloading, installing, or using the Hostly application ("App"), you agree to be legally bound by these Terms of Service. If you do not agree to these terms, you must not use the App. These terms govern all users: buyers, sellers, job seekers, employers, and visitors.</p>'
-      + '<h2>2. Who Can Use Hostly</h2>'
-      + '<p>You must be at least 18 years old to create an account or use Hostly. By registering, you confirm that you meet this age requirement and are legally competent to enter into contracts under Zimbabwean law.</p>'
-      + '<h2>3. Account Responsibility</h2>'
-      + '<p>You are responsible for keeping your account credentials confidential. All activity that occurs under your account is your responsibility. You must provide accurate and truthful information when registering.</p>'
-      + '<h2>4. What Hostly Is</h2>'
-      + '<p>Hostly is an online classifieds marketplace that connects buyers and sellers in Zimbabwe. We provide the platform — we are not a party to any transaction between users. We do not hold payments, guarantee delivery, or verify the condition of items unless stated.</p>'
-      + '<h2>5. Listing Rules</h2>'
-      + '<p>All listings must be honest, legal, and comply with Zimbabwean law. The following content is strictly prohibited:</p>'
-      + '<ul><li>Stolen, counterfeit, or fraudulent goods of any kind</li><li>Weapons, firearms, ammunition, or explosive devices</li><li>Illegal drugs, controlled substances, or drug paraphernalia</li><li>Adult, sexually explicit, or pornographic content</li><li>Protected wildlife, animal products, or endangered species</li><li>Pyramid schemes, multi-level marketing, or investment fraud</li><li>Fake, misleading, or non-existent job listings</li><li>Fraudulent rental listings or advance deposit scams</li><li>Human trafficking, exploitation, or domestic workers without consent</li></ul>'
-      + '<h2>6. Advertising Credits (Boost Feature)</h2>'
-      + '<p>Hostly offers optional paid advertising credits ("Boost") to increase listing visibility. These credits are purchased via external payment methods (EcoCash, OneMoney, or bank transfer) and are not processed by Google Play or the Apple App Store. Credits are non-refundable once applied. Unused credits may be refunded at our discretion within 7 days — contact us to request a refund.</p>'
-      + '<h2>7. User Conduct</h2>'
-      + '<p>You agree not to harass or threaten other users, post false or deceptive information, send unsolicited messages, create multiple accounts to evade bans, impersonate any person or entity, or use automated tools to access the platform.</p>'
-      + '<h2>8. User Content License</h2>'
-      + '<p>By posting content on Hostly, you grant us a non-exclusive, worldwide, royalty-free license to display, reproduce, and distribute that content within the App and for promotional purposes. You confirm you own or have rights to all content posted.</p>'
-      + '<h2>9. Intellectual Property</h2>'
-      + '<p>All design, branding, logos, code, and content created by Hostly are protected by copyright. You may not copy, reproduce, or redistribute any part of the App without our written consent.</p>'
-      + '<h2>10. Moderation and Enforcement</h2>'
-      + '<p>We reserve the right to remove any listing, suspend, or permanently ban any account that violates these Terms at any time. Banned users may appeal by contacting chakusaprince@gmail.com within 14 days of the ban.</p>'
-      + '<h2>11. Disclaimer of Warranties</h2>'
-      + '<p>Hostly is provided "as is" and "as available" without any warranties, express or implied. We are not responsible for the quality, safety, legality, or availability of listed items.</p>'
-      + '<h2>12. Limitation of Liability</h2>'
-      + '<p>To the maximum extent permitted by law, Hostly and its operators shall not be liable for any indirect, incidental, punitive, or consequential damages arising from your use of the App.</p>'
-      + '<h2>13. Governing Law</h2>'
-      + '<p>These Terms are governed exclusively by the laws of the Republic of Zimbabwe. Any legal disputes shall be subject to the jurisdiction of the courts of Zimbabwe.</p>'
-      + '<h2>14. Changes to These Terms</h2>'
-      + '<p>We may update these Terms from time to time. Continued use of the App after any update constitutes your acceptance of the revised Terms.</p>'
-      + '<h2>15. Contact Us</h2>'
-      + '<p>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>';
+  H.authDoSetPassword = async function() {
+    var pass  = ((document.getElementById('rpNewPass')  || {}).value || '').trim();
+    var pass2 = ((document.getElementById('rpNewPass2') || {}).value || '').trim();
+    if (pass.length < 8)         { H.toast('Password must be at least 8 characters'); return; }
+    if (!/[A-Z]/.test(pass))     { H.toast('Password must include an uppercase letter'); return; }
+    if (!/[0-9]/.test(pass) && !/[^A-Za-z0-9]/.test(pass)) { H.toast('Password must include a number or special character'); return; }
+    if (pass !== pass2)          { H.toast('Passwords do not match'); return; }
+    var c = sb();
+    if (!c) { H.toast('Connection error'); return; }
+    var btns = document.querySelectorAll('#modalBox button');
+    btns.forEach(function(b){ b.disabled = true; });
+    var res = await c.auth.updateUser({ password: pass });
+    btns.forEach(function(b){ b.disabled = false; });
+    if (res.error) { H.toast(res.error.message || 'Failed to update password'); return; }
+    H.closeModal();
+    H.toast('Password updated! Please sign in.');
+    H.requireAuth('Sign in with your new password');
   };
 
-  H._fullPrivacyHTML = function() {
-    return ''
-      + '<h2>1. Who We Are</h2>'
-      + '<p>Hostly is a Zimbabwean marketplace application. We are committed to protecting your privacy and handling your data responsibly. This policy explains what data we collect, why we collect it, and how we protect it.</p>'
-      + '<h2>2. Data We Collect</h2>'
-      + '<ul><li><strong>Account data:</strong> Name, email address, phone number, encrypted password</li><li><strong>Profile data:</strong> Profile photo, bio, city/province location</li><li><strong>Listing data:</strong> Photos, descriptions, prices, and location of items you post</li><li><strong>Messages:</strong> In-app conversations between buyers and sellers</li><li><strong>Transaction data:</strong> Advertising credit balance and top-up reference history</li><li><strong>Device data:</strong> Device type, operating system version, app version</li><li><strong>Usage data:</strong> Pages viewed, search queries, and listing interactions</li></ul>'
-      + '<h2>3. How We Use Your Data</h2>'
-      + '<ul><li>To create and manage your user account</li><li>To display your listings to other users across Zimbabwe</li><li>To facilitate secure in-app messaging between buyers and sellers</li><li>To detect, investigate, and prevent fraud and policy violations</li><li>To improve the App, fix bugs, and enhance user experience</li><li>To send you important notifications about your account and listings</li></ul>'
-      + '<h2>4. Data We Do Not Collect</h2>'
-      + '<ul><li>We do not collect your precise GPS or real-time location</li><li>We do not collect payment card numbers or banking credentials</li><li>We do not access your camera or photo library without your explicit action</li><li>We do not collect contacts, call logs, or SMS messages</li></ul>'
-      + '<h2>5. Data Sharing</h2>'
-      + '<p>We do not sell your personal data to third parties. We may share data with:</p>'
-      + '<ul><li><strong>Other users:</strong> Your public profile name, phone number (if provided), and listings are visible to all users</li><li><strong>Supabase:</strong> Our secure database and authentication infrastructure provider</li><li><strong>Legal authorities:</strong> When required by Zimbabwean law, court order, or to protect public safety</li></ul>'
-      + '<h2>6. Data Security</h2>'
-      + '<p>We implement industry-standard security: HTTPS encryption for all data in transit, encrypted password storage (never stored in plain text), row-level security on our database, and access controls.</p>'
-      + '<h2>7. Camera and Photo Permissions</h2>'
-      + '<p>We request camera and photo library access only when you choose to upload a photo for a listing or your profile. The App never accesses your camera or photos passively.</p>'
-      + '<h2>8. Notifications Permission</h2>'
-      + '<p>We request permission to send push notifications to alert you about new messages, listing activity, and account updates. You may disable notifications at any time in your device settings.</p>'
-      + '<h2>9. Data Retention</h2>'
-      + '<p>We retain your data for as long as your account is active. When you delete your account, all personal data, listings, messages, and transaction records are permanently deleted within 30 days.</p>'
-      + '<h2>10. Your Rights</h2>'
-      + '<ul><li>Access and review your personal data at any time via your Profile page</li><li>Correct inaccurate information through your Profile Settings</li><li>Delete your account and all associated data via Settings → Delete Account</li><li>Opt out of promotional notifications via Settings → Notification Preferences</li><li>Request a copy of all data we hold about you by emailing chakusaprince@gmail.com</li></ul>'
-      + '<h2>11. Children\'s Privacy</h2>'
-      + '<p>Hostly is strictly for users aged 18 and over. We do not knowingly collect personal data from anyone under 18. If we discover that a minor has created an account, we will immediately delete their account and all associated data.</p>'
-      + '<h2>12. Third-Party Links</h2>'
-      + '<p>Listings may include links to WhatsApp or external websites. We are not responsible for the privacy practices or content of any third-party services.</p>'
-      + '<h2>13. Changes to This Policy</h2>'
-      + '<p>We will notify you of material changes to this Privacy Policy through the App at least 7 days before they take effect.</p>'
-      + '<h2>14. Contact Us</h2>'
-      + '<p>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>';
+  H.authShowDoc = function(which) {
+    var sheet   = document.getElementById('docSheet');
+    var titleEl = document.getElementById('docSheetTitle');
+    var bodyEl  = document.getElementById('docSheetBody');
+    if (!sheet || !titleEl || !bodyEl) return;
+    titleEl.textContent = which === 'terms' ? 'Terms & Conditions' : 'Privacy Policy';
+    bodyEl.innerHTML    = which === 'terms' ? H._termsText() : H._privacyText();
+    bodyEl.scrollTop    = 0;
+    sheet.classList.add('open');
+  };
+
+  H.closeDocSheet = function() {
+    var sheet = document.getElementById('docSheet');
+    if (sheet) sheet.classList.remove('open');
+  };
+
+  H._termsText = function() {
+    return '<div class="doc-content">'
+      + '<h2>Terms &amp; Conditions</h2>'
+      + '<p><strong>Effective Date: 1 May 2026</strong></p>'
+      + '<p>Welcome to PaMarket Zimbabwe. By downloading or using the PaMarket app you agree to be bound by these Terms and Conditions. Please read them carefully.</p>'
+      + '<h3>1. Eligibility</h3>'
+      + '<p>You must be at least 18 years old to create an account and use PaMarket. By registering you confirm that you meet this requirement. PaMarket reserves the right to terminate accounts of users found to be under 18.</p>'
+      + '<h3>2. Account Responsibility</h3>'
+      + '<p>You are responsible for keeping your login credentials secure. You are liable for all activity that occurs under your account. Notify us immediately at chakusaprince@gmail.com if you suspect unauthorised access.</p>'
+      + '<h3>3. Listings</h3>'
+      + '<p>You may only list items you own or have legal authority to sell. All listing information — including title, description, photos, and price — must be accurate and not misleading. PaMarket reserves the right to remove any listing without notice.</p>'
+      + '<h3>4. Prohibited Content</h3>'
+      + '<p>The following are strictly prohibited on PaMarket: stolen or counterfeit goods; illegal drugs, weapons, or firearms; adult or explicit content; hate speech or content that promotes discrimination; spam, pyramid schemes, or fraudulent offers; impersonation of any person or business.</p>'
+      + '<h3>5. Transactions</h3>'
+      + '<p>PaMarket is a listing and communication platform only. We do not process payments, hold funds, or guarantee the quality of any item. All transactions are solely between buyer and seller. PaMarket accepts no liability for disputes, losses, or damages arising from transactions.</p>'
+      + '<h3>6. Wallet &amp; Top-Ups</h3>'
+      + '<p>The in-app wallet is used exclusively for boosting listings. Top-up amounts that have not yet been used may be refunded upon written request to chakusaprince@gmail.com within 30 days of payment. Used credits are non-refundable. Wallet balances have no cash value and cannot be transferred.</p>'
+      + '<h3>7. Intellectual Property</h3>'
+      + '<p>All content you post on PaMarket (photos, descriptions, etc.) remains yours. By posting, you grant PaMarket a non-exclusive, royalty-free licence to display your content within the app. The PaMarket name, logo, and app design are our intellectual property and may not be copied or reused.</p>'
+      + '<h3>8. Privacy</h3>'
+      + '<p>Your use of the app is also governed by our Privacy Policy, which is incorporated into these Terms by reference.</p>'
+      + '<h3>9. Termination</h3>'
+      + '<p>We may suspend or permanently ban any account that violates these Terms, with or without notice. You may delete your account at any time via Settings → Security → Delete Account.</p>'
+      + '<h3>10. Limitation of Liability</h3>'
+      + '<p>PaMarket is provided "as is" without warranties of any kind. To the maximum extent permitted by law, PaMarket shall not be liable for any indirect, incidental, or consequential damages arising from your use of the app.</p>'
+      + '<h3>11. Changes to Terms</h3>'
+      + '<p>We may update these Terms from time to time. Continued use of the app after changes are posted constitutes acceptance of the revised Terms.</p>'
+      + '<h3>12. Governing Law</h3>'
+      + '<p>These Terms are governed by the laws of Zimbabwe. Any disputes shall be resolved in the courts of Zimbabwe.</p>'
+      + '<h3>13. Contact</h3>'
+      + '<p>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>'
+      + '</div>';
+  };
+
+  H._privacyText = function() {
+    return '<div class="doc-content">'
+      + '<h2>Privacy Policy</h2>'
+      + '<p><strong>Effective Date: 1 May 2026</strong></p>'
+      + '<p>PaMarket Zimbabwe ("we", "us", or "our") is committed to protecting your personal information. This Privacy Policy explains what data we collect, how we use it, and your rights.</p>'
+      + '<h3>1. Information We Collect</h3>'
+      + '<p><strong>Account data:</strong> name, email address, phone number, and profile photo when you register.</p>'
+      + '<p><strong>Listing data:</strong> photos, descriptions, prices, and location you provide when posting an ad.</p>'
+      + '<p><strong>Usage data:</strong> pages viewed, searches performed, listings saved, and messages sent within the app.</p>'
+      + '<p><strong>Device data:</strong> device type, operating system, and app version for crash reporting and performance monitoring.</p>'
+      + '<h3>2. How We Use Your Information</h3>'
+      + '<p>To operate and improve the PaMarket platform; to authenticate your account and keep it secure; to display your listings to other users; to send you notifications about messages, offers, and account activity; to investigate reports of abuse or policy violations.</p>'
+      + '<h3>3. Data Sharing</h3>'
+      + '<p>We do not sell your personal data. We share data only with: <strong>Supabase</strong> (our database and authentication provider, data stored in EU data centres with encryption at rest and in transit); <strong>Google</strong> (if you choose Sign in with Google); and law enforcement when required by law.</p>'
+      + '<h3>4. Photos &amp; Camera</h3>'
+      + '<p>The app requests access to your camera and photo library only to let you upload listing photos and a profile picture. We do not access your camera or photos for any other purpose.</p>'
+      + '<h3>5. Data Retention</h3>'
+      + '<p>Your data is retained for as long as your account is active. When you delete your account, your personal data, listings, and messages are permanently deleted within 30 days.</p>'
+      + '<h3>6. Security</h3>'
+      + '<p>All data is transmitted over HTTPS. Passwords are never stored — authentication is managed by Supabase using industry-standard bcrypt hashing.</p>'
+      + '<h3>7. Your Rights</h3>'
+      + '<p>You may access, correct, or delete your personal data at any time via Settings → Edit Profile or Settings → Security → Delete Account. You may also contact us directly to request a copy of your data.</p>'
+      + '<h3>8. Children\'s Privacy</h3>'
+      + '<p>PaMarket is not intended for users under 18. We do not knowingly collect data from children. If we become aware that a child has registered, we will delete the account immediately.</p>'
+      + '<h3>9. Changes to This Policy</h3>'
+      + '<p>We may update this Privacy Policy from time to time. We will notify you of significant changes via in-app notification. Continued use of the app constitutes acceptance of the updated policy.</p>'
+      + '<h3>10. Contact</h3>'
+      + '<p>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>'
+      + '</div>';
   };
 
 })(window.H);
 
 ;/* === www/js/home.js === */
-﻿'use strict';
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
+'use strict';
 (function (H) {
   const { escHtml, timeAgo, filterListings, renderListCard, renderFeatCard, CATEGORIES, ICONS } = H;
 
@@ -1820,17 +2177,20 @@ H.init();
   };
 
   function renderHCard(l) {
-    const photo = (l.photos && l.photos[0]) || ('https://picsum.photos/seed/' + l.id + '/300/200');
+    const photo = (l.photos && l.photos[0]) || '';
     const price = l.price ? ('$' + Number(l.price).toLocaleString()) : 'Free';
-    const title = escHtml((l.title || '').slice(0, 38));
+    const title = escHtml((l.title || '').slice(0, 36));
     const loc   = escHtml(l.suburb || l.city || l.prov || '');
-    return `<div onclick="openListing('${l.id}')" style="width:155px;flex-shrink:0;background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--border);cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.07)">
-      <div style="height:108px;overflow:hidden;background:#f0f0f0;position:relative">
-        <img src="${photo}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.src='https://picsum.photos/seed/${l.id}/300/200'">
+    return `<div onclick="openListing('${l.id}')" style="background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--border);cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.07)">
+      <div style="aspect-ratio:4/3;overflow:hidden;background:#f0f0f0;position:relative">
+        ${photo
+          ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.onerror=null;this.style.display='none'">`
+          : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>'}
+        ${l.boost && l.boost.until > Date.now() ? '<span style="position:absolute;top:6px;left:6px;background:#1A3A8F;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">SPONSORED</span>' : ''}
         ${l.negotiable ? '<span style="position:absolute;top:6px;right:6px;background:#F5A623;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">NEG</span>' : ''}
       </div>
-      <div style="padding:9px 10px 11px">
-        <div style="font-size:15px;font-weight:800;color:#1A3A8F;margin-bottom:2px">${price}</div>
+      <div style="padding:8px 10px 11px">
+        <div style="font-size:14px;font-weight:800;color:#1A3A8F;margin-bottom:2px">${price}</div>
         <div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">${title}</div>
         <div style="font-size:11px;color:var(--sub)">${loc}</div>
       </div>
@@ -1840,14 +2200,15 @@ H.init();
   H.pages.Home = function () {
     const u = H.currentUser();
     const unreadNotifs = u ? (H.state.notifs[u.id] || []).filter(n => !n.read).length : 0;
-    const unreadMsgs   = u ? (H.state.conversations || []).filter(cv =>
-      cv.members.includes(u.id) && cv.messages.some(m => m.from !== u.id && !m.read)).length : 0;
+    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+    const unreadMsgs   = u ? H.state.conversations.filter(cv =>
+      Array.isArray(cv.members) && cv.members.includes(u.id) && (cv.messages || []).some(m => m.from !== u.id && !m.read)).length : 0;
     const activeListings = (H.state.listings || []).filter(l => l.status === 'active');
     const filtered       = filterListings(activeListings);
     const featured       = filtered.filter(l => l.boost && l.boost.until > Date.now()).slice(0, 6);
 
     const catSections = CATEGORIES.map(c => ({
-      ...c, items: filtered.filter(l => l.cat === c.id).slice(0, 10)
+      ...c, items: filtered.filter(l => l.cat === c.id).slice(0, 4)
     })).filter(s => s.items.length > 0);
 
     return `<div class="page active" style="background:var(--bg)">
@@ -1855,12 +2216,11 @@ H.init();
       <!-- HEADER -->
       <div style="background:#1A3A8F;padding-bottom:16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(26,58,143,0.3)">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0">
-          <div onclick="H.logoTap()" style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <img src="img/icon-192.png" alt="" style="width:32px;height:32px;border-radius:8px">
-            <span style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px;font-family:Inter,sans-serif">Host<em style="font-style:normal;color:#F5A623">ly</em></span>
+          <div onclick="H.logoTap()" style="cursor:pointer">
+            <span style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-1px;font-family:Inter,sans-serif">Pa<em style="font-style:normal;color:#F5A623">Market</em></span>
           </div>
           <div style="display:flex;gap:6px">
-            <div onclick="H.currentUser()?H.openInner('Notifications'):H.requireAuth('Sign in to view notifications')"
+            <div onclick="H.openInner('Notifications')"
               style="position:relative;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;cursor:pointer">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               <span data-notif-badge style="position:absolute;top:4px;right:4px;background:#F5A623;color:#1A3A8F;border-radius:50%;min-width:16px;height:16px;font-size:9px;font-weight:900;display:${unreadNotifs ? 'flex' : 'none'};align-items:center;justify-content:center;padding:0 2px">${unreadNotifs > 9 ? '9+' : unreadNotifs}</span>
@@ -1937,8 +2297,51 @@ H.init();
           </div>
         </div>
 
+        <!-- HOT ON PAMARKET (paid ads horizontal scroll) -->
+        ${(function(){
+          var now = Date.now();
+          var ads = (H.state.paidAds||[]).filter(function(a){ return a.active && a.endsAt > now; });
+          if (!ads.length) return '';
+          ads.forEach(function(a){ if(H.trackAdImpression) H.trackAdImpression(a.id); });
+          return '<div style="padding:20px 0 0">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">'
+            + '<div>'
+            + '<div style="font-size:10px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Sponsored</div>'
+            + '<span style="font-size:17px;font-weight:800;color:var(--text)">Hot on PaMarket</span>'
+            + '</div>'
+            + '</div>'
+            + '<div style="display:flex;gap:12px;padding:0 16px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">'
+            + ads.map(function(a){
+                var clickFn = 'H.trackAdClick(' + JSON.stringify(a.id) + ',' + JSON.stringify(a.linkUrl||'') + ')';
+                var title    = escHtml(a.headline || a.businessName || 'Sponsored');
+                var sub      = escHtml(a.tagline || '');
+                var bg       = escHtml(a.bgColor || '#1A3A8F');
+                var initials = (a.businessName||'AD').split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase();
+                /* Image is positioned absolute over the initials fallback.
+                   If it fails to load, onerror removes it and the initials show through. */
+                return '<div onclick="' + escHtml(clickFn) + '" style="width:170px;flex-shrink:0;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.12);background:var(--card)">'
+                  + '<div style="height:130px;background:' + bg + ';position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center">'
+                  /* initials always rendered as the base layer */
+                  + '<span style="font-size:38px;font-weight:900;color:rgba(255,255,255,0.35);letter-spacing:-1px;position:relative;z-index:1">' + escHtml(initials) + '</span>'
+                  /* image sits on top via absolute — removed on error so initials show */
+                  + (a.imageUrl ? '<img src="' + escHtml(a.imageUrl) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2" loading="lazy" onerror="this.parentNode.removeChild(this)">' : '')
+                  /* AD badge always on top */
+                  + '<span style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);color:#fff;font-size:8px;font-weight:700;padding:2px 7px;border-radius:6px;letter-spacing:.5px;z-index:3">AD</span>'
+                  /* gradient overlay at bottom for text legibility when image is shown */
+                  + (a.imageUrl ? '<div style="position:absolute;bottom:0;left:0;right:0;height:56px;background:linear-gradient(to top,rgba(0,0,0,0.55),transparent);z-index:2"></div>' : '')
+                  + '</div>'
+                  + '<div style="padding:10px 12px 13px">'
+                  + '<div style="font-size:13px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">' + title + '</div>'
+                  + (sub ? '<div style="font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + sub + '</div>' : '')
+                  + '</div>'
+                  + '</div>';
+              }).join('')
+            + '</div>'
+            + '</div>';
+        })()}
+
         <!-- POST AD BUTTON -->
-        <div style="padding:8px 12px 0">
+        <div style="padding:12px 12px 0">
           <button onclick="H.navTo('Post',null)"
             style="width:100%;padding:14px;background:#F5A623;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(245,166,35,0.35)">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1978,7 +2381,7 @@ H.init();
                 </div>
                 <span onclick="H.filterByCat('${s.id}')" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>
               </div>
-              <div style="display:flex;gap:12px;padding:0 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px">
                 ${s.items.map(l => renderHCard(l)).join('')}
               </div>
             </div>
@@ -2038,18 +2441,19 @@ H.init();
 
 })(window.H);
 
-
-
-
-
 ;/* === www/js/browse.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 (function (H) {
   const pages = H.pages;
   const state = H.state;
   const { escHtml, filterListings, renderListCard, CATEGORIES } = H;
 
-  // Icons (prefer shared set, fallback to inline SVGs)
   const I = (window.H && H.ICONS) || {};
   const S = {
     microphone: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
@@ -2069,14 +2473,33 @@ H.init();
     lastSearch: ''
   };
 
-  // ---------------------------------------------------
-  // BROWSE PAGE
-  // ---------------------------------------------------
+  function renderListingsWithSponsored(filteredList) {
+    if (!filteredList.length) return '';
+    const now = Date.now();
+    const sponsored = (H.state.listings || []).filter(l =>
+      l.status === 'active' && l.boost && l.boost.until > now
+    );
+    if (!sponsored.length) return filteredList.map(renderListCard).join('');
+    const shownIds = new Set(filteredList.map(l => l.id));
+    const pool = sponsored.filter(l => !shownIds.has(l.id));
+    if (!pool.length) return filteredList.map(renderListCard).join('');
+    const parts = [];
+    let pi = 0;
+    filteredList.forEach((l, i) => {
+      parts.push(renderListCard(l));
+      if ((i + 1) % 5 === 0) {
+        const s = pool[pi % pool.length];
+        pi++;
+        parts.push(`<div style="position:relative">${renderListCard(s)}<span style="position:absolute;top:10px;left:10px;background:#1A3A8F;color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px;pointer-events:none;z-index:1">SPONSORED</span></div>`);
+      }
+    });
+    return parts.join('');
+  }
+
   pages.Browse = function () {
-    const activeListings = (state.listings || []).filter(l => l.status === 'active' && !H.isExpired(l));
+    const activeListings = (state.listings || []).filter(l => l.status === 'active');
     const u = H.currentUser();
     const recentSearches = (u && u.recentSearches) || [];
-    const savedSearches = u ? ((state.savedSearches || {})[u.id] || []) : [];
 
     return `<div class="page active">
       <div class="app-header" style="padding-bottom:16px">
@@ -2089,26 +2512,9 @@ H.init();
         <div class="search-box">
           <span aria-hidden="true">${S.search}</span>
           <input id="searchIn" placeholder="Search all listings…" oninput="H._browse.onSearch()">
-          ${u ? `<button class="save-search-btn" onclick="H._browse.saveSearch()" title="Save search">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-          </button>` : ''}
           <button class="voice-btn" onclick="H._browse.voiceSearch()" title="Voice search">${S.microphone}</button>
         </div>
       </div>
-
-      ${savedSearches.length ? `
-        <div class="recent-searches">
-          <div class="section-title">Saved Searches</div>
-          <div class="search-tags">
-            ${savedSearches.slice(0,5).map(s => `
-              <button class="search-tag saved-search-tag" onclick="H._browse.searchTag('${H.escHtml(s.query||'')}')">
-                <span>${H.escHtml(s.query||s.cat||'search')}</span>
-                <span onclick="H._browse.removeSavedSearch('${s.id}');event.stopPropagation()">${S.close}</span>
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      ` : ''}
 
       <div class="browse-controls">
         <button class="filter-btn" onclick="H._browse.toggleFilters()">
@@ -2166,39 +2572,18 @@ H.init();
         <div class="filter-section">
           <div class="filter-title">Condition</div>
           <div class="filter-options">
-            <label class="filter-radio">
-              <input type="radio" name="condition" value="all" onchange="H._browse.onFilterChange()" checked>
-              <span>Any</span>
-            </label>
-            <label class="filter-radio">
-              <input type="radio" name="condition" value="new" onchange="H._browse.onFilterChange()">
-              <span>New</span>
-            </label>
-            <label class="filter-radio">
-              <input type="radio" name="condition" value="like-new" onchange="H._browse.onFilterChange()">
-              <span>Like New</span>
-            </label>
-            <label class="filter-radio">
-              <input type="radio" name="condition" value="used" onchange="H._browse.onFilterChange()">
-              <span>Used</span>
-            </label>
-            <label class="filter-radio">
-              <input type="radio" name="condition" value="refurbished" onchange="H._browse.onFilterChange()">
-              <span>Refurbished</span>
-            </label>
+            <label class="filter-radio"><input type="radio" name="condition" value="all" onchange="H._browse.onFilterChange()" checked><span>Any</span></label>
+            <label class="filter-radio"><input type="radio" name="condition" value="new" onchange="H._browse.onFilterChange()"><span>New</span></label>
+            <label class="filter-radio"><input type="radio" name="condition" value="like-new" onchange="H._browse.onFilterChange()"><span>Like New</span></label>
+            <label class="filter-radio"><input type="radio" name="condition" value="used" onchange="H._browse.onFilterChange()"><span>Used</span></label>
+            <label class="filter-radio"><input type="radio" name="condition" value="refurbished" onchange="H._browse.onFilterChange()"><span>Refurbished</span></label>
           </div>
         </div>
 
         <div class="filter-section">
           <div class="filter-title">Other</div>
-          <label class="filter-checkbox">
-            <input type="checkbox" id="verifiedOnly" onchange="H._browse.onFilterChange()">
-            <span>Verified Sellers Only</span>
-          </label>
-          <label class="filter-checkbox">
-            <input type="checkbox" id="boostedOnly" onchange="H._browse.onFilterChange()">
-            <span>Premium Ads Only</span>
-          </label>
+          <label class="filter-checkbox"><input type="checkbox" id="verifiedOnly" onchange="H._browse.onFilterChange()"><span>Verified Sellers Only</span></label>
+          <label class="filter-checkbox"><input type="checkbox" id="boostedOnly" onchange="H._browse.onFilterChange()"><span>Premium Ads Only</span></label>
         </div>
 
         <div class="filter-actions">
@@ -2210,22 +2595,21 @@ H.init();
       <div class="sec-head"><div class="sec-title">Results</div></div>
       <div class="listing-list" id="listingList">
         ${activeListings.length
-          ? filterListings(activeListings, '').map(renderListCard).join('')
+          ? renderListingsWithSponsored(filterListings(activeListings, ''))
           : H.skeletonCards(6)}
       </div>
     </div>`;
   };
 
   pages.Browse_after = function () {
-    // Background refresh from Supabase — fills skeleton if cache was empty
     if (typeof H.fetchListingsFromSupabase === 'function') {
       H.fetchListingsFromSupabase().then(() => {
         const el = document.getElementById('listingList');
         if (!el || H.currentPageName !== 'Browse') return;
         const q = document.getElementById('searchIn')?.value || '';
-        const active = (state.listings || []).filter(l => l.status === 'active' && !H.isExpired(l));
+        const active = (state.listings || []).filter(l => l.status === 'active');
         el.innerHTML = active.length
-          ? filterListings(active, q).map(renderListCard).join('')
+          ? renderListingsWithSponsored(filterListings(active, q))
           : H.emptyState('No listings yet', 'Listings will appear here once people start posting', null, null);
       }).catch(() => {
         const el = document.getElementById('listingList');
@@ -2245,11 +2629,11 @@ H.init();
         H._browse._searchTimer = setTimeout(() => {
           const q = document.getElementById('searchIn')?.value || '';
           browseState.lastSearch = q;
-          const activeListings = (state.listings || []).filter(l => l.status === 'active' && !H.isExpired(l));
+          const activeListings = (state.listings || []).filter(l => l.status === 'active');
           const filtered = filterListings(activeListings, q);
           const el = document.getElementById('listingList');
           if (el) el.innerHTML = filtered.length
-            ? filtered.map(renderListCard).join('')
+            ? renderListingsWithSponsored(filtered)
             : H.emptyState('No matches', 'Try a different search term', null, null);
           if (q.trim()) {
             const u = H.currentUser();
@@ -2263,10 +2647,7 @@ H.init();
       },
       searchTag: (term) => {
         const inp = document.getElementById('searchIn');
-        if (inp) {
-          inp.value = term;
-          H._browse.onSearch();
-        }
+        if (inp) { inp.value = term; H._browse.onSearch(); }
       },
       removeSearch: (term) => {
         const u = H.currentUser();
@@ -2276,9 +2657,7 @@ H.init();
           H.renderPage('Browse');
         }
       },
-      voiceSearch: () => {
-        H.toast('Voice search coming soon!');
-      },
+      voiceSearch: () => { H.toast('Voice search is not available on this device'); },
       saveSearch: () => {
         const q = document.getElementById('searchIn')?.value?.trim() || '';
         const u = H.currentUser();
@@ -2288,9 +2667,17 @@ H.init();
         state.savedSearches[u.id] = state.savedSearches[u.id] || [];
         const already = state.savedSearches[u.id].some(s => s.query === q && s.cat === browseState.selectedCategory);
         if (already) { H.toast('Search already saved'); return; }
-        state.savedSearches[u.id].unshift({ id: H.uid(), query: q, cat: browseState.selectedCategory, savedAt: Date.now() });
+        const newId = H.uid();
+        state.savedSearches[u.id].unshift({ id: newId, query: q, cat: browseState.selectedCategory, savedAt: Date.now() });
         state.savedSearches[u.id] = state.savedSearches[u.id].slice(0, 10);
         H.saveState();
+        var _sb = window.supabase;
+        if (_sb && typeof _sb.from === 'function') {
+          _sb.from('saved_searches').insert({
+            user_id: u.id, query: q || null,
+            category: browseState.selectedCategory || null
+          }).then(function(res) { if (res && res.error) console.warn('Saved search sync failed:', res.error.message); });
+        }
         H.toast('Search saved — we\'ll notify you of new matches');
       },
       removeSavedSearch: (id) => {
@@ -2300,9 +2687,7 @@ H.init();
         H.saveState();
         H.renderPage('Browse');
       },
-      onFilterChange: () => {
-        // Placeholder for future filter logic
-      },
+      onFilterChange: () => {},
       onSortChange: () => {
         const sortVal = document.getElementById('sortBy')?.value;
         browseState.sortBy = sortVal;
@@ -2315,29 +2700,11 @@ H.init();
           ev.target.classList.add('active');
         }
       },
-      applyFilters: () => {
-        H._browse.toggleFilters();
-        H._browse.onSearch();
-      },
+      applyFilters: () => { H._browse.toggleFilters(); H._browse.onSearch(); },
       resetFilters: () => {
-        browseState = {
-          showFilters: false,
-          priceMin: 0,
-          priceMax: 1000000,
-          selectedCategory: null,
-          condition: 'all',
-          sortBy: 'recent',
-          currency: 'all',
-          lastSearch: ''
-        };
-        // Reset UI elements
-        document.querySelectorAll('.filter-checkbox input, .filter-radio input').forEach(input => {
-          input.checked = false;
-        });
-        document.querySelectorAll('input[name="condition"]').forEach(input => {
-          if (input.value === 'all') input.checked = true;
-        });
-        // Update currency buttons visually
+        browseState = { showFilters:false, priceMin:0, priceMax:1000000, selectedCategory:null, condition:'all', sortBy:'recent', currency:'all', lastSearch:'' };
+        document.querySelectorAll('.filter-checkbox input, .filter-radio input').forEach(input => { input.checked = false; });
+        document.querySelectorAll('input[name="condition"]').forEach(input => { if (input.value === 'all') input.checked = true; });
         document.querySelectorAll('.cur-opt').forEach(b => b.classList.remove('active'));
         const defaultCurBtn = document.querySelector('.cur-opt.all') || document.querySelector('[onclick*="\'all\'"]');
         if (defaultCurBtn) defaultCurBtn.classList.add('active');
@@ -2345,7 +2712,6 @@ H.init();
       }
     };
 
-    // Restore search query from previous visit (must be after H._browse is assigned)
     if (browseState.lastSearch) {
       const inp = document.getElementById('searchIn');
       if (inp) { inp.value = browseState.lastSearch; H._browse.onSearch(); }
@@ -2353,7 +2719,14 @@ H.init();
   };
 
 })(window.H);
+
 ;/* === www/js/post.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 (function (H) {
   const pages = H.pages;
@@ -2406,17 +2779,20 @@ H.init();
       <div class="fg"><div class="fl">Description</div>
         <textarea class="fi" rows="4" id="postDesc" placeholder="Describe what you're selling · condition, features, why you're selling..." maxlength="2000">${H.escHtml(s.desc)}</textarea>
       </div>
-      <div class="step-btns"><button class="btn-next" onclick="H._post.next()">Continue ?</button></div>`;
+      <div class="step-btns"><button class="btn-next" onclick="H._post.next()">Continue →</button></div>`;
 
     if (s.step === 2) return `
       <div class="fg"><div class="fl">Price</div>
-        <div class="price-row">
-          <input class="fi" style="flex:1" type="number" placeholder="0" id="priceInput" value="${H.escHtml(s.price)}" min="0">
-          <div class="cur-toggle">
-            <button class="cur ${s.currency === 'USD' ? 'on' : ''}" onclick="H._post.setCur('USD')">USD</button>
-            <button class="cur ${s.currency === 'ZiG' ? 'on' : ''}" onclick="H._post.setCur('ZiG')">ZiG</button>
-          </div>
-        </div>
+        ${H.state.freeOnly
+          ? `<div class="fi" style="color:var(--sub);cursor:default;background:var(--bg2)">Free / Negotiable (set by platform)</div><input type="hidden" id="priceInput" value="0">`
+          : `<div class="price-row">
+              <input class="fi" style="flex:1" type="number" placeholder="0" id="priceInput" value="${H.escHtml(s.price)}" min="0">
+              <div class="cur-toggle">
+                <button class="cur ${s.currency === 'USD' ? 'on' : ''}" onclick="H._post.setCur('USD')">USD</button>
+                <button class="cur ${s.currency === 'ZiG' ? 'on' : ''}" onclick="H._post.setCur('ZiG')">ZiG</button>
+              </div>
+            </div>`
+        }
       </div>
       <div class="fg"><div class="fl">Province</div>
         <select class="fi" id="provinceSel" onchange="H._post.onProv(this.value)">
@@ -2432,50 +2808,53 @@ H.init();
         <input class="fi" id="suburbIn" value="${H.escHtml(s.suburb)}" placeholder="e.g. Avondale West">
       </div>
       <div class="step-btns">
-        <button class="btn-prev" onclick="H._post.prev()">? Back</button>
-        <button class="btn-next" onclick="H._post.next()">Continue ?</button>
+        <button class="btn-prev" onclick="H._post.prev()">← Back</button>
+        <button class="btn-next" onclick="H._post.next()">Continue →</button>
       </div>`;
 
     if (s.step === 3) return `
       <div class="fg">
         <div class="fl">Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--sub2)">(up to 8 · first is the cover)</span></div>
-        <label class="img-upload-zone" for="photoFile">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <div class="img-upload-title">Tap to add photos</div>
-          <div class="img-upload-sub">JPG, PNG · Max 8 photos · auto-compressed</div>
-        </label>
-        <input type="file" id="photoFile" accept="image/*" multiple capture="environment" style="display:none" onchange="H._post.onPhotos(event)">
-        <div class="photo-grid" id="photoGrid">${renderPhotoGrid()}</div>
+        ${H.state.allowImageUploads === false
+          ? `<div style="padding:18px;background:var(--bg2);border-radius:12px;text-align:center;color:var(--sub);font-size:13px;border:1px dashed var(--border)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Photo uploads are currently disabled by the admin.</div>`
+          : `<label class="img-upload-zone" for="photoFile">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <div class="img-upload-title">Tap to add photos</div>
+              <div class="img-upload-sub">JPG, PNG · Max 8 photos · auto-compressed</div>
+            </label>
+            <input type="file" id="photoFile" accept="image/*" multiple capture="environment" style="display:none" onchange="H._post.onPhotos(event)">
+            <div class="photo-grid" id="photoGrid">${renderPhotoGrid()}</div>`
+        }
       </div>
       <div class="tip-box">
-        <div class="tip-title">?? Photos sell 3× faster</div>
+        <div class="tip-title"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Photos sell 3× faster</div>
         <div class="tip-body">Listings with 5+ clear photos in good lighting get 3× more enquiries.</div>
       </div>
       <div class="step-btns">
-        <button class="btn-prev" onclick="H._post.prev()">? Back</button>
-        <button class="btn-next" onclick="H._post.next()">Preview ?</button>
+        <button class="btn-prev" onclick="H._post.prev()">← Back</button>
+        <button class="btn-next" onclick="H._post.next()">Preview →</button>
       </div>`;
 
     if (s.step === 4) return `
       <div class="preview-card">
-        <div class="preview-label">? Ad Preview</div>
+        <div class="preview-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ad Preview</div>
         <div class="preview-title">${H.escHtml(s.title || 'Untitled')}</div>
         <div class="preview-price">${H.escHtml(H.fmtPrice(s.price, s.currency))}</div>
-        <div class="preview-meta">?? ${H.escHtml(s.suburb || s.city)}, ${H.escHtml(s.prov)} · ${(CATEGORIES.find(c => c.id === s.cat) || {}).name || 'Other'} · ${s.photos.length} photo${s.photos.length === 1 ? '' : 's'}</div>
+        <div class="preview-meta"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${H.escHtml(s.suburb || s.city)}, ${H.escHtml(s.prov)} · ${(CATEGORIES.find(c => c.id === s.cat) || {}).name || 'Other'} · ${s.photos.length} photo${s.photos.length === 1 ? '' : 's'}</div>
       </div>
       <div class="tip-box">
-        <div class="tip-title">?? Listing Rules</div>
+        <div class="tip-title"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>Listing Rules</div>
         <div class="tip-body">By posting you confirm this item is legal, you own it, and the photos are real. Scam listings result in account suspension.</div>
       </div>
       <div class="step-btns">
-        <button class="btn-prev" onclick="H._post.prev()">? Back</button>
-        <button class="btn-submit" onclick="H._post.submit()">Post Ad ?</button>
+        <button class="btn-prev" onclick="H._post.prev()">← Back</button>
+        <button class="btn-submit" onclick="H._post.submit()">Post Ad →</button>
       </div>`;
   }
 
   function renderPhotoGrid() {
     return postState.photos.map((p, i) =>
-      `<div class="photo-thumb"><img src="${p}"><button class="rm" onclick="H._post.removePhoto(${i})">·</button></div>`
+      `<div class="photo-thumb"><img src="${p}"><button class="rm" onclick="H._post.removePhoto(${i})">×</button></div>`
     ).join('');
   }
 
@@ -2496,21 +2875,20 @@ H.init();
     onProv(p)    { postState.prov = p; postState.city = CITIES_BY_PROV[p][0]; refreshBody(); },
     removePhoto(i) { postState.photos.splice(i, 1); document.getElementById('photoGrid').innerHTML = renderPhotoGrid(); },
     onPhotos(e)  {
+      const ALLOWED = ['image/jpeg','image/png','image/gif','image/webp'];
+      const MAX_BYTES = 5 * 1024 * 1024;
       const files = Array.from(e.target.files || []);
       const remaining = 8 - postState.photos.length;
+      let rejected = 0;
       files.slice(0, remaining).forEach(f => {
-        compressImage(f, 1200, 0.78).then(({dataUrl, blob}) => {
-          postState.photos.push(dataUrl);
-          const idx = postState.photos.length - 1;
+        if (!ALLOWED.includes(f.type)) { rejected++; return; }
+        if (f.size > MAX_BYTES) { rejected++; return; }
+        H.compressImage(f, 1200, 0.78).then(d => {
+          postState.photos.push(d);
           document.getElementById('photoGrid').innerHTML = renderPhotoGrid();
-          // Upload to Supabase Storage in the background; replace preview URL when done
-          if (blob && typeof H.uploadPhotoToStorage === 'function') {
-            H.uploadPhotoToStorage(blob).then(url => {
-              if (url && postState.photos[idx] === dataUrl) postState.photos[idx] = url;
-            }).catch(() => {});
-          }
         });
       });
+      if (rejected) H.toast(rejected + ' photo(s) skipped — use JPG/PNG under 5 MB', 4000, true);
       e.target.value = '';
     },
     next() {
@@ -2526,9 +2904,10 @@ H.init();
         s.prov   = document.getElementById('provinceSel').value;
         s.city   = document.getElementById('citySel').value;
         s.suburb = document.getElementById('suburbIn').value.trim();
-        if (!s.price || Number(s.price) <= 0) { H.toast('Enter a valid price'); return; }
+        if (!H.state.freeOnly && (!s.price || Number(s.price) <= 0)) { H.toast('Enter a valid price'); return; }
+        if (H.state.freeOnly) s.price = '0';
       } else if (s.step === 3) {
-        if (!s.photos.length) { H.toast('Add at least one photo'); return; }
+        if (H.state.allowImageUploads !== false && !s.photos.length) { H.toast('Add at least one photo'); return; }
       }
       s.step++;
       refreshSteps();
@@ -2538,26 +2917,32 @@ H.init();
       if (postState.step > 1) { postState.step--; refreshSteps(); refreshBody(); }
     },
     submit() {
+      if (H.checkBan && H.checkBan()) return;
       const s = postState;
       const u = H.currentUser();
+      const needsApproval = !!(H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified));
       const l = {
         id: H.uid(), sellerId: u.id, sellerName: u.name || '', sellerPhone: u.phone || '', title: s.title, desc: s.desc,
         price: s.price, currency: s.currency, cat: s.cat,
         prov: s.prov, city: s.city, suburb: s.suburb,
         photos: s.photos, createdAt: Date.now(),
-        expiresAt: Date.now() + (30 * 24 * 60 * 60 * 1000),
-        status: (H.state.requireListingApproval || s.cat === 'jobs') ? 'pending' : 'active',
+        status: needsApproval ? 'pending' : 'active',
         boost: null, views: 0
       };
       H.state.listings.unshift(l);
       H.saveState();
       if (typeof H.saveListingToCloud === "function") H.saveListingToCloud(l);
-      H.toast(H.state.requireListingApproval ? 'Ad submitted for admin approval' : '?? Your ad is live!');
-      H.navTo('Home', document.querySelector('[data-nav="Home"]'));
+      if (needsApproval) {
+        H.toast('Ad submitted! It will go live after admin review.', 5000);
+        H.openInner('MyListings');
+      } else {
+        H.toast('Your ad is live!');
+        H.navTo('Home', document.querySelector('[data-nav="Home"]'));
+      }
     }
   };
 
-  function compressImage(file, maxDim = 1200, q = 0.8) {
+  H.compressImage = function compressImage(file, maxDim = 1200, q = 0.8) {
     return new Promise(res => {
       const r = new FileReader();
       r.onload = ev => {
@@ -2569,8 +2954,7 @@ H.init();
           const c = document.createElement('canvas');
           c.width = w; c.height = h;
           c.getContext('2d').drawImage(img, 0, 0, w, h);
-          const dataUrl = c.toDataURL('image/jpeg', q);
-          c.toBlob(blob => res({dataUrl, blob}), 'image/jpeg', q);
+          res(c.toDataURL('image/jpeg', q));
         };
         img.src = ev.target.result;
       };
@@ -2581,7 +2965,13 @@ H.init();
 })(window.H);
 
 ;/* === www/js/detail.js === */
-﻿'use strict';
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
+'use strict';
 (function (H) {
   const pages = H.pages;
 
@@ -2642,7 +3032,7 @@ H.init();
 
       <div class="det-photo" id="dPhoto">
         ${photos.length
-          ? `<img src="${photos[0]}" id="dPhotoImg" onclick="H.openPhotoViewer(${JSON.stringify(photos)},0)" style="cursor:zoom-in">`
+          ? `<img src="${photos[0]}" id="dPhotoImg" data-photos="${H.escHtml(JSON.stringify(photos))}" onclick="H.openPhotoViewer(JSON.parse(this.dataset.photos),0)" style="cursor:zoom-in">`
           : `<div class="ph">${H.categoryIcon(l.cat)}</div>`}
         ${photos.length > 1 ? `
           <div class="photo-dots">${photos.map((_,i)=>`<div class="pdot ${i===0?'on':''}" onclick="H.setPhoto('${l.id}',${i})"></div>`).join('')}</div>
@@ -2681,20 +3071,15 @@ H.init();
         ${isMine ? `
           <button class="btn-pri" onclick="H.openBoostPage('${l.id}')" style="margin-bottom:8px">${S.boost} Boost this Listing</button>
           <button style="width:100%;padding:13px;background:#fee2e2;color:#dc2626;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" onclick="H.deleteListing('${l.id}')">Delete Listing</button>
-        ` : `
-          <button class="wa-btn" onclick="H.openWA('${l.id}')">
-            ${S.wa} Chat on WhatsApp
-          </button>
-          <button class="msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')">
-            ${S.message} Message in App
-          </button>
-          <button class="call-btn" onclick="H.callSeller('${H.escHtml(sellerPhone)}')">
-            ${S.phone} Call ${H.escHtml(sellerPhone||'Seller')}
-          </button>
-          <button class="report-btn" onclick="H.reportListing('${l.id}')">
-            ${S.flag} Report this Listing
-          </button>
-        `}
+        ` : (function(){
+          const cm = l.contactMethod || 'chat';
+          const waBtn   = `<button class="wa-btn" onclick="H.openWA('${l.id}')">${S.wa} Chat on WhatsApp</button>`;
+          const chatBtn = `<button class="msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')">${S.message} Message in App</button>`;
+          const callBtn = sellerPhone ? `<button class="call-btn" onclick="H.callSeller('${sellerPhone}')">${S.phone} Call ${H.escHtml(sellerPhone)}</button>` : '';
+          const rptBtn  = `<button class="report-btn" onclick="H.reportListing('${l.id}')">${S.flag} Report this Listing</button>`;
+          if (cm === 'phone') return callBtn + waBtn + chatBtn + rptBtn;
+          return chatBtn + waBtn + callBtn + rptBtn;
+        })()}
       </div>
     </div>`;
   };
@@ -2740,7 +3125,7 @@ H.init();
 
   H.shareListing = function(id) {
     const l = H.state.listings.find(x => x.id === id); if (!l) return;
-    const text = l.title+' · '+H.fmtPrice(l.price, l.currency)+' on Hostly Zimbabwe';
+    const text = l.title+' · '+H.fmtPrice(l.price, l.currency)+' on PaMarket Zimbabwe';
     if (navigator.share) navigator.share({title:l.title, text, url:location.href}).catch(()=>{});
     else { if (navigator.clipboard) navigator.clipboard.writeText(text+' '+location.href); H.toast('Link copied'); }
   };
@@ -2750,20 +3135,48 @@ H.init();
     if (!u) { H.requireAuth('Sign in to save listings'); return; }
     H.state.saves[u.id] = H.state.saves[u.id] || [];
     const i = H.state.saves[u.id].indexOf(id);
-    if (i >= 0) { H.state.saves[u.id].splice(i,1); H.toast('Removed from saved'); }
+    const removing = i >= 0;
+    if (removing) { H.state.saves[u.id].splice(i,1); H.toast('Removed from saved'); }
     else { H.state.saves[u.id].push(id); H.toast('Saved'); }
     H.saveState();
+    var _sb = window.supabase;
+    if (_sb && typeof _sb.from === 'function') {
+      if (removing) {
+        _sb.from('user_saves').delete().eq('user_id', u.id).eq('listing_id', id)
+          .then(function(res) { if (res && res.error) console.warn('Save sync failed:', res.error.message); });
+      } else {
+        _sb.from('user_saves').upsert({ user_id: u.id, listing_id: id, saved_at: new Date().toISOString() })
+          .then(function(res) { if (res && res.error) console.warn('Save sync failed:', res.error.message); });
+      }
+    }
     H.renderPage('Detail', {id});
   };
 
   H.deleteListing = function(id) {
     H.modal({
       title:'Delete this listing?', body:'This cannot be undone.', confirmText:'Delete', danger:true,
-      onConfirm:() => {
-        H.state.listings = H.state.listings.filter(l => l.id !== id);
+      onConfirm: async () => {
+        var sc = window.supabase;
+        if (sc && typeof sc.from === 'function') {
+          try {
+            var res = await sc.from('listings').delete().eq('id', id).select();
+            if (res && res.error) {
+              H.toast('Could not delete: ' + (res.error.message || 'permission denied'));
+              return;
+            }
+            if (!res.data || res.data.length === 0) {
+              H.toast('Could not delete — please try again');
+              return;
+            }
+          } catch (e) {
+            H.toast('Network error — try again');
+            return;
+          }
+        }
+        H.state.listings = (H.state.listings || []).filter(l => l.id !== id);
         H.saveState();
-        if (typeof H.deleteListingFromCloud==='function') H.deleteListingFromCloud(id);
-        H.toast('Listing deleted'); H.goBack();
+        H.toast('Listing deleted');
+        H.goBack();
       }
     });
   };
@@ -2773,28 +3186,26 @@ H.init();
     const seller = getSeller(l);
     const phone  = (seller.phone||l.sellerPhone||'').replace(/[^\d+]/g,'');
     if (!phone) { H.toast('No WhatsApp number available'); return; }
-    const txt = encodeURIComponent('Hi! I saw your "'+l.title+'" listing on Hostly Zimbabwe. Is it still available?');
+    const txt = encodeURIComponent('Hi! I saw your "'+l.title+'" listing on PaMarket Zimbabwe. Is it still available?');
     window.open('https://wa.me/'+phone.replace('+','')+'?text='+txt, '_blank');
   };
 
   H.callSeller = function(phone) {
     if (!phone || phone.trim()==='') { H.toast('No phone number available'); return; }
-    const clean = phone.replace(/[^\d+\-() ]/g,'').trim();
-    if (!clean) { H.toast('No phone number available'); return; }
-    // window.open with '_system' works in Capacitor (routes through native intent)
-    // and falls back gracefully in a browser
-    window.open('tel:'+clean, '_system');
-    // Also copy to clipboard as a backup so the number is always accessible
-    if (navigator.clipboard) navigator.clipboard.writeText(clean).catch(()=>{});
-    H.toast('Calling '+clean);
+    const clean = phone.replace(/\s+/g,'');
+    if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+      location.href = 'tel:'+clean;
+    } else {
+      if (navigator.clipboard) navigator.clipboard.writeText(clean);
+      H.toast('Number copied: '+clean);
+    }
   };
 
   H.startChatWith = function(sellerId, listingId) {
     if (!H.currentUser()) { H.requireAuth('Sign in to message sellers'); return; }
     const u = H.currentUser();
     if (!sellerId || sellerId === u.id) { H.toast('You cannot message yourself'); return; }
-    H.state.conversations = H.state.conversations || [];
-    // Deterministic ID: sorted user IDs + listingId ensures same conv across sessions
+    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
     const ids = [u.id, sellerId].sort();
     const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId || '').slice(-6);
     let conv = H.state.conversations.find(c => c.id === convId);
@@ -2802,6 +3213,7 @@ H.init();
       conv = { id: convId, members: [u.id, sellerId], listingId: listingId || null, messages: [] };
       H.state.conversations.push(conv);
       H.saveState();
+      if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(conv);
     }
     H.openInner('Chat', { id: convId });
   };
@@ -2819,7 +3231,10 @@ H.init();
         const note   = document.getElementById('reportNote')?.value||'';
         H.state.reports = H.state.reports||[];
         H.state.reports.push({id:H.uid(), reporterId:H.currentUser().id, targetType:'listing', targetId:id, reason:reason+(note?' - '+note:''), t:Date.now(), status:'open'});
-        H.saveState(); H.toast('Report submitted. Thank you.');
+        H.saveState();
+        var _sb = window.supabase;
+        if (_sb) _sb.from('reports').insert({target_type:'listing', target_id:id, reason:reason+(note?' - '+note:''), reporter_id:String(H.currentUser().id), status:'open'}).then(function(r){ if(r&&r.error) console.warn('report save:',r.error.message); });
+        H.toast('Report submitted. Thank you.');
       }
     });
   };
@@ -2837,14 +3252,16 @@ H.init();
         const note   = document.getElementById('reportNote')?.value||'';
         H.state.reports = H.state.reports||[];
         H.state.reports.push({id:H.uid(), reporterId:H.currentUser().id, targetType:'user', targetId:id, reason:reason+(note?' - '+note:''), t:Date.now(), status:'open'});
-        H.saveState(); H.toast('Report submitted');
+        H.saveState();
+        var _sb = window.supabase;
+        if (_sb) _sb.from('reports').insert({target_type:'user', target_id:id, reason:reason+(note?' - '+note:''), reporter_id:String(H.currentUser().id), status:'open'}).then(function(r){ if(r&&r.error) console.warn('report save:',r.error.message); });
+        H.toast('Report submitted');
       }
     });
   };
 
   H.openBoostPage = function(listingId) { H.openInner('Boost', {listingId}); };
 
-  // ── PHOTO VIEWER ──────────────────────────────────
   function pvHTML(photos, idx) {
     var dots = '';
     if (photos.length > 1) {
@@ -2856,7 +3273,7 @@ H.init();
     }
     return '<div style="position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px)+14px) 16px 14px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(rgba(0,0,0,.65),transparent);z-index:2">'
       + '<span id="pvCounter" style="color:#fff;font-size:14px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.6)">'+(idx+1)+' / '+photos.length+'</span>'
-      + '<button onclick="H.closePhotoViewer()" style="background:rgba(0,0,0,.45);border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+      + '<button ontouchstart="event.stopPropagation()" ontouchend="event.stopPropagation();H.closePhotoViewer()" onclick="H.closePhotoViewer()" style="background:rgba(0,0,0,.45);border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
       + '</button></div>'
       + '<img id="pvImg" src="'+photos[idx]+'" style="position:absolute;top:50%;left:50%;max-width:100%;max-height:100%;object-fit:contain;will-change:transform;pointer-events:none;-webkit-user-drag:none;user-select:none" draggable="false">'
@@ -3107,42 +3524,175 @@ H.init();
 })(window.H);
 
 ;/* === www/js/messages.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 (function (H) {
   const pages = H.pages;
   const state = H.state;
   const { currentUser, escHtml, timeAgo, uid, toast, modal,
           innerTopbar, emptyState, openInner, goBack, renderPage,
-          saveState, initials, pushNotif, fmtPrice, ICONS } = H;
+          initials, pushNotif, fmtPrice, ICONS } = H;
+
+  function conversations() {
+    if (!Array.isArray(H.state.conversations)) {
+      H.state.conversations = [];
+      H.saveState();
+    }
+    const deleted = H.state.deletedConvIds || [];
+    return deleted.length
+      ? H.state.conversations.filter(function (c) { return !deleted.includes(c.id); })
+      : H.state.conversations;
+  }
+
+  function users() {
+    if (!Array.isArray(H.state.users)) H.state.users = [];
+    return H.state.users;
+  }
+
+  // Fetch a single user profile from Supabase and cache it, then re-render the current page.
+  // Prevents repeated network calls using a per-session pending map.
+  H._pendingProfileFetch = H._pendingProfileFetch || {};
+  H._resolveOtherName = function(otherId, conv) {
+    if (!otherId || H._pendingProfileFetch[otherId]) return;
+    H._pendingProfileFetch[otherId] = true;
+    var sb = window.supabase;
+    if (!sb || typeof sb.from !== 'function') return;
+    sb.from('profiles')
+      .select('id,name,phone,email,avatar,verified,role,status,created_at')
+      .eq('id', otherId)
+      .single()
+      .then(function(res) {
+        var p = res && res.data;
+        var nameResolved = '';
+        if (p) {
+          var existing = (H.state.users||[]).find(function(x){ return x.id === p.id; });
+          if (existing) {
+            if (p.name && !existing.name) { existing.name = p.name; }
+            if (p.avatar && !existing.avatar) { existing.avatar = p.avatar; }
+            nameResolved = existing.name;
+          } else {
+            var entry = {
+              id: p.id, name: p.name||'', phone: p.phone||'', email: p.email||'',
+              avatar: p.avatar||null, verified: !!p.verified, role: p.role||'user',
+              status: p.status||'active',
+              joinedAt: p.created_at ? new Date(p.created_at).getTime() : Date.now()
+            };
+            (H.state.users = H.state.users||[]).push(entry);
+            nameResolved = entry.name;
+          }
+        }
+        // If profiles table gave no name, fall back to message sender_name
+        if (!nameResolved && conv && Array.isArray(conv.messages)) {
+          var msgWithName = conv.messages.find(function(m){ return m.from === otherId && m.senderName; });
+          if (msgWithName) { nameResolved = msgWithName.senderName; }
+          var userEntry = (H.state.users||[]).find(function(x){ return x.id === otherId; });
+          if (nameResolved) {
+            if (userEntry) { userEntry.name = nameResolved; }
+            else { (H.state.users = H.state.users||[]).push({ id: otherId, name: nameResolved, phone: '', email: '', avatar: null, verified: false, role: 'user', status: 'active', joinedAt: Date.now() }); }
+          }
+        }
+        if (nameResolved && conv && !conv.otherName) { conv.otherName = nameResolved; }
+        if (nameResolved) {
+          H.saveState();
+          var page = H.currentPageName;
+          if (page === 'Messages' || page === 'Chat') { H.renderPage(page); }
+        }
+      })
+      .catch(function() {});
+  };
+
+  function conversationSignature() {
+    const u = currentUser();
+    if (!u) return '';
+    return conversations()
+      .filter(c => Array.isArray(c.members) && c.members.includes(u.id))
+      .map(c => {
+        const msgs = Array.isArray(c.messages) ? c.messages : [];
+        const last = msgs[msgs.length - 1] || {};
+        const unread = msgs.filter(m => m.from !== u.id && !m.read).length;
+        const otherId = Array.isArray(c.members) ? c.members.find(m => m !== u.id) : '';
+        const other = otherId ? users().find(x => x.id === otherId) : null;
+        return [c.id, msgs.length, last.id || '', last.t || 0, unread, (other && other.name) || '', (other && other.avatar) || ''].join(':');
+      })
+      .sort()
+      .join('|');
+  }
+
+  function otherAvatarFor(c, u) {
+    const otherId = c && Array.isArray(c.members) ? c.members.find(m => m !== u.id) : null;
+    const other = otherId ? users().find(x => x.id === otherId) : null;
+    const ini = initials((other && other.name) || 'U');
+    return (other && other.avatar)
+      ? '<img src="' + escHtml(other.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+      : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + ini + '</div>';
+  }
+
+  function appendThemMessage(thread, avatarHtml, m) {
+    if (!thread || !m || thread.querySelector('[data-msg-id="' + escHtml(m.id) + '"]')) return;
+    const wrap = document.createElement('div');
+    wrap.setAttribute('data-msg-id', m.id);
+    wrap.style.cssText = 'display:flex;align-items:flex-end;gap:6px';
+    const avaEl = document.createElement('div');
+    avaEl.style.cssText = 'width:28px;height:28px;flex-shrink:0';
+    avaEl.innerHTML = avatarHtml;
+    const div = document.createElement('div');
+    div.className = 'chat-bubble them';
+    div.innerHTML = escHtml(m.text) + '<div style="font-size:10px;opacity:.6;margin-top:3px">' + timeAgo(m.t) + '</div>';
+    wrap.appendChild(avaEl);
+    wrap.appendChild(div);
+    thread.appendChild(wrap);
+  }
 
   // ---------------------------------------------------
   // MESSAGES LIST
   // ---------------------------------------------------
   pages.Messages = function () {
     const u = currentUser();
-    const convos = (state.conversations || [])
-      .filter(c => c.members.includes(u.id) && c.messages.length)
-      .sort((a, b) => b.messages[b.messages.length - 1].t - a.messages[a.messages.length - 1].t);
+    if (!u) {
+      return `<div class="page active">${H.innerTopbar('Messages')}
+        <div style="padding:20px">${H.emptyState('Sign in required', 'Sign in to view and send messages.', 'Sign In', "H.requireAuth('Sign in to view messages')")}</div>
+      </div>`;
+    }
+    const convos = conversations()
+      .filter(c => Array.isArray(c.members) && c.members.includes(u.id) && Array.isArray(c.messages) && c.messages.length)
+      .sort((a, b) => {
+        const am = a.messages[a.messages.length - 1] || {};
+        const bm = b.messages[b.messages.length - 1] || {};
+        return (bm.t || 0) - (am.t || 0);
+      });
 
     return `<div class="page active">${H.innerTopbar('Messages')}
       <div style="padding:10px 14px;font-size:12px;color:var(--sub)">${convos.length} conversation${convos.length === 1 ? '' : 's'}</div>
       <div>
         ${convos.length ? convos.map(c => {
           const otherId = c.members.find(m => m !== u.id);
-          const other   = state.users.find(x => x.id === otherId) || { name: (function(){ var lastMsg = c.messages.find(function(m){ return m.from===otherId; }); return lastMsg&&lastMsg.senderName ? lastMsg.senderName : 'User'; })() };
+          // Backfill c.otherName from any message senderName we have
+          if (!c.otherName) {
+            const sn = (c.messages.find(function(m){ return m.from===otherId && m.senderName; })||{}).senderName;
+            if (sn) { c.otherName = sn; H.saveState(); }
+          }
+          const other   = users().find(x => x.id === otherId) || { name: c.otherName || '' };
+          // If name is still blank, trigger async profile fetch which will re-render when resolved
+          if (!other.name && otherId) { H._resolveOtherName(otherId, c); }
+          const otherDisplayName = other.name || c.otherName || 'Unknown User';
           const last    = c.messages[c.messages.length - 1];
           const unread  = c.messages.some(m => m.from !== u.id && !m.read);
-          return `<div class="msg-item" onclick="H.openChat('${c.id}')">
-            <div class="msg-av">${initials(other.name)}</div>
+          return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item" data-cid="${escHtml(c.id)}" onclick="H.openChat('${c.id}')">
+            <div class="msg-av">${initials(otherDisplayName)}</div>
             <div class="msg-body">
               <div class="msg-name-row">
-                <div class="msg-name">${escHtml(other.name)}</div>
+                <div class="msg-name">${escHtml(otherDisplayName)}</div>
                 <div class="msg-time">${timeAgo(last.t)}</div>
               </div>
               <div class="msg-preview">${last.from === u.id ? 'You: ' : ''}${escHtml(last.text)}</div>
             </div>
             ${unread ? '<div class="msg-unread-dot"></div>' : ''}
-          </div>`;
+          </div></div>`;
         }).join('') : H.emptyState('No messages yet', 'When buyers message you about a listing, it will show up here.', null, null)}
       </div>
     </div>`;
@@ -3150,36 +3700,80 @@ H.init();
 
   
   pages.Chat = function ({ id }) {
-    const c = (state.conversations || []).find(x => x.id === id);
+    const c = conversations().find(x => x.id === id);
     if (!c) return '<div class="page active">' + H.innerTopbar('Chat') + '<div class="empty-state"><div class="empty-title">Conversation not found</div></div></div>';
     const u = currentUser();
+    if (!u) {
+      return `<div class="page active">${H.innerTopbar('Chat')}
+        <div style="padding:20px">${H.emptyState('Sign in required', 'Sign in to view and send messages.', 'Sign In', "H.requireAuth('Sign in to view messages')")}</div>
+      </div>`;
+    }
+    if (!Array.isArray(c.members)) c.members = [];
+    if (!Array.isArray(c.messages)) c.messages = [];
     const otherId = c.members.find(m => m !== u.id);
-    const other = state.users.find(x => x.id === otherId) || { name: (function(){ var m = c.messages.find(function(msg){ return msg.from===otherId; }); return m&&m.senderName ? m.senderName : 'User'; })() };
+    // Backfill c.otherName from any message senderName we have
+    if (!c.otherName) {
+      const sn = (c.messages.find(function(msg){ return msg.from===otherId && msg.senderName; })||{}).senderName;
+      if (sn) { c.otherName = sn; H.saveState(); }
+    }
+    const other = users().find(x => x.id === otherId) || { name: c.otherName || '' };
+    // If name is still blank, trigger async profile fetch — will re-render when resolved
+    if (!other.name && otherId) { H._resolveOtherName(otherId, c); }
+    const otherDisplayName = other.name || c.otherName || 'Unknown User';
     const listing = (state.listings || []).find(l => l.id === c.listingId);
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
-    saveState();
+    H.saveState();
+    if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
     H._activeChat = id;
+
+    const otherIni = initials(otherDisplayName);
+    const otherAvatar = other.avatar
+      ? '<img src="' + escHtml(other.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+      : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>';
+
     const msgs = c.messages.map(function(m) {
       const mine = m.from === u.id;
-      return '<div class="chat-bubble ' + (mine ? 'me' : 'them') + '">'
+      if (mine) {
+        return '<div class="chat-bubble me" data-msg-id="' + escHtml(m.id) + '">'
+          + escHtml(m.text)
+          + '<div style="font-size:10px;opacity:.6;margin-top:3px;text-align:right">' + timeAgo(m.t) + '</div>'
+          + '</div>';
+      }
+      return '<div data-msg-id="' + escHtml(m.id) + '" style="display:flex;align-items:flex-end;gap:6px">'
+        + '<div style="width:28px;height:28px;flex-shrink:0">' + otherAvatar + '</div>'
+        + '<div class="chat-bubble them">'
         + escHtml(m.text)
         + '<div style="font-size:10px;opacity:.6;margin-top:3px">' + timeAgo(m.t) + '</div>'
-        + '</div>';
+        + '</div></div>';
     }).join('');
-    return '<div class="page active">'
-      + '<div class="det-topbar"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
-      + '<div class="det-topbar-title">' + escHtml(other.name) + '</div></div>'
-      + (listing ? '<div style="padding:8px 14px;background:var(--card);border-bottom:1px solid var(--border);font-size:13px;color:var(--sub)">Re: ' + escHtml(listing.title) + '</div>' : '')
-      + '<div class="chat-thread" id="chatThread" style="height:calc(100vh - 200px);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px">' + (msgs || '<div style="text-align:center;color:var(--sub);padding:40px 20px;font-size:14px">No messages yet. Say hello!</div>') + '</div>'
-      + '<div class="chat-input-bar">'
-      + '<input id="chatIn" placeholder="Message..." onkeydown="if(event.keyCode===13)H.sendChat()">'
+
+    const otherPhone = other.phone || '';
+    const otherIdSafe = escHtml(otherId || '');
+    return '<div class="page active" style="display:flex;flex-direction:column;overflow:hidden;height:100%">'
+      + '<div class="det-topbar" style="flex-shrink:0"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      + '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">'
+      + '<div style="width:34px;height:34px;flex-shrink:0">' + otherAvatar + '</div>'
+      + '<div style="min-width:0"><div class="det-topbar-title" style="margin:0;text-align:left">' + escHtml(otherDisplayName) + '</div>'
+      + (other.verified ? '<div style="font-size:10px;color:#22c55e;font-weight:600;display:flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Verified</div>' : '<div style="font-size:10px;color:rgba(255,255,255,.5)">Tap to view profile</div>') + '</div>'
+      + '</div>'
+      + '<button onclick="H._chat.openMenu(\'' + otherIdSafe + '\')" style="padding:8px;background:none;border:none;color:#fff;cursor:pointer;flex-shrink:0;margin-left:4px"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
+      + '</div>'
+      + (listing ? '<div style="flex-shrink:0;padding:8px 14px;background:var(--card);border-bottom:1px solid var(--border);font-size:13px;color:var(--sub)">Re: ' + escHtml(listing.title) + '</div>' : '')
+      + '<div class="chat-thread" id="chatThread" style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"><div style="flex:1;min-height:0"></div>' + (msgs || '<div style="text-align:center;color:var(--sub);padding:40px 20px;font-size:14px">No messages yet. Say hello!</div>') + '</div>'
+      + '<div class="chat-input-bar" style="flex-shrink:0">'
+      + '<input id="chatIn" placeholder="Type a message..." onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}" style="flex:1">'
       + '<button class="chat-send" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
       + '</div></div>';
   };
 
   pages.Chat_after = function () {
+    if (window._messagesPoll) { clearInterval(window._messagesPoll); window._messagesPoll = null; }
     const t = document.getElementById('chatThread');
     if (t) t.scrollTop = t.scrollHeight;
+    // Lock #mainArea so iOS can't scroll it when the keyboard appears.
+    // The keyboard would otherwise push mainArea upward, hiding the topbar with the user's name.
+    const ma = document.getElementById('mainArea');
+    if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
     setTimeout(() => document.getElementById('chatIn')?.focus(), 200);
     if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);
   };
@@ -3189,19 +3783,79 @@ H.init();
 
   H.startChatWith = function (otherId, listingId) {
     const u = currentUser();
+    if (!u) { H.requireAuth('Sign in to message sellers'); return; }
+    if (!otherId) { H.toast('Seller profile is not available yet'); return; }
     if (otherId === u.id) { H.toast('You cannot message yourself'); return; }
     // Use deterministic ID so both users get same conversation
     const ids = [u.id, otherId].sort();
     const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId||'').slice(-6);
-    let c = (state.conversations || []).find(x => x.id === convId);
+    // If this conv was previously deleted, un-delete it so new messages from this person show
+    if (Array.isArray(H.state.deletedConvIds) && H.state.deletedConvIds.includes(convId)) {
+      H.state.deletedConvIds = H.state.deletedConvIds.filter(function(id){ return id !== convId; });
+    }
+    // Resolve the other user's name for display before they reply
+    const otherUser = (H.state.users||[]).find(function(x){ return x.id === otherId; });
+    const listingObj = listingId ? (H.state.listings||[]).find(function(x){ return x.id === listingId; }) : null;
+    const otherName = (otherUser && otherUser.name) || (listingObj && listingObj.sellerName) || '';
+    let c = conversations().find(x => x.id === convId);
     if (!c) {
-      c = { id: convId, members: [u.id, otherId], listingId: listingId||null, messages: [] };
-      state.conversations = state.conversations || [];
-      state.conversations.push(c);
-      saveState();
+      c = { id: convId, members: [u.id, otherId], listingId: listingId||null, messages: [], otherName: otherName };
+      if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+      H.state.conversations.push(c);
+      H.saveState();
       if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c);
+    } else if (!c.otherName && otherName) {
+      c.otherName = otherName;
+      H.saveState();
     }
     H.openInner('Chat', { id: convId });
+  };
+
+  pages.Messages_after = function () {
+    // Mark all received messages as read when the inbox is opened
+    const _u = H.currentUser();
+    if (_u) {
+      let _dirty = false;
+      (H.state.conversations || []).forEach(function(c) {
+        if (!Array.isArray(c.members) || !c.members.includes(_u.id)) return;
+        (c.messages || []).forEach(function(m) {
+          if (m.from !== _u.id && !m.read) { m.read = true; _dirty = true; }
+        });
+      });
+      if (_dirty) H.saveState();
+      if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
+    }
+    if (window._chatPoll) { clearInterval(window._chatPoll); window._chatPoll = null; }
+    if (window._messagesPoll) clearInterval(window._messagesPoll);
+    H._refreshMessagesPage();
+    window._messagesPoll = setInterval(function () {
+      if (H.currentPageName !== 'Messages') {
+        clearInterval(window._messagesPoll);
+        window._messagesPoll = null;
+        return;
+      }
+      H._refreshMessagesPage();
+    }, 5000);
+    H._setupMsgSwipe();
+  };
+
+  H._refreshMessagesPage = function (opts) {
+    opts = opts || {};
+    if (H._syncingMessagesPage || !H.currentUser()) return Promise.resolve(false);
+    if (opts.skipSync) {
+      if (H.currentPageName === 'Messages') H.renderPage('Messages');
+      return Promise.resolve(true);
+    }
+    if (typeof H.syncConversations !== 'function') return Promise.resolve(false);
+    H._syncingMessagesPage = true;
+    const before = conversationSignature();
+    return H.syncConversations().then(function () {
+      const after = conversationSignature();
+      if (H.currentPageName === 'Messages' && after !== before) H.renderPage('Messages');
+      return after !== before;
+    }).finally(function () {
+      H._syncingMessagesPage = false;
+    });
   };
 
   H.startChatPolling = function(convId) {
@@ -3211,40 +3865,62 @@ H.init();
         clearInterval(window._chatPoll);
         return;
       }
-      const conv = (H.state.conversations || []).find(c => c.id === convId);
-      const countBefore = conv ? conv.messages.length : 0;
+      const conv = conversations().find(c => c.id === convId);
+      const idsBefore = new Set(((conv && conv.messages) || []).map(m => m.id));
       if (typeof H.syncConversations === 'function') {
         await H.syncConversations();
       }
-      const convAfter = (H.state.conversations || []).find(c => c.id === convId);
-      if (!convAfter || convAfter.messages.length <= countBefore) return;
+      const convAfter = conversations().find(c => c.id === convId);
+      if (!convAfter) return;
       // Append only the new messages without a full page re-render
       const thread = document.getElementById('chatThread');
       if (!thread) return;
       const u = H.currentUser();
-      const newMsgs = convAfter.messages.slice(countBefore);
+      if (!u) return;
+      const ava2 = otherAvatarFor(convAfter, u);
+      const newMsgs = (convAfter.messages || []).filter(m => !idsBefore.has(m.id));
       newMsgs.forEach(function(m) {
-        if (m.from === u.id) return; // we already added our own
+        if (m.from === u.id) return;
         m.read = true;
-        const div = document.createElement('div');
-        div.className = 'chat-bubble them';
-        div.innerHTML = escHtml(m.text) + '<div style="font-size:10px;opacity:.6;margin-top:3px">' + timeAgo(m.t) + '</div>';
-        thread.appendChild(div);
+        appendThemMessage(thread, ava2, m);
       });
       thread.scrollTop = thread.scrollHeight;
-      saveState();
+      H.saveState();
+      if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
     }, 4000);
+  };
+
+  H._appendChatMessages = function (convId, msgs) {
+    if (H.currentPageName !== 'Chat' || !H.currentPageParams || H.currentPageParams.id !== convId) return false;
+    const thread = document.getElementById('chatThread');
+    const u = H.currentUser();
+    const conv = conversations().find(c => c.id === convId);
+    if (!thread || !u || !conv) return false;
+    const ava = otherAvatarFor(conv, u);
+    let appended = false;
+    (msgs || []).forEach(function(m) {
+      if (!m || m.from === u.id) return;
+      m.read = true;
+      appendThemMessage(thread, ava, m);
+      appended = true;
+    });
+    if (appended) {
+      thread.scrollTop = thread.scrollHeight;
+      H.saveState();
+    }
+    return appended;
   };
 
 
   // syncConversations is defined in app.js (cloud-aware version)
 
 
-  H.sendChat = function () {
+  H.sendChat = async function () {
+    if (H.checkBan && H.checkBan()) return;
     const inp = document.getElementById('chatIn');
     const text = inp ? inp.value.trim() : '';
     if (!text) return;
-    const c = (H.state.conversations || []).find(function(x){ return x.id === H._activeChat; });
+    const c = conversations().find(function(x){ return x.id === H._activeChat; });
     if (!c) return;
     const u = H.currentUser();
     var msgId = H.uid();
@@ -3257,24 +3933,204 @@ H.init();
     if (thread) {
       const div = document.createElement('div');
       div.className = 'chat-bubble me';
+      div.setAttribute('data-msg-id', msgId);
       div.innerHTML = escHtml(text) + '<div style="font-size:10px;opacity:.6;margin-top:3px">just now</div>';
       thread.appendChild(div);
       thread.scrollTop = thread.scrollHeight;
     }
     try {
-      if (window.supabase && typeof window.supabase.from === 'function') {
-        window.supabase.from('messages').insert({
+      // Try to persist the conversation entry (non-fatal if table doesn't exist yet)
+      if (typeof H.ensureConversationInCloud === 'function') {
+        H.ensureConversationInCloud(c).catch(function(e){ console.warn('conv sync (non-fatal):', e.message); });
+      }
+      // Save the message — this is what matters
+      var msgSaved = false;
+      if (typeof H.saveMessageToCloud === 'function') {
+        var cloudResult = await H.saveMessageToCloud(c.id, c.messages[c.messages.length - 1]);
+        if (cloudResult && cloudResult.ok === false) throw new Error(cloudResult.error || 'Message sync failed');
+        msgSaved = true;
+      }
+      if (!msgSaved && window.supabase && typeof window.supabase.from === 'function') {
+        var r = await window.supabase.from('messages').insert({
           id: msgId, conversation_id: c.id,
           sender_id: u.id, sender_name: u.name || '',
           text: text, created_at: new Date(msgT).toISOString(), read: false
-        }).then(function(r){ if(r&&r.error) console.warn('Msg save failed:', r.error.message); });
+        });
+        if (r && r.error) throw new Error(r.error.message);
       }
-    } catch(e) { console.warn('Msg cloud error:', e.message); }
+      var otherId = c.members.find(function(m){ return m !== u.id; });
+      if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Message', (u.name || 'Someone') + ': ' + text.slice(0, 80), 'message');
+    } catch(e) {
+      console.warn('Msg cloud error:', e.message);
+      H.toast('Message could not be sent. Check your connection and try again.', 5000, true);
+    }
+  };
+
+
+  H._setupMsgSwipe = function () {
+    document.querySelectorAll('.swipe-del-row').forEach(function (row) {
+      var inner = row.querySelector('.msg-item');
+      if (!inner) return;
+      var convId = inner.dataset.cid;
+      var startX = 0, startY = 0, dx = 0, hor = false, swiped = false;
+      var THRESHOLD = 72;
+
+      row.addEventListener('touchstart', function (e) {
+        var t = e.touches[0];
+        startX = t.clientX; startY = t.clientY;
+        dx = 0; hor = false; swiped = false;
+        inner.style.transition = 'none';
+      }, { passive: true });
+
+      row.addEventListener('touchmove', function (e) {
+        var t = e.touches[0];
+        var dxNow = t.clientX - startX;
+        var dyNow = t.clientY - startY;
+        if (!hor) {
+          if (Math.abs(dxNow) > 8 && Math.abs(dxNow) > Math.abs(dyNow)) hor = true;
+          else if (Math.abs(dyNow) > 8) return;
+          else return;
+        }
+        dx = Math.min(0, dxNow);
+        inner.style.transform = 'translateX(' + dx + 'px)';
+        swiped = Math.abs(dx) > 10;
+      }, { passive: true });
+
+      row.addEventListener('touchend', function () {
+        if (!hor) return;
+        inner.style.transition = 'transform .22s ease';
+        if (dx <= -THRESHOLD) {
+          inner.style.transform = 'translateX(-110%)';
+          setTimeout(function () { H._deleteConversation(convId); }, 240);
+        } else {
+          inner.style.transform = 'translateX(0)';
+        }
+        hor = false;
+      });
+
+      inner.addEventListener('click', function (e) {
+        if (swiped) { e.preventDefault(); e.stopImmediatePropagation(); swiped = false; }
+      }, true);
+    });
+  };
+
+  H._deleteConversation = function (convId) {
+    // Mark as deleted locally — do NOT delete from Supabase so the other party keeps their messages
+    if (!Array.isArray(H.state.deletedConvIds)) H.state.deletedConvIds = [];
+    if (!H.state.deletedConvIds.includes(convId)) H.state.deletedConvIds.push(convId);
+    H.state.conversations = (H.state.conversations || []).filter(function (c) { return c.id !== convId; });
+    H.saveState();
+    if (H.currentPageName === 'Messages') H.renderPage('Messages');
+  };
+
+  // ── Chat menu: block, view profile, report ───────────────
+  H._chat = {
+    openMenu(userId) {
+      const u = H.currentUser();
+      const other = (H.state.users || []).find(x => x.id === userId);
+      const name = other ? escHtml(other.name || 'User') : 'User';
+      const isBlocked = ((H.currentUser() || {}).blockedUsers || []).includes(userId);
+      H.modal({
+        title: name,
+        body: `<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
+          <button onclick="H.closeModal();setTimeout(()=>H._chat.showProfile('${escHtml(userId)}'),80)" style="width:100%;padding:13px;background:var(--bg);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:7px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>View Profile &amp; Listings
+          </button>
+          <button onclick="H.closeModal();setTimeout(()=>H._chat.blockUser('${escHtml(userId)}'),80)" style="width:100%;padding:13px;background:${isBlocked?'var(--bg)':'#FEF2F2'};border:1px solid ${isBlocked?'var(--border)':'#FECACA'};border-radius:12px;font-size:15px;font-weight:600;color:${isBlocked?'var(--text)':'#DC2626'};cursor:pointer;font-family:inherit;text-align:left">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:7px"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>${isBlocked ? 'Unblock User' : 'Block User'}
+          </button>
+          <button onclick="H.closeModal();setTimeout(()=>H._chat.reportUser('${escHtml(userId)}'),80)" style="width:100%;padding:13px;background:var(--bg);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:7px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Report
+          </button>
+        </div>`,
+        confirmText: null,
+        cancelText: 'Close',
+      });
+    },
+
+    showProfile(userId) {
+      const other = (H.state.users || []).find(x => x.id === userId);
+      if (!other) { H.toast('Profile not available'); return; }
+      const listings = (H.state.listings || []).filter(l => l.sellerId === userId && l.status === 'active');
+      const ini = H.initials(other.name || 'U');
+      const avatar = other.avatar
+        ? `<img src="${escHtml(other.avatar)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover">`
+        : `<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">${ini}</div>`;
+      const listingCards = listings.slice(0, 4).map(l => {
+        const ph = (l.photos && l.photos[0])
+          ? `<img src="${escHtml(l.photos[0])}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0">`
+          : `<div style="width:56px;height:56px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--sub)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>`;
+        return `<div onclick="H.closeModal();setTimeout(()=>H.openListing('${l.id}'),80)" style="display:flex;gap:10px;align-items:center;padding:8px;background:var(--bg);border-radius:10px;cursor:pointer">
+          ${ph}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div>
+            <div style="font-size:12px;color:var(--blue);font-weight:700">${escHtml(H.fmtPrice(l.price, l.currency))}</div>
+          </div>
+        </div>`;
+      }).join('');
+      H.modal({
+        title: 'Profile',
+        body: `<div style="text-align:center;padding:8px 0 16px">
+          ${avatar}
+          <div style="font-size:18px;font-weight:800;color:var(--text);margin-top:10px">${escHtml(other.name || 'User')}</div>
+          ${other.verified ? '<div style="font-size:12px;color:#22c55e;font-weight:600;margin-top:4px;display:flex;align-items:center;gap:4px;justify-content:center"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>ID Verified</div>' : ''}
+          ${other.phone ? `<div style="font-size:13px;color:var(--sub);margin-top:4px;display:flex;align-items:center;gap:4px;justify-content:center"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.86a16 16 0 0 0 6.29 6.29l.91-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>${escHtml(other.phone)}</div>` : ''}
+          ${other.joinedAt ? `<div style="font-size:12px;color:var(--sub);margin-top:3px">Member since ${new Date(other.joinedAt).toLocaleDateString()}</div>` : ''}
+        </div>
+        ${listings.length ? `<div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Active Listings (${listings.length})</div>
+        <div style="display:flex;flex-direction:column;gap:8px">${listingCards}</div>` : '<div style="text-align:center;color:var(--sub);font-size:13px;padding:12px 0">No active listings</div>'}
+        ${other.phone ? `<div style="display:flex;gap:8px;margin-top:16px">
+          <a href="tel:${escHtml(other.phone)}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#1A3A8F;color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.86a16 16 0 0 0 6.29 6.29l.91-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Call</a>
+          <a href="https://wa.me/${escHtml(other.phone.replace(/\D/g,''))}" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700">WhatsApp</a>
+        </div>` : ''}`,
+        confirmText: null,
+        cancelText: 'Close',
+      });
+    },
+
+    blockUser(userId) {
+      const u = H.currentUser();
+      if (!u) return;
+      if (!Array.isArray(u.blockedUsers)) u.blockedUsers = [];
+      const already = u.blockedUsers.includes(userId);
+      if (already) {
+        u.blockedUsers = u.blockedUsers.filter(id => id !== userId);
+        H.saveState();
+        H.toast('User unblocked');
+      } else {
+        u.blockedUsers.push(userId);
+        H.saveState();
+        H.toast('User blocked — you will no longer receive messages from them');
+        H.goBack();
+      }
+    },
+
+    reportUser(userId) {
+      const other = (H.state.users || []).find(x => x.id === userId);
+      if (!Array.isArray(H.state.reports)) H.state.reports = [];
+      const u = H.currentUser();
+      const rep = { id: H.uid(), reporterId: u.id, targetType: 'user', targetId: userId,
+        reason: 'Reported from chat', t: Date.now(), status: 'open' };
+      H.state.reports.push(rep);
+      H.saveState();
+      H.toast('Report submitted — our team will review within 24 hours');
+      if (window.supabase && typeof window.supabase.from === 'function') {
+        window.supabase.from('reports').insert({ id: rep.id, reporter_id: rep.reporterId,
+          target_type: 'user', target_id: userId, reason: rep.reason,
+          created_at: new Date(rep.t).toISOString(), status: 'open' }).catch(() => {});
+      }
+    },
   };
 
 })(window.H);
 
 ;/* === www/js/notifications.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 (function (H) {
   const { escHtml, timeAgo, uid, toast } = H;
@@ -3286,10 +4142,15 @@ H.init();
   }
 
   // ── Push helper (called from anywhere) ────────────────────
-  H.pushNotif = function (uid_, title, body, type) {
+  H.pushNotif = function (uid_, title, body, type, imageUrl, deepLink) {
     H.state.notifs = H.state.notifs || {};
     H.state.notifs[uid_] = H.state.notifs[uid_] || [];
-    const n = { id: uid(), t: Date.now(), read: false, title, body, type: type || _inferType(title) };
+    const n = {
+      id: uid(), t: Date.now(), read: false,
+      title, body, type: type || _inferType(title),
+      imageUrl: imageUrl || null,
+      deepLink: deepLink || null
+    };
     H.state.notifs[uid_].unshift(n);
     if (H.state.notifs[uid_].length > 100) H.state.notifs[uid_].length = 100;
     saveState();
@@ -3300,7 +4161,8 @@ H.init();
     if (c) {
       c.from('notifications').insert({
         id: n.id, user_id: uid_, title: n.title, body: n.body,
-        type: n.type, read: false, created_at: new Date(n.t).toISOString()
+        type: n.type, read: false, created_at: n.t,
+        meta: { deepLink: deepLink || null, imageUrl: imageUrl || null }
       }).then(r => { if (r && r.error) console.warn('notif insert failed:', r.error.message); });
     }
   };
@@ -3356,19 +4218,25 @@ H.init();
         const t = new Date(r.created_at).getTime();
         const existing = local.find(n => n.id === r.id);
         if (existing) {
-          // Cloud read state wins if true (don't unread something the user read on another device)
           if (r.read && !existing.read) existing.read = true;
         } else if (!localIds.has(r.id)) {
-          local.unshift({ id: r.id, t, read: !!r.read, title: r.title || '', body: r.body || '', type: r.type || _inferType(r.title) });
+          local.unshift({
+            id: r.id, t, read: !!r.read,
+            title: r.title || '', body: r.body || '',
+            type: r.type || _inferType(r.title),
+            imageUrl: (r.meta && r.meta.imageUrl) || r.image_url || null,
+            deepLink: (r.meta && r.meta.deepLink) || r.deep_link || null
+          });
         }
       });
-      // sort newest first, cap at 100
-      local.sort((a, b) => b.t - a.t);
-      if (local.length > 100) local.length = 100;
-      H.state.notifs[u.id] = local;
+      // Remove items deleted on server (or another device)
+      const serverIds = new Set(res.data.map(r => r.id));
+      const pruned = local.filter(n => serverIds.has(n.id));
+      pruned.sort((a, b) => b.t - a.t);
+      if (pruned.length > 100) pruned.length = 100;
+      H.state.notifs[u.id] = pruned;
       saveState();
       H._updateNotifBadge();
-      // Re-render only if the notification list actually changed
       _maybeRenderNotifs(u.id);
     } catch (e) {
       console.warn('syncNotifications error:', e.message);
@@ -3395,9 +4263,26 @@ H.init();
           list.unshift({
             id: r.id, t: new Date(r.created_at).getTime(),
             read: !!r.read, title: r.title || '', body: r.body || '',
-            type: r.type || _inferType(r.title)
+            type: r.type || _inferType(r.title),
+            imageUrl: (r.meta && r.meta.imageUrl) || r.image_url || null,
+            deepLink: (r.meta && r.meta.deepLink) || r.deep_link || null
           });
           if (list.length > 100) list.length = 100;
+          saveState();
+          H._updateNotifBadge();
+          _maybeRenderNotifs(u.id);
+        }
+      })
+      .on('postgres_changes', {
+        event: 'DELETE', schema: 'public', table: 'notifications',
+        filter: 'user_id=eq.' + u.id
+      }, payload => {
+        const oldId = payload.old && payload.old.id; if (!oldId) return;
+        H.state.notifs = H.state.notifs || {};
+        const list = H.state.notifs[u.id] = H.state.notifs[u.id] || [];
+        const idx = list.findIndex(n => n.id === oldId);
+        if (idx !== -1) {
+          list.splice(idx, 1);
           saveState();
           H._updateNotifBadge();
           _maybeRenderNotifs(u.id);
@@ -3437,6 +4322,41 @@ H.init();
     if (c) {
       c.from('notifications').update({ read: true }).eq('user_id', u.id).eq('read', false)
         .then(r => { if (r && r.error) console.warn('mark-all update failed:', r.error.message); });
+    }
+  };
+
+  // ── Delete single notification ────────────────────────────
+  H.deleteNotif = async function (notifId) {
+    const u = H.currentUser(); if (!u) return;
+    const list = H.state.notifs[u.id] || [];
+    const idx = list.findIndex(n => n.id === notifId);
+    if (idx === -1) return;
+    list.splice(idx, 1);
+    saveState();
+    H._updateNotifBadge();
+    H.renderPage('Notifications');
+    const c = sb();
+    if (c) {
+      c.from('notifications').delete().eq('id', notifId)
+        .then(r => { if (r && r.error) console.warn('notif delete failed:', r.error.message); });
+    }
+  };
+
+  // ── Clear all notifications ───────────────────────────────
+  H.clearAllNotifs = async function () {
+    const u = H.currentUser(); if (!u) return;
+    const list = H.state.notifs[u.id] || [];
+    if (!list.length) { toast('No notifications to clear'); return; }
+    const ids = list.map(n => n.id);
+    H.state.notifs[u.id] = [];
+    saveState();
+    H._updateNotifBadge();
+    H.renderPage('Notifications');
+    toast('Cleared all notifications');
+    const c = sb();
+    if (c) {
+      c.from('notifications').delete().eq('user_id', u.id).in('id', ids)
+        .then(r => { if (r && r.error) console.warn('notif clear failed:', r.error.message); });
     }
   };
 
@@ -3496,12 +4416,55 @@ H.init();
     return map[type] || '#1A3A8F';
   }
 
+  // ── Notification tap navigation ───────────────────────────
+  H._notifNavigate = function (link, type) {
+    // If there's a deep link, follow it
+    if (link) {
+      // In-app listing detail: URL contains ?id=xxx or &id=xxx
+      const listingMatch = link.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (listingMatch) {
+        H.openInner('Detail', { id: listingMatch[1] });
+        return;
+      }
+      // External URL — open in system browser
+      if (link.startsWith('http')) {
+        try {
+          if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+            window.Capacitor.Plugins.Browser.open({ url: link });
+          } else {
+            window.open(link, '_blank', 'noopener,noreferrer');
+          }
+        } catch (e) { window.open(link, '_blank', 'noopener,noreferrer'); }
+        return;
+      }
+      // In-app named route like "Messages" or "detail?id=xxx"
+      const routeMatch = link.match(/^(\w+)(?:\?(.*))?$/);
+      if (routeMatch) {
+        const page = routeMatch[1];
+        const params = {};
+        if (routeMatch[2]) new URLSearchParams(routeMatch[2]).forEach((v, k) => { params[k] = v; });
+        if (Object.keys(params).length) H.openInner(page, params);
+        else H.navTo(page);
+        return;
+      }
+    }
+    // No deep link — navigate based on notification type
+    const t = type || '';
+    if (t === 'message')                    { H.navTo('Messages'); return; }
+    if (t === 'sale' || t === 'wallet')     { H.navTo('Account'); return; }
+    if (t === 'boost' || t === 'verify' || t === 'review' || t === 'ban' || t === 'report') {
+      H.navTo('Account'); return;
+    }
+    // info / system / unknown — go to Home so something always happens
+    H.navTo('Home');
+  };
+
   // ── Notifications page ────────────────────────────────────
   pages.Notifications = function () {
     const u = H.currentUser();
     if (!u) {
       return '<div class="page active">' + H.innerTopbar('Notifications')
-        + H.emptyState('Sign in required', 'Sign in to view your notifications.', 'Sign In', "H.authPage()")
+        + H.emptyState('No notifications yet', 'Important updates and app notices will appear here. Log in to see account alerts.', 'Login to continue', "H.requireAuth('Login to continue')")
         + '</div>';
     }
     const list = (H.state.notifs[u.id] || []).slice().sort((a, b) => b.t - a.t);
@@ -3513,24 +4476,45 @@ H.init();
       </button>
       <div class="inner-topbar-title">Notifications${unreadCount ? ` <span style="background:#F5A623;color:#1A3A8F;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:800;margin-left:6px">${unreadCount}</span>` : ''}</div>
       ${unreadCount ? '<button onclick="H.markAllNotifsRead()" style="background:none;border:none;color:#1A3A8F;font-size:13px;font-weight:600;cursor:pointer;padding:6px 10px">Mark all read</button>' : '<div style="width:34px"></div>'}
-    </div>`;
+    </div>
+    ${list.length ? `<div style="display:flex;justify-content:flex-end;padding:8px 16px;border-bottom:1px solid var(--border)">
+      <button onclick="H.clearAllNotifs()" style="background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 6px">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Clear all
+      </button>
+    </div>` : ''}`;
 
     return `<div class="page active">${headerBar}
       <div id="notifList" style="padding-bottom:90px">
         ${list.length ? list.map(n => {
           const type = n.type || _inferType(n.title);
           const color = _notifColor(type);
-          return `<div onclick="H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)'"
-              style="background:${n.read ? 'var(--card)' : 'rgba(26,58,143,.04)'};border-bottom:1px solid var(--border);padding:14px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;position:relative">
-            <div style="width:38px;height:38px;border-radius:50%;background:${_notifBg(type)};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${color}">
-              ${_notifIcon(type)}
-            </div>
+          const safeLink = n.deepLink ? escHtml(n.deepLink) : '';
+          const tapAction = `H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)';H._notifNavigate(${safeLink ? `'${safeLink}'` : 'null'},'${type}');`;
+          const navHint = type === 'message' ? 'Open Messages ›'
+            : (type === 'sale' || type === 'wallet') ? 'Open Account ›'
+            : n.deepLink ? 'Tap to open ›'
+            : type === 'info' || type === 'system' ? 'Tap to view ›'
+            : 'Open ›';
+          return `<div onclick="${tapAction}"
+              style="background:${n.read ? 'var(--card)' : 'rgba(26,58,143,.04)'};border-bottom:1px solid var(--border);padding:14px 40px 14px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;position:relative">
+            ${n.imageUrl
+              ? `<img src="${escHtml(n.imageUrl)}" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
+              : `<div style="width:38px;height:38px;border-radius:50%;background:${_notifBg(type)};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${color}">${_notifIcon(type)}</div>`
+            }
             <div style="flex:1;min-width:0">
               <div style="font-size:14px;font-weight:${n.read ? '600' : '800'};color:var(--text);margin-bottom:3px;line-height:1.3">${escHtml(n.title || '')}</div>
               <div style="font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:4px">${escHtml(n.body || '')}</div>
-              <div style="font-size:11px;color:var(--sub2);font-weight:500">${timeAgo(n.t)}</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="font-size:11px;color:var(--sub2);font-weight:500">${timeAgo(n.t)}</div>
+                <div style="font-size:11px;color:${color};font-weight:600">${navHint}</div>
+              </div>
             </div>
             ${n.read ? '' : `<span data-unread-dot style="width:9px;height:9px;border-radius:50%;background:${color};margin-top:6px;flex-shrink:0"></span>`}
+            <button onclick="event.stopPropagation();H.deleteNotif('${n.id}')" aria-label="Delete notification"
+              style="position:absolute;top:50%;right:10px;transform:translateY(-50%);background:none;border:none;padding:6px;cursor:pointer;color:var(--sub);border-radius:6px;display:flex;align-items:center;justify-content:center;opacity:0.55">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
           </div>`;
         }).join('') : H.emptyState('All caught up', 'New notifications about your listings and messages will appear here.', null, null)}
       </div>
@@ -3549,6 +4533,7 @@ H.init();
   };
 
   pages.Notifications_after = function () {
+    if (!H.currentUser()) return;
     // Sync from Supabase whenever the page is opened
     if (typeof H.syncNotifications === 'function') H.syncNotifications();
     // Make sure real-time subscription is alive
@@ -3621,7 +4606,7 @@ H.init();
             Privacy Note
           </div>
           <div style="font-size:12px;color:var(--sub);line-height:1.6">
-            Hostly never sells your notification preferences or contact details to third parties.
+            PaMarket never sells your notification preferences or contact details to third parties.
             You can turn off all notifications at any time from your device settings.
           </div>
         </div>
@@ -3656,9 +4641,6 @@ H.init();
           saveState, fmtPrice, initials, renderListCard, navTo,
           pushNotif, CATEGORIES } = H;
 
-  // ---------------------------------------------------
-  // SAVED LISTINGS
-  // ---------------------------------------------------
   pages.Saved = function () {
     const u    = currentUser();
     const ids  = state.saves[u.id] || [];
@@ -3676,14 +4658,11 @@ H.init();
       <div class="listing-list">
         ${list.length
           ? list.map(renderListCard).join('')
-          : emptyState('Nothing saved yet', 'Tap the ? on any listing to save it for later', 'Browse Listings', "H.navTo('Browse',document.querySelector('[data-nav=Browse]'))")}
+          : emptyState('Nothing saved yet', 'Tap the ♡ on any listing to save it for later', 'Browse Listings', "H.navTo('Browse',document.querySelector('[data-nav=Browse]'))")}
       </div>
     </div>`;
   };
 
-  // ---------------------------------------------------
-  // PROFILE (own)
-  // ---------------------------------------------------
   pages.Profile = function () {
     const u         = currentUser();
     const myListings = (state.listings || []).filter(l => l.sellerId === u.id);
@@ -3719,16 +4698,16 @@ H.init();
           <span class="mi-badge-green">${active}</span>
           <div class="mi-arrow">›</div>
         </div>
-        <div class="mi" onclick="H.openInner('Payments')">
-          <div class="mi-icon amber-ic"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
-          <div class="mi-label">Wallet &amp; Payments</div>
+        <div class="mi" onclick="H.openInner('Ads')">
+          <div class="mi-icon blue-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg></div>
+          <div class="mi-label">Advertisements</div>
           <div class="mi-arrow">›</div>
         </div>
         <div class="mi" onclick="H.openInner('Verify')">
           <div class="mi-icon ${u.verified ? 'blue-ic' : 'green-ic'}">
             <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
-          <div class="mi-label">${u.verified ? 'Verified ?' : 'Get Verified'}</div>
+          <div class="mi-label">${u.verified ? 'Verified ✓' : 'Get Verified'}</div>
           ${!u.verified ? '<span style="font-size:11px;color:var(--o);font-weight:700">Boost trust</span>' : ''}
           <div class="mi-arrow">›</div>
         </div>
@@ -3741,12 +4720,6 @@ H.init();
           <div class="mi-label">Notifications</div>
           <div class="mi-arrow">›</div>
         </div>
-        <div class="mi" onclick="H.toggleDarkMode()">
-          <div class="mi-icon"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
-          <div class="mi-label">Dark Mode</div>
-          <span id="darkModeToggle" class="${(u.settings&&u.settings.theme)==='dark'?'mi-badge-green':''}" style="font-size:12px;font-weight:700;color:var(--sub2);margin-right:4px">${(u.settings&&u.settings.theme)==='dark'?'On':'Off'}</span>
-          <div class="mi-arrow">›</div>
-        </div>
         <div class="mi" onclick="H.openInner('LanguageSettings')">
           <div class="mi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
           <div class="mi-label">Language</div>
@@ -3754,11 +4727,6 @@ H.init();
         </div>
         <div class="mi" onclick="H.openInner('PrivacySettings')">
           <div class="mi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-          <div class="mi-label">Privacy Settings</div>
-          <div class="mi-arrow">›</div>
-        </div>
-        <div class="mi" onclick="H.openInner('HelpPrivacy')">
-          <div class="mi-icon blue-ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
           <div class="mi-label">Privacy Policy</div>
           <div class="mi-arrow">›</div>
         </div>
@@ -3769,7 +4737,7 @@ H.init();
         </div>
         <div class="mi" onclick="H.openInner('About')">
           <div class="mi-icon green-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-          <div class="mi-label">About Hostly</div>
+          <div class="mi-label">About PaMarket</div>
           <div class="mi-arrow">›</div>
         </div>
         ${u.role === 'admin' ? `
@@ -3784,7 +4752,7 @@ H.init();
       <div class="menu-items" style="padding-bottom:90px">
         <div class="mi" onclick="H.logOut()">
           <div class="mi-icon red-ic"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
-          <div class="mi-label red-lbl">Log Out</div>
+          <div class="mi-label red-lbl">Sign Out</div>
         </div>
         <div class="mi" onclick="H.openInner('DeleteAccount')">
           <div class="mi-icon red-ic"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></div>
@@ -3794,9 +4762,6 @@ H.init();
     </div>`;
   };
 
-  // ---------------------------------------------------
-  // MY LISTINGS
-  // ---------------------------------------------------
   pages.MyListings = function () {
     const u    = currentUser();
     const list = (state.listings || []).filter(l => l.sellerId === u.id).sort((a, b) => b.createdAt - a.createdAt);
@@ -3805,12 +4770,9 @@ H.init();
       <div style="padding-bottom:90px">
         ${list.length ? list.map(l => {
           const statusClass = l.status === 'active' ? 'status-active' : l.status === 'banned' ? 'status-banned' : 'status-pending';
-          const expiring = l.expiresAt && l.expiresAt - Date.now() < 7 * 24 * 60 * 60 * 1000;
-          const expired  = H.isExpired(l);
-          const daysLeft = l.expiresAt ? Math.max(0, Math.ceil((l.expiresAt - Date.now()) / 86400000)) : null;
           return `<div class="my-listing-card">
             <div class="ml-thumb">
-              ${l.photos && l.photos[0] ? `<img src="${l.photos[0]}">` : (CATEGORIES.find(c => c.id === l.cat) || {}).icon || '??'}
+              ${l.photos && l.photos[0] ? `<img src="${l.photos[0]}">` : ((CATEGORIES.find(c => c.id === l.cat) || {}).icon || '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#ccc"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>')}
             </div>
             <div class="ml-body">
               <div class="ml-title">${escHtml(l.title)}</div>
@@ -3818,12 +4780,10 @@ H.init();
               <div class="ml-meta">
                 <span class="status-pill ${statusClass}">${l.status}</span>
                 · ${l.views || 0} views · ${timeAgo(l.createdAt)}
-                ${expired ? ' · <span style="color:#dc2626;font-weight:700">Expired</span>' : expiring ? ` · <span style="color:#f59e0b;font-weight:700">${daysLeft}d left</span>` : ''}
               </div>
               <div class="ml-actions">
                 <button class="ml-act-btn" onclick="H.openListing('${l.id}')">View</button>
-                <button class="ml-act-btn" onclick="H.openInner('Boost',{listingId:'${l.id}'})">? Boost</button>
-                ${(expired || expiring) ? `<button class="ml-act-btn" onclick="H.renewListing('${l.id}')">Renew</button>` : ''}
+                <button class="ml-act-btn" onclick="H.openInner('Boost',{listingId:'${l.id}'})">⚡ Boost</button>
                 ${l.status === 'active'
                   ? `<button class="ml-act-btn red" onclick="H.deleteListing('${l.id}')">Delete</button>`
                   : ''}
@@ -3835,21 +4795,19 @@ H.init();
     </div>`;
   };
 
-  // Log out helper
   H.logOut = function () {
-    modal({
-      title: 'Log out?', body: 'You will be returned to the login screen.',
-      confirmText: 'Log Out',
-      onConfirm: () => {
-        state.currentUserId = null;
-        saveState();
-        location.reload();
-      }
-    });
+    H.logout();
   };
 
 })(window.H);
+
 ;/* === www/js/admin.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 (function (H) {
   const pages = H.pages;
@@ -3908,10 +4866,13 @@ H.init();
       ['reports',       `Reports (${(H.state.reports||[]).filter(r=>r.status==='open').length})`],
       ['payments',      'Payments'],
       ['analytics',     'Analytics'],
+      ['verifications',  `Verify (${(H.state.users||[]).filter(u=>u.verificationPending&&!u.verified).length})`],
       ['settings',      'Settings'],
+      ['ads',           `Ads (${((H.state.paidAds||[]).filter(a=>a.active&&a.endsAt>Date.now())).length} live)`],
       ['notifications', 'Notify'],
       ['support',       `Support (${(H.state.supportTickets||[]).filter(t=>t.status!=='closed').length})`],
-      ['logs',          `Logs (${(H.state.adminLogs||[]).length})`]
+      ['logs',          `Logs (${(H.state.adminLogs||[]).length})`],
+      ['messages',      `Messages (${(H.state.conversations||[]).length})`]
     ];
 
     return `<div class="page active">${innerTopbar('Admin Panel')}
@@ -3922,20 +4883,141 @@ H.init();
     </div>`;
   };
 
+  pages.Admin_after = function () {
+    const body = document.getElementById('adminBody');
+    const reRender = function () { if (body) body.innerHTML = renderBody(); };
+    const syncs = [syncVerificationsFromSupabase()];
+    if (typeof H.syncReports === 'function') syncs.push(H.syncReports());
+    if (typeof H.syncConversations === 'function') syncs.push(H.syncConversations());
+    Promise.all(syncs).then(reRender);
+  };
+
+  function syncVerificationsFromSupabase() {
+    const sb = window.supabase;
+    if (!sb || typeof sb.from !== 'function') return Promise.resolve();
+
+    const p1 = sb.from('profiles')
+      .select('id,name,email,phone,verification_pending,id_type,verified,verified_at,avatar_url,role')
+      .or('verification_pending.eq.true,verified.eq.true')
+      .then(function (res) {
+        const data = res && res.data;
+        if (!data || !data.length) return;
+        if (!H.state.users) H.state.users = [];
+        data.forEach(function (p) {
+          let u = H.state.users.find(function (x) { return x.id === p.id; });
+          if (u) {
+            if (p.verification_pending !== undefined) u.verificationPending = p.verification_pending;
+            if (p.id_type) u.verificationIdType = p.id_type;
+            if (p.verified !== undefined) u.verified = p.verified;
+            if (p.verified_at) u.verifiedAt = new Date(p.verified_at).getTime();
+            if (p.name)  u.name  = p.name;
+            if (p.email) u.email = p.email;
+            if (p.phone) u.phone = p.phone;
+          } else {
+            H.state.users.push({
+              id: p.id,
+              name:  p.name  || 'Unknown',
+              email: p.email || '',
+              phone: p.phone || '',
+              avatar: p.avatar_url || '',
+              role:  p.role  || 'user',
+              verificationPending: p.verification_pending || false,
+              verificationIdType:  p.id_type || '',
+              verified:   p.verified   || false,
+              verifiedAt: p.verified_at ? new Date(p.verified_at).getTime() : null,
+              joinedAt:   Date.now()
+            });
+          }
+        });
+      })
+      .catch(function () {});
+
+    const p2 = sb.from('verifications')
+      .select('user_id,id_doc,selfie,status,submitted_at')
+      .then(function (res) {
+        const data = res && res.data;
+        if (!data) return;
+        H.state._verifications = {};
+        data.forEach(function (v) { H.state._verifications[v.user_id] = v; });
+      })
+      .catch(function () {});
+
+    return Promise.all([p1, p2]);
+  }
+
   function renderBody() {
     switch (_adminTab) {
-      case 'overview':      return renderOverview();
-      case 'users':         return renderUsers();
-      case 'listings':      return renderListings();
-      case 'reports':       return renderReports();
-      case 'payments':      return renderPayments();
-      case 'analytics':     return renderAnalytics();
-      case 'settings':      return renderSettings();
-      case 'notifications': return renderNotifications();
-      case 'support':       return renderSupport();
-      case 'logs':          return renderLogs();
+      case 'overview':       return renderOverview();
+      case 'users':          return renderUsers();
+      case 'listings':       return renderListings();
+      case 'reports':        return renderReports();
+      case 'payments':       return renderPayments();
+      case 'analytics':      return renderAnalytics();
+      case 'verifications':  return renderVerifications();
+      case 'settings':       return renderSettings();
+      case 'ads':            return renderAds();
+      case 'notifications':  return renderNotifications();
+      case 'support':        return renderSupport();
+      case 'logs':           return renderLogs();
+      case 'messages':       return renderMessages();
       default: return '';
     }
+  }
+
+  function renderVerifications() {
+    const pending = (H.state.users||[]).filter(u=>u.verificationPending && !u.verified);
+    const verified = (H.state.users||[]).filter(u=>u.verified);
+    const vdocs = H.state._verifications || {};
+    return `
+      <div class="stats" style="margin:0 0 14px">
+        <div class="stat"><div class="stat-n">${pending.length}</div><div class="stat-l">Pending</div></div>
+        <div class="stat"><div class="stat-n">${verified.length}</div><div class="stat-l">Verified</div></div>
+        <div class="stat"><div class="stat-n">${(H.state.users||[]).length}</div><div class="stat-l">Total Users</div></div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Pending Verification Requests</div>
+      ${pending.length ? `
+      <div class="section-card" style="margin-bottom:16px">
+        ${pending.map(u => {
+          const vd = vdocs[u.id];
+          const idDocHtml  = vd && vd.id_doc  ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">ID Document</div><img src="${vd.id_doc}" style="width:140px;border-radius:8px;border:1px solid var(--n3);display:block"></div>` : '';
+          const selfieHtml = vd && vd.selfie   ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">Selfie</div><img src="${vd.selfie}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--n3);display:block"></div>` : '';
+          const noPhotos   = !vd ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">No photos received — verifications table may be missing</div>` : (!vd.id_doc && !vd.selfie) ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">No photos in submission</div>` : '';
+          return `
+          <div class="admin-row" style="padding:14px">
+            <div class="admin-row-head">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:40px;height:40px;border-radius:50%;background:#1A3A8F20;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#1A3A8F;flex-shrink:0">${H.initials(u.name||'U')}</div>
+                <div>
+                  <div class="admin-row-name" style="font-size:14px;font-weight:700">${escHtml(u.name||'Unknown')}</div>
+                  <div class="admin-row-meta">${escHtml(u.email||'')} · ${escHtml(u.phone||'No phone')}</div>
+                  ${u.cv && u.cv.headline ? `<div style="font-size:12px;color:#1A3A8F;font-weight:600;margin-top:2px">${escHtml(u.cv.headline)}</div>` : ''}
+                </div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:var(--sub);margin:8px 0">${u.verificationIdType ? `ID Type: ${escHtml(u.verificationIdType)}` : 'Standard verification request'}</div>
+            ${noPhotos}
+            ${(idDocHtml || selfieHtml) ? `<div style="display:flex;gap:12px;margin:10px 0;flex-wrap:wrap;align-items:flex-start">${idDocHtml}${selfieHtml}</div>` : ''}
+            <div class="admin-actions">
+              <button class="ml-act-btn" onclick="H._admin.approveVerification('${u.id}')">${S.verify} Approve &amp; Verify</button>
+              <button class="ml-act-btn red" onclick="H._admin.rejectVerification('${u.id}')">${S.reject} Reject</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>` : `<div style="text-align:center;padding:32px 20px;color:var(--sub);font-size:14px">No pending verification requests</div>`}
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Verified Users</div>
+      <div class="section-card">
+        ${verified.length ? verified.slice(0,20).map(u => `
+          <div class="admin-row">
+            <div class="admin-row-head">
+              <div class="admin-row-name">${escHtml(u.name||'Unknown')} <span style="color:#059669;font-size:11px">✓ Verified</span></div>
+              <span style="font-size:11px;color:var(--sub)">${new Date(u.verifiedAt||u.joinedAt||Date.now()).toLocaleDateString()}</span>
+            </div>
+            <div class="admin-row-meta">${escHtml(u.email||u.phone||'')}</div>
+            <div class="admin-actions">
+              <button class="ml-act-btn red" onclick="H._admin.revokeVerification('${u.id}')">Revoke</button>
+            </div>
+          </div>`).join('') : '<div style="padding:16px;text-align:center;color:var(--sub)">No verified users yet</div>'}
+      </div>`;
   }
 
   // ── OVERVIEW ──────────────────────────────────────────────
@@ -3953,6 +5035,9 @@ H.init();
     const expiring = listings.filter(l=>l.expiresAt&&l.expiresAt-Date.now()<7*86400000&&l.expiresAt>Date.now()).length;
     const openTickets = (H.state.supportTickets||[]).filter(t=>t.status!=='closed').length;
     const topupQueue = (H.state.topupRequests||[]).filter(r=>r.status==='pending').length;
+    const convos = H.state.conversations || [];
+    let msgUnread = 0;
+    convos.forEach(function (c) { (c.messages||[]).forEach(function (m) { if (!m.read) msgUnread++; }); });
 
     return `
       <div class="stats" style="margin:0 0 10px">
@@ -3993,6 +5078,11 @@ H.init();
         <div class="stat"><div class="stat-n">${txns.length}</div><div class="stat-l">Transactions</div></div>
         <div class="stat"><div class="stat-n">${users.filter(u=>u.status!=='active').length}</div><div class="stat-l">Banned</div></div>
         <div class="stat"><div class="stat-n">${listings.filter(l=>l.status==='pending').length}</div><div class="stat-l">Pending</div></div>
+      </div>
+      <div class="stats" style="margin:10px 0 0" onclick="H._admin.setTab('messages')" style="cursor:pointer">
+        <div class="stat" style="cursor:pointer" onclick="H._admin.setTab('messages')"><div class="stat-n">${convos.length}</div><div class="stat-l">Conversations</div></div>
+        <div class="stat" style="cursor:pointer" onclick="H._admin.setTab('messages')"><div class="stat-n">${msgUnread}</div><div class="stat-l">Unread Msgs</div></div>
+        <div class="stat" style="cursor:pointer" onclick="H._admin.setTab('messages')"><div class="stat-n">${(H.state.users||[]).filter(u=>u.verificationPending&&!u.verified).length}</div><div class="stat-l">Verify Queue</div></div>
       </div>`;
   }
 
@@ -4099,6 +5189,7 @@ H.init();
           <button class="ml-act-btn red" onclick="H._admin.banUser('${u.id}','perm')">${S.ban} Ban</button>
         ` : `<button class="ml-act-btn" onclick="H._admin.unban('${u.id}')">${S.unban} Unban</button>`}
         ${!u.verified?`<button class="ml-act-btn" onclick="H._admin.verifyUser('${u.id}')">${S.verify} Verify</button>`:''}
+        ${!u.companyVerified?`<button class="ml-act-btn" onclick="H._admin.verifyCompany('${u.id}')">🏢 Company ✓</button>`:`<button class="ml-act-btn" onclick="H._admin.revokeCompany('${u.id}')">🏢 Revoke Co.</button>`}
         ${u.role!=='admin'?`<button class="ml-act-btn" onclick="H._admin.makeAdmin('${u.id}')">${S.admin} Make Admin</button>`:''}
         ${u.id!==currentUser().id?`<button class="ml-act-btn red" onclick="H._admin.deleteUser('${u.id}')">${S.delete} Delete</button>`:''}
       </div>
@@ -4154,7 +5245,7 @@ H.init();
   let _reportFilter = 'all';
   function renderReports(filter) {
     if (filter !== undefined) _reportFilter = filter;
-    const all  = [...(H.state.reports||[])].sort((a,b)=>b.t-a.t);
+    const all  = [...(H.state.reports||[])].sort((a,b)=>(b.t||b.createdAt||0)-(a.t||a.createdAt||0));
     const open = all.filter(r=>r.status==='open');
     const list = _reportFilter==='open' ? open
                : _reportFilter==='listing' ? all.filter(r=>r.targetType==='listing')
@@ -4273,15 +5364,14 @@ H.init();
 
   // ── NOTIFICATIONS ─────────────────────────────────────────
   function renderNotifications() {
-    const users = H.state.users || [];
     return `<div class="section-card" style="padding:14px">
       <div class="menu-group-label" style="padding:0 0 14px">Send Broadcast</div>
       <div class="fg">
         <div class="fl">Target Audience</div>
         <select class="fi" id="bcastTarget">
-          <option value="all">All Users (${users.length})</option>
-          <option value="verified">Verified Users Only (${users.filter(u=>u.verified).length})</option>
-          <option value="unverified">Unverified Only (${users.filter(u=>!u.verified).length})</option>
+          <option value="all">All Users</option>
+          <option value="verified">Verified Users Only</option>
+          <option value="unverified">Unverified Users Only</option>
           <option value="sellers">Users with Listings</option>
           <option value="inactive">Users with No Listings</option>
         </select>
@@ -4292,9 +5382,18 @@ H.init();
       </div>
       <div class="fg">
         <div class="fl">Message</div>
-        <textarea class="fi" rows="4" id="bcastMsg" placeholder="Write your message..."></textarea>
+        <textarea class="fi" rows="4" id="bcastMsg" placeholder="Write your message to all selected users..."></textarea>
       </div>
-      <button class="btn-pri" onclick="H._admin.broadcast()">${S.broadcast} Send Broadcast</button>
+      <div class="fg">
+        <div class="fl">Image URL <span style="font-size:11px;color:var(--sub)">(optional — shown in notification card)</span></div>
+        <input class="fi" id="bcastImage" placeholder="https://... image to display with notification">
+        <div style="font-size:11px;color:var(--sub);margin-top:4px">Tip: upload image to Supabase Storage and paste the public URL here</div>
+      </div>
+      <div class="fg">
+        <div class="fl">Tap Destination URL <span style="font-size:11px;color:var(--sub)">(optional — where to go when user taps)</span></div>
+        <input class="fi" id="bcastLink" placeholder="https://... or listing URL (e.g. detail?id=abc123)">
+      </div>
+      <button class="btn-pri" id="bcastSendBtn" onclick="H._admin.broadcast()">${S.broadcast} Send Broadcast</button>
     </div>`;
   }
 
@@ -4350,6 +5449,122 @@ H.init();
       </div>`;
   }
 
+  // ── MESSAGES ──────────────────────────────────────────────
+  function renderMessages() {
+    const convos = H.state.conversations || [];
+    const users  = H.state.users || [];
+
+    // Count totals
+    let totalMessages = 0;
+    let unreadCount   = 0;
+    convos.forEach(function (c) {
+      const msgs = c.messages || [];
+      totalMessages += msgs.length;
+      msgs.forEach(function (m) { if (!m.read) unreadCount++; });
+    });
+
+    function getUserName(id) {
+      const u = users.find(function (x) { return x.id === id; });
+      return u ? (u.name || u.email || u.phone || 'Unknown') : 'Unknown';
+    }
+
+    const rows = convos.length ? convos.map(function (c) {
+      const msgs     = c.messages || [];
+      const last     = msgs[msgs.length - 1];
+      const lastText = last ? escHtml((last.text || last.body || '').slice(0, 80)) : '<em>No messages</em>';
+      const lastTime = last ? timeAgo(last.createdAt || last.t || 0) : '';
+      const unread   = msgs.filter(function (m) { return !m.read; }).length;
+
+      // Build participant display
+      const participants = (c.participants || c.participantIds || []);
+      const names = participants.length
+        ? participants.map(function (id) { return escHtml(getUserName(id)); }).join(', ')
+        : (c.buyerId && c.sellerId
+            ? escHtml(getUserName(c.buyerId)) + ' &amp; ' + escHtml(getUserName(c.sellerId))
+            : 'Unknown participants');
+
+      const convId = escHtml(c.id || '');
+
+      // Expandable messages block
+      const msgsHtml = msgs.length ? msgs.map(function (m) {
+        const senderName = escHtml(getUserName(m.senderId || m.from || ''));
+        const msgTime    = new Date(m.createdAt || m.t || Date.now()).toLocaleString();
+        const isAdmin    = (users.find(function (x) { return x.id === (m.senderId || m.from); }) || {}).role === 'admin';
+        return `<div style="padding:6px 10px;border-left:3px solid ${isAdmin?'#1A3A8F':'#e5e7eb'};margin-bottom:6px;background:${isAdmin?'#eff6ff':'var(--linen)'};border-radius:0 6px 6px 0">
+          <div style="font-size:11px;font-weight:700;color:${isAdmin?'#1A3A8F':'var(--charcoal)'};margin-bottom:2px">${senderName}</div>
+          <div style="font-size:13px;color:var(--charcoal)">${escHtml((m.text||m.body||'').slice(0,300))}</div>
+          <div style="font-size:10px;color:var(--ash);margin-top:3px">${msgTime}</div>
+        </div>`;
+      }).join('') : '<div style="font-size:12px;color:var(--ash);padding:6px">No messages in this conversation</div>';
+
+      return `<div class="admin-row" style="padding:12px 14px">
+        <div class="admin-row-head" style="cursor:pointer" onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('conv-msgs-${convId}'))">
+          <div>
+            <div class="admin-row-name" style="font-size:13px;font-weight:700">${names}</div>
+            <div class="admin-row-meta" style="margin-top:3px">${lastText} &middot; ${lastTime}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            ${unread ? `<span style="background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">${unread} unread</span>` : ''}
+            <span style="font-size:11px;color:var(--sub);white-space:nowrap">${msgs.length} msg${msgs.length!==1?'s':''}</span>
+            <span style="color:var(--sub)">&#9660;</span>
+          </div>
+        </div>
+        <div id="conv-msgs-${convId}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--linen-dark)">
+          ${msgsHtml}
+        </div>
+      </div>`;
+    }).join('') : '<div style="text-align:center;padding:40px 20px;color:var(--sub);font-size:14px">No conversations found.<br>Sync from Cloud to load messages.</div>';
+
+    return `
+      <div class="stats" style="margin:0 0 14px">
+        <div class="stat"><div class="stat-n">${convos.length}</div><div class="stat-l">Conversations</div></div>
+        <div class="stat"><div class="stat-n">${totalMessages}</div><div class="stat-l">Total Messages</div></div>
+        <div class="stat"><div class="stat-n">${unreadCount}</div><div class="stat-l">Unread</div></div>
+      </div>
+      <button class="btn-pri" style="width:100%;margin-bottom:14px" onclick="H._admin.syncAllMessages()">${S.reload} Sync from Cloud</button>
+      <div class="section-card" style="padding:0">${rows}</div>`;
+  }
+
+  // ── ADS MANAGEMENT ───────────────────────────────────────
+  const CATS = ['property','vehicles','electronics','furniture','fashion','services','agriculture','pets','kids','other','rooms','jobs'];
+
+  function renderAds() {
+    var now = Date.now();
+    var ads = H.state.paidAds || [];
+    var live = ads.filter(function(a){ return a.active && a.endsAt > now; });
+    return `
+      <div class="stats" style="margin:0 0 14px">
+        <div class="stat"><div class="stat-n">${live.length}</div><div class="stat-l">Live</div></div>
+        <div class="stat"><div class="stat-n">${ads.filter(function(a){return a.type==='banner';}).length}</div><div class="stat-l">Banners</div></div>
+        <div class="stat"><div class="stat-n">${ads.filter(function(a){return a.type==='spotlight';}).length}</div><div class="stat-l">Spotlights</div></div>
+      </div>
+      <div style="padding:0 4px">
+        <button class="btn-submit" onclick="H._admin.showAdForm()" style="width:100%;margin-bottom:14px">+ Create New Ad</button>
+        ${ads.length ? ads.map(function(a){ return renderAdRow(a, now); }).join('') : '<div style="text-align:center;padding:30px 16px;color:var(--sub)">No paid ads yet.<br>Create one to start showing businesses on the app.</div>'}
+      </div>`;
+  }
+
+  function renderAdRow(a, now) {
+    var isLive = a.active && a.endsAt > now;
+    var endDate = new Date(a.endsAt).toLocaleDateString('en-ZW', {day:'numeric',month:'short',year:'numeric'});
+    var typeLabel = a.type === 'banner' ? '🖼 Banner' : ('⭐ Spotlight · ' + (a.targetCat || ''));
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        ${a.imageUrl ? '<img src="'+escHtml(a.imageUrl)+'" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex-shrink:0">' : '<div style="width:44px;height:44px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">'+(a.type==='banner'?'🖼':'⭐')+'</div>'}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(a.businessName)}</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:2px">${typeLabel} · ends ${endDate}</div>
+        </div>
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;flex-shrink:0;${isLive?'background:#F0FDF4;color:#00A651':'background:var(--border);color:var(--sub)'}">${isLive?'LIVE':'OFF'}</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="ml-act-btn" onclick="H._admin.toggleAd('${a.id}')">${isLive ? 'Pause' : 'Activate'}</button>
+        <button class="ml-act-btn" onclick="H._admin.showAdForm('${a.id}')">Edit</button>
+        <button class="ml-act-btn red" onclick="H._admin.deleteAd('${a.id}')">Delete</button>
+      </div>
+    </div>`;
+  }
+
   // ── ADMIN ACTIONS ─────────────────────────────────────────
   H._admin = {
     setTab(t) {
@@ -4357,6 +5572,13 @@ H.init();
       document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab===t));
       const body = document.getElementById('adminBody');
       if (body) body.innerHTML = renderBody();
+      if (t === 'verifications') {
+        syncVerificationsFromSupabase().then(function () { if (body) body.innerHTML = renderBody(); });
+      } else if (t === 'reports' && typeof H.syncReports === 'function') {
+        H.syncReports().then(function () { if (body) body.innerHTML = renderBody(); });
+      } else if (t === 'messages' && typeof H.syncConversations === 'function') {
+        H.syncConversations().then(function () { if (body) body.innerHTML = renderBody(); });
+      }
     },
 
     filterUsers(q) {
@@ -4393,12 +5615,19 @@ H.init();
       const r = (H.state.topupRequests||[]).find(x=>x.id===rid); if (!r) return;
       const u = (H.state.users||[]).find(x=>x.id===r.userId); if (!u) return;
       r.status = 'approved';
-      u.walletUSD = (u.walletUSD||0) + Number(r.amount);
+      const amount = Number(r.amount);
+      u.walletUSD = parseFloat(((u.walletUSD||0) + amount).toFixed(2));
       H.state.txns = H.state.txns||[];
-      H.state.txns.unshift({id:uid(),userId:u.id,type:'topup',amt:Number(r.amount),note:`Top-up approved by admin (ref: ${r.ref||'—'})`,t:Date.now()});
-      pushNotif(u.id,'Top-up Approved',`$${r.amount} has been added to your wallet`);
-      alog(`Approved top-up $${r.amount} for ${u.name}`);
-      saveState(); toast(`$${r.amount} credited to ${u.name}`); this.setTab('payments');
+      H.state.txns.unshift({id:uid(),userId:u.id,type:'topup',amt:amount,note:`Top-up via ${r.method||'EcoCash'} (ref: ${r.reference||r.ref||'—'})`,t:Date.now()});
+      pushNotif(u.id,'Wallet Credited ✓',`$${amount.toFixed(2)} has been added to your PaMarket wallet`,'wallet');
+      alog(`Approved top-up $${amount} for ${u.name}`);
+      // Sync to Supabase
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('topup_requests').update({ status: 'approved' }).eq('id', rid);
+        sb.from('profiles').update({ wallet_usd: u.walletUSD }).eq('id', u.id);
+      }
+      saveState(); toast(`$${amount.toFixed(2)} credited to ${u.name}`); this.setTab('payments');
     },
 
     rejectTopup(rid) {
@@ -4473,6 +5702,57 @@ H.init();
       saveState(); toast(`${u.name} verified`); this.setTab('users');
     },
 
+    approveVerification(uid_) {
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.verified=true; u.verifiedAt=Date.now(); u.verificationPending=false;
+      alog(`Verification approved: ${u.name}`);
+      pushNotif(uid_,'Identity Verified ✓','Congratulations! Your identity has been verified on PaMarket.','verify');
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ verified: true, updated_at: new Date().toISOString() }).eq('id', uid_);
+      }
+      saveState(); toast(`${u.name} verified ✓`); this.setTab('verifications');
+    },
+
+    rejectVerification(uid_) {
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.verificationPending=false;
+      alog(`Verification rejected: ${u.name}`);
+      pushNotif(uid_,'Verification Unsuccessful','Your ID verification could not be approved. Contact support for help.','warn');
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ verification_pending: false }).eq('id', uid_);
+        sb.from('verifications').delete().eq('user_id', uid_);
+      }
+      saveState(); toast(`Verification rejected for ${u.name}`); this.setTab('verifications');
+    },
+
+    revokeVerification(uid_) {
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.verified=false; u.verifiedAt=null;
+      alog(`Verification revoked: ${u.name}`);
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ verified: false }).eq('id', uid_);
+      }
+      saveState(); toast(`Verification revoked for ${u.name}`); this.setTab('verifications');
+    },
+
+    verifyCompany(uid_) {
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.companyVerified = true; u.companyVerifiedAt = Date.now();
+      alog(`Company verified: ${u.name}`);
+      pushNotif(uid_,'Company Verified ✓','Your company account has been verified on PaMarket.','verify');
+      saveState(); toast(`${u.name} company verified`); this.setTab('users');
+    },
+
+    revokeCompany(uid_) {
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.companyVerified = false;
+      alog(`Company verification revoked: ${u.name}`);
+      saveState(); toast(`Company verification revoked`); this.setTab('users');
+    },
+
     approveListing(lid) {
       const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
       l.status='active';
@@ -4530,29 +5810,82 @@ H.init();
     toggleSetting(k) {
       H.state[k] = !H.state[k];
       alog(`Toggled setting: ${k} = ${H.state[k]}`);
-      saveState(); toast('Setting updated'); this.setTab('settings');
+      saveState(); toast('Setting updated');
+      // Persist to Supabase so settings survive page reloads
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        const KEYS = ['requireListingApproval','autoApproveVerified','allowImageUploads',
+                      'signupPaused','requirePhoneVerification','enablePremiumListings','freeOnly'];
+        const settingsObj = {};
+        KEYS.forEach(key => { settingsObj[key] = !!H.state[key]; });
+        sb.from('app_settings').upsert({ id: 1, settings: settingsObj, updated_at: new Date().toISOString() })
+          .then(r => { if (r && r.error) console.warn('settings save:', r.error.message); });
+      }
+      this.setTab('settings');
     },
 
-    broadcast() {
-      const title  = document.getElementById('bcastTitle')?.value?.trim();
-      const msg    = document.getElementById('bcastMsg')?.value?.trim();
-      const target = document.getElementById('bcastTarget')?.value || 'all';
+    async broadcast() {
+      const title    = (document.getElementById('bcastTitle')?.value  || '').trim();
+      const msg      = (document.getElementById('bcastMsg')?.value    || '').trim();
+      const target   = document.getElementById('bcastTarget')?.value  || 'all';
+      const imageUrl = (document.getElementById('bcastImage')?.value  || '').trim() || null;
+      const deepLink = (document.getElementById('bcastLink')?.value   || '').trim() || null;
       if (!title || !msg) { toast('Enter title and message'); return; }
-      const allUsers = H.state.users||[];
-      const sellerIds = new Set((H.state.listings||[]).map(l=>l.sellerId));
-      const targets = allUsers.filter(u => {
-        if (target==='verified')   return u.verified;
-        if (target==='unverified') return !u.verified;
-        if (target==='sellers')    return sellerIds.has(u.id);
-        if (target==='inactive')   return !sellerIds.has(u.id);
-        return true;
-      });
-      targets.forEach(u => pushNotif(u.id, title, msg));
-      alog(`Broadcast (${target}) to ${targets.length} users: ${msg.slice(0,50)}`);
+
+      const btn = document.getElementById('bcastSendBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+
+      const c = window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null;
+      let userIds = [];
+      try {
+        if (c && target !== 'sellers' && target !== 'inactive') {
+          let q = c.from('profiles').select('id');
+          if (target === 'verified')   q = q.eq('verified', true);
+          if (target === 'unverified') q = q.eq('verified', false);
+          const res = await q.limit(5000);
+          if (res.data) userIds = res.data.map(p => p.id).filter(Boolean);
+        } else if (c) {
+          const [uRes, lRes] = await Promise.all([
+            c.from('profiles').select('id').limit(5000),
+            c.from('listings').select('seller_id').neq('status','banned').limit(10000)
+          ]);
+          const sellerSet = new Set((lRes.data||[]).map(l => l.seller_id).filter(Boolean));
+          const allIds    = (uRes.data||[]).map(p => p.id).filter(Boolean);
+          userIds = allIds.filter(id => target === 'sellers' ? sellerSet.has(id) : !sellerSet.has(id));
+        } else {
+          // Fallback to local state when Supabase unavailable
+          const localUsers = H.state.users || [];
+          const localSellers = new Set((H.state.listings||[]).map(l=>l.sellerId));
+          userIds = localUsers.filter(u => {
+            if (target==='verified')   return u.verified;
+            if (target==='unverified') return !u.verified;
+            if (target==='sellers')    return localSellers.has(u.id);
+            if (target==='inactive')   return !localSellers.has(u.id);
+            return true;
+          }).map(u => u.id);
+        }
+      } catch(e) {
+        console.warn('broadcast fetch error:', e);
+        toast('Failed to fetch users. Please try again.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Send Broadcast'; }
+        return;
+      }
+
+      if (!userIds.length) {
+        toast('No users found for this filter');
+        if (btn) { btn.disabled = false; btn.textContent = 'Send Broadcast'; }
+        return;
+      }
+
+      userIds.forEach(id => H.pushNotif(id, title, msg, 'system', imageUrl, deepLink));
+      alog(`Broadcast (${target}) to ${userIds.length} users: ${msg.slice(0,50)}`);
       saveState();
-      toast(`Broadcast sent to ${targets.length} user${targets.length!==1?'s':''}`);
+      toast(`✓ Broadcast sent to ${userIds.length} user${userIds.length!==1?'s':''}`);
       document.getElementById('bcastTitle').value = '';
       document.getElementById('bcastMsg').value = '';
+      if (document.getElementById('bcastImage')) document.getElementById('bcastImage').value = '';
+      if (document.getElementById('bcastLink'))  document.getElementById('bcastLink').value = '';
+      if (btn) { btn.disabled = false; btn.textContent = 'Send Broadcast'; }
     },
 
     respondToTicket(tid) {
@@ -4597,7 +5930,7 @@ H.init();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `hostly-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `pamarket-backup-${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
       alog('Exported all data');
@@ -4656,6 +5989,189 @@ H.init();
           saveState(); toast('Logs cleared'); this.setTab('logs');
         }
       });
+    },
+
+    showAdForm(id) {
+      const ad = id ? (H.state.paidAds||[]).find(a=>a.id===id) : null;
+      const today = new Date().toISOString().slice(0,10);
+      const inAMonth = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+      const catOptions = CATS.map(c=>`<option value="${c}" ${ad&&ad.targetCat===c?'selected':''}>${c}</option>`).join('');
+      H.modal({
+        title: ad ? 'Edit Ad' : 'Create Paid Ad',
+        body: `
+          <div class="fg" style="margin-top:8px"><div class="fl">Ad Type</div>
+            <select class="fi" id="_adType" onchange="document.getElementById('_spotlightRow').style.display=this.value==='spotlight'?'':'none'">
+              <option value="banner" ${!ad||ad.type==='banner'?'selected':''}>🖼 Home Banner</option>
+              <option value="spotlight" ${ad&&ad.type==='spotlight'?'selected':''}>⭐ Category Spotlight</option>
+            </select></div>
+          <div class="fg"><div class="fl">Business Name</div><input class="fi" id="_adBiz" value="${escHtml(ad?ad.businessName:'')}" placeholder="e.g. Mega Furniture Harare"></div>
+          <div class="fg"><div class="fl">Headline / Tagline</div><input class="fi" id="_adHead" value="${escHtml(ad?ad.headline||'':'')}" placeholder="e.g. Best prices in Harare!"></div>
+          <div class="fg"><div class="fl">Sub-tagline (optional)</div><input class="fi" id="_adTag" value="${escHtml(ad?ad.tagline||'':'')}" placeholder="e.g. Free delivery on orders over $50"></div>
+          <div class="fg"><div class="fl">Image URL (optional)</div><input class="fi" id="_adImg" value="${escHtml(ad?ad.imageUrl||'':'')}" placeholder="https://... or leave blank for colour card"></div>
+          <div class="fg"><div class="fl">Background Colour</div><div style="display:flex;align-items:center;gap:8px"><input type="color" id="_adColor" value="${ad?ad.bgColor||'#1A3A8F':'#1A3A8F'}" style="width:44px;height:36px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><span id="_adColorHex" style="font-size:13px;color:var(--sub)">${ad?ad.bgColor||'#1A3A8F':'#1A3A8F'}</span></div></div>
+          <div class="fg"><div class="fl">Tap Destination URL (optional)</div><input class="fi" id="_adLink" value="${escHtml(ad?ad.linkUrl||'':'')}" placeholder="https://wa.me/2637... or leave blank"></div>
+          <div class="fg" id="_spotlightRow" style="display:${ad&&ad.type==='spotlight'?'':'none'}"><div class="fl">Target Category</div><select class="fi" id="_adCat">${catOptions}</select></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="fg"><div class="fl">Start Date</div><input class="fi" type="date" id="_adStart" value="${ad?new Date(ad.startsAt).toISOString().slice(0,10):today}"></div>
+            <div class="fg"><div class="fl">End Date</div><input class="fi" type="date" id="_adEnd" value="${ad?new Date(ad.endsAt).toISOString().slice(0,10):inAMonth}"></div>
+          </div>`,
+        confirmText: ad ? 'Save Changes' : 'Create Ad',
+        onConfirm: () => H._admin.saveAd(id)
+      });
+      setTimeout(()=>{
+        const colorInput = document.getElementById('_adColor');
+        if (colorInput) colorInput.oninput = function(){ const hex=document.getElementById('_adColorHex'); if(hex) hex.textContent=this.value; };
+      }, 100);
+    },
+
+    saveAd(id) {
+      const type  = (document.getElementById('_adType')||{}).value || 'banner';
+      const biz   = ((document.getElementById('_adBiz')||{}).value||'').trim();
+      const head  = ((document.getElementById('_adHead')||{}).value||'').trim();
+      const tag   = ((document.getElementById('_adTag')||{}).value||'').trim();
+      const img   = ((document.getElementById('_adImg')||{}).value||'').trim();
+      const color = ((document.getElementById('_adColor')||{}).value||'#1A3A8F');
+      const link  = ((document.getElementById('_adLink')||{}).value||'').trim();
+      const cat   = ((document.getElementById('_adCat')||{}).value)||'';
+      const start = new Date(((document.getElementById('_adStart')||{}).value)||new Date().toISOString().slice(0,10)).getTime();
+      const end   = new Date(((document.getElementById('_adEnd')||{}).value)||new Date(Date.now()+30*86400000).toISOString().slice(0,10)).getTime();
+      if (!biz) { toast('Enter business name', 4000, true); return false; }
+      if (end <= start) { toast('End date must be after start date', 4000, true); return false; }
+      H.state.paidAds = H.state.paidAds || [];
+      if (id) {
+        const ad = H.state.paidAds.find(a=>a.id===id);
+        if (ad) Object.assign(ad, {type,businessName:biz,headline:head,tagline:tag,imageUrl:img,bgColor:color,linkUrl:link,targetCat:cat,startsAt:start,endsAt:end});
+        alog(`Updated ad: ${biz}`);
+      } else {
+        H.state.paidAds.unshift({id:uid(),type,businessName:biz,headline:head,tagline:tag,imageUrl:img,bgColor:color,linkUrl:link,targetCat:cat,startsAt:start,endsAt:end,active:true,createdAt:Date.now()});
+        alog(`Created ad: ${biz} (${type})`);
+      }
+      saveState(); toast('Ad saved!'); this.setTab('ads');
+    },
+
+    toggleAd(id) {
+      const ad = (H.state.paidAds||[]).find(a=>a.id===id); if (!ad) return;
+      ad.active = !ad.active;
+      alog(`${ad.active?'Activated':'Paused'} ad: ${ad.businessName}`);
+      saveState(); this.setTab('ads');
+    },
+
+    async syncAllMessages() {
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') {
+        toast('Supabase not available'); return;
+      }
+      const body = document.getElementById('adminBody');
+      try {
+        // Fetch messages and conversations in parallel
+        const [msgsRes, convosRes] = await Promise.all([
+          sb.from('messages').select('*').order('created_at', { ascending: false }).limit(500),
+          sb.from('conversations').select('*').limit(200)
+        ]);
+
+        const msgs   = (msgsRes  && msgsRes.data)  || [];
+        const convos = (convosRes && convosRes.data) || [];
+
+        // Build conversations map from DB rows
+        if (!H.state.conversations) H.state.conversations = [];
+        const convoMap = {};
+        H.state.conversations.forEach(function (c) { convoMap[c.id] = c; });
+
+        convos.forEach(function (c) {
+          const cid = c.id;
+          if (!convoMap[cid]) {
+            convoMap[cid] = {
+              id: cid,
+              participants: c.participant_ids || c.participants || [c.buyer_id, c.seller_id].filter(Boolean),
+              buyerId:  c.buyer_id  || null,
+              sellerId: c.seller_id || null,
+              listingId: c.listing_id || null,
+              createdAt: c.created_at ? new Date(c.created_at).getTime() : Date.now(),
+              messages: []
+            };
+          } else {
+            // Merge fields
+            const existing = convoMap[cid];
+            if (!existing.participants || !existing.participants.length) {
+              existing.participants = c.participant_ids || c.participants || [c.buyer_id, c.seller_id].filter(Boolean);
+            }
+          }
+        });
+
+        // Attach messages to conversations
+        msgs.forEach(function (m) {
+          const cid = m.conversation_id;
+          if (!cid) return;
+          if (!convoMap[cid]) {
+            convoMap[cid] = { id: cid, participants: [], messages: [], createdAt: Date.now() };
+          }
+          const c = convoMap[cid];
+          if (!c.messages) c.messages = [];
+          const exists = c.messages.some(function (x) { return x.id === m.id; });
+          if (!exists) {
+            c.messages.push({
+              id:        m.id,
+              senderId:  m.sender_id  || m.senderId  || null,
+              text:      m.content    || m.text       || m.body || '',
+              createdAt: m.created_at ? new Date(m.created_at).getTime() : Date.now(),
+              read:      m.is_read    || m.read       || false
+            });
+          }
+        });
+
+        // Sort messages within each conversation
+        Object.values(convoMap).forEach(function (c) {
+          (c.messages || []).sort(function (a, b) { return a.createdAt - b.createdAt; });
+        });
+
+        H.state.conversations = Object.values(convoMap);
+
+        // Collect all participant IDs and fetch missing profiles
+        const knownIds = new Set((H.state.users || []).map(function (u) { return u.id; }));
+        const missingIds = [];
+        H.state.conversations.forEach(function (c) {
+          (c.participants || []).forEach(function (id) { if (id && !knownIds.has(id)) missingIds.push(id); });
+          if (c.buyerId  && !knownIds.has(c.buyerId))  missingIds.push(c.buyerId);
+          if (c.sellerId && !knownIds.has(c.sellerId)) missingIds.push(c.sellerId);
+        });
+        const uniqueMissing = [...new Set(missingIds)];
+        if (uniqueMissing.length) {
+          const profilesRes = await sb.from('profiles').select('id,name,phone,email').in('id', uniqueMissing);
+          const profiles = (profilesRes && profilesRes.data) || [];
+          if (!H.state.users) H.state.users = [];
+          profiles.forEach(function (p) {
+            if (!H.state.users.find(function (u) { return u.id === p.id; })) {
+              H.state.users.push({
+                id: p.id, name: p.name || 'Unknown',
+                email: p.email || '', phone: p.phone || '',
+                role: 'user', status: 'active', joinedAt: Date.now()
+              });
+            }
+          });
+        }
+
+        H.saveState();
+        alog('Synced messages from cloud');
+        if (body) body.innerHTML = renderBody();
+        toast('Messages synced');
+      } catch (e) {
+        console.error('syncAllMessages error:', e);
+        toast('Failed to sync messages');
+      }
+    },
+
+    deleteAd(id) {
+      const ad = (H.state.paidAds||[]).find(a=>a.id===id); if (!ad) return;
+      modal({
+        title: 'Delete Ad',
+        body: `Remove the ad for <strong>${escHtml(ad.businessName)}</strong>? This cannot be undone.`,
+        confirmText: 'Delete', danger: true,
+        onConfirm: () => {
+          H.state.paidAds = (H.state.paidAds||[]).filter(a=>a.id!==id);
+          alog(`Deleted ad: ${ad.businessName}`);
+          saveState(); toast('Ad deleted'); this.setTab('ads');
+        }
+      });
     }
   };
 
@@ -4664,6 +6180,12 @@ H.init();
 
 
 ;/* === www/js/verify.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 (function (H) {
   const pages = H.pages;
@@ -4701,17 +6223,54 @@ H.init();
   // VERIFY PAGE
   // ---------------------------------------------------
   pages.Verify = function () {
-    const u      = currentUser();
-    const hasId  = !!u.idDocs;
+    const u         = currentUser();
+    const hasId     = !!u.idDocs;
     const hasSelfie = !!u.selfie;
+    const isPending = !!u.verification_pending;
+
+    if (u.verified) {
+      return `<div class="page active">${innerTopbar('Identity Verified')}
+        <div class="inner-content">
+          <div class="verify-badge-preview">
+            <div class="vbp-icon" style="color:#22c55e">${I.check}</div>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:#22c55e">You are verified <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#22c55e" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div style="font-size:12px;color:var(--sub);margin-top:2px">Buyers trust verified sellers more.</div>
+            </div>
+          </div>
+          <div class="tip-box"><div class="tip-title">${I.lock} Blue badge active</div>
+            <div class="tip-body">Your blue verified badge is now showing on all your listings and profile.</div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    if (isPending) {
+      return `<div class="page active">${innerTopbar('Verify Identity')}
+        <div class="inner-content">
+          <div style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.4);border-radius:16px;padding:20px;text-align:center;margin-bottom:18px">
+            <div style="margin-bottom:8px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div style="font-size:15px;font-weight:700;color:#fbbf24">Verification Pending</div>
+            <div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.5">
+              Your ID and selfie have been submitted.<br>An admin will review your documents and approve your badge — usually within 24 hours.
+            </div>
+          </div>
+          <div class="tip-box">
+            <div class="tip-title">${I.lock} What happens next?</div>
+            <div class="tip-body">Once approved you will get a notification and your blue <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg> badge will appear on all your listings automatically.</div>
+          </div>
+          <button class="ml-act-btn" style="width:100%;padding:12px;margin-top:12px" onclick="H._verify.cancelPending()">Cancel request</button>
+        </div>
+      </div>`;
+    }
 
     return `<div class="page active">${innerTopbar('Verify Identity')}
       <div class="inner-content">
         <div class="verify-badge-preview">
           <div class="vbp-icon">${I.shield || I.check}</div>
           <div>
-            <div style="font-size:14px;font-weight:700">${u.verified ? 'You are verified' : 'Get your Blue Verified Badge'}</div>
-            <div style="font-size:12px;color:var(--sub);margin-top:1px">${u.verified ? 'Buyers trust verified sellers more.' : 'Verified sellers get 4× more enquiries'}</div>
+            <div style="font-size:14px;font-weight:700">Get your Blue Verified Badge</div>
+            <div style="font-size:12px;color:var(--sub);margin-top:1px">Verified sellers get 4× more enquiries</div>
           </div>
         </div>
 
@@ -4739,23 +6298,23 @@ H.init();
         <div class="verify-step">
           <div class="verify-num ${hasSelfie ? 'done' : ''}">${hasSelfie ? I.check : `<span style="font-size:15px;font-weight:600">3</span>`}</div>
           <div style="flex:1">
-            <div class="verify-step-title">AI Liveness Selfie</div>
-            <div class="verify-step-sub">We use on-device AI to confirm you're a real human. Blink and slowly turn your head when prompted.</div>
+            <div class="verify-step-title">Face Selfie</div>
+            <div class="verify-step-sub">Take a clear photo of your face. An admin will review it alongside your ID.</div>
             <button class="verify-step-btn" onclick="H.openInner('SelfieCam')">
-              ${I.camera} ${hasSelfie ? 'Re-take Selfie' : 'Start Liveness Check'}
+              ${I.camera} ${hasSelfie ? 'Re-take Selfie' : 'Take Selfie'}
             </button>
             ${hasSelfie ? `<img src="${u.selfie}" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin-top:10px;border:3px solid var(--n4)">` : ''}
           </div>
         </div>
 
-        ${hasId && hasSelfie && !u.verified ? `
-          <button class="btn-pri" onclick="H._verify.submitForReview()">Submit for Review</button>
-          <div style="font-size:12px;color:var(--sub);text-align:center;margin-top:8px">Approval typically within minutes via our automated AI check.</div>
+        ${hasId && hasSelfie ? `
+          <button class="btn-pri" id="submitVerifyBtn" onclick="H._verify.submitForReview()">Submit for Admin Review</button>
+          <div style="font-size:12px;color:var(--sub);text-align:center;margin-top:8px">Reviewed by our team within 24 hours.</div>
         ` : ''}
 
         <div class="tip-box" style="margin-top:14px">
           <div class="tip-title">${I.lock} Your data is secure</div>
-          <div class="tip-body">ID and selfie data is stored encrypted on your device only and used solely for verification. Never sold or shared.</div>
+          <div class="tip-body">Your ID and selfie are sent securely and used solely for identity verification. Never sold or shared.</div>
         </div>
       </div>
     </div>`;
@@ -4765,21 +6324,20 @@ H.init();
   // SELFIE CAM
   // ---------------------------------------------------
   pages.SelfieCam = function () {
-    return `<div class="page active">${innerTopbar('AI Liveness Check')}
+    return `<div class="page active">${innerTopbar('Take Selfie')}
       <div class="inner-content">
+        <div style="font-size:13px;color:var(--sub);text-align:center;margin-bottom:12px;line-height:1.5">
+          Position your face clearly in the oval.<br>An admin will manually review your photo.
+        </div>
         <div class="cam-wrap" id="camWrap">
           <video id="camVideo" playsinline autoplay muted></video>
           <div class="face-guide"></div>
-          <div class="cam-state" id="camState">Initializing camera·</div>
+          <div class="cam-state" id="camState">Initializing camera…</div>
           <div class="cam-instr" id="camInstr">Position your face inside the oval</div>
         </div>
         <canvas id="camCanvas" style="display:none"></canvas>
-        <button class="btn-pri" id="capBtn" onclick="H._verify.captureSelfie()" disabled>Start Liveness Check</button>
+        <button class="btn-pri" id="capBtn" onclick="H._verify.captureSelfie()" disabled>Take Photo</button>
         <button class="ml-act-btn" style="width:100%;padding:12px;margin-top:8px" onclick="H._verify.cancel()">Cancel</button>
-        <div class="tip-box" style="margin-top:14px">
-          <div class="tip-title">${I.info || '?'} How it works</div>
-          <div class="tip-body">Our AI checks for face motion (turn head left & right) and blink to confirm you're a real human and not a static photo or screen.</div>
-        </div>
       </div>
     </div>`;
   };
@@ -4813,15 +6371,18 @@ H.init();
       const sy = (v.videoHeight - Math.min(v.videoWidth, v.videoHeight)) / 2;
       const sz = Math.min(v.videoWidth, v.videoHeight);
       ctx.drawImage(v, sx, sy, sz, sz, 0, 0, 160, 160);
-      const d = ctx.getImageData(40, 30, 80, 100).data;
-      let sumR = 0, sumG = 0, sumB = 0, count = 0;
-      for (let i = 0; i < d.length; i += 4) { sumR += d[i]; sumG += d[i+1]; sumB += d[i+2]; count++; }
-      const r = sumR / count, g = sumG / count, b = sumB / count;
-      const skinish = (r > 95 && g > 40 && b > 20 && r > g && r > b && Math.abs(r - g) > 10);
+      // Sample center-face region only (not edges — reduces hand false positives)
+      const d = ctx.getImageData(50, 25, 60, 80).data;
+      let skinPx = 0, total = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i+1], b = d[i+2];
+        // Strict skin tone — requires reddish cast, not just warm
+        if (r > 100 && g > 50 && b > 30 && r > g + 15 && r > b + 20 && Math.abs(r-g) > 15) skinPx++;
+        total++;
+      }
+      const faceDetected = (skinPx / total) > 0.30; // 30% skin coverage required
       const el = document.getElementById('camState');
-      if (el) el.textContent = skinish ? '? Face detected' : 'Show your face';
-      // Use icon in innerHTML if you prefer:
-      // if (el) el.innerHTML = skinish ? `${I.check} Face detected` : `${I.cross} Show your face`;
+      if (el) el.textContent = faceDetected ? 'Face detected — tap Take Photo' : 'Position your face in the oval';
     }, 400);
   }
 
@@ -4836,91 +6397,77 @@ H.init();
       });
     },
 
-    submitForReview() {
+    async cancelPending() {
+      const u = currentUser();
+      u.verification_pending = false;
+      saveState();
+      if (window.supabase) {
+        await window.supabase.from('profiles').update({ verification_pending: false }).eq('id', u.id);
+      }
+      toast('Verification request cancelled');
+      renderPage('Verify');
+    },
+
+    async submitForReview() {
       const u = currentUser();
       if (!u.idDocs || !u.selfie) { toast('Complete both steps first'); return; }
-      toast('Verifying with AI…');
-      setTimeout(() => {
-        u.verified = true;
+      const btn = document.getElementById('submitVerifyBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+      try {
+        if (!window.supabase) throw new Error('Not connected');
+        // Save verification record with photos for admin review
+        const { error: vErr } = await window.supabase.from('verifications').upsert({
+          user_id: u.id,
+          id_doc: u.idDocs,
+          selfie: u.selfie,
+          status: 'pending',
+          submitted_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+        if (vErr) throw vErr;
+        // Mark profile as pending
+        const { error: pErr } = await window.supabase.from('profiles')
+          .update({ verification_pending: true })
+          .eq('id', u.id);
+        if (pErr) throw pErr;
+        u.verification_pending = true;
         saveState();
-        pushNotif(u.id, 'Verification complete', 'You now have a blue verified badge.');
-        toast('You are verified!');
+        toast('Documents submitted! Admin will review within 24 hours.', 5000);
         renderPage('Verify');
-      }, 1200);
+      } catch (e) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit for Admin Review'; }
+        toast('Failed to submit: ' + (e.message || 'Check your connection'), 4000, true);
+      }
     },
 
     async captureSelfie() {
       const btn = document.getElementById('capBtn');
       btn.disabled = true;
-      const stages = [
-        { instr: 'Look straight at the camera',   state: 'Hold still…',         ms: 1500 },
-        { instr: 'Slowly turn your head LEFT',    state: 'Detecting motion…',   ms: 2200 },
-        { instr: 'Now turn your head RIGHT',      state: 'Detecting motion…',   ms: 2200 },
-        { instr: 'Blink twice',                   state: 'Detecting blink…',    ms: 2200 },
-        { instr: 'Almost done…',                  state: 'Verifying with AI…',  ms: 1500 }
-      ];
+      btn.textContent = 'Capturing…';
       const v = document.getElementById('camVideo');
       const c = document.getElementById('camCanvas');
       const ctx = c.getContext('2d');
-      c.width = 320; c.height = 320;
-      let motionScore = 0, blinkScore = 0, faceScore = 0, lastFrame = null;
-
-      for (const stage of stages) {
-        document.getElementById('camInstr').textContent = stage.instr;
-        document.getElementById('camState').textContent = stage.state;
-        const start = Date.now();
-        while (Date.now() - start < stage.ms) {
-          await new Promise(r => setTimeout(r, 150));
-          if (!v.videoWidth) continue;
-          const sz = Math.min(v.videoWidth, v.videoHeight);
-          ctx.drawImage(v, (v.videoWidth - sz) / 2, (v.videoHeight - sz) / 2, sz, sz, 0, 0, 320, 320);
-          const id   = ctx.getImageData(60, 80, 200, 160);
-          const data = id.data;
-          let skinPx = 0;
-          for (let i = 0; i < data.length; i += 4) {
-            const r = data[i], g = data[i+1], b = data[i+2];
-            if (r > 95 && g > 40 && b > 20 && r > g && r > b && Math.abs(r - g) > 10) skinPx++;
-          }
-          const eye = ctx.getImageData(80, 100, 140, 30).data;
-          let sumEye = 0;
-          for (let i = 0; i < eye.length; i += 4) sumEye += (eye[i] + eye[i+1] + eye[i+2]) / 3;
-          const eyeBright = sumEye / (eye.length / 4);
-          const skinPct = skinPx / (data.length / 4);
-          if (skinPct > 0.15) faceScore++;
-          if (lastFrame) {
-            let diff = 0;
-            for (let i = 0; i < data.length; i += 16) diff += Math.abs(data[i] - lastFrame[i]);
-            const avg = diff / (data.length / 16);
-            if (stage.instr.includes('LEFT') || stage.instr.includes('RIGHT')) { if (avg > 8) motionScore++; }
-            if (stage.instr.includes('Blink')) { if (eyeBright < 60 || avg > 6) blinkScore++; }
-          }
-          lastFrame = new Uint8ClampedArray(data);
-        }
-      }
+      // Short countdown then snap
+      document.getElementById('camInstr').textContent = 'Hold still — capturing…';
+      document.getElementById('camState').textContent = '3…';
+      await new Promise(r => setTimeout(r, 800));
+      document.getElementById('camState').textContent = '2…';
+      await new Promise(r => setTimeout(r, 800));
+      document.getElementById('camState').textContent = '1…';
+      await new Promise(r => setTimeout(r, 800));
 
       const sz = Math.min(v.videoWidth, v.videoHeight);
       c.width = 480; c.height = 480;
       ctx.drawImage(v, (v.videoWidth - sz) / 2, (v.videoHeight - sz) / 2, sz, sz, 0, 0, 480, 480);
       const dataUrl = c.toDataURL('image/jpeg', 0.85);
-      const passed  = faceScore > 4 && motionScore > 2 && blinkScore > 1;
 
-      document.getElementById('camState').innerHTML = passed
-        ? `${I.check} Liveness passed`
-        : `${I.cross} Liveness failed`;
-      document.getElementById('camInstr').textContent = passed
-        ? 'Real human confirmed'
-        : 'Could not confirm · please try again';
-      await new Promise(r => setTimeout(r, 800));
+      document.getElementById('camState').textContent = 'Photo taken';
+      document.getElementById('camInstr').textContent = 'Saving selfie…';
+      await new Promise(r => setTimeout(r, 600));
 
-      if (passed) {
-        const u = currentUser(); u.selfie = dataUrl; saveState();
-        toast('Liveness passed · selfie saved');
-        stopCam(); goBack();
-      } else {
-        btn.disabled = false;
-        btn.textContent = 'Try Again';
-        toast('Liveness failed. Make sure your face is well lit and follow the prompts.');
-      }
+      const u = currentUser(); u.selfie = dataUrl; saveState();
+      toast('Selfie saved');
+      stopCam();
+      renderPage('Verify');
     }
   };
 
@@ -4948,82 +6495,44 @@ H.init();
 'use strict';
 (function (H) {
 
-  var JOB_CATS = ['Accounting & Finance','Sales & Marketing','IT & Technology','Construction',
-    'Healthcare','Education','Hospitality','Administration','Engineering','Driving & Logistics',
-    'Legal','Media & Communications','Agriculture','Security','Domestic & Cleaning'];
+  var JOB_CATS = ['Accounting & Finance', 'Sales & Marketing', 'IT & Technology', 'Construction', 'Healthcare', 'Education', 'Hospitality', 'Administration', 'Engineering', 'Driving & Logistics'];
 
-  var EXP_LEVELS = [['any','Any Experience'],['entry','Entry Level (0-2 yrs)'],['mid','Mid Level (3-5 yrs)'],['senior','Senior (5-10 yrs)'],['expert','Expert (10+ yrs)']];
-  var AVAIL_OPTS  = [['immediately','Immediately'],['2weeks','Within 2 weeks'],['1month','Within 1 month'],['negotiable','Negotiable']];
-  var EDU_LEVELS  = [['any','Any'],['none','No formal qualification'],['certificate','Certificate / Diploma'],['degree','Bachelor\'s Degree'],['postgrad','Postgraduate']];
-
-  // ── HELPERS ───────────────────────────────────────────────
   function parseLine(lines, key) {
-    var found = lines.find(function(ln){ return ln.startsWith(key + ':'); });
+    var found = lines.find(function (ln) { return ln.startsWith(key + ':'); });
     return found ? found.slice(key.length + 1).trim() : '';
   }
 
-  function getJobData(l) {
-    if (l.jobData) return l.jobData;
-    var lines = (l.desc || '').split('\n');
-    return {
-      company:  l.company || l.sellerName || parseLine(lines,'COMPANY') || '',
-      jobType:  parseLine(lines,'JOB TYPE') || '',
-      industry: parseLine(lines,'INDUSTRY') || '',
-      salary:   parseLine(lines,'SALARY')   || '',
-      deadline: parseLine(lines,'DEADLINE') || '',
-      exp:      '',  benefits: '',  positions: '1',  eduReq: '',
-      applyEmail: '', applyPhone: '', applyUrl: '', applyMethod: 'inapp',
-      description:     _extractSection(l.desc, 'DESCRIPTION',     ['RESPONSIBILITIES','REQUIREMENTS','HOW TO APPLY']),
-      responsibilities: _extractSection(l.desc,'RESPONSIBILITIES', ['REQUIREMENTS','HOW TO APPLY']),
-      requirements:    _extractSection(l.desc, 'REQUIREMENTS',    ['HOW TO APPLY'])
-    };
-  }
-
-  function _extractSection(desc, key, ends) {
-    if (!desc) return '';
-    var start = desc.indexOf('\n' + key + ':\n');
-    if (start < 0) return '';
-    start += key.length + 3;
-    var end = desc.length;
-    ends.forEach(function(e){ var i = desc.indexOf('\n' + e + ':'); if (i > start) end = Math.min(end, i); });
-    return desc.slice(start, end).trim();
-  }
-
   function jobCard(l) {
-    var jd = getJobData(l);
-    var deadline = jd.deadline ? ' · Deadline: ' + jd.deadline : '';
-    var daysLeft = '';
-    if (jd.deadline) {
-      var d = new Date(jd.deadline); var now = new Date();
-      var days = Math.ceil((d - now) / 86400000);
-      if (days >= 0 && days <= 7) daysLeft = '<span style="background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;margin-left:4px">' + (days === 0 ? 'Today!' : days + 'd left') + '</span>';
-    }
-    var apps = (H.state.applications || []).filter(function(a){ return a.jobId === l.id; }).length;
-    return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + l.id + '\'})" style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid var(--border);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.06)">'
+    var lines = (l.desc || '').split('\n');
+    var company  = l.company || l.sellerName || parseLine(lines, 'COMPANY') || 'Company';
+    var jobType  = parseLine(lines, 'JOB TYPE') || '';
+    var salary   = parseLine(lines, 'SALARY') || '';
+    var industry = parseLine(lines, 'INDUSTRY') || '';
+    var seller   = (H.state.users || []).find(function(u){ return u.id === l.sellerId; });
+    var coVerified = seller && (seller.companyVerified || seller.verified);
+    var verBadge = coVerified ? '<span style="background:#059669;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>' : '';
+    var logoHtml = (l.photos && l.photos[0])
+      ? '<img src="' + l.photos[0] + '" style="width:46px;height:46px;border-radius:12px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)">'
+      : '<div style="width:46px;height:46px;border-radius:12px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;font-weight:800;color:#1A3A8F">' + (company.slice(0,2).toUpperCase()) + '</div>';
+
+    return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + l.id + '\'})" style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:10px;border:1px solid var(--border);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
       + '<div style="display:flex;align-items:flex-start;gap:12px">'
-      + '<div style="width:44px;height:44px;border-radius:12px;background:#F5A62320;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-      + '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#c07800" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>'
+      + logoHtml
       + '<div style="flex:1;min-width:0">'
-      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:2px">'
-      + '<div style="font-size:15px;font-weight:700;color:var(--text-primary)">' + H.escHtml(l.title) + '</div>' + daysLeft + '</div>'
-      + '<div style="font-size:13px;color:var(--text-sub);margin-bottom:8px">' + H.escHtml(jd.company || l.sellerName || '') + (jd.industry ? ' · ' + H.escHtml(jd.industry) : '') + '</div>'
+      + '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(l.title) + '</div>'
+      + '<div style="font-size:13px;font-weight:600;color:#1A3A8F;margin-bottom:6px;display:flex;align-items:center">' + H.escHtml(company) + verBadge + (industry ? '<span style="color:var(--sub);font-weight:400;margin-left:4px">· ' + H.escHtml(industry) + '</span>' : '') + '</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:5px">'
-      + (jd.jobType ? '<span style="background:#1A3A8F18;color:#1A3A8F;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px">' + H.escHtml(jd.jobType) + '</span>' : '')
-      + (jd.salary  ? '<span style="background:#F5A62318;color:#c07800;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px">' + H.escHtml(jd.salary) + '</span>' : '')
-      + '<span style="background:var(--bg);color:var(--text-sub);font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px">' + H.escHtml(l.city || 'Zimbabwe') + '</span>'
-      + (apps > 0 ? '<span style="color:var(--text-sub);font-size:11px;padding:3px 0">' + apps + ' applied</span>' : '')
-      + '<span style="color:var(--text-sub);font-size:11px;padding:3px 0">' + H.timeAgo(l.createdAt) + '</span>'
+      + (jobType ? '<span style="background:#1A3A8F14;color:#1A3A8F;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px">' + H.escHtml(jobType) + '</span>' : '')
+      + (salary ? '<span style="background:#F5A62314;color:#c07800;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' + H.escHtml(salary) + '</span>' : '')
+      + (l.city ? '<span style="background:var(--bg);color:var(--sub);font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:3px">' + H.ICONS.location + H.escHtml(l.city) + '</span>' : '')
+      + '<span style="color:var(--sub);font-size:11px;padding:3px 0">' + H.timeAgo(l.createdAt) + '</span>'
       + '</div></div></div></div>';
   }
 
-  // ── JOBS LANDING ──────────────────────────────────────────
   H.pages.Jobs = function () {
-    var u    = H.currentUser();
-    var jobs = (H.state.listings || []).filter(function(l){ return l.status === 'active' && l.cat === 'jobs'; });
-    var myApps = u ? (H.state.applications || []).filter(function(a){ return a.applicantId === u.id; }) : [];
-    var candidates = (H.state.users || []).filter(function(u){ return u.openToWork; });
-    var recent = jobs.slice().sort(function(a,b){ return b.createdAt - a.createdAt; }).slice(0,5);
-    var myJobs = u ? jobs.filter(function(l){ return l.sellerId === u.id; }) : [];
+    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'jobs'; });
+    var candidates = (H.state.users || []).filter(function (u) { return u.openToWork; });
+    var recent = jobs.slice().sort(function (a, b) { return b.createdAt - a.createdAt; }).slice(0, 5);
 
     return '<div class="page active">'
       + '<div class="det-topbar" style="background:#F5A623">'
@@ -5036,42 +6545,34 @@ H.init();
       + '<div style="font-size:13px;color:rgba(26,58,143,.75);margin-bottom:16px">' + jobs.length + ' opening' + (jobs.length !== 1 ? 's' : '') + ' across Zimbabwe</div>'
       + '<div style="background:rgba(255,255,255,.95);border-radius:14px;display:flex;align-items:center;padding:0 14px;gap:8px">'
       + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
-      + '<input placeholder="Search job title, company, skills…" autocomplete="off" oninput="H.openInner(\'FindJobs\',{q:this.value})" style="flex:1;border:none;outline:none;padding:14px 0;font-size:14px;background:transparent;color:#1A3A8F;font-family:Inter,sans-serif">'
-      + '</div></div>'
-      + '<div style="padding:16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-      + '<div onclick="H.openInner(\'FindJobs\')" style="background:#1A3A8F;border-radius:16px;padding:18px 14px;cursor:pointer;box-shadow:0 4px 16px rgba(26,58,143,.25)">'
-      + '<div style="font-size:26px;margin-bottom:8px">💼</div>'
-      + '<div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:2px">Find Jobs</div>'
-      + '<div style="font-size:11px;color:rgba(255,255,255,.7)">' + jobs.length + ' openings</div></div>'
-      + '<div onclick="H.openInner(\'HireTalent\')" style="background:#fff;border-radius:16px;padding:18px 14px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.08);border:2px solid #F5A623">'
-      + '<div style="font-size:26px;margin-bottom:8px">🔍</div>'
-      + '<div style="font-size:15px;font-weight:800;color:#1A3A8F;margin-bottom:2px">Hire Talent</div>'
-      + '<div style="font-size:11px;color:var(--text-sub)">' + candidates.length + ' candidate' + (candidates.length !== 1 ? 's' : '') + '</div></div>'
-      + (u ? '<div onclick="H.openInner(\'AppliedJobs\')" style="background:var(--card);border-radius:16px;padding:18px 14px;cursor:pointer;border:1.5px solid var(--border)">'
-        + '<div style="font-size:26px;margin-bottom:8px">📋</div>'
-        + '<div style="font-size:15px;font-weight:800;color:var(--text-primary);margin-bottom:2px">My Applications</div>'
-        + '<div style="font-size:11px;color:var(--text-sub)">' + myApps.length + ' submitted</div></div>' : '')
-      + (u ? '<div onclick="H._toggleOpenToWork()" style="background:var(--card);border-radius:16px;padding:18px 14px;cursor:pointer;border:1.5px solid ' + (u.openToWork ? '#22c55e' : 'var(--border)') + '">'
-        + '<div style="font-size:26px;margin-bottom:8px">' + (u.openToWork ? '🟢' : '⚪') + '</div>'
-        + '<div style="font-size:15px;font-weight:800;color:var(--text-primary);margin-bottom:2px">Open to Work</div>'
-        + '<div style="font-size:11px;color:' + (u.openToWork ? '#22c55e' : 'var(--text-sub)') + '">' + (u.openToWork ? 'Profile visible' : 'Tap to enable') + '</div></div>' : '')
+      + '<input placeholder="Search job title, company, skills…" autocomplete="off" oninput="H.openInner(\'FindJobs\',{q:this.value})" style="flex:1;border:none;outline:none;padding:14px 0;font-size:14px;background:transparent;color:#1A3A8F;font-family:Inter,sans-serif"></div>'
       + '</div>'
-      + (myJobs.length ? '<div style="padding:0 14px 12px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-size:15px;font-weight:800;color:var(--text-primary)">My Job Postings</div></div>'
-        + myJobs.slice(0,3).map(function(l){
-          var apps = (H.state.applications || []).filter(function(a){ return a.jobId === l.id; }).length;
-          return '<div style="background:var(--card);border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer" onclick="H.openInner(\'JobApplications\',{jobId:\'' + l.id + '\'})">'
-            + '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(l.title) + '</div>'
-            + '<div style="font-size:12px;color:var(--text-sub);margin-top:2px">' + H.timeAgo(l.createdAt) + '</div></div>'
-            + '<div style="text-align:center;flex-shrink:0"><div style="font-size:20px;font-weight:900;color:#1A3A8F">' + apps + '</div><div style="font-size:10px;color:var(--text-sub);font-weight:600">App' + (apps!==1?'s':'') + '</div></div></div>';
-        }).join('') + '</div>' : '')
+      + '<div style="padding:16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+      + '<div onclick="H.openInner(\'FindJobs\')" style="background:#1A3A8F;border-radius:16px;padding:20px 14px;cursor:pointer;box-shadow:0 4px 16px rgba(26,58,143,.25)">'
+      + '<div style="margin-bottom:8px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div>'
+      + '<div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:4px">Find Jobs</div>'
+      + '<div style="font-size:12px;color:rgba(255,255,255,.7)">' + jobs.length + ' openings</div></div>'
+      + '<div onclick="H.openInner(\'HireTalent\')" style="background:#fff;border-radius:16px;padding:20px 14px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.08);border:2px solid #F5A623">'
+      + '<div style="margin-bottom:8px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#1A3A8F" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>'
+      + '<div style="font-size:16px;font-weight:800;color:#1A3A8F;margin-bottom:4px">Hire Talent</div>'
+      + '<div style="font-size:12px;color:var(--sub)">' + candidates.length + ' candidate' + (candidates.length !== 1 ? 's' : '') + '</div></div>'
+      + '</div>'
+      + '<div onclick="H.openInner(\'JobSeekerProfile\')" style="margin:0 14px 12px;background:linear-gradient(135deg,#22c55e,#15803d);border-radius:16px;padding:16px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">'
+      + '<div><div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:2px">Looking for Work?</div><div style="font-size:12px;color:rgba(255,255,255,.8)">Build your CV profile and let employers find you</div></div>'
+      + '<div style="display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div></div>'
       + '<div style="padding:0 14px 12px">'
-      + '<div style="font-size:15px;font-weight:800;color:var(--text-primary);margin-bottom:10px">Browse by Category</div>'
+      + '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px">Browse by Category</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
-      + JOB_CATS.map(function(cat){
-        var cnt = jobs.filter(function(j){ return (j.title + ' ' + (j.desc || '') + ' ' + (j.jobData ? JSON.stringify(j.jobData) : '')).toLowerCase().includes(cat.split(' ')[0].toLowerCase()); }).length;
-        return '<div onclick="H.openInner(\'FindJobs\',{cat:\'' + H.escHtml(cat) + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:7px 13px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-mid)">' + H.escHtml(cat) + '<span style="color:var(--text-sub);margin-left:4px">(' + cnt + ')</span></div>';
-      }).join('') + '</div></div>'
-      + (recent.length ? '<div style="padding:0 14px 16px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-size:15px;font-weight:800;color:var(--text-primary)">Recent Openings</div><button onclick="H.openInner(\'FindJobs\')" style="background:none;border:none;color:#1A3A8F;font-size:12px;font-weight:700;cursor:pointer;padding:0">View All →</button></div>' + recent.map(jobCard).join('') + '</div>' : '')
+      + JOB_CATS.map(function (cat) {
+        var cnt = jobs.filter(function (j) { return (j.title + ' ' + (j.desc || '')).toLowerCase().includes(cat.split(' ')[0].toLowerCase()); }).length;
+        return '<div onclick="H.openInner(\'FindJobs\',{cat:\'' + cat + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:8px 14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text)">' + H.escHtml(cat) + '<span style="color:var(--sub);margin-left:4px">(' + cnt + ')</span></div>';
+      }).join('')
+      + '</div></div>'
+      + (recent.length ? '<div style="padding:0 14px 16px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+        + '<div style="font-size:15px;font-weight:800;color:var(--text)">Recent Openings</div>'
+        + '<button onclick="H.openInner(\'FindJobs\')" style="background:none;border:none;color:#1A3A8F;font-size:12px;font-weight:700;cursor:pointer;padding:0">View All →</button>'
+        + '</div>' + recent.map(jobCard).join('') + '</div>' : '')
       + '<div style="margin:0 14px 88px;background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:16px;padding:20px">'
       + '<div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:6px">Hiring? Post a Job Free</div>'
       + '<div style="font-size:13px;color:rgba(255,255,255,.7);margin-bottom:14px">Reach thousands of qualified candidates across Zimbabwe</div>'
@@ -5079,24 +6580,14 @@ H.init();
       + '</div></div>';
   };
 
-  H._toggleOpenToWork = function() {
-    var u = H.currentUser(); if (!u) { H.requireAuth('Sign in to set your availability'); return; }
-    u.openToWork = !u.openToWork;
-    H.saveState();
-    H.toast(u.openToWork ? '🟢 You are now visible to employers' : 'Open to Work disabled');
-    H.renderPage('Jobs');
-  };
-
-  // ── FIND JOBS ─────────────────────────────────────────────
-  H.pages.FindJobs = function(params) {
+  H.pages.FindJobs = function (params) {
     params = params || {};
-    var jobs = (H.state.listings || []).filter(function(l){ return l.status === 'active' && l.cat === 'jobs'; })
-      .sort(function(a,b){ return b.createdAt - a.createdAt; });
+    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'jobs'; })
+      .sort(function (a, b) { return b.createdAt - a.createdAt; });
 
-    var filterHtml = H._sel('findjobs','subcat','Category',[['all','All Categories']].concat(JOB_CATS.map(function(c){return [c,c];})))
-      + H._sel('findjobs','fuelType','Job Type',[['all','All'],['full-time','Full-time'],['part-time','Part-time'],['contract','Contract'],['freelance','Freelance'],['internship','Internship']])
-      + H._sel('findjobs','propType','Experience',EXP_LEVELS)
-      + H._sel('findjobs','edu','Education',EDU_LEVELS)
+    var filterHtml = H._sel('findjobs', 'subcat', 'Job Category', [['all', 'All Categories']].concat(JOB_CATS.map(function (c) { return [c, c]; })).concat([['Other', 'Other']]))
+      + H._sel('findjobs', 'fuelType', 'Job Type', [['all', 'All'], ['full-time', 'Full-time'], ['part-time', 'Part-time'], ['contract', 'Contract'], ['freelance', 'Freelance'], ['internship', 'Internship']])
+      + H._sel('findjobs', 'propType', 'Qualification', [['all', 'All'], ['none', 'No formal qualification'], ['certificate', 'Certificate / Diploma'], ['degree', 'Degree'], ['postgrad', 'Postgraduate']])
       + H._citysel('findjobs') + H._priceRange('findjobs') + H._sortsel('findjobs');
 
     return '<div class="page active">'
@@ -5118,688 +6609,1541 @@ H.init();
       + '</div>'
       + '<div id="fp_findjobs" style="display:none;background:var(--card);border-bottom:2px solid #F5A623;padding:16px 14px">'
       + filterHtml
-      + '<div style="display:flex;gap:8px;margin-top:4px"><button onclick="H._clearFilters(\'findjobs\')" style="flex:1;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--text-sub);cursor:pointer">Clear</button>'
+      + '<div style="display:flex;gap:8px;margin-top:4px">'
+      + '<button onclick="H._clearFilters(\'findjobs\')" style="flex:1;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">Clear</button>'
       + '<button onclick="H._toggleFilters(\'findjobs\')" style="flex:2;padding:10px;background:#F5A623;border:none;border-radius:10px;font-size:13px;font-weight:700;color:#1A3A8F;cursor:pointer">Apply Filters</button>'
       + '</div></div>'
       + '<div id="cl_findjobs" style="padding:12px 12px 88px">'
-      + (jobs.length ? jobs.map(jobCard).join('') : H.emptyState('No jobs yet','Check back soon!','Post a Job',"H.openInner('PostJob')"))
+      + (jobs.length ? jobs.map(jobCard).join('') : H.emptyState('No jobs yet', 'Check back soon!', 'Post a Job', "H.openInner('PostJob')"))
       + '</div></div>';
   };
 
-  H.pages.FindJobs_after = function(params) {
+  H.pages.FindJobs_after = function (params) {
     params = params || {};
     H._filters['findjobs'] = {};
     if (params.cat) H._filters['findjobs'].subcat = params.cat;
     H._applyJobFilters();
   };
 
-  H._applyJobFilters = function() {
-    var el = document.getElementById('cl_findjobs'); if (!el) return;
+  H._applyJobFilters = function () {
+    var el = document.getElementById('cl_findjobs');
+    if (!el) return;
     var f = H._filters['findjobs'] || {};
-    var jobs = (H.state.listings || []).filter(function(l){ return l.status === 'active' && l.cat === 'jobs'; });
+    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'jobs'; });
     var q = ((document.getElementById('cs_findjobs') || {}).value || '').toLowerCase().trim();
-    if (q) jobs = jobs.filter(function(l){
-      var jd = l.jobData || {};
-      return (l.title + ' ' + (l.desc||'') + ' ' + (l.city||'') + ' ' + (jd.company||l.sellerName||'') + ' ' + (jd.industry||'')).toLowerCase().includes(q);
-    });
-    if (f.city && f.city !== 'all') jobs = jobs.filter(function(l){ return (l.city+' '+(l.prov||'')).toLowerCase().includes(f.city.toLowerCase()); });
-    if (f.subcat && f.subcat !== 'all') jobs = jobs.filter(function(l){ return (l.title+' '+(l.desc||'')+' '+JSON.stringify(l.jobData||{})).toLowerCase().includes(f.subcat.split(' ')[0].toLowerCase()); });
-    if (f.fuelType && f.fuelType !== 'all') jobs = jobs.filter(function(l){ var jd=l.jobData||{}; return (jd.jobType||'').toLowerCase().includes(f.fuelType.replace('-',' '))||(l.desc||'').toLowerCase().includes(f.fuelType.replace('-',' ')); });
-    if (f.priceMin) jobs = jobs.filter(function(l){ return (l.price||0) >= +f.priceMin; });
-    if (f.priceMax) jobs = jobs.filter(function(l){ return (l.price||0) <= +f.priceMax; });
-    jobs.sort(function(a,b){ return b.createdAt - a.createdAt; });
-    el.innerHTML = jobs.length ? jobs.map(jobCard).join('') : H.emptyState('No jobs match','Try adjusting your filters',null,null);
+    if (q) jobs = jobs.filter(function (l) { return (l.title + ' ' + (l.desc || '') + ' ' + (l.city || '') + ' ' + (l.sellerName || '')).toLowerCase().includes(q); });
+    if (f.city && f.city !== 'all') jobs = jobs.filter(function (l) { return (l.city + ' ' + (l.prov || '')).toLowerCase().includes(f.city.toLowerCase()); });
+    if (f.subcat && f.subcat !== 'all') jobs = jobs.filter(function (l) { return (l.title + ' ' + (l.desc || '')).toLowerCase().includes(f.subcat.split(' ')[0].toLowerCase()); });
+    if (f.fuelType && f.fuelType !== 'all') jobs = jobs.filter(function (l) { return (l.desc || '').toLowerCase().includes(f.fuelType.replace('-', ' ')); });
+    if (f.priceMin) jobs = jobs.filter(function (l) { return (l.price || 0) >= +f.priceMin; });
+    if (f.priceMax) jobs = jobs.filter(function (l) { return (l.price || 0) <= +f.priceMax; });
+    jobs.sort(function (a, b) { return b.createdAt - a.createdAt; });
+    el.innerHTML = jobs.length ? jobs.map(jobCard).join('') : H.emptyState('No jobs match', 'Try adjusting your filters', null, null);
     var cnt = document.getElementById('cc_findjobs');
-    if (cnt) cnt.textContent = jobs.length + ' job' + (jobs.length!==1?'s':'');
-    var n = Object.keys(f).filter(function(k){ return f[k] && f[k]!=='all' && f[k]!=='' && f[k]!=='newest'; }).length;
+    if (cnt) cnt.textContent = jobs.length + ' job' + (jobs.length !== 1 ? 's' : '');
+    var n = Object.keys(f).filter(function (k) { return f[k] && f[k] !== 'all' && f[k] !== '' && f[k] !== 'newest'; }).length;
     var badge = document.getElementById('fb_findjobs');
-    if (badge){ badge.textContent = n||''; badge.style.display = n?'flex':'none'; }
+    if (badge) { badge.textContent = n || ''; badge.style.display = n ? 'flex' : 'none'; }
   };
 
-  // ── POST JOB (ENHANCED) ───────────────────────────────────
-  H.pages.PostJob = function() {
-    var u = H.currentUser();
-    if (!u) return '<div class="page active">' + H.innerTopbar('Post a Job') + H.emptyState('Sign in required','You must sign in to post a job','Sign In',"H.requireAuth('Post a job')") + '</div>';
+  H.pages.HireTalent = function () {
+    var candidates = (H.state.users || []).filter(function (u) {
+      return u.openToWork || (u.cv && u.cv.visible !== false && (u.cv.headline || u.cv.summary || (u.cv.experience && u.cv.experience.length)));
+    });
+    var sectors = ['All'].concat(JOB_CATS);
     var ZW = H._ZW_CITIES || [];
-    return '<div class="page active">'
-      + '<div class="det-topbar"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Post a Job</div></div>'
-      + '<div style="margin:12px 14px;background:#1A3A8F18;border-radius:12px;padding:12px 14px;display:flex;gap:10px">'
-      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-      + '<div style="font-size:12px;color:#1A3A8F;font-weight:600;line-height:1.6">Jobs are reviewed before going live. Posting is free. Complete all required fields for faster approval.</div>'
-      + '</div>'
-      + '<div style="padding:0 14px 110px">'
-
-      // Company info
-      + _sec('Company Information')
-      + _field('jCompany','Company Name *','text','Your company or organisation name',H.escHtml(u.company||u.name||''))
-      + '<div style="margin-bottom:14px;background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">'
-      + '<div><div style="font-size:14px;font-weight:600;color:var(--text-primary)">Post Anonymously</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">Company name visible. Your personal identity hidden.</div></div>'
-      + '<div id="anonTog" onclick="this.dataset.on=this.dataset.on===\'1\'?\'0\':\'1\';this.style.background=this.dataset.on===\'1\'?\'#1A3A8F\':\'var(--border)\';this.querySelector(\'div\').style.left=this.dataset.on===\'1\'?\'23px\':\'3px\';document.getElementById(\'jAnon\').value=this.dataset.on" data-on="0" style="width:46px;height:26px;border-radius:13px;background:var(--border);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0"><div style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div></div>'
-      + '<input type="hidden" id="jAnon" value="0">'
-      + '</div>'
-
-      // Job details
-      + _sec('Job Details')
-      + _field('jTitle','Job Title *','text','e.g. Accountant, Driver, Sales Representative','')
-      + _select('jCat','Job Category *',[['','Select category…']].concat(JOB_CATS.map(function(c){return [c,c];})))
-      + _select('jLocation','Location *',[['','Select city…']].concat(ZW.map(function(c){return [c,c];})).concat([['Remote','Remote'],['Multiple Locations','Multiple Locations']]))
-      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Job Type</label>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:10px">' + ['Full-time','Part-time','Contract','Freelance','Internship'].map(function(t,i){
-        return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="jType" value="' + t + '"' + (i===0?' checked':'') + ' style="accent-color:#1A3A8F"><span style="font-size:13px;font-weight:600;color:var(--text-primary)">' + t + '</span></label>';
-      }).join('') + '</div></div>'
-      + '<div style="margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px">'
-      + '<div><label style="font-size:12px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Min Salary (USD)</label><input id="jSalMin" type="number" placeholder="e.g. 500" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text-primary);outline:none;box-sizing:border-box"></div>'
-      + '<div><label style="font-size:12px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Max Salary (USD)</label><input id="jSalMax" type="number" placeholder="e.g. 1500" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text-primary);outline:none;box-sizing:border-box"></div>'
-      + '</div>'
-      + _select('jExpReq','Experience Required',EXP_LEVELS)
-      + _select('jEdu','Minimum Education',EDU_LEVELS)
-      + _field('jPositions','Number of Openings','number','1','1')
-      + _field('jDeadline','Application Deadline','date','','')
-
-      // Description
-      + _sec('Job Description')
-      + _textarea('jDesc','Job Description *','Describe the role, the company culture, what a typical day looks like…',6)
-      + _textarea('jResp','Key Responsibilities','List the main duties and responsibilities…',4)
-      + _textarea('jReqs','Requirements & Qualifications','Experience, education, skills, certifications required…',4)
-      + _textarea('jBenefits','Benefits & Perks','Medical aid, leave days, transport, bonus, training…',3)
-
-      // How to Apply
-      + _sec('How to Apply')
-      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Application Method</label>'
-      + '<div style="display:flex;flex-direction:column;gap:8px">'
-      + ['In-App (recommended)','Email','WhatsApp','External URL'].map(function(m,i){
-        return '<label style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:10px;padding:12px 14px;border:1.5px solid var(--border);cursor:pointer">'
-          + '<input type="radio" name="jApplyMethod" value="' + ['inapp','email','whatsapp','url'][i] + '"' + (i===0?' checked':'') + ' onclick="H._toggleApplyMethod(this.value)" style="accent-color:#1A3A8F">'
-          + '<span style="font-size:13px;font-weight:600;color:var(--text-primary)">' + m + '</span></label>';
-      }).join('') + '</div></div>'
-      + '<div id="jApplyEmailWrap" style="display:none">' + _field('jEmail','Email to Receive Applications','email','e.g. hr@company.co.zw',H.escHtml(u.email||'')) + '</div>'
-      + '<div id="jApplyPhoneWrap" style="display:none">' + _field('jPhone','WhatsApp Number','tel','e.g. +263771234567',H.escHtml(u.phone||'')) + '</div>'
-      + '<div id="jApplyUrlWrap" style="display:none">' + _field('jApplyUrl','Application URL','url','https://company.com/apply','') + '</div>'
-      + '</div>'
-
-      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
-      + '<button onclick="H._submitJob()" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#0f2460);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">Submit Job for Review →</button>'
-      + '</div></div>';
-  };
-
-  H._toggleApplyMethod = function(method) {
-    ['Email','Phone','Url'].forEach(function(m){ var el = document.getElementById('jApply' + m + 'Wrap'); if (el) el.style.display = 'none'; });
-    if (method === 'email')    { var e = document.getElementById('jApplyEmailWrap'); if (e) e.style.display = 'block'; }
-    if (method === 'whatsapp') { var e = document.getElementById('jApplyPhoneWrap'); if (e) e.style.display = 'block'; }
-    if (method === 'url')      { var e = document.getElementById('jApplyUrlWrap'); if (e) e.style.display = 'block'; }
-  };
-
-  function _sec(title) {
-    return '<div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin:18px 0 10px;padding-top:6px;border-top:1px solid var(--border)">' + title + '</div>';
-  }
-
-  function _field(id, label, type, placeholder, value) {
-    return '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">' + label + '</label>'
-      + '<input id="' + id + '" type="' + type + '" placeholder="' + H.escHtml(placeholder) + '" value="' + (value||'') + '" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text-primary);outline:none;box-sizing:border-box"></div>';
-  }
-
-  function _select(id, label, opts) {
-    return '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">' + label + '</label>'
-      + '<select id="' + id + '" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text-primary);outline:none">'
-      + opts.map(function(o){ return '<option value="' + H.escHtml(o[0]) + '">' + H.escHtml(o[1]) + '</option>'; }).join('') + '</select></div>';
-  }
-
-  function _textarea(id, label, placeholder, rows) {
-    return '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">' + label + '</label>'
-      + '<textarea id="' + id + '" placeholder="' + H.escHtml(placeholder) + '" rows="' + rows + '" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text-primary);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif"></textarea></div>';
-  }
-
-  function _val(id){ return ((document.getElementById(id)||{}).value||'').trim(); }
-
-  H._submitJob = function() {
-    var company  = _val('jCompany');
-    var title    = _val('jTitle');
-    var cat      = _val('jCat');
-    var location = _val('jLocation');
-    var desc     = _val('jDesc');
-    if (!company)            { H.toast('Company name is required'); return; }
-    if (!title)              { H.toast('Job title is required'); return; }
-    if (!cat)                { H.toast('Please select a job category'); return; }
-    if (!location)           { H.toast('Please select a location'); return; }
-    if (desc.length < 30)    { H.toast('Job description must be at least 30 characters'); return; }
-    var u = H.currentUser(); if (!u) { H.toast('Please sign in first'); return; }
-    var jobType = 'Full-time';
-    document.querySelectorAll('input[name="jType"]').forEach(function(r){ if (r.checked) jobType = r.value; });
-    var applyMethod = 'inapp';
-    document.querySelectorAll('input[name="jApplyMethod"]').forEach(function(r){ if (r.checked) applyMethod = r.value; });
-    var salMin  = _val('jSalMin');
-    var salMax  = _val('jSalMax');
-    var salary  = salMin && salMax ? '$' + salMin + ' – $' + salMax + '/mo' : salMin ? 'From $' + salMin + '/mo' : 'Negotiable';
-    var anon    = (document.getElementById('jAnon')||{}).value === '1';
-    var jobData = {
-      company:   company,
-      jobType:   jobType,
-      industry:  cat,
-      salary:    salary,
-      exp:       _val('jExpReq'),
-      eduReq:    _val('jEdu'),
-      positions: _val('jPositions') || '1',
-      deadline:  _val('jDeadline'),
-      benefits:  _val('jBenefits'),
-      description:      _val('jDesc'),
-      responsibilities: _val('jResp'),
-      requirements:     _val('jReqs'),
-      applyMethod: applyMethod,
-      applyEmail:  applyMethod === 'email'    ? _val('jEmail')    : '',
-      applyPhone:  applyMethod === 'whatsapp' ? _val('jPhone')    : '',
-      applyUrl:    applyMethod === 'url'      ? _val('jApplyUrl') : ''
-    };
-    // Keep desc as legacy plain text too for search compatibility
-    var fullDesc = 'COMPANY: ' + company + '\nJOB TYPE: ' + jobType + '\nINDUSTRY: ' + cat + '\nSALARY: ' + salary
-      + (jobData.deadline ? '\nDEADLINE: ' + jobData.deadline : '')
-      + '\n\nDESCRIPTION:\n' + desc
-      + (jobData.responsibilities ? '\n\nRESPONSIBILITIES:\n' + jobData.responsibilities : '')
-      + (jobData.requirements     ? '\n\nREQUIREMENTS:\n' + jobData.requirements : '')
-      + (jobData.benefits         ? '\n\nBENEFITS:\n' + jobData.benefits : '')
-      + (jobData.applyEmail || jobData.applyPhone || jobData.applyUrl ? '\n\nHOW TO APPLY:\n'
-          + (jobData.applyEmail ? 'Email: ' + jobData.applyEmail + '\n' : '')
-          + (jobData.applyPhone ? 'WhatsApp: ' + jobData.applyPhone + '\n' : '')
-          + (jobData.applyUrl   ? 'URL: ' + jobData.applyUrl : '') : '');
-    var listing = {
-      id: H.uid(), cat: 'jobs', title: title, desc: fullDesc, jobData: jobData,
-      price: salMin ? +salMin : 0, currency: 'USD', city: location, prov: location,
-      sellerId: u.id, sellerName: anon ? company : (u.name||company),
-      company: company, createdAt: Date.now(), expiresAt: Date.now() + 60*24*60*60*1000,
-      status: 'pending', photos: []
-    };
-    H.state.listings = H.state.listings || [];
-    H.state.listings.push(listing);
-    H.saveState();
-    if (typeof H.saveListingToCloud === 'function') H.saveListingToCloud(listing);
-    H.toast('Job submitted for review! It will go live once approved.');
-    H.goBack();
-  };
-
-  // ── JOB DETAIL ────────────────────────────────────────────
-  H.pages.JobDetail = function(params) {
-    var id = params && params.id;
-    var l  = (H.state.listings||[]).find(function(x){ return x.id === id; });
-    if (!l) return '<div class="page active">' + H.innerTopbar('Job') + H.emptyState('Job not found','This posting may have been removed.','Browse Jobs',"H.filterByCat('jobs')") + '</div>';
-    var jd = getJobData(l);
-    var u       = H.currentUser();
-    var isMine  = u && l.sellerId === u.id;
-    var apps    = (H.state.applications||[]);
-    var myApp   = u ? apps.find(function(a){ return a.jobId===id && a.applicantId===u.id; }) : null;
-    var appCount = apps.filter(function(a){ return a.jobId===id; }).length;
-    var newApps  = apps.filter(function(a){ return a.jobId===id && a.status==='pending'; }).length;
-    var ci = (jd.company||l.sellerName||'C').split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase();
-    var chip = 'display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;margin-right:6px;margin-bottom:6px';
-
-    // Deadline countdown
-    var deadlineHtml = '';
-    if (jd.deadline) {
-      var dDate = new Date(jd.deadline); var now = new Date();
-      var dDays = Math.ceil((dDate - now) / 86400000);
-      var dColor = dDays <= 3 ? '#dc2626' : dDays <= 7 ? '#f59e0b' : '#22c55e';
-      deadlineHtml = '<div style="background:' + dColor + '15;border:1px solid ' + dColor + '40;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px">'
-        + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="' + dColor + '" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
-        + '<span style="font-size:13px;font-weight:700;color:' + dColor + '">'
-        + (dDays < 0 ? 'Applications closed' : dDays === 0 ? 'Deadline: Today!' : 'Deadline: ' + dDays + ' day' + (dDays!==1?'s':'') + ' left (' + jd.deadline + ')')
-        + '</span></div>';
-    }
-
-    var similar = (H.state.listings||[]).filter(function(x){ return x.id!==id && x.cat==='jobs' && x.status==='active'; }).slice(0,3);
 
     return '<div class="page active">'
-      + '<div class="det-topbar" style="background:#0a2558"><button class="back" onclick="H.goBack()" style="color:#fff"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
-      + '<div class="det-topbar-title" style="color:#fff;font-size:14px">' + H.escHtml(l.title) + '</div>'
-      + (isMine
-        ? '<button onclick="H.openInner(\'JobApplications\',{jobId:\'' + id + '\'})" style="background:' + (newApps?'#F5A623':'rgba(255,255,255,.18)') + ';border:none;color:' + (newApps?'#1A3A8F':'#fff') + ';font-size:11px;font-weight:800;cursor:pointer;padding:5px 10px;border-radius:8px">' + appCount + ' App' + (appCount===1?'':'s') + (newApps?' ('+newApps+' new)':'') + '</button>'
-        : '<button onclick="H._saveJob(\'' + id + '\')" style="background:rgba(255,255,255,.18);border:none;color:#fff;padding:6px;border-radius:8px;display:flex;align-items:center;cursor:pointer"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>')
-      + '</div>'
-
-      + '<div style="background:linear-gradient(160deg,#0a2558 0%,#1A3A8F 60%,#2952cc 100%);padding:20px 16px 24px">'
-      + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
-      + '<div style="width:56px;height:56px;border-radius:14px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,.2)">' + ci + '</div>'
-      + '<div style="flex:1;min-width:0">'
-      + '<div style="font-size:19px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:4px">' + H.escHtml(l.title) + '</div>'
-      + '<div style="font-size:14px;color:rgba(255,255,255,.8);font-weight:600">' + H.escHtml(jd.company||l.sellerName||'') + '</div>'
-      + '</div></div>'
-      + '<div style="display:flex;flex-wrap:wrap;margin-bottom:4px">'
-      + (jd.jobType  ? '<span style="' + chip + ';background:rgba(255,255,255,.18);color:#fff">'    + H.escHtml(jd.jobType)  + '</span>' : '')
-      + (jd.industry ? '<span style="' + chip + ';background:#F5A62330;color:#F5A623">'             + H.escHtml(jd.industry) + '</span>' : '')
-      + '<span style="' + chip + ';background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + H.escHtml(l.city||'Zimbabwe') + '</span>'
-      + '</div></div>'
-
-      + '<div style="padding:0 12px">'
-      + deadlineHtml
-
-      + '<div style="background:var(--card);border-radius:16px;margin-top:-14px;padding:16px;border:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px">'
-      + _ji('Salary',    jd.salary || 'Negotiable')
-      + _ji('Location',  l.city || 'Zimbabwe')
-      + _ji('Experience',jd.exp ? (EXP_LEVELS.find(function(e){return e[0]===jd.exp;})||[,''])[1] : 'Not specified')
-      + _ji('Positions', (jd.positions || '1') + ' opening' + ((jd.positions||'1')!=='1'?'s':''))
-      + _ji('Posted',    H.timeAgo(l.createdAt))
-      + _ji('Applicants',appCount + ' so far')
-      + '</div>'
-
-      + (jd.description     ? _jb('About the Role',        jd.description)      : '')
-      + (jd.responsibilities ? _jb('Key Responsibilities',  jd.responsibilities) : '')
-      + (jd.requirements     ? _jb('Requirements',          jd.requirements)     : '')
-      + (jd.benefits         ? _jb('Benefits & Perks',      jd.benefits)         : '')
-
-      // How to Apply (external methods)
-      + (jd.applyEmail||jd.applyPhone||jd.applyUrl ? '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border)">'
-        + '<div style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px"><div style="width:3px;height:16px;background:#1A3A8F;border-radius:2px"></div>Also Apply Via</div>'
-        + (jd.applyEmail ? '<a href="mailto:' + H.escHtml(jd.applyEmail) + '?subject=' + encodeURIComponent('Application: ' + l.title) + '" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#1A3A8F15;border-radius:10px;margin-bottom:8px;text-decoration:none"><span style="font-size:16px">📧</span><span style="font-size:13px;font-weight:600;color:#1A3A8F">' + H.escHtml(jd.applyEmail) + '</span></a>' : '')
-        + (jd.applyPhone ? '<button onclick="window.open(\'https://wa.me/' + jd.applyPhone.replace(/[^\d+]/g,'') + '?text=' + encodeURIComponent('Hi, I am applying for the ' + l.title + ' position at ' + (jd.company||'')) + '\',\'_blank\')" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#25D36615;border-radius:10px;width:100%;border:none;cursor:pointer;margin-bottom:8px"><span style="font-size:16px">💬</span><span style="font-size:13px;font-weight:600;color:#25D366">' + H.escHtml(jd.applyPhone) + '</span></button>' : '')
-        + (jd.applyUrl   ? '<button onclick="window.open(\'' + H.escHtml(jd.applyUrl) + '\',\'_system\')" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#1A3A8F10;border-radius:10px;width:100%;border:none;cursor:pointer"><span style="font-size:16px">🔗</span><span style="font-size:13px;font-weight:600;color:#1A3A8F">Apply on Website</span></button>' : '')
-        + '</div>' : '')
-
-      + (similar.length ? '<div style="margin-bottom:12px"><div style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:10px;display:flex;align-items:center;gap:8px"><div style="width:3px;height:16px;background:#F5A623;border-radius:2px"></div>Similar Jobs</div>' + similar.map(jobCard).join('') + '</div>' : '')
-      + '<div style="height:90px"></div></div>'
-
-      // Fixed apply bar
-      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
-      + (isMine
-        ? '<button onclick="H.openInner(\'JobApplications\',{jobId:\'' + id + '\'})" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer">View Applications (' + appCount + ')' + (newApps?' · ' + newApps + ' NEW':'') + '</button>'
-        : l.status !== 'active'
-          ? '<div style="padding:14px;background:var(--bg);border-radius:13px;text-align:center;font-size:14px;font-weight:700;color:var(--text-sub)">This position is no longer accepting applications</div>'
-          : myApp
-            ? '<div style="display:flex;gap:8px"><div style="flex:1;padding:14px;background:#dcfce7;border-radius:13px;text-align:center;font-size:13px;font-weight:700;color:#15803d">✓ Applied ' + H.timeAgo(myApp.appliedAt) + '</div>'
-              + '<button onclick="H._withdrawApplication(\'' + myApp.id + '\',\'' + id + '\')" style="padding:14px;background:#fee2e2;color:#dc2626;border:none;border-radius:13px;font-size:13px;font-weight:700;cursor:pointer">Withdraw</button></div>'
-            : '<button onclick="H._applyToJob(\'' + id + '\')" style="width:100%;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>Apply Now — It\'s Free</button>'
-      )
-      + '</div></div>';
-  };
-
-  H._saveJob = function(id) {
-    var u = H.currentUser(); if (!u) { H.requireAuth('Sign in to save jobs'); return; }
-    H.state.saves = H.state.saves || {};
-    H.state.saves[u.id] = H.state.saves[u.id] || [];
-    var i = H.state.saves[u.id].indexOf(id);
-    if (i >= 0) { H.state.saves[u.id].splice(i,1); H.toast('Job removed from saved'); }
-    else        { H.state.saves[u.id].push(id);    H.toast('Job saved'); }
-    H.saveState();
-  };
-
-  // ── APPLY TO JOB (ENHANCED) ───────────────────────────────
-  H._applyToJob = function(jobId) {
-    if (!H.currentUser()) { H.requireAuth('Sign in to apply for jobs'); return; }
-    var l = (H.state.listings||[]).find(function(x){ return x.id === jobId; });
-    if (!l) { H.toast('Job not found'); return; }
-    var u       = H.currentUser();
-    var jd      = getJobData(l);
-    var company = jd.company || l.sellerName || 'Company';
-    var existing = (H.state.applications||[]).find(function(a){ return a.jobId===jobId && a.applicantId===u.id; });
-    if (existing) { H.toast('You have already applied for this position'); return; }
-
-    H.modal({
-      title: 'Apply: ' + H.escHtml(l.title),
-      body:
-        '<div style="background:#1A3A8F08;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:13px;color:var(--text-sub)">'
-        + '📌 <strong>' + H.escHtml(company) + '</strong> · ' + H.escHtml(l.city||'Zimbabwe') + '</div>'
-
-        + '<div style="margin-bottom:6px"><label style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.5px">Cover Letter <span style="color:#dc2626">*</span></label></div>'
-        + '<textarea id="applyMsg" rows="6" placeholder="Tell the employer about yourself — your relevant experience, why you\'re the right fit, and what you bring to the role. Be specific and professional." style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;background:var(--card);color:var(--text-primary);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif" oninput="var n=this.value.length;var c=document.getElementById(\'applyCharCnt\');if(c){c.textContent=n+\'/50 min\';c.style.color=n>=50?\'#22c55e\':\'#dc2626\';}"></textarea>'
-        + '<div id="applyCharCnt" style="font-size:11px;color:#dc2626;text-align:right;margin-bottom:12px;margin-top:3px">0/50 min</div>'
-
-        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
-        + '<div><label style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Expected Salary (USD/mo)</label>'
-        + '<input id="applySalary" type="number" placeholder="e.g. 700" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text-primary);outline:none;box-sizing:border-box"></div>'
-        + '<div><label style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Availability</label>'
-        + '<select id="applyAvail" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text-primary);outline:none">'
-        + AVAIL_OPTS.map(function(o){ return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('') + '</select></div>'
-        + '</div>'
-
-        + '<div style="margin-bottom:12px"><label style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">CV / Portfolio Link (optional)</label>'
-        + '<input id="applyCvLink" type="url" placeholder="https://drive.google.com/… or LinkedIn URL" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text-primary);outline:none;box-sizing:border-box"></div>'
-
-        + '<div style="background:#F5A62310;border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text-sub)">'
-        + '📤 Shared with employer: <strong>' + H.escHtml(u.name||'Your name') + '</strong>'
-        + (u.phone ? ' · ' + H.escHtml(u.phone) : ' (no phone — add in Profile)')
-        + (u.email ? ' · ' + H.escHtml(u.email) : ' (no email — add in Profile)')
-        + '</div>',
-
-      confirmText: 'Submit Application',
-      onConfirm: function() {
-        var msg   = (_val('applyMsg'));
-        if (msg.length < 50) { H.toast('Cover letter must be at least 50 characters. Tell the employer why you\'re right for this role.'); return false; }
-        var salary = _val('applySalary');
-        var avail  = (_val('applyAvail')) || 'immediately';
-        var cvLink = _val('applyCvLink');
-        H._submitJobApplication(jobId, msg, { salary: salary, avail: avail, cvLink: cvLink });
-      }
-    });
-  };
-
-  H._submitJobApplication = function(jobId, message, extras) {
-    extras = extras || {};
-    var u = H.currentUser(); if (!u) return;
-    var l = (H.state.listings||[]).find(function(x){ return x.id === jobId; }); if (!l) return;
-    var jd = getJobData(l);
-    var company = jd.company || l.sellerName || 'Company';
-    H.state.applications = H.state.applications || [];
-    var existing = H.state.applications.find(function(a){ return a.jobId===jobId && a.applicantId===u.id; });
-    if (existing) { H.toast('You already applied for this job'); return; }
-    var app = {
-      id: H.uid(), jobId: jobId, jobTitle: l.title, company: company,
-      applicantId: u.id, applicantName: u.name||'Applicant',
-      applicantPhone: u.phone||'', applicantEmail: u.email||'',
-      message: message,
-      expectedSalary: extras.salary || '',
-      availability:   extras.avail  || 'immediately',
-      cvLink:         extras.cvLink || '',
-      status: 'pending', appliedAt: Date.now(), employerId: l.sellerId,
-      statusHistory: [{status:'pending', t: Date.now(), note: 'Application submitted'}]
-    };
-    H.state.applications.push(app);
-    H.saveState();
-    if (typeof H.saveApplicationToCloud === 'function') H.saveApplicationToCloud(app);
-    if (l.sellerId) H.pushNotif(l.sellerId, 'New Application 📩', u.name + ' applied for ' + l.title);
-    H.toast('✅ Application submitted! The employer will be in touch.');
-    H.renderPage('JobDetail', {id: jobId});
-    // Create a private conversation thread
-    H.state.conversations = H.state.conversations || [];
-    var convId = 'job_' + app.id.slice(-8);
-    if (!H.state.conversations.find(function(c){ return c.id === convId; })) {
-      H.state.conversations.push({
-        id: convId, members: [u.id, l.sellerId], listingId: jobId,
-        appId: app.id, isJobThread: true, messages: []
-      });
-      H.saveState();
-    }
-  };
-
-  H._withdrawApplication = function(appId, jobId) {
-    H.modal({
-      title: 'Withdraw Application',
-      body: 'Are you sure? The employer will no longer see your application and you can reapply later.',
-      confirmText: 'Withdraw',
-      onConfirm: function() {
-        H.state.applications = (H.state.applications||[]).filter(function(a){ return a.id !== appId; });
-        H.saveState();
-        H.toast('Application withdrawn');
-        H.renderPage('JobDetail', {id: jobId});
-      }
-    });
-  };
-
-  // ── EMPLOYER: JOB APPLICATIONS DASHBOARD (ENHANCED) ───────
-  var _appTab = 'all';
-  H.pages.JobApplications = function(params) {
-    var jobId = params && params.jobId;
-    var u = H.currentUser();
-    if (!u) return '<div class="page active">' + H.innerTopbar('Applications') + H.emptyState('Sign in required','',null,null) + '</div>';
-    var l = (H.state.listings||[]).find(function(x){ return x.id === jobId; });
-    if (!l || l.sellerId !== u.id) return '<div class="page active">' + H.innerTopbar('Applications') + H.emptyState('Access denied','',null,null) + '</div>';
-    var jd = getJobData(l);
-    var allApps = (H.state.applications||[]).filter(function(a){ return a.jobId === jobId; }).sort(function(a,b){ return b.appliedAt - a.appliedAt; });
-    var counts  = {all:allApps.length, pending:0, reviewed:0, shortlisted:0, interview:0, rejected:0};
-    allApps.forEach(function(a){ if (counts[a.status]!==undefined) counts[a.status]++; else counts.pending++; });
-    var filtered = _appTab==='all' ? allApps : allApps.filter(function(a){ return a.status === _appTab; });
-    var STATUS_C = {pending:'#F5A623',reviewed:'#1A3A8F',shortlisted:'#22c55e',interview:'#7c3aed',rejected:'#ef4444'};
-    var STATUS_L = {pending:'New',reviewed:'Reviewed',shortlisted:'Shortlisted',interview:'Interview',rejected:'Rejected'};
-
-    return '<div class="page active">'
-      + H.innerTopbar('Applications — ' + H.escHtml(l.title))
-      + '<div style="padding:14px;background:var(--card);border-bottom:1px solid var(--border)">'
-      + '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px">'
-      + [['all','Total'],['pending','New'],['shortlisted','Listed'],['interview','Interview'],['rejected','Declined']].map(function(s){
-        var c = s[0]==='all' ? allApps.length : counts[s[0]]||0;
-        var col = s[0]==='all'?'#1A3A8F':(STATUS_C[s[0]]||'#999');
-        return '<div style="text-align:center;background:' + col + '10;border-radius:10px;padding:8px 4px">'
-          + '<div style="font-size:20px;font-weight:900;color:' + col + '">' + c + '</div>'
-          + '<div style="font-size:10px;font-weight:600;color:var(--text-sub)">' + s[1] + '</div></div>';
-      }).join('')
-      + '</div>'
-      + '<div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px">'
-      + ['all','pending','reviewed','shortlisted','interview','rejected'].map(function(s){
-        var lbl = s==='all'?'All ('+allApps.length+')':(STATUS_L[s]||s)+' ('+(s==='all'?allApps.length:counts[s]||0)+')';
-        return '<button onclick="H._appTabSwitch(\'' + jobId + '\',\'' + s + '\')" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid ' + (_appTab===s?'#1A3A8F':'var(--border)') + ';background:' + (_appTab===s?'#1A3A8F':'var(--bg)') + ';color:' + (_appTab===s?'#fff':'var(--text-mid)') + ';font-size:12px;font-weight:700;cursor:pointer">' + lbl + '</button>';
-      }).join('')
-      + '</div>'
-      + (allApps.length ? '<div style="margin-top:12px;display:flex;gap:8px"><button onclick="H._exportAppsCSV(\'' + jobId + '\')" style="flex:1;padding:9px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;color:var(--text-mid);cursor:pointer">⬇ Export CSV</button>'
-        + '<button onclick="H._broadcastToApplicants(\'' + jobId + '\')" style="flex:1;padding:9px;background:#1A3A8F18;border:1px solid #1A3A8F30;border-radius:10px;font-size:12px;font-weight:700;color:#1A3A8F;cursor:pointer">📢 Message All</button></div>' : '')
-      + '</div>'
-      + '<div style="padding:12px 14px 88px">'
-      + (filtered.length ? filtered.map(function(app) {
-          var sc = STATUS_C[app.status]||'#999';
-          var sl = STATUS_L[app.status]||app.status;
-          var ini = (app.applicantName||'A').split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
-          var availLabel = (AVAIL_OPTS.find(function(o){return o[0]===app.availability;})||['',''])[1]||app.availability||'';
-          return '<div id="appcard_' + app.id + '" style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;border:1.5px solid ' + (app.status==='pending'?'#F5A62340':'var(--border)') + '">'
-            + '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">'
-            + '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#3a6fd8);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0">' + ini + '</div>'
-            + '<div style="flex:1;min-width:0">'
-            + '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:4px">'
-            + '<div style="font-size:15px;font-weight:700;color:var(--text-primary)">' + H.escHtml(app.applicantName||'Applicant') + '</div>'
-            + '<span style="background:' + sc + '20;color:' + sc + ';font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px">' + sl + '</span>'
-            + '</div>'
-            + '<div style="font-size:12px;color:var(--text-sub);margin-top:3px">' + H.timeAgo(app.appliedAt) + '</div>'
-            + (app.applicantPhone ? '<div style="font-size:12px;color:var(--text-sub);margin-top:1px">📱 ' + H.escHtml(app.applicantPhone) + '</div>' : '')
-            + (app.applicantEmail ? '<div style="font-size:12px;color:var(--text-sub);margin-top:1px">✉️ ' + H.escHtml(app.applicantEmail) + '</div>' : '')
-            + (app.expectedSalary ? '<div style="font-size:12px;color:var(--text-sub);margin-top:1px">💰 Expects $' + H.escHtml(app.expectedSalary) + '/mo</div>' : '')
-            + (availLabel ? '<div style="font-size:12px;color:var(--text-sub);margin-top:1px">📅 Available: ' + H.escHtml(availLabel) + '</div>' : '')
-            + (app.cvLink ? '<a href="' + H.escHtml(app.cvLink) + '" target="_blank" style="font-size:12px;color:#1A3A8F;font-weight:600;margin-top:3px;display:block;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">📎 View CV / Portfolio</a>' : '')
-            + '</div></div>'
-            + (app.message ? '<div style="font-size:13px;color:var(--text-mid);line-height:1.65;padding:12px;background:var(--bg);border-radius:10px;margin-bottom:12px;border-left:3px solid #1A3A8F40">'
-              + '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Cover Letter</div>'
-              + H.escHtml(app.message) + '</div>' : '')
-            + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
-            + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'shortlisted\')" style="padding:8px 12px;background:#22c55e15;color:#15803d;border:1.5px solid #22c55e40;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">✓ Shortlist</button>'
-            + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'interview\')" style="padding:8px 12px;background:#7c3aed15;color:#7c3aed;border:1.5px solid #7c3aed40;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">📅 Interview</button>'
-            + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'rejected\')" style="padding:8px 12px;background:#ef444415;color:#dc2626;border:1.5px solid #ef444440;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">✗ Decline</button>'
-            + (app.applicantPhone ? '<button onclick="window.open(\'https://wa.me/' + app.applicantPhone.replace(/[^\d]/g,'') + '\',\'_blank\')" style="padding:8px 12px;background:#25D36615;color:#25D366;border:1.5px solid #25D36640;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">WhatsApp</button>' : '')
-            + '<button onclick="H._messageApplicant(\'' + app.applicantId + '\',\'' + app.jobId + '\')" style="padding:8px 12px;background:#1A3A8F15;color:#1A3A8F;border:1.5px solid #1A3A8F30;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">💬 Message</button>'
-            + '</div></div>';
-        }).join('')
-        : H.emptyState('No ' + (_appTab==='all'?'':''+_appTab+' ') + 'applications','',null,null))
-      + '</div></div>';
-  };
-
-  H._appTabSwitch = function(jobId, tab) {
-    _appTab = tab;
-    H.renderPage('JobApplications', {jobId: jobId});
-  };
-
-  H._messageApplicant = function(applicantId, jobId) {
-    if (!H.currentUser()) return;
-    H.startChatWith(applicantId, jobId);
-  };
-
-  H._exportAppsCSV = function(jobId) {
-    var apps = (H.state.applications||[]).filter(function(a){ return a.jobId === jobId; });
-    var rows = [['Name','Phone','Email','Status','Expected Salary','Availability','CV Link','Applied At','Cover Letter']];
-    apps.forEach(function(a){
-      rows.push([a.applicantName||'',a.applicantPhone||'',a.applicantEmail||'',a.status||'',a.expectedSalary||'',a.availability||'',a.cvLink||'',new Date(a.appliedAt).toLocaleString(),(a.message||'').replace(/\n/g,' ')]);
-    });
-    var csv = rows.map(function(r){ return r.map(function(c){ return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
-    var blob = new Blob([csv], {type:'text/csv'});
-    var url  = URL.createObjectURL(blob);
-    var a    = document.createElement('a');
-    a.href   = url; a.download = 'applications-' + jobId.slice(-6) + '.csv'; a.click();
-    URL.revokeObjectURL(url);
-    H.toast('CSV downloaded');
-  };
-
-  H._broadcastToApplicants = function(jobId) {
-    var l = (H.state.listings||[]).find(function(x){ return x.id===jobId; }); if (!l) return;
-    H.modal({
-      title: 'Message All Applicants',
-      body: '<div style="font-size:13px;color:var(--text-sub);margin-bottom:10px">All applicants for "' + H.escHtml(l.title) + '" will receive this notification.</div>'
-        + '<textarea id="broadcastMsg" rows="4" placeholder="e.g. Thank you for applying. We are reviewing applications and will be in touch by Friday." style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;background:var(--card);color:var(--text-primary);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif"></textarea>',
-      confirmText: 'Send to All',
-      onConfirm: function() {
-        var msg = _val('broadcastMsg');
-        if (!msg) { H.toast('Enter a message'); return false; }
-        var apps = (H.state.applications||[]).filter(function(a){ return a.jobId===jobId; });
-        apps.forEach(function(a){
-          if (a.applicantId) H.pushNotif(a.applicantId, 'Update on your application', msg);
-        });
-        H.toast('Message sent to ' + apps.length + ' applicant' + (apps.length!==1?'s':''));
-      }
-    });
-  };
-
-  H._setAppStatus = function(appId, status) {
-    var app = (H.state.applications||[]).find(function(a){ return a.id===appId; }); if (!app) return;
-    app.status = status;
-    app.statusHistory = app.statusHistory || [];
-    app.statusHistory.push({status: status, t: Date.now()});
-    H.saveState();
-    if (typeof H.updateApplicationStatusCloud === 'function') H.updateApplicationStatusCloud(appId, status);
-    var msgs = {shortlisted:'🎉 Congratulations! Your application for {title} has been shortlisted.', interview:'📅 You have been invited to interview for {title}. The employer will contact you with details.', rejected:'Thank you for applying for {title}. Unfortunately you have not been selected at this time. We wish you all the best.'};
-    if (app.applicantId && msgs[status]) {
-      H.pushNotif(app.applicantId, status==='rejected'?'Application Update':'Great news!', (msgs[status]||'').replace('{title}', app.jobTitle||'the position'));
-    }
-    var labels = {shortlisted:'Shortlisted ✓', interview:'Marked for Interview 📅', rejected:'Declined'};
-    H.toast(labels[status]||'Updated');
-    H.renderPage('JobApplications', {jobId: app.jobId});
-  };
-
-  // ── CANDIDATE: APPLIED JOBS (ENHANCED) ───────────────────
-  H.pages.AppliedJobs = function() {
-    var u = H.currentUser();
-    if (!u) return '<div class="page active">' + H.innerTopbar('My Applications') + H.emptyState('Sign in required','',null,null) + '</div>';
-    var apps = (H.state.applications||[]).filter(function(a){ return a.applicantId===u.id; }).sort(function(a,b){ return b.appliedAt-a.appliedAt; });
-    var STATUS_C = {pending:'#F5A623',reviewed:'#1A3A8F',shortlisted:'#22c55e',interview:'#7c3aed',rejected:'#ef4444'};
-    var STATUS_L = {pending:'Under Review',reviewed:'Reviewed',shortlisted:'✓ Shortlisted',interview:'Interview Invited',rejected:'Not Selected'};
-
-    var stats = { total:apps.length, shortlisted:apps.filter(function(a){return a.status==='shortlisted';}).length, interview:apps.filter(function(a){return a.status==='interview';}).length, pending:apps.filter(function(a){return a.status==='pending';}).length };
-
-    return '<div class="page active">'
-      + H.innerTopbar('My Applications')
-      + '<div style="padding:12px 14px;background:var(--card);border-bottom:1px solid var(--border)">'
-      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">'
-      + [['total','Total','#1A3A8F'],['pending','Pending','#F5A623'],['shortlisted','Shortlisted','#22c55e'],['interview','Interview','#7c3aed']].map(function(s){
-        return '<div style="text-align:center;background:' + s[2] + '10;border-radius:10px;padding:8px 4px">'
-          + '<div style="font-size:18px;font-weight:900;color:' + s[2] + '">' + stats[s[0]] + '</div>'
-          + '<div style="font-size:10px;font-weight:600;color:var(--text-sub)">' + s[1] + '</div></div>';
-      }).join('')
-      + '</div></div>'
-      + '<div style="padding:12px 14px 88px">'
-      + (apps.length ? apps.map(function(app) {
-          var sc = STATUS_C[app.status]||'#999';
-          var sl = STATUS_L[app.status]||app.status;
-          return '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;border:1.5px solid ' + (app.status==='shortlisted'||app.status==='interview'?sc+'40':'var(--border)') + '">'
-            + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px">'
-            + '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(app.jobTitle||'Job') + '</div>'
-            + '<div style="font-size:13px;color:var(--text-sub)">' + H.escHtml(app.company||'') + '</div></div>'
-            + '<span style="background:' + sc + '20;color:' + sc + ';font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0">' + sl + '</span>'
-            + '</div>'
-            + (app.message ? '<div style="font-size:12px;color:var(--text-sub);background:var(--bg);border-radius:8px;padding:8px 10px;margin-bottom:8px;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">' + H.escHtml(app.message) + '</div>' : '')
-            + '<div style="display:flex;align-items:center;justify-content:space-between">'
-            + '<span style="font-size:12px;color:var(--text-sub)">Applied ' + H.timeAgo(app.appliedAt) + '</span>'
-            + '<div style="display:flex;gap:6px">'
-            + '<button onclick="H.openInner(\'JobDetail\',{id:\'' + app.jobId + '\'})" style="padding:7px 12px;background:#1A3A8F15;color:#1A3A8F;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">View Job</button>'
-            + '<button onclick="H._withdrawApplication(\'' + app.id + '\',\'' + app.jobId + '\')" style="padding:7px 10px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Withdraw</button>'
-            + '</div></div>'
-            + (app.status==='interview' ? '<div style="margin-top:10px;background:#7c3aed15;border-radius:10px;padding:10px 12px;font-size:13px;color:#7c3aed;font-weight:600">📅 You\'ve been invited to interview! Check your phone and email for details from the employer.</div>' : '')
-            + (app.status==='shortlisted' ? '<div style="margin-top:10px;background:#22c55e15;border-radius:10px;padding:10px 12px;font-size:13px;color:#15803d;font-weight:600">🎉 Congratulations! You have been shortlisted. The employer will be in touch.</div>' : '')
-            + '</div>';
-        }).join('')
-        : H.emptyState('No applications yet','Browse jobs and apply directly in the app.','Browse Jobs',"H.openInner('FindJobs')"))
-      + '</div></div>';
-  };
-
-  // ── HIRE TALENT (ENHANCED) ────────────────────────────────
-  H.pages.HireTalent = function() {
-    var candidates = (H.state.users||[]).filter(function(u){ return u.openToWork; });
-    var sectors    = ['All'].concat(JOB_CATS);
-    var ZW = H._ZW_CITIES || [];
-    return '<div class="page active">'
-      + '<div class="det-topbar" style="background:#1A3A8F"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Hire Talent</div>'
-      + '<button onclick="H.openInner(\'PostJob\')" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:6px 12px;border-radius:8px">+ Post Job</button></div>'
+      + '<div class="det-topbar" style="background:#1A3A8F"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Hire Talent</div></div>'
       + '<div style="background:#1A3A8F;padding:0 12px 14px">'
       + '<div style="background:rgba(255,255,255,.13);border-radius:12px;display:flex;align-items:center;padding:0 12px;gap:8px">'
       + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
       + '<input id="talentQ" placeholder="Search by name, skill, title…" autocomplete="off" oninput="H._filterTalent()" style="flex:1;border:none;outline:none;padding:12px 0;font-size:14px;background:transparent;color:#fff;font-family:Inter,sans-serif"></div>'
-      + '<div style="color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-top:8px"><span id="talentCount">' + candidates.length + ' candidate' + (candidates.length!==1?'s':'') + ' open to work</span></div>'
+      + '<div style="color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-top:8px"><span id="talentCount">' + candidates.length + ' candidate' + (candidates.length !== 1 ? 's' : '') + '</span></div>'
       + '</div>'
       + '<div id="sectorTabs" style="background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;white-space:nowrap;padding:10px 14px;display:flex;gap:8px">'
-      + sectors.map(function(s,i){ return '<button onclick="H._talentSector(\'' + H.escHtml(s) + '\')" style="flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid ' + (i===0?'#1A3A8F':'var(--border)') + ';background:' + (i===0?'#1A3A8F':'var(--bg)') + ';color:' + (i===0?'#fff':'var(--text-mid)') + ';font-size:12px;font-weight:700;cursor:pointer">' + H.escHtml(s) + '</button>'; }).join('')
+      + sectors.map(function (s, i) {
+        return '<button onclick="H._talentSector(\'' + s + '\')" style="flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid ' + (i === 0 ? '#1A3A8F' : 'var(--border)') + ';background:' + (i === 0 ? '#1A3A8F' : 'var(--bg)') + ';color:' + (i === 0 ? '#fff' : 'var(--text)') + ';font-size:12px;font-weight:700;cursor:pointer">' + H.escHtml(s) + '</button>';
+      }).join('')
       + '</div>'
-      + '<div style="padding:10px 14px;display:flex;gap:10px;border-bottom:1px solid var(--border);overflow-x:auto">'
-      + '<div style="flex-shrink:0"><div style="font-size:10px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">City</div>'
-      + '<select onchange="H._setFilter(\'talent\',\'city\',this.value);H._filterTalent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text-primary);outline:none">'
-      + '<option value="all">All Cities</option>' + ZW.map(function(c){ return '<option value="' + c + '">' + c + '</option>'; }).join('') + '</select></div>'
-      + '<div style="flex-shrink:0"><div style="font-size:10px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Experience</div>'
-      + '<select onchange="H._setFilter(\'talent\',\'exp\',this.value);H._filterTalent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text-primary);outline:none">'
-      + '<option value="all">Any</option>' + EXP_LEVELS.slice(1).map(function(e){ return '<option value="' + e[0] + '">' + e[1] + '</option>'; }).join('') + '</select></div>'
+      + '<div style="padding:10px 14px;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid var(--border)">'
+      + '<div style="flex-shrink:0"><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">City</div>'
+      + '<select onchange="H._setFilter(\'talent\',\'city\',this.value);H._filterTalent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none">'
+      + '<option value="all">All Cities</option>' + ZW.map(function (c) { return '<option value="' + c + '">' + c + '</option>'; }).join('') + '</select></div>'
+      + '<div style="flex-shrink:0;margin-left:8px"><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Experience</div>'
+      + '<select onchange="H._setFilter(\'talent\',\'exp\',this.value);H._filterTalent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none">'
+      + '<option value="all">Any</option><option value="entry">Entry Level</option><option value="mid">3-5 Years</option><option value="senior">5+ Years</option><option value="expert">10+ Years</option></select></div>'
       + '</div>'
       + '<div id="talentList" style="padding:12px 14px 88px">'
       + (candidates.length ? candidates.map(_candidateCard).join('') : _emptyTalent())
       + '</div></div>';
   };
 
-  H.pages.HireTalent_after = function(){ H._currentTalentSector = 'All'; };
+  H.pages.HireTalent_after = function () {
+    H._currentTalentSector = 'All';
+    var _sb = window.supabase;
+    if (!_sb || typeof _sb.from !== 'function') return;
+    // Load profiles that are open to work OR have a CV set to visible
+    _sb.from('profiles')
+      .select('id,name,phone,email,avatar,verified,job_title,skills,sector,exp,city,open_to_work,cv')
+      .or('open_to_work.eq.true,cv->visible.eq.true')
+      .limit(200)
+      .then(function (res) {
+        if (res.error || !res.data || !res.data.length) return;
+        res.data.forEach(function (p) {
+          var ex = (H.state.users || []).find(function (u) { return u.id === p.id; });
+          var cvData = typeof p.cv === 'string' ? JSON.parse(p.cv || '{}') : (p.cv || null);
+          if (!ex) {
+            (H.state.users = H.state.users || []).push({
+              id: p.id, name: p.name || 'User', phone: p.phone || '',
+              email: p.email || '', avatar: p.avatar || null,
+              verified: p.verified || false, openToWork: p.open_to_work || false,
+              jobTitle: p.job_title || '', skills: p.skills || '',
+              sector: p.sector || '', exp: p.exp || '', city: p.city || '',
+              cv: cvData || null
+            });
+          } else {
+            ex.openToWork = p.open_to_work || ex.openToWork;
+            ex.jobTitle   = p.job_title   || ex.jobTitle   || '';
+            ex.skills     = p.skills      || ex.skills     || '';
+            ex.sector     = p.sector      || ex.sector     || '';
+            ex.exp        = p.exp         || ex.exp        || '';
+            ex.city       = p.city        || ex.city       || '';
+            if (cvData) ex.cv = cvData;
+          }
+        });
+        H.saveState();
+        H._filterTalent();
+      });
+  };
 
-  H._talentSector = function(sector) {
+  H._talentSector = function (sector) {
     H._currentTalentSector = sector;
-    document.querySelectorAll('#sectorTabs button').forEach(function(btn){
+    document.querySelectorAll('#sectorTabs button').forEach(function (btn) {
       var active = btn.textContent.trim() === sector;
-      btn.style.background   = active ? '#1A3A8F' : 'var(--bg)';
-      btn.style.color        = active ? '#fff' : 'var(--text-mid)';
-      btn.style.borderColor  = active ? '#1A3A8F' : 'var(--border)';
+      btn.style.background = active ? '#1A3A8F' : 'var(--bg)';
+      btn.style.color = active ? '#fff' : 'var(--text)';
+      btn.style.borderColor = active ? '#1A3A8F' : 'var(--border)';
     });
     H._filterTalent();
   };
 
-  H._filterTalent = function() {
-    var el  = document.getElementById('talentList');
+  H._filterTalent = function () {
+    var el = document.getElementById('talentList');
     var cnt = document.getElementById('talentCount');
     if (!el) return;
-    var q      = ((document.getElementById('talentQ')||{}).value||'').toLowerCase();
+    var q = ((document.getElementById('talentQ') || {}).value || '').toLowerCase();
     var sector = H._currentTalentSector || 'All';
-    var f      = H._filters['talent'] || {};
-    var list   = (H.state.users||[]).filter(function(u){ return u.openToWork; });
-    if (q) list = list.filter(function(u){ return ((u.name||'')+(u.jobTitle||'')+(u.skills||'')+(u.city||'')+(u.bio||'')).toLowerCase().includes(q); });
-    if (sector && sector !== 'All') list = list.filter(function(u){ return ((u.sector||u.jobTitle||'')).toLowerCase().includes(sector.split(' ')[0].toLowerCase()); });
-    if (f.city && f.city !== 'all') list = list.filter(function(u){ return (u.city||'').toLowerCase().includes(f.city.toLowerCase()); });
-    if (f.exp  && f.exp  !== 'all') list = list.filter(function(u){ return (u.experienceLevel||'') === f.exp; });
-    if (cnt) cnt.textContent = list.length + ' candidate' + (list.length!==1?'s':'') + ' open to work';
+    var f = H._filters['talent'] || {};
+    var list = (H.state.users || []).filter(function (u) {
+      return u.openToWork || (u.cv && u.cv.visible !== false && (u.cv.headline || u.cv.summary || (u.cv.experience && u.cv.experience.length)));
+    });
+    if (q) list = list.filter(function (u) {
+      var cv = u.cv || {};
+      var searchText = [u.name||'', u.jobTitle||'', cv.headline||'', cv.summary||'',
+        (cv.skills||[]).join(' '), (cv.experience||[]).map(function(e){return (e.title||'')+(e.company||'');}).join(' '),
+        u.city||'', cv.location||''].join(' ').toLowerCase();
+      return searchText.includes(q);
+    });
+    if (sector && sector !== 'All') list = list.filter(function (u) {
+      var cv = u.cv || {};
+      var text = [(u.sector||''), (u.jobTitle||''), (cv.headline||''), (cv.skills||[]).join(' ')].join(' ').toLowerCase();
+      return text.includes(sector.split(' ')[0].toLowerCase());
+    });
+    if (f.city && f.city !== 'all') list = list.filter(function (u) {
+      return ((u.cv && u.cv.location || u.city) || '').toLowerCase().includes(f.city.toLowerCase());
+    });
+    if (cnt) cnt.textContent = list.length + ' candidate' + (list.length !== 1 ? 's' : '');
     el.innerHTML = list.length ? list.map(_candidateCard).join('') : _emptyTalent();
   };
 
   function _candidateCard(u) {
-    var ini    = H.initials(u.name||'U');
-    var skills = (u.skills||'').split(',').slice(0,4).filter(Boolean);
-    var expLabel = (EXP_LEVELS.find(function(e){return e[0]===u.experienceLevel;})||['',''])[1];
-    return '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid var(--border)">'
+    var ini = H.initials(u.name || 'U');
+    var cv  = u.cv || {};
+    var verBadge = u.verified
+      ? '<span style="background:#059669;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;margin-left:6px;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>'
+      : '';
+    var headline = cv.headline || u.jobTitle || 'Open to Work';
+    var location = cv.location || u.city || '';
+    var expCount = (cv.experience || []).length;
+    var rawSkills = cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean);
+    var skills = rawSkills.slice(0, 4).map(function(s){ return s.trim(); }).filter(Boolean);
+    var latestExp = cv.experience && cv.experience[0];
+    var expectedSal = u.expectedSalary || (cv.expectedSalary ? '$' + cv.expectedSalary + '/mo' : '');
+
+    // Contact logic
+    var waFull  = u.whatsappFull || '';
+    var callNum = u.phoneForCalls || waFull;
+    var canWa   = !!waFull   && (u.contactMethod !== 'call');
+    var canCall = !!callNum  && (u.contactMethod !== 'whatsapp');
+    var waUrl   = 'https://wa.me/' + waFull + '?text=' + encodeURIComponent('Hi ' + (u.name || '') + ', I saw your profile on PaMarket and I have a job opportunity for you.');
+    var hasDirectContact = canWa || canCall;
+    var msgStyle = hasDirectContact
+      ? 'flex:1;padding:9px;background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit'
+      : 'flex:1;padding:9px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit';
+
+    return '<div style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.05)">'
       + '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">'
-      + '<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#3a6fd8);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0">' + ini + '</div>'
-      + '<div style="flex:1;min-width:0">'
-      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:2px">'
-      + '<div style="font-size:15px;font-weight:700;color:var(--text-primary)">' + H.escHtml(u.name||'Anonymous') + '</div>'
-      + (u.verified ? '<span style="background:#1A3A8F;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px">✓ Verified</span>' : '')
+      + '<div style="width:50px;height:50px;border-radius:50%;overflow:hidden;flex-shrink:0">'
+      + (u.avatar ? '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#3a6fd8);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff">' + ini + '</div>')
       + '</div>'
-      + '<div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-bottom:2px">' + H.escHtml(u.jobTitle||'Open to Work') + '</div>'
-      + '<div style="font-size:12px;color:var(--text-sub)">'
-      + (u.city ? '📍 ' + H.escHtml(u.city) : '')
-      + (expLabel ? ' · ' + H.escHtml(expLabel) : '')
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:2px"><div style="font-size:15px;font-weight:700;color:var(--text)">' + H.escHtml(u.name || 'Anonymous') + '</div>' + verBadge + '</div>'
+      + '<div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-bottom:2px">' + H.escHtml(headline) + '</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--sub)">'
+      + (location ? '<span style="display:inline-flex;align-items:center;gap:3px">' + H.ICONS.location + H.escHtml(location) + '</span>' : '')
+      + (expCount ? '<span style="display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>' + expCount + ' position' + (expCount!==1?'s':'') + '</span>' : '')
+      + (expectedSal ? '<span style="display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' + H.escHtml(expectedSal) + '</span>' : '')
       + '</div></div></div>'
-      + (u.bio ? '<div style="font-size:13px;color:var(--text-mid);line-height:1.55;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + H.escHtml(u.bio) + '</div>' : '')
-      + (skills.length ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">' + skills.map(function(s){ return '<span style="background:var(--bg);border:1px solid var(--border);font-size:11px;padding:3px 9px;border-radius:6px;color:var(--text-mid);font-weight:500">' + H.escHtml(s.trim()) + '</span>'; }).join('') + '</div>' : '')
-      + '<div style="display:flex;gap:8px">'
-      + '<button onclick="H.startChatWith(\'' + u.id + '\',null)" style="flex:1;padding:9px;background:#1A3A8F15;color:#1A3A8F;border:1.5px solid #1A3A8F30;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">💬 Message</button>'
-      + (u.phone ? '<button onclick="window.open(\'https://wa.me/' + u.phone.replace(/[^\d+]/g,'') + '\',\'_blank\')" style="flex:1;padding:9px;background:#25D36615;color:#25D366;border:1.5px solid #25D36640;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">WhatsApp</button>' : '')
-      + (u.email ? '<button onclick="window.location.href=\'mailto:' + H.escHtml(u.email) + '\'" style="flex:1;padding:9px;background:#F5A62315;color:#c07800;border:1.5px solid #F5A62330;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Email</button>' : '')
+      + (latestExp ? '<div style="background:var(--bg);border-radius:10px;padding:8px 10px;margin-bottom:8px;border-left:3px solid #1A3A8F">'
+          + '<div style="font-size:12px;font-weight:700;color:var(--text)">' + H.escHtml(latestExp.title) + '</div>'
+          + '<div style="font-size:11px;color:var(--sub);margin-top:1px">' + H.escHtml(latestExp.company) + (latestExp.duration ? ' · ' + H.escHtml(latestExp.duration) : '') + '</div>'
+          + '</div>' : '')
+      + (skills.length ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">' + skills.map(function (s) { return '<span style="background:#1A3A8F12;border:1px solid #1A3A8F22;font-size:11px;padding:2px 8px;border-radius:6px;color:#1A3A8F;font-weight:600">' + H.escHtml(s) + '</span>'; }).join('') + '</div>' : '')
+      + (cv.summary ? '<div style="font-size:12px;color:var(--sub);line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + H.escHtml(cv.summary) + '</div>' : '')
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      + '<button onclick="H.startChatWith(\'' + u.id + '\')" style="' + msgStyle + ';display:inline-flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'
+      + (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;padding:9px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
+      + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;padding:9px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
+      + '<button onclick="H.openInner(\'ViewCandidateCV\',{id:\'' + u.id + '\'})" style="flex:1;padding:9px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + (hasDirectContact ? 'CV' : 'View CV') + '</button>'
       + '</div></div>';
   }
 
+  function _cvSection(title, body) {
+    return '<div style="margin-bottom:20px">'
+      + '<div style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:8px">'
+      + '<span style="flex:1;height:1px;background:var(--border)"></span>' + H.escHtml(title) + '<span style="flex:1;height:1px;background:var(--border)"></span></div>'
+      + body + '</div>';
+  }
+
+  H.pages.ViewCandidateCV = function (params) {
+    var uid = params && params.id;
+    var u = uid ? (H.state.users || []).find(function (x) { return x.id === uid; }) : null;
+    if (!u) return '<div class="page active">' + H.innerTopbar('Candidate CV') + H.emptyState('Not found', 'Candidate profile unavailable', null, null) + '</div>';
+    var me = H.currentUser();
+    var isMine = !!(me && me.id === uid);
+    var cv  = u.cv || {};
+    var ini = H.initials(u.name || 'U');
+    var verBadge = u.verified ? '<span style="background:#059669;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>' : '';
+    var expLvl = { entry: 'Entry Level (0–2 yrs)', mid: '3–5 Years', senior: '5–10 Years', expert: '10+ Years' }[u.exp || ''] || '';
+    var skills = cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean).map(function (s) { return s.trim(); }).filter(Boolean);
+    var exp   = cv.experience     || [];
+    var edu   = cv.education      || [];
+    var certs = cv.certifications || [];
+    var headline    = cv.headline || u.jobTitle || 'Open to Work';
+    var location    = cv.location || u.city || '';
+    var summary     = cv.summary  || '';
+    var expectedSal = cv.expectedSalary ? '$' + cv.expectedSalary + '/mo' : (u.expectedSalary || '');
+    var waFull  = u.whatsappFull || '';
+    var callNum = u.phoneForCalls || waFull;
+    var canWa   = !!waFull   && (u.contactMethod !== 'call');
+    var canCall = !!callNum  && (u.contactMethod !== 'whatsapp');
+    var waUrl   = 'https://wa.me/' + waFull + '?text=' + encodeURIComponent('Hi ' + (u.name || '') + ', I saw your profile on PaMarket and I have a job opportunity for you.');
+    var jobTypes = (u.jobTypes || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+
+    return '<div class="page active">'
+      + H.innerTopbar('Candidate CV')
+      + '<div style="padding-bottom:100px">'
+      // ── header ──
+      + '<div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952c8 100%);padding:22px 18px 20px">'
+      + '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px">'
+      + '<div style="width:64px;height:64px;border-radius:50%;overflow:hidden;flex-shrink:0;border:3px solid rgba(255,255,255,.3)">'
+      + (u.avatar ? '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">' + ini + '</div>')
+      + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px"><div style="font-size:19px;font-weight:800;color:#fff">' + H.escHtml(u.name || 'Anonymous') + '</div>' + verBadge + '</div>'
+      + '<div style="font-size:13px;color:rgba(255,255,255,.9);font-weight:600;margin-bottom:5px">' + H.escHtml(headline) + '</div>'
+      + '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:rgba(255,255,255,.72)">'
+      + (location ? '<span style="display:inline-flex;align-items:center;gap:3px">' + H.ICONS.location + H.escHtml(location) + '</span>' : '')
+      + (expLvl   ? '<span style="display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>' + H.escHtml(expLvl) + '</span>' : '')
+      + (expectedSal ? '<span style="display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' + H.escHtml(expectedSal) + '</span>' : '')
+      + '</div>'
+      + (jobTypes.length ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">' + jobTypes.map(function(t){ return '<span style="background:rgba(255,255,255,.2);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px">' + H.escHtml(t) + '</span>'; }).join('') + '</div>' : '')
+      + ((u.linkedinUrl || u.githubUrl || u.websiteUrl) ? '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:11px">'
+          + (u.linkedinUrl ? '<a href="' + H.escHtml(u.linkedinUrl) + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> LinkedIn</a>' : '')
+          + (u.githubUrl   ? '<a href="' + H.escHtml(u.githubUrl)   + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg> GitHub</a>' : '')
+          + (u.websiteUrl  ? '<a href="' + H.escHtml(u.websiteUrl)  + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg> Portfolio</a>' : '')
+          + '</div>' : '')
+      + '</div></div></div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="display:flex;align-items:center;gap:5px;background:#25D366;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Chat on WhatsApp</a>' : '')
+      + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="display:flex;align-items:center;gap:5px;background:#1A3A8F;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call Candidate</a>' : '')
+      + '<div onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#fff;cursor:pointer"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</div>'
+      + '</div></div>'
+      // ── body ──
+      + '<div style="padding:16px 16px 0">'
+      + (summary ? _cvSection('Professional Summary', '<p style="font-size:13px;color:var(--text);line-height:1.75;margin:0">' + H.escHtml(summary) + '</p>')
+          : (u.bio ? _cvSection('Professional Summary', '<p style="font-size:13px;color:var(--text);line-height:1.75;margin:0">' + H.escHtml(u.bio) + '</p>') : ''))
+      + (exp.length ? _cvSection('Work Experience', exp.map(function (e) {
+          return '<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">'
+            + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:3px">'
+            + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(e.title || '') + '</div>'
+            + (e.duration ? '<div style="font-size:11px;color:var(--sub);white-space:nowrap;flex-shrink:0">' + H.escHtml(e.duration) + '</div>' : '')
+            + '</div>'
+            + '<div style="font-size:12px;color:#1A3A8F;font-weight:600;margin-bottom:4px">' + H.escHtml(e.company || '') + '</div>'
+            + (e.description ? '<div style="font-size:12px;color:var(--sub);line-height:1.65">' + H.escHtml(e.description) + '</div>' : '')
+            + '</div>';
+        }).join('')) : '')
+      + (edu.length ? _cvSection('Education', edu.map(function (e) {
+          return '<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">'
+            + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(e.degree || e.qualification || '') + '</div>'
+            + '<div style="font-size:12px;color:#1A3A8F;font-weight:600">' + H.escHtml(e.school || e.institution || '') + '</div>'
+            + (e.year ? '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + H.escHtml(e.year) + '</div>' : '')
+            + '</div>';
+        }).join('')) : '')
+      + (skills.length ? _cvSection('Skills', '<div style="display:flex;flex-wrap:wrap;gap:6px">' + skills.map(function (s) {
+          return '<span style="background:#1A3A8F14;border:1px solid #1A3A8F30;color:#1A3A8F;font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px">' + H.escHtml(s) + '</span>';
+        }).join('') + '</div>') : '')
+      + (certs.length ? _cvSection('Certifications', certs.map(function (c) {
+          var name = typeof c === 'string' ? c : (c.name || '');
+          return '<div style="margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:var(--text)">' + H.escHtml(name) + '</div>'
+            + (c.issuer ? '<div style="font-size:12px;color:var(--sub)">' + H.escHtml(c.issuer) + (c.year ? ' · ' + H.escHtml(c.year) : '') + '</div>' : '') + '</div>';
+        }).join('')) : '')
+      + '</div></div>'
+      // ── fixed bottom ──
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200;display:flex;gap:8px">'
+      + (isMine
+        ? '<button onclick="H.openInner(\'CandidateProfile\')" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>'
+          + '<button onclick="H._deleteJobProfile()" style="flex:1;padding:13px;background:var(--bg);color:#ef4444;border:1.5px solid #fecaca;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Delete Profile</button>'
+        : (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
+          + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
+          + '<button onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;' + (canWa || canCall ? 'background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;' : 'background:#1A3A8F;color:#fff;border:none;') + 'border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'
+          + '<button onclick="H._cvDownload(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952c8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CV</button>'
+      )
+      + '</div></div>';
+  };
+
+  H._cvDownload = function (userId) {
+    var u = (H.state.users || []).find(function (x) { return x.id === userId; });
+    if (!u) return;
+    var cv = u.cv || {};
+    // Open the uploaded file directly if available
+    var fileUrl = cv.cvFileUrl || u.cvFileUrl || '';
+    if (fileUrl) { window.open(fileUrl, '_blank'); return; }
+    var skills = cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean).map(function (s) { return s.trim(); }).filter(Boolean);
+    var exp   = cv.experience     || [];
+    var edu   = cv.education      || [];
+    var certs = cv.certifications || [];
+    var line  = '─────────────────────────────────────────────────────';
+    var thick = '═════════════════════════════════════════════════════';
+    var lines = [];
+    lines.push(thick);
+    lines.push('  CURRICULUM VITAE');
+    lines.push(thick);
+    lines.push('');
+    lines.push('NAME:      ' + (u.name || ''));
+    if (cv.headline || u.jobTitle) lines.push('TITLE:     ' + (cv.headline || u.jobTitle));
+    if (cv.location || u.city)    lines.push('LOCATION:  ' + (cv.location || u.city));
+    if (u.email)           lines.push('EMAIL:     ' + u.email);
+    if (cv.expectedSalary) lines.push('EXPECTED:  $' + cv.expectedSalary + '/month');
+    lines.push('');
+    if (cv.summary) {
+      lines.push(line); lines.push('PROFESSIONAL SUMMARY'); lines.push(line);
+      lines.push(cv.summary); lines.push('');
+    }
+    if (exp.length) {
+      lines.push(line); lines.push('WORK EXPERIENCE'); lines.push(line);
+      exp.forEach(function (e, i) {
+        if (i) lines.push('');
+        lines.push((e.title || '') + (e.duration ? '  [' + e.duration + ']' : ''));
+        if (e.company) lines.push(e.company);
+        if (e.description) lines.push(e.description);
+      });
+      lines.push('');
+    }
+    if (edu.length) {
+      lines.push(line); lines.push('EDUCATION'); lines.push(line);
+      edu.forEach(function (e) {
+        lines.push((e.degree || e.qualification || '') + (e.year ? '  [' + e.year + ']' : ''));
+        if (e.school || e.institution) lines.push(e.school || e.institution);
+      });
+      lines.push('');
+    }
+    if (skills.length) {
+      lines.push(line); lines.push('SKILLS'); lines.push(line);
+      lines.push(skills.join(', ')); lines.push('');
+    }
+    if (certs.length) {
+      lines.push(line); lines.push('CERTIFICATIONS'); lines.push(line);
+      certs.forEach(function (c) {
+        var name = typeof c === 'string' ? c : (c.name || '');
+        lines.push(name + (c.issuer ? ' — ' + c.issuer : '') + (c.year ? ' (' + c.year + ')' : ''));
+      });
+      lines.push('');
+    }
+    lines.push(thick);
+    lines.push('Generated by PaMarket — Zimbabwe\'s Free Marketplace');
+    var blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href   = url;
+    a.download = ((u.name || 'cv').replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_') || 'cv') + '_CV.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    H.toast('CV downloaded');
+  };
+
+  H._deleteJobProfile = function () {
+    var u = H.currentUser(); if (!u) return;
+    H.modal({
+      title: 'Delete Job Profile',
+      body: '<div style="font-size:13px;color:var(--sub);line-height:1.6">This will remove you from Hire Talent and hide your CV from employers. Your PaMarket account is kept.</div>',
+      confirmText: 'Delete Profile',
+      danger: true,
+      onConfirm: function () {
+        u.openToWork = false;
+        u.cv = null;
+        u.jobTitle = '';
+        u.cvFileName = '';
+        u.cvFileUrl = '';
+        H.saveState();
+        var _sb = window.supabase;
+        if (_sb && typeof _sb.from === 'function') {
+          _sb.from('profiles').update({ open_to_work: false, cv: null, job_title: null, cv_file_name: null, cv_file_url: null })
+            .eq('id', u.id).then(function(r){ if(r&&r.error) console.warn('profile delete cv:', r.error.message); });
+        }
+        H.toast('Job profile removed');
+        H.goBack();
+      }
+    });
+  };
+
   function _emptyTalent() {
     return '<div style="text-align:center;padding:40px 20px">'
-      + '<div style="font-size:48px;margin-bottom:12px">👥</div>'
-      + '<div style="font-size:17px;font-weight:700;color:var(--text-primary);margin-bottom:6px">No candidates yet</div>'
-      + '<div style="font-size:13px;color:var(--text-sub);margin-bottom:20px">Job seekers who enable "Open to Work" will appear here.</div>'
-      + '<button onclick="H.toast(\'Share Hostly with job seekers!\')" style="padding:12px 24px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Invite Job Seekers</button>'
+      + '<div style="margin-bottom:12px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>'
+      + '<div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">No candidates yet</div>'
+      + '<div style="font-size:13px;color:var(--sub);margin-bottom:20px">Job seekers who mark themselves open to work will appear here.</div>'
+      + '<button onclick="H.toast(\'Share PaMarket with job seekers!\')" style="padding:12px 24px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Invite Job Seekers</button>'
       + '</div>';
   }
 
+  // ── Screening question builder (shared by PostJob + EditJob) ────
+  var _jqInStyle = 'width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit;margin-top:4px';
+
+  function _jqSectionHtml() {
+    return '<div style="margin-top:6px;margin-bottom:20px">'
+      + '<div style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      + '<span style="flex:1;height:1px;background:var(--border)"></span>Screening Questions<span style="flex:1;height:1px;background:var(--border)"></span></div>'
+      + '<div style="font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.5">Candidates must answer these when applying. Answers appear in your applications inbox.</div>'
+      + '<div id="jqList" style="margin-bottom:10px"></div>'
+      + '<button onclick="H._jqAddModal()" type="button" style="width:100%;padding:12px;border:2px dashed var(--border);border-radius:12px;background:transparent;color:#1A3A8F;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">'
+      + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Screening Question</button>'
+      + '</div>';
+  }
+
+  H._jqRender = function () {
+    var el = document.getElementById('jqList'); if (!el) return;
+    var arr = H._jobQuestionsArr || [];
+    if (!arr.length) { el.innerHTML = ''; return; }
+    var typeLabels = { text: 'Short text', yesno: 'Yes / No', select: 'Multiple choice' };
+    el.innerHTML = arr.map(function (q, i) {
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px">'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;line-height:1.4">' + H.escHtml(q.question) + '</div>'
+        + '<div style="font-size:11px;color:var(--sub);display:flex;flex-wrap:wrap;gap:5px;align-items:center">'
+        + '<span style="background:var(--bg);padding:1px 7px;border-radius:5px">' + (typeLabels[q.type] || q.type) + '</span>'
+        + (q.required ? '<span style="color:#ef4444;font-weight:700">Required</span>' : '<span>Optional</span>')
+        + (q.type === 'select' && q.options && q.options.length ? '<span style="color:var(--sub2)">· ' + H.escHtml(q.options.join(', ')) + '</span>' : '')
+        + '</div></div>'
+        + '<button onclick="H._jqRemove(' + i + ')" type="button" style="background:none;border:none;color:var(--sub);cursor:pointer;padding:2px;flex-shrink:0">'
+        + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>'
+        + '</button></div>';
+    }).join('');
+  };
+
+  H._jqRemove = function (idx) {
+    if (!H._jobQuestionsArr) return;
+    H._jobQuestionsArr.splice(idx, 1);
+    H._jqRender();
+  };
+
+  H._jqAddModal = function () {
+    H.modal({
+      title: 'Add Screening Question',
+      body: '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text)">Question *</label>'
+        + '<input id="jqQText" placeholder="e.g. Do you have a valid driver\'s licence?" style="' + _jqInStyle + '"></div>'
+        + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text);display:block;margin-bottom:6px">Answer Type</label>'
+        + '<div style="display:flex;flex-direction:column;gap:8px">'
+        + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="radio" name="jqType" value="text" checked style="accent-color:#1A3A8F" onchange="document.getElementById(\'jqOptsWrap\').style.display=\'none\'"> Short text answer</label>'
+        + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="radio" name="jqType" value="yesno" style="accent-color:#1A3A8F" onchange="document.getElementById(\'jqOptsWrap\').style.display=\'none\'"> Yes or No</label>'
+        + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="radio" name="jqType" value="select" style="accent-color:#1A3A8F" onchange="document.getElementById(\'jqOptsWrap\').style.display=\'\'"> Multiple choice</label>'
+        + '</div></div>'
+        + '<div id="jqOptsWrap" style="display:none;margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text)">Choices (comma-separated) *</label>'
+        + '<input id="jqOpts" placeholder="e.g. 0-1 years, 2-5 years, 5+ years" style="' + _jqInStyle + '"></div>'
+        + '<div style="display:flex;align-items:center;gap:8px">'
+        + '<input type="checkbox" id="jqReq" style="width:16px;height:16px;accent-color:#1A3A8F;cursor:pointer">'
+        + '<label for="jqReq" style="font-size:13px;font-weight:600;color:var(--text);cursor:pointer">Required</label></div>',
+      confirmText: 'Add Question',
+      onConfirm: function () {
+        var q = ((document.getElementById('jqQText') || {}).value || '').trim();
+        if (!q) { H.toast('Please enter a question'); return false; }
+        var type = 'text';
+        document.querySelectorAll('input[name="jqType"]').forEach(function (r) { if (r.checked) type = r.value; });
+        var opts = [];
+        if (type === 'select') {
+          opts = ((document.getElementById('jqOpts') || {}).value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+          if (!opts.length) { H.toast('Please add at least one choice'); return false; }
+        }
+        var required = !!((document.getElementById('jqReq') || {}).checked);
+        H._jobQuestionsArr = H._jobQuestionsArr || [];
+        H._jobQuestionsArr.push({ id: H.uid(), question: q, type: type, options: opts, required: required });
+        H._jqRender();
+      }
+    });
+  };
+
+  H.pages.PostJob = function () {
+    var u = H.currentUser();
+    if (!u) return '<div class="page active">' + H.innerTopbar('Post a Job') + H.emptyState('Sign in required', 'You must sign in to post a job', 'Sign In', "H.requireAuth('Post a job')") + '</div>';
+
+    if (!u.verified) {
+      var pendingBanner = u.verification_pending
+        ? '<div style="background:#F5A62318;border:1px solid #F5A62340;border-radius:12px;padding:14px 16px;margin-bottom:20px"><div style="font-size:14px;font-weight:700;color:#c07800">Verification Pending</div><div style="font-size:13px;color:var(--sub);margin-top:4px">Your request is under review. We\'ll notify you once approved.</div></div>'
+        : '<button onclick="H.openInner(\'Verify\')" style="padding:14px 32px;background:linear-gradient(135deg,#1A3A8F,#0f2460);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:inline-block">Verify My Company →</button>';
+      return '<div class="page active">'
+        + '<div class="det-topbar"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Post a Job</div></div>'
+        + '<div style="padding:48px 24px;text-align:center">'
+        + '<div style="margin-bottom:16px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>'
+        + '<div style="font-size:19px;font-weight:800;color:var(--text);margin-bottom:8px">Company Verification Required</div>'
+        + '<div style="font-size:14px;color:var(--sub);line-height:1.7;margin-bottom:24px">To post a job, your company must be verified by PaMarket. This protects job seekers from fraudulent listings.</div>'
+        + pendingBanner
+        + '</div></div>';
+    }
+
+    var ZW = H._ZW_CITIES || [];
+    // Build city → province map for correct prov storage
+    var CITY_PROV = {};
+    Object.keys(H.CITIES_BY_PROV || {}).forEach(function (prov) {
+      (H.CITIES_BY_PROV[prov] || []).forEach(function (city) { CITY_PROV[city] = prov; });
+    });
+    // Also map main cities to their province (Harare→Harare, Bulawayo→Bulawayo, etc.)
+    (H.PROVINCES || []).forEach(function (p) { if (!CITY_PROV[p]) CITY_PROV[p] = p; });
+
+    return '<div class="page active">'
+      + '<div class="det-topbar"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Post a Job</div></div>'
+      + '<div style="margin:12px 14px;background:#1A3A8F18;border-radius:12px;padding:12px 14px;display:flex;gap:10px">'
+      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+      + '<div style="font-size:12px;color:#1A3A8F;font-weight:600;line-height:1.6">Jobs go live immediately. Company name is always visible. Posting is free.</div>'
+      + '</div>'
+      + '<div style="padding:0 14px 100px">'
+      + _field('jCompany', 'Company Name *', 'text', 'Your company or organisation name', H.escHtml(u.company || u.name || ''))
+      + '<div style="margin-bottom:14px;background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">'
+      + '<div><div style="font-size:14px;font-weight:600;color:var(--text)">Post Anonymously</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Company name visible. Your identity hidden.</div></div>'
+      + '<div id="anonTog" onclick="this.dataset.on=this.dataset.on===\'1\'?\'0\':\'1\';this.style.background=this.dataset.on===\'1\'?\'#1A3A8F\':\'var(--border)\';this.querySelector(\'div\').style.left=this.dataset.on===\'1\'?\'23px\':\'3px\';document.getElementById(\'jAnon\').value=this.dataset.on" data-on="0" style="width:46px;height:26px;border-radius:13px;background:var(--border);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0"><div style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div></div>'
+      + '<input type="hidden" id="jAnon" value="0">'
+      + '</div>'
+      + _field('jTitle', 'Job Title *', 'text', 'e.g. Accountant, Driver, Sales Representative', '')
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Job Category *</label>'
+      + '<select id="jCat" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none"><option value="">Select category…</option>'
+      + JOB_CATS.map(function (c) { return '<option>' + H.escHtml(c) + '</option>'; }).join('') + '<option>Other</option></select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Province *</label>'
+      + '<select id="jProv" onchange="H._jobProvChange(this.value)" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none"><option value="">Select province…</option>'
+      + (H.PROVINCES || []).map(function (p) { return '<option>' + H.escHtml(p) + '</option>'; }).join('')
+      + '</select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">City / Town *</label>'
+      + '<select id="jLocation" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none"><option value="">Select province first…</option>'
+      + '<option>Remote</option><option>Multiple Locations</option></select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Job Type</label>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:10px">' + ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'].map(function (t, i) { return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="jType" value="' + t + '"' + (i === 0 ? ' checked' : '') + ' style="accent-color:#1A3A8F"><span style="font-size:13px;font-weight:600;color:var(--text)">' + t + '</span></label>'; }).join('') + '</div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Salary Range (USD)</label>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input id="jSalMin" type="number" placeholder="Min" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"><input id="jSalMax" type="number" placeholder="Max" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"></div></div>'
+      + _textarea('jDesc', 'Job Description *', 'Describe the role, responsibilities, company culture…', 6)
+      + _textarea('jReqs', 'Requirements & Qualifications', 'List qualifications, experience, skills required…', 4)
+      + _textarea('jResp', 'Key Responsibilities', 'List the main duties and responsibilities…', 4)
+      + _field('jEmail', 'Application Email', 'email', 'Email to receive applications', H.escHtml(u.email || ''))
+      + _field('jPhone', 'WhatsApp Number', 'tel', 'e.g. +263771234567', H.escHtml(u.phone || ''))
+      + _jqSectionHtml()
+      + '</div>'
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
+      + '<button onclick="H._submitJob()" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#0f2460);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">Post Job Now →</button>'
+      + '</div></div>';
+  };
+
+  H.pages.PostJob_after = function () {
+    H._jobQuestionsArr = [];
+    H._jqRender();
+  };
+
+  function _field(id, label, type, placeholder, value) {
+    return '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">' + label + '</label>'
+      + '<input id="' + id + '" type="' + type + '" placeholder="' + H.escHtml(placeholder) + '" value="' + (value || '') + '" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"></div>';
+  }
+
+  function _textarea(id, label, placeholder, rows) {
+    return '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">' + label + '</label>'
+      + '<textarea id="' + id + '" placeholder="' + H.escHtml(placeholder) + '" rows="' + rows + '" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif"></textarea></div>';
+  }
+
+  H._submitJob = function () {
+    var company = (document.getElementById('jCompany') || {}).value || '';
+    var title = (document.getElementById('jTitle') || {}).value || '';
+    var cat = (document.getElementById('jCat') || {}).value || '';
+    var prov = (document.getElementById('jProv') || {}).value || '';
+    var location = (document.getElementById('jLocation') || {}).value || '';
+    var desc = (document.getElementById('jDesc') || {}).value || '';
+    if (!company.trim()) { H.toast('Company name is required'); return; }
+    if (!title.trim()) { H.toast('Job title is required'); return; }
+    if (!cat) { H.toast('Please select a job category'); return; }
+    if (!prov && location !== 'Remote' && location !== 'Multiple Locations') { H.toast('Please select a province'); return; }
+    if (!location) { H.toast('Please select a city / town'); return; }
+    if (desc.trim().length < 30) { H.toast('Please write a job description (min 30 chars)'); return; }
+    var u = H.currentUser();
+    if (!u) { H.toast('Please sign in first'); return; }
+    if (!u.verified) { H.toast('Company must be verified to post jobs. Go to Profile → Verify Identity.', 4000); return; }
+    var jobType = 'Full-time';
+    document.querySelectorAll('input[name="jType"]').forEach(function (r) { if (r.checked) jobType = r.value; });
+    var salMin = (document.getElementById('jSalMin') || {}).value || '';
+    var salMax = (document.getElementById('jSalMax') || {}).value || '';
+    var salary = salMin && salMax ? '$' + salMin + ' - $' + salMax : salMin ? 'From $' + salMin : 'Negotiable';
+    var reqs = (document.getElementById('jReqs') || {}).value || '';
+    var resp = (document.getElementById('jResp') || {}).value || '';
+    var email = (document.getElementById('jEmail') || {}).value || '';
+    var phone = (document.getElementById('jPhone') || {}).value || '';
+    var anon = (document.getElementById('jAnon') || {}).value === '1';
+    var fullDesc = 'COMPANY: ' + company + '\nJOB TYPE: ' + jobType + '\nINDUSTRY: ' + cat + '\nSALARY: ' + salary
+      + '\n\nDESCRIPTION:\n' + desc
+      + (resp ? '\n\nRESPONSIBILITIES:\n' + resp : '')
+      + (reqs ? '\n\nREQUIREMENTS:\n' + reqs : '')
+      + ((email || phone) ? '\n\nHOW TO APPLY:\n' + (email ? 'Email: ' + email + '\n' : '') + (phone ? 'WhatsApp: ' + phone : '') : '');
+    var listing = {
+      id: H.uid(), cat: 'jobs', title: title.trim(), desc: fullDesc,
+      price: salMin ? +salMin : 0, currency: 'USD', city: location, prov: prov || location,
+      sellerId: u.id, sellerName: anon ? company : (u.name || company),
+      sellerPhone: u.phone || '', company: company,
+      createdAt: Date.now(), status: 'active', photos: [],
+      custom_questions: H._jobQuestionsArr && H._jobQuestionsArr.length ? H._jobQuestionsArr.slice() : []
+    };
+    H.state.listings = H.state.listings || [];
+    H.state.listings.push(listing);
+    H.saveState();
+    if (typeof H.saveListingToCloud === 'function') H.saveListingToCloud(listing);
+    H.toast('Job posted! Candidates can now apply.');
+    H.goBack();
+  };
+
+  H._jobProvChange = function (prov) {
+    var sel = document.getElementById('jLocation');
+    var existingCity = sel && sel.dataset.prefill ? sel.dataset.prefill : '';
+    if (!sel) return;
+    var cities = (H.CITIES_BY_PROV[prov] || []);
+    sel.innerHTML = '<option value="">Select city / town…</option>'
+      + cities.map(function (c) { return '<option' + (c === existingCity ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
+      + '<option' + (existingCity === 'Remote' ? ' selected' : '') + '>Remote</option>'
+      + '<option' + (existingCity === 'Multiple Locations' ? ' selected' : '') + '>Multiple Locations</option>';
+    sel.dataset.prefill = '';
+  };
+
+  function _textareaVal(id, label, placeholder, rows, val) {
+    return '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">' + label + '</label>'
+      + '<textarea id="' + id + '" placeholder="' + H.escHtml(placeholder) + '" rows="' + rows + '" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif">' + H.escHtml(val || '') + '</textarea></div>';
+  }
+
+  H.pages.EditJob = function (params) {
+    var id = params && params.listingId;
+    var l = id ? (H.state.listings || []).find(function (x) { return x.id === id; }) : null;
+    if (!l) return '<div class="page active">' + H.innerTopbar('Edit Job') + H.emptyState('Not found', '', null, null) + '</div>';
+
+    var lines = (l.desc || '').split('\n');
+    var company  = l.company || parseLine(lines, 'COMPANY') || l.sellerName || '';
+    var jobType  = parseLine(lines, 'JOB TYPE') || 'Full-time';
+    var category = parseLine(lines, 'INDUSTRY') || l.subcat || '';
+    var salaryStr = parseLine(lines, 'SALARY') || '';
+    var prov = l.prov || '';
+    var city = l.city || '';
+    var selStyle = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none';
+
+    var salMin = '', salMax = '';
+    var salMatch = salaryStr.match(/\$(\d+)\s*-\s*\$(\d+)/);
+    if (salMatch) { salMin = salMatch[1]; salMax = salMatch[2]; }
+    else { var fromMatch = salaryStr.match(/From\s*\$(\d+)/i); if (fromMatch) salMin = fromMatch[1]; }
+
+    var d = l.desc || '';
+    function _nextAfter(pos) {
+      return [d.indexOf('\nRESPONSIBILITIES:\n'), d.indexOf('\nREQUIREMENTS:\n'), d.indexOf('\nHOW TO APPLY:'), d.length]
+        .filter(function(x){ return x > pos; }).sort(function(a,b){ return a-b; })[0];
+    }
+    var descS = d.indexOf('\nDESCRIPTION:\n');
+    var respS = d.indexOf('\nRESPONSIBILITIES:\n');
+    var reqS  = d.indexOf('\nREQUIREMENTS:\n');
+    var applyS = d.indexOf('\nHOW TO APPLY:');
+    var description      = descS  > -1 ? d.slice(descS + 14, _nextAfter(descS)).trim()  : '';
+    var responsibilities = respS  > -1 ? d.slice(respS + 19, [reqS, applyS, d.length].filter(function(x){ return x > respS; }).sort(function(a,b){return a-b;})[0]).trim() : '';
+    var requirements     = reqS   > -1 ? d.slice(reqS  + 15, [applyS, d.length].filter(function(x){ return x > reqS; }).sort(function(a,b){return a-b;})[0]).trim()  : '';
+    var applySection     = applyS > -1 ? d.slice(applyS + 14).trim() : '';
+    var em = applySection.match(/Email:\s*(.+)/);
+    var ph = applySection.match(/WhatsApp:\s*(.+)/);
+    var applyEmail = em ? em[1].trim() : '';
+    var applyPhone = ph ? ph[1].trim() : '';
+
+    var citiesForProv = prov && H.CITIES_BY_PROV ? (H.CITIES_BY_PROV[prov] || []) : [];
+    var cityOptions = '<option value="">Select city / town…</option>'
+      + (prov ? citiesForProv.map(function(c){ return '<option' + (c === city ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('') : '')
+      + '<option' + (city === 'Remote' ? ' selected' : '') + '>Remote</option>'
+      + '<option' + (city === 'Multiple Locations' ? ' selected' : '') + '>Multiple Locations</option>';
+
+    return '<div class="page active">'
+      + '<div class="det-topbar"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Edit Job</div></div>'
+      + '<div style="padding:0 14px 100px">'
+      + _field('jCompany', 'Company Name *', 'text', 'Your company or organisation name', H.escHtml(company))
+      + _field('jTitle', 'Job Title *', 'text', 'e.g. Accountant, Driver, Sales Representative', H.escHtml(l.title || ''))
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Job Category *</label>'
+      + '<select id="jCat" style="' + selStyle + '"><option value="">Select category…</option>'
+      + JOB_CATS.map(function(c){ return '<option' + (c === category ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
+      + '<option' + (category === 'Other' ? ' selected' : '') + '>Other</option></select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Province *</label>'
+      + '<select id="jProv" onchange="H._jobProvChange(this.value)" style="' + selStyle + '"><option value="">Select province…</option>'
+      + (H.PROVINCES || []).map(function(p){ return '<option' + (p === prov ? ' selected' : '') + '>' + H.escHtml(p) + '</option>'; }).join('')
+      + '</select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">City / Town *</label>'
+      + '<select id="jLocation" data-prefill="' + H.escHtml(city) + '" style="' + selStyle + '">' + cityOptions + '</select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Job Type</label>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:10px">'
+      + ['Full-time','Part-time','Contract','Freelance','Internship'].map(function(t){ return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="jType" value="' + t + '"' + (t === jobType ? ' checked' : '') + ' style="accent-color:#1A3A8F"><span style="font-size:13px;font-weight:600;color:var(--text)">' + t + '</span></label>'; }).join('')
+      + '</div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Salary Range (USD)</label>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input id="jSalMin" type="number" placeholder="Min" value="' + H.escHtml(salMin) + '" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"><input id="jSalMax" type="number" placeholder="Max" value="' + H.escHtml(salMax) + '" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"></div></div>'
+      + _textareaVal('jDesc', 'Job Description *', 'Describe the role, responsibilities, company culture…', 6, description)
+      + _textareaVal('jReqs', 'Requirements & Qualifications', 'List qualifications, experience, skills required…', 4, requirements)
+      + _textareaVal('jResp', 'Key Responsibilities', 'List the main duties and responsibilities…', 4, responsibilities)
+      + _field('jEmail', 'Application Email', 'email', 'Email to receive applications', H.escHtml(applyEmail))
+      + _field('jPhone', 'WhatsApp Number', 'tel', 'e.g. +263771234567', H.escHtml(applyPhone))
+      + _jqSectionHtml()
+      + '</div>'
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
+      + '<button id="ejSaveBtn" onclick="H._updateJob(\'' + H.escHtml(id) + '\')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#0f2460);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">Save Changes →</button>'
+      + '</div></div>';
+  };
+
+  H.pages.EditJob_after = function (params) {
+    var id = params && params.listingId;
+    var l = id ? (H.state.listings || []).find(function (x) { return x.id === id; }) : null;
+    H._jobQuestionsArr = (l && l.custom_questions) ? l.custom_questions.slice() : [];
+    H._jqRender();
+  };
+
+  H._updateJob = function (id) {
+    var company  = ((document.getElementById('jCompany')  || {}).value || '').trim();
+    var title    = ((document.getElementById('jTitle')    || {}).value || '').trim();
+    var cat      = (document.getElementById('jCat')       || {}).value || '';
+    var prov     = (document.getElementById('jProv')      || {}).value || '';
+    var location = (document.getElementById('jLocation')  || {}).value || '';
+    var desc     = ((document.getElementById('jDesc')     || {}).value || '').trim();
+    if (!company)               { H.toast('Company name is required'); return; }
+    if (!title)                 { H.toast('Job title is required'); return; }
+    if (!cat)                   { H.toast('Please select a job category'); return; }
+    if (!location)              { H.toast('Please select a city / town'); return; }
+    if (desc.length < 30)       { H.toast('Please write a job description (min 30 chars)'); return; }
+
+    var jobType = 'Full-time';
+    document.querySelectorAll('input[name="jType"]').forEach(function(r){ if (r.checked) jobType = r.value; });
+    var salMin = (document.getElementById('jSalMin') || {}).value || '';
+    var salMax = (document.getElementById('jSalMax') || {}).value || '';
+    var salary = salMin && salMax ? '$' + salMin + ' - $' + salMax : salMin ? 'From $' + salMin : 'Negotiable';
+    var reqs  = (document.getElementById('jReqs')  || {}).value || '';
+    var resp  = (document.getElementById('jResp')  || {}).value || '';
+    var email = ((document.getElementById('jEmail') || {}).value || '').trim();
+    var phone = ((document.getElementById('jPhone') || {}).value || '').trim();
+
+    var fullDesc = 'COMPANY: ' + company + '\nJOB TYPE: ' + jobType + '\nINDUSTRY: ' + cat + '\nSALARY: ' + salary
+      + '\n\nDESCRIPTION:\n' + desc
+      + (resp  ? '\n\nRESPONSIBILITIES:\n' + resp  : '')
+      + (reqs  ? '\n\nREQUIREMENTS:\n'      + reqs  : '')
+      + ((email || phone) ? '\n\nHOW TO APPLY:\n' + (email ? 'Email: ' + email + '\n' : '') + (phone ? 'WhatsApp: ' + phone : '') : '');
+
+    var l = (H.state.listings || []).find(function (x) { return x.id === id; });
+    if (!l) { H.toast('Job not found'); return; }
+
+    var btn = document.getElementById('ejSaveBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+    l.title = title; l.company = company; l.desc = fullDesc;
+    l.price = salMin ? +salMin : 0; l.city = location; l.prov = prov || location;
+    l.custom_questions = H._jobQuestionsArr ? H._jobQuestionsArr.slice() : [];
+    l.updatedAt = Date.now();
+    H.saveState();
+
+    var _sb = window.supabase;
+    if (_sb && typeof _sb.from === 'function') {
+      _sb.from('listings').update({
+        title: l.title, company: l.company, desc: fullDesc, description: fullDesc,
+        price: l.price, city: l.city, prov: l.prov,
+        custom_questions: l.custom_questions, updated_at: l.updatedAt
+      }).eq('id', id).then(function(r){ if(r&&r.error) console.warn('Job update error:', r.error.message); });
+    }
+    H.toast('Job updated!');
+    H.goBack();
+  };
+
+  H.pages.JobDetail = function (params) {
+    var id = params && params.id;
+    var l = (H.state.listings || []).find(function (x) { return x.id === id; });
+    if (!l) return '<div class="page active">' + H.innerTopbar('Job') + H.emptyState('Job not found', 'This posting may have been removed.', 'Browse Jobs', "H.filterByCat('jobs')") + '</div>';
+
+    var lines = (l.desc || '').split('\n');
+    var company  = l.company || l.sellerName || parseLine(lines, 'COMPANY') || 'Company';
+    var jobType  = parseLine(lines, 'JOB TYPE') || '';
+    var industry = parseLine(lines, 'INDUSTRY') || '';
+    var salary   = parseLine(lines, 'SALARY')   || 'Not disclosed';
+    var deadline = parseLine(lines, 'DEADLINE') || '';
+    var d = l.desc || '';
+    var descS  = d.indexOf('\nDESCRIPTION:\n');
+    var respS  = d.indexOf('\nRESPONSIBILITIES:\n');
+    var reqS   = d.indexOf('\nREQUIREMENTS:\n');
+    var applyS = d.indexOf('\nHOW TO APPLY:');
+    function _next(from) { return [respS,reqS,applyS,d.length].filter(function(x){return x>from;}).sort(function(a,b){return a-b;})[0]; }
+    var description      = descS  > -1 ? d.slice(descS  + 14, _next(descS)).trim()  : (d.split('\n').filter(function(ln){return !ln.includes(':');}).slice(0,4).join('\n') || '');
+    var responsibilities = respS  > -1 ? d.slice(respS  + 19, _next(respS)).trim()  : '';
+    var requirements     = reqS   > -1 ? d.slice(reqS   + 15, _next(reqS)).trim()   : '';
+    var applySection     = applyS > -1 ? d.slice(applyS + 14).trim()                : '';
+    var em = applySection.match(/Email:\s*(.+)/), ph = applySection.match(/WhatsApp:\s*(.+)/);
+    var applyEmail = em ? em[1].trim() : '';
+    var applyPhone = ph ? ph[1].trim().replace(/[^\d+]/g, '') : '';
+
+    var u      = H.currentUser();
+    var isMine = u && l.sellerId && l.sellerId === u.id;
+    var apps   = (H.state.applications || []);
+    var myApp  = u ? apps.find(function(a){ return a.jobId === id && a.applicantId === u.id; }) : null;
+    var appCount = apps.filter(function(a){ return a.jobId === id; }).length;
+
+    var companyInitials = (company || 'C').split(' ').slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();
+    var companyLogoHtml = (l.photos && l.photos[0])
+      ? '<img src="' + l.photos[0] + '" style="width:56px;height:56px;border-radius:14px;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,.3)">'
+      : '<div style="width:56px;height:56px;border-radius:14px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,.2)">' + companyInitials + '</div>';
+
+    var chipStyle = 'display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;margin-right:6px;margin-bottom:6px';
+
+    return '<div class="page active">'
+      + '<div class="det-topbar" style="background:#0a2558"><button class="back" onclick="H.goBack()" style="color:#fff"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      + '<div class="det-topbar-title" style="color:#fff;font-size:14px">' + H.escHtml(l.title) + '</div>'
+      + (isMine ? '<button onclick="H.openInner(\'JobApplications\',{jobId:\'' + id + '\'})" style="background:rgba(255,255,255,.18);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:5px 10px;border-radius:8px">' + appCount + ' App' + (appCount===1?'':'s') + '</button>' : '<div style="width:40px"></div>')
+      + '</div>'
+
+      + '<div style="background:linear-gradient(160deg,#0a2558 0%,#1A3A8F 60%,#2952cc 100%);padding:20px 16px 24px">'
+      + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
+      + companyLogoHtml
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:19px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:4px">' + H.escHtml(l.title) + '</div>'
+      + '<div style="font-size:14px;color:rgba(255,255,255,.8);font-weight:600">' + H.escHtml(company) + '</div>'
+      + '</div></div>'
+      + '<div style="display:flex;flex-wrap:wrap;margin-bottom:4px">'
+      + (jobType  ? '<span style="' + chipStyle + ';background:rgba(255,255,255,.18);color:#fff">' + H.escHtml(jobType)  + '</span>' : '')
+      + (industry ? '<span style="' + chipStyle + ';background:#F5A62330;color:#F5A623">'         + H.escHtml(industry) + '</span>' : '')
+      + '<span style="' + chipStyle + ';background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)">'
+      + '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+      + H.escHtml(l.city || 'Zimbabwe') + '</span>'
+      + '<span style="' + chipStyle + ';background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)">'
+      + '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+      + H.timeAgo(l.createdAt) + '</span>'
+      + '</div></div>'
+
+      + '<div style="padding:0 12px">'
+      + '<div style="background:var(--card);border-radius:16px;margin-top:-14px;padding:16px;border:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px">'
+      + _ji('Salary', salary) + _ji('Location', l.city || 'Zimbabwe')
+      + (deadline ? _ji('Deadline', deadline) : _ji('Status', l.status === 'active' ? 'Open' : 'Closed'))
+      + _ji('Posted', H.timeAgo(l.createdAt))
+      + '</div>'
+
+      + (description      ? _jb('About the Role',       description)      : '')
+      + (responsibilities ? _jb('Key Responsibilities', responsibilities) : '')
+      + (requirements     ? _jb('Requirements',         requirements)     : '')
+
+      + '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border)">'
+        + '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px">How to Apply</div>'
+        + '<div style="font-size:13px;color:var(--sub);margin-bottom:10px">Use Easy Apply to submit your application securely through PaMarket. The employer will review your profile and message you here.</div>'
+        + (applyEmail ? '<a href="mailto:' + H.escHtml(applyEmail) + '?subject=' + encodeURIComponent('Application: ' + l.title) + '" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#1A3A8F15;border-radius:10px;margin-bottom:8px;text-decoration:none"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span style="font-size:13px;font-weight:600;color:#1A3A8F">' + H.escHtml(applyEmail) + '</span></a>' : '')
+        + '</div>'
+
+      + '<div style="height:90px"></div></div>'
+
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
+      + (isMine
+        ? '<button onclick="H.openInner(\'JobApplications\',{jobId:\'' + id + '\'})" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer">View Applications (' + appCount + ')</button>'
+        : myApp
+          ? '<div style="padding:14px;background:#dcfce7;border-radius:13px;text-align:center;font-size:14px;font-weight:700;color:#15803d;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Application Submitted · ' + H.timeAgo(myApp.appliedAt) + '</div>'
+          : '<button onclick="H._applyToJob(\'' + id + '\')" style="width:100%;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>Easy Apply in App</button>'
+      )
+      + '</div></div>';
+  };
+
+  H._applyToJob = function (jobId) {
+    if (!H.currentUser()) { H.requireAuth('Sign in to apply for jobs'); return; }
+    var l = (H.state.listings || []).find(function(x){ return x.id === jobId; });
+    if (!l) { H.toast('Job not found'); return; }
+    H.openInner('ApplyJob', { jobId: jobId });
+  };
+
+  H.pages.ApplyJob = function (params) {
+    var jobId = params && params.jobId;
+    var l = (H.state.listings || []).find(function(x){ return x.id === jobId; });
+    if (!l) return '<div class="page active">' + H.innerTopbar('Apply') + H.emptyState('Job not found', '', null, null) + '</div>';
+    var company = l.company || l.sellerName || 'Company';
+    var questions = l.custom_questions || [];
+    var inS = 'width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit';
+
+    var questionsHtml = questions.map(function (q, i) {
+      var lbl = '<label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:8px;line-height:1.5">'
+        + (q.required ? '<span style="color:#ef4444;margin-right:2px">*</span>' : '')
+        + H.escHtml(q.question) + '</label>';
+      var inp = '';
+      if (q.type === 'yesno') {
+        inp = '<div id="applyQ_' + i + '" data-value="" style="display:flex;gap:8px">'
+          + '<button type="button" onclick="var p=this.parentElement;p.dataset.value=\'Yes\';this.style.background=\'#1A3A8F\';this.style.color=\'#fff\';this.style.borderColor=\'#1A3A8F\';this.nextElementSibling.style.background=\'var(--card)\';this.nextElementSibling.style.color=\'var(--text)\';this.nextElementSibling.style.borderColor=\'var(--border)\'" style="flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--card);color:var(--text);font-family:inherit">Yes</button>'
+          + '<button type="button" onclick="var p=this.parentElement;p.dataset.value=\'No\';this.style.background=\'#1A3A8F\';this.style.color=\'#fff\';this.style.borderColor=\'#1A3A8F\';this.previousElementSibling.style.background=\'var(--card)\';this.previousElementSibling.style.color=\'var(--text)\';this.previousElementSibling.style.borderColor=\'var(--border)\'" style="flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--card);color:var(--text);font-family:inherit">No</button>'
+          + '</div>';
+      } else if (q.type === 'select') {
+        inp = '<select id="applyQ_' + i + '" style="' + inS + '">'
+          + '<option value="">Select an option…</option>'
+          + (q.options || []).map(function(o){ return '<option>' + H.escHtml(o) + '</option>'; }).join('')
+          + '</select>';
+      } else {
+        inp = '<textarea id="applyQ_' + i + '" rows="2" placeholder="Your answer…" style="' + inS + ';resize:vertical"></textarea>';
+      }
+      return '<div style="margin-bottom:16px">' + lbl + inp + '</div>';
+    }).join('');
+
+    return '<div class="page active">'
+      + H.innerTopbar('Apply for ' + H.escHtml(l.title))
+      + '<div style="padding:14px 14px 100px">'
+      + '<div style="background:#1A3A8F14;border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;gap:12px;align-items:center">'
+      + '<div style="width:42px;height:42px;border-radius:10px;background:#1A3A8F;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0">' + H.escHtml(company.slice(0, 2).toUpperCase()) + '</div>'
+      + '<div><div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(l.title) + '</div>'
+      + '<div style="font-size:12px;color:var(--sub)">' + H.escHtml(company) + ' · ' + H.escHtml(l.city || 'Zimbabwe') + '</div></div>'
+      + '</div>'
+      + '<div style="margin-bottom:16px">'
+      + '<label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:8px">Cover Message</label>'
+      + '<textarea id="applyMsg" rows="4" placeholder="Introduce yourself — your experience, why you\'re a great fit…" style="' + inS + ';resize:vertical"></textarea>'
+      + '<div style="font-size:11px;color:var(--sub);margin-top:5px">Your profile is shared with the employer. They may message you through PaMarket.</div>'
+      + '</div>'
+      + (questions.length
+        ? '<div style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:8px"><span style="flex:1;height:1px;background:var(--border)"></span>Application Questions<span style="flex:1;height:1px;background:var(--border)"></span></div>'
+          + questionsHtml
+        : '')
+      + '</div>'
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
+      + '<button onclick="H._submitApplyJob(\'' + H.escHtml(jobId) + '\')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">'
+      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg> Submit Application</button>'
+      + '</div></div>';
+  };
+
+  H._submitApplyJob = function (jobId) {
+    var u = H.currentUser(); if (!u) return;
+    var l = (H.state.listings || []).find(function(x){ return x.id === jobId; }); if (!l) return;
+    var msg = ((document.getElementById('applyMsg') || {}).value || '').trim();
+    var questions = l.custom_questions || [];
+    var answers = [];
+    var valid = true;
+    questions.forEach(function (q, i) {
+      var el = document.getElementById('applyQ_' + i);
+      var val = '';
+      if (q.type === 'yesno') {
+        val = el ? (el.dataset.value || '') : '';
+      } else {
+        val = el ? ((el.value || '').trim()) : '';
+      }
+      if (q.required && !val) {
+        H.toast('Please answer: ' + q.question.slice(0, 60));
+        valid = false;
+      }
+      answers.push({ questionId: q.id, question: q.question, answer: val });
+    });
+    if (!valid) return;
+    H._submitJobApplication(jobId, msg, answers);
+  };
+
+  H._submitJobApplication = function (jobId, message, answers) {
+    var u = H.currentUser(); if (!u) return;
+    var l = (H.state.listings || []).find(function(x){ return x.id === jobId; }); if (!l) return;
+    var company = l.company || l.sellerName || 'Company';
+    H.state.applications = H.state.applications || [];
+    var existing = H.state.applications.find(function(a){ return a.jobId === jobId && a.applicantId === u.id; });
+    if (existing) { H.toast('You already applied for this job'); return; }
+    var app = {
+      id: H.uid(), jobId: jobId, jobTitle: l.title, company: company,
+      applicantId: u.id, applicantName: u.name || 'Applicant',
+      message: message, answers: answers || [], status: 'pending', appliedAt: Date.now(),
+      employerId: l.sellerId
+    };
+    H.state.applications.push(app);
+    H.saveState();
+    if (typeof H.saveApplicationToCloud === 'function') H.saveApplicationToCloud(app);
+    if (l.sellerId) H.pushNotif(l.sellerId, 'New Application', u.name + ' applied for ' + l.title, 'message');
+    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+    var ids = [u.id, l.sellerId].sort();
+    var convId = 'job_' + jobId.slice(-8) + '_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    if (!H.state.conversations.find(function(c){ return c.id === convId; })) {
+      var conv = {
+        id: convId, members: [u.id, l.sellerId], listingId: jobId,
+        appId: app.id, isJobThread: true,
+        messages: message ? [{id: H.uid(), from: u.id, senderName: u.name||'', text: message, t: Date.now(), read: false}] : []
+      };
+      H.state.conversations.push(conv);
+      H.saveState();
+      if (typeof H.ensureConversationInCloud === 'function') {
+        H.ensureConversationInCloud(conv).then(function(){
+          if (message && typeof H.saveMessageToCloud === 'function') H.saveMessageToCloud(convId, conv.messages[0]);
+        });
+      } else if (message && typeof H.saveMessageToCloud === 'function') H.saveMessageToCloud(convId, conv.messages[0]);
+    }
+    H.toast('Application submitted! The employer will be in touch.');
+    H.goBack();
+  };
+
+  H.pages.JobApplications = function (params) {
+    var jobId = params && params.jobId;
+    var u = H.currentUser();
+    if (!u) return '<div class="page active">' + H.innerTopbar('Applications') + H.emptyState('Sign in required', '', null, null) + '</div>';
+    var l = (H.state.listings || []).find(function(x){ return x.id === jobId; });
+    var title = l ? l.title : 'Job';
+    var apps = (H.state.applications || []).filter(function(a){ return a.jobId === jobId; })
+      .sort(function(a,b){ return b.appliedAt - a.appliedAt; });
+
+    var statusColors = { pending:'#F5A623', reviewed:'#1A3A8F', shortlisted:'#22c55e', rejected:'#ef4444' };
+    var statusLabels = { pending:'New', reviewed:'Reviewed', shortlisted:'Shortlisted', rejected:'Rejected' };
+
+    return '<div class="page active">'
+      + H.innerTopbar('Applications for ' + H.escHtml(title))
+      + '<div style="padding:12px 14px 16px;background:var(--card);border-bottom:1px solid var(--border)">'
+      + '<div style="font-size:22px;font-weight:800;color:var(--text)">' + apps.length + ' Application' + (apps.length===1?'':'s') + '</div>'
+      + '<div style="font-size:13px;color:var(--sub);margin-top:2px">' + H.escHtml(title) + '</div>'
+      + '</div>'
+      + '<div style="padding:12px 14px 88px">'
+      + (apps.length ? apps.map(function(app) {
+          var statusC = statusColors[app.status] || '#999';
+          var statusL = statusLabels[app.status] || app.status;
+          var ini = (app.applicantName||'A').split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+          return '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid var(--border)">'
+            + '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">'
+            + '<div style="width:44px;height:44px;border-radius:50%;background:#1A3A8F;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0">' + ini + '</div>'
+            + '<div style="flex:1;min-width:0">'
+            + '<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+            + '<div style="font-size:15px;font-weight:700;color:var(--text)">' + H.escHtml(app.applicantName || 'Applicant') + '</div>'
+            + '<span style="background:' + statusC + '20;color:' + statusC + ';font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px">' + statusL + '</span>'
+            + '</div>'
+            + '<div style="font-size:12px;color:var(--sub);margin-top:2px">' + H.timeAgo(app.appliedAt) + '</div>'
+            + '</div></div>'
+            + (app.message ? '<div style="font-size:13px;color:var(--text);line-height:1.6;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:10px">' + H.escHtml(app.message.slice(0,200)) + (app.message.length>200?'…':'') + '</div>' : '')
+            + (app.answers && app.answers.length
+              ? '<div style="margin-bottom:12px">'
+                + '<div style="font-size:10px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Screening Answers</div>'
+                + app.answers.map(function(a) {
+                    return '<div style="border-left:3px solid #1A3A8F30;padding:5px 8px;margin-bottom:5px">'
+                      + '<div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:1px">' + H.escHtml(a.question || '') + '</div>'
+                      + '<div style="font-size:13px;font-weight:600;color:' + (a.answer ? 'var(--text)' : 'var(--sub2)') + '">' + H.escHtml(a.answer || 'No answer') + '</div>'
+                      + '</div>';
+                  }).join('')
+                + '</div>'
+              : '')
+            + '<div style="display:flex;gap:8px">'
+            + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'shortlisted\')" style="flex:1;padding:8px;background:#22c55e15;color:#15803d;border:1.5px solid #22c55e40;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Shortlist</button>'
+            + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'rejected\')" style="flex:1;padding:8px;background:#ef444415;color:#dc2626;border:1.5px solid #ef444440;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Decline</button>'
+            + '<button onclick="H._openApplicationChat(\'' + app.id + '\')" style="flex:1;padding:8px;background:#1A3A8F15;color:#1A3A8F;border:1.5px solid #1A3A8F40;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Message</button>'
+            + '</div></div>';
+        }).join('')
+        : H.emptyState('No applications yet', 'Share your job posting to attract candidates.', null, null))
+      + '</div></div>';
+  };
+
+  H._setAppStatus = function (appId, status) {
+    var app = (H.state.applications || []).find(function(a){ return a.id === appId; });
+    if (!app) return;
+    app.status = status;
+    H.saveState();
+    if (typeof H.updateApplicationStatusCloud === 'function') H.updateApplicationStatusCloud(appId, status);
+    var u = H.currentUser();
+    var jobId = app.jobId;
+    H.toast(status === 'shortlisted' ? 'Shortlisted!' : 'Declined');
+    if (app.applicantId) {
+      H.pushNotif(app.applicantId,
+        status === 'shortlisted' ? 'Application Update' : 'Application Update',
+        status === 'shortlisted'
+          ? 'Congratulations! Your application for ' + app.jobTitle + ' has been shortlisted.'
+          : 'Your application for ' + app.jobTitle + ' was not selected at this time.',
+        status === 'shortlisted' ? 'verify' : 'info'
+      );
+    }
+    H.renderPage('JobApplications', {jobId: jobId});
+  };
+
+  H.pages.JobApplications_after = function(params) {
+    if (typeof H.syncApplications === 'function' && !H._syncingJobApplications) {
+      H._syncingJobApplications = true;
+      H.syncApplications().then(function(){
+        if (H.currentPageName === 'JobApplications') H.renderPage('JobApplications', params || H.currentPageParams);
+      }).finally(function(){
+        H._syncingJobApplications = false;
+      });
+    }
+  };
+
+  H._openApplicationChat = function(appId) {
+    var app = (H.state.applications || []).find(function(a){ return a.id === appId; });
+    if (!app) return;
+    var ids = [app.applicantId, app.employerId].sort();
+    var convId = 'job_' + app.jobId.slice(-8) + '_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+    var conv = H.state.conversations.find(function(c){ return c.id === convId; });
+    if (!conv) {
+      conv = {
+        id: convId, members: [app.applicantId, app.employerId], listingId: app.jobId,
+        appId: app.id, isJobThread: true,
+        messages: app.message ? [{ id: H.uid(), from: app.applicantId, senderName: app.applicantName || '', text: app.message, t: app.appliedAt || Date.now(), read: false }] : []
+      };
+      if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+      H.state.conversations.push(conv);
+      H.saveState();
+    }
+    if (typeof H.ensureConversationInCloud === 'function') {
+      H.ensureConversationInCloud(conv).then(function(){
+        if (conv.messages && conv.messages.length && typeof H.saveMessageToCloud === 'function') H.saveMessageToCloud(conv.id, conv.messages[0]);
+      });
+    } else if (conv.messages && conv.messages.length && typeof H.saveMessageToCloud === 'function') H.saveMessageToCloud(conv.id, conv.messages[0]);
+    H.openInner('Chat', { id: conv.id });
+  };
+
+  H.pages.AppliedJobs = function () {
+    var u = H.currentUser();
+    if (!u) return '<div class="page active">' + H.innerTopbar('My Applications') + H.emptyState('Sign in required', '', null, null) + '</div>';
+    var apps = (H.state.applications || []).filter(function(a){ return a.applicantId === u.id; })
+      .sort(function(a,b){ return b.appliedAt - a.appliedAt; });
+    var statusColors = { pending:'#F5A623', reviewed:'#1A3A8F', shortlisted:'#22c55e', rejected:'#ef4444' };
+    var statusLabels = { pending:'Pending', reviewed:'Reviewed', shortlisted:'Shortlisted', rejected:'Not selected' };
+
+    return '<div class="page active">'
+      + H.innerTopbar('My Applications')
+      + '<div style="padding:12px 14px 88px">'
+      + (apps.length ? apps.map(function(app) {
+          var statusC = statusColors[app.status] || '#999';
+          var statusL = statusLabels[app.status] || app.status;
+          return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + app.jobId + '\'})" style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid var(--border);cursor:pointer">'
+            + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
+            + '<div style="font-size:15px;font-weight:700;color:var(--text);flex:1;margin-right:10px">' + H.escHtml(app.jobTitle || 'Job') + '</div>'
+            + '<span style="background:' + statusC + '20;color:' + statusC + ';font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0">' + statusL + '</span>'
+            + '</div>'
+            + '<div style="font-size:13px;color:var(--sub);margin-bottom:4px">' + H.escHtml(app.company || '') + '</div>'
+            + '<div style="font-size:12px;color:var(--sub2)">Applied ' + H.timeAgo(app.appliedAt) + '</div>'
+            + '</div>';
+        }).join('')
+        : H.emptyState('No applications yet', 'Browse jobs and apply directly in the app.', 'Browse Jobs', "H.openInner('FindJobs')"))
+      + '</div></div>';
+  };
+
+  var inStyle = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit';
+
+  function _cpSectionHead(icon, title) {
+    return '<div style="display:flex;align-items:center;gap:10px;margin:20px 0 10px">'
+      + '<span style="display:inline-flex;align-items:center;color:var(--sub)">' + icon + '</span>'
+      + '<span style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px">' + title + '</span>'
+      + '<span style="flex:1;height:1px;background:var(--border)"></span>'
+      + '</div>';
+  }
+
+  function _cpRenderSkillChips(skills) {
+    return skills.map(function(s, i) {
+      return '<span style="display:inline-flex;align-items:center;gap:4px;background:#1A3A8F;color:#fff;font-size:12px;font-weight:600;padding:4px 8px;border-radius:8px">'
+        + H.escHtml(s.trim())
+        + '<button onclick="H._cpRemoveSkill(' + i + ')" style="background:none;border:none;color:#fff;font-size:13px;cursor:pointer;padding:0;line-height:1;font-family:inherit">×</button>'
+        + '</span>';
+    }).join('');
+  }
+
+  function _cpRenderResumeZone(fileName, uploading) {
+    if (uploading) {
+      return '<div style="display:flex;align-items:center;gap:8px;background:#1A3A8F14;border-radius:10px;padding:10px 12px;border:1.5px solid #1A3A8F30">'
+        + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#1A3A8F" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>'
+        + '<span style="font-size:13px;font-weight:600;color:#1A3A8F">Uploading…</span>'
+        + '</div>';
+    }
+    if (fileName) {
+      return '<div style="display:flex;align-items:center;gap:8px;background:#22c55e18;border-radius:10px;padding:10px 12px;border:1.5px solid #22c55e40">'
+        + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#15803d" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+        + '<span style="flex:1;font-size:13px;font-weight:600;color:#15803d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(fileName) + '</span>'
+        + '<button onclick="event.stopPropagation();H._cpClearResume()" style="background:none;border:none;color:#15803d;font-size:16px;cursor:pointer;padding:0;font-family:inherit">×</button>'
+        + '</div>';
+    }
+    return '<div onclick="document.getElementById(\'cpResumeFile\').click()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:2px dashed var(--border);border-radius:10px;padding:20px;cursor:pointer;text-align:center">'
+      + '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
+      + '<span style="font-size:13px;font-weight:600;color:var(--sub)">Tap to upload Resume / CV</span>'
+      + '<span style="font-size:11px;color:var(--sub2)">PDF, DOC, DOCX · Max 3 MB</span>'
+      + '</div>';
+  }
+
+  // ── Global toggle helpers — defined at script load, never depend on _after ──
+  window._cpJT = function(btn) {
+    var on = btn.getAttribute('data-sel') !== '1';
+    btn.setAttribute('data-sel', on ? '1' : '0');
+    btn.style.background  = on ? '#1A3A8F' : '#fff';
+    btn.style.color       = on ? '#fff'    : '#667085';
+    btn.style.border      = on ? '1.5px solid #1A3A8F' : '1.5px solid #E4E8F0';
+  };
+
+  window._cpCM = function(btn) {
+    var wrap = document.getElementById('cpCMWrap');
+    if (!wrap) return;
+    [].forEach.call(wrap.querySelectorAll('button[data-cm]'), function(b) {
+      b.setAttribute('data-sel', '0');
+      b.style.background = '#fff';
+      b.style.color      = '#667085';
+      b.style.border     = '1.5px solid #E4E8F0';
+    });
+    btn.setAttribute('data-sel', '1');
+    btn.style.background = '#1A3A8F';
+    btn.style.color      = '#fff';
+    btn.style.border     = '1.5px solid #1A3A8F';
+  };
+
+  window._cpOpenFile = function() {
+    var fi = document.getElementById('cpResumeFile');
+    if (fi) { try { fi.click(); } catch(e) {} }
+  };
+
+  window._cpSamePhone = function(el) {
+    var row = document.getElementById('cpPhoneRow');
+    if (row) row.style.display = el.checked ? 'none' : '';
+  };
+
+  H.pages.CandidateProfile = function () {
+    var u = H.currentUser();
+    if (!u) return '<div class="page active">' + H.innerTopbar('Job Seeker Profile') + H.emptyState('Sign in required', 'Sign in to set up your job seeker profile', 'Sign In', "H.requireAuth('Job seeker profile')") + '</div>';
+    var ZW = H._ZW_CITIES || [];
+    var expLevels = [['entry','Entry Level (0-2 yrs)'],['mid','3-5 Years'],['senior','5-10 Years'],['expert','10+ Years']];
+    var on = u.openToWork ? '1' : '0';
+    var togBg   = u.openToWork ? '#22c55e' : '#E4E8F0';
+    var togLeft = u.openToWork ? '23px' : '3px';
+    var existingSkills = (u.skills || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    var jobTypesList = ['Full-Time','Part-Time','Contract','Casual / Day Labor','Remote'];
+    var selectedJobTypes = (u.jobTypes || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    var waCC = u.whatsappCC || '263';
+    var waNum = u.whatsappNum || '';
+    var samePhone = u.samePhone ? true : false;
+    var phoneForCalls = u.phoneForCalls || '';
+    var contactMethod = u.contactMethod || '';
+    var waCCOptions = [['263','ZW +263'],['27','ZA +27'],['267','BW +267'],['260','ZM +260'],['255','TZ +255'],['254','KE +254'],['234','NG +234'],['44','GB +44'],['1','US +1']];
+    var cvFileName = H._cpResumeFileName || u.cvFileName || '';
+
+    var jt_off = '1.5px solid #E4E8F0';
+    var jt_on  = '1.5px solid #1A3A8F';
+
+    return '<div class="page active">'
+      + H.innerTopbar('Job Seeker Profile')
+      + '<div style="margin:12px 14px;background:#22c55e18;border-radius:12px;padding:12px 14px;display:flex;gap:10px">'
+      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#15803d" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+      + '<div style="font-size:12px;color:#15803d;font-weight:600;line-height:1.6">Employers in Hire Talent can find and contact you when you turn on Open to Work.</div>'
+      + '</div>'
+      + '<div style="padding:0 14px 100px">'
+
+      // ── Open to Work toggle ──
+      + '<div style="margin-bottom:16px;background:#fff;border-radius:12px;padding:16px;border:1px solid #E4E8F0;display:flex;align-items:center;justify-content:space-between">'
+      + '<div><div style="font-size:15px;font-weight:700;color:var(--text)">Open to Work</div><div style="font-size:12px;color:#667085;margin-top:2px">Appear in employer searches</div></div>'
+      + '<div id="otwTog" onclick="var o=this.dataset.on===\'1\'?\'0\':\'1\';this.dataset.on=o;this.style.background=o===\'1\'?\'#22c55e\':\'#E4E8F0\';this.querySelector(\'div\').style.left=o===\'1\'?\'23px\':\'3px\'" data-on="' + on + '" style="width:46px;height:26px;border-radius:13px;background:' + togBg + ';position:relative;cursor:pointer;transition:background .2s;flex-shrink:0">'
+      + '<div style="position:absolute;top:3px;left:' + togLeft + ';width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div></div>'
+      + '</div>'
+
+      // ── Basic Details ──
+      + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>', 'Basic Details')
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Current / Desired Job Title</label>'
+      + '<input id="cpTitle" placeholder="e.g. Accountant, Driver, Teacher" value="' + H.escHtml(u.jobTitle || '') + '" style="' + inStyle + '"></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Industry / Sector</label>'
+      + '<select id="cpSector" style="' + inStyle + '"><option value="">Select sector…</option>'
+      + JOB_CATS.map(function(c){ return '<option value="' + H.escHtml(c) + '"' + (u.sector === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
+      + '</select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Experience Level</label>'
+      + '<select id="cpExp" style="' + inStyle + '"><option value="">Select level…</option>'
+      + expLevels.map(function(e){ return '<option value="' + e[0] + '"' + (u.exp === e[0] ? ' selected' : '') + '>' + H.escHtml(e[1]) + '</option>'; }).join('')
+      + '</select></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">City</label>'
+      + '<select id="cpCity" style="' + inStyle + '"><option value="">Select city…</option>'
+      + ZW.map(function(c){ return '<option value="' + H.escHtml(c) + '"' + (u.city === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
+      + '<option value="Remote"' + (u.city === 'Remote' ? ' selected' : '') + '>Remote / Any</option>'
+      + '</select></div>'
+
+      // ── Professional Background ──
+      + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>', 'Professional Background')
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Bio / About Me</label>'
+      + '<textarea id="cpBio" maxlength="300" placeholder="Tell employers a bit about yourself…" style="' + inStyle + 'height:90px;resize:vertical">' + H.escHtml(u.bio || '') + '</textarea>'
+      + '<div style="text-align:right;font-size:11px;color:#667085;margin-top:3px"><span id="cpBioCount">' + (u.bio || '').length + '</span>/300</div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Skills</label>'
+      + '<div id="cpSkillsChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' + _cpRenderSkillChips(existingSkills) + '</div>'
+      + '<input id="cpSkillsInput" placeholder="Type a skill and press comma or Enter…" style="' + inStyle + '">'
+      + '<input type="hidden" id="cpSkillsVal" value="' + H.escHtml(existingSkills.join(',')) + '">'
+      + '</div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Expected Salary / Rate <span style="font-weight:400;text-transform:none">(optional)</span></label>'
+      + '<input id="cpSalary" placeholder="e.g. $500/mo, $20/hr or Negotiable" value="' + H.escHtml(u.expectedSalary || '') + '" style="' + inStyle + '"></div>'
+
+      // ── Job Preferences ──
+      + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>', 'Job Preferences')
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Job Type / Availability</label>'
+      + '<div id="cpJTWrap" style="display:flex;flex-wrap:wrap;gap:8px">'
+      + jobTypesList.map(function(t) {
+          var sel = selectedJobTypes.indexOf(t) !== -1;
+          return '<button type="button" onclick="_cpJT(this)" data-jt="' + H.escHtml(t) + '" data-sel="' + (sel ? '1' : '0') + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (sel ? '#1A3A8F' : '#fff') + ';color:' + (sel ? '#fff' : '#667085') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : '#E4E8F0') + '">' + H.escHtml(t) + '</button>';
+        }).join('')
+      + '</div></div>'
+
+      // ── Contact & Reach ──
+      + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg>', 'Contact & Reach')
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">WhatsApp Number</label>'
+      + '<div style="display:flex;gap:8px">'
+      + '<select id="cpWaCC" style="padding:13px;border:1.5px solid #E4E8F0;border-radius:12px;font-size:14px;background:#fff;color:var(--text);outline:none;flex-shrink:0;font-family:inherit">'
+      + waCCOptions.map(function(o){ return '<option value="' + o[0] + '"' + (waCC === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('')
+      + '</select>'
+      + '<input id="cpWaNum" type="tel" placeholder="712 345 678" value="' + H.escHtml(waNum) + '" style="' + inStyle + '">'
+      + '</div>'
+      + '<div style="font-size:11px;color:#667085;margin-top:5px">Employers can message you directly on WhatsApp</div>'
+      + '</div>'
+      + '<div style="margin-bottom:14px;display:flex;align-items:center;gap:8px">'
+      + '<input type="checkbox" id="cpSamePhone"' + (samePhone ? ' checked' : '') + ' onchange="_cpSamePhone(this)" style="width:16px;height:16px;cursor:pointer">'
+      + '<label for="cpSamePhone" style="font-size:13px;font-weight:600;color:var(--text);cursor:pointer">Same number for calls as WhatsApp</label>'
+      + '</div>'
+      + '<div id="cpPhoneRow" style="margin-bottom:14px;' + (samePhone ? 'display:none' : '') + '"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Phone for Calls</label>'
+      + '<input id="cpPhone" type="tel" placeholder="e.g. 0712 345 678" value="' + H.escHtml(samePhone ? '' : phoneForCalls) + '" style="' + inStyle + '"></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Preferred Contact Method</label>'
+      + '<div id="cpCMWrap" style="display:flex;gap:8px">'
+      + [
+          ['<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp', 'whatsapp'],
+          ['<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call', 'call'],
+          ['<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Both', 'both']
+        ].map(function(cm) {
+          var sel = contactMethod === cm[1];
+          return '<button type="button" onclick="_cpCM(this)" data-cm="' + cm[1] + '" data-sel="' + (sel ? '1' : '0') + '" style="flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;background:' + (sel ? '#1A3A8F' : '#fff') + ';color:' + (sel ? '#fff' : '#667085') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : '#E4E8F0') + '">' + cm[0] + '</button>';
+        }).join('')
+      + '</div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Best Time to Contact</label>'
+      + '<select id="cpAvail" style="' + inStyle + '">'
+      + ['Anytime','Morning (8am–12pm)','Afternoon (12pm–5pm)','Evening (5pm–8pm)'].map(function(t){ return '<option value="' + H.escHtml(t) + '"' + ((u.contactAvail || 'Anytime') === t ? ' selected' : '') + '>' + H.escHtml(t) + '</option>'; }).join('')
+      + '</select></div>'
+
+      // ── Professional Links ──
+      + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>', 'Professional Links')
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">LinkedIn <span style="font-weight:400;text-transform:none">(optional)</span></label>'
+      + '<input id="cpLinkedin" type="url" placeholder="linkedin.com/in/your-name" value="' + H.escHtml(u.linkedinUrl || '') + '" style="' + inStyle + '"></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">GitHub <span style="font-weight:400;text-transform:none">(optional)</span></label>'
+      + '<input id="cpGithub" type="url" placeholder="github.com/username" value="' + H.escHtml(u.githubUrl || '') + '" style="' + inStyle + '"></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Portfolio / Website <span style="font-weight:400;text-transform:none">(optional)</span></label>'
+      + '<input id="cpWebsite" type="url" placeholder="yourportfolio.com" value="' + H.escHtml(u.websiteUrl || '') + '" style="' + inStyle + '"></div>'
+
+      // ── Resume / CV ──
+      + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>', 'Resume / CV')
+      + '<div id="cpResumeZone" style="margin-bottom:20px">' + _cpRenderResumeZone(cvFileName) + '</div>'
+      + '<input type="file" id="cpResumeFile" accept=".pdf,.doc,.docx" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">'
+
+      + '</div>'
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #E4E8F0;z-index:200">'
+      + '<button id="cpSaveBtn" onclick="H._saveCandidateProfile()" style="width:100%;padding:15px;background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Save Profile</button>'
+      + '</div></div>';
+  };
+
+  H.pages.CandidateProfile_after = function () {
+    // Bio counter
+    var bioEl = document.getElementById('cpBio');
+    if (bioEl) {
+      bioEl.addEventListener('input', function() {
+        var cnt = document.getElementById('cpBioCount');
+        if (cnt) cnt.textContent = this.value.length;
+      });
+    }
+
+    // Skills chip logic
+    H._cpSkillsArr = (document.getElementById('cpSkillsVal') || {value:''}).value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+
+    function _cpSyncSkills() {
+      var chipsEl = document.getElementById('cpSkillsChips');
+      var valEl   = document.getElementById('cpSkillsVal');
+      if (chipsEl) chipsEl.innerHTML = _cpRenderSkillChips(H._cpSkillsArr);
+      if (valEl)   valEl.value = H._cpSkillsArr.join(',');
+    }
+
+    H._cpRemoveSkill = function(i) {
+      H._cpSkillsArr.splice(i, 1);
+      _cpSyncSkills();
+    };
+
+    var skillInput = document.getElementById('cpSkillsInput');
+    if (skillInput) {
+      skillInput.addEventListener('keydown', function(e) {
+        if (e.key === ',' || e.key === 'Enter') {
+          e.preventDefault();
+          var val = this.value.replace(/,/g,'').trim();
+          if (val && H._cpSkillsArr.indexOf(val) === -1) { H._cpSkillsArr.push(val); _cpSyncSkills(); }
+          this.value = '';
+        }
+      });
+      skillInput.addEventListener('blur', function() {
+        var parts = this.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        parts.forEach(function(p){ if (p && H._cpSkillsArr.indexOf(p) === -1) H._cpSkillsArr.push(p); });
+        if (parts.length) { _cpSyncSkills(); skillInput.value = ''; }
+      });
+    }
+
+    // Resume upload
+    H._cpResumeData     = H._cpResumeData     || null;
+    H._cpResumeFileName = H._cpResumeFileName || null;
+
+    var fileInput = document.getElementById('cpResumeFile');
+    if (fileInput) {
+      fileInput.addEventListener('change', function() {
+        var file = this.files && this.files[0];
+        if (!file) return;
+        if (file.size > 3 * 1024 * 1024) { H.toast('File too large — max 3 MB'); this.value = ''; return; }
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          H._cpResumeData     = ev.target.result;
+          H._cpResumeFileName = file.name;
+          var zone = document.getElementById('cpResumeZone');
+          if (zone) zone.innerHTML = _cpRenderResumeZone(file.name);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    H._cpClearResume = function() {
+      H._cpResumeData = null; H._cpResumeFileName = null;
+      var fi = document.getElementById('cpResumeFile'); if (fi) fi.value = '';
+      var z  = document.getElementById('cpResumeZone');  if (z)  z.innerHTML = _cpRenderResumeZone('');
+    };
+  };
+
+  H._saveCandidateProfile = function () {
+    var u = H.currentUser(); if (!u) return;
+    var saveBtn = document.getElementById('cpSaveBtn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+
+    // Collect all form values
+    u.openToWork     = !!(document.getElementById('otwTog') && document.getElementById('otwTog').dataset.on === '1');
+    u.jobTitle       = ((document.getElementById('cpTitle')   || {}).value || '').trim();
+    u.sector         = (document.getElementById('cpSector')   || {}).value || '';
+    u.exp            = (document.getElementById('cpExp')      || {}).value || '';
+    u.city           = (document.getElementById('cpCity')     || {}).value || '';
+    u.bio            = ((document.getElementById('cpBio')     || {}).value || '').trim();
+    u.expectedSalary = ((document.getElementById('cpSalary')  || {}).value || '').trim();
+    u.skills         = (H._cpSkillsArr || []).join(',');
+
+    // Job types — read data-sel attribute
+    var jtArr = [];
+    var jtWrap = document.getElementById('cpJTWrap');
+    if (jtWrap) {
+      [].forEach.call(jtWrap.querySelectorAll('button[data-jt]'), function(b) {
+        if (b.getAttribute('data-sel') === '1') jtArr.push(b.getAttribute('data-jt'));
+      });
+    }
+    u.jobTypes = jtArr.join(',');
+
+    // Contact method — read data-sel attribute
+    var contactMethod = '';
+    var cmWrap = document.getElementById('cpCMWrap');
+    if (cmWrap) {
+      [].forEach.call(cmWrap.querySelectorAll('button[data-cm]'), function(b) {
+        if (b.getAttribute('data-sel') === '1') contactMethod = b.getAttribute('data-cm') || '';
+      });
+    }
+    u.contactMethod = contactMethod;
+
+    // WhatsApp / phone
+    var waCC  = (document.getElementById('cpWaCC')  || {}).value || '263';
+    var waNum = ((document.getElementById('cpWaNum') || {}).value || '').trim();
+    var samePh = !!(document.getElementById('cpSamePhone') && document.getElementById('cpSamePhone').checked);
+    var phCalls = samePh ? waNum : ((document.getElementById('cpPhone') || {}).value || '').trim();
+    u.whatsappCC   = waCC;
+    u.whatsappNum  = waNum;
+    u.samePhone    = samePh;
+    u.phoneForCalls = phCalls;
+    u.whatsappFull  = waCC + waNum.replace(/^0/, '').replace(/\s/g, '');
+    u.contactAvail  = (document.getElementById('cpAvail') || {}).value || 'Anytime';
+
+    // Professional links
+    u.linkedinUrl = ((document.getElementById('cpLinkedin') || {}).value || '').trim();
+    u.githubUrl   = ((document.getElementById('cpGithub')   || {}).value || '').trim();
+    u.websiteUrl  = ((document.getElementById('cpWebsite')  || {}).value || '').trim();
+
+    // Resume filename
+    if (H._cpResumeFileName) u.cvFileName = H._cpResumeFileName;
+
+    // Bridge flat fields → structured cv object
+    var prevCv = u.cv || {};
+    u.cv = {
+      headline:       u.jobTitle       || prevCv.headline       || '',
+      location:       u.city           || prevCv.location       || '',
+      summary:        u.bio            || prevCv.summary        || '',
+      skills:         (u.skills || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean),
+      expectedSalary: u.expectedSalary || prevCv.expectedSalary || '',
+      visible:        !!u.openToWork,
+      experience:     prevCv.experience     || [],
+      education:      prevCv.education      || [],
+      certifications: prevCv.certifications || [],
+      cvFileUrl:      prevCv.cvFileUrl      || u.cvFileUrl      || ''
+    };
+
+    H.saveState();
+
+    // Navigate to profile VIEW (not goBack) so user sees their saved profile
+    H.toast(u.openToWork ? 'Profile saved — employers can now find you!' : 'Profile saved');
+    H.state._backToAccount = false;
+    try { H.renderPage('JobSeekerProfile'); } catch(e) { try { H.navTo('Account'); } catch(e2) {} }
+
+    // Background Supabase sync
+    var _syncToCloud = function(cvFileUrl) {
+      var _sb = window.supabase;
+      if (!_sb || typeof _sb.from !== 'function') return;
+      var d = {
+        id: u.id,
+        open_to_work: u.openToWork,
+        job_title: u.jobTitle       || null,
+        skills:    u.skills         || null,
+        sector:    u.sector         || null,
+        exp:       u.exp            || null,
+        city:      u.city           || null,
+        bio:       u.bio            || null,
+        job_types:            u.jobTypes      || null,
+        expected_salary:      u.expectedSalary|| null,
+        whatsapp_number:      u.whatsappFull  || null,
+        phone_for_calls:      u.phoneForCalls || null,
+        contact_method:       u.contactMethod || null,
+        contact_availability: u.contactAvail  || null,
+        linkedin_url:         u.linkedinUrl   || null,
+        github_url:           u.githubUrl     || null,
+        website_url:          u.websiteUrl    || null,
+        cv_file_name:         u.cvFileName    || null,
+        cv:                   u.cv            || null
+      };
+      if (cvFileUrl) { d.cv_file_url = cvFileUrl; u.cv.cvFileUrl = cvFileUrl; u.cvFileUrl = cvFileUrl; H.saveState(); }
+      _sb.from('profiles').upsert(d).then(function(r){ if (r && r.error) console.warn('cp sync:', r.error.message); });
+    };
+
+    if (H._cpResumeData && H._cpResumeFileName && window.supabase) {
+      try {
+        var b64    = H._cpResumeData.split(',')[1] || '';
+        var mmatch = H._cpResumeData.match(/data:([^;]+);/);
+        var mime   = mmatch ? mmatch[1] : 'application/octet-stream';
+        var bytes  = atob(b64);
+        var arr    = new Uint8Array(bytes.length);
+        for (var k = 0; k < bytes.length; k++) arr[k] = bytes.charCodeAt(k);
+        var blob   = new Blob([arr], { type: mime });
+        var path   = u.id + '/' + Date.now() + '_' + H._cpResumeFileName;
+        window.supabase.storage.from('cv-files').upload(path, blob, { upsert: true })
+          .then(function(res) {
+            var url = '';
+            if (!res.error) {
+              var pr = window.supabase.storage.from('cv-files').getPublicUrl(path);
+              url = pr.data && pr.data.publicUrl ? pr.data.publicUrl : '';
+            }
+            _syncToCloud(url);
+          }).catch(function() { _syncToCloud(''); });
+      } catch(e) { _syncToCloud(''); }
+    } else {
+      _syncToCloud('');
+    }
+  };
+
   function _ji(label, value) {
-    return '<div><div style="font-size:10px;color:var(--text-sub);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">' + label + '</div><div style="font-size:13px;font-weight:700;color:var(--text-primary)">' + H.escHtml(String(value||'—')) + '</div></div>';
+    return '<div><div style="font-size:10px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">' + label + '</div><div style="font-size:13px;font-weight:700;color:var(--text)">' + H.escHtml(String(value)) + '</div></div>';
   }
 
   function _jb(sectionTitle, text) {
     return '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid var(--border)">'
-      + '<div style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:10px;display:flex;align-items:center;gap:8px"><div style="width:3px;height:16px;background:#1A3A8F;border-radius:2px"></div>' + sectionTitle + '</div>'
-      + '<div style="font-size:13px;color:var(--text-mid);line-height:1.8;white-space:pre-line">' + H.escHtml(text) + '</div></div>';
+      + '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px">'
+      + '<div style="width:3px;height:16px;background:#1A3A8F;border-radius:2px"></div>' + sectionTitle + '</div>'
+      + '<div style="font-size:13px;color:var(--sub);line-height:1.8;white-space:pre-line">' + H.escHtml(text) + '</div></div>';
   }
 
 })(window.H);
@@ -6018,9 +8362,21 @@ H.init();
 })(window.H);
 
 ;/* === www/js/account.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 (function (H) {
   const pages = H.pages;
+
+  pages.Account = function () {
+    const u = H.currentUser();
+    if (!u) return H.guestAccountPage();
+    return pages.AccountHub();
+  };
 
   // ── Account Hub ───────────────────────────────────────────
   // A full-screen version of the account centre, reachable via
@@ -6037,8 +8393,9 @@ H.init();
 
     const activeAds = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active').length;
     const savedAds  = ((H.state.saves || {})[u.id] || []).length;
-    const unread    = (H.state.conversations || []).reduce((n, c) =>
-      c.members.includes(u.id) ? n + (c.messages || []).filter(m => m.from !== u.id && !m.read).length : n, 0);
+    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+    const unread    = H.state.conversations.reduce((n, c) =>
+      Array.isArray(c.members) && c.members.includes(u.id) ? n + (c.messages || []).filter(m => m.from !== u.id && !m.read).length : n, 0);
 
     const row = (icon, label, page, badge) => `
       <div onclick="H.openInner('${page}')"
@@ -6062,7 +8419,7 @@ H.init();
           <div style="font-size:13px;color:rgba(255,255,255,.8);margin-bottom:3px">${H.escHtml(u.email || '')}</div>
           <div style="font-size:12px;color:rgba(255,255,255,.65)">${H.escHtml(u.phone || 'No phone number')}</div>
         </div>
-        ${u.verified ? '<span style="background:#22C55E;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0">✓ Verified</span>' : ''}
+        ${u.verified ? '<span style="background:#22C55E;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>' : ''}
       </div>
 
       <!-- Quick Stats -->
@@ -6081,7 +8438,9 @@ H.init();
         ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', 'My Listings', 'MyListings', activeAds || '')}
         ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>', 'Saved & Favorites', 'Favorites', savedAds || '')}
         ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>', 'My Job Applications', 'AppliedJobs', ((H.state.applications||[]).filter(a=>a.applicantId===u.id).length || ''))}
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>', 'Wallet & Payments', 'Wallet', '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>', 'My Job Profile / CV', 'JobSeekerProfile', u.cv && u.cv.headline ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>', 'Advertisements', 'Ads', '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', 'My Advertisements', 'MyAds', '')}
       </div>
 
       <div style="margin-top:12px">
@@ -6094,6 +8453,10 @@ H.init();
         <button onclick="H.logout()" style="width:100%;padding:14px;background:#FFF1F0;color:#EF4444;border:1.5px solid #FECACA;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">
           Sign Out
         </button>
+        <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--sub);line-height:1.8">
+          © ${new Date().getFullYear()} PaMarket · Made in Zimbabwe 🇿🇼<br>
+          <span style="font-size:10px;color:var(--sub2,#bbb)">All rights reserved · <span onclick="H.openInner('HelpTerms')" style="cursor:pointer;text-decoration:underline">Terms</span> · <span onclick="H.openInner('HelpPrivacy')" style="cursor:pointer;text-decoration:underline">Privacy</span></span>
+        </div>
       </div>
     </div>`;
   };
@@ -6101,15 +8464,19 @@ H.init();
 })(window.H = window.H || {});
 
 ;/* === www/js/profile.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 (function (H) {
   const pages = H.pages;
 
-  // ── Helpers ──────────────────────────────────────────────
   const activeCount = uid => (H.state.listings || []).filter(l => l.sellerId === uid && l.status === 'active').length;
   const soldCount   = uid => (H.state.listings || []).filter(l => l.sellerId === uid && l.status === 'sold').length;
 
-  // ── Icons ────────────────────────────────────────────────
   const IC = {
     pencil: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/><line x1="15" y1="5" x2="19" y2="9"/></svg>',
     shield: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
@@ -6124,7 +8491,6 @@ H.init();
   const starEmpty = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
   const stars = n => Array.from({length:5}, (_,i) => i < Math.round(n) ? starFill : starEmpty).join('');
 
-  // ── Profile Page ─────────────────────────────────────────
   pages.Profile = function (params) {
     const viewId = params && params.id;
     const u = viewId
@@ -6157,18 +8523,9 @@ H.init();
       </div>
 
       <div class="profile-stats">
-        <div class="stat-box">
-          <div class="stat-val">${activeCount(u.id)}</div>
-          <div class="stat-label">Active Ads</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val">${avgRating}</div>
-          <div class="stat-label">Rating (${ratingCount})</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val">${soldCount(u.id)}</div>
-          <div class="stat-label">Sold</div>
-        </div>
+        <div class="stat-box"><div class="stat-val">${activeCount(u.id)}</div><div class="stat-label">Active Ads</div></div>
+        <div class="stat-box"><div class="stat-val">${avgRating}</div><div class="stat-label">Rating (${ratingCount})</div></div>
+        <div class="stat-box"><div class="stat-val">${soldCount(u.id)}</div><div class="stat-label">Sold</div></div>
       </div>
 
       ${isOwn ? `
@@ -6201,7 +8558,6 @@ H.init();
     </div>`;
   };
 
-  // ── Edit Profile ─────────────────────────────────────────
   pages.EditProfile = function () {
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
@@ -6209,17 +8565,13 @@ H.init();
     return `<div class="page active">
       ${H.innerTopbar('Edit Profile')}
       <div class="form-wrap">
-        <!-- Avatar picker -->
         <div style="display:flex;flex-direction:column;align-items:center;padding:8px 0 16px">
           <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#1A3A8F;margin-bottom:10px;border:2.5px solid #1A3A8F22">
             ${u.avatar ? `<img id="avatarPreview" src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover">` : `<span id="avatarPreview">${H.initials(u.name)}</span>`}
           </div>
-          <label for="profilePicFile" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer;background:#1A3A8F14;padding:7px 16px;border-radius:20px">
-            Change Photo
-          </label>
+          <label for="profilePicFile" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer;background:#1A3A8F14;padding:7px 16px;border-radius:20px">Change Photo</label>
           <input type="file" id="profilePicFile" accept="image/*" capture="user" style="display:none" onchange="H._editProfile.onPicChange(event)">
         </div>
-
         <div class="fg"><div class="fl">Full Name <span style="color:#EF4444">*</span></div>
           <input class="fi" id="editName" value="${H.escHtml(u.name || '')}" placeholder="Your full name" maxlength="60">
         </div>
@@ -6234,14 +8586,17 @@ H.init();
         <div class="fg"><div class="fl">Bio</div>
           <textarea class="fi" rows="3" id="editBio" placeholder="Tell buyers about yourself..." maxlength="200">${H.escHtml(u.bio || '')}</textarea>
         </div>
-
-        <div id="editSaveMsg" style="display:none;font-size:13px;color:#16A34A;text-align:center;padding:8px 0;font-weight:600">✓ Saved!</div>
+        <div id="editSaveMsg" style="display:none;font-size:13px;color:#16A34A;text-align:center;padding:8px 0;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#16A34A" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Saved!</div>
         <div id="editErrMsg"  style="display:none;font-size:13px;color:#EF4444;text-align:center;padding:8px 0"></div>
-
         <div class="btn-group">
           <button id="editSaveBtn" class="btn-pri" onclick="H._editProfile.save()">Save Changes</button>
           <button class="btn-sec" onclick="H.openInner('ChangePassword')">Change Password</button>
           <button class="btn-sec" onclick="H.goBack()">Cancel</button>
+        </div>
+        <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Danger Zone</div>
+          <button onclick="H._editProfile.deleteCV()" style="width:100%;padding:13px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">Delete My CV / Candidate Profile</button>
+          <button onclick="H._editProfile.deleteAccount()" style="width:100%;padding:13px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#DC2626" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Delete Account</button>
         </div>
       </div>
     </div>`;
@@ -6257,7 +8612,6 @@ H.init();
         const u = H.currentUser();
         u.avatar = compressed;
         H.saveState();
-        // Update preview in place without full re-render
         const prev = document.getElementById('avatarPreview');
         if (prev) { prev.outerHTML = `<img id="avatarPreview" src="${compressed}" style="width:100%;height:100%;object-fit:cover">`; }
       },
@@ -6269,94 +8623,111 @@ H.init();
         const btn   = document.getElementById('editSaveBtn');
         const errEl = document.getElementById('editErrMsg');
         const okEl  = document.getElementById('editSaveMsg');
-
         const showErr = (msg) => { if(errEl){errEl.textContent=msg;errEl.style.display='';} H.toast(msg); };
-
         if (!name || name.length < 2) { showErr('Please enter your full name (min 2 characters)'); return; }
-
-        // Optional phone validation — international format
-        if (phone && !/^\+?[0-9\s\-]{7,16}$/.test(phone)) {
-          showErr('Phone number looks invalid. Use format: +263 77 123 4567'); return;
-        }
-
+        if (phone && !/^\+?[0-9\s\-]{7,16}$/.test(phone)) { showErr('Phone number looks invalid. Use format: +263 77 123 4567'); return; }
         if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
         if (errEl) errEl.style.display = 'none';
-
         u.name  = name;
         if (phone) u.phone = phone;
         u.bio   = bio;
         H.saveState();
-
-        // Sync to Supabase profiles table
         const c = window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null;
         if (c) {
-          const res = await c.from('profiles').upsert({
-            id: u.id, name: u.name, phone: u.phone || null,
-            bio: u.bio || null, avatar: u.avatar || null,
-            updated_at: new Date().toISOString()
-          });
-          if (res && res.error) {
-            console.warn('Profile sync failed:', res.error.message);
-          }
+          const res = await c.from('profiles').upsert({ id: u.id, name: u.name, phone: u.phone || null, bio: u.bio || null, avatar: u.avatar || null, updated_at: new Date().toISOString() });
+          if (res && res.error) console.warn('Profile sync failed:', res.error.message);
         }
-
         if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
         if (okEl) { okEl.style.display = ''; setTimeout(() => { if(okEl) okEl.style.display='none'; }, 2500); }
         H.toast('Profile updated!');
-      }
+      },
+      deleteCV() {
+        H.modal({
+          title: 'Delete CV / Candidate Profile?',
+          body: 'This will permanently remove your professional profile and CV from PaMarket. Your listings will not be affected.',
+          confirmText: 'Delete CV',
+          cancelText: 'Cancel',
+          danger: true,
+          onConfirm() {
+            const u = H.currentUser();
+            if (!u) return;
+            delete u.cv;
+            delete u.jobTitle;
+            delete u.skills;
+            H.saveState();
+            if (window.supabase && typeof window.supabase.from === 'function') {
+              window.supabase.from('profiles').update({ cv: null, job_title: null, skills: null }, { returning: 'minimal' }).eq('id', u.id).catch(() => {});
+            }
+            H.toast('CV deleted');
+            H.renderPage('EditProfile');
+          },
+        });
+      },
+      deleteAccount() {
+        H.modal({
+          title: 'Delete Account?',
+          body: `<div style="font-size:14px;color:var(--text);line-height:1.7">
+            <p style="margin:0 0 10px;color:#DC2626;font-weight:700;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#DC2626" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> This cannot be undone.</p>
+            <p style="margin:0 0 8px">All your listings, messages, and profile data will be permanently removed.</p>
+            <p style="margin:0">Type <strong>DELETE</strong> below to confirm:</p>
+            <input id="deleteConfirmInput" class="fi" style="margin-top:10px" placeholder="Type DELETE">
+          </div>`,
+          confirmText: 'Delete My Account',
+          cancelText: 'Cancel',
+          danger: true,
+          onConfirm() {
+            const inp = document.getElementById('deleteConfirmInput');
+            if (!inp || inp.value.trim() !== 'DELETE') { H.toast('Type DELETE to confirm'); return; }
+            const u = H.currentUser();
+            if (!u) return;
+            H.state.listings = (H.state.listings || []).filter(l => l.sellerId !== u.id);
+            H.state.conversations = (H.state.conversations || []).filter(c => !(c.members || []).includes(u.id));
+            H.state.users = (H.state.users || []).filter(x => x.id !== u.id);
+            H.state.currentUserId = null;
+            H.saveState();
+            if (window.supabase && window.supabase.auth) {
+              window.supabase.auth.signOut().catch(() => {}).finally(() => window.location.reload());
+            } else {
+              window.location.reload();
+            }
+          },
+        });
+      },
     };
   };
 
-  // ── My Listings ──────────────────────────────────────────
   pages.MyListings = function () {
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
-
     const all      = (H.state.listings || []).filter(l => l.sellerId === u.id);
     const active   = all.filter(l => l.status === 'active');
     const pending  = all.filter(l => l.status === 'pending');
     const sold     = all.filter(l => l.status === 'sold');
     const rejected = all.filter(l => l.status === 'rejected');
-
     const btn = (label, fn, c, bg, bo) =>
       `<button onclick="${fn}" style="flex:1;padding:8px 2px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:${bg};color:${c};border:1.5px solid ${bo};font-family:inherit;white-space:nowrap">${label}</button>`;
-
     const actionBars = {
-      active:   (id) => btn('Edit',        `H._myListings.edit('${id}')`,       '#1A3A8F','#EFF6FF','#BFDBFE')
-                      + btn('Mark Sold',   `H._myListings.markSold('${id}')`,   '#16a34a','#dcfce7','#bbf7d0')
-                      + btn('Delete',      `H._myListings.del('${id}')`,        '#ef4444','#fef2f2','#fecaca'),
-      pending:  (id) => btn('Edit',        `H._myListings.edit('${id}')`,       '#1A3A8F','#EFF6FF','#BFDBFE')
-                      + btn('Delete',      `H._myListings.del('${id}')`,        '#ef4444','#fef2f2','#fecaca'),
-      sold:     (id) => btn('Post Again',  `H._myListings.reactivate('${id}')`, '#1A3A8F','#EFF6FF','#BFDBFE')
-                      + btn('Delete',      `H._myListings.del('${id}')`,        '#ef4444','#fef2f2','#fecaca'),
-      rejected: (id) => btn('Edit & Resubmit', `H._myListings.edit('${id}')`,  '#D97706','#FFFBEB','#FDE68A')
-                      + btn('Delete',      `H._myListings.del('${id}')`,        '#ef4444','#fef2f2','#fecaca'),
+      active:   (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); const isJob=l&&l.cat==='jobs'; return btn('Edit',`H._myListings.edit('${id}')`,'#1A3A8F','#EFF6FF','#BFDBFE')+btn(isJob?'Mark Filled':'Mark Sold',`H._myListings.markSold('${id}')`,'#16a34a','#dcfce7','#bbf7d0')+btn('Delete',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'); },
+      pending:  (id) => btn('Edit',`H._myListings.edit('${id}')`,'#1A3A8F','#EFF6FF','#BFDBFE')+btn('Delete',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'),
+      sold:     (id) => btn('Post Again',`H._myListings.reactivate('${id}')`,'#1A3A8F','#EFF6FF','#BFDBFE')+btn('Delete',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'),
+      rejected: (id) => btn('Edit & Resubmit',`H._myListings.edit('${id}')`,'#D97706','#FFFBEB','#FDE68A')+btn('Delete',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'),
     };
-
-    const myCard = (l, status) =>
-      `<div style="margin-bottom:14px">
-        ${H.renderListCard(l)}
-        <div style="display:flex;gap:6px;margin-top:6px">
-          ${(actionBars[status] || actionBars.active)(l.id)}
-        </div>
-      </div>`;
-
+    const myCard = (l, status) => `<div style="margin-bottom:14px">${H.renderListCard(l)}<div style="display:flex;gap:6px;margin-top:6px">${(actionBars[status]||actionBars.active)(l.id)}</div></div>`;
     const section = (list, label, status) => list.length
       ? `<div style="padding:12px">${list.map(l => myCard(l, status)).join('')}</div>`
       : `<div style="color:var(--sub);padding:32px 20px;text-align:center;font-size:13px">No ${label.toLowerCase()} listings</div>`;
-
     return `<div class="page active">
       ${H.innerTopbar('My Listings')}
       <div class="listing-tabs">
         <button class="tab active" data-tab="active">Active (${active.length})</button>
         <button class="tab" data-tab="pending">Pending (${pending.length})</button>
-        <button class="tab" data-tab="sold">Sold (${sold.length})</button>
+        <button class="tab" data-tab="sold">Sold / Filled (${sold.length})</button>
         <button class="tab" data-tab="rejected">Rejected (${rejected.length})</button>
       </div>
       <div class="tabs-content">
         <div class="tab-content active" data-tab="active">${section(active,'Active','active')}</div>
         <div class="tab-content" data-tab="pending">${section(pending,'Pending','pending')}</div>
-        <div class="tab-content" data-tab="sold">${section(sold,'Sold','sold')}</div>
+        <div class="tab-content" data-tab="sold">${section(sold,'Sold / Filled','sold')}</div>
         <div class="tab-content" data-tab="rejected">${section(rejected,'Rejected','rejected')}</div>
       </div>
       <div style="height:24px"></div>
@@ -6373,39 +8744,14 @@ H.init();
         if (el) el.classList.add('active');
       });
     });
-
     H._myListings = {
-      edit: (id) => H.openInner('EditListing', { listingId: id }),
-      markSold: (id) => {
-        const l = (H.state.listings || []).find(x => x.id === id);
-        if (!l) return;
-        l.status = 'sold';
-        l.soldAt = Date.now();
-        H.saveState();
-        H.toast('Listing marked as sold');
-        H.renderPage('MyListings');
-      },
-      del: (id) => {
-        if (!window.confirm('Delete this listing permanently?')) return;
-        H.state.listings = (H.state.listings || []).filter(x => x.id !== id);
-        H.saveState();
-        H.toast('Listing deleted');
-        H.renderPage('MyListings');
-      },
-      reactivate: (id) => {
-        const l = (H.state.listings || []).find(x => x.id === id);
-        if (!l) return;
-        l.status = 'active';
-        delete l.soldAt;
-        l.renewedAt = Date.now();
-        H.saveState();
-        H.toast('Listing reactivated!');
-        H.renderPage('MyListings');
-      },
+      edit: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); H.openInner(l&&l.cat==='jobs'?'EditJob':'EditListing',{listingId:id}); },
+      markSold: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='sold'; l.soldAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'sold'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job marked as filled' : 'Listing marked as sold'); H.renderPage('MyListings'); },
+      del: (id) => { if(!window.confirm('Delete this listing permanently?'))return; H.state.listings=(H.state.listings||[]).filter(x=>x.id!==id); H.saveState(); H.toast('Listing deleted'); H.renderPage('MyListings'); },
+      reactivate: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='active'; delete l.soldAt; l.renewedAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'active'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job reopened!' : 'Listing reactivated!'); H.renderPage('MyListings'); },
     };
   };
 
-  // ── Edit Listing ─────────────────────────────────────────
   pages.EditListing = function (params) {
     const id = params && params.listingId;
     const l  = id ? (H.state.listings || []).find(x => x.id === id) : null;
@@ -6413,15 +8759,9 @@ H.init();
     return `<div class="page active">
       ${H.innerTopbar('Edit Listing')}
       <div class="form-wrap">
-        <div class="fg"><div class="fl">Title</div>
-          <input class="fi" id="elTitle" value="${H.escHtml(l.title || '')}" placeholder="Listing title" maxlength="80">
-        </div>
-        <div class="fg"><div class="fl">Price (USD)</div>
-          <input class="fi" id="elPrice" type="number" min="0" value="${H.escHtml(String(l.price || ''))}" placeholder="0">
-        </div>
-        <div class="fg"><div class="fl">Description</div>
-          <textarea class="fi" id="elDesc" rows="5" placeholder="Describe your item...">${H.escHtml(l.description || '')}</textarea>
-        </div>
+        <div class="fg"><div class="fl">Title</div><input class="fi" id="elTitle" value="${H.escHtml(l.title || '')}" placeholder="Listing title" maxlength="80"></div>
+        <div class="fg"><div class="fl">Price (USD)</div><input class="fi" id="elPrice" type="number" min="0" value="${H.escHtml(String(l.price || ''))}" placeholder="0"></div>
+        <div class="fg"><div class="fl">Description</div><textarea class="fi" id="elDesc" rows="5" placeholder="Describe your item...">${H.escHtml(l.description || '')}</textarea></div>
         <div id="elErr" style="display:none;color:#ef4444;font-size:13px;font-weight:600;padding:6px 0"></div>
         <button id="elSaveBtn" class="btn-pri" onclick="H._editListing.save('${id}')">Save Changes</button>
         <button class="btn-sec" onclick="H.goBack()">Cancel</button>
@@ -6437,21 +8777,14 @@ H.init();
         const desc  = document.getElementById('elDesc')?.value.trim();
         const errEl = document.getElementById('elErr');
         const btn   = document.getElementById('elSaveBtn');
-        const showErr = (m) => { if (errEl) { errEl.textContent = m; errEl.style.display = ''; } };
-
+        const showErr = (m) => { if(errEl){errEl.textContent=m;errEl.style.display='';} };
         if (!title) { showErr('Title is required'); return; }
         if (isNaN(price) || price < 0) { showErr('Enter a valid price'); return; }
         if (!desc) { showErr('Description is required'); return; }
-
         const l = (H.state.listings || []).find(x => x.id === id);
         if (!l) { showErr('Listing not found'); return; }
-
-        l.title       = title;
-        l.price       = price;
-        l.description = desc;
-        l.updatedAt   = Date.now();
+        l.title=title; l.price=price; l.description=desc; l.updatedAt=Date.now();
         if (l.status === 'rejected') l.status = 'pending';
-
         if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
         H.saveState();
         H.toast('Listing updated!');
@@ -6460,14 +8793,11 @@ H.init();
     };
   };
 
-  // ── Favorites ────────────────────────────────────────────
   pages.Favorites = function () {
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
-
     const saved = (H.state.saves && H.state.saves[u.id]) || [];
     const list  = (H.state.listings || []).filter(l => saved.includes(l.id) && l.status === 'active');
-
     const savedCard = (l) =>
       `<div style="margin-bottom:14px">
         ${H.renderListCard(l)}
@@ -6476,13 +8806,10 @@ H.init();
           <button onclick="H.openListing('${l.id}')" style="flex:2;padding:9px 4px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#EFF6FF;color:#1A3A8F;border:1.5px solid #BFDBFE;font-family:inherit">View Listing</button>
         </div>
       </div>`;
-
     return `<div class="page active">
       ${H.innerTopbar(list.length ? `Saved & Favorites (${list.length})` : 'Saved & Favorites')}
       <div style="padding:14px">
-        ${list.length
-          ? list.map(savedCard).join('')
-          : H.emptyState('No saved listings', 'Tap the heart on any listing to save it', 'Browse', "H.navTo('Browse')")}
+        ${list.length ? list.map(savedCard).join('') : H.emptyState('No saved listings', 'Tap the heart on any listing to save it', 'Browse', "H.navTo('Browse')")}
       </div>
       <div style="height:24px"></div>
     </div>`;
@@ -6491,8 +8818,7 @@ H.init();
   pages.Favorites_after = function () {
     H._favorites = {
       unsave: (id) => {
-        const u = H.currentUser();
-        if (!u) return;
+        const u = H.currentUser(); if (!u) return;
         H.state.saves = H.state.saves || {};
         H.state.saves[u.id] = (H.state.saves[u.id] || []).filter(sid => sid !== id);
         H.saveState();
@@ -6502,55 +8828,46 @@ H.init();
     };
   };
 
-  // ── Identity Verification ────────────────────────────────
   pages.ProfileVerify = function () {
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
-
-    if (u.verified) return `<div class="page active">
-      ${H.innerTopbar('Identity Verification')}
-      <div class="section-box" style="text-align:center;padding:32px 20px">
-        <div style="font-size:48px;margin-bottom:12px">✅</div>
-        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Identity Verified</div>
-        <div style="font-size:14px;color:var(--sub)">You have a verified badge on all your listings.</div>
-        <div style="font-size:12px;color:var(--sub);margin-top:8px">Verified on ${new Date(u.verifiedAt || Date.now()).toLocaleDateString()}</div>
-      </div>
-    </div>`;
-
-    if (u.verificationPending) return `<div class="page active">
-      ${H.innerTopbar('Identity Verification')}
-      <div class="section-box" style="text-align:center;padding:32px 20px">
-        <div style="font-size:48px;margin-bottom:12px">⏳</div>
-        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Verification Pending</div>
-        <div style="font-size:14px;color:var(--sub)">Your request is under review. We will notify you within 24 hours.</div>
-      </div>
-    </div>`;
-
+    if (u.verified) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="margin-bottom:12px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Identity Verified</div><div style="font-size:14px;color:var(--sub)">You have a verified badge on all your listings.</div><div style="font-size:12px;color:var(--sub);margin-top:8px">Verified on ${new Date(u.verifiedAt || Date.now()).toLocaleDateString()}</div></div></div>`;
+    if (u.verificationPending) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="margin-bottom:12px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Verification Pending</div><div style="font-size:14px;color:var(--sub)">Your request is under review. We will notify you within 24 hours.</div><button onclick="H._profileVerify.cancelPending()" style="margin-top:18px;padding:10px 28px;background:var(--bg);color:var(--sub);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel request</button></div></div>`;
     return `<div class="page active">
       ${H.innerTopbar('Verify Identity')}
-      <div class="section-box" style="text-align:center;padding:24px 20px">
-        <div style="font-size:48px;margin-bottom:12px">🪪</div>
-        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Get Verified</div>
-        <div style="font-size:14px;color:var(--sub)">Build trust with buyers by verifying your identity with a valid ID.</div>
+      <div class="section-box" style="text-align:center;padding:20px 20px 14px">
+        <div style="margin-bottom:10px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">Identity Verification</div>
+        <div style="font-size:13px;color:var(--sub)">Submit your ID and a selfie. Review takes up to 24 hours.</div>
       </div>
       <div class="form-wrap">
-        <div class="fg"><div class="fl">ID Type</div>
-          <select class="fi" id="idType">
-            <option>National ID</option>
-            <option>Passport</option>
-            <option>Driver&#39;s License</option>
-          </select>
-        </div>
-        <div class="fg"><div class="fl">ID Number</div>
-          <input class="fi" id="idNum" placeholder="Enter your ID number">
+        <div class="fg"><div class="fl">ID Type</div><select class="fi" id="idType"><option>National ID</option><option>Passport</option><option>Driver&#39;s License</option></select></div>
+        <div class="fg"><div class="fl">ID Number</div><input class="fi" id="idNum" placeholder="Enter your ID number"></div>
+        <div class="fg">
+          <div class="fl">Selfie Photo <span style="font-weight:400;color:var(--sub);font-size:11px">(center your face in the oval)</span></div>
+          <div style="position:relative;width:220px;height:280px;margin:0 auto 10px;border-radius:14px;overflow:hidden;background:#111">
+            <div id="selfiePH" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a2e;gap:8px">
+              <div style="display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+              <div style="font-size:12px;color:rgba(255,255,255,.65);text-align:center;padding:0 16px">Tap Camera or Upload to add your selfie</div>
+            </div>
+            <video id="selfieVid" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)"></video>
+            <canvas id="selfieCanvas" style="display:none"></canvas>
+            <div id="selfiePrev" style="display:none;position:absolute;inset:0"><img id="selfieImg" style="width:100%;height:100%;object-fit:cover"></div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
+              <div style="width:130px;height:170px;border-radius:50%;border:3px solid rgba(255,255,255,.88);box-shadow:0 0 0 9999px rgba(0,0,0,.48)"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;max-width:220px;margin:0 auto">
+            <button id="selfieStartBtn" onclick="H._profileVerify.startCamera()" style="flex:1;padding:10px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Camera</button>
+            <button id="selfieCapBtn" onclick="H._profileVerify.captureSelfie()" style="display:none;flex:1;padding:10px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Capture</button>
+            <button id="selfieRetakeBtn" onclick="H._profileVerify.retakeSelfie()" style="display:none;flex:1;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg> Retake</button>
+            <label for="selfieFile" style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">Upload</label>
+            <input type="file" id="selfieFile" accept="image/*" capture="user" style="display:none" onchange="H._profileVerify.handleSelfieFile(this)">
+          </div>
         </div>
         <div class="fg"><div class="fl">ID Photo (Front)</div>
-          <label class="img-upload-zone" for="idPhotoFront">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <div class="img-upload-title">Upload front of ID</div>
-            <div class="img-upload-sub">JPG or PNG</div>
-          </label>
-          <input type="file" id="idPhotoFront" accept="image/*" capture style="display:none">
+          <label class="img-upload-zone" for="idPhotoFront"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-upload-title" id="idPhotoLabel">Upload front of ID</div><div class="img-upload-sub">National ID, Passport or Driver&#39;s License</div></label>
+          <input type="file" id="idPhotoFront" accept="image/*" capture="environment" style="display:none" onchange="H._profileVerify.previewIdPhoto(this)">
         </div>
         <button class="btn-pri" onclick="H._profileVerify.submit()">Submit for Verification</button>
       </div>
@@ -6559,36 +8876,174 @@ H.init();
 
   pages.ProfileVerify_after = function () {
     H._profileVerify = {
-      submit: () => {
-        const idNum = document.getElementById('idNum')?.value.trim();
+      _stream: null,
+      _selfieData: null,
+
+      startCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          H.toast('Camera not available — please upload a selfie photo.');
+          return;
+        }
+        const btn = document.getElementById('selfieStartBtn');
+        if (btn) btn.style.display = 'none';
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 640 } } })
+          .then(stream => {
+            this._stream = stream;
+            const vid = document.getElementById('selfieVid');
+            const ph  = document.getElementById('selfiePH');
+            const cap = document.getElementById('selfieCapBtn');
+            if (vid) { vid.srcObject = stream; vid.style.display = 'block'; }
+            if (ph)  ph.style.display = 'none';
+            if (cap) cap.style.display = 'flex';
+          })
+          .catch(() => {
+            H.toast('Camera permission denied — use Upload instead.');
+            const btn2 = document.getElementById('selfieStartBtn');
+            if (btn2) btn2.style.display = 'flex';
+          });
+      },
+
+      captureSelfie() {
+        const vid    = document.getElementById('selfieVid');
+        const canvas = document.getElementById('selfieCanvas');
+        if (!vid || !canvas) return;
+        canvas.width  = vid.videoWidth  || 480;
+        canvas.height = vid.videoHeight || 640;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(vid, 0, 0);
+        this._selfieData = canvas.toDataURL('image/jpeg', 0.85);
+        if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
+        vid.style.display = 'none';
+        const prev    = document.getElementById('selfiePrev');
+        const img     = document.getElementById('selfieImg');
+        const capBtn  = document.getElementById('selfieCapBtn');
+        const retake  = document.getElementById('selfieRetakeBtn');
+        if (prev)   prev.style.display = 'block';
+        if (img)    img.src = this._selfieData;
+        if (capBtn) capBtn.style.display = 'none';
+        if (retake) retake.style.display = 'flex';
+        H.toast('Selfie captured');
+      },
+
+      retakeSelfie() {
+        this._selfieData = null;
+        const prev   = document.getElementById('selfiePrev');
+        const retake = document.getElementById('selfieRetakeBtn');
+        if (prev)   prev.style.display = 'none';
+        if (retake) retake.style.display = 'none';
+        this.startCamera();
+      },
+
+      handleSelfieFile(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          this._selfieData = e.target.result;
+          const ph      = document.getElementById('selfiePH');
+          const vid     = document.getElementById('selfieVid');
+          const prev    = document.getElementById('selfiePrev');
+          const img     = document.getElementById('selfieImg');
+          const startBtn = document.getElementById('selfieStartBtn');
+          const capBtn  = document.getElementById('selfieCapBtn');
+          const retake  = document.getElementById('selfieRetakeBtn');
+          if (ph)       ph.style.display = 'none';
+          if (vid)      vid.style.display = 'none';
+          if (prev)     prev.style.display = 'block';
+          if (img)      img.src = this._selfieData;
+          if (startBtn) startBtn.style.display = 'none';
+          if (capBtn)   capBtn.style.display = 'none';
+          if (retake)   retake.style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+      },
+
+      previewIdPhoto(input) {
+        const label = document.getElementById('idPhotoLabel');
+        if (input.files && input.files[0] && label) label.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> ID photo selected';
+      },
+
+      async submit() {
+        const idType = document.getElementById('idType')?.value || 'National ID';
+        const idNum  = (document.getElementById('idNum')?.value || '').trim();
         if (!idNum) { H.toast('Please enter your ID number'); return; }
+        if (!this._selfieData) { H.toast('Please take or upload a selfie photo'); return; }
+        if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
+        const btn = document.querySelector('.btn-pri[onclick="H._profileVerify.submit()"]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
         const u = H.currentUser();
-        u.verificationPending = true;
+        const sb = window.supabase;
+
+        const doSubmit = async (idDocData) => {
+          try {
+            if (!sb) throw new Error('Not connected to server');
+            const { error: vErr } = await sb.from('verifications').upsert({
+              user_id: u.id,
+              id_doc: idDocData || null,
+              selfie: this._selfieData,
+              status: 'pending',
+              submitted_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+            if (vErr) throw vErr;
+            const { error: pErr } = await sb.from('profiles').update({
+              verification_pending: true,
+              updated_at: new Date().toISOString()
+            }).eq('id', u.id);
+            if (pErr) throw pErr;
+            u.verificationPending    = true;
+            u.verification_pending   = true;
+            u.verificationIdType     = idType;
+            u.verificationIdNum      = idNum;
+            H.saveState();
+            H.toast('Verification submitted! Admin will review within 24 hours.');
+            H.goBack();
+          } catch (e) {
+            if (btn) { btn.disabled = false; btn.textContent = 'Submit for Verification'; }
+            H.toast('Failed to submit: ' + (e.message || 'Check your connection'));
+          }
+        };
+
+        const idFile = document.getElementById('idPhotoFront');
+        if (idFile && idFile.files && idFile.files[0]) {
+          const reader = new FileReader();
+          reader.onload = e => doSubmit(e.target.result);
+          reader.readAsDataURL(idFile.files[0]);
+        } else {
+          doSubmit(null);
+        }
+      },
+
+      async cancelPending() {
+        const u = H.currentUser();
+        u.verificationPending  = false;
+        u.verification_pending = false;
         H.saveState();
-        H.toast('Verification submitted. We will review within 24h.');
-        H.goBack();
+        const sb = window.supabase;
+        if (sb) {
+          await sb.from('profiles').update({ verification_pending: false }).eq('id', u.id);
+          await sb.from('verifications').delete().eq('user_id', u.id);
+        }
+        H.toast('Verification request cancelled');
+        H.renderPage('ProfileVerify');
       }
     };
   };
 
-  // ── Reviews & Ratings ────────────────────────────────────
   pages.Reviews = function (params) {
     const viewId = params && params.id;
     const me = H.currentUser();
     const u  = viewId ? (H.state.users || []).find(x => x.id === viewId) : me;
     if (!u) return '<div class="page active">' + H.innerTopbar('Reviews') + H.emptyState('User not found', '', null, null) + '</div>';
-
     const isOwn = !viewId || (me && viewId === me.id);
     const reviews = u.reviews || [];
     const avg = reviews.length ? (reviews.reduce((a,r) => a + (r.rating||0), 0) / reviews.length).toFixed(1) : null;
     const dist = [5,4,3,2,1].map(n => ({ n, count: reviews.filter(r => Math.round(r.rating||0)===n).length }));
     const maxDist = Math.max(1, ...dist.map(d => d.count));
-
     const alreadyReviewed = me && reviews.some(r => r.reviewerId === me.id);
-
     return `<div class="page active">
       ${H.innerTopbar(isOwn ? 'My Reviews' : H.escHtml(u.name) + '\'s Reviews')}
-
       <div style="background:var(--card);padding:20px 16px;border-bottom:1px solid var(--border)">
         <div style="display:flex;gap:20px;align-items:center">
           <div style="text-align:center">
@@ -6597,60 +9052,32 @@ H.init();
             <div style="font-size:12px;color:var(--sub)">${reviews.length} review${reviews.length===1?'':'s'}</div>
           </div>
           <div style="flex:1">
-            ${dist.map(d => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-              <div style="font-size:11px;color:var(--sub);width:8px">${d.n}</div>
-              <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
-                <div style="height:100%;background:#f59e0b;width:${Math.round((d.count/maxDist)*100)}%;border-radius:3px;transition:width .3s"></div>
-              </div>
-              <div style="font-size:11px;color:var(--sub);width:14px;text-align:right">${d.count}</div>
-            </div>`).join('')}
+            ${dist.map(d => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><div style="font-size:11px;color:var(--sub);width:8px">${d.n}</div><div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;background:#f59e0b;width:${Math.round((d.count/maxDist)*100)}%;border-radius:3px;transition:width .3s"></div></div><div style="font-size:11px;color:var(--sub);width:14px;text-align:right">${d.count}</div></div>`).join('')}
           </div>
         </div>
-        ${!isOwn && me && !alreadyReviewed ? `
-        <button onclick="H.leaveReview('${u.id}')" style="width:100%;margin-top:16px;padding:12px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">
-          Leave a Review
-        </button>` : ''}
+        ${!isOwn && me && !alreadyReviewed ? `<button onclick="H.leaveReview('${u.id}')" style="width:100%;margin-top:16px;padding:12px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Leave a Review</button>` : ''}
         ${!isOwn && me && alreadyReviewed ? `<div style="text-align:center;margin-top:14px;font-size:13px;color:var(--sub)">You have already reviewed this seller</div>` : ''}
       </div>
-
       <div style="padding:12px 14px 88px">
         ${reviews.length ? reviews.slice().sort((a,b) => b.date - a.date).slice(0,20).map(r => `
           <div style="background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid var(--border)">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-              <div>
-                <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(r.reviewerName || 'Anonymous')}</div>
-                <div style="display:flex;gap:2px;margin-top:3px">${stars(r.rating||0)}</div>
-              </div>
+              <div><div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(r.reviewerName || 'Anonymous')}</div><div style="display:flex;gap:2px;margin-top:3px">${stars(r.rating||0)}</div></div>
               <div style="font-size:12px;color:var(--sub)">${H.timeAgo(r.date)}</div>
             </div>
             ${r.text ? `<div style="font-size:13px;color:var(--text);line-height:1.6;margin-top:8px">${H.escHtml(r.text)}</div>` : ''}
-          </div>`).join('')
-          : `<div style="text-align:center;padding:48px 20px">
-            <div style="font-size:40px;margin-bottom:12px">⭐</div>
-            <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">No reviews yet</div>
-            <div style="font-size:13px;color:var(--sub)">Reviews from buyers will appear here after transactions</div>
-          </div>`}
+          </div>`).join('') : `<div style="text-align:center;padding:48px 20px"><div style="display:flex;justify-content:center;margin-bottom:12px"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">No reviews yet</div><div style="font-size:13px;color:var(--sub)">Reviews from buyers will appear here after transactions</div></div>`}
       </div>
     </div>`;
   };
 
-  // ── Leave a Review ────────────────────────────────────────
   H.leaveReview = function (sellerId) {
     const me = H.currentUser();
     if (!me) { H.requireAuth('Sign in to leave a review'); return; }
     if (sellerId === me.id) { H.toast('You cannot review yourself'); return; }
-
-    let selectedRating = 0;
-
     H.modal({
       title: 'Leave a Review',
-      body: `<div style="text-align:center;margin-bottom:14px">
-        <div style="font-size:13px;color:var(--sub);margin-bottom:10px">Tap to rate your experience</div>
-        <div id="starPicker" style="display:flex;justify-content:center;gap:8px">
-          ${[1,2,3,4,5].map(n => `<button data-star="${n}" onclick="H._pickStar(${n})" style="font-size:32px;background:none;border:none;cursor:pointer;padding:4px;line-height:1">☆</button>`).join('')}
-        </div>
-      </div>
-      <textarea id="reviewText" rows="3" placeholder="Share your experience with this seller…" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif"></textarea>`,
+      body: `<div style="text-align:center;margin-bottom:14px"><div style="font-size:13px;color:var(--sub);margin-bottom:10px">Tap to rate your experience</div><div id="starPicker" style="display:flex;justify-content:center;gap:8px">${[1,2,3,4,5].map(n => `<button data-star="${n}" onclick="H._pickStar(${n})" style="background:none;border:none;cursor:pointer;padding:4px;line-height:1"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--sub)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>`).join('')}</div></div><textarea id="reviewText" rows="3" placeholder="Share your experience with this seller…" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif"></textarea>`,
       confirmText: 'Submit Review',
       onConfirm: () => {
         const rating = H._selectedStar || 0;
@@ -6667,8 +9094,8 @@ H.init();
     const btns = document.querySelectorAll('#starPicker button');
     btns.forEach(function(b) {
       const v = parseInt(b.getAttribute('data-star'));
-      b.textContent = v <= n ? '★' : '☆';
-      b.style.color = v <= n ? '#f59e0b' : 'var(--sub)';
+      const filled = v <= n;
+      b.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" fill="${filled ? '#f59e0b' : 'none'}" stroke="${filled ? '#f59e0b' : 'currentColor'}" stroke-width="2" style="color:${filled ? '#f59e0b' : 'var(--sub)'}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
     });
   };
 
@@ -6679,513 +9106,946 @@ H.init();
     seller.ratings  = seller.ratings  || [];
     const dup = seller.reviews.find(r => r.reviewerId === me.id);
     if (dup) { H.toast('You have already reviewed this seller'); return; }
-    const review = {
-      id: H.uid(), reviewerId: me.id, reviewerName: me.name || 'User',
-      rating, text, date: Date.now()
-    };
+    const review = { id: H.uid(), reviewerId: me.id, reviewerName: me.name || 'User', rating, text, date: Date.now() };
     seller.reviews.unshift(review);
     seller.ratings.push(rating);
     H.saveState();
+    var _sb = window.supabase;
+    if (_sb && typeof _sb.from === 'function') {
+      _sb.from('reviews').insert({
+        seller_id: sellerId, reviewer_id: me.id,
+        reviewer_name: me.name || 'User', rating: rating,
+        body: text || null, created_at: new Date().toISOString()
+      }).then(function(res) {
+        if (res && res.error) console.warn('Review sync failed:', res.error.message);
+      });
+    }
     H.pushNotif(sellerId, 'New Review', me.name + ' left you a ' + rating + '-star review', 'review');
     H.toast('Review submitted. Thank you!');
     H.renderPage('Reviews', {id: sellerId});
   };
 
-  // ── Applied Jobs (candidate view) ─────────────────────────
-  // Registered as pages.AppliedJobs in jobs.js — linked from account menu here
   H._openAppliedJobs = function () { H.openInner('AppliedJobs'); };
 
+  // ── JOB SEEKER PROFILE — READ-ONLY VIEW (LinkedIn-style) ──
+  pages.JobSeekerProfile = function () {
+    const u = H.currentUser();
+    if (!u) return H.emptyState('Not logged in', 'Please sign in');
+
+    const cv       = u.cv || {};
+    const exp      = cv.experience || [];
+    const edu      = cv.education  || [];
+    const skills   = (u.skills || (cv.skills || []).join(',') || '').split(',').map(s => s.trim()).filter(Boolean);
+    const headline = u.jobTitle || cv.headline || '';
+    const bio      = u.bio || cv.summary || '';
+    const location = u.city || cv.location || '';
+    const jobTypes = (u.jobTypes || '').split(',').map(s => s.trim()).filter(Boolean);
+    const salary   = u.expectedSalary || cv.expectedSalary || '';
+    const hasProfile = !!(headline || bio || skills.length || exp.length || edu.length);
+
+    const sec = (title, icon, content) => `
+      <div style="background:#fff;border-radius:16px;margin-bottom:12px;border:1px solid #E4E8F0;overflow:hidden">
+        <div style="padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #F0F4FF">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.5px">${icon}${title}</div>
+          ${title==='Experience'?`<button onclick="H._cvProfile.addExp()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>`:''}
+          ${title==='Education'?`<button onclick="H._cvProfile.addEdu()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>`:''}
+        </div>
+        <div style="padding:14px 16px">${content}</div>
+      </div>`;
+
+    const expHtml = exp.length ? exp.map((e, i) => `
+      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #F0F4FF">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(e.title||'')}</div>
+        <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.company||'')}</div>
+        <div style="font-size:12px;color:#667085;margin-top:2px">${H.escHtml(e.duration||'')}${e.current?' · Current':''}</div>
+        ${e.desc?`<div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.55">${H.escHtml(e.desc)}</div>`:''}
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button onclick="H._cvProfile.editExp(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
+          <button onclick="H._cvProfile.delExp(${i})"  style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
+        </div>
+      </div>`).join('')
+      : '<div style="color:#667085;font-size:13px">No experience added yet</div>';
+
+    const eduHtml = edu.length ? edu.map((e, i) => `
+      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #F0F4FF">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(e.degree||'')}</div>
+        <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.school||'')}</div>
+        <div style="font-size:12px;color:#667085;margin-top:2px">${H.escHtml(e.year||'')}</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button onclick="H._cvProfile.editEdu(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
+          <button onclick="H._cvProfile.delEdu(${i})"  style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
+        </div>
+      </div>`).join('')
+      : '<div style="color:#667085;font-size:13px">No education added yet</div>';
+
+    const skillsHtml = skills.length
+      ? skills.map(s => `<span style="display:inline-block;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">${H.escHtml(s)}</span>`).join('')
+      : '<div style="color:#667085;font-size:13px">No skills added yet</div>';
+
+    const jtHtml = jobTypes.length
+      ? jobTypes.map(t => `<span style="display:inline-block;background:#F0FDF4;color:#15803d;border:1px solid #BBF7D0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">${H.escHtml(t)}</span>`).join('')
+      : '<div style="color:#667085;font-size:13px">Not set</div>';
+
+    const contactHtml = (() => {
+      const rows = [];
+      if (u.whatsappFull || u.whatsappNum) rows.push(`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span style="font-size:13px;color:var(--text)">+${H.escHtml(u.whatsappFull||u.whatsappNum||'')}</span></div>`);
+      if (u.contactMethod) rows.push(`<div style="font-size:13px;color:#667085">Preferred: <strong style="color:var(--text)">${H.escHtml(u.contactMethod)}</strong></div>`);
+      if (u.linkedinUrl)   rows.push(`<div style="margin-top:6px;font-size:13px"><a href="${H.escHtml(u.linkedinUrl)}" target="_blank" style="color:#1A3A8F;font-weight:600">LinkedIn Profile</a></div>`);
+      if (u.websiteUrl)    rows.push(`<div style="margin-top:4px;font-size:13px"><a href="${H.escHtml(u.websiteUrl)}" target="_blank" style="color:#1A3A8F;font-weight:600">Portfolio / Website</a></div>`);
+      return rows.length ? rows.join('') : '<div style="color:#667085;font-size:13px">No contact info added yet</div>';
+    })();
+
+    const resumeHtml = (u.cvFileUrl || u.cvFileName)
+      ? `<div style="display:flex;align-items:center;gap:10px;background:#F8FAFF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 14px">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${H.escHtml(u.cvFileName||'Resume')}</div></div>
+          ${u.cvFileUrl?`<a href="${H.escHtml(u.cvFileUrl)}" target="_blank" style="font-size:12px;font-weight:700;color:#1A3A8F;text-decoration:none;flex-shrink:0">View</a>`:''}
+        </div>`
+      : '<div style="color:#667085;font-size:13px">No resume uploaded yet</div>';
+
+    if (!hasProfile) {
+      return `<div class="page active">
+        ${H.innerTopbar('My Job Profile')}
+        <div style="padding:40px 24px;text-align:center">
+          <div style="width:72px;height:72px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#1A3A8F" stroke-width="1.5"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+          </div>
+          <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">You don't have a job profile yet</div>
+          <div style="font-size:13px;color:#667085;line-height:1.6;margin-bottom:24px">Create your profile so employers in Hire Talent can find and contact you.</div>
+          <button onclick="H.openInner('CandidateProfile')" style="width:100%;max-width:280px;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Create Job Profile</button>
+        </div>
+      </div>`;
+    }
+
+    return `<div class="page active">
+      ${H.innerTopbar('My Job Profile')}
+      <div style="padding:0 14px 100px">
+
+        <!-- Profile Header Card -->
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:20px;padding:20px;margin:14px 0;display:flex;gap:14px;align-items:flex-start">
+          <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;font-weight:800;color:#fff;border:2.5px solid rgba(255,255,255,.4)">
+            ${u.avatar?`<img src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:H.initials(u.name)}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:17px;font-weight:800;color:#fff">${H.escHtml(u.name||'')}</div>
+            ${headline?`<div style="font-size:13px;color:rgba(255,255,255,.9);font-weight:600;margin-top:3px">${H.escHtml(headline)}</div>`:''}
+            ${location?`<div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:2px;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${H.escHtml(location)}</div>`:''}
+            ${u.openToWork?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.25);border:1px solid rgba(34,197,94,.5);border-radius:20px;padding:3px 10px;margin-top:6px"><svg viewBox="0 0 24 24" width="10" height="10" fill="#22c55e" stroke="none"><circle cx="12" cy="12" r="12"/></svg><span style="font-size:11px;font-weight:700;color:#86efac">Open to Work</span></div>`:''}
+          </div>
+        </div>
+
+        ${u.verified?`<div style="display:flex;align-items:center;gap:6px;background:#ECFDF5;border:1.5px solid #6EE7B7;border-radius:10px;padding:10px 14px;margin-bottom:12px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;font-weight:700;color:#059669">Identity Verified</span></div>`:''}
+
+        ${bio?sec('About','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg> ',`<div style="font-size:13px;color:var(--text);line-height:1.65">${H.escHtml(bio)}</div>`):''}
+
+        ${sec('Skills','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> ', skillsHtml)}
+        ${jobTypes.length?sec('Job Type / Availability','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> ', jtHtml):''}
+        ${salary?sec('Expected Salary','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> ',`<div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(String(salary))}</div>`):''}
+        ${sec('Work Experience','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> ', expHtml)}
+        ${sec('Education','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> ', eduHtml)}
+        ${sec('Contact & Links','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> ', contactHtml)}
+        ${sec('Resume / CV','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ', resumeHtml)}
+
+      </div>
+
+      <!-- Fixed bottom Edit button -->
+      <div style="position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #E4E8F0;z-index:200">
+        <button onclick="H.openInner('CandidateProfile')" style="width:100%;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Profile
+        </button>
+      </div>
+    </div>`;
+  };
+
+  pages.JobSeekerProfile_after = function () {
+    function captureDraft() {
+      const u = H.currentUser();
+      if (!u) return;
+      u.cv = u.cv || {};
+      const headlineEl = document.getElementById('cvHeadline');
+      const summaryEl = document.getElementById('cvSummary');
+      const skillsEl = document.getElementById('cvSkills');
+      const certsEl = document.getElementById('cvCerts');
+      const salaryEl = document.getElementById('cvSalary');
+      const locationEl = document.getElementById('cvLocation');
+      const visibleEl = document.getElementById('cvVisible');
+      if (headlineEl) u.cv.headline = headlineEl.value.trim();
+      if (summaryEl) u.cv.summary = summaryEl.value.trim();
+      if (skillsEl) u.cv.skills = skillsEl.value.split(',').map(s => s.trim()).filter(Boolean);
+      if (certsEl) u.cv.certs = certsEl.value.split('\n').map(s => s.trim()).filter(Boolean);
+      if (salaryEl) u.cv.expectedSalary = parseFloat(salaryEl.value) || null;
+      if (locationEl) u.cv.location = locationEl.value.trim();
+      if (visibleEl) u.cv.visible = visibleEl.checked;
+    }
+    H._cvProfile = {
+      save() {
+        const u = H.currentUser();
+        if (!u) return;
+        captureDraft();
+        // Make visible in HireTalent if they have a headline or experience
+        if (u.cv.visible && (u.cv.headline || u.cv.summary || (u.cv.experience && u.cv.experience.length))) {
+          u.openToWork = true;
+        }
+        u.jobTitle = u.cv.headline || u.jobTitle || '';
+        u.skills = (u.cv.skills || []).join(', ');
+        H.saveState();
+        const sb = window.supabase;
+        if (sb && typeof sb.from === 'function') {
+          sb.from('profiles').upsert({
+            id: u.id, cv: u.cv,
+            job_title: u.jobTitle || null,
+            skills: u.skills || null,
+            city: u.cv.location || null,
+            open_to_work: u.openToWork || false,
+            updated_at: new Date().toISOString()
+          }).then(r => { if (r && r.error) console.warn('CV sync:', r.error.message); });
+        }
+        H.toast('Job profile saved!');
+        H.goBack();
+      },
+      addExp() {
+        captureDraft();
+        H.modal({
+          title: 'Add Work Experience',
+          body: `<div style="display:flex;flex-direction:column;gap:8px">
+            <input id="expTitle" class="fi" placeholder="Job Title *">
+            <input id="expCompany" class="fi" placeholder="Company Name *">
+            <input id="expDuration" class="fi" placeholder="Duration e.g. Jan 2020 – Dec 2022">
+            <label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer"><input type="checkbox" id="expCurrent">Still working here</label>
+            <textarea id="expDesc" class="fi" rows="3" placeholder="Role description / responsibilities..."></textarea>
+          </div>`,
+          confirmText: 'Add',
+          onConfirm: () => {
+            const title   = (document.getElementById('expTitle')?.value || '').trim();
+            const company = (document.getElementById('expCompany')?.value || '').trim();
+            if (!title || !company) { H.toast('Title and company are required'); return false; }
+            const u = H.currentUser();
+            u.cv = u.cv || {};
+            u.cv.experience = u.cv.experience || [];
+            u.cv.experience.push({
+              title, company,
+              duration: (document.getElementById('expDuration')?.value || '').trim(),
+              current:  document.getElementById('expCurrent')?.checked || false,
+              desc:     (document.getElementById('expDesc')?.value || '').trim()
+            });
+            H.saveState();
+            H.renderPage('JobSeekerProfile');
+          }
+        });
+      },
+      addEdu() {
+        captureDraft();
+        H.modal({
+          title: 'Add Education',
+          body: `<div style="display:flex;flex-direction:column;gap:8px">
+            <input id="eduDegree" class="fi" placeholder="Degree / Certificate *">
+            <input id="eduSchool" class="fi" placeholder="School / University *">
+            <input id="eduYear" class="fi" placeholder="Year e.g. 2018">
+          </div>`,
+          confirmText: 'Add',
+          onConfirm: () => {
+            const degree = (document.getElementById('eduDegree')?.value || '').trim();
+            const school = (document.getElementById('eduSchool')?.value || '').trim();
+            if (!degree || !school) { H.toast('Degree and school are required'); return false; }
+            const u = H.currentUser();
+            u.cv = u.cv || {};
+            u.cv.education = u.cv.education || [];
+            u.cv.education.push({
+              degree, school,
+              year: (document.getElementById('eduYear')?.value || '').trim()
+            });
+            H.saveState();
+            H.renderPage('JobSeekerProfile');
+          }
+        });
+      },
+      editExp(i) {
+        captureDraft();
+        const u = H.currentUser();
+        const e = (u.cv && u.cv.experience && u.cv.experience[i]) || {};
+        H.modal({
+          title: 'Edit Work Experience',
+          body: `<div style="display:flex;flex-direction:column;gap:8px">
+            <input id="expTitle" class="fi" value="${H.escHtml(e.title||'')}" placeholder="Job Title *">
+            <input id="expCompany" class="fi" value="${H.escHtml(e.company||'')}" placeholder="Company Name *">
+            <input id="expDuration" class="fi" value="${H.escHtml(e.duration||'')}" placeholder="Duration">
+            <label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer"><input type="checkbox" id="expCurrent" ${e.current?'checked':''}>Still working here</label>
+            <textarea id="expDesc" class="fi" rows="3" placeholder="Description...">${H.escHtml(e.desc||'')}</textarea>
+          </div>`,
+          confirmText: 'Save',
+          onConfirm: () => {
+            const title   = (document.getElementById('expTitle')?.value || '').trim();
+            const company = (document.getElementById('expCompany')?.value || '').trim();
+            if (!title || !company) { H.toast('Title and company are required'); return false; }
+            u.cv.experience[i] = {
+              title, company,
+              duration: (document.getElementById('expDuration')?.value || '').trim(),
+              current:  document.getElementById('expCurrent')?.checked || false,
+              desc:     (document.getElementById('expDesc')?.value || '').trim()
+            };
+            H.saveState();
+            H.renderPage('JobSeekerProfile');
+          }
+        });
+      },
+      editEdu(i) {
+        captureDraft();
+        const u = H.currentUser();
+        const e = (u.cv && u.cv.education && u.cv.education[i]) || {};
+        H.modal({
+          title: 'Edit Education',
+          body: `<div style="display:flex;flex-direction:column;gap:8px">
+            <input id="eduDegree" class="fi" value="${H.escHtml(e.degree||'')}" placeholder="Degree *">
+            <input id="eduSchool" class="fi" value="${H.escHtml(e.school||'')}" placeholder="School *">
+            <input id="eduYear" class="fi" value="${H.escHtml(e.year||'')}" placeholder="Year">
+          </div>`,
+          confirmText: 'Save',
+          onConfirm: () => {
+            const degree = (document.getElementById('eduDegree')?.value || '').trim();
+            const school = (document.getElementById('eduSchool')?.value || '').trim();
+            if (!degree || !school) { H.toast('Required fields missing'); return false; }
+            u.cv.education[i] = { degree, school, year: (document.getElementById('eduYear')?.value || '').trim() };
+            H.saveState();
+            H.renderPage('JobSeekerProfile');
+          }
+        });
+      },
+      delExp(i) {
+        const u = H.currentUser();
+        if (!u.cv || !u.cv.experience) return;
+        u.cv.experience.splice(i, 1);
+        H.saveState();
+        H.renderPage('JobSeekerProfile');
+      },
+      delEdu(i) {
+        const u = H.currentUser();
+        if (!u.cv || !u.cv.education) return;
+        u.cv.education.splice(i, 1);
+        H.saveState();
+        H.renderPage('JobSeekerProfile');
+      }
+    };
+  };
+
 })(window.H = window.H || {});
+
 ;/* === www/js/wallet.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 (function (H) {
   const pages = H.pages;
-  const { escHtml, uid, fmtPrice, pushNotif } = H;
+  const { escHtml, fmtPrice, PROVINCES, CITIES_BY_PROV, CATEGORIES } = H;
 
-  const I = {
-    boost:  '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-    down:   '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>',
-    up:     '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>',
-    copy:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
-    check:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
-    plus:   '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
-    wallet: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
-    info:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  const IC = {
+    bolt:    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    star:    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    chevron: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>',
+    photo:   '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+    ads:     '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>',
+    wa:      '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>',
+    mail:    '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+    phone:   '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.01 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.36 6.36l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>',
   };
 
-  // Payment method definitions — real Zimbabwean details
-  const METHODS = {
-    ecocash: {
-      id: 'ecocash', label: 'EcoCash', network: 'Econet Wireless',
-      color: '#00A651', bg: '#F0FDF4', border: '#86EFAC', textColor: '#15803d',
-      number: '+263 77 734 1565', rawNumber: '+263777341565',
-      name: 'Prince Chakusa',
-      steps: ['Open EcoCash on your phone', 'Select "Send Money"', 'Enter number: +263 77 734 1565', 'Enter the USD amount', 'Use your name as the reference / reason', 'Note the EcoCash reference number from the confirmation SMS'],
-    },
-    onemoney: {
-      id: 'onemoney', label: 'OneMoney', network: 'NetOne',
-      color: '#E65C00', bg: '#FFF7F0', border: '#FDBA74', textColor: '#9a3412',
-      number: '+263 77 734 1565', rawNumber: '+263777341565',
-      name: 'Prince Chakusa',
-      steps: ['Open OneMoney on your phone', 'Select "Send Money"', 'Enter number: +263 77 734 1565', 'Enter the USD amount', 'Use your name as the reference / reason', 'Note the OneMoney reference number from the confirmation SMS'],
-    },
-    bank: {
-      id: 'bank', label: 'Bank Transfer', network: 'CBZ Bank Zimbabwe',
-      color: '#1A3A8F', bg: '#EFF6FF', border: '#BFDBFE', textColor: '#1e40af',
-      account: '05121050340078', rawAccount: '05121050340078',
-      name: 'Prince Chakusa',
-      bankName: 'CBZ Bank Zimbabwe',
-      branch: 'Harare Main',
-      steps: ['Log in to your CBZ online banking or visit a branch', 'Select "Transfer / Pay"', 'Enter account: 05121050340078', 'Account name: Prince Chakusa', 'Enter the USD amount', 'Use your name as reference', 'Note the transaction reference number'],
-    },
+  // Category map: Ads-page id → H.CATEGORIES id
+  const CAT_MAP = {
+    property: 'property', vehicles: 'vehicles', electronics: 'electronics',
+    business: 'services', jobs: 'jobs', other: 'other',
   };
 
-  let _boostState = { planId: 'standard', listingId: null };
+  const ADS_CATS = [
+    { id:'listing',     icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>', title:'A specific listing',    desc:'Boost or feature one of your existing ads' },
+    { id:'property',    icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>', title:'Property',              desc:'Homes, land, rentals and commercial spaces' },
+    { id:'vehicles',    icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>', title:'Vehicles',              desc:'Cars, trucks, motorbikes and more' },
+    { id:'electronics', icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>', title:'Electronics & Gadgets', desc:'Phones, laptops and appliances' },
+    { id:'business',    icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>', title:'Business / Services',   desc:'Promote your services to active buyers' },
+    { id:'jobs',        icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', title:'Jobs',                  desc:'Find the best talent for your company' },
+    { id:'other',       icon:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>', title:'Other',                 desc:'Everything else' },
+  ];
 
-  // ── BOOST ──────────────────────────────────────────────────
-  pages.Boost = function ({ listingId }) {
-    const u        = H.currentUser();
-    const myActive = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active');
-    if (!myActive.length) {
-      return `<div class="page active">${H.innerTopbar('Boost a Listing')}
-        <div class="empty-H.state">
-          <div class="empty-icon">${I.boost}</div>
-          <div class="empty-title">No active listings</div>
-          <div class="empty-sub">Post a listing first, then come back to boost it.</div>
-          <button class="btn-pri" style="max-width:240px;margin-top:10px" onclick="H.navTo('Post',null)">Post an Ad</button>
-        </div>
-      </div>`;
-    }
+  // Module-level state
+  let _selIndex     = 0;
+  let _selBoostType = 'Sponsored Listing';
+  let _myListings   = [];
 
-    _boostState.listingId = listingId || myActive[0].id;
-    const sel = H.BOOST_PLANS.find(p => p.id === _boostState.planId) || H.BOOST_PLANS[0];
+  // Ad creation form state
+  let _cs = { cat:'', title:'', desc:'', price:'', currency:'USD', prov:'', city:'', suburb:'', contact:'chat', photos:[] };
 
-    return `<div class="page active">${H.innerTopbar('Boost a Listing')}
-      <div class="boost-hero">
-        <div class="boost-hero-title">${I.boost} Get More Eyes</div>
-        <div class="boost-hero-sub">Boosted listings appear at the top of search results</div>
-      </div>
-      <div class="inner-content">
-        <div class="fl">Select listing</div>
-        <select class="fi" style="margin-bottom:14px" id="boostListing" onchange="H._boost.setListing(this.value)">
-          ${myActive.map(l => `<option value="${l.id}" ${_boostState.listingId === l.id ? 'selected' : ''}>${escHtml(l.title)} · ${escHtml(fmtPrice(l.price, l.currency))}</option>`).join('')}
-        </select>
-        <div class="fl">Choose boost plan</div>
-        ${H.BOOST_PLANS.map(p => `
-          <div class="boost-plan ${_boostState.planId === p.id ? 'sel' : ''}" onclick="H._boost.selectPlan('${p.id}')">
-            <div class="boost-plan-top">
-              <div>
-                <span class="boost-plan-name">${p.name}</span>
-                ${p.badgeText ? `<span class="boost-plan-badge ${p.badge || ''}">${p.badgeText}</span>` : ''}
-              </div>
-              <div class="boost-plan-price">$${p.price}</div>
-            </div>
-            <div class="boost-plan-desc">${p.desc}</div>
-          </div>`).join('')}
-
-        <div style="background:var(--n4);border:1px solid var(--n5);padding:11px 14px;border-radius:12px;margin:12px 0;font-size:13px;color:var(--sub)">
-          Wallet balance: <strong style="color:var(--n2)">$${(u.walletUSD || 0).toFixed(2)}</strong>
-        </div>
-        <button class="btn-submit" onclick="H._boost.activate()">
-          Activate ${sel.name} · $${sel.price}
-        </button>
-        <div style="text-align:center;font-size:12px;color:var(--sub);margin-top:8px">Top up via EcoCash, OneMoney or bank transfer</div>
-      </div>
-    </div>`;
-  };
-
-  H._boost = {
-    setListing(id) { _boostState.listingId = id; },
-    selectPlan(pid) { _boostState.planId = pid; H.renderPage('Boost', { listingId: _boostState.listingId }); },
-    activate() {
-      const u    = H.currentUser();
-      const plan = H.BOOST_PLANS.find(p => p.id === _boostState.planId);
-      const l    = H.state.listings.find(x => x.id === _boostState.listingId);
-      if (!l) return;
-      if ((u.walletUSD || 0) < plan.price) {
-        H.modal({
-          title: 'Insufficient Balance',
-          body: `<div style="font-size:14px;line-height:1.6">You need <strong>$${(plan.price - (u.walletUSD || 0)).toFixed(2)}</strong> more to activate this boost.<br><br>Top up via EcoCash, OneMoney or bank transfer.</div>`,
-          confirmText: 'Top Up Now',
-          onConfirm: () => { H.openInner('TopUp'); }
-        });
-        return;
-      }
-      u.walletUSD = +(u.walletUSD - plan.price).toFixed(2);
-      l.boost = { plan: plan.id, until: Date.now() + plan.days * 86400000 };
-      H.state.txns = H.state.txns || [];
-      H.state.txns.unshift({ id: uid(), userId: u.id, type: 'boost', amt: -plan.price, t: Date.now(), note: `${plan.name} · ${l.title}` });
-      pushNotif(u.id, 'Boost Activated!', `${l.title} is now boosted for ${plan.days} days.`);
-      H.saveState();
-      H.toast('Boost activated!');
-      H.goBack();
-    }
-  };
-
-  // ── WALLET ─────────────────────────────────────────────────
-  pages.Wallet = function () {
+  // ─── ENTRY: category picker ──────────────────────────────────────────────────
+  pages.Ads = function () {
     const u = H.currentUser();
-    if (!u) return `<div class="page active">${H.innerTopbar('Wallet')}${H.emptyState('Not signed in', 'Sign in to access your wallet', 'Sign In', "H.authPage()")}</div>`;
-
-    const txns    = (H.state.txns || []).filter(t => t.userId === u.id).slice(0, 50);
-    const pending = (H.state.topupRequests || []).filter(r => r.userId === u.id && r.status === 'pending');
-    const bal     = (u.walletUSD || 0).toFixed(2);
-
-    const typeLabel = { topup: 'Wallet Top Up', boost: 'Listing Boost', fee: 'Platform Fee' };
-
-    const txRow = (t) => {
-      const isIn  = t.amt > 0;
-      const label = H.escHtml(typeLabel[t.type] || t.note || 'Transaction');
-      const bg    = isIn ? '#F0FDF4' : t.type === 'boost' ? '#FFF7ED' : '#FEF2F2';
-      const ic    = isIn ? '#00A651' : t.type === 'boost' ? '#D97706' : '#ef4444';
-      const icon  = isIn ? I.down : t.type === 'boost' ? I.boost : I.up;
-      const dateStr = new Date(t.t || Date.now()).toLocaleDateString('en-ZW', { day:'numeric', month:'short', year:'numeric' });
-      return `<div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)">
-        <div style="width:40px;height:40px;border-radius:12px;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${ic}">${icon}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
-          <div style="font-size:11px;color:var(--sub);margin-top:2px">${dateStr}</div>
-        </div>
-        <div style="font-size:15px;font-weight:800;color:${isIn ? '#00A651' : '#ef4444'};flex-shrink:0">${isIn ? '+' : ''}$${Math.abs(t.amt).toFixed(2)}</div>
+    if (!u) {
+      return `<div class="page active">${H.innerTopbar('Advertisements')}
+        ${H.emptyState('Sign in to continue', 'Create a free account to advertise on PaMarket', 'Sign In', 'H.authPage()')}
       </div>`;
-    };
+    }
+    return `<div class="page active">${H.innerTopbar('Advertisements')}
 
-    const pendingRow = (r) => {
-      const m = METHODS[r.methodId] || METHODS.ecocash;
-      const dateStr = new Date(r.t || Date.now()).toLocaleDateString('en-ZW', { day:'numeric', month:'short' });
-      return `<div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)">
-        <div style="width:40px;height:40px;border-radius:12px;background:${m.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${m.color}">${I.down}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:600;color:var(--text)">Top Up · ${H.escHtml(r.method)}</div>
-          <div style="font-size:11px;color:var(--sub);margin-top:2px">$${r.amount.toFixed(2)} · Ref: ${H.escHtml(r.reference)} · ${dateStr}</div>
-        </div>
-        <span style="font-size:10px;font-weight:700;color:#D97706;background:#FFFBEB;border:1px solid #FDE68A;padding:3px 8px;border-radius:8px;flex-shrink:0">Verifying</span>
-      </div>`;
-    };
-
-    const allRows = [...pending.map(pendingRow), ...txns.map(txRow)];
-
-    // Spend options
-    const spendItems = [
-      { label: 'Boost a Listing', desc: 'From $2/day · appear at top of results', icon: I.boost, color: '#F5A623', action: "H.openInner('Boost')" },
-    ];
-
-    return `<div class="page active">
-      ${H.innerTopbar('Wallet')}
-
-      <!-- Balance Card -->
-      <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);margin:16px;border-radius:22px;padding:26px 22px 22px">
-        <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Hostly Wallet Balance</div>
-        <div style="font-size:42px;font-weight:900;color:#fff;letter-spacing:-2px;line-height:1;margin-bottom:4px">$${bal}</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:22px">United States Dollar (USD)</div>
-        <button onclick="H.openInner('TopUp')"
-          style="width:100%;padding:14px;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.4);border-radius:14px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
-          ${I.plus} Top Up via EcoCash / Bank
-        </button>
+      <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);padding:22px 20px 20px;text-align:center">
+        <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:5px">Pa<span style="color:#F5A623">Market</span> for Business</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.5">Reach active buyers across all 10 provinces of Zimbabwe</div>
       </div>
 
-      <!-- How to spend -->
-      <div style="margin:0 16px 16px">
-        <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Use Your Balance</div>
-        ${spendItems.map(s => `
-          <div onclick="${s.action}" style="display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-bottom:8px">
-            <div style="width:40px;height:40px;border-radius:12px;background:#FFF7ED;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${s.color}">${s.icon}</div>
-            <div style="flex:1">
-              <div style="font-size:14px;font-weight:700;color:var(--text)">${s.label}</div>
-              <div style="font-size:12px;color:var(--sub);margin-top:2px">${s.desc}</div>
+      <div style="padding:16px 16px 80px">
+        <div style="font-size:19px;font-weight:900;color:var(--text);margin-bottom:3px">What do you want to advertise?</div>
+        <div style="font-size:13px;color:var(--sub);margin-bottom:16px">Choose a category to get started</div>
+
+        ${ADS_CATS.map(c => `
+          <div onclick="H._adv.pickCategory('${c.id}')"
+              style="display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+            <div style="width:46px;height:46px;background:var(--bg);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text)">${c.icon}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:15px;font-weight:700;color:var(--text)">${c.title}</div>
+              <div style="font-size:12px;color:var(--sub);margin-top:2px;line-height:1.4">${c.desc}</div>
             </div>
-            <div style="color:var(--sub)">›</div>
+            ${IC.chevron}
           </div>`).join('')}
-      </div>
 
-      <!-- Accepted methods info -->
-      <div style="margin:0 16px 16px">
-        <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Accepted Payment Methods</div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
-          ${[
-            { label: 'EcoCash', sub: 'Econet Wireless · +263 77 734 1565', color: '#00A651', bg: '#F0FDF4' },
-            { label: 'OneMoney', sub: 'NetOne · +263 77 734 1565', color: '#E65C00', bg: '#FFF7F0' },
-            { label: 'Bank Transfer', sub: 'CBZ Bank Zimbabwe', color: '#1A3A8F', bg: '#EFF6FF' },
-          ].map((m, i, arr) => `
-            <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;${i < arr.length-1 ? 'border-bottom:1px solid var(--border)' : ''}">
-              <div style="width:10px;height:10px;border-radius:50%;background:${m.color};flex-shrink:0"></div>
-              <div style="flex:1">
-                <div style="font-size:14px;font-weight:600;color:var(--text)">${m.label}</div>
-                <div style="font-size:11px;color:var(--sub)">${m.sub}</div>
-              </div>
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:6px 0 20px">
+          ${[['🏙️','10','Provinces'],['👥','50K+','Buyers'],['📈','3×','More Reach']].map(([e,n,l])=>`
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center">
+              <div style="font-size:20px">${e}</div>
+              <div style="font-size:16px;font-weight:900;color:#1A3A8F">${n}</div>
+              <div style="font-size:10px;font-weight:600;color:var(--sub)">${l}</div>
             </div>`).join('')}
         </div>
-      </div>
 
-      <!-- Transaction History -->
-      <div style="margin:0 16px">
-        <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">
-          Transaction History
-          ${pending.length ? `<span style="background:#FFFBEB;color:#D97706;border:1px solid #FDE68A;font-size:10px;padding:2px 8px;border-radius:8px;margin-left:6px;font-weight:700">${pending.length} verifying</span>` : ''}
+        <!-- Learn more -->
+        <div style="background:var(--blue-light);border:1px solid var(--blue-soft);border-radius:14px;padding:14px 16px;margin-bottom:20px">
+          <div style="font-size:14px;font-weight:800;color:#1A3A8F;margin-bottom:6px">How advertising works</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.7">1. Choose a category above<br>2. Fill in your ad details &amp; photos<br>3. Our team reviews it (usually within 24 hrs)<br>4. Your ad goes live and reaches buyers across Zimbabwe</div>
+          <button onclick="H._adv.learnMore()" style="margin-top:10px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Learn More →</button>
         </div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:0 14px">
-          ${allRows.length
-            ? allRows.join('')
-            : `<div style="padding:36px 16px;text-align:center">
-                <div style="font-size:32px;margin-bottom:8px">💳</div>
-                <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">No transactions yet</div>
-                <div style="font-size:12px;color:var(--sub)">Top up your wallet to get started</div>
-              </div>`}
+
+        <!-- Social media -->
+        <div style="border-top:1px solid var(--border);padding-top:18px">
+          <div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-bottom:12px">Follow us on social media</div>
+          <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
+            <a href="https://www.facebook.com/pamarket" target="_blank" style="width:44px;height:44px;border-radius:12px;background:#1877F2;display:flex;align-items:center;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+            <a href="https://www.instagram.com/pamarket" target="_blank" style="width:44px;height:44px;border-radius:12px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".5" fill="#fff" stroke="none"/></svg></a>
+            <a href="https://x.com/pamarket" target="_blank" style="width:44px;height:44px;border-radius:12px;background:#000;display:flex;align-items:center;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+            <a href="https://www.tiktok.com/@pamarket" target="_blank" style="width:44px;height:44px;border-radius:12px;background:#010101;display:flex;align-items:center;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.77 1.52V6.76a4.85 4.85 0 0 1-1-.07z"/></svg></a>
+            <a href="https://www.youtube.com/@pamarket" target="_blank" style="width:44px;height:44px;border-radius:12px;background:#FF0000;display:flex;align-items:center;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF0000"/></svg></a>
+            <a href="https://www.linkedin.com/company/pamarket" target="_blank" style="width:44px;height:44px;border-radius:12px;background:#0A66C2;display:flex;align-items:center;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+          </div>
         </div>
       </div>
-
-      <div style="height:36px"></div>
     </div>`;
   };
 
-  pages.Payments = pages.Wallet;
+  pages.Wallet   = pages.Ads;
+  pages.Payments = pages.Ads;
+  pages.TopUp    = pages.Ads;
 
-  // ── TOP UP ─────────────────────────────────────────────────
-  pages.TopUp = function (params) {
+  // ─── Ad creation form (for category cards) ───────────────────────────────────
+  pages.AdsCreate = function ({ category } = {}) {
     const u = H.currentUser();
-    if (!u) return `<div class="page active">${H.innerTopbar('Top Up')}${H.emptyState('Not signed in', '', 'Sign In', "H.authPage()")}</div>`;
+    if (!u) {
+      return `<div class="page active">${H.innerTopbar('Create Advertisement')}
+        ${H.emptyState('Not signed in', 'Please sign in to continue', 'Sign In', 'H.authPage()')}
+      </div>`;
+    }
 
-    const reason = (params && params.reason) || '';
-    const preset = (params && params.amount) ? String(params.amount) : '';
+    const catId  = CAT_MAP[category] || category || '';
+    const catObj = CATEGORIES.find(c => c.id === catId);
+    const catIcon = ADS_CATS.find(c => CAT_MAP[c.id] === catId || c.id === category)?.icon || '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
 
-    const methodBtn = (m, active) =>
-      `<button id="tuBtn_${m.id}" onclick="H._topup.setMethod('${m.id}')"
-        style="flex:1;padding:12px 4px;border-radius:12px;border:2px solid ${active ? m.color : 'var(--border)'};background:${active ? m.bg : 'var(--card)'};cursor:pointer;font-family:inherit;transition:all .15s">
-        <div style="font-size:13px;font-weight:700;color:${active ? m.color : 'var(--sub)'}">${m.label}</div>
-        <div style="font-size:10px;color:${active ? m.textColor : 'var(--sub)'};margin-top:2px;opacity:.8">${m.network}</div>
-      </button>`;
+    _cs = { cat: catId, title:'', desc:'', price:'', currency:'USD', company:'',
+            prov: PROVINCES[0], city:(CITIES_BY_PROV[PROVINCES[0]]||[])[0]||'',
+            suburb:'', contact:'chat', photos:[] };
 
-    const detailRow = (label, value, copyVal) =>
-      `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.06)">
-        <div style="font-size:12px;color:var(--sub);font-weight:500">${label}</div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="font-size:13px;font-weight:700;color:var(--text)">${H.escHtml(value)}</div>
-          ${copyVal ? `<button onclick="H._topup.copy('${H.escHtml(copyVal)}','${label}')" style="background:none;border:none;color:var(--sub);cursor:pointer;padding:2px;line-height:1">${I.copy}</button>` : ''}
+    return renderCreateShell(catIcon, catObj?.name || category || 'Other');
+  };
+
+  function renderCreateShell(catIcon, catName) {
+    return `<div class="page active">${H.innerTopbar('Create Advertisement')}
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px;background:var(--card);border-bottom:1px solid var(--border)">
+        <span style="color:var(--text)">${catIcon}</span>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--text)">${escHtml(catName)}</div>
+          <div style="font-size:12px;color:var(--sub)">Fill in the details below</div>
+        </div>
+      </div>
+      <div style="padding:16px 16px 100px" id="adsCreateBody">
+        ${renderCreateForm()}
+      </div>
+    </div>`;
+  }
+
+  function renderCreateForm() {
+    const s = _cs;
+    const prov = s.prov || PROVINCES[0];
+    const cities = CITIES_BY_PROV[prov] || [];
+
+    const photoGrid = s.photos.map((p, i) =>
+      `<div style="position:relative;width:80px;height:80px;flex-shrink:0">
+        <img src="${p}" style="width:80px;height:80px;border-radius:10px;object-fit:cover">
+        <button onclick="H._adsCreate.removePhoto(${i})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#EF4444;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">×</button>
+      </div>`
+    ).join('');
+
+    const isJobs = s.cat === 'jobs';
+    const maxPhotos = isJobs ? 2 : 8;
+
+    return `
+      ${isJobs ? `
+      <div class="fg">
+        <div class="fl">Company Name <span style="color:var(--red)">*</span></div>
+        <input class="fi" id="acCompany" value="${escHtml(s.company)}" placeholder="e.g. ABC Holdings Zimbabwe" maxlength="80">
+      </div>
+      ` : ''}
+      <div class="fg">
+        <div class="fl">${isJobs ? 'Ad Headline' : 'Title'} <span style="color:var(--red)">*</span></div>
+        <input class="fi" id="acTitle" value="${escHtml(s.title)}" placeholder="${isJobs ? 'e.g. Now Hiring: Sales Executives — Join Our Growing Team' : 'e.g. 3 Bedroom House in Avondale'}" maxlength="80">
+      </div>
+      <div class="fg">
+        <div class="fl">Description <span style="color:var(--red)">*</span></div>
+        <textarea class="fi" rows="4" id="acDesc" placeholder="${isJobs ? 'Describe the position(s), what you offer, and why candidates should apply. Include role, salary range, requirements, and how to apply.' : 'Describe what you\'re advertising — condition, features, why buyers should contact you...'}" maxlength="2000">${escHtml(s.desc)}</textarea>
+      </div>
+
+      <div class="fg">
+        <div class="fl">${isJobs ? 'Company Logo / Ad Banner' : 'Photos <span style="color:var(--red)">*</span>'} <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--sub)">${isJobs ? '(optional, up to 2)' : '(min 1, up to 8)'}</span></div>
+        ${isJobs ? `<div style="background:#1A3A8F0D;border:1px solid #1A3A8F22;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#1A3A8F;line-height:1.6">Upload your company logo and/or a "Now Hiring" banner. This appears alongside your ad to attract candidates.</div>` : ''}
+        <label for="acPhotos" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--border);border-radius:14px;padding:20px;cursor:pointer;background:var(--bg);margin-bottom:10px">
+          ${IC.photo}
+          <div style="font-size:14px;font-weight:600;color:var(--sub)">${isJobs ? 'Tap to add logo / banner' : 'Tap to add photos'}</div>
+          <div style="font-size:12px;color:var(--sub)">JPG, PNG · Max ${maxPhotos} image${maxPhotos > 1 ? 's' : ''}</div>
+        </label>
+        <input type="file" id="acPhotos" accept="image/*" multiple style="display:none" onchange="H._adsCreate.onPhotos(event)">
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="acPhotoGrid">${photoGrid}</div>
+      </div>
+
+      <input type="hidden" id="acPrice" value="0">
+
+      <div class="fg">
+        <div class="fl">Province</div>
+        <select class="fi" id="acProv" onchange="H._adsCreate.onProv(this.value)">
+          ${PROVINCES.map(p => `<option${p===prov?' selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg">
+        <div class="fl">City / Town</div>
+        <select class="fi" id="acCity">
+          ${cities.map(c => `<option${c===s.city?' selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg">
+        <div class="fl">Suburb / Area <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--sub)">(optional)</span></div>
+        <input class="fi" id="acSuburb" value="${escHtml(s.suburb)}" placeholder="e.g. Avondale West">
+      </div>
+
+      <div class="fg">
+        <div class="fl">Preferred Contact Method</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="H._adsCreate.setContact('chat')" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${s.contact==='chat'?'#1A3A8F':'var(--border)'};background:${s.contact==='chat'?'var(--blue-light)':'var(--card)'};color:${s.contact==='chat'?'#1A3A8F':'var(--text)'};font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+            💬 In-App Chat
+          </button>
+          <button onclick="H._adsCreate.setContact('phone')" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${s.contact==='phone'?'#1A3A8F':'var(--border)'};background:${s.contact==='phone'?'var(--blue-light)':'var(--card)'};color:${s.contact==='phone'?'#1A3A8F':'var(--text)'};font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+            📞 Phone Call
+          </button>
+        </div>
+      </div>
+
+      <div id="acErr" style="background:var(--red-light);border-radius:10px;color:var(--red);font-size:13px;font-weight:600;padding:10px 12px;margin-bottom:12px;display:none"></div>
+
+      <button id="acBtn" class="btn-submit" style="width:100%;font-size:15px" onclick="H._adsCreate.submit()">
+        Submit Advertisement
+      </button>
+      <div style="text-align:center;font-size:12px;color:var(--sub);margin-top:8px">
+        Your ad will go live after admin review (usually within 24 hours)
+      </div>`;
+  }
+
+  H._adsCreate = {
+    setCur(c) {
+      _cs.currency = c;
+      const body = document.getElementById('adsCreateBody');
+      if (body) body.innerHTML = renderCreateForm();
+    },
+    onProv(p) {
+      _cs.prov = p;
+      _cs.city = (CITIES_BY_PROV[p] || [])[0] || '';
+      const body = document.getElementById('adsCreateBody');
+      if (body) body.innerHTML = renderCreateForm();
+    },
+    setContact(m) {
+      _cs.contact = m;
+      const body = document.getElementById('adsCreateBody');
+      if (body) body.innerHTML = renderCreateForm();
+    },
+    onPhotos(e) {
+      const files = Array.from(e.target.files || []);
+      const maxPhotos = _cs.cat === 'jobs' ? 2 : 8;
+      const remaining = maxPhotos - _cs.photos.length;
+      files.slice(0, remaining).forEach(f => {
+        if (!f.type.startsWith('image/')) return;
+        (H.compressImage || _compressImage)(f, 1200, 0.78).then(d => {
+          _cs.photos.push(d);
+          const grid = document.getElementById('acPhotoGrid');
+          if (grid) grid.innerHTML = _cs.photos.map((p, i) =>
+            `<div style="position:relative;width:80px;height:80px;flex-shrink:0"><img src="${p}" style="width:80px;height:80px;border-radius:10px;object-fit:cover"><button onclick="H._adsCreate.removePhoto(${i})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#EF4444;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">×</button></div>`
+          ).join('');
+        });
+      });
+      e.target.value = '';
+    },
+    removePhoto(i) {
+      _cs.photos.splice(i, 1);
+      const grid = document.getElementById('acPhotoGrid');
+      if (grid) grid.innerHTML = _cs.photos.map((p, idx) =>
+        `<div style="position:relative;width:80px;height:80px;flex-shrink:0"><img src="${p}" style="width:80px;height:80px;border-radius:10px;object-fit:cover"><button onclick="H._adsCreate.removePhoto(${idx})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#EF4444;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">×</button></div>`
+      ).join('');
+    },
+    async submit() {
+      _cs.title   = (document.getElementById('acTitle')?.value   || '').trim();
+      _cs.desc    = (document.getElementById('acDesc')?.value    || '').trim();
+      _cs.price   = document.getElementById('acPrice')?.value    || '0';
+      _cs.suburb  = (document.getElementById('acSuburb')?.value  || '').trim();
+      _cs.company = (document.getElementById('acCompany')?.value || '').trim();
+
+      const errEl = document.getElementById('acErr');
+      const btn   = document.getElementById('acBtn');
+      errEl.style.display = 'none';
+      const err = m => { errEl.textContent = m; errEl.style.display = 'block'; errEl.scrollIntoView({behavior:'smooth',block:'nearest'}); };
+
+      if (_cs.cat === 'jobs' && !_cs.company) { err('Company name is required'); return; }
+      if (_cs.title.length < 5)  { err('Title needs at least 5 characters'); return; }
+      if (_cs.desc.length < 10)  { err('Description needs at least 10 characters'); return; }
+      if (_cs.cat !== 'jobs' && !_cs.photos.length) { err('Please add at least one photo'); return; }
+
+      btn.disabled = true; btn.textContent = 'Submitting…';
+
+      const u = H.currentUser();
+      const needsApproval = !!(H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified));
+      const listing = {
+        id: H.uid(), sellerId: u.id, sellerName: u.name || '', sellerPhone: u.phone || '',
+        title: _cs.title, desc: _cs.desc, price: _cs.price, currency: _cs.currency,
+        cat: _cs.cat, prov: _cs.prov, city: _cs.city, suburb: _cs.suburb,
+        company: _cs.company || '',
+        photos: _cs.photos, createdAt: Date.now(),
+        status: 'pending',
+        contactMethod: _cs.contact, boost: null, views: 0,
+      };
+
+      if (!Array.isArray(H.state.listings)) H.state.listings = [];
+      H.state.listings.unshift(listing);
+      H.saveState();
+      if (typeof H.saveListingToCloud === 'function') H.saveListingToCloud(listing);
+
+      H.toast('Ad submitted! It will go live after admin review. ✅', 5000);
+      H.goBack();
+    },
+  };
+
+  // Fallback compressImage (in case post.js hasn't loaded yet)
+  function _compressImage(file, maxDim, q) {
+    return new Promise(res => {
+      const r = new FileReader();
+      r.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else if (h > maxDim)     { w = Math.round(w * maxDim / h); h = maxDim; }
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          res(c.toDataURL('image/jpeg', q || 0.78));
+        };
+        img.src = ev.target.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }
+
+  // ─── AdsBoost: select listing to promote ─────────────────────────────────────
+  pages.AdsBoost = function () {
+    const u = H.currentUser();
+    if (!u) {
+      return `<div class="page active">${H.innerTopbar('Select a Listing')}
+        ${H.emptyState('Not signed in', 'Please sign in to continue', 'Sign In', 'H.authPage()')}
+      </div>`;
+    }
+    _myListings = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active');
+    if (!_myListings.length) {
+      return `<div class="page active">${H.innerTopbar('Select a Listing')}
+        <div class="empty-state">
+          <div class="empty-icon">${IC.ads}</div>
+          <div class="empty-title">No active listings</div>
+          <div class="empty-sub">Post a listing first, then come back to promote it.</div>
+          <button class="btn-pri" style="max-width:240px;margin-top:12px" onclick="H.navTo('Post',null)">Post an Ad</button>
         </div>
       </div>`;
-
-    const eco  = METHODS.ecocash;
-    const one  = METHODS.onemoney;
-    const bank = METHODS.bank;
-
-    return `<div class="page active">
-      ${H.innerTopbar('Top Up Wallet')}
-      <div class="form-wrap">
-
-        ${reason ? `<div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin-bottom:4px;font-size:13px;color:#1e40af;font-weight:600">${I.info} Topping up for: ${H.escHtml(reason)}</div>` : ''}
-
-        <!-- How it works -->
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:4px">
-          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">How to top up</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            ${['Send money to us using EcoCash, OneMoney, or bank transfer','Use your name as the payment reference','Copy the reference number from your confirmation SMS','Enter the reference below and submit — admin verifies within 24 hours'].map((s,i) =>
-              `<div style="display:flex;gap:10px;align-items:flex-start">
-                <div style="width:22px;height:22px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${i+1}</div>
-                <div style="font-size:13px;color:var(--sub);line-height:1.5">${s}</div>
-              </div>`
-            ).join('')}
-          </div>
-        </div>
-
-        <!-- Store compliance notice -->
-        <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:12px;padding:12px 14px;margin-bottom:4px;display:flex;gap:10px;align-items:flex-start">
-          <div style="color:#D97706;flex-shrink:0;margin-top:1px">${I.info}</div>
-          <div style="font-size:12px;color:#92400E;line-height:1.6">
-            <strong>External Payment — Not an In-App Purchase.</strong> Advertising credits are purchased via mobile money or bank transfer directly to Hostly. This transaction is not processed by Google Play or the Apple App Store.
-            Need help? <a href="https://wa.me/971589772645" style="color:#D97706;font-weight:700;text-decoration:none">WhatsApp us</a> or email <a href="mailto:chakusaprince@gmail.com" style="color:#D97706;font-weight:700;text-decoration:none">chakusaprince@gmail.com</a>
-          </div>
-        </div>
-
-        <!-- Method Selector -->
-        <div class="fg">
-          <div class="fl">Select Payment Method</div>
-          <div style="display:flex;gap:8px;margin-top:6px">
-            ${methodBtn(eco, true)}
-            ${methodBtn(one, false)}
-            ${methodBtn(bank, false)}
-          </div>
-        </div>
-
-        <!-- EcoCash Details -->
-        <div id="tuDetails_ecocash" style="background:${eco.bg};border:1.5px solid ${eco.border};border-radius:14px;padding:16px">
-          <div style="font-size:13px;font-weight:700;color:${eco.textColor};margin-bottom:12px">Send to this EcoCash number:</div>
-          <div style="font-size:26px;font-weight:900;color:${eco.color};letter-spacing:2px;margin-bottom:4px">${eco.number}</div>
-          <div style="font-size:12px;color:${eco.textColor};margin-bottom:12px">Account name: <strong>${eco.name}</strong></div>
-          ${detailRow('Network', 'Econet Wireless (EcoCash)', null)}
-          ${detailRow('Send to', eco.number, eco.rawNumber)}
-          ${detailRow('Account name', eco.name, eco.name)}
-          ${detailRow('Reference', H.currentUser()?.name || 'Your name', H.currentUser()?.name || '')}
-        </div>
-
-        <!-- OneMoney Details -->
-        <div id="tuDetails_onemoney" style="display:none;background:${one.bg};border:1.5px solid ${one.border};border-radius:14px;padding:16px">
-          <div style="font-size:13px;font-weight:700;color:${one.textColor};margin-bottom:12px">Send to this OneMoney number:</div>
-          <div style="font-size:26px;font-weight:900;color:${one.color};letter-spacing:2px;margin-bottom:4px">${one.number}</div>
-          <div style="font-size:12px;color:${one.textColor};margin-bottom:12px">Account name: <strong>${one.name}</strong></div>
-          ${detailRow('Network', 'NetOne (OneMoney)', null)}
-          ${detailRow('Send to', one.number, one.rawNumber)}
-          ${detailRow('Account name', one.name, one.name)}
-          ${detailRow('Reference', H.currentUser()?.name || 'Your name', H.currentUser()?.name || '')}
-        </div>
-
-        <!-- Bank Transfer Details -->
-        <div id="tuDetails_bank" style="display:none;background:${bank.bg};border:1.5px solid ${bank.border};border-radius:14px;padding:16px">
-          <div style="font-size:13px;font-weight:700;color:${bank.textColor};margin-bottom:12px">Bank Transfer Details:</div>
-          ${detailRow('Bank', bank.bankName, null)}
-          ${detailRow('Account Name', bank.name, bank.name)}
-          ${detailRow('Account No.', bank.account, bank.rawAccount)}
-          ${detailRow('Branch', bank.branch, null)}
-          ${detailRow('Reference', H.currentUser()?.name || 'Your name', H.currentUser()?.name || '')}
-        </div>
-
-        <!-- Quick Amount Presets -->
-        <div class="fg">
-          <div class="fl">Select Amount (USD)</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
-            ${[2,5,10,20,50].map(amt =>
-              `<button onclick="H._topup.setAmt(${amt})" id="tuPreset_${amt}"
-                style="padding:10px 0;border-radius:10px;border:2px solid var(--border);background:var(--card);font-size:14px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;flex:1;min-width:48px">
-                $${amt}
-              </button>`
-            ).join('')}
-          </div>
-          <input class="fi" id="tuAmt" type="number" min="1" step="1" placeholder="Or enter custom amount"
-            style="margin-top:8px" oninput="H._topup.clearPresets()"
-            value="${preset}">
-        </div>
-
-        <!-- Reference -->
-        <div class="fg">
-          <div class="fl">Transaction Reference</div>
-          <input class="fi" id="tuRef" placeholder="e.g. ECO123456789" autocapitalize="characters" autocomplete="off">
-          <div style="font-size:12px;color:var(--sub);margin-top:5px;line-height:1.5">
-            The reference / confirmation code from your EcoCash, OneMoney, or bank SMS after sending payment
-          </div>
-        </div>
-
-        <div id="tuErr" style="display:none;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;color:#ef4444;font-size:13px;font-weight:600;padding:10px 12px;margin-bottom:4px"></div>
-
-        <button id="tuSubmitBtn" class="btn-pri" onclick="H._topup.submit()">
-          I Have Paid — Submit for Verification
-        </button>
-        <div style="text-align:center;font-size:12px;color:var(--sub);margin-top:6px;line-height:1.5">
-          Admin verifies within 24 hours · Your wallet will be credited automatically
-        </div>
-        <button class="btn-sec" onclick="H.goBack()">Cancel</button>
+    }
+    return `<div class="page active">${H.innerTopbar('Select a Listing')}
+      <div style="padding:12px 16px 80px">
+        <div style="font-size:13px;color:var(--sub);margin-bottom:14px">Select the listing you want to promote</div>
+        ${_myListings.map((l, i) => {
+          const thumb = (l.photos && l.photos[0])
+            ? `<img src="${escHtml(l.photos[0])}" style="width:54px;height:54px;border-radius:10px;object-fit:cover;flex-shrink:0">`
+            : `<div style="width:54px;height:54px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--sub)">${IC.photo}</div>`;
+          return `
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px">
+            <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+              ${thumb}
+              <div style="flex:1;min-width:0">
+                <div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div>
+                <div style="font-size:12px;color:var(--sub);margin-top:3px">${escHtml(fmtPrice(l.price, l.currency))} · ${escHtml(l.city || '')}</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <button onclick="H._adv.selectBoost(${i},'Sponsored Listing')"
+                style="padding:10px 8px;background:var(--blue-light);border:1.5px solid var(--blue-soft);border-radius:10px;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.3">
+                ${IC.bolt} Sponsored<div style="font-size:10px;font-weight:500;margin-top:3px;opacity:.75">Every 5 listings</div>
+              </button>
+              <button onclick="H._adv.selectBoost(${i},'Featured Ad')"
+                style="padding:10px 8px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;color:#B45309;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.3">
+                ${IC.star} Featured<div style="font-size:10px;font-weight:500;margin-top:3px;opacity:.75">Top placement</div>
+              </button>
+            </div>
+          </div>`;
+        }).join('')}
       </div>
     </div>`;
   };
 
-  pages.TopUp_after = function (params) {
-    const preset = params && params.amount ? String(params.amount) : null;
+  // ─── AdsContact: contact sales ────────────────────────────────────────────────
+  pages.AdsContact = function () {
+    const listing = _myListings[_selIndex];
+    const title   = listing ? listing.title : 'my listing';
+    const type    = _selBoostType;
+    const msg     = `Hello, I want to promote my ad: "${title}" (${type})`;
+    const msgE    = encodeURIComponent(msg);
+    const subE    = encodeURIComponent('Advertising Enquiry — ' + type);
 
-    H._topup = {
-      method: 'ecocash',
+    function btn(bg, border, color, icon, label, sub, action) {
+      return `<button onclick="${action}"
+        style="width:100%;display:flex;align-items:center;gap:14px;padding:16px;background:${bg};border:1.5px solid ${border};border-radius:14px;color:${color};font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;text-align:left">
+        <span style="flex-shrink:0">${icon}</span>
+        <div><div>${label}</div><div style="font-size:12px;font-weight:400;opacity:.8;margin-top:2px">${sub}</div></div>
+      </button>`;
+    }
 
-      setMethod(m) {
-        this.method = m;
-        Object.keys(METHODS).forEach(id => {
-          const panel = document.getElementById('tuDetails_' + id);
-          const btn   = document.getElementById('tuBtn_' + id);
-          const cfg   = METHODS[id];
-          const active = id === m;
-          if (panel) panel.style.display = active ? '' : 'none';
-          if (btn) {
-            btn.style.borderColor = active ? cfg.color : 'var(--border)';
-            btn.style.background  = active ? cfg.bg : 'var(--card)';
-            btn.querySelector('div').style.color = active ? cfg.color : 'var(--sub)';
-          }
-        });
-      },
-
-      setAmt(v) {
-        const inp = document.getElementById('tuAmt');
-        if (inp) inp.value = v;
-        [2,5,10,20,50].forEach(a => {
-          const b = document.getElementById('tuPreset_' + a);
-          if (!b) return;
-          const active = a === v;
-          b.style.borderColor = active ? '#1A3A8F' : 'var(--border)';
-          b.style.background  = active ? '#EFF6FF' : 'var(--card)';
-          b.style.color       = active ? '#1A3A8F' : 'var(--text)';
-        });
-      },
-
-      clearPresets() {
-        [2,5,10,20,50].forEach(a => {
-          const b = document.getElementById('tuPreset_' + a);
-          if (b) { b.style.borderColor = 'var(--border)'; b.style.background = 'var(--card)'; b.style.color = 'var(--text)'; }
-        });
-      },
-
-      copy(text, label) {
-        const clean = text.replace(/\s/g, '');
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(clean).then(() => H.toast(`${label} copied!`)).catch(() => H.toast(clean));
-        } else {
-          H.toast(clean);
-        }
-      },
-
-      submit() {
-        const amt    = parseFloat(document.getElementById('tuAmt')?.value);
-        const ref    = (document.getElementById('tuRef')?.value || '').trim().toUpperCase();
-        const errEl  = document.getElementById('tuErr');
-        const btn    = document.getElementById('tuSubmitBtn');
-        const showErr = (msg) => { if (errEl) { errEl.textContent = msg; errEl.style.display = ''; } };
-        if (errEl) errEl.style.display = 'none';
-
-        if (!amt || amt < 1)   { showErr('Please enter an amount of at least $1.00'); return; }
-        if (amt > 5000)        { showErr('Maximum single top-up is $5,000. Contact support for larger amounts.'); return; }
-        if (!ref)              { showErr('Please enter the transaction reference from your SMS'); return; }
-        if (ref.length < 6)    { showErr('Reference seems too short — double-check your SMS'); return; }
-
-        const duplicate = (H.state.topupRequests || []).some(r => r.reference.toUpperCase() === ref);
-        if (duplicate) { showErr('This reference has already been submitted. Contact support if this is an error.'); return; }
-
-        if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
-
-        const u   = H.currentUser();
-        const cfg = METHODS[this.method] || METHODS.ecocash;
-
-        // Save to Supabase so admin can see it
-        try {
-          const c = window.supabase;
-          if (c) {
-            const { error } = await c.from('topup_requests').insert({
-              user_id: u.id, user_name: u.name,
-              amount: amt, method: cfg.label,
-              reference: ref, status: 'pending'
-            });
-            if (error && error.code !== '23505') {
-              // 23505 = duplicate reference (already submitted), other errors are real
-              console.warn('topup insert:', error.message);
-            }
-          }
-        } catch(e) { console.warn('topup supabase:', e); }
-
-        // Also keep in local state as fallback
-        H.state.topupRequests = H.state.topupRequests || [];
-        H.state.topupRequests.push({
-          id: H.uid(), userId: u.id, userName: u.name,
-          amount: amt, method: cfg.label, methodId: this.method,
-          reference: ref, status: 'pending', t: Date.now()
-        });
-        H.saveState();
-        H.pushNotif && H.pushNotif(u.id, 'Top-up Submitted', `$${amt.toFixed(2)} via ${cfg.label} — reference ${ref}. Admin will verify within 24 hours.`, 'info');
-        H.toast('Submitted! Admin will verify within 24 hours.');
-        H.goBack();
-      }
-    };
-
-    // Apply preset from params
-    if (preset) H._topup.setAmt(Number(preset));
+    return `<div class="page active">${H.innerTopbar('Contact Sales')}
+      <div style="padding:20px 16px 80px">
+        <div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:4px">Promote Your Listing</div>
+        <div style="font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:20px">
+          Contact our team to set up your <strong style="color:var(--text)">${escHtml(type)}</strong> package.
+        </div>
+        <div style="background:var(--blue-light);border:1px solid var(--blue-soft);border-radius:12px;padding:14px;margin-bottom:24px">
+          <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Pre-filled message</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.6;font-style:italic">"${escHtml(msg)}"</div>
+        </div>
+        ${btn('#25D366','#25D366','#fff', IC.wa,    'WhatsApp Us',  'Fastest response — usually within the hour', `window.open('https://wa.me/971589772645?text=${msgE}','_blank')`)}
+        ${btn('var(--card)','var(--border)','var(--text)', IC.mail,'Email Us','info@pamarket.co.zw',`window.open('mailto:info@pamarket.co.zw?subject=${subE}&body=${msgE}','_blank')`)}
+        ${btn('var(--card)','var(--border)','var(--text)', IC.phone,'Call Us','Mon–Sat, 8am–6pm CAT',`window.location.href='tel:+263787341565'`)}
+        <div style="margin-top:20px;text-align:center;font-size:12px;color:var(--sub);line-height:1.7">
+          No payment is taken through the app.
+        </div>
+      </div>
+    </div>`;
   };
 
-  H._wallet   = {};
-  H.showTopUp = () => H.openInner('TopUp');
+  // ─── My Advertisements ────────────────────────────────────────────────────────
+  pages.MyAds = function () {
+    const u = H.currentUser();
+    if (!u) {
+      return `<div class="page active">${H.innerTopbar('My Advertisements')}
+        ${H.emptyState('Not signed in', 'Sign in to view your advertisements', 'Sign In', 'H.authPage()')}
+      </div>`;
+    }
+    const all     = (H.state.listings || []).filter(l => l.sellerId === u.id);
+    const active  = all.filter(l => l.status === 'active');
+    const pending = all.filter(l => l.status === 'pending');
+    const boosted = all.filter(l => l.boosted || l.featured);
 
-  // Legacy copy helper used in other pages
+    function row(l) {
+      const thumb = (l.photos && l.photos[0])
+        ? `<img src="${escHtml(l.photos[0])}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;flex-shrink:0">`
+        : `<div style="width:50px;height:50px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--sub)">${IC.photo}</div>`;
+      return `
+        <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+            ${thumb}
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div>
+              <div style="font-size:11px;color:var(--sub);margin-top:3px">${escHtml(fmtPrice(l.price, l.currency))} · ${escHtml(l.city || '')}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button onclick="H.openInner('EditListing',{listingId:'${escHtml(l.id)}'})"
+              style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:11px;font-weight:700;padding:7px 8px;border-radius:8px;cursor:pointer;font-family:inherit">
+              ✏️ Edit
+            </button>
+            <button onclick="H._adv.promoteFromDash('${escHtml(l.id)}')"
+              style="flex:1;background:var(--blue-light);border:1px solid var(--blue-soft);color:var(--blue);font-size:11px;font-weight:700;padding:7px 8px;border-radius:8px;cursor:pointer;font-family:inherit">
+              Promote
+            </button>
+            <button onclick="H._adv.deleteAd('${escHtml(l.id)}')"
+              style="background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;font-size:13px;font-weight:700;padding:7px 10px;border-radius:8px;cursor:pointer;font-family:inherit;flex-shrink:0">
+              🗑
+            </button>
+          </div>
+        </div>`;
+    }
+
+    function section(title, items, emptyMsg) {
+      return `
+        <div style="margin-bottom:20px">
+          <div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;padding:0 16px;margin-bottom:8px">
+            ${title} <span style="background:var(--blue);color:#fff;border-radius:8px;padding:1px 7px;font-size:10px;margin-left:4px">${items.length}</span>
+          </div>
+          <div style="background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:0 16px">
+            ${items.length ? items.map(row).join('') : `<div style="padding:18px 0;text-align:center;font-size:13px;color:var(--sub)">${emptyMsg}</div>`}
+          </div>
+        </div>`;
+    }
+
+    return `<div class="page active">${H.innerTopbar('My Advertisements')}
+      <div style="padding:16px 0 80px">
+        <div style="padding:0 16px;margin-bottom:16px">
+          <button onclick="H.openInner('Ads')"
+            style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
+            ${IC.ads} New Advertisement
+          </button>
+        </div>
+        ${section('Active Ads',  active,  'No active ads yet')}
+        ${section('Pending',     pending, 'No pending ads')}
+        ${section('Boosted',     boosted, 'No boosted ads — tap Promote to get started')}
+      </div>
+    </div>`;
+  };
+
+  // ─── Learn More inner page ────────────────────────────────────────────────────
+  pages.AdsLearnMore = function () {
+    function section(emoji, title, color, features, desc) {
+      return `
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:50px;height:50px;background:${color}18;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${emoji}</div>
+            <div style="font-size:18px;font-weight:900;color:var(--text)">${title}</div>
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.75;margin-bottom:14px">${desc}</div>
+          <div style="border-top:1px solid var(--border);padding-top:12px">
+            ${features.map(f => `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px"><span style="color:${color};font-size:15px;flex-shrink:0">✓</span><span style="font-size:13px;color:var(--text);line-height:1.5">${f}</span></div>`).join('')}
+          </div>
+          <div style="margin-top:12px;padding:8px 12px;background:${color}12;border-radius:8px;font-size:11px;color:${color};font-weight:700;text-align:center">
+            &copy; 2026 PaMarket. All rights reserved.
+          </div>
+        </div>`;
+    }
+
+    return `<div class="page active">${H.innerTopbar('Learn More')}
+      <div style="padding:16px 16px 80px">
+
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center">
+          <div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:6px">Advertising on Pa<span style="color:#F5A623">Market</span></div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);line-height:1.6">Zimbabwe's free marketplace connecting buyers and sellers across all 10 provinces</div>
+        </div>
+
+        ${section('👔', 'Jobs & Hiring', '#1A3A8F',
+          [
+            'Post vacancies that reach thousands of job seekers across Zimbabwe',
+            'Filter candidates by province, city or skill set',
+            'Receive applications directly through in-app chat',
+            'Free to post — no recruitment agency fees',
+            'Admin-reviewed listings guarantee quality postings',
+          ],
+          'Reach the best local talent fast. Whether you need a driver in Harare, an accountant in Bulawayo, or a farmhand in Masvingo — PaMarket connects you with active job seekers across the country. Post your vacancy today and let candidates come to you.'
+        )}
+
+        ${section('🤝', 'Hire Candidates', '#059669',
+          [
+            'Browse verified candidate profiles and CVs',
+            'View skills, experience and location at a glance',
+            'Contact candidates directly — no middleman',
+            'Candidates upload portfolios and reference letters',
+            'Real-time availability status on each profile',
+          ],
+          'Don\'t wait for applications — go straight to the talent. Our Hire Candidates section lets you browse ready-to-work professionals who have already uploaded their CVs and skills. Ideal for urgent roles or specialised positions where you need the right person fast.'
+        )}
+
+        ${section('🏠', 'Properties', '#D97706',
+          [
+            'List residential homes, plots, farms and commercial spaces',
+            'Rentals, sales and lease listings all in one place',
+            'High-quality photo galleries for each property',
+            'Location mapped to province, city and suburb',
+            'Boosted listings appear at the top of search results',
+          ],
+          'Zimbabwe\'s property market moves fast. Whether you\'re selling a house in Borrowdale, renting a flat in Mutare, or listing commercial space in the CBD — PaMarket gives your property maximum visibility. Our platform reaches serious buyers and tenants who are actively searching.'
+        )}
+
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:10px">How it works</div>
+          ${[
+            ['1', 'Choose a category and fill in your ad details'],
+            ['2', 'Add clear photos — more photos get more views'],
+            ['3', 'Our team reviews your listing (within 24 hours)'],
+            ['4', 'Your ad goes live and buyers can contact you directly'],
+          ].map(([n, t]) => `
+            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px">
+              <div style="width:26px;height:26px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div>
+              <div style="font-size:13px;color:var(--text);line-height:1.5;padding-top:4px">${t}</div>
+            </div>`).join('')}
+        </div>
+
+        <div style="text-align:center;padding:16px 0;border-top:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--sub);line-height:1.8">
+            &copy; 2026 PaMarket Zimbabwe (Pvt) Ltd. All rights reserved.<br>
+            Unauthorised reproduction of listings or content is prohibited.<br>
+            <span style="font-weight:700;color:var(--text)">info@pamarket.co.zw</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  // ─── Handlers ─────────────────────────────────────────────────────────────────
+  H._adv = {
+    pickCategory(cat) {
+      if (cat === 'listing') {
+        H.openInner('AdsBoost');
+      } else {
+        H.openInner('AdsCreate', { category: cat });
+      }
+    },
+    selectBoost(idx, boostType) {
+      _selIndex     = idx;
+      _selBoostType = boostType;
+      H.openInner('AdsContact');
+    },
+    learnMore() {
+      H.openInner('AdsLearnMore');
+    },
+    promoteFromDash(listingId) {
+      const u = H.currentUser();
+      _myListings = (H.state.listings || []).filter(l => l.sellerId === (u || {}).id && l.status === 'active');
+      const idx = _myListings.findIndex(l => l.id === listingId);
+      _selIndex     = idx >= 0 ? idx : 0;
+      _selBoostType = 'Sponsored Listing';
+      H.openInner('AdsContact');
+    },
+    deleteAd(id) {
+      if (!window.confirm('Delete this ad permanently?')) return;
+      H.state.listings = (H.state.listings || []).filter(l => l.id !== id);
+      H.saveState();
+      if (typeof H.deleteListingFromCloud === 'function') H.deleteListingFromCloud(id);
+      H.toast('Ad deleted');
+      H.renderPage('MyAds');
+    },
+  };
+
+  H._wallet   = { openTopUp() { H.openInner('Ads'); }, openSite() { H.openInner('Ads'); } };
+  H.showTopUp = () => H.openInner('Ads');
+
   H._copyText = function (el) {
     const text = (el && el.dataset) ? el.dataset.v : String(el);
     if (navigator.clipboard) navigator.clipboard.writeText(text);
@@ -7559,18 +10419,42 @@ H.init();
             <input type="radio" name="language" disabled>
             <div style="flex:1">
               <div style="font-weight:700;color:var(--text)">Shona · ChiShona</div>
-              <div style="font-size:12px;color:var(--muted)">Coming soon</div>
+              <div style="font-size:12px;color:var(--muted)">Not available in this version</div>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:12px;padding:14px 0;opacity:.5">
             <input type="radio" name="language" disabled>
             <div style="flex:1">
               <div style="font-weight:700;color:var(--text)">Ndebele · IsiNdebele</div>
-              <div style="font-size:12px;color:var(--muted)">Coming soon</div>
+              <div style="font-size:12px;color:var(--muted)">Not available in this version</div>
             </div>
           </div>
         </div>
-        <p style="font-size:13px;color:var(--muted);text-align:center;margin-top:8px">Shona and Ndebele translations are in progress and will be added in a future update.</p>
+        <p style="font-size:13px;color:var(--muted);text-align:center;margin-top:8px">PaMarket uses English for app screens and account communication.</p>
+      </div>
+    </div>`;
+  };
+
+  pages.LanguageSettings = function () {
+    const current = H.getLanguage ? H.getLanguage() : ((H.currentUser() && H.currentUser().language) || H.state.language || 'English');
+    return `<div class="page active">
+      ${H.innerTopbar('Language')}
+      <div class="form-wrap">
+        <div class="section-box" style="padding:0">
+          <button onclick="H.setLanguage('English')" style="display:flex;align-items:center;gap:12px;width:100%;padding:16px;background:var(--card);border:none;text-align:left;cursor:pointer">
+            <span style="width:22px;height:22px;border-radius:50%;border:2px solid #1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              ${current === 'English' ? '<span style="width:10px;height:10px;border-radius:50%;background:#1A3A8F"></span>' : ''}
+            </span>
+            <div style="flex:1">
+              <div style="font-size:15px;font-weight:700;color:var(--text-primary)">English</div>
+              <div style="font-size:12px;color:var(--text-sub);margin-top:2px">App display language</div>
+            </div>
+            ${current === 'English' ? '<svg viewBox="0 0 24 24" fill="none" stroke="#1A3A8F" stroke-width="2.5" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+          </button>
+        </div>
+        <div class="section-box" style="margin-top:12px">
+          <div style="font-size:13px;line-height:1.55;color:var(--text-sub)">PaMarket uses English for app screens and account communication.</div>
+        </div>
       </div>
     </div>`;
   };
@@ -7580,6 +10464,13 @@ H.init();
   // --- Blocked Users ----------------------------------------
   pages.BlockedUsers = function () {
     const u = H.currentUser();
+    // Migrate legacy blocks stored at H.state.blockedUsers (top-level) into the user object
+    if (Array.isArray(H.state.blockedUsers) && H.state.blockedUsers.length) {
+      if (!Array.isArray(u.blockedUsers)) u.blockedUsers = [];
+      H.state.blockedUsers.forEach(id => { if (!u.blockedUsers.includes(id)) u.blockedUsers.push(id); });
+      delete H.state.blockedUsers;
+      H.saveState();
+    }
     const blocked = u.blockedUsers || [];
 
     return `<div class="page active">
@@ -7622,6 +10513,56 @@ H.init();
 'use strict';
 (function (H) {
   const pages = H.pages;
+  const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+  H._twoFactorCreateSecret = function () {
+    const bytes = new Uint8Array(10);
+    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
+    else for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+    let bits = '', out = '';
+    bytes.forEach(b => { bits += b.toString(2).padStart(8, '0'); });
+    for (let i = 0; i < bits.length; i += 5) out += B32[parseInt(bits.slice(i, i + 5).padEnd(5, '0'), 2)];
+    return out.replace(/(.{4})/g, '$1 ').trim();
+  };
+
+  function base32Bytes(secret) {
+    let bits = '';
+    String(secret || '').replace(/\s+/g, '').toUpperCase().split('').forEach(ch => {
+      const v = B32.indexOf(ch);
+      if (v >= 0) bits += v.toString(2).padStart(5, '0');
+    });
+    const bytes = [];
+    for (let i = 0; i + 8 <= bits.length; i += 8) bytes.push(parseInt(bits.slice(i, i + 8), 2));
+    return bytes;
+  }
+
+  async function hotp(secret, counter) {
+    const keyData = new Uint8Array(base32Bytes(secret));
+    const key = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+    const buf = new ArrayBuffer(8);
+    const view = new DataView(buf);
+    const high = Math.floor(counter / 0x100000000);
+    const low = counter >>> 0;
+    view.setUint32(0, high);
+    view.setUint32(4, low);
+    const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, buf));
+    const off = sig[sig.length - 1] & 15;
+    const bin = ((sig[off] & 127) << 24) | (sig[off + 1] << 16) | (sig[off + 2] << 8) | sig[off + 3];
+    return String(bin % 1000000).padStart(6, '0');
+  }
+
+  H._twoFactorCode = function (secret, offset) {
+    return hotp(secret, Math.floor(Date.now() / 30000) + (offset || 0));
+  };
+
+  H._twoFactorVerify = async function (secret, code) {
+    const c = String(code || '').replace(/\D/g, '');
+    if (!secret || c.length !== 6) return false;
+    for (const o of [-1, 0, 1]) {
+      if (await H._twoFactorCode(secret, o) === c) return true;
+    }
+    return false;
+  };
 
   // -- CHANGE PASSWORD ---------------------------------------
   pages.ChangePassword = function () {
@@ -7714,21 +10655,71 @@ H.init();
 
   pages.TwoFactor = function () {
     const u = H.currentUser();
-    const enabled = u.twoFactorEnabled || false;
+    const enabled = !!(u && u.twoFactorEnabled && u.twoFactorSecret);
+    const setup = u._pendingTwoFactorSecret || H._twoFactorCreateSecret();
+    if (!enabled && !u._pendingTwoFactorSecret) {
+      u._pendingTwoFactorSecret = setup;
+      H.saveState();
+    }
+    const email       = H.escHtml(u ? (u.email || u.name || 'user') : 'user');
+    const secretClean = setup.replace(/\s/g, '');
+    const totpUri     = 'otpauth://totp/PaMarket:' + encodeURIComponent(email) + '?secret=' + secretClean + '&issuer=PaMarket';
+    const qrUrl       = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(totpUri);
+
     return `<div class="page active">
       ${H.innerTopbar('Two-Factor Authentication')}
       <div class="form-wrap">
-        <div class="section-box">
-          <div class="verify-title">${enabled ? '2FA Enabled' : '2FA Disabled'}</div>
-          <div class="verify-sub">${enabled ? 'Your account is protected.' : 'Add an extra layer of security.'}</div>
-        </div>
-        <div class="section-box">
-          <div class="section-title">How it works</div>
-          <div class="info-row"><span class="info-label">Step 1</span><span class="info-val">Enter your password</span></div>
-          <div class="info-row"><span class="info-label">Step 2</span><span class="info-val">Get a code via SMS</span></div>
-          <div class="info-row"><span class="info-label">Step 3</span><span class="info-val">Enter code to log in</span></div>
-        </div>
-        <button class="btn-pri" onclick="H._twoFactor.toggle()">${enabled ? 'Disable 2FA' : 'Enable 2FA'}</button>
+        ${enabled ? `
+          <div class="section-box" style="text-align:center;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:1.5px solid #86efac">
+            <div style="font-size:32px;margin-bottom:8px">🔐</div>
+            <div style="font-size:17px;font-weight:800;color:#15803d;margin-bottom:4px">2FA is Active</div>
+            <div style="font-size:13px;color:#166534;line-height:1.5">Your account is protected with two-factor authentication. You'll need your authenticator app every time you log in.</div>
+          </div>
+          <div class="section-box">
+            <div class="section-title">Disable Two-Factor Authentication</div>
+            <div style="font-size:13px;color:var(--text-sub);margin-bottom:12px;line-height:1.5">Open your authenticator app and enter the 6-digit code to confirm you want to disable 2FA.</div>
+            <div class="fg">
+              <div class="fl">Authenticator code</div>
+              <input class="fi" id="twoFactorCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456" onkeydown="if(event.key==='Enter')H._twoFactor.disable()">
+            </div>
+            <button class="btn-pri" style="background:#dc2626" onclick="H._twoFactor.disable()">Disable 2FA</button>
+          </div>
+        ` : `
+          <div class="section-box" style="text-align:center">
+            <div style="font-size:32px;margin-bottom:8px">🔒</div>
+            <div style="font-size:17px;font-weight:800;color:var(--text-primary);margin-bottom:4px">Set Up Two-Factor Authentication</div>
+            <div style="font-size:13px;color:var(--text-sub);line-height:1.5">Add an extra layer of security. After setup, every login will require a 6-digit code from your authenticator app.</div>
+          </div>
+
+          <div class="section-box">
+            <div class="section-title">Step 1 — Install an Authenticator App</div>
+            <div style="font-size:13px;color:var(--text-sub);line-height:1.6">Download one of these free apps on your phone:<br>
+              <strong>Google Authenticator</strong>, <strong>Microsoft Authenticator</strong>, or <strong>Authy</strong>
+            </div>
+          </div>
+
+          <div class="section-box">
+            <div class="section-title">Step 2 — Scan the QR Code</div>
+            <div style="font-size:13px;color:var(--text-sub);margin-bottom:14px;line-height:1.5">Open your authenticator app, tap <strong>+</strong> or <strong>Add account</strong>, then scan this code:</div>
+            <div style="display:flex;justify-content:center;margin-bottom:12px">
+              <img src="${H.escHtml(qrUrl)}" width="180" height="180" alt="2FA QR Code" style="border-radius:12px;border:2px solid var(--border);padding:8px;background:#fff">
+            </div>
+            <div style="font-size:12px;color:var(--text-sub);text-align:center;margin-bottom:8px">Can't scan? Use this manual key instead:</div>
+            <div style="font-family:monospace;font-size:15px;font-weight:800;letter-spacing:2px;color:var(--blue);background:var(--blue-light,#EFF6FF);border:1.5px solid rgba(26,58,143,.2);border-radius:10px;padding:12px;text-align:center;word-break:break-all;cursor:pointer" onclick="
+              navigator.clipboard && navigator.clipboard.writeText('${H.escHtml(secretClean)}').then(()=>H.toast('Key copied!')).catch(()=>{});
+            ">${H.escHtml(setup)} <span style="font-size:11px;opacity:.6">(tap to copy)</span></div>
+          </div>
+
+          <div class="section-box">
+            <div class="section-title">Step 3 — Enter the 6-Digit Code</div>
+            <div style="font-size:13px;color:var(--text-sub);margin-bottom:12px;line-height:1.5">After scanning, your app will show a 6-digit code. Enter it below to confirm the setup.</div>
+            <div class="fg">
+              <div class="fl">Authenticator code</div>
+              <input class="fi" id="twoFactorCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456" onkeydown="if(event.key==='Enter')H._twoFactor.enable()">
+            </div>
+            <button class="btn-pri" onclick="H._twoFactor.enable()">Enable 2FA</button>
+          </div>
+        `}
         <button class="btn-sec" onclick="H.goBack()">Back</button>
       </div>
     </div>`;
@@ -7736,11 +10727,32 @@ H.init();
 
   pages.TwoFactor_after = function () {
     H._twoFactor = {
-      toggle: () => {
+      enable: async () => {
         const u = H.currentUser();
-        u.twoFactorEnabled = !u.twoFactorEnabled;
+        const code = (document.getElementById('twoFactorCode')?.value || '').trim();
+        if (!await H._twoFactorVerify(u._pendingTwoFactorSecret, code)) {
+          H.toast('Invalid authenticator code');
+          return;
+        }
+        u.twoFactorSecret = u._pendingTwoFactorSecret;
+        u.twoFactorEnabled = true;
+        delete u._pendingTwoFactorSecret;
         H.saveState();
-        H.toast(u.twoFactorEnabled ? '2FA enabled' : '2FA disabled');
+        H.toast('2FA enabled');
+        H.renderPage('TwoFactor');
+      },
+      disable: async () => {
+        const u = H.currentUser();
+        const code = (document.getElementById('twoFactorCode')?.value || '').trim();
+        if (!await H._twoFactorVerify(u.twoFactorSecret, code)) {
+          H.toast('Invalid authenticator code');
+          return;
+        }
+        u.twoFactorEnabled = false;
+        u.twoFactorSecret = null;
+        delete u._pendingTwoFactorSecret;
+        H.saveState();
+        H.toast('2FA disabled');
         H.renderPage('TwoFactor');
       }
     };
@@ -7835,6 +10847,12 @@ H.init();
 })(window.H = window.H || {});
 
 ;/* === www/js/help.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 (function (H) {
   const pages = H.pages;
@@ -8031,104 +11049,395 @@ H.init();
           <div style="color:var(--sub)">${S.chevron}</div>
         </a>
 
-        <div class="section-title">Send us a message</div>
-        <div class="fg">
-          <div class="fl">Subject</div>
-          <input class="fi" id="supportSubject" placeholder="What's your issue?">
-        </div>
-
-        <div class="fg">
-          <div class="fl">Message</div>
-          <textarea class="fi" rows="5" id="supportMsg" placeholder="Describe your issue in detail..."></textarea>
-        </div>
-
-        <button class="btn-pri" onclick="H._support.send()">Send Message</button>
-        <div style="text-align:center;font-size:12px;color:var(--sub);margin-top:8px">We respond within 24 hours</div>
       </div>
     </div>`;
   };
 
-  pages.ContactSupport_after = function () {
-    H._support = {
-      send: () => {
-        const subject = document.getElementById('supportSubject')?.value?.trim();
-        const msg = document.getElementById('supportMsg')?.value?.trim();
-        if (!subject || !msg) { H.toast('Please fill in all fields'); return; }
-        
-        H.state.supportTickets = H.state.supportTickets || [];
-        H.state.supportTickets.push({
-          id: H.uid(),
-          userId: H.state.currentUserId,
-          subject,
-          message: msg,
-          createdAt: Date.now(),
-          status: 'open'
-        });
-        H.saveState();
-        H.toast('Support ticket created! We\'ll respond within 24h.');
-        H.goBack();
-      }
-    };
-  };
-
-  // --- Report Problem ---------------------------------------
+  // --- Support Bot (Report a Problem) ----------------------
   pages.ReportProblem = function () {
-    return `<div class="page active">
-      ${H.innerTopbar('Report a Problem')}
-      <div class="form-wrap">
-        <div class="fg">
-          <div class="fl">Problem Type</div>
-          <select class="fi" id="problemType">
-            <option>-- Select --</option>
-            <option>App Crash or Error</option>
-            <option>Slow Performance</option>
-            <option>Missing Features</option>
-            <option>Payment Issues</option>
-            <option>Other Technical Issue</option>
-          </select>
-        </div>
-
-        <div class="fg">
-          <div class="fl">Description</div>
-          <textarea class="fi" rows="5" id="problemDesc" placeholder="Describe the issue and steps to reproduce..."></textarea>
-        </div>
-
-        <div class="fg">
-          <div class="fl">Screenshots (optional)</div>
-          <label class="img-upload-zone" for="problemScreenshot">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <div class="img-upload-title">Tap to add screenshot</div>
-          </label>
-          <input type="file" id="problemScreenshot" accept="image/*" capture style="display:none">
-        </div>
-
-        <button class="btn-pri" onclick="H._problems.report()">Report Issue</button>
+    return `<div class="page active" style="display:flex;flex-direction:column;overflow:hidden;height:100%">
+      ${H.innerTopbar('Support Chat')}
+      <div id="botChat" style="flex:1;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:12px;min-height:0"></div>
+      <div id="botChips" style="padding:8px 14px 4px;min-height:46px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--bg);border-top:1px solid var(--border)"></div>
+      <div style="padding:8px 14px 20px;background:var(--bg);display:flex;gap:8px;align-items:center">
+        <input id="botInput" class="fi" style="flex:1;margin:0;font-size:14px" placeholder="Type your question..." onkeydown="if(event.key==='Enter')H._bot.send()">
+        <button onclick="H._bot.send()" style="background:#1A3A8F;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0">Send</button>
       </div>
     </div>`;
   };
 
   pages.ReportProblem_after = function () {
-    H._problems = {
-      report: () => {
-        const type = document.getElementById('problemType')?.value;
-        const desc = document.getElementById('problemDesc')?.value?.trim();
-        if (!type || type === '-- Select --' || !desc) { H.toast('Please fill in all fields'); return; }
-        
-        H.state.reports = H.state.reports || [];
-        H.state.reports.push({
-          id: H.uid(),
-          reporterId: H.state.currentUserId,
-          targetType: 'bug',
-          problemType: type,
-          description: desc,
-          createdAt: Date.now(),
-          status: 'open'
-        });
-        H.saveState();
-        H.toast('Bug report submitted. Thank you for helping us improve!');
-        H.goBack();
+    /* ── inject animation styles once ── */
+    if (!document.getElementById('bot-css')) {
+      var st = document.createElement('style');
+      st.id = 'bot-css';
+      st.textContent =
+        '@keyframes botIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}' +
+        '@keyframes dotP{0%,80%,100%{transform:scale(.45);opacity:.3}40%{transform:scale(1);opacity:1}}' +
+        '.bot-bbl{animation:botIn .22s ease}' +
+        '.bot-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#9ca3af;margin:0 2px;animation:dotP 1.3s ease-in-out infinite}' +
+        '.bot-dot:nth-child(2){animation-delay:.22s}.bot-dot:nth-child(3){animation-delay:.44s}' +
+        '.bot-chip:hover{background:#1A3A8F!important;color:#fff!important;border-color:#1A3A8F!important}';
+      document.head.appendChild(st);
+    }
+
+    var HKEY = 'pm_bot_h2';
+    var WA   = 'https://wa.me/971589772645';
+    var ML   = 'mailto:chakusaprince@gmail.com';
+    var PH   = 'tel:+971589772645';
+    var WASVG= '<svg viewBox="0 0 24 24" width="17" height="17" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>';
+
+    /* ── knowledge base — 26 topics ── */
+    var KB = [
+      {
+        tags:['sign in','login','log in','signin','forgot password','reset password','locked out','wrong password','account access','cant sign','cannot sign','email not found','not signing'],
+        answer:'To sign in, tap "Sign In" on the home screen and enter your email and password.\n\nForgot your password?\n• Tap "Forgot Password" below the sign-in form\n• Check your inbox AND spam folder for the reset link\n\nIf your email isn\'t recognised, you may have registered with a different address.',
+        chips:['Change Password','Delete Account','Contact Support']
+      },
+      {
+        tags:['post','create listing','add listing','sell','post ad','how to post','new listing','list item','publish listing','upload item','add item'],
+        answer:'To post a listing:\n1. Tap the orange ✚ Post button at the bottom of the screen\n2. Choose the right category (Electronics, Jobs, Rentals, etc.)\n3. Add 3–5 clear photos, a descriptive title, honest description, and price\n4. Set your location and tap Publish\n\nListings are reviewed and go live within minutes. Clear photos and honest descriptions get up to 3× more responses!',
+        chips:['Edit a Listing','Boost a Listing','Mark as Sold']
+      },
+      {
+        tags:['verify','verification','id','identity','badge','blue badge','verified seller','document','selfie','id document','get verified'],
+        answer:'To earn your verified ✓ badge:\n1. Go to Profile (bottom nav)\n2. Tap "Verify Identity"\n3. Upload a clear photo of your national ID or passport\n4. Take a selfie — your face must match the ID\n5. Submit and wait up to 24 hours\n\nVerified sellers rank higher in search results and buyers trust them significantly more.',
+        chips:['Edit Profile','Post a Listing','Contact Support']
+      },
+      {
+        tags:['boost','promote','advertise','spotlight','feature','credits','ad credit','visibility','top of results','top listing','sponsored'],
+        answer:'Boost puts your listing at the very top of search results and category pages!\n\nHow to boost:\n1. Open any of your active listings\n2. Tap "Boost Listing"\n3. Choose a package (duration/reach)\n4. Pay via EcoCash, OneMoney, or bank transfer\n\nNote: Credits are non-refundable once applied to a listing. Unused credits can be refunded within 7 days — contact us to request this.',
+        chips:['Payment Methods','Post a Listing','Contact Support']
+      },
+      {
+        tags:['message','chat','messaging','inbox','not receiving','send message','conversation','message seller','not syncing','not delivered','no reply','messages disappear'],
+        answer:'Troubleshooting messages:\n\n• Make sure you\'re signed in\n• Check your internet connection\n• Close the app fully and reopen it — messages sync on reload\n• Wait 10–15 seconds after sending for delivery\n\nTo start a new chat:\n→ Open any listing → tap "Message Seller"\n\nIf the other person can\'t see your message, ask them to close and reopen the app.',
+        chips:['Notification Issue','Block a User','Contact Support']
+      },
+      {
+        tags:['scam','fraud','fake','suspicious','stolen','illegal','inappropriate','cheat','deceive','fake listing','advance fee','deposit scam','fake job','fake rental'],
+        answer:'To report a scam or suspicious listing:\n1. Open the listing or user profile\n2. Tap the ⋯ menu → tap "Report"\n3. Select "Fraud / Scam" and describe what happened\n4. Submit — we review within 24 hours\n\n🛡 Safety rules:\n• NEVER pay any deposit before physically viewing an item\n• NEVER share your OTP, PIN, or bank password\n• Meet in a safe, busy public place\n• If it feels wrong, walk away immediately',
+        chips:['Block a User','Report a User','Contact Support']
+      },
+      {
+        tags:['report user','bad user','bad seller','bad buyer','harass','abusive','threatening','rude'],
+        answer:'To report a user:\n1. Tap their name or profile picture to open their profile\n2. Scroll to the bottom\n3. Tap "Report User"\n4. Select the reason (Harassment, Fraud, Spam, etc.) and submit\n\nTo block them immediately:\n• On their profile, tap "Block User"\n• They can no longer message you, see your phone number, or view your listings\n• Manage all blocked users in Settings',
+        chips:['Report a Scam','Contact Support','Ask Another Question']
+      },
+      {
+        tags:['payment','pay','ecocash','onemoney','bank transfer','mobile money','zipit','rtgs','how to pay','transaction'],
+        answer:'PaMarket uses direct peer-to-peer payments between buyers and sellers.\n\nAccepted methods:\n• EcoCash — send to seller\'s registered number\n• OneMoney — same process\n• Bank transfer (ZIPIT / RTGS)\n• Cash on delivery (meet in person)\n\n⚠️ PaMarket does NOT hold or process payments. Deal directly with sellers. Always inspect items before paying — never pay sight-unseen.',
+        chips:['Boost a Listing','Report a Scam','Ask Another Question']
+      },
+      {
+        tags:['job','apply','application','vacancy','hire','employer','employee','applied','apply for job','job not showing','job listing'],
+        answer:'To apply for a job:\n1. Open the job listing\n2. Tap "Apply Now"\n3. Fill in your name, phone, email, and a short cover message\n4. Submit — the employer receives your application and contacts you directly\n\nFor employers:\n• Post in the "Jobs" category\n• Tap "Mark as Filled" once the position is taken\n\nTip: Complete your profile and upload your CV for one-tap applications!',
+        chips:['Upload My CV','Post a Listing','Contact Support']
+      },
+      {
+        tags:['cv','resume','upload cv','build cv','my cv','curriculum','work experience','open to work','job seeker'],
+        answer:'To build and upload your CV:\n1. Go to Profile (bottom nav)\n2. Tap "Edit Profile"\n3. Scroll to the CV / Work Experience section\n4. Add your job history, skills, education, and sector\n5. Toggle "Open to Work" ON so employers can find you\n\nYour CV is shared automatically when you apply for any job listing.',
+        chips:['Apply for a Job','Get Verified','Ask Another Question']
+      },
+      {
+        tags:['delete account','remove account','close account','deactivate','leave pamarket','cancel account','erase account'],
+        answer:'To permanently delete your account:\n1. Go to Settings (tap your profile icon → Settings)\n2. Scroll down to the Security section\n3. Tap "Delete Account"\n4. Enter your password to confirm\n\n⚠️ This cannot be undone. All your listings, messages, CV, and personal data are permanently deleted within 30 days.',
+        chips:['Sign In Issue','Contact Support','Ask Another Question']
+      },
+      {
+        tags:['crash','not loading','slow','freeze','stuck','error','blank screen','app not working','force close','bug','broken','won\'t open','not opening','keeps crashing','white screen'],
+        answer:'Step-by-step fix for app issues:\n\n1. Close the app fully and reopen it\n2. Check your internet (try switching between WiFi and mobile data)\n3. Restart your phone\n4. Clear the app cache:\n   Android: Settings → Apps → PaMarket → Storage → Clear Cache\n   iPhone: Offload the app in Settings → General → iPhone Storage\n5. Uninstall and reinstall the latest version\n\nStill broken? Tell us your phone model and exactly what happens — we\'ll fix it quickly!',
+        chips:['Contact Support','Ask Another Question']
+      },
+      {
+        tags:['edit','update listing','change price','modify listing','update ad','change description','change photo','edit my listing'],
+        answer:'To edit a listing:\n1. Tap the Profile icon (bottom nav) → My Listings\n2. Tap the listing you want to change\n3. Tap "Edit"\n4. Update the title, price, photos, description, or location\n5. Tap Save — changes appear live within seconds',
+        chips:['Mark as Sold','Boost a Listing','Delete a Listing']
+      },
+      {
+        tags:['delete listing','remove listing','take down','delete ad','remove ad'],
+        answer:'To delete a listing:\n1. Go to My Listings (Profile icon)\n2. Tap the listing\n3. Tap "Delete" (or the trash icon)\n4. Confirm deletion\n\nThe listing is permanently removed from the marketplace.\n\nIf you just sold the item, use "Mark as Sold" instead — it hides the listing while keeping your record.',
+        chips:['Post a Listing','Edit a Listing','Ask Another Question']
+      },
+      {
+        tags:['sold','mark sold','mark filled','filled','listing sold','close listing','item sold','job filled','position filled'],
+        answer:'To mark a listing as sold or filled:\n1. Go to My Listings\n2. Tap the listing\n3. Tap "Mark as Sold" (items / rentals) or "Mark as Filled" (job vacancies)\n\nThe listing is hidden from public search but kept in your account records. Tap "Delete" if you want it fully removed.',
+        chips:['Post a Listing','Edit a Listing','Ask Another Question']
+      },
+      {
+        tags:['notification','alert','push notification','not getting notification','no notification','enable notification','not notified'],
+        answer:'To fix notifications:\n\nAndroid:\n  Settings → Apps → PaMarket → Notifications → Turn ON\n\niPhone:\n  Settings → PaMarket → Notifications → Allow Notifications\n\nAlso make sure you\'re signed in — notifications only work when logged in.\n\nYou\'ll receive alerts for: new messages, job applications on your listings, listing status changes, and admin updates.',
+        chips:['Messages Issue','Contact Support','Ask Another Question']
+      },
+      {
+        tags:['block','block user','blocked','unwanted messages','spam user'],
+        answer:'To block a user:\n1. Tap their name or profile photo to open their profile\n2. Scroll to the bottom of their profile\n3. Tap "Block User"\n\nBlocked users cannot message you, call you, or see your contact details. You can view and manage all blocked users in Settings.',
+        chips:['Report a User','Messages Issue','Ask Another Question']
+      },
+      {
+        tags:['free','cost','price','fee','how much','charges','paid feature','subscription','pricing'],
+        answer:'PaMarket is 100% free for buyers and sellers!\n\nAlways free:\n✓ Post unlimited listings\n✓ Message any seller or buyer\n✓ Apply for jobs\n✓ Browse all categories\n✓ Create your profile and CV\n✓ Get verified\n\nOptional paid upgrades:\n• Boost — pushes your listing to the top of search results\n• Spotlight Ad — featured placement on the home page\n\nNo subscription. No hidden fees. No commission on sales.',
+        chips:['Boost a Listing','Post a Listing','Ask Another Question']
+      },
+      {
+        tags:['profile','update profile','edit profile','change name','change photo','profile picture','bio','city','avatar'],
+        answer:'To update your profile:\n1. Tap the Profile icon at the bottom\n2. Tap "Edit Profile"\n3. Change your name, profile photo, bio, city, phone number, or skills\n4. Tap Save\n\nA complete profile with a clear, friendly photo gets 3× more responses from buyers and employers.',
+        chips:['Get Verified','Upload My CV','Ask Another Question']
+      },
+      {
+        tags:['rental','rent','house','room','property','accommodation','commercial space','apartment','flat','lodge','bedsit'],
+        answer:'To find a rental:\n• Select "Rentals" on the home screen or search by city\n• Filter by price range and province\n• Tap any listing to see full details and contact the landlord directly\n\nTo post a rental:\n• Tap ✚ Post → choose "Rentals"\n• Add real photos of the actual property, monthly rent, and exact location\n\n⚠️ NEVER pay a deposit before physically viewing a property.',
+        chips:['Post a Listing','Report a Scam','Payment Methods']
+      },
+      {
+        tags:['category','what can i sell','electronics','cars','vehicles','furniture','clothes','services','animals','farm','what can be sold'],
+        answer:'PaMarket supports all legal categories:\n\n🛒 Buy & Sell\n   Electronics · Clothing · Furniture · Vehicles · Appliances · Farming equipment\n\n💼 Jobs\n   All sectors · Full-time · Part-time · Freelance · Domestic\n\n🏠 Rentals\n   Houses · Rooms · Commercial spaces · Farmland\n\n🔧 Services\n   Plumbing · Construction · Cleaning · Delivery · Tutoring\n\nAlways choose the most specific category — it gets your listing found faster.',
+        chips:['Post a Listing','Get Verified','Ask Another Question']
+      },
+      {
+        tags:['photo','image upload','add photo','photo not uploading','picture not loading','image not showing','photo failed'],
+        answer:'Tips for uploading photos:\n• Use JPG or PNG files under 5 MB each\n• Make sure your internet connection is stable when uploading\n• Try a different photo if one specific image keeps failing\n• Clear app cache if photos won\'t display (Settings → Apps → PaMarket → Clear Cache)\n\nYou can add up to 5 photos per listing. The FIRST photo becomes your thumbnail — make it the best, clearest shot!',
+        chips:['Post a Listing','Edit a Listing','Contact Support']
+      },
+      {
+        tags:['renew','expired listing','30 days','listing expired','listing removed','disappeared','no longer showing','listing gone'],
+        answer:'Listings stay active for 30 days, then automatically archive.\n\nTo renew an expired listing:\n1. Go to My Listings\n2. Find the expired listing (marked "Expired")\n3. Tap "Renew"\n\nThis re-publishes it free for another 30 days.\n\nIf your listing disappeared before 30 days, it may have been reported and removed. Check your notification inbox or contact us for details.',
+        chips:['Edit a Listing','Boost a Listing','Contact Support']
+      },
+      {
+        tags:['search','find listing','browse','can\'t find','not showing up','listing not found','search not working','search results'],
+        answer:'How to find listings:\n• Use the search bar at the top — try specific keywords like "iPhone 13 Harare" or "2 bedroom Bulawayo"\n• Browse by category on the home screen\n• Filter by province, price range, or category\n\nIf YOUR listing isn\'t showing in search:\n• It may still be under review (allow a few minutes after posting)\n• Check it hasn\'t expired (30-day limit)\n• Try searching for the exact title you used',
+        chips:['Post a Listing','Renew a Listing','Contact Support']
+      },
+      {
+        tags:['banned','suspended','account suspended','account banned','why banned','appeal ban','unban','account disabled'],
+        answer:'If your account has been suspended:\n\n1. Check your registered email — we send a notification explaining the reason\n2. Common reasons: policy violation, reported content, suspicious login activity\n\nTo appeal:\n• Email chakusaprince@gmail.com with:\n  — Your account email address\n  — Why you believe the suspension was an error\n  — Any supporting evidence\n• We review all appeals within 7 days\n\n⚠️ Creating a second account to bypass a ban results in permanent removal.',
+        chips:['Contact Support','Ask Another Question']
+      },
+      {
+        tags:['change phone','phone number','update phone','new number','change number'],
+        answer:'To update your phone number:\n1. Go to Profile (bottom nav)\n2. Tap "Edit Profile"\n3. Update your phone number field\n4. Save changes\n\nYour phone number is visible to other users when they view your listings — make sure it\'s a number you actively use.',
+        chips:['Edit Profile','Get Verified','Ask Another Question']
+      },
+    ];
+
+    var chat     = document.getElementById('botChat');
+    var chipsEl  = document.getElementById('botChips');
+    var input    = document.getElementById('botInput');
+    var history  = [];
+    var msgCount = 0;
+
+    var INIT_CHIPS = ['Sign In Issue','Post a Listing','Get Verified','Messaging Issue','Report a Scam','Boost a Listing','Job / CV Help','App Not Working','Pricing Info','Account Banned'];
+    var CHIP_MAP   = {
+      'Sign In Issue':    'sign in login forgot password',
+      'Post a Listing':   'post create listing sell publish',
+      'Get Verified':     'verify verification badge identity',
+      'Messaging Issue':  'message chat not working inbox',
+      'Report a Scam':    'scam fraud fake suspicious',
+      'Boost a Listing':  'boost promote advertise credits',
+      'Job / CV Help':    'job apply cv resume vacancy',
+      'App Not Working':  'crash not loading freeze error bug',
+      'Pricing Info':     'free cost price fee subscription',
+      'Account Banned':   'banned suspended appeal account',
+      'Edit a Listing':   'edit update listing change price',
+      'Delete a Listing': 'delete remove listing',
+      'Mark as Sold':     'sold filled close listing',
+      'Upload My CV':     'cv resume upload build',
+      'Apply for a Job':  'job apply application vacancy',
+      'Payment Methods':  'payment pay ecocash onemoney bank transfer',
+      'Block a User':     'block user blocked harass',
+      'Report a User':    'report user bad seller harass',
+      'Notification Issue':'notification alert push not getting',
+      'Edit Profile':     'profile photo bio city update',
+      'Renew a Listing':  'renew expired listing 30 days',
+      'Change Password':  'sign in forgot password reset',
+    };
+
+    function timeStr() {
+      return new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }
+
+    function nl2br(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    }
+
+    function scrollDown() {
+      setTimeout(function(){ if (chat) chat.scrollTop = chat.scrollHeight; }, 70);
+    }
+
+    function saveHistory() {
+      try { localStorage.setItem(HKEY, JSON.stringify(history.slice(-60))); } catch(e) {}
+    }
+
+    function loadHistory() {
+      try { var s = localStorage.getItem(HKEY); return s ? JSON.parse(s) : null; } catch(e) { return null; }
+    }
+
+    function avatar() {
+      var d = document.createElement('div');
+      d.style.cssText = 'width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 1px 4px rgba(26,58,143,.3)';
+      d.textContent = 'P';
+      return d;
+    }
+
+    function addMsg(text, isUser, restored) {
+      if (!restored) { history.push({t:text, u:isUser, ts:timeStr()}); saveHistory(); }
+
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:flex-end;gap:8px;' + (isUser ? 'justify-content:flex-end' : 'justify-content:flex-start');
+
+      if (!isUser) row.appendChild(avatar());
+
+      var col = document.createElement('div');
+      col.style.cssText = 'display:flex;flex-direction:column;align-items:' + (isUser ? 'flex-end' : 'flex-start') + ';max-width:80%;gap:3px';
+
+      var bbl = document.createElement('div');
+      if (!restored) bbl.className = 'bot-bbl';
+      bbl.style.cssText = 'padding:10px 14px;border-radius:' + (isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px') + ';font-size:14px;line-height:1.55;word-break:break-word;' + (isUser ? 'background:#1A3A8F;color:#fff' : 'background:var(--card);color:var(--text);border:1.5px solid var(--border)');
+      bbl.innerHTML = nl2br(text);
+      col.appendChild(bbl);
+
+      var ts = document.createElement('div');
+      ts.style.cssText = 'font-size:10px;color:var(--sub);padding:0 4px';
+      ts.textContent = restored && restored.ts ? restored.ts : timeStr();
+      col.appendChild(ts);
+
+      if (!isUser && !restored) {
+        var fb = document.createElement('div');
+        fb.style.cssText = 'display:flex;gap:6px;padding:0 2px;margin-top:1px';
+        fb.innerHTML =
+          '<button onclick="H._bot.helpful(this)" style="background:none;border:1.5px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--sub);cursor:pointer">👍 Helpful</button>' +
+          '<button onclick="H._bot.notHelpful(this)" style="background:none;border:1.5px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--sub);cursor:pointer">👎 Not quite</button>';
+        col.appendChild(fb);
+      }
+
+      row.appendChild(col);
+      chat.appendChild(row);
+      scrollDown();
+    }
+
+    function showTyping() {
+      hideTyping();
+      var row = document.createElement('div');
+      row.id = 'bot-typing';
+      row.style.cssText = 'display:flex;align-items:flex-end;gap:8px';
+      row.appendChild(avatar());
+      var bbl = document.createElement('div');
+      bbl.style.cssText = 'background:var(--card);border:1.5px solid var(--border);border-radius:18px 18px 18px 4px;padding:12px 16px';
+      bbl.innerHTML = '<span class="bot-dot"></span><span class="bot-dot"></span><span class="bot-dot"></span>';
+      row.appendChild(bbl);
+      chat.appendChild(row);
+      scrollDown();
+    }
+
+    function hideTyping() {
+      var el = document.getElementById('bot-typing');
+      if (el) el.remove();
+    }
+
+    function addContactCard() {
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:flex-end;gap:8px';
+      row.appendChild(avatar());
+      var card = document.createElement('div');
+      card.style.cssText = 'display:flex;flex-direction:column;gap:8px;max-width:86%';
+      card.innerHTML =
+        '<div style="font-size:12px;color:var(--sub);padding:0 2px">Reach our team directly:</div>' +
+        '<a href="'+WA+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;background:#F0FDF4;border:1.5px solid #bbf7d0;border-radius:14px;padding:11px 14px;text-decoration:none">'+WASVG+'<div><div style="font-size:13px;font-weight:700;color:#16a34a">WhatsApp Chat</div><div style="font-size:11px;color:var(--sub)">+971 589 772 645 · Fastest reply</div></div></a>' +
+        '<a href="'+ML+'" style="display:flex;align-items:center;gap:10px;background:#EFF6FF;border:1.5px solid #bfdbfe;border-radius:14px;padding:11px 14px;text-decoration:none"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><div><div style="font-size:13px;font-weight:700;color:#1A3A8F">Email Support</div><div style="font-size:11px;color:var(--sub)">chakusaprince@gmail.com</div></div></a>' +
+        '<a href="'+PH+'" style="display:flex;align-items:center;gap:10px;background:#F0FDF4;border:1.5px solid #bbf7d0;border-radius:14px;padding:11px 14px;text-decoration:none"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 2.1.74 3.26a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c1.16.38 2.3.61 3.26.74a2 2 0 0 1 1.72 2.03z"/></svg><div><div style="font-size:13px;font-weight:700;color:#16a34a">Call Us</div><div style="font-size:11px;color:var(--sub)">+971 589 772 645</div></div></a>';
+      row.appendChild(card);
+      chat.appendChild(row);
+      scrollDown();
+    }
+
+    function showChips(list) {
+      if (!chipsEl) return;
+      chipsEl.innerHTML = '';
+      list.forEach(function(label) {
+        var btn = document.createElement('button');
+        btn.className = 'bot-chip';
+        btn.style.cssText = 'background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:6px 13px;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,border-color .15s';
+        btn.textContent = label;
+        btn.onclick = function(){ handleInput(label); };
+        chipsEl.appendChild(btn);
+      });
+    }
+
+    function bestMatch(text) {
+      var lower = text.toLowerCase();
+      var best = null, top = 0;
+      KB.forEach(function(entry) {
+        var hits = 0;
+        entry.tags.forEach(function(tag){ if (lower.indexOf(tag) !== -1) hits++; });
+        if (hits > top) { top = hits; best = entry; }
+      });
+      return top > 0 ? best : null;
+    }
+
+    function respond(query) {
+      hideTyping();
+      var match = bestMatch(query);
+      if (match) {
+        addMsg(match.answer, false);
+        showChips((match.chips || []).concat(['Ask Another Question']));
+      } else {
+        addMsg("I couldn't find a specific answer for that. Let me connect you with our support team directly:", false);
+        addContactCard();
+        showChips(['Ask Another Question']);
+      }
+    }
+
+    function handleInput(text) {
+      if (!text || !text.trim()) return;
+      if (input) input.value = '';
+
+      if (text === 'Ask Another Question') {
+        addMsg(text, true);
+        addMsg('Of course! What can I help you with? 😊', false);
+        showChips(INIT_CHIPS);
+        return;
+      }
+      if (text === 'Contact Support') {
+        addMsg(text, true);
+        addMsg('Here are all the ways to reach us:', false);
+        addContactCard();
+        showChips(['Ask Another Question']);
+        return;
+      }
+
+      addMsg(text, true);
+      var query = CHIP_MAP[text] || text;
+      showTyping();
+      setTimeout(function(){ respond(query); }, 680);
+    }
+
+    H._bot = {
+      send: function() {
+        var val = input ? input.value.trim() : '';
+        if (val) handleInput(val);
+      },
+      helpful: function(btn) {
+        if (btn.parentElement) btn.parentElement.innerHTML = '<span style="font-size:11px;color:#16a34a;font-weight:700">✓ Great, glad that helped!</span>';
+        showChips(INIT_CHIPS);
+      },
+      notHelpful: function(btn) {
+        if (btn.parentElement) btn.parentElement.innerHTML = '<span style="font-size:11px;color:var(--sub)">Let me get our team to help...</span>';
+        setTimeout(function(){ addContactCard(); showChips(['Ask Another Question']); }, 350);
       }
     };
+
+    /* ── init: restore history or show greeting ── */
+    var saved = loadHistory();
+    if (saved && saved.length > 0) {
+      history = saved;
+      saved.forEach(function(m) { addMsg(m.t, m.u, m); });
+      addMsg('Welcome back! How can I help you today?', false, true); // true = don't save greeting to history
+      showChips(INIT_CHIPS);
+    } else {
+      addMsg('Hi! I\'m the PaMarket Support Bot.\n\nI can answer your questions instantly — 26 topics covered. Tap a topic below or type anything.', false, true);
+      showChips(INIT_CHIPS);
+    }
   };
 
   // --- Terms & Conditions ----------------------------------
@@ -8141,16 +11450,16 @@ H.init();
           <p style="color:var(--ash);font-size:12px">Last updated: May 2026 · Effective immediately</p>
 
           <h2>1. Agreement to Terms</h2>
-          <p>By downloading, installing, or using the Hostly application ("App"), you agree to be legally bound by these Terms of Service. If you do not agree to these terms, you must not use the App. These terms govern all users: buyers, sellers, job seekers, employers, and visitors.</p>
+          <p>By downloading, installing, or using the PaMarket application ("App"), you agree to be legally bound by these Terms of Service. If you do not agree to these terms, you must not use the App. These terms govern all users: buyers, sellers, job seekers, employers, and visitors.</p>
 
-          <h2>2. Who Can Use Hostly</h2>
-          <p>You must be at least 18 years old to create an account or use Hostly. By registering, you confirm that you meet this age requirement and are legally competent to enter into contracts under Zimbabwean law. We reserve the right to terminate accounts where the minimum age requirement is not met.</p>
+          <h2>2. Who Can Use PaMarket</h2>
+          <p>You must be at least 18 years old to create an account or use PaMarket. By registering, you confirm that you meet this age requirement and are legally competent to enter into contracts under Zimbabwean law. We reserve the right to terminate accounts where the minimum age requirement is not met.</p>
 
           <h2>3. Account Responsibility</h2>
           <p>You are responsible for keeping your account credentials confidential. All activity that occurs under your account is your responsibility. You must provide accurate and truthful information when registering. If you suspect unauthorized access to your account, contact us immediately at chakusaprince@gmail.com or WhatsApp +971 589 772 645.</p>
 
-          <h2>4. What Hostly Is</h2>
-          <p>Hostly is an online classifieds marketplace that connects buyers and sellers in Zimbabwe. We provide the platform — we are not a party to any transaction between users. We do not hold payments, guarantee delivery, or verify the condition of items unless stated. All transactions are conducted directly between users at their own risk.</p>
+          <h2>4. What PaMarket Is</h2>
+          <p>PaMarket is an online classifieds marketplace that connects buyers and sellers in Zimbabwe. We provide the platform — we are not a party to any transaction between users. We do not hold payments, guarantee delivery, or verify the condition of items unless stated. All transactions are conducted directly between users at their own risk.</p>
 
           <h2>5. Listing Rules</h2>
           <p>All listings must be honest, legal, and comply with Zimbabwean law. You must own or have explicit authority to sell any item listed. The following content is strictly prohibited and will result in immediate removal and account termination:</p>
@@ -8167,7 +11476,7 @@ H.init();
           </ul>
 
           <h2>6. Advertising Credits (Boost Feature)</h2>
-          <p>Hostly offers optional paid advertising credits ("Boost") to increase the visibility of your listings. These credits are purchased as a business service via external payment methods (EcoCash, OneMoney, or bank transfer). Advertising credits are not processed by Google Play or the Apple App Store. Credits are non-refundable once applied to a listing. Unused credits may be refunded at our discretion within 7 days of purchase — contact us to request a refund.</p>
+          <p>PaMarket offers optional paid advertising credits ("Boost") to increase the visibility of your listings. These credits are purchased as a business service via external payment methods (EcoCash, OneMoney, or bank transfer). Advertising credits are not processed by Google Play or the Apple App Store. Credits are non-refundable once applied to a listing. Unused credits may be refunded at our discretion within 7 days of purchase — contact us to request a refund.</p>
 
           <h2>7. User Conduct</h2>
           <p>You agree not to:</p>
@@ -8182,19 +11491,19 @@ H.init();
           </ul>
 
           <h2>8. User Content License</h2>
-          <p>By posting photos, text, or any content on Hostly, you grant us a non-exclusive, worldwide, royalty-free license to display, reproduce, and distribute that content within the App and for promotional purposes. You confirm that you own or have the rights to all content you post and that it does not infringe any third-party rights.</p>
+          <p>By posting photos, text, or any content on PaMarket, you grant us a non-exclusive, worldwide, royalty-free license to display, reproduce, and distribute that content within the App and for promotional purposes. You confirm that you own or have the rights to all content you post and that it does not infringe any third-party rights.</p>
 
           <h2>9. Intellectual Property</h2>
-          <p>All design, branding, logos, code, and content created by Hostly are protected by copyright and intellectual property law. You may not copy, reproduce, reverse-engineer, or redistribute any part of the App without our written consent.</p>
+          <p>All design, branding, logos, code, and content created by PaMarket are protected by copyright and intellectual property law. You may not copy, reproduce, reverse-engineer, or redistribute any part of the App without our written consent.</p>
 
           <h2>10. Moderation and Enforcement</h2>
           <p>We reserve the right to remove any listing, suspend, or permanently ban any account that violates these Terms at any time, with or without notice. Serious violations including fraud, scams, or illegal activity may be reported to relevant Zimbabwean authorities. Banned users may appeal by contacting chakusaprince@gmail.com within 14 days of the ban.</p>
 
           <h2>11. Disclaimer of Warranties</h2>
-          <p>Hostly is provided "as is" and "as available" without any warranties, express or implied. We do not guarantee that the App will be uninterrupted, error-free, or that listings are accurate. We are not responsible for the quality, safety, legality, or availability of listed items.</p>
+          <p>PaMarket is provided "as is" and "as available" without any warranties, express or implied. We do not guarantee that the App will be uninterrupted, error-free, or that listings are accurate. We are not responsible for the quality, safety, legality, or availability of listed items.</p>
 
           <h2>12. Limitation of Liability</h2>
-          <p>To the maximum extent permitted by law, Hostly and its operators shall not be liable for any indirect, incidental, punitive, or consequential damages arising from your use of the App, including loss of money, data, or business opportunity resulting from transactions between users.</p>
+          <p>To the maximum extent permitted by law, PaMarket and its operators shall not be liable for any indirect, incidental, punitive, or consequential damages arising from your use of the App, including loss of money, data, or business opportunity resulting from transactions between users.</p>
 
           <h2>13. Governing Law</h2>
           <p>These Terms are governed exclusively by the laws of the Republic of Zimbabwe. Any legal disputes shall be subject to the jurisdiction of the courts of Zimbabwe.</p>
@@ -8221,7 +11530,7 @@ pages.HelpPrivacy = function () {
           <p style="color:var(--ash);font-size:12px">Last updated: May 2026</p>
 
           <h2>1. Who We Are</h2>
-          <p>Hostly is a Zimbabwean marketplace application. We are committed to protecting your privacy and handling your data responsibly. This policy explains what data we collect, why we collect it, and how we protect it.</p>
+          <p>PaMarket is a Zimbabwean marketplace application. We are committed to protecting your privacy and handling your data responsibly. This policy explains what data we collect, why we collect it, and how we protect it.</p>
 
           <h2>2. Data We Collect</h2>
           <ul>
@@ -8283,7 +11592,7 @@ pages.HelpPrivacy = function () {
           </ul>
 
           <h2>11. Children's Privacy</h2>
-          <p>Hostly is strictly for users aged 18 and over. We do not knowingly collect personal data from anyone under 18. If we discover that a minor has created an account, we will immediately delete their account and all associated data. If you believe a minor is using the App, please contact us.</p>
+          <p>PaMarket is strictly for users aged 18 and over. We do not knowingly collect personal data from anyone under 18. If we discover that a minor has created an account, we will immediately delete their account and all associated data. If you believe a minor is using the App, please contact us.</p>
 
           <h2>12. Third-Party Links</h2>
           <p>Listings may include links to WhatsApp or external websites. We are not responsible for the privacy practices or content of any third-party services. We encourage you to review their privacy policies before sharing personal information.</p>
@@ -8308,7 +11617,7 @@ pages.HelpCommunity = function () {
         <div class="doc-section">
           <h2>Community Guidelines</h2>
           <p style="color:var(--ash);font-size:12px">Last updated: May 2026</p>
-          <p>Hostly is built on trust. These guidelines exist to keep our marketplace safe, fair, and beneficial for every Zimbabwean. Violations result in warnings, listing removal, suspension, or permanent bans.</p>
+          <p>PaMarket is built on trust. These guidelines exist to keep our marketplace safe, fair, and beneficial for every Zimbabwean. Violations result in warnings, listing removal, suspension, or permanent bans.</p>
 
           <h2>1. Be Honest</h2>
           <p>Accuracy is everything in a marketplace. You must:</p>
@@ -8350,7 +11659,7 @@ pages.HelpCommunity = function () {
           </ul>
 
           <h2>5. Prohibited Items</h2>
-          <p>The following may never be listed on Hostly:</p>
+          <p>The following may never be listed on PaMarket:</p>
           <ul>
             <li>Stolen goods of any kind</li>
             <li>Counterfeit or fake branded products</li>
@@ -8393,7 +11702,7 @@ pages.HelpCommunity = function () {
           <p>Banned users may appeal by emailing chakusaprince@gmail.com with evidence. We review all appeals within 7 days.</p>
 
           <h2>9. Our Commitment</h2>
-          <p>We are committed to making Hostly Zimbabwe's most trusted marketplace. We review all reports, take action on violations, and continuously improve our safety systems. Together we can build a marketplace that works for everyone.</p>
+          <p>We are committed to making PaMarket Zimbabwe's most trusted marketplace. We review all reports, take action on violations, and continuously improve our safety systems. Together we can build a marketplace that works for everyone.</p>
 
           <h2>Contact Safety Team</h2>
           <p>chakusaprince@gmail.com</p>
@@ -8402,21 +11711,21 @@ pages.HelpCommunity = function () {
     </div>`;
   };
 
-  // --- About Hostly -----------------------------------------
+  // --- About PaMarket -----------------------------------------
   pages.About = function () {
     const year = new Date().getFullYear();
     return `<div class="page active">
-      ${H.innerTopbar('About Hostly')}
+      ${H.innerTopbar('About PaMarket')}
       <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);padding:36px 20px 32px;text-align:center">
         <div style="width:72px;height:72px;background:rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:36px;font-weight:900;color:#fff;letter-spacing:-2px">H</div>
-        <div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.5px">Hostly</div>
+        <div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.5px">PaMarket</div>
         <div style="font-size:13px;color:rgba(255,255,255,.75);margin-top:6px">Zimbabwe's Free Marketplace</div>
         <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:10px;font-weight:600">Version 1.0.0</div>
       </div>
 
       <div class="doc-content" style="padding-top:20px">
         <p style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Our Mission</p>
-        <p>Hostly connects Zimbabweans to buy, sell, rent, and find jobs — for free. We believe commerce should be accessible to everyone, not just those who can afford platform fees.</p>
+        <p>PaMarket connects Zimbabweans to buy, sell, rent, and find jobs — for free. We believe commerce should be accessible to everyone, not just those who can afford platform fees.</p>
 
         <p style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;margin-top:20px">What We Offer</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
@@ -8457,7 +11766,7 @@ pages.HelpCommunity = function () {
         </div>
 
         <div style="text-align:center;padding:28px 0 0;font-size:12px;color:var(--sub)">
-          © ${year} Hostly · Made in Zimbabwe 🇿🇼
+          © ${year} PaMarket · Made in Zimbabwe 🇿🇼
         </div>
       </div>
     </div>`;
@@ -8474,7 +11783,7 @@ H.pages.LegalHub = function() {
   var emailLink = 'mailto:chakusaprince@gmail.com';
   var waLink = 'https://wa.me/971589772645';
   var html = '<div class="page active">' + H.innerTopbar('Legal Hub');
-  html += '<div class="legal-hero"><div class="legal-hero-title">Welcome to<br><strong>Hostly Legal Hub</strong></div><div class="legal-hero-sub">Legal information for Hostly products and services</div></div>';
+  html += '<div class="legal-hero"><div class="legal-hero-title">Welcome to<br><strong>PaMarket Legal Hub</strong></div><div class="legal-hero-sub">Legal information for PaMarket products and services</div></div>';
   sections.forEach(function(sec) {
     html += '<div class="legal-section-title">' + sec.title + '</div><div class="legal-list">';
     sec.items.forEach(function(item) { html += '<div class="legal-item"><div class="legal-item-title">' + item + '</div><div class="legal-item-arrow">&rsaquo;</div></div>'; });
@@ -8486,11 +11795,17 @@ H.pages.LegalHub = function() {
   html += '</div>';
   html += '<div class="legal-footer"><div class="legal-footer-links">';
   ['About Us','Advertise','Terms of Use','Privacy Policy'].forEach(function(l) { html += '<span class="legal-footer-link" onclick="H.openInner(\x27About\x27)">' + l + '</span>'; });
-  html += '</div><div class="legal-footer-copy">Hostly &copy; 2026 &middot; Zimbabwe\'s #1 Free Marketplace</div></div>';
+  html += '</div><div class="legal-footer-copy">PaMarket &copy; 2026 &middot; Zimbabwe\'s #1 Free Marketplace</div></div>';
   html += '</div></div>';
   return html;
 };
 ;/* === www/js/moderation.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 (function (H) {
 
@@ -8630,6 +11945,12 @@ H.pages.LegalHub = function() {
 
 
 ;/* === www/js/categories.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 'use strict';
 // ── Shared filter infrastructure for all category pages ────
 (function (H) {
@@ -8704,9 +12025,27 @@ H.pages.LegalHub = function() {
       return b.createdAt - a.createdAt;
     });
 
+    var spotlightHtml = (function(){
+      var now = Date.now();
+      var spot = (H.state.paidAds||[]).find(function(a){
+        return a.type==='spotlight' && a.active && a.endsAt > now && (a.targetCat===catId || a.targetCat===baseCat);
+      });
+      if (!spot) return '';
+      if(H.trackAdImpression) H.trackAdImpression(spot.id);
+      var tap = spot.linkUrl ? 'onclick="H.trackAdClick(' + JSON.stringify(spot.id) + ',' + JSON.stringify(spot.linkUrl) + ')"' : '';
+      return '<div ' + tap + ' style="display:flex;align-items:center;gap:14px;background:' + H.escHtml(spot.bgColor||'#EFF6FF') + ';border:1.5px solid ' + H.escHtml(spot.borderColor||'rgba(26,58,143,0.2)') + ';border-radius:14px;padding:14px 16px;margin-bottom:12px;cursor:' + (spot.linkUrl?'pointer':'default') + ';position:relative">'
+        + (spot.imageUrl ? '<img src="' + H.escHtml(spot.imageUrl) + '" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0" onerror="this.onerror=null;this.style.display=\'none\'">' : '')
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:14px;font-weight:800;color:#1A3A8F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(spot.businessName) + '</div>'
+        + (spot.tagline ? '<div style="font-size:12px;color:var(--sub);margin-top:2px">' + H.escHtml(spot.tagline) + '</div>' : '')
+        + '</div>'
+        + '<span style="font-size:9px;font-weight:700;color:#1A3A8F;background:rgba(26,58,143,0.1);padding:2px 6px;border-radius:6px;flex-shrink:0">SPONSORED</span>'
+        + '</div>';
+    })();
+
     el.innerHTML = all.length
-      ? '<div class="listing-list">' + all.map(H.renderListCard).join('') + '</div>'
-      : H.emptyState('No listings match', 'Try adjusting your filters', null, null);
+      ? spotlightHtml + '<div class="listing-list">' + all.map(H.renderListCard).join('') + '</div>'
+      : spotlightHtml + H.emptyState('No listings match', 'Try adjusting your filters', null, null);
 
     var cnt = document.getElementById('cc_' + catId);
     if (cnt) cnt.textContent = all.length + ' listing' + (all.length !== 1 ? 's' : '');
@@ -8898,6 +12237,12 @@ H.pages.LegalHub = function() {
 })(window.H);
 
 ;/* === www/js/supabase.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
 // supabase.js "” safe Supabase client initialisation
 (function () {
   // Make sure the CDN loaded
@@ -8935,16 +12280,21 @@ H.pages.LegalHub = function() {
 
   window.supabase = window.supabase.createClient(supabaseUrl || '', supabaseAnonKey || '');
 
-  // Handle OAuth callbacks (Google, Facebook) — fires when page loads after redirect
-  window.supabase.auth.onAuthStateChange(async function(event, session) {
-    if (event !== 'SIGNED_IN' || !session || !session.user) return;
+  // Only handle OAuth callbacks — NOT regular page loads with stored sessions.
+  // The app restores login state from H.loadState() (localStorage), not from here.
+  var _isOAuthCallback = window.location.search.includes('code=') || window.location.hash.includes('access_token=');
+  var _isPasswordReset = window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery');
+  var _oauthHandled = false;
+
+  async function handleOAuthSession(session) {
+    if (_oauthHandled) return;
+    _oauthHandled = true;
     var user   = session.user;
     var userId = user.id;
     var meta   = user.user_metadata || {};
     var name   = meta.full_name || meta.name || user.email || 'User';
     var avatar = meta.avatar_url || meta.picture || null;
     var email  = user.email || '';
-
     try {
       var pr = await window.supabase.from('profiles').select('*').eq('id', userId).single();
       var profile = pr.data;
@@ -8952,38 +12302,146 @@ H.pages.LegalHub = function() {
         await window.supabase.from('profiles').upsert({ id: userId, name: name, avatar: avatar });
         profile = { id: userId, name: name, avatar: avatar, role: 'user', status: 'active', wallet_usd: 0, verified: false };
       }
-
-      // Wait for H to be ready (OAuth redirect loads fresh page, H boots async)
       var attempts = 0;
       var trySetup = function() {
         if (!window.H || !window.H.state || typeof window.H.navTo !== 'function') {
-          if (++attempts < 30) { setTimeout(trySetup, 200); return; }
+          if (++attempts < 40) { setTimeout(trySetup, 200); return; }
           return;
         }
         var users = window.H.state.users = window.H.state.users || [];
-        if (!users.find(function(u){ return u.id === userId; })) {
-          users.push({
-            id: userId, email: email,
-            name: profile.name || name,
-            phone: profile.phone || '',
-            avatar: profile.avatar || avatar,
-            verified: !!profile.verified,
-            walletUSD: parseFloat(profile.wallet_usd) || 0,
-            language: 'English',
-            joinedAt: new Date(profile.created_at || Date.now()).getTime(),
-            role: profile.role || 'user',
-            status: profile.status || 'active',
-            banReason: null, banUntil: null, blocked: []
-          });
+        var existing = users.find(function(u){ return u.id === userId; });
+        if (!existing) {
+          users.push({ id: userId, email: email, name: profile.name || name, phone: profile.phone || '', avatar: profile.avatar || avatar, verified: !!profile.verified, walletUSD: parseFloat(profile.wallet_usd) || 0, language: 'English', joinedAt: new Date(profile.created_at || Date.now()).getTime(), role: profile.role || 'user', status: profile.status || 'active', banReason: null, banUntil: null, blocked: [] });
+        } else {
+          existing.name = profile.name || existing.name;
+          existing.avatar = profile.avatar || existing.avatar;
+          existing.role = profile.role || existing.role;
+          existing.verified = !!profile.verified;
+          existing.walletUSD = parseFloat(profile.wallet_usd) || existing.walletUSD || 0;
         }
         window.H.state.currentUserId = userId;
         if (typeof window.H.saveState === 'function') window.H.saveState();
+        if (typeof window.H.closeLoginModal === 'function') window.H.closeLoginModal();
         var nav = document.getElementById('bottomNav');
         if (nav) nav.style.display = 'flex';
         window.H.navTo('Home');
         window.H.toast('Welcome, ' + (profile.name || name) + '!');
+        if (typeof window.H.startRealtime === 'function') window.H.startRealtime();
       };
       trySetup();
     } catch(e) { console.warn('OAuth login handler:', e); }
+  }
+
+  window.supabase.auth.onAuthStateChange(async function(event, session) {
+    // Password reset link clicked — show the set-new-password form
+    if (event === 'PASSWORD_RECOVERY') {
+      var waitH = function(attempts) {
+        if (!window.H || typeof window.H.authShowSetPassword !== 'function') {
+          if (attempts < 40) setTimeout(function(){ waitH(attempts + 1); }, 200);
+          return;
+        }
+        window.H.authShowSetPassword();
+      };
+      waitH(0);
+      return;
+    }
+    if (event !== 'SIGNED_IN' || !session || !session.user) return;
+    if (!_isOAuthCallback) return;
+    handleOAuthSession(session);
   });
+
+  // Fallback getSession() only on actual OAuth callback pages
+  if (_isOAuthCallback) {
+    window.supabase.auth.getSession().then(function(result) {
+      var session = result && result.data && result.data.session;
+      if (session && session.user) handleOAuthSession(session);
+    });
+  }
+
+  // Real-time sync — subscribes to live database changes
+  window.H = window.H || {};
+  window.H.startRealtime = function() {
+    var sb = window.supabase;
+    if (!sb || !sb.channel) return;
+    if (window._realtimeStarted) return;
+    window._realtimeStarted = true;
+
+    // Listings channel
+    sb.channel('rt-listings')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'listings' }, function(payload) {
+        var row = payload.new;
+        if (!row || !window.H || !window.H.state) return;
+        var existing = (window.H.state.listings || []).find(function(l){ return l.id === row.id; });
+        if (!existing) {
+          window.H.state.listings = window.H.state.listings || [];
+          window.H.state.listings.unshift({
+            id: row.id, title: row.title || '', desc: row.description || '',
+            price: row.price || 0, currency: row.currency || 'USD',
+            cat: row.category || '', photos: row.photos || [],
+            sellerId: row.seller_id || '', sellerName: row.seller_name || '',
+            province: row.province || '', status: row.status || 'active',
+            createdAt: new Date(row.created_at || Date.now()).getTime(),
+            views: 0, company: row.company || null
+          });
+          if (typeof window.H.saveState === 'function') window.H.saveState();
+        }
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'listings' }, function(payload) {
+        var id = payload.old && payload.old.id;
+        if (!id || !window.H || !window.H.state) return;
+        window.H.state.listings = (window.H.state.listings || []).filter(function(l){ return l.id !== id; });
+        if (typeof window.H.saveState === 'function') window.H.saveState();
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'listings' }, function(payload) {
+        var row = payload.new;
+        if (!row || !window.H || !window.H.state) return;
+        var l = (window.H.state.listings || []).find(function(x){ return x.id === row.id; });
+        if (l) {
+          l.status = row.status || l.status;
+          l.title  = row.title  || l.title;
+          l.price  = row.price  != null ? row.price : l.price;
+          if (typeof window.H.saveState === 'function') window.H.saveState();
+        }
+      })
+      .subscribe();
+
+    // Wallet top-up approvals channel
+    sb.channel('rt-topup')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'topup_requests' }, function(payload) {
+        var row = payload.new;
+        if (!row || !window.H || !window.H.state) return;
+        var req = (window.H.state.topupRequests || []).find(function(r){ return r.reference === row.reference; });
+        if (req && row.status === 'approved') {
+          req.status = 'approved';
+          var u = window.H.currentUser && window.H.currentUser();
+          if (u && u.id === req.userId) {
+            u.walletUSD = +((u.walletUSD || 0) + (req.amount || 0)).toFixed(2);
+            window.H.state.txns = window.H.state.txns || [];
+            window.H.state.txns.unshift({ id: window.H.uid(), userId: u.id, type: 'topup', amt: req.amount, t: Date.now(), note: 'Wallet Top Up · ' + req.method });
+            if (typeof window.H.saveState === 'function') window.H.saveState();
+            if (typeof window.H.toast === 'function') window.H.toast('Wallet credited $' + req.amount.toFixed(2) + '!');
+          }
+        }
+      })
+      .subscribe();
+
+    // Profile verification approvals
+    sb.channel('rt-profiles')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, function(payload) {
+        var row = payload.new;
+        if (!row || !window.H || !window.H.state) return;
+        var u = (window.H.state.users || []).find(function(x){ return x.id === row.id; });
+        if (u) {
+          var wasUnverified = !u.verified;
+          u.verified = !!row.verified;
+          u.role     = row.role || u.role;
+          u.walletUSD = row.wallet_usd != null ? parseFloat(row.wallet_usd) : u.walletUSD;
+          if (typeof window.H.saveState === 'function') window.H.saveState();
+          if (wasUnverified && u.verified && u.id === (window.H.state.currentUserId)) {
+            if (typeof window.H.toast === 'function') window.H.toast('Your identity has been verified!');
+          }
+        }
+      })
+      .subscribe();
+  };
 })();

@@ -28,6 +28,58 @@
     return H.state.users;
   }
 
+  // Fetch a single user profile from Supabase and cache it, then re-render the current page.
+  // Prevents repeated network calls using a per-session pending map.
+  H._pendingProfileFetch = H._pendingProfileFetch || {};
+  H._resolveOtherName = function(otherId, conv) {
+    if (!otherId || H._pendingProfileFetch[otherId]) return;
+    H._pendingProfileFetch[otherId] = true;
+    var sb = window.supabase;
+    if (!sb || typeof sb.from !== 'function') return;
+    sb.from('profiles')
+      .select('id,name,phone,email,avatar,verified,role,status,created_at')
+      .eq('id', otherId)
+      .single()
+      .then(function(res) {
+        var p = res && res.data;
+        var nameResolved = '';
+        if (p) {
+          var existing = (H.state.users||[]).find(function(x){ return x.id === p.id; });
+          if (existing) {
+            if (p.name && !existing.name) { existing.name = p.name; }
+            if (p.avatar && !existing.avatar) { existing.avatar = p.avatar; }
+            nameResolved = existing.name;
+          } else {
+            var entry = {
+              id: p.id, name: p.name||'', phone: p.phone||'', email: p.email||'',
+              avatar: p.avatar||null, verified: !!p.verified, role: p.role||'user',
+              status: p.status||'active',
+              joinedAt: p.created_at ? new Date(p.created_at).getTime() : Date.now()
+            };
+            (H.state.users = H.state.users||[]).push(entry);
+            nameResolved = entry.name;
+          }
+        }
+        // If profiles table gave no name, fall back to message sender_name
+        if (!nameResolved && conv && Array.isArray(conv.messages)) {
+          var msgWithName = conv.messages.find(function(m){ return m.from === otherId && m.senderName; });
+          if (msgWithName) { nameResolved = msgWithName.senderName; }
+          var userEntry = (H.state.users||[]).find(function(x){ return x.id === otherId; });
+          if (nameResolved) {
+            if (userEntry) { userEntry.name = nameResolved; }
+            else { (H.state.users = H.state.users||[]).push({ id: otherId, name: nameResolved, phone: '', email: '', avatar: null, verified: false, role: 'user', status: 'active', joinedAt: Date.now() }); }
+          }
+        }
+        if (nameResolved && conv && !conv.otherName) { conv.otherName = nameResolved; }
+        if (nameResolved) {
+          H.saveState();
+          var page = H.currentPageName;
+          if (page === 'Messages' || page === 'Chat') { H.renderPage(page); }
+        }
+      })
+      .catch(function() {});
+  };
+
   function conversationSignature() {
     const u = currentUser();
     if (!u) return '';
@@ -98,14 +150,17 @@
             const sn = (c.messages.find(function(m){ return m.from===otherId && m.senderName; })||{}).senderName;
             if (sn) { c.otherName = sn; H.saveState(); }
           }
-          const other   = users().find(x => x.id === otherId) || { name: c.otherName || 'Unknown User' };
+          const other   = users().find(x => x.id === otherId) || { name: c.otherName || '' };
+          // If name is still blank, trigger async profile fetch which will re-render when resolved
+          if (!other.name && otherId) { H._resolveOtherName(otherId, c); }
+          const otherDisplayName = other.name || c.otherName || 'Unknown User';
           const last    = c.messages[c.messages.length - 1];
           const unread  = c.messages.some(m => m.from !== u.id && !m.read);
           return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item" data-cid="${escHtml(c.id)}" onclick="H.openChat('${c.id}')">
-            <div class="msg-av">${initials(other.name)}</div>
+            <div class="msg-av">${initials(otherDisplayName)}</div>
             <div class="msg-body">
               <div class="msg-name-row">
-                <div class="msg-name">${escHtml(other.name)}</div>
+                <div class="msg-name">${escHtml(otherDisplayName)}</div>
                 <div class="msg-time">${timeAgo(last.t)}</div>
               </div>
               <div class="msg-preview">${last.from === u.id ? 'You: ' : ''}${escHtml(last.text)}</div>
@@ -135,14 +190,17 @@
       const sn = (c.messages.find(function(msg){ return msg.from===otherId && msg.senderName; })||{}).senderName;
       if (sn) { c.otherName = sn; H.saveState(); }
     }
-    const other = users().find(x => x.id === otherId) || { name: c.otherName || 'Unknown User' };
+    const other = users().find(x => x.id === otherId) || { name: c.otherName || '' };
+    // If name is still blank, trigger async profile fetch — will re-render when resolved
+    if (!other.name && otherId) { H._resolveOtherName(otherId, c); }
+    const otherDisplayName = other.name || c.otherName || 'Unknown User';
     const listing = (state.listings || []).find(l => l.id === c.listingId);
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
     H.saveState();
     if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
     H._activeChat = id;
 
-    const otherIni = initials(other.name || 'U');
+    const otherIni = initials(otherDisplayName);
     const otherAvatar = other.avatar
       ? '<img src="' + escHtml(other.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
       : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>';
@@ -169,7 +227,7 @@
       + '<div class="det-topbar" style="flex-shrink:0"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
       + '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">'
       + '<div style="width:34px;height:34px;flex-shrink:0">' + otherAvatar + '</div>'
-      + '<div style="min-width:0"><div class="det-topbar-title" style="margin:0;text-align:left">' + escHtml(other.name) + '</div>'
+      + '<div style="min-width:0"><div class="det-topbar-title" style="margin:0;text-align:left">' + escHtml(otherDisplayName) + '</div>'
       + (other.verified ? '<div style="font-size:10px;color:#22c55e;font-weight:600;display:flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Verified</div>' : '<div style="font-size:10px;color:rgba(255,255,255,.5)">Tap to view profile</div>') + '</div>'
       + '</div>'
       + '<button onclick="H._chat.openMenu(\'' + otherIdSafe + '\')" style="padding:8px;background:none;border:none;color:#fff;cursor:pointer;flex-shrink:0;margin-left:4px"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
