@@ -290,33 +290,46 @@
   }
 
   // ── Notification tap navigation ───────────────────────────
-  H._notifNavigate = function (link) {
-    if (!link) return;
-    // In-app deep links: listing detail, listing=ID, etc.
-    const listingMatch = link.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if (listingMatch) {
-      H.openInner('Detail', { id: listingMatch[1] });
-      return;
+  H._notifNavigate = function (link, type) {
+    // If there's a deep link, follow it
+    if (link) {
+      // In-app listing detail: URL contains ?id=xxx or &id=xxx
+      const listingMatch = link.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (listingMatch) {
+        H.openInner('Detail', { id: listingMatch[1] });
+        return;
+      }
+      // External URL — open in system browser
+      if (link.startsWith('http')) {
+        try {
+          if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+            window.Capacitor.Plugins.Browser.open({ url: link });
+          } else {
+            window.open(link, '_blank', 'noopener,noreferrer');
+          }
+        } catch (e) { window.open(link, '_blank', 'noopener,noreferrer'); }
+        return;
+      }
+      // In-app named route like "Messages" or "detail?id=xxx"
+      const routeMatch = link.match(/^(\w+)(?:\?(.*))?$/);
+      if (routeMatch) {
+        const page = routeMatch[1];
+        const params = {};
+        if (routeMatch[2]) new URLSearchParams(routeMatch[2]).forEach((v, k) => { params[k] = v; });
+        if (Object.keys(params).length) H.openInner(page, params);
+        else H.navTo(page);
+        return;
+      }
     }
-    // External URL — open in system browser
-    if (link.startsWith('http')) {
-      try {
-        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
-          window.Capacitor.Plugins.Browser.open({ url: link });
-        } else {
-          window.open(link, '_blank', 'noopener,noreferrer');
-        }
-      } catch (e) { window.open(link, '_blank', 'noopener,noreferrer'); }
-      return;
+    // No deep link — navigate based on notification type
+    const t = type || '';
+    if (t === 'message')                    { H.navTo('Messages'); return; }
+    if (t === 'sale' || t === 'wallet')     { H.navTo('Account'); return; }
+    if (t === 'boost' || t === 'verify' || t === 'review' || t === 'ban' || t === 'report') {
+      H.navTo('Account'); return;
     }
-    // In-app route string like "detail?id=xxx"
-    const routeMatch = link.match(/^(\w+)(?:\?(.*))?$/);
-    if (routeMatch) {
-      const page = routeMatch[1];
-      const params = {};
-      if (routeMatch[2]) new URLSearchParams(routeMatch[2]).forEach((v, k) => { params[k] = v; });
-      H.openInner(page, params);
-    }
+    // info / system / unknown — go to Home so something always happens
+    H.navTo('Home');
   };
 
   // ── Notifications page ────────────────────────────────────
@@ -349,10 +362,13 @@
         ${list.length ? list.map(n => {
           const type = n.type || _inferType(n.title);
           const color = _notifColor(type);
-          const hasLink = !!(n.deepLink);
-          const tapAction = hasLink
-            ? `H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)';H._notifNavigate('${escHtml(n.deepLink||'')}');`
-            : `H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)'`;
+          const safeLink = n.deepLink ? escHtml(n.deepLink) : '';
+          const tapAction = `H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)';H._notifNavigate(${safeLink ? `'${safeLink}'` : 'null'},'${type}');`;
+          const navHint = type === 'message' ? 'Open Messages ›'
+            : (type === 'sale' || type === 'wallet') ? 'Open Account ›'
+            : n.deepLink ? 'Tap to open ›'
+            : type === 'info' || type === 'system' ? 'Tap to view ›'
+            : 'Open ›';
           return `<div onclick="${tapAction}"
               style="background:${n.read ? 'var(--card)' : 'rgba(26,58,143,.04)'};border-bottom:1px solid var(--border);padding:14px 40px 14px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;position:relative">
             ${n.imageUrl
@@ -364,7 +380,7 @@
               <div style="font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:4px">${escHtml(n.body || '')}</div>
               <div style="display:flex;align-items:center;gap:8px">
                 <div style="font-size:11px;color:var(--sub2);font-weight:500">${timeAgo(n.t)}</div>
-                ${hasLink ? '<div style="font-size:11px;color:#1A3A8F;font-weight:600">Tap to open ›</div>' : ''}
+                <div style="font-size:11px;color:${color};font-weight:600">${navHint}</div>
               </div>
             </div>
             ${n.read ? '' : `<span data-unread-dot style="width:9px;height:9px;border-radius:50%;background:${color};margin-top:6px;flex-shrink:0"></span>`}
