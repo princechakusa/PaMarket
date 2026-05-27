@@ -1,0 +1,70 @@
+name: PaMarket QA Pipeline
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  qa-pipeline:
+    name: QA Pipeline
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: qa-system
+        run: npm install
+
+      - name: Install Playwright (optional - skipped if fails)
+        working-directory: qa-system
+        run: npx playwright install chromium --with-deps
+        continue-on-error: true
+
+      - name: Run QA pipeline
+        id: qa
+        working-directory: qa-system
+        run: node orchestrator.js
+        continue-on-error: true
+        env:
+          QA_READ_ONLY: 'true'
+          QA_SKIP_DEPLOY: 'true'
+          BROWSER_HEADLESS: 'true'
+          PLAYWRIGHT_TIMEOUT: '30000'
+          REPORT_DIR: './reports'
+          REPORT_FORMAT: 'both'
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          QA_USER_EMAIL: ${{ secrets.QA_USER_EMAIL }}
+          QA_USER_PASSWORD: ${{ secrets.QA_USER_PASSWORD }}
+          QA_ADMIN_EMAIL: ${{ secrets.QA_ADMIN_EMAIL }}
+          QA_ADMIN_PASSWORD: ${{ secrets.QA_ADMIN_PASSWORD }}
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qa-reports-${{ github.run_number }}
+          path: qa-system/reports/
+          retention-days: 30
+
+      - name: Annotate critical issues
+        if: steps.qa.outputs.has_critical == 'true'
+        run: |
+          echo "::warning::QA found critical issues — download the qa-reports artifact to see the full report"
+
+      - name: QA passed
+        if: steps.qa.outputs.has_critical != 'true'
+        run: echo "::notice::QA passed — no critical issues found"

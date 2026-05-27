@@ -1,0 +1,435 @@
+﻿<!DOCTYPE html>
+<!-- © 2026 PaMarket. All rights reserved. Unauthorised copying or distribution is prohibited. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1A3A8F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PaMarket">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="PaMarket — Zimbabwe's free marketplace. Buy, sell and find jobs across all provinces.">
+  <meta name="keywords" content="Zimbabwe marketplace, buy sell Zimbabwe, jobs Zimbabwe, Harare classifieds">
+  <meta property="og:title" content="PaMarket — Zimbabwe's Free Marketplace">
+  <meta property="og:description" content="Buy, sell and find jobs across all provinces of Zimbabwe.">
+  <meta property="og:image" content="img/icon-512.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PaMarket — Zimbabwe's Free Marketplace">
+  <meta name="twitter:description" content="Buy, sell and find jobs across all provinces of Zimbabwe.">
+  <meta name="twitter:image" content="img/icon-512.png">
+  <title>PaMarket — Zimbabwe's Free Marketplace</title>
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://gxgytumhknmnwspxjzxw.supabase.co; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://gxgytumhknmnwspxjzxw.supabase.co wss://gxgytumhknmnwspxjzxw.supabase.co https://accounts.google.com https://appleid.apple.com https://graph.facebook.com https://cdn.jsdelivr.net; frame-src https://appleid.apple.com; object-src 'none';">
+
+  <link rel="icon" href="img/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/pages-patch.css">
+
+  <style>
+    /* ── Splash Screen ─────────────────────────────────── */
+    #pamarketSplash {
+      position: fixed; inset: 0;
+      background: linear-gradient(160deg, #1A3A8F 0%, #0f2460 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 99999;
+      transition: opacity .4s ease, transform .4s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    #pamarketSplash.hiding {
+      opacity: 0;
+      transform: scale(1.04);
+      pointer-events: none;
+    }
+    .splash-wordmark {
+      font-size: 52px; font-weight: 900;
+      color: #fff; letter-spacing: -2px;
+      animation: splashBounce .65s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .splash-wordmark em { font-style: normal; color: #F5A623; }
+    .splash-tag {
+      font-size: 13px; font-weight: 500;
+      color: rgba(255,255,255,.6);
+      margin-top: 6px;
+      animation: splashFade .5s .35s both;
+    }
+    .splash-dots {
+      display: flex; gap: 6px; margin-top: 48px;
+      animation: splashFade .5s .5s both;
+    }
+    .splash-dots span {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,.3);
+      animation: dotPulse 1.2s infinite;
+    }
+    .splash-dots span:nth-child(2) { animation-delay: .2s; }
+    .splash-dots span:nth-child(3) { animation-delay: .4s; }
+
+    @keyframes splashBounce {
+      from { opacity:0; transform:translateY(24px) scale(.88); }
+      to   { opacity:1; transform:none; }
+    }
+    @keyframes splashFade {
+      from { opacity:0; transform:translateY(8px); }
+      to   { opacity:1; transform:none; }
+    }
+    @keyframes dotPulse {
+      0%,80%,100% { background:rgba(255,255,255,.25); transform:scale(.8); }
+      40%         { background:#F5A623; transform:scale(1); }
+    }
+
+    /* ── Action Sheet ──────────────────────────────────── */
+    .action-sheet {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      background: var(--card, #fff);
+      border-radius: 22px 22px 0 0;
+      padding: 22px 16px calc(24px + env(safe-area-inset-bottom));
+      z-index: 9100;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(0.16,1,0.3,1);
+      box-shadow: 0 -8px 40px rgba(16,24,40,.14);
+      border-top: 1px solid var(--border, #E4E8F0);
+      font-family: 'Inter', sans-serif;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .action-sheet.open { transform: translateY(0); }
+
+    .sheet-bg {
+      position: fixed; inset: 0;
+      background: rgba(16,24,40,.45);
+      z-index: 9050;
+      display: none;
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+    }
+    .sheet-bg.open { display: block; }
+
+    .sheet-header {
+      font-size: 17px; font-weight: 800;
+      margin-bottom: 18px; text-align: center;
+      color: var(--text, #101828);
+      padding: 4px 0 12px;
+      border-bottom: 1px solid var(--border, #E4E8F0);
+      letter-spacing: -.3px;
+    }
+    .sheet-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--border, #E4E8F0);
+      cursor: pointer; font-size: 15px;
+      width: 100%; text-align: left;
+      background: none; border-top: none;
+      border-left: none; border-right: none;
+      transition: background .15s;
+      font-family: 'Inter', sans-serif;
+      color: var(--text, #101828);
+    }
+    .sheet-item:active { background: rgba(26,58,143,.06); }
+    .sheet-item:last-of-type { border-bottom: none; }
+    .sheet-item.danger { color: #B42318; }
+    .sheet-icon {
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; color: #1A3A8F;
+    }
+    .sheet-item.danger .sheet-icon { color: #B42318; }
+    .sheet-label { flex: 1; font-weight: 500; }
+    .sheet-item.danger .sheet-label { color: #B42318; font-weight: 700; }
+    .sheet-close {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px;
+      width: 100%; padding: 14px; margin-top: 10px;
+      border: 1.5px solid var(--border, #E4E8F0);
+      background: transparent; border-radius: 14px;
+      cursor: pointer; font-size: 15px; font-weight: 600;
+      color: var(--sub, #667085);
+      transition: all .2s; font-family: 'Inter', sans-serif;
+    }
+    .sheet-close:active { background: var(--bg, #F5F6FA); }
+
+    /* ── Network Status Banner ─────────────────────────── */
+    #netBanner {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: #dc2626; color: #fff;
+      font-size: 13px; font-weight: 600;
+      text-align: center; padding: 10px 16px;
+      z-index: 8000;
+      transform: translateY(-100%);
+      transition: transform .3s;
+      font-family: 'Inter', sans-serif;
+    }
+    #netBanner.show { transform: translateY(0); }
+
+    /* ── Update Banner ─────────────────────────────────── */
+    #updateBanner {
+      position: fixed; bottom: 80px; left: 16px; right: 16px;
+      background: #1A3A8F; color: #fff;
+      border-radius: 16px; padding: 14px 16px;
+      display: none; align-items: center; justify-content: space-between;
+      z-index: 7000; box-shadow: 0 8px 24px rgba(26,58,143,.4);
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+    }
+    #updateBanner.show { display: flex; }
+  </style>
+</head>
+<body>
+
+  <!-- Splash -->
+  <div id="pamarketSplash">
+    <div class="splash-wordmark">Pa<em>Market</em></div>
+    <div class="splash-tag">#1 Zim Buy. Sell. Hire. Get Hired.</div>
+    <div class="splash-dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- Offline banner -->
+  <div id="netBanner">📡 No internet connection — some features may be limited</div>
+
+  <!-- Update banner -->
+  <div id="updateBanner" class="show" style="display:none">
+    <span>🚀 New version available!</span>
+    <button onclick="location.reload(true)" style="background:#F5A623;color:#1A3A8F;border:none;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Update</button>
+  </div>
+
+  <!-- Main App -->
+  <div id="app">
+    <div class="scroll-area" id="mainArea"></div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" id="bottomNav" style="display:none" aria-label="Main navigation">
+      <button class="nav-btn active" data-nav="Home" aria-label="Home">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span>Home</span>
+      </button>
+
+      <button class="nav-btn" data-nav="Browse" aria-label="Search">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <span>Search</span>
+      </button>
+
+      <!-- Post FAB -->
+      <div class="post-fab-wrap">
+        <button class="post-fab" data-nav="Post" title="Post a free ad" aria-label="Post an ad">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <span class="fab-lbl">Post</span>
+      </div>
+
+      <button class="nav-btn" data-nav="Messages" aria-label="Messages">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span>Messages</span>
+        <span class="badge" id="msgBadge" style="display:none">0</span>
+      </button>
+
+      <button class="nav-btn" data-nav="Account" aria-label="Account">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span>Account</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toastEl" role="status" aria-live="polite"></div>
+
+  <!-- Modal -->
+  <div class="modal-bg" id="modalBg" role="dialog" aria-modal="true">
+    <div class="modal" id="modalBox"></div>
+  </div>
+
+  <!-- Action Sheet -->
+  <div class="sheet-bg" id="sheetBg" onclick="H.closeSheet()" aria-hidden="true"></div>
+  <div class="action-sheet" id="actionSheet" role="dialog" aria-modal="true"></div>
+
+  <!-- Ban Screen -->
+  <div class="ban-screen" id="banScreen" role="alert"></div>
+
+  <!-- Doc Sheet (Terms / Privacy full-screen) -->
+  <div id="docSheet">
+    <div id="docSheetBar">
+      <button id="docSheetClose" onclick="H.closeDocSheet()" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <span id="docSheetTitle"></span>
+    </div>
+    <div id="docSheetBody"></div>
+  </div>
+
+  <!-- ── Supabase ──────────────────────────────────────── -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.SUPABASE_URL      = 'https://gxgytumhknmnwspxjzxw.supabase.co';
+    window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
+  </script>
+  <script src="js/supabase.js?v=1"></script>
+
+  <!-- ── Core ─────────────────────────────────────────── -->
+  <script src="js/moderation.js?v=1"></script>
+  <script src="js/app.js?v=13"></script>
+  <script src="js/auth.js?v=2"></script>
+
+  <!-- ── Pages ────────────────────────────────────────── -->
+  <script src="js/browse.js?v=2"></script>
+  <script src="js/detail.js?v=4"></script>
+  <script src="js/post.js?v=4"></script>
+  <script src="js/saved.js?v=2"></script>
+  <script src="js/messages.js?v=12"></script>
+  <script src="js/notifications.js?v=2"></script>
+  <script src="js/profile.js?v=4"></script>
+  <script src="js/account.js?v=5"></script>
+  <script src="js/settings.js?v=2"></script>
+  <script src="js/security_pages.js?v=2"></script>
+  <script src="js/help.js?v=4"></script>
+  <script src="js/wallet.js?v=7"></script>
+  <script src="js/verify.js?v=2"></script>
+  <script src="js/admin.js?v=4"></script>
+  <script src="js/home.js?v=7"></script>
+
+  <!-- ── Category Pages (base filter engine must load first) ── -->
+  <script src="js/categories.js?v=3"></script>
+  <script src="js/property.js?v=1"></script>
+  <script src="js/vehicles.js?v=1"></script>
+  <script src="js/rooms.js?v=1"></script>
+  <script src="js/electronics.js?v=1"></script>
+  <script src="js/furniture.js?v=1"></script>
+  <script src="js/fashion.js?v=1"></script>
+  <script src="js/services.js?v=1"></script>
+  <script src="js/agriculture.js?v=1"></script>
+  <script src="js/pets.js?v=1"></script>
+  <script src="js/kids.js?v=1"></script>
+  <script src="js/other.js?v=1"></script>
+  <script src="js/jobs.js?v=6"></script>
+
+  <!-- ── App Bootstrap ────────────────────────────────── -->
+  <script>
+    // ── Splash hide — tied to app readiness, not a hard timer ──
+    window._hideSplash = function() {
+      const splash = document.getElementById('pamarketSplash');
+      if (!splash) return;
+      splash.classList.add('hiding');
+      setTimeout(() => splash.remove(), 450);
+    };
+    // Fallback: hide after 4s max in case boot is very slow
+    window.addEventListener('load', () => setTimeout(window._hideSplash, 4000));
+
+    // ── Service Worker ───────────────────────────────────
+    if ('serviceWorker' in navigator) {
+      // Unregister stale workers then re-register fresh
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+      });
+      navigator.serviceWorker.register('sw.js').then(reg => {
+        reg.onupdatefound = () => {
+          const w = reg.installing;
+          w.onstatechange = () => {
+            if (w.state === 'installed' && navigator.serviceWorker.controller) {
+              document.getElementById('updateBanner').style.display = 'flex';
+            }
+          };
+        };
+      }).catch(() => {});
+    }
+
+    // ── Network status ───────────────────────────────────
+    function updateOnlineStatus() {
+      const banner = document.getElementById('netBanner');
+      if (banner) banner.classList.toggle('show', !navigator.onLine);
+    }
+    window.addEventListener('online',  updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // ── Message badge updater ────────────────────────────
+    H.updateMsgBadge = function() {
+      try {
+        const u = H.currentUser && H.currentUser();
+        const badge = document.getElementById('msgBadge');
+        if (!badge) return;
+        if (!u) { badge.style.display = 'none'; return; }
+        if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+        const convos = H.state.conversations.filter(c => Array.isArray(c.members) && c.members.includes(u.id));
+        const unread = convos.reduce((n, c) =>
+          n + (c.messages||[]).filter(m => m.from !== u.id && !m.read).length, 0);
+        badge.textContent = unread > 9 ? '9+' : unread;
+        badge.style.display = unread ? '' : 'none';
+      } catch(e) {}
+    };
+    H.updateMsgBadge();
+    window._msgBadgeInterval = setInterval(H.updateMsgBadge, 5000);
+
+    // ── Admin page local login fallback ──────────────────
+    window.addEventListener('load', () => {
+      H.authAdminSignInPage = async function () {
+        const email = document.getElementById('admEmailPage')?.value.trim();
+        const pass  = document.getElementById('admPassPage')?.value.trim();
+        if (!email || !pass) { H.toast('Enter admin credentials'); return; }
+        // Try local users first
+        const u = (H.state.users || []).find(x =>
+          (x.email || '').toLowerCase() === email.toLowerCase() &&
+          x._localPassword === pass && x.role === 'admin'
+        );
+        if (u) {
+          H.state.currentUserId = u.id;
+          H.state.adminSession  = { at: Date.now(), via: 'local' };
+          H.saveState();
+          H.boot();
+        } else {
+          H.toast('Invalid admin credentials');
+          document.getElementById('bottomNav').style.display = 'flex';
+        }
+      };
+    });
+
+    // ── Prevent rubber-band scroll on iOS ────────────────
+    document.addEventListener('touchmove', function(e) {
+      if (e.target.closest('#mainArea, .action-sheet, #docSheet, .modal-body-scroll, .login-modal, .modal')) return;
+      e.preventDefault();
+    }, { passive: false });
+
+    // ── Allow scroll inside doc sheet and modals ─────────
+    document.getElementById('docSheetBody').addEventListener('touchmove', function(e) {
+      e.stopPropagation();
+    }, { passive: true });
+    document.getElementById('modalBox').addEventListener('touchmove', function(e) {
+      e.stopPropagation();
+    }, { passive: true });
+
+    // ── Keyboard: Escape closes modals / sheets / doc sheet ──
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Escape') return;
+      var ds = document.getElementById('docSheet');
+      if (ds && ds.classList.contains('open')) { if (typeof H !== 'undefined' && H.closeDocSheet) H.closeDocSheet(); return; }
+      var mb = document.getElementById('modalBg');
+      if (mb && mb.classList.contains('show')) { if (typeof H !== 'undefined' && H.closeModal) H.closeModal(); return; }
+      var sheet = document.getElementById('actionSheet');
+      if (sheet && sheet.classList.contains('open')) { if (typeof H !== 'undefined' && H.closeSheet) H.closeSheet(); return; }
+      if (typeof H !== 'undefined' && H.closeLoginModal) H.closeLoginModal();
+    });
+  </script>
+</body>
+</html>

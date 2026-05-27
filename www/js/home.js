@@ -1,0 +1,287 @@
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
+'use strict';
+(function (H) {
+  const { escHtml, timeAgo, filterListings, renderListCard, renderFeatCard, CATEGORIES, ICONS } = H;
+
+  let searchTimer;
+  function debounce(fn, delay) {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(fn, delay);
+  }
+
+  const CAT_COLORS = {
+    vehicles:'#e53935',property:'#1E88E5',electronics:'#8E24AA',
+    fashion:'#F06292',furniture:'#6D4C41',services:'#00897B',
+    jobs:'#F5A623',rooms:'#00838F',other:'#546E7A',
+    agriculture:'#558B2F',pets:'#FB8C00',kids:'#E91E63',
+  };
+
+  function renderHCard(l) {
+    const photo = (l.photos && l.photos[0]) || '';
+    const price = l.price ? ('$' + Number(l.price).toLocaleString()) : 'Free';
+    const title = escHtml((l.title || '').slice(0, 36));
+    const loc   = escHtml(l.suburb || l.city || l.prov || '');
+    return `<div onclick="openListing('${l.id}')" style="background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--border);cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.07)">
+      <div style="aspect-ratio:4/3;overflow:hidden;background:#f0f0f0;position:relative">
+        ${photo
+          ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.onerror=null;this.style.display='none'">`
+          : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>'}
+        ${l.boost && l.boost.until > Date.now() ? '<span style="position:absolute;top:6px;left:6px;background:#1A3A8F;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">SPONSORED</span>' : ''}
+        ${l.negotiable ? '<span style="position:absolute;top:6px;right:6px;background:#F5A623;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">NEG</span>' : ''}
+      </div>
+      <div style="padding:8px 10px 11px">
+        <div style="font-size:14px;font-weight:800;color:#1A3A8F;margin-bottom:2px">${price}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">${title}</div>
+        <div style="font-size:11px;color:var(--sub)">${loc}</div>
+      </div>
+    </div>`;
+  }
+
+  H.pages.Home = function () {
+    const u = H.currentUser();
+    const unreadNotifs = u ? (H.state.notifs[u.id] || []).filter(n => !n.read).length : 0;
+    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+    const unreadMsgs   = u ? H.state.conversations.filter(cv =>
+      Array.isArray(cv.members) && cv.members.includes(u.id) && (cv.messages || []).some(m => m.from !== u.id && !m.read)).length : 0;
+    const activeListings = (H.state.listings || []).filter(l => l.status === 'active');
+    const filtered       = filterListings(activeListings);
+    const featured       = filtered.filter(l => l.boost && l.boost.until > Date.now()).slice(0, 6);
+
+    const catSections = CATEGORIES.map(c => ({
+      ...c, items: filtered.filter(l => l.cat === c.id).slice(0, 4)
+    })).filter(s => s.items.length > 0);
+
+    return `<div class="page active" style="background:var(--bg)">
+
+      <!-- HEADER -->
+      <div style="background:#1A3A8F;padding-bottom:16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(26,58,143,0.3)">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0">
+          <div onclick="H.logoTap()" style="cursor:pointer">
+            <span style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-1px;font-family:Inter,sans-serif">Pa<em style="font-style:normal;color:#F5A623">Market</em></span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <div onclick="H.openInner('Notifications')"
+              style="position:relative;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;cursor:pointer">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span data-notif-badge style="position:absolute;top:4px;right:4px;background:#F5A623;color:#1A3A8F;border-radius:50%;min-width:16px;height:16px;font-size:9px;font-weight:900;display:${unreadNotifs ? 'flex' : 'none'};align-items:center;justify-content:center;padding:0 2px">${unreadNotifs > 9 ? '9+' : unreadNotifs}</span>
+            </div>
+            <div onclick="H.currentUser()?H.openInner('Messages'):H.requireAuth('Sign in to view messages')"
+              style="position:relative;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;cursor:pointer">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              ${unreadMsgs ? `<span style="position:absolute;top:4px;right:4px;background:#F5A623;color:#1A3A8F;border-radius:50%;min-width:16px;height:16px;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 2px">${unreadMsgs > 9 ? '9+' : unreadMsgs}</span>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div onclick="H.toggleCityPicker()" style="display:inline-flex;align-items:center;gap:5px;padding:8px 16px 10px;cursor:pointer">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span style="font-size:13px;color:rgba(255,255,255,0.9);font-weight:600">${escHtml(H.state.cityFilter)}</span>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+
+        <div style="margin:0 16px;background:#fff;border-radius:14px;display:flex;align-items:center;padding:0 12px;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.18)">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="2.5" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="searchIn" placeholder="Search cars, houses, jobs..."
+            oninput="H.onSearch()" autocomplete="off"
+            style="flex:1;border:none;outline:none;padding:14px 0;font-size:15px;font-family:Inter,sans-serif;color:#222;background:transparent">
+          <button onclick="document.getElementById('searchIn').value='';H.onSearch()"
+            style="background:none;border:none;padding:6px;cursor:pointer;color:#ccc;display:flex;align-items:center;flex-shrink:0">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- CITY PICKER -->
+      <div class="city-picker" id="cityPicker" role="dialog">
+        <div class="city-picker-title">Select your city</div>
+        <div class="city-grid">
+          <div class="city-opt ${H.state.cityFilter === 'All Zimbabwe' ? 'sel' : ''}" onclick="H.pickCity('All Zimbabwe')">All Zimbabwe</div>
+          ${['Harare','Bulawayo','Mutare','Gweru','Masvingo','Chinhoyi','Kwekwe','Kadoma'].map(c =>
+            `<div class="city-opt ${H.state.cityFilter === c ? 'sel' : ''}" onclick="H.pickCity('${c}')">${c}</div>`
+          ).join('')}
+        </div>
+      </div>
+
+      <div style="padding-bottom:88px">
+
+        <!-- CATEGORIES GRID -->
+        <div style="background:var(--card);padding:18px 16px 20px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <span style="font-size:15px;font-weight:800;color:var(--text)">Browse Categories</span>
+            <span onclick="H.navTo('Browse',null)" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+            ${CATEGORIES.map(c => {
+              const color = CAT_COLORS[c.id] || '#546E7A';
+              return `<div onclick="H.filterByCat('${c.id}')" style="display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer">
+                <div style="width:56px;height:56px;border-radius:16px;background:${color}18;display:flex;align-items:center;justify-content:center;font-size:26px;border:1.5px solid ${color}22;transition:transform 0.15s"
+                  onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">${c.icon}</div>
+                <span style="font-size:11px;font-weight:600;color:var(--text);text-align:center;line-height:1.2">${c.name}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- BANNER -->
+        <div style="margin:0 12px 8px;background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:18px;padding:20px;display:flex;align-items:center;justify-content:space-between;overflow:hidden;position:relative">
+          <div style="position:absolute;right:-24px;top:-24px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.07)"></div>
+          <div style="position:absolute;right:50px;bottom:-35px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,0.05)"></div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Zimbabwe's Free Marketplace</div>
+            <div style="font-size:21px;font-weight:900;color:#fff;line-height:1.1;margin-bottom:4px">Buy. Sell. Hire.</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.7)">Real people. Real deals.</div>
+          </div>
+          <div style="text-align:center;flex-shrink:0;margin-left:16px">
+            <div style="font-size:30px;font-weight:900;color:#F5A623;line-height:1">${activeListings.length}</div>
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.75);text-transform:uppercase;margin-top:3px">Active Ads</div>
+          </div>
+        </div>
+
+        <!-- HOT ON PAMARKET (paid ads horizontal scroll) -->
+        ${(function(){
+          var now = Date.now();
+          var ads = (H.state.paidAds||[]).filter(function(a){ return a.active && a.endsAt > now; });
+          if (!ads.length) return '';
+          ads.forEach(function(a){ if(H.trackAdImpression) H.trackAdImpression(a.id); });
+          return '<div style="padding:20px 0 0">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">'
+            + '<div>'
+            + '<div style="font-size:10px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Sponsored</div>'
+            + '<span style="font-size:17px;font-weight:800;color:var(--text)">Hot on PaMarket</span>'
+            + '</div>'
+            + '</div>'
+            + '<div style="display:flex;gap:12px;padding:0 16px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">'
+            + ads.map(function(a){
+                var clickFn = 'H.trackAdClick(' + JSON.stringify(a.id) + ',' + JSON.stringify(a.linkUrl||'') + ')';
+                var title    = escHtml(a.headline || a.businessName || 'Sponsored');
+                var sub      = escHtml(a.tagline || '');
+                var bg       = escHtml(a.bgColor || '#1A3A8F');
+                var initials = (a.businessName||'AD').split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase();
+                /* Image is positioned absolute over the initials fallback.
+                   If it fails to load, onerror removes it and the initials show through. */
+                return '<div onclick="' + escHtml(clickFn) + '" style="width:170px;flex-shrink:0;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.12);background:var(--card)">'
+                  + '<div style="height:130px;background:' + bg + ';position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center">'
+                  /* initials always rendered as the base layer */
+                  + '<span style="font-size:38px;font-weight:900;color:rgba(255,255,255,0.35);letter-spacing:-1px;position:relative;z-index:1">' + escHtml(initials) + '</span>'
+                  /* image sits on top via absolute — removed on error so initials show */
+                  + (a.imageUrl ? '<img src="' + escHtml(a.imageUrl) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2" loading="lazy" onerror="this.parentNode.removeChild(this)">' : '')
+                  /* AD badge always on top */
+                  + '<span style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);color:#fff;font-size:8px;font-weight:700;padding:2px 7px;border-radius:6px;letter-spacing:.5px;z-index:3">AD</span>'
+                  /* gradient overlay at bottom for text legibility when image is shown */
+                  + (a.imageUrl ? '<div style="position:absolute;bottom:0;left:0;right:0;height:56px;background:linear-gradient(to top,rgba(0,0,0,0.55),transparent);z-index:2"></div>' : '')
+                  + '</div>'
+                  + '<div style="padding:10px 12px 13px">'
+                  + '<div style="font-size:13px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">' + title + '</div>'
+                  + (sub ? '<div style="font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + sub + '</div>' : '')
+                  + '</div>'
+                  + '</div>';
+              }).join('')
+            + '</div>'
+            + '</div>';
+        })()}
+
+        <!-- POST AD BUTTON -->
+        <div style="padding:12px 12px 0">
+          <button onclick="H.navTo('Post',null)"
+            style="width:100%;padding:14px;background:#F5A623;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(245,166,35,0.35)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Post a Free Ad
+          </button>
+        </div>
+
+        <!-- FEATURED -->
+        ${featured.length ? `
+        <div style="padding:20px 0 0">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="#F5A623" stroke="#F5A623" stroke-width="1"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span style="font-size:16px;font-weight:800;color:var(--text)">Featured Ads</span>
+            </div>
+            <span onclick="H.navTo('Browse',null)" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>
+          </div>
+          <div style="display:flex;gap:12px;padding:0 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+            ${featured.map(l => `<div style="flex-shrink:0">${renderFeatCard(l)}</div>`).join('')}
+          </div>
+        </div>` : ''}
+
+        <!-- SEARCH RESULTS (shown when typing) -->
+        <div id="searchResults" style="display:none;padding:16px 12px 0">
+          <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:12px;padding:0 4px">Search Results</div>
+          <div id="searchResultsList" style="display:flex;flex-direction:column;gap:10px"></div>
+        </div>
+
+        <!-- CATEGORY SECTIONS (Dubizzle style, shown by default) -->
+        <div id="catSections">
+          ${catSections.length ? catSections.map(s => `
+            <div style="padding:20px 0 0">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:20px">${s.icon}</span>
+                  <span style="font-size:16px;font-weight:800;color:var(--text)">Latest in ${s.name}</span>
+                </div>
+                <span onclick="H.filterByCat('${s.id}')" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px">
+                ${s.items.map(l => renderHCard(l)).join('')}
+              </div>
+            </div>
+          `).join('') : `<div style="padding:32px 16px">${H.emptyState('No listings yet', 'Be the first to post in your area!', 'Post your first ad', "H.navTo('Post',null)")}</div>`}
+        </div>
+
+      </div>
+    </div>`;
+  };
+
+  H.onSearch = function () {
+    debounce(() => {
+      const q      = document.getElementById('searchIn')?.value || '';
+      const catDiv = document.getElementById('catSections');
+      const srDiv  = document.getElementById('searchResults');
+      const srList = document.getElementById('searchResultsList');
+      if (!catDiv || !srDiv || !srList) return;
+      if (!q.trim()) {
+        catDiv.style.display = '';
+        srDiv.style.display  = 'none';
+        return;
+      }
+      catDiv.style.display = 'none';
+      srDiv.style.display  = '';
+      const active   = (H.state.listings || []).filter(l => l.status === 'active');
+      const results  = filterListings(active, q);
+      srList.innerHTML = results.length
+        ? results.map(l => `<div>${renderListCard(l)}</div>`).join('')
+        : H.emptyState('No matches', 'Try different keywords or browse a category', null, null);
+    }, 300);
+  };
+
+  H.pages.Home_after = function () {
+    if (typeof H.fetchListingsFromSupabase !== 'function') return;
+    const countBefore = (H.state.listings || []).filter(l => l.status === 'active').length;
+    H.fetchListingsFromSupabase().then(() => {
+      if (H.currentPageName !== 'Home') return;
+      const countAfter = (H.state.listings || []).filter(l => l.status === 'active').length;
+      if (countAfter > countBefore) H.toast('New listings loaded — pull down to refresh');
+    }).catch(() => {});
+  };
+
+  H.toggleCityPicker = function () {
+    const picker = document.getElementById('cityPicker');
+    if (picker) picker.classList.toggle('open');
+  };
+
+  H.pickCity = function (c) {
+    H.state.cityFilter = c;
+    H.saveState();
+    const picker = document.getElementById('cityPicker');
+    if (picker) picker.classList.remove('open');
+    H.renderPage('Home');
+  };
+
+  
+
+})(window.H);

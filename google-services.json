@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "128268926194",
+    "project_id": "pamarket-zim",
+    "storage_bucket": "pamarket-zim.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:128268926194:android:3d31b2675b6a47e68e646b",
+        "android_client_info": {
+          "package_name": "com.pamarket.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBprVFgI6Yqaf75LGOSdaM459GSuyDWDKI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

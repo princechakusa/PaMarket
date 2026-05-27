@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PaMarket — Buy. Sell. Hire. Zimbabwe's Free Marketplace</title>
+<meta name="description" content="Zimbabwe's free marketplace. Buy, sell and hire across 25+ cities. Thousands of listings, completely free to post.">
+<meta property="og:title" content="PaMarket — Buy. Sell. Hire.">
+<meta property="og:description" content="Zimbabwe's free marketplace. Real people. Real deals.">
+<link rel="icon" href="img/icon-192.png" type="image/png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1A3A8F;--dark:#0f2460;--mid:#2550C0;--light:#EEF2FF;
+  --accent:#F5A623;--accent-dark:#D4891A;
+  --bg:#F5F7FA;--text:#1A1A2E;--sub:#667085;--border:#E4E8F0;
+  --success:#10b981;--danger:#ef4444;
+  --r8:8px;--r12:12px;--r16:16px;--rpill:999px;
+  --s1:0 1px 4px rgba(0,0,0,.06);--s2:0 4px 16px rgba(0,0,0,.08);--s3:0 8px 32px rgba(0,0,0,.12);
+  --f:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+body{font-family:var(--f);background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
+button{cursor:pointer;font-family:var(--f);border:none;background:none}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.container{max-width:1280px;margin:0 auto;padding:0 24px}
+@media(max-width:768px){.container{padding:0 16px}}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 22px;border-radius:var(--r8);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;border:none;text-decoration:none;white-space:nowrap;line-height:1}
+.btn-primary{background:var(--navy);color:#fff}.btn-primary:hover{background:var(--mid);transform:translateY(-1px)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:var(--accent-dark);transform:translateY(-1px)}
+.btn-outline{background:#fff;color:var(--navy);border:2px solid var(--navy)}.btn-outline:hover{background:var(--light)}
+.btn-outline-white{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.7)}.btn-outline-white:hover{background:rgba(255,255,255,.12);border-color:#fff}
+.btn-ghost{background:transparent;color:var(--sub);border:1.5px solid var(--border)}.btn-ghost:hover{border-color:var(--navy);color:var(--navy)}
+.btn-sm{padding:8px 16px;font-size:13px}
+.btn-lg{padding:14px 32px;font-size:16px}
+
+/* HEADER */
+#site-header{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--border);box-shadow:var(--s1)}
+.hdr{display:flex;align-items:center;gap:16px;height:68px;padding:0 24px;max-width:1280px;margin:0 auto}
+.logo{font-size:26px;font-weight:900;color:var(--navy);letter-spacing:-.5px;text-decoration:none}
+.logo span{color:var(--accent)}
+.hdr-nav{display:flex;gap:2px;margin-left:4px}
+.nav-a{padding:8px 13px;font-size:14px;font-weight:600;color:var(--sub);border-radius:var(--r8);transition:all .2s;text-decoration:none;white-space:nowrap}
+.nav-a:hover,.nav-a.active{color:var(--navy);background:var(--light)}
+.hdr-actions{display:flex;gap:10px;flex-shrink:0;margin-left:auto}
+.hamburger{display:none;padding:4px;color:var(--text);align-items:center;justify-content:center}
+.mob-nav{display:none;position:absolute;top:68px;left:0;right:0;background:#fff;border-bottom:1px solid var(--border);padding:12px 20px 16px;box-shadow:var(--s2);z-index:999;flex-direction:column;gap:2px}
+.mob-nav.open{display:flex}
+.mob-nav a{padding:11px 14px;font-size:15px;font-weight:600;color:var(--text);border-radius:var(--r8);display:block}
+.mob-nav a:hover{background:var(--bg)}
+.mob-nav-btns{display:flex;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.mob-nav-btns .btn{flex:1;justify-content:center}
+@media(max-width:900px){.hdr-nav{display:none}}
+@media(max-width:600px){.hamburger{display:flex}.hdr-actions{display:none}}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+
+/* HERO */
+.hero{
+  background:linear-gradient(135deg,var(--dark) 0%,var(--navy) 55%,#1e4fd8 100%);
+  padding:96px 24px 104px;
+  position:relative;
+  overflow:hidden;
+}
+.hero::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,.025) 40px,rgba(255,255,255,.025) 41px),
+    repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(255,255,255,.025) 40px,rgba(255,255,255,.025) 41px);
+  pointer-events:none;
+}
+.hero::after{
+  content:'';
+  position:absolute;
+  top:-120px;right:-120px;
+  width:560px;height:560px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(245,166,35,.15) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-inner{position:relative;z-index:1;max-width:720px;margin:0 auto;text-align:center}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(245,166,35,.18);border:1px solid rgba(245,166,35,.4);border-radius:var(--rpill);padding:6px 16px;font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;margin-bottom:24px}
+.hero-eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.hero h1{font-size:clamp(48px,8vw,80px);font-weight:900;color:#fff;line-height:1;letter-spacing:-3px;margin-bottom:20px}
+.hero-sub{font-size:18px;color:rgba(255,255,255,.82);margin-bottom:36px;line-height:1.7;max-width:560px;margin-left:auto;margin-right:auto}
+.hero-search{display:flex;background:#fff;border-radius:var(--rpill);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);margin-bottom:24px;border:3px solid rgba(255,255,255,.1)}
+.hero-loc{border:none;border-right:1px solid var(--border);padding:0 18px;font-size:14px;color:var(--text);outline:none;height:60px;background:#fff;min-width:150px;cursor:pointer;font-weight:500}
+.hero-q{flex:1;border:none;padding:0 20px;height:60px;font-size:15px;color:var(--text);outline:none}
+.hero-q::placeholder{color:var(--sub)}
+.hero-search-btn{background:var(--accent);color:#fff;padding:0 28px;font-size:15px;font-weight:800;border:none;cursor:pointer;transition:background .2s;height:60px;display:flex;align-items:center;gap:8px;border-radius:0 var(--rpill) var(--rpill) 0;white-space:nowrap}
+.hero-search-btn:hover{background:var(--accent-dark)}
+.hero-pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:32px}
+.hero-pill{background:rgba(255,255,255,.12);color:rgba(255,255,255,.9);padding:6px 16px;border-radius:var(--rpill);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);display:inline-block}
+.hero-pill:hover{background:rgba(255,255,255,.22);transform:translateY(-1px);color:#fff}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+@media(max-width:640px){
+  .hero{padding:64px 16px 72px}
+  .hero-search{flex-direction:column;border-radius:var(--r16)}
+  .hero-loc{border-right:none;border-bottom:1px solid var(--border);height:50px;border-radius:0;min-width:auto;width:100%}
+  .hero-q{height:50px}
+  .hero-search-btn{height:50px;border-radius:0 0 var(--r16) var(--r16)}
+}
+
+/* STATS BAR */
+.stats-bar{background:#fff;border-bottom:1px solid var(--border);box-shadow:var(--s1)}
+.stats-inner{display:flex;align-items:center;justify-content:center;max-width:1200px;margin:0 auto}
+.stat-blk{flex:1;text-align:center;padding:28px 16px;border-right:1px solid var(--border);position:relative}
+.stat-blk:last-child{border-right:none}
+.stat-num{font-size:30px;font-weight:900;color:var(--navy);line-height:1}
+.stat-lbl{font-size:13px;color:var(--sub);margin-top:5px;font-weight:500}
+.stat-blk:hover .stat-num{color:var(--accent);transition:color .2s}
+@media(max-width:600px){.stats-inner{flex-wrap:wrap}.stat-blk{flex:0 0 50%;border-bottom:1px solid var(--border)}.stat-blk:nth-child(even){border-right:none}.stat-num{font-size:24px}}
+
+/* SECTION */
+.section{padding:80px 0}
+@media(max-width:768px){.section{padding:52px 0}}
+.sec-eyebrow{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.8px;text-align:center;margin-bottom:8px}
+.sec-title{font-size:clamp(26px,3.5vw,38px);font-weight:900;color:var(--text);text-align:center;letter-spacing:-.5px;margin-bottom:10px}
+.sec-bar{width:48px;height:4px;background:var(--accent);border-radius:2px;margin:0 auto 16px}
+.sec-sub{font-size:16px;color:var(--sub);text-align:center;max-width:520px;margin:0 auto 52px;line-height:1.7}
+
+/* CATEGORIES */
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:900px){.cat-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:480px){.cat-grid{grid-template-columns:repeat(2,1fr);gap:10px}}
+.cat-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r16);padding:28px 12px 22px;text-align:center;cursor:pointer;transition:all .25s;box-shadow:var(--s1);text-decoration:none;display:block;position:relative;overflow:hidden}
+.cat-card:hover{border-color:var(--navy);transform:translateY(-4px);box-shadow:0 12px 32px rgba(26,58,143,.15)}
+.cat-icon{width:60px;height:60px;border-radius:var(--r12);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:all .25s}
+.cat-card:hover .cat-icon{transform:scale(1.08)}
+.cat-name{font-size:13px;font-weight:700;color:var(--text)}
+
+/* HOW IT WORKS */
+.hiw-bg{background:var(--light)}
+.hiw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;position:relative}
+.hiw-grid::before{content:'';position:absolute;top:44px;left:calc(16.67% + 32px);right:calc(16.67% + 32px);height:2px;background:repeating-linear-gradient(90deg,var(--navy) 0,var(--navy) 8px,transparent 8px,transparent 16px);opacity:.25;z-index:0}
+@media(max-width:768px){.hiw-grid{grid-template-columns:1fr;gap:24px}.hiw-grid::before{display:none}}
+.hiw-card{background:#fff;border-radius:var(--r16);padding:40px 28px 36px;text-align:center;border:1.5px solid var(--border);box-shadow:var(--s1);position:relative;z-index:1;transition:all .25s}
+.hiw-card:hover{transform:translateY(-4px);box-shadow:var(--s3);border-color:var(--navy)}
+.hiw-step{font-size:52px;font-weight:900;color:var(--accent);line-height:1;margin-bottom:12px;letter-spacing:-2px;opacity:.9}
+.hiw-icon-wrap{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--light),#dce6ff);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:var(--navy)}
+.hiw-card h3{font-size:18px;font-weight:800;color:var(--text);margin-bottom:12px}
+.hiw-card p{font-size:14px;color:var(--sub);line-height:1.8}
+
+/* APP IN ACTION */
+.app-action-bg{background:#E8EDF5}
+.phones-row{display:flex;gap:32px;justify-content:center;align-items:flex-end;flex-wrap:wrap}
+.phone-frame-wrap{display:flex;flex-direction:column;align-items:center;gap:20px}
+.phone-frame{width:200px;border-radius:32px;border:8px solid #1a1a2e;overflow:hidden;box-shadow:0 24px 48px rgba(0,0,0,.25),0 0 0 1px rgba(255,255,255,.06);background:#1a1a2e;position:relative;flex-shrink:0}
+.phone-caption{font-size:14px;font-weight:700;color:var(--text);text-align:center}
+.phone-caption-sub{font-size:12px;color:var(--sub);text-align:center;margin-top:2px}
+@media(max-width:900px){
+  .phones-row{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;justify-items:center}
+  .phone-frame{width:100%;max-width:220px;border-radius:28px;border-width:7px}
+  .phone-frame-wrap{width:100%}
+}
+@media(max-width:480px){
+  .phones-row{grid-template-columns:repeat(2,1fr);gap:16px}
+  .phone-frame{max-width:100%;border-radius:20px;border-width:5px}
+}
+
+/* WHY PAMARKET */
+.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+@media(max-width:900px){.why-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.why-grid{grid-template-columns:1fr}}
+.why-card{background:#fff;border-radius:var(--r16);padding:32px 24px;border:1.5px solid var(--border);text-align:center;box-shadow:var(--s1);transition:all .25s}
+.why-card:hover{transform:translateY(-4px);box-shadow:var(--s3);border-color:var(--navy)}
+.why-icon{width:64px;height:64px;border-radius:50%;background:var(--light);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--navy);transition:all .25s}
+.why-card:hover .why-icon{background:var(--navy);color:#fff}
+.why-card h3{font-size:17px;font-weight:800;color:var(--text);margin-bottom:10px}
+.why-card p{font-size:14px;color:var(--sub);line-height:1.75}
+
+/* SHARE EXPERIENCE */
+.share-bg{background:#E8EDF5}
+.share-card{background:#fff;border-radius:var(--r16);padding:52px 48px;max-width:640px;margin:0 auto;text-align:center;box-shadow:var(--s3);border:1.5px solid var(--border)}
+.share-icon{width:72px;height:72px;border-radius:50%;background:var(--light);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;color:var(--navy)}
+.share-card h3{font-size:22px;font-weight:800;color:var(--text);margin-bottom:12px}
+.share-card p{font-size:16px;color:var(--sub);line-height:1.7;margin-bottom:28px}
+.share-note{font-size:13px;color:var(--sub);margin-top:16px;opacity:.8}
+@media(max-width:600px){.share-card{padding:36px 24px}}
+
+/* SAFETY STRIP */
+.safety-strip{background:var(--dark);padding:48px 0}
+.safety-inner{display:flex;align-items:center;justify-content:center;gap:56px;flex-wrap:wrap}
+.safety-item{display:flex;align-items:center;gap:14px;color:#fff}
+.safety-icon-wrap{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.safety-label{font-size:15px;font-weight:700}
+.safety-sub{font-size:13px;color:rgba(255,255,255,.65);margin-top:2px}
+.safety-divider{width:1px;height:44px;background:rgba(255,255,255,.15)}
+@media(max-width:640px){.safety-divider{display:none}.safety-inner{flex-direction:column;align-items:flex-start;gap:20px;padding:0 24px}}
+
+/* FOOTER */
+footer{background:var(--dark);color:rgba(255,255,255,.75);padding:56px 0 0}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.08)}
+@media(max-width:900px){.footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.footer-grid{grid-template-columns:1fr}}
+.footer-logo{font-size:26px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:14px;display:block}
+.footer-logo span{color:var(--accent)}
+.footer-brand p{font-size:14px;line-height:1.8;color:rgba(255,255,255,.6);max-width:260px;margin-bottom:22px}
+.social-links{display:flex;gap:10px;flex-wrap:wrap}
+.social-link{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);transition:all .2s}
+.social-link:hover{background:var(--accent);border-color:var(--accent);color:#fff;transform:translateY(-2px)}
+.footer-col h4{font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:18px}
+.footer-col a{display:block;font-size:14px;color:rgba(255,255,255,.6);margin-bottom:11px;transition:color .2s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding:20px 0;font-size:13px;color:rgba(255,255,255,.45)}
+@media(max-width:600px){.footer-bottom{flex-direction:column;gap:6px;text-align:center}}
+
+/* WHATSAPP FLOAT */
+.wa-float{position:fixed;bottom:24px;right:24px;z-index:900;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.wa-tooltip{background:var(--dark);color:#fff;padding:6px 14px;border-radius:var(--rpill);font-size:13px;font-weight:600;white-space:nowrap;opacity:0;transform:translateX(6px);transition:all .2s;pointer-events:none}
+.wa-float:hover .wa-tooltip{opacity:1;transform:translateX(0)}
+.wa-btn{width:56px;height:56px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,.45);transition:all .2s;color:#fff}
+.wa-btn:hover{transform:scale(1.08);box-shadow:0 8px 28px rgba(37,211,102,.55)}
+
+/* AUTH MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)}
+.modal-overlay.hidden{display:none!important}
+.modal-box{background:#fff;border-radius:var(--r16);padding:36px;width:100%;max-width:420px;position:relative;max-height:90vh;overflow-y:auto}
+.modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--sub);transition:all .2s}
+.modal-close:hover{background:var(--border);color:var(--text)}
+.modal-tabs{display:flex;background:var(--bg);border-radius:var(--r8);padding:4px;margin-bottom:24px;margin-top:20px}
+.modal-tab{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;color:var(--sub);border-radius:6px;transition:all .2s}
+.modal-tab.active{background:#fff;color:var(--navy);box-shadow:var(--s1)}
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:14px;font-weight:600;color:var(--text);margin-bottom:7px}
+.form-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--r8);font-size:15px;color:var(--text);background:#fff;outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--navy)}
+.hidden{display:none!important}
+
+/* TOAST */
+#toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--text);color:#fff;padding:12px 22px;border-radius:var(--rpill);font-size:14px;font-weight:500;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:auto;max-width:320px;text-align:center}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header" role="banner">
+  <div class="hdr">
+    <a href="index.html" class="logo" aria-label="PaMarket Home">Pa<span>Market</span></a>
+    <nav class="hdr-nav" aria-label="Main navigation">
+      <a href="browse.html" class="nav-a">Browse</a>
+      <a href="jobs.html" class="nav-a">Jobs</a>
+      <a href="services.html" class="nav-a">Services</a>
+      <a href="about.html" class="nav-a">About</a>
+      <a href="advertise.html" class="nav-a">Advertise</a>
+    </nav>
+    <div class="hdr-actions">
+      <button class="btn btn-outline btn-sm" onclick="showModal()">Sign In</button>
+      <a href="post-ad.html" class="btn btn-accent btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Post Free Ad
+      </a>
+    </div>
+    <button class="hamburger" onclick="toggleMob()" aria-label="Toggle menu" aria-expanded="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+    </button>
+  </div>
+  <nav id="mobNav" class="mob-nav" aria-label="Mobile navigation">
+    <a href="index.html">Home</a>
+    <a href="browse.html">Browse All</a>
+    <a href="jobs.html">Jobs</a>
+    <a href="services.html">Services</a>
+    <a href="about.html">About</a>
+    <a href="advertise.html">Advertise</a>
+    <div class="mob-nav-btns">
+      <button class="btn btn-outline" onclick="showModal()">Sign In</button>
+      <a href="post-ad.html" class="btn btn-accent">Post Free Ad</a>
+    </div>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero" aria-label="Hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-dot"></span>
+      Zimbabwe's Free Marketplace
+    </div>
+    <h1>Buy. Sell. Hire.</h1>
+    <p class="hero-sub">Connect with thousands of buyers and sellers across Zimbabwe, completely free.</p>
+    <div class="hero-search" role="search" aria-label="Search listings">
+      <select class="hero-loc" id="heroLoc" aria-label="Select city">
+        <option value="">All Zimbabwe</option>
+        <option>Harare</option>
+        <option>Bulawayo</option>
+        <option>Chitungwiza</option>
+        <option>Mutare</option>
+        <option>Gweru</option>
+        <option>Kwekwe</option>
+        <option>Kadoma</option>
+        <option>Masvingo</option>
+        <option>Hwange</option>
+        <option>Chinhoyi</option>
+        <option>Norton</option>
+        <option>Marondera</option>
+        <option>Ruwa</option>
+        <option>Victoria Falls</option>
+      </select>
+      <input type="text" id="heroQ" class="hero-q" placeholder="What are you looking for?" aria-label="Search keyword" onkeydown="if(event.key==='Enter')doHeroSearch()">
+      <button class="hero-search-btn" onclick="doHeroSearch()" aria-label="Search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Search
+      </button>
+    </div>
+    <div class="hero-pills" aria-label="Quick category links">
+      <a href="browse.html?cat=Property" class="hero-pill">Property</a>
+      <a href="browse.html?cat=Vehicles" class="hero-pill">Vehicles</a>
+      <a href="browse.html?cat=Rooms" class="hero-pill">Rooms</a>
+      <a href="jobs.html" class="hero-pill">Jobs</a>
+      <a href="browse.html?cat=Electronics" class="hero-pill">Electronics</a>
+    </div>
+    <div class="hero-ctas">
+      <a href="post-ad.html" class="btn btn-accent btn-lg">Post Free Ad</a>
+      <a href="browse.html" class="btn btn-outline-white btn-lg">Browse All Listings</a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar" role="region" aria-label="Platform statistics">
+  <div class="stats-inner">
+    <div class="stat-blk">
+      <div class="stat-num" id="stat1" data-target="50000">0</div>
+      <div class="stat-lbl">Listings Across Zimbabwe</div>
+    </div>
+    <div class="stat-blk">
+      <div class="stat-num" id="stat2" data-target="25">0</div>
+      <div class="stat-lbl">Cities Covered</div>
+    </div>
+    <div class="stat-blk">
+      <div class="stat-num" id="stat3" data-target="12">0</div>
+      <div class="stat-lbl">Categories</div>
+    </div>
+    <div class="stat-blk">
+      <div class="stat-num">100%</div>
+      <div class="stat-lbl">Free to Post</div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- CATEGORIES -->
+<section class="section reveal" aria-labelledby="cats-title">
+  <div class="container">
+    <div class="sec-eyebrow">Explore</div>
+    <h2 class="sec-title" id="cats-title">Browse Categories</h2>
+    <div class="sec-bar"></div>
+    <p class="sec-sub">Find exactly what you are looking for across 12 categories</p>
+    <div class="cat-grid" id="catGrid"></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div class="hiw-bg">
+<section class="section reveal" aria-labelledby="hiw-title">
+  <div class="container">
+    <div class="sec-eyebrow">Simple Process</div>
+    <h2 class="sec-title" id="hiw-title">How It Works</h2>
+    <div class="sec-bar"></div>
+    <p class="sec-sub">Start buying or selling in three simple steps</p>
+    <div class="hiw-grid">
+      <div class="hiw-card">
+        <div class="hiw-step">01</div>
+        <div class="hiw-icon-wrap">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <h3>Create Your Free Ad</h3>
+        <p>Sign up, choose your category and fill in the details. Your listing goes live in minutes.</p>
+      </div>
+      <div class="hiw-card">
+        <div class="hiw-step">02</div>
+        <div class="hiw-icon-wrap">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>Connect with Buyers</h3>
+        <p>Receive direct messages from interested buyers across Zimbabwe. No middleman needed.</p>
+      </div>
+      <div class="hiw-card">
+        <div class="hiw-step">03</div>
+        <div class="hiw-icon-wrap">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>Close the Deal</h3>
+        <p>Meet the buyer, agree on a price and complete your transaction safely.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- APP IN ACTION -->
+<div class="app-action-bg">
+<section class="section reveal" aria-labelledby="app-action-title">
+  <div class="container">
+    <div class="sec-eyebrow">Real Screenshots</div>
+    <h2 class="sec-title" id="app-action-title">See PaMarket in Action</h2>
+    <div class="sec-bar"></div>
+    <p class="sec-sub">A fast, clean marketplace built for Zimbabwe</p>
+    <div class="phones-row" aria-label="App screenshots">
+
+      <div class="phone-frame-wrap">
+        <div class="phone-frame">
+          <img src="https://i.postimg.cc/kGjXRh0W/IMG-2986.png" alt="PaMarket home screen" loading="lazy" style="width:100%;display:block">
+        </div>
+        <div class="phone-caption">Home Screen</div>
+        <div class="phone-caption-sub">Browse all 12 categories</div>
+      </div>
+
+      <div class="phone-frame-wrap">
+        <div class="phone-frame" style="transform:translateY(-20px)">
+          <img src="https://i.postimg.cc/2yH8LXsx/IMG-2987.png" alt="PaMarket hire talent screen" loading="lazy" style="width:100%;display:block">
+        </div>
+        <div class="phone-caption">Hire Talent</div>
+        <div class="phone-caption-sub">Find candidates across Zimbabwe</div>
+      </div>
+
+      <div class="phone-frame-wrap">
+        <div class="phone-frame">
+          <img src="https://i.postimg.cc/zvdXHPs7/IMG-2988.png" alt="PaMarket account menu" loading="lazy" style="width:100%;display:block">
+        </div>
+        <div class="phone-caption">Your Account</div>
+        <div class="phone-caption-sub">Manage listings and profile</div>
+      </div>
+
+      <div class="phone-frame-wrap">
+        <div class="phone-frame" style="transform:translateY(-20px)">
+          <img src="https://i.postimg.cc/3NLJ0bsB/IMG-2989.png" alt="PaMarket post ad screen" loading="lazy" style="width:100%;display:block">
+        </div>
+        <div class="phone-caption">Post a Free Ad</div>
+        <div class="phone-caption-sub">Live in minutes, no fees</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- WHY PAMARKET -->
+<section class="section reveal" aria-labelledby="why-title">
+  <div class="container">
+    <div class="sec-eyebrow">Why Us</div>
+    <h2 class="sec-title" id="why-title">Why Choose PaMarket</h2>
+    <div class="sec-bar"></div>
+    <p class="sec-sub">Everything you need to buy and sell with confidence, at no cost</p>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3>Always Free</h3>
+        <p>Post as many ads as you want at zero cost. No listing fees, no commissions.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
+        <h3>Instant Reach</h3>
+        <p>Your ad reaches thousands of active buyers across Zimbabwe the moment it goes live.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>Safe and Secure</h3>
+        <p>Verified profiles, built-in messaging and moderation to protect every transaction.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>
+        </div>
+        <h3>Built for Zimbabwe</h3>
+        <p>Designed for Zimbabwe's mobile users. Works fast on any connection, in any city.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHARE YOUR EXPERIENCE -->
+<div class="share-bg">
+<section class="section reveal" aria-labelledby="share-title">
+  <div class="container">
+    <div class="sec-eyebrow">Community</div>
+    <h2 class="sec-title" id="share-title">What Do You Think?</h2>
+    <div class="sec-bar"></div>
+    <p class="sec-sub">Have you used PaMarket? We would love to hear from you.</p>
+    <div class="share-card">
+      <div class="share-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <h3>Your Experience Matters</h3>
+      <p>Share your story and help others discover PaMarket. Every voice helps build a better marketplace for Zimbabwe.</p>
+      <a href="contact.html" class="btn btn-accent btn-lg">Share Your Experience</a>
+      <p class="share-note">Be among the first voices of our growing community.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- SAFETY STRIP -->
+<div class="safety-strip reveal" role="region" aria-label="Trust and safety features">
+  <div class="container">
+    <div class="safety-inner">
+      <div class="safety-item">
+        <div class="safety-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 11l1.5 1.5L21 9"/></svg>
+        </div>
+        <div>
+          <div class="safety-label">Verified Sellers</div>
+          <div class="safety-sub">Identity-checked profiles</div>
+        </div>
+      </div>
+      <div class="safety-divider"></div>
+      <div class="safety-item">
+        <div class="safety-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div>
+          <div class="safety-label">Secure Messaging</div>
+          <div class="safety-sub">Chat privately and safely</div>
+        </div>
+      </div>
+      <div class="safety-divider"></div>
+      <div class="safety-item">
+        <div class="safety-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <div class="safety-label">24/7 Moderation</div>
+          <div class="safety-sub">Listings reviewed around the clock</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- FOOTER -->
+<footer role="contentinfo">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="footer-logo">Pa<span>Market</span></a>
+        <p>Zimbabwe's free classified marketplace. Buy, sell and hire across the country.</p>
+        <div class="social-links" aria-label="Social media links">
+          <!-- Facebook -->
+          <a href="#" class="social-link" aria-label="Facebook">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047v-2.66c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.874v2.277h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+          </a>
+          <!-- Instagram -->
+          <a href="#" class="social-link" aria-label="Instagram">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+          </a>
+          <!-- X / Twitter -->
+          <a href="#" class="social-link" aria-label="X (Twitter)">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <!-- WhatsApp -->
+          <a href="https://wa.me/971589772645" class="social-link" aria-label="WhatsApp">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+          </a>
+          <!-- TikTok -->
+          <a href="#" class="social-link" aria-label="TikTok">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Marketplace</h4>
+        <a href="browse.html">Browse All Listings</a>
+        <a href="browse.html?cat=Property">Property</a>
+        <a href="browse.html?cat=Vehicles">Vehicles</a>
+        <a href="browse.html?cat=Electronics">Electronics</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="services.html">Services</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="about.html">About PaMarket</a>
+        <a href="advertise.html">Advertise With Us</a>
+        <a href="post-ad.html">Post Free Ad</a>
+        <a href="help.html">Help Center</a>
+        <a href="contact.html">Contact Us</a>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 PaMarket. Made in Zimbabwe &#127469;&#127484;. All rights reserved.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- WHATSAPP FLOAT -->
+<div class="wa-float" role="complementary" aria-label="WhatsApp contact">
+  <div class="wa-tooltip">Chat with us on WhatsApp</div>
+  <a href="https://wa.me/971589772645" class="wa-btn" aria-label="Chat on WhatsApp" target="_blank" rel="noopener noreferrer">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+  </a>
+</div>
+
+<!-- AUTH MODAL -->
+<div id="authModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-box">
+    <button class="modal-close" onclick="hideModal()" aria-label="Close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+    <h2 id="modal-title" style="font-size:22px;font-weight:800">Welcome to PaMarket</h2>
+    <p style="color:var(--sub);font-size:14px;margin-top:6px">Sign in or create your free account</p>
+    <div class="modal-tabs">
+      <div class="modal-tab active" onclick="switchTab('login',this)">Sign In</div>
+      <div class="modal-tab" onclick="switchTab('register',this)">Register</div>
+    </div>
+    <div id="loginForm">
+      <div class="form-group"><label class="form-label">Email Address</label><input type="email" class="form-input" placeholder="your@email.com"></div>
+      <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" placeholder="Your password"></div>
+      <button class="btn btn-primary" style="width:100%;padding:14px" onclick="showToast('Sign in coming soon!','success')">Sign In</button>
+    </div>
+    <div id="registerForm" class="hidden">
+      <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" placeholder="Your full name"></div>
+      <div class="form-group"><label class="form-label">Email Address</label><input type="email" class="form-input" placeholder="your@email.com"></div>
+      <div class="form-group"><label class="form-label">Phone Number</label><input type="tel" class="form-input" placeholder="+263 7XX XXX XXX"></div>
+      <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" placeholder="Create a password"></div>
+      <button class="btn btn-accent" style="width:100%;padding:14px" onclick="showToast('Registration coming soon!','success')">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" role="status" aria-live="polite"></div>
+
+<script>
+const SB_URL='https://gxgytumhknmnwspxjzxw.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
+
+const CATS = [
+  {name:'Property',    bg:'#EEF9FF', color:'#0ea5e9', icon:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},
+  {name:'Vehicles',    bg:'#FFF7ED', color:'#f97316', icon:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17H5v-5l2-6h10l2 6v5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>'},
+  {name:'Rooms',       bg:'#F0FDF4', color:'#22c55e', icon:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>'},
+  {name:'Electronics', bg:'#F5F3FF', color:'#8b5cf6', icon:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>'},
+  {name:'Jobs',        bg:'#FFFBEB', color:'#f59e0b', icon:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>'},
+  {name:'Furniture',   bg:'#FFF1F2', color:'#f43f5e', icon:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="8" rx="2"/><rect x="5" y="7" width="3" height="3" rx="1"/><rect x="16" y="7" width="3" height="3" rx="1"/><path d="M5 18v2"/><path d="M19 18v2"/></svg>'},
+  {name:'Fashion',     bg:'#FDF4FF', color:'#a855f7', icon:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>'},
+  {name:'Services',    bg:'#ECFDF5', color:'#10b981', icon:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'},
+  {name:'Agriculture', bg:'#F7FEE7', color:'#65a30d', icon:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>'},
+  {name:'Pets',        bg:'#FFF7ED', color:'#fb923c', icon:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14" r="5"/><circle cx="7" cy="7" r="2"/><circle cx="17" cy="7" r="2"/><circle cx="4" cy="13" r="2"/><circle cx="20" cy="13" r="2"/></svg>'},
+  {name:'Baby &amp; Kids', bg:'#FFF0F6', color:'#ec4899', icon:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h.01M15 12h.01M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M17.8 11.8a7 7 0 0 0-11.6 0"/><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/></svg>'},
+  {name:'Other',       bg:'#F8FAFC', color:'#64748b', icon:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>'},
+];
+
+function renderCats(liveCounts){
+  const g=document.getElementById('catGrid');
+  if(!g)return;
+  g.innerHTML=CATS.map(c=>{
+    const rawName=c.name.replace('&amp;','&');
+    const href=rawName==='Jobs'?'jobs.html':rawName==='Services'?'services.html':'browse.html?cat='+encodeURIComponent(rawName);
+    return `<a class="cat-card" href="${href}" aria-label="${c.name}">
+      <div class="cat-icon" style="background:${c.bg};color:${c.color}">${c.icon}</div>
+      <div class="cat-name">${c.name}</div>
+    </a>`;
+  }).join('');
+}
+renderCats(null);
+
+// Counter animation
+function animateStat(el,target,suffix=''){
+  const duration=1800;const start=performance.now();
+  function step(now){
+    const p=Math.min((now-start)/duration,1);
+    const ease=1-Math.pow(1-p,3);
+    const val=Math.floor(ease*target);
+    el.textContent=val.toLocaleString()+(p>=1?suffix:'');
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+const statsObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const el=e.target;
+      const t=parseInt(el.dataset.target);
+      if(t)animateStat(el,t,'+');
+      statsObs.unobserve(el);
+    }
+  });
+},{threshold:0.5});
+document.querySelectorAll('.stat-num[data-target]').forEach(el=>statsObs.observe(el));
+
+// Scroll reveal
+const revealObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');revealObs.unobserve(e.target)}});
+},{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
+
+// Nav
+function toggleMob(){
+  const n=document.getElementById('mobNav');
+  const btn=document.querySelector('.hamburger');
+  const open=n.classList.toggle('open');
+  btn.setAttribute('aria-expanded',String(open));
+}
+document.addEventListener('click',e=>{
+  const n=document.getElementById('mobNav');
+  if(n.classList.contains('open')&&!document.getElementById('site-header').contains(e.target))n.classList.remove('open');
+});
+
+// Search
+function doHeroSearch(){
+  const q=document.getElementById('heroQ')?.value?.trim();
+  const loc=document.getElementById('heroLoc')?.value;
+  let url='browse.html?';
+  if(q)url+='q='+encodeURIComponent(q);
+  if(loc)url+=(q?'&':'')+'loc='+encodeURIComponent(loc);
+  if(url==='browse.html?')url='browse.html';
+  window.location.href=url;
+}
+
+// Modal
+function showModal(){document.getElementById('authModal').classList.remove('hidden')}
+function hideModal(){document.getElementById('authModal').classList.add('hidden')}
+document.getElementById('authModal').addEventListener('click',e=>{if(e.target===e.currentTarget)hideModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')hideModal()});
+function switchTab(tab,el){
+  document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('loginForm').classList.toggle('hidden',tab!=='login');
+  document.getElementById('registerForm').classList.toggle('hidden',tab!=='register');
+}
+
+// Live counts from Supabase
+async function loadLiveCounts(){
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/listings?select=category&status=eq.active`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+    if(!r.ok)return;
+    const data=await r.json();
+    if(!Array.isArray(data)||!data.length)return;
+    const el=document.getElementById('stat1');
+    if(el){el.dataset.target=data.length;animateStat(el,data.length,'+')}
+  }catch(e){}
+}
+loadLiveCounts();
+
+// Toast
+function showToast(msg,type=''){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className='toast'+(type?' '+type:'');
+  t.textContent=msg;
+  c.appendChild(t);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3000);
+}
+</script>
+<script src="auth.js"></script>
+</body>
+</html>
