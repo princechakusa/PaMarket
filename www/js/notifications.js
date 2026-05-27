@@ -15,10 +15,15 @@
   }
 
   // ── Push helper (called from anywhere) ────────────────────
-  H.pushNotif = function (uid_, title, body, type) {
+  H.pushNotif = function (uid_, title, body, type, imageUrl, deepLink) {
     H.state.notifs = H.state.notifs || {};
     H.state.notifs[uid_] = H.state.notifs[uid_] || [];
-    const n = { id: uid(), t: Date.now(), read: false, title, body, type: type || _inferType(title) };
+    const n = {
+      id: uid(), t: Date.now(), read: false,
+      title, body, type: type || _inferType(title),
+      imageUrl: imageUrl || null,
+      deepLink: deepLink || null
+    };
     H.state.notifs[uid_].unshift(n);
     if (H.state.notifs[uid_].length > 100) H.state.notifs[uid_].length = 100;
     saveState();
@@ -29,7 +34,8 @@
     if (c) {
       c.from('notifications').insert({
         id: n.id, user_id: uid_, title: n.title, body: n.body,
-        type: n.type, read: false, created_at: n.t
+        type: n.type, read: false, created_at: n.t,
+        meta: { deepLink: deepLink || null, imageUrl: imageUrl || null }
       }).then(r => { if (r && r.error) console.warn('notif insert failed:', r.error.message); });
     }
   };
@@ -87,7 +93,13 @@
         if (existing) {
           if (r.read && !existing.read) existing.read = true;
         } else if (!localIds.has(r.id)) {
-          local.unshift({ id: r.id, t, read: !!r.read, title: r.title || '', body: r.body || '', type: r.type || _inferType(r.title) });
+          local.unshift({
+            id: r.id, t, read: !!r.read,
+            title: r.title || '', body: r.body || '',
+            type: r.type || _inferType(r.title),
+            imageUrl: (r.meta && r.meta.imageUrl) || r.image_url || null,
+            deepLink: (r.meta && r.meta.deepLink) || r.deep_link || null
+          });
         }
       });
       // Remove items deleted on server (or another device)
@@ -124,7 +136,9 @@
           list.unshift({
             id: r.id, t: new Date(r.created_at).getTime(),
             read: !!r.read, title: r.title || '', body: r.body || '',
-            type: r.type || _inferType(r.title)
+            type: r.type || _inferType(r.title),
+            imageUrl: (r.meta && r.meta.imageUrl) || r.image_url || null,
+            deepLink: (r.meta && r.meta.deepLink) || r.deep_link || null
           });
           if (list.length > 100) list.length = 100;
           saveState();
@@ -275,6 +289,36 @@
     return map[type] || '#1A3A8F';
   }
 
+  // ── Notification tap navigation ───────────────────────────
+  H._notifNavigate = function (link) {
+    if (!link) return;
+    // In-app deep links: listing detail, listing=ID, etc.
+    const listingMatch = link.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (listingMatch) {
+      H.openInner('Detail', { id: listingMatch[1] });
+      return;
+    }
+    // External URL — open in system browser
+    if (link.startsWith('http')) {
+      try {
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+          window.Capacitor.Plugins.Browser.open({ url: link });
+        } else {
+          window.open(link, '_blank', 'noopener,noreferrer');
+        }
+      } catch (e) { window.open(link, '_blank', 'noopener,noreferrer'); }
+      return;
+    }
+    // In-app route string like "detail?id=xxx"
+    const routeMatch = link.match(/^(\w+)(?:\?(.*))?$/);
+    if (routeMatch) {
+      const page = routeMatch[1];
+      const params = {};
+      if (routeMatch[2]) new URLSearchParams(routeMatch[2]).forEach((v, k) => { params[k] = v; });
+      H.openInner(page, params);
+    }
+  };
+
   // ── Notifications page ────────────────────────────────────
   pages.Notifications = function () {
     const u = H.currentUser();
@@ -305,15 +349,23 @@
         ${list.length ? list.map(n => {
           const type = n.type || _inferType(n.title);
           const color = _notifColor(type);
-          return `<div onclick="H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)'"
+          const hasLink = !!(n.deepLink);
+          const tapAction = hasLink
+            ? `H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)';H._notifNavigate('${escHtml(n.deepLink||'')}');`
+            : `H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)'`;
+          return `<div onclick="${tapAction}"
               style="background:${n.read ? 'var(--card)' : 'rgba(26,58,143,.04)'};border-bottom:1px solid var(--border);padding:14px 40px 14px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;position:relative">
-            <div style="width:38px;height:38px;border-radius:50%;background:${_notifBg(type)};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${color}">
-              ${_notifIcon(type)}
-            </div>
+            ${n.imageUrl
+              ? `<img src="${escHtml(n.imageUrl)}" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
+              : `<div style="width:38px;height:38px;border-radius:50%;background:${_notifBg(type)};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${color}">${_notifIcon(type)}</div>`
+            }
             <div style="flex:1;min-width:0">
               <div style="font-size:14px;font-weight:${n.read ? '600' : '800'};color:var(--text);margin-bottom:3px;line-height:1.3">${escHtml(n.title || '')}</div>
               <div style="font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:4px">${escHtml(n.body || '')}</div>
-              <div style="font-size:11px;color:var(--sub2);font-weight:500">${timeAgo(n.t)}</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="font-size:11px;color:var(--sub2);font-weight:500">${timeAgo(n.t)}</div>
+                ${hasLink ? '<div style="font-size:11px;color:#1A3A8F;font-weight:600">Tap to open ›</div>' : ''}
+              </div>
             </div>
             ${n.read ? '' : `<span data-unread-dot style="width:9px;height:9px;border-radius:50%;background:${color};margin-top:6px;flex-shrink:0"></span>`}
             <button onclick="event.stopPropagation();H.deleteNotif('${n.id}')" aria-label="Delete notification"
