@@ -599,7 +599,7 @@ What We Offer
 
     <div class="notice-bar">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span><a href="#" onclick="return false">Sign in</a> to post faster and manage your ads from a dashboard.</span>
+      <span><a href="javascript:void(0)" onclick="paAuth.goToSignIn()">Sign in</a> to post faster and manage your ads from a dashboard.</span>
     </div>
 
     <!-- CATEGORY -->
@@ -943,7 +943,7 @@ async function submitJob(){
     cat: 'Jobs',
     city: jCity,
     desc: fullDesc,
-    price: showSal&&salMin?parseFloat(salMin):null,
+    price: showSal&&salMin!==''?parseFloat(salMin):null,
     currency: jobCurrency,
     sellerName: recruiterName,
     phone: jPhone,
@@ -1074,7 +1074,7 @@ async function submitAd(){
     cat,
     city: loc,
     desc,
-    price: price?parseFloat(price):null,
+    price: (price!==''&&price!==null&&price!==undefined)?parseFloat(price):null,
     currency: selectedCurrency,
     sellerName: name,
     phone,

@@ -36,6 +36,12 @@ function showErr(msg){
   setTimeout(()=>window.location.href='index.html',3000);
 }
 
+function safeReturnUrl(url){
+  try{const u=new URL(url,location.href);if(u.origin!==location.origin)return'index.html';}catch{}
+  if(!url||url.includes('auth.html')||url.includes('auth-callback.html'))return'index.html';
+  return url;
+}
+
 async function handleCallback(){
   // Supabase puts tokens in URL hash after OAuth redirect
   const hash=window.location.hash.substring(1);
@@ -48,10 +54,35 @@ async function handleCallback(){
   const type=params.get('type');  // 'recovery', 'signup', 'magiclink', etc.
 
   if(!accessToken){
-    // Some flows use query string with a code (PKCE)
     const qp=new URLSearchParams(location.search);
     const error=qp.get('error_description')||qp.get('error');
     if(error){showErr(error);return}
+    // PKCE flow: ?code= in query string — exchange for session
+    const code=qp.get('code');
+    if(code){
+      try{
+        document.getElementById('msg').textContent='Completing sign-in…';
+        const r=await fetch(`${SB_URL}/auth/v1/token?grant_type=pkce`,{
+          method:'POST',
+          headers:{'apikey':SB_KEY,'Content-Type':'application/json'},
+          body:JSON.stringify({auth_code:code,code_verifier:sessionStorage.getItem('pm_pkce_verifier')||''})
+        });
+        if(!r.ok)throw new Error('Code exchange failed');
+        const data=await r.json();
+        const session={
+          access_token:data.access_token,
+          refresh_token:data.refresh_token||'',
+          expires_at:Math.floor(Date.now()/1000)+(data.expires_in||3600),
+          user:data.user
+        };
+        localStorage.setItem('pm_session',JSON.stringify(session));
+        sessionStorage.removeItem('pm_pkce_verifier');
+        const returnUrl=safeReturnUrl(sessionStorage.getItem('pm_return_url')||'index.html');
+        sessionStorage.removeItem('pm_return_url');
+        window.location.href=returnUrl;
+        return;
+      }catch{showErr('Could not complete sign-in. Please try again.');return}
+    }
     showErr('No access token found. Please try signing in again.');
     return;
   }
@@ -83,8 +114,8 @@ async function handleCallback(){
     };
     localStorage.setItem('pm_session',JSON.stringify(session));
 
-    // Redirect back to where the user came from
-    const returnUrl=sessionStorage.getItem('pm_return_url')||'index.html';
+    // Redirect back to where the user came from (same-origin only)
+    const returnUrl=safeReturnUrl(sessionStorage.getItem('pm_return_url')||'index.html');
     sessionStorage.removeItem('pm_return_url');
     window.location.href=returnUrl;
   }catch(err){

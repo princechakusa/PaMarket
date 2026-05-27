@@ -336,9 +336,10 @@ function showIllustration(show){
 function getReturnUrl(){
   const q=new URLSearchParams(location.search);
   const pm=sessionStorage.getItem('pm_return_url');
-  const url=q.get('return')||pm||'index.html';
-  // Never redirect back to auth.html
-  if(url.includes('auth.html')||url.includes('auth-callback.html'))return'index.html';
+  let url=q.get('return')||pm||'index.html';
+  // Never redirect to auth pages or external origins
+  try{const u=new URL(url,location.href);if(u.origin!==location.origin)url='index.html';}catch{url='index.html'}
+  if(url.includes('auth.html')||url.includes('auth-callback.html'))url='index.html';
   return url;
 }
 
@@ -358,7 +359,7 @@ function getSession(){
     const s=localStorage.getItem('pm_session');
     if(!s)return null;
     const session=JSON.parse(s);
-    if(session.expires_at&&Date.now()/1000>session.expires_at+60){
+    if(session.expires_at&&Date.now()/1000>session.expires_at-60){
       localStorage.removeItem('pm_session');return null;
     }
     return session;
@@ -605,7 +606,7 @@ function doGoogle(){
   // Fix: build correct callback URL
   const base=location.href.replace(/auth\.html.*/,'');
   const callbackUrl=base+'auth-callback.html';
-  window.location.href=`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
+  window.location.href=`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}&flow_type=implicit`;
 }
 
 /* ---- ACTION: SIGN IN ---- */
@@ -669,11 +670,13 @@ async function doSignUp(){
       options:{data:{full_name:name}}
     });
     if(!res.ok){
-      let msg=res.data?.error_description||res.data?.msg||res.data?.error||'Sign up failed';
-      if(msg.toLowerCase().includes('already registered')||msg.toLowerCase().includes('already exists')||msg.toLowerCase().includes('unique constraint')){
-        msg='This email is already registered. <span class="auth-link" onclick="showSignIn(\'in\')">Sign in instead</span>';
+      const rawMsg=res.data?.error_description||res.data?.msg||res.data?.error||'Sign up failed';
+      if(rawMsg.toLowerCase().includes('already registered')||rawMsg.toLowerCase().includes('already exists')||rawMsg.toLowerCase().includes('unique constraint')){
+        // Safe controlled HTML — not from server
+        document.getElementById('signUpError').innerHTML=`<div class="auth-error">This email is already registered. <span class="auth-link" onclick="showSignIn('in')">Sign in instead</span></div>`;
+      }else{
+        showError('signUpError',rawMsg);  // esc() applied inside showError
       }
-      document.getElementById('signUpError').innerHTML=`<div class="auth-error">${msg}</div>`;
       btn.innerHTML='Create Account';
       setBusy(false);return;
     }
@@ -712,9 +715,16 @@ async function doVerifyOtp(){
       btn.innerHTML='Verify and Continue';
       setBusy(false);return;
     }
-    if(res.data?.access_token){saveSession(res.data)}
-    toast('Email verified! Welcome to PaMarket','success');
-    showSuccess('','signup');
+    const sessionData=res.data?.session||res.data;
+    if(sessionData?.access_token){
+      saveSession(sessionData);
+      toast('Email verified! Welcome to PaMarket','success');
+      showSuccess('','signup');
+    }else{
+      showError('otpError','Verification failed. Please try again or resend the code.');
+      btn.innerHTML='Verify and Continue';
+      setBusy(false);
+    }
   }catch{
     showError('otpError','Connection error. Please try again.');
     btn.innerHTML='Verify and Continue';
@@ -748,7 +758,7 @@ async function doForgot(){
     // Use the auth-callback page as the redirect for password reset
     const base=location.href.replace(/auth\.html.*/,'');
     const redirectTo=base+'auth-callback.html?type=recovery';
-    const res=await sbPost('/auth/v1/recover',{email,options:{redirectTo}});
+    const res=await sbPost('/auth/v1/recover',{email,redirect_to:redirectTo});
     // Supabase always returns 200 for security (even if email not found)
     showResetSent(email);
   }catch{

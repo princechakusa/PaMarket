@@ -23,7 +23,7 @@ const paAuth={
       if(s){
         this.session=JSON.parse(s);
         // Discard if expired
-        if(this.session.expires_at && Date.now()/1000 > this.session.expires_at+60){
+        if(this.session.expires_at && Date.now()/1000 > this.session.expires_at-60){
           this.session=null;
           localStorage.removeItem('pm_session');
         }
@@ -40,7 +40,7 @@ const paAuth={
 
   signInWithGoogle(){
     sessionStorage.setItem('pm_return_url',location.href);
-    window.location.href=`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(getCallbackUrl())}`;
+    window.location.href=`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(getCallbackUrl())}&flow_type=implicit`;
   },
 
   goToSignIn(){
