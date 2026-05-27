@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signing in... — PaMarket</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F5F7FA}
+.box{text-align:center;padding:48px 32px;background:#fff;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,.08);max-width:360px;width:100%;margin:16px}
+.logo{font-size:28px;font-weight:900;color:#1A3A8F;margin-bottom:24px;letter-spacing:-.5px}
+.logo span{color:#F5A623}
+.spinner{width:44px;height:44px;border:3px solid #E4E8F0;border-top-color:#1A3A8F;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.msg{color:#667085;font-size:15px;line-height:1.5}
+.error{color:#ef4444;font-size:14px;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">Pa<span>Market</span></div>
+  <div class="spinner" id="spinner"></div>
+  <p class="msg" id="msg">Signing you in...</p>
+  <p class="error hidden" id="errMsg"></p>
+</div>
+<script>
+const SB_URL='https://gxgytumhknmnwspxjzxw.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
+
+function showErr(msg){
+  document.getElementById('spinner').style.display='none';
+  document.getElementById('msg').textContent='Sign-in failed.';
+  const e=document.getElementById('errMsg');
+  e.textContent=msg;
+  e.classList.remove('hidden');
+  setTimeout(()=>window.location.href='index.html',3000);
+}
+
+async function handleCallback(){
+  // Supabase puts tokens in URL hash after OAuth redirect
+  const hash=window.location.hash.substring(1);
+  const params=new URLSearchParams(hash);
+
+  const accessToken=params.get('access_token');
+  const refreshToken=params.get('refresh_token');
+  const expiresIn=parseInt(params.get('expires_in')||'3600',10);
+  const tokenType=params.get('token_type')||'bearer';
+  const type=params.get('type');  // 'recovery', 'signup', 'magiclink', etc.
+
+  if(!accessToken){
+    // Some flows use query string with a code (PKCE)
+    const qp=new URLSearchParams(location.search);
+    const error=qp.get('error_description')||qp.get('error');
+    if(error){showErr(error);return}
+    showErr('No access token found. Please try signing in again.');
+    return;
+  }
+
+  try{
+    // Fetch user profile from Supabase
+    const r=await fetch(`${SB_URL}/auth/v1/user`,{
+      headers:{
+        'apikey':SB_KEY,
+        'Authorization':tokenType+' '+accessToken
+      }
+    });
+    if(!r.ok) throw new Error('Could not fetch user profile');
+    const user=await r.json();
+
+    const session={
+      access_token:accessToken,
+      refresh_token:refreshToken||'',
+      expires_at:Math.floor(Date.now()/1000)+expiresIn,
+      user:user
+    };
+    localStorage.setItem('pm_session',JSON.stringify(session));
+
+    // Redirect back to where the user came from
+    const returnUrl=sessionStorage.getItem('pm_return_url')||'index.html';
+    sessionStorage.removeItem('pm_return_url');
+    window.location.href=returnUrl;
+  }catch(err){
+    showErr('Error completing sign-in. Please try again.');
+  }
+}
+
+handleCallback();
+</script>
+</body>
+</html>
