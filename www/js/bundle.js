@@ -1,4 +1,4 @@
-/* Hostly bundle — built 2026-05-27T17:57:13Z */
+/* Hostly bundle — built 2026-05-27T18:22:38Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -641,9 +641,9 @@ window.H = {
     // Stop the native browser PTR from firing inside the WebView
     el.style.overscrollBehaviorY = 'contain';
 
-    const THRESHOLD = 75;   // raw finger distance (px) that triggers a refresh
-    const MAX_VIS   = 90;   // maximum visual content travel (px)
-    const IND_SIZE  = 44;   // spinner circle diameter (px)
+    const THRESHOLD = 80;   // raw finger travel (px) that fires a refresh
+    const MAX_VIS   = 110;  // max content travel — generous, like the browser
+    const IND_SIZE  = 48;   // spinner disc diameter (px)
 
     // ── Clean up any old indicator from a previous init ────────────
     document.getElementById('ptr-ind')?.remove();
@@ -666,20 +666,17 @@ window.H = {
     const styleEl = document.createElement('style');
     styleEl.id = 'ptr-css';
     styleEl.textContent =
-      '#ptr-ring{width:26px;height:26px;border-radius:50%;' +
-        'border:3px solid rgba(26,58,143,.22);border-top-color:#1A3A8F;}' +
-      '@keyframes ptr-spin{to{transform:rotate(360deg)}}' +
-      '#ptr-ring.ptr-spin{animation:ptr-spin .65s linear infinite;}';
+      '#ptr-ring{width:30px;height:30px;border-radius:50%;' +
+        'border:3.5px solid rgba(26,58,143,.2);border-top-color:#1A3A8F;' +
+        'animation:ptr-spin .65s linear infinite;}' +
+      '@keyframes ptr-spin{to{transform:rotate(360deg)}}';
     document.head.appendChild(styleEl);
 
-    const ring = document.getElementById('ptr-ring');
 
-    // ── Damping ────────────────────────────────────────────────────
-    // Near 1:1 with finger for first 60 px (feels physical like the browser),
-    // then heavy rubber-band to cap at MAX_VIS.
+    // ── Damping: near 1:1 for first 80 px (feels like the browser) ──
     function damp(dist) {
-      if (dist <= 60) return dist * 0.85;
-      return 51 + (dist - 60) * 0.18;
+      if (dist <= 80) return dist * 0.9;        // 90% — almost 1:1
+      return 72 + (dist - 80) * 0.28;           // soft cap toward MAX_VIS
     }
 
     // ── Content movement ───────────────────────────────────────────
@@ -709,7 +706,7 @@ window.H = {
       var y = (visual / 2) - (IND_SIZE / 2);
       ind.style.transition = 'none';
       ind.style.transform  = 'translateX(-50%) translateY(' + y + 'px)';
-      ind.style.opacity    = Math.min(Math.max((visual - 16) / 28, 0), 1).toFixed(2);
+      ind.style.opacity    = Math.min(Math.max((visual - 20) / 24, 0), 1).toFixed(2);
     }
 
     // During refresh the content snaps back so the gap closes.
@@ -719,14 +716,12 @@ window.H = {
       ind.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1),opacity .2s';
       ind.style.transform  = 'translateX(-50%) translateY(6px)'; // hovers just inside content top
       ind.style.opacity    = '1';
-      if (ring) ring.classList.add('ptr-spin');
     }
 
     function hideIndicator() {
       ind.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1),opacity .25s';
       ind.style.transform  = 'translateX(-50%) translateY(-' + IND_SIZE + 'px)';
       ind.style.opacity    = '0';
-      if (ring) ring.classList.remove('ptr-spin');
     }
 
     // ── Refresh ────────────────────────────────────────────────────
