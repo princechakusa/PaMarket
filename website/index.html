@@ -152,58 +152,14 @@ button{cursor:pointer;font-family:var(--f);border:none;background:none}
 .app-action-bg{background:#E8EDF5}
 .phones-row{display:flex;gap:32px;justify-content:center;align-items:flex-end;flex-wrap:wrap}
 .phone-frame-wrap{display:flex;flex-direction:column;align-items:center;gap:20px}
-.phone-frame{width:200px;border-radius:32px;border:8px solid #1a1a2e;overflow:hidden;box-shadow:0 24px 48px rgba(0,0,0,.25),0 0 0 1px rgba(255,255,255,.06);background:#fff;position:relative;flex-shrink:0}
-.phone-notch{height:20px;background:#1a1a2e;display:flex;align-items:center;justify-content:center}
-.phone-notch-bar{width:56px;height:5px;background:rgba(255,255,255,.3);border-radius:3px}
+.phone-frame{width:200px;border-radius:32px;border:8px solid #1a1a2e;overflow:hidden;box-shadow:0 24px 48px rgba(0,0,0,.25),0 0 0 1px rgba(255,255,255,.06);background:#1a1a2e;position:relative;flex-shrink:0}
 .phone-caption{font-size:14px;font-weight:700;color:var(--text);text-align:center}
 .phone-caption-sub{font-size:12px;color:var(--sub);text-align:center;margin-top:2px}
-/* Mock screen styles */
-.mock-screen{background:#f5f7fa;width:100%;font-family:-apple-system,sans-serif}
-.mock-header{background:#1A3A8F;padding:10px 10px 8px;display:flex;align-items:center;justify-content:space-between}
-.mock-logo{font-size:13px;font-weight:900;color:#fff;letter-spacing:-.3px}.mock-logo span{color:#F5A623}
-.mock-search-bar{background:rgba(255,255,255,.15);border-radius:20px;height:22px;margin:6px 10px 8px;display:flex;align-items:center;padding:0 8px;gap:4px}
-.mock-search-bar svg{opacity:.6;flex-shrink:0}
-.mock-search-text{font-size:8px;color:rgba(255,255,255,.7)}
-.mock-section-title{font-size:9px;font-weight:800;color:#1a1a2e;padding:8px 10px 4px;display:flex;justify-content:space-between;align-items:center}
-.mock-section-title span{font-size:8px;color:#1A3A8F;font-weight:600}
-.mock-cats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:0 8px 6px}
-.mock-cat{background:#fff;border-radius:8px;padding:6px 2px;text-align:center;border:1px solid #e4e8f0}
-.mock-cat-icon{font-size:12px;line-height:1.4}
-.mock-cat-label{font-size:6px;color:#1a1a2e;font-weight:600;margin-top:2px;line-height:1.2}
-.mock-banner{background:#1A3A8F;margin:4px 8px;border-radius:8px;padding:8px;display:flex;justify-content:space-between;align-items:center}
-.mock-banner-text{font-size:8px;color:#fff;font-weight:700;line-height:1.4}
-.mock-banner-num{font-size:18px;font-weight:900;color:#F5A623;line-height:1}
-.mock-banner-sub{font-size:6px;color:rgba(255,255,255,.7)}
-.mock-post-btn{background:#F5A623;margin:6px 8px;border-radius:8px;padding:7px;text-align:center;font-size:9px;font-weight:800;color:#fff}
-/* Post Ad mock */
-.mock-post-header{background:#1A3A8F;padding:10px;color:#fff}
-.mock-post-title{font-size:12px;font-weight:900}
-.mock-post-sub{font-size:7px;opacity:.75;margin-top:2px}
-.mock-progress{height:3px;background:rgba(255,255,255,.2);margin:6px 10px 0;border-radius:2px;overflow:hidden}
-.mock-progress-fill{height:100%;width:25%;background:#F5A623;border-radius:2px}
-.mock-label{font-size:7px;font-weight:700;color:#667085;padding:6px 10px 2px;text-transform:uppercase;letter-spacing:.4px}
-.mock-cats-sm{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:0 8px 4px}
-.mock-cat-sm{background:#fff;border-radius:6px;padding:5px 2px;text-align:center;border:1px solid #e4e8f0}
-.mock-cat-sm-icon{font-size:10px}
-.mock-cat-sm-label{font-size:5.5px;color:#1a1a2e;font-weight:600;margin-top:1px}
-.mock-input{background:#fff;border:1px solid #e4e8f0;border-radius:6px;margin:2px 8px;padding:6px 8px;font-size:7px;color:#cbd5e1}
-.mock-textarea{height:32px;background:#fff;border:1px solid #e4e8f0;border-radius:6px;margin:2px 8px;padding:5px 8px;font-size:7px;color:#cbd5e1}
-/* Account mock */
-.mock-menu-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#fff;border-bottom:1px solid #f1f5f9}
-.mock-menu-left{display:flex;align-items:center;gap:6px}
-.mock-menu-icon{width:20px;height:20px;background:#EEF2FF;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0}
-.mock-menu-label{font-size:8px;font-weight:600;color:#1a1a2e}
-.mock-menu-chevron{font-size:8px;color:#cbd5e1}
-.mock-signout{margin:8px;background:#fff0f0;border:1px solid #fecaca;border-radius:6px;padding:7px;text-align:center;font-size:8px;font-weight:700;color:#ef4444}
-.mock-footer-text{text-align:center;padding:4px 0 6px;font-size:6px;color:#94a3b8}
-@media(max-width:768px){
-  .phones-row{gap:20px}
-  .phone-frame{width:160px;border-radius:24px;border-width:6px}
-}
-@media(max-width:480px){
-  .phones-row{overflow-x:auto;flex-wrap:nowrap;justify-content:flex-start;padding:0 0 16px;-webkit-overflow-scrolling:touch;gap:16px;scrollbar-width:none}
+@media(max-width:900px){.phones-row{gap:16px}.phone-frame{width:155px;border-radius:26px;border-width:6px}}
+@media(max-width:600px){
+  .phones-row{overflow-x:auto;flex-wrap:nowrap;justify-content:flex-start;padding:8px 0 20px;-webkit-overflow-scrolling:touch;gap:14px;scrollbar-width:none}
   .phones-row::-webkit-scrollbar{display:none}
-  .phone-frame{width:140px;flex-shrink:0}
+  .phone-frame{width:140px;border-radius:22px;border-width:5px;flex-shrink:0}
 }
 
 /* WHY PAMARKET */
@@ -450,95 +406,39 @@ footer{background:var(--dark);color:rgba(255,255,255,.75);padding:56px 0 0}
     <div class="sec-bar"></div>
     <p class="sec-sub">A fast, clean marketplace built for Zimbabwe</p>
     <div class="phones-row" aria-label="App screenshots">
-      <!-- Phone 1: Home/Browse -->
+
       <div class="phone-frame-wrap">
-        <div class="phone-frame" aria-hidden="true">
-          <div class="phone-notch"><div class="phone-notch-bar"></div></div>
-          <div class="mock-screen">
-            <div class="mock-header">
-              <div class="mock-logo">Pa<span>Market</span></div>
-            </div>
-            <div class="mock-search-bar">
-              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <div class="mock-search-text">Search cars, houses, jobs...</div>
-            </div>
-            <div class="mock-section-title">Browse Categories <span>See all</span></div>
-            <div class="mock-cats">
-              <div class="mock-cat"><div class="mock-cat-icon">🏠</div><div class="mock-cat-label">Property</div></div>
-              <div class="mock-cat"><div class="mock-cat-icon">🚗</div><div class="mock-cat-label">Vehicles</div></div>
-              <div class="mock-cat"><div class="mock-cat-icon">🛏</div><div class="mock-cat-label">Rooms</div></div>
-              <div class="mock-cat"><div class="mock-cat-icon">💻</div><div class="mock-cat-label">Electronics</div></div>
-              <div class="mock-cat"><div class="mock-cat-icon">💼</div><div class="mock-cat-label">Jobs</div></div>
-              <div class="mock-cat"><div class="mock-cat-icon">🛋</div><div class="mock-cat-label">Furniture</div></div>
-              <div class="mock-cat"><div class="mock-cat-icon">👗</div><div class="mock-cat-label">Fashion</div></div>
-              <div class="mock-cat"><div class="mock-cat-icon">⚙️</div><div class="mock-cat-label">Services</div></div>
-              <div class="mock-cat"><div class="mock-cat-icon">🌱</div><div class="mock-cat-label">Agriculture</div></div>
-              <div class="mock-cat"><div class="mock-cat-icon">🐾</div><div class="mock-cat-label">Pets</div></div>
-              <div class="mock-cat"><div class="mock-cat-icon">👶</div><div class="mock-cat-label">Baby&Kids</div></div>
-              <div class="mock-cat"><div class="mock-cat-icon">⋯</div><div class="mock-cat-label">Other</div></div>
-            </div>
-            <div class="mock-banner">
-              <div><div class="mock-banner-text">Zimbabwe's Free<br>Marketplace</div><div class="mock-banner-sub">Buy. Sell. Hire.</div></div>
-            </div>
-            <div class="mock-post-btn">+ Post a Free Ad</div>
-          </div>
+        <div class="phone-frame">
+          <img src="https://i.postimg.cc/kGjXRh0W/IMG-2986.png" alt="PaMarket home screen" loading="lazy" style="width:100%;display:block">
         </div>
-        <div class="phone-caption">Browse Categories</div>
-        <div class="phone-caption-sub">Find anything across 12 categories</div>
+        <div class="phone-caption">Home Screen</div>
+        <div class="phone-caption-sub">Browse all 12 categories</div>
       </div>
 
-      <!-- Phone 2: Post Ad -->
       <div class="phone-frame-wrap">
-        <div class="phone-frame" style="transform:translateY(-16px)" aria-hidden="true">
-          <div class="phone-notch"><div class="phone-notch-bar"></div></div>
-          <div class="mock-screen">
-            <div class="mock-post-header">
-              <div class="mock-post-title">Post a Free Ad</div>
-              <div class="mock-post-sub">Reach buyers across Zimbabwe in minutes</div>
-              <div class="mock-progress"><div class="mock-progress-fill"></div></div>
-            </div>
-            <div class="mock-label">Category</div>
-            <div class="mock-cats-sm">
-              <div class="mock-cat-sm"><div class="mock-cat-sm-icon">🏠</div><div class="mock-cat-sm-label">Property</div></div>
-              <div class="mock-cat-sm"><div class="mock-cat-sm-icon">🚗</div><div class="mock-cat-sm-label">Vehicles</div></div>
-              <div class="mock-cat-sm"><div class="mock-cat-sm-icon">🛏</div><div class="mock-cat-sm-label">Rooms</div></div>
-              <div class="mock-cat-sm"><div class="mock-cat-sm-icon">💻</div><div class="mock-cat-sm-label">Electronics</div></div>
-              <div class="mock-cat-sm"><div class="mock-cat-sm-icon">💼</div><div class="mock-cat-sm-label">Jobs</div></div>
-              <div class="mock-cat-sm"><div class="mock-cat-sm-icon">🛋</div><div class="mock-cat-sm-label">Furniture</div></div>
-              <div class="mock-cat-sm"><div class="mock-cat-sm-icon">👗</div><div class="mock-cat-sm-label">Fashion</div></div>
-              <div class="mock-cat-sm"><div class="mock-cat-sm-icon">⚙️</div><div class="mock-cat-sm-label">Services</div></div>
-              <div class="mock-cat-sm"><div class="mock-cat-sm-icon">🌱</div><div class="mock-cat-sm-label">Agriculture</div></div>
-            </div>
-            <div class="mock-label">Title</div>
-            <div class="mock-input">e.g. 3 Bedroom Flat in Avondale</div>
-            <div class="mock-label">Description</div>
-            <div class="mock-textarea"></div>
-          </div>
+        <div class="phone-frame" style="transform:translateY(-20px)">
+          <img src="https://i.postimg.cc/2yH8LXsx/IMG-2987.png" alt="PaMarket hire talent screen" loading="lazy" style="width:100%;display:block">
+        </div>
+        <div class="phone-caption">Hire Talent</div>
+        <div class="phone-caption-sub">Find candidates across Zimbabwe</div>
+      </div>
+
+      <div class="phone-frame-wrap">
+        <div class="phone-frame">
+          <img src="https://i.postimg.cc/zvdXHPs7/IMG-2988.png" alt="PaMarket account menu" loading="lazy" style="width:100%;display:block">
+        </div>
+        <div class="phone-caption">Your Account</div>
+        <div class="phone-caption-sub">Manage listings and profile</div>
+      </div>
+
+      <div class="phone-frame-wrap">
+        <div class="phone-frame" style="transform:translateY(-20px)">
+          <img src="https://i.postimg.cc/3NLJ0bsB/IMG-2989.png" alt="PaMarket post ad screen" loading="lazy" style="width:100%;display:block">
         </div>
         <div class="phone-caption">Post a Free Ad</div>
         <div class="phone-caption-sub">Live in minutes, no fees</div>
       </div>
 
-      <!-- Phone 3: Account -->
-      <div class="phone-frame-wrap">
-        <div class="phone-frame" aria-hidden="true">
-          <div class="phone-notch"><div class="phone-notch-bar"></div></div>
-          <div class="mock-screen">
-            <div class="mock-menu-item"><div class="mock-menu-left"><div class="mock-menu-icon">📋</div><div class="mock-menu-label">My Listings</div></div><div class="mock-menu-chevron">›</div></div>
-            <div class="mock-menu-item"><div class="mock-menu-left"><div class="mock-menu-icon">❤️</div><div class="mock-menu-label">Saved &amp; Favorites</div></div><div class="mock-menu-chevron">›</div></div>
-            <div class="mock-menu-item"><div class="mock-menu-left"><div class="mock-menu-icon">💼</div><div class="mock-menu-label">My Job Applications</div></div><div class="mock-menu-chevron">›</div></div>
-            <div class="mock-menu-item"><div class="mock-menu-left"><div class="mock-menu-icon">📄</div><div class="mock-menu-label">My Job Profile / CV</div></div><div class="mock-menu-chevron">›</div></div>
-            <div class="mock-menu-item"><div class="mock-menu-left"><div class="mock-menu-icon">📢</div><div class="mock-menu-label">Advertisements</div></div><div class="mock-menu-chevron">›</div></div>
-            <div class="mock-menu-item"><div class="mock-menu-left"><div class="mock-menu-icon">⚙️</div><div class="mock-menu-label">Settings</div></div><div class="mock-menu-chevron">›</div></div>
-            <div class="mock-menu-item"><div class="mock-menu-left"><div class="mock-menu-icon">🔒</div><div class="mock-menu-label">Security &amp; Password</div></div><div class="mock-menu-chevron">›</div></div>
-            <div class="mock-menu-item"><div class="mock-menu-left"><div class="mock-menu-icon">❓</div><div class="mock-menu-label">Help &amp; Support</div></div><div class="mock-menu-chevron">›</div></div>
-            <div class="mock-signout">Sign Out</div>
-            <div class="mock-footer-text">© 2026 PaMarket · Made in Zimbabwe 🇿🇼</div>
-          </div>
-        </div>
-        <div class="phone-caption">Manage Your Account</div>
-        <div class="phone-caption-sub">Track your listings easily</div>
-      </div>
     </div>
   </div>
 </section>
