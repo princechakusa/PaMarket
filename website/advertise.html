@@ -165,7 +165,7 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin
       </button>
     </div>
     <div class="header-actions">
-      <a href="#" onclick="return false" class="btn btn-outline btn-sm">Sign In</a>
+      <div id="headerAuth"></div>
       <a href="post-ad.html" class="btn btn-accent btn-sm">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Post Ad
@@ -182,7 +182,7 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin
     <a href="services.html">Services</a>
     <a href="advertise.html">Advertise</a>
     <div class="mobile-nav-actions">
-      <a href="#" onclick="return false" class="btn btn-outline">Sign In</a>
+      <div id="mobileNavAuth"></div>
       <a href="post-ad.html" class="btn btn-accent">Post Ad</a>
     </div>
   </div>
@@ -400,5 +400,6 @@ function toggleMobileNav(){document.getElementById('mobileNav').classList.toggle
 document.addEventListener('click',function(e){const nav=document.getElementById('mobileNav');const hdr=document.getElementById('site-header');if(!nav.classList.contains('hidden')&&!hdr.contains(e.target))nav.classList.add('hidden')})
 function showToast(msg,type=''){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className='toast '+(type||'');t.textContent=msg;c.appendChild(t);requestAnimationFrame(()=>{requestAnimationFrame(()=>{t.classList.add('show')})});setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3000)}
 </script>
+<script src="auth.js"></script>
 </body>
 </html>

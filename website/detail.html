@@ -172,7 +172,7 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin
       </button>
     </div>
     <div class="header-actions">
-      <a href="#" onclick="return false" class="btn btn-outline btn-sm">Sign In</a>
+      <div id="headerAuth"></div>
       <a href="post-ad.html" class="btn btn-accent btn-sm">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Post Ad
@@ -189,7 +189,7 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin
     <a href="services.html">Services</a>
     <a href="advertise.html">Advertise</a>
     <div class="mobile-nav-actions">
-      <a href="#" onclick="return false" class="btn btn-outline">Sign In</a>
+      <div id="mobileNavAuth"></div>
       <a href="post-ad.html" class="btn btn-accent">Post Ad</a>
     </div>
   </div>
@@ -298,26 +298,31 @@ function setGalleryImg(idx,imgs){
 }
 
 function getImgs(ad){
-  let raw=ad.images||ad.image_url||ad.photo_url||ad.photos||null;
+  let raw=ad.photos||ad.images||ad.image_url||ad.photo_url||null;
   if(!raw)return null;
   if(typeof raw==='string'){try{raw=JSON.parse(raw)}catch{raw=[raw]}}
   if(typeof raw==='string')raw=[raw];
   if(!Array.isArray(raw))raw=[];
-  raw=raw.filter(Boolean).map(u=>u.startsWith('http')?u:`${SB_URL}/storage/v1/object/public/${u}`);
+  raw=raw.filter(u=>u&&typeof u==='string').map(u=>{
+    u=u.trim();
+    if(u.startsWith('http'))return u;
+    return`${SB_URL}/storage/v1/object/public/${u}`;
+  });
   return raw.length?raw:null;
 }
 
 function makeSimCard(ad){
   const imgs=getImgs(ad);
   const img=imgs?escHtml(imgs[0]):PLACEHOLDER;
+  const simLoc=ad.city?(ad.prov?ad.city+', '+ad.prov:ad.city):(ad.prov||'Zimbabwe');
   return `<a class="ad-card" href="detail.html?id=${ad.id}">
-    <div class="ad-img-wrap"><img src="${img}" alt="${escHtml(ad.title)}" loading="lazy" onerror="this.src='${PLACEHOLDER}'"><span class="ad-badge">${escHtml(ad.category||'')}</span></div>
+    <div class="ad-img-wrap"><img src="${img}" alt="${escHtml(ad.title)}" loading="lazy" onerror="this.src='${PLACEHOLDER}'"><span class="ad-badge">${escHtml(ad.cat||ad.category||'')}</span></div>
     <div class="ad-info">
       <div class="ad-title">${escHtml(ad.title)}</div>
       <div class="ad-price">${formatPrice(ad.price,ad.currency)}</div>
       <div class="ad-meta">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-        ${escHtml(ad.location||'Zimbabwe')}<span class="ad-meta-dot">·</span>${timeAgo(ad.created_at)}
+        ${escHtml(simLoc)}<span class="ad-meta-dot">·</span>${timeAgo(ad.createdAt||ad.created_at)}
       </div>
     </div>
   </a>`;
@@ -338,13 +343,14 @@ async function loadDetail(){
 
   listing=ad;
   document.title=`${ad.title} — PaMarket Zimbabwe`;
-  document.getElementById('bcTitle').textContent=ad.category||'Listing';
+  document.getElementById('bcTitle').textContent=ad.cat||ad.category||'Listing';
 
   const imgs=getImgs(ad)||[PLACEHOLDER];
-  const phone=escHtml(ad.phone||ad.contact_phone||'');
-  const sellerName=escHtml(ad.seller_name||ad.name||'Seller');
+  const phone=escHtml(ad.phone||ad.sellerPhone||ad.contact_phone||'');
+  const sellerName=escHtml(ad.sellerName||ad.seller_name||ad.name||'Seller');
   const sellerInit=(sellerName[0]||'S').toUpperCase();
-  const joined=ad.created_at?new Date(ad.created_at).toLocaleDateString('en-ZW',{month:'long',year:'numeric'}):'';
+  const ts=ad.createdAt||ad.created_at;
+  const joined=ts?new Date(ts).toLocaleDateString('en-ZW',{month:'long',year:'numeric'}):'';
 
   document.getElementById('detailContent').innerHTML=`
     <div class="detail-layout">
@@ -354,23 +360,23 @@ async function loadDetail(){
         ${imgs.length>1?`<div class="gallery-thumbs">${imgs.map((src,i)=>`<div class="gallery-thumb ${i===0?'active':''}" onclick="setGalleryImg(${i},imgArr)"><img src="${escHtml(src)}" alt="Image ${i+1}" onerror="this.src='${PLACEHOLDER}'"></div>`).join('')}</div>`:''}
 
         <div style="margin-top:24px">
-          <span class="detail-cat-badge">${escHtml(ad.category||'')}</span>
+          <span class="detail-cat-badge">${escHtml(ad.cat||ad.category||'')}</span>
           <h1 class="detail-title">${escHtml(ad.title)}</h1>
           <div class="detail-price">${formatPrice(ad.price,ad.currency)}</div>
           <div class="detail-meta">
             <div class="detail-meta-item">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-              ${escHtml(ad.location||'Zimbabwe')}
+              ${escHtml(ad.city?(ad.prov?ad.city+', '+ad.prov:ad.city):(ad.prov||'Zimbabwe'))}
             </div>
             <div class="detail-meta-item">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              ${timeAgo(ad.created_at)}
+              ${timeAgo(ad.createdAt||ad.created_at)}
             </div>
             ${ad.views?`<div class="detail-meta-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>${ad.views} views</div>`:''}
           </div>
 
           <div class="detail-section-title">Description</div>
-          <div class="detail-desc">${escHtml(ad.description||'No description provided.')}</div>
+          <div class="detail-desc">${escHtml(ad.desc||ad.description||'No description provided.')}</div>
           <a class="report-link" onclick="showToast('Report submitted. Our team will review it shortly.','success')">Report this listing</a>
         </div>
       </div>
@@ -439,5 +445,6 @@ async function loadDetail(){
 
 loadDetail();
 </script>
+<script src="auth.js"></script>
 </body>
 </html>

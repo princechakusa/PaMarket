@@ -185,7 +185,7 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin
       </button>
     </div>
     <div class="header-actions">
-      <a href="#" onclick="return false" class="btn btn-outline btn-sm">Sign In</a>
+      <div id="headerAuth"></div>
       <a href="post-ad.html" class="btn btn-accent btn-sm">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Post Ad
@@ -202,7 +202,7 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin
     <a href="services.html">Services</a>
     <a href="advertise.html">Advertise</a>
     <div class="mobile-nav-actions">
-      <a href="#" onclick="return false" class="btn btn-outline">Sign In</a>
+      <div id="mobileNavAuth"></div>
       <a href="post-ad.html" class="btn btn-accent">Post Ad</a>
     </div>
   </div>
@@ -377,14 +377,17 @@ function toggleMobileNav(){document.getElementById('mobileNav').classList.toggle
 document.addEventListener('click',function(e){const nav=document.getElementById('mobileNav');const hdr=document.getElementById('site-header');if(!nav.classList.contains('hidden')&&!hdr.contains(e.target))nav.classList.add('hidden')});
 
 function getImgs(ad){
-  let raw=ad.images||ad.image_url||ad.photo_url||ad.photos||null;
+  // Real field name in PaMarket DB is 'photos' (camelCase app schema)
+  let raw=ad.photos||ad.images||ad.image_url||ad.photo_url||null;
   if(!raw)return null;
-  // Parse if JSON string e.g. '["https://..."]'
   if(typeof raw==='string'){try{raw=JSON.parse(raw)}catch{raw=[raw]}}
-  // Single string url
   if(typeof raw==='string')raw=[raw];
   if(!Array.isArray(raw))raw=[];
-  raw=raw.filter(Boolean).map(u=>u.startsWith('http')?u:`${SB_URL}/storage/v1/object/public/${u}`);
+  raw=raw.filter(u=>u&&typeof u==='string').map(u=>{
+    u=u.trim();
+    if(u.startsWith('http'))return u;
+    return`${SB_URL}/storage/v1/object/public/${u}`;
+  });
   return raw.length?raw:null;
 }
 
@@ -392,9 +395,9 @@ function makeAdCard(ad){
   const imgs=getImgs(ad);
   const img=imgs?escHtml(imgs[0]):PLACEHOLDER;
   const price=formatPrice(ad.price,ad.currency);
-  const loc=escHtml(ad.location||'Zimbabwe');
-  const ago=timeAgo(ad.created_at);
-  const cat=escHtml(ad.category||'');
+  const loc=escHtml(ad.city?(ad.prov?ad.city+', '+ad.prov:ad.city):(ad.prov||'Zimbabwe'));
+  const ago=timeAgo(ad.createdAt||ad.created_at);
+  const cat=escHtml(ad.cat||ad.category||'');
   return `<a class="ad-card" href="detail.html?id=${ad.id}">
     <div class="ad-img-wrap">
       <img src="${img}" alt="${escHtml(ad.title)}" loading="lazy" onerror="this.src='${PLACEHOLDER}'">
@@ -541,15 +544,15 @@ async function loadListings(){
   updateActiveFilters();
 
   let q='select=*&status=eq.active';
-  if(filters.cat) q+='&category=eq.'+encodeURIComponent(filters.cat);
-  if(filters.loc) q+='&location=eq.'+encodeURIComponent(filters.loc);
+  if(filters.cat) q+='&cat=eq.'+encodeURIComponent(filters.cat);
+  if(filters.loc) q+='&city=eq.'+encodeURIComponent(filters.loc);
   if(filters.min) q+='&price=gte.'+filters.min;
   if(filters.max) q+='&price=lte.'+filters.max;
   if(filters.q) q+='&title=ilike.*'+encodeURIComponent(filters.q)+'*';
 
   if(filters.sort==='price_asc') q+='&order=price.asc';
   else if(filters.sort==='price_desc') q+='&order=price.desc';
-  else q+='&order=created_at.desc';
+  else q+='&order=createdAt.desc';
 
   q+='&limit=200';
   allData=await sbGet('listings',q);
@@ -577,5 +580,6 @@ loadListings();
 
 function showToast(msg,type=''){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className='toast '+(type||'');t.textContent=msg;c.appendChild(t);requestAnimationFrame(()=>{requestAnimationFrame(()=>{t.classList.add('show')})});setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3000)}
 </script>
+<script src="auth.js"></script>
 </body>
 </html>

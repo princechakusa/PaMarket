@@ -106,14 +106,14 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin
       <button onclick="doSearch()" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
     </div>
     <div class="header-actions">
-      <a href="#" onclick="return false" class="btn btn-outline btn-sm">Sign In</a>
+      <div id="headerAuth"></div>
       <a href="post-ad.html" class="btn btn-accent btn-sm">Post Ad</a>
     </div>
     <button class="hamburger" onclick="toggleMobileNav()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
   </div>
   <div id="mobileNav" class="mobile-nav hidden">
     <a href="index.html">Home</a><a href="browse.html">Browse All</a><a href="jobs.html">Jobs</a><a href="services.html">Services</a><a href="advertise.html">Advertise</a>
-    <div class="mobile-nav-actions"><a href="#" onclick="return false" class="btn btn-outline">Sign In</a><a href="post-ad.html" class="btn btn-accent">Post Ad</a></div>
+    <div class="mobile-nav-actions"><div id="mobileNavAuth"></div><a href="post-ad.html" class="btn btn-accent">Post Ad</a></div>
   </div>
 </header>
 
@@ -243,5 +243,6 @@ function doSearch(){const q=document.getElementById('headerSearchInput')?.value?
 function toggleMobileNav(){document.getElementById('mobileNav').classList.toggle('hidden')}
 document.addEventListener('click',function(e){const nav=document.getElementById('mobileNav');const hdr=document.getElementById('site-header');if(!nav.classList.contains('hidden')&&!hdr.contains(e.target))nav.classList.add('hidden')})
 </script>
+<script src="auth.js"></script>
 </body>
 </html>

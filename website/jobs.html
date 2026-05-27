@@ -248,7 +248,7 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px}
       </button>
     </div>
     <div class="header-actions">
-      <a href="#" onclick="return false" class="btn btn-outline btn-sm">Sign In</a>
+      <div id="headerAuth"></div>
       <a href="post-ad.html?cat=Jobs" class="btn btn-accent btn-sm">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Post a Job
@@ -266,7 +266,7 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px}
     <a href="about.html">About</a>
     <a href="advertise.html">Advertise</a>
     <div class="mobile-nav-actions">
-      <a href="#" onclick="return false" class="btn btn-outline">Sign In</a>
+      <div id="mobileNavAuth"></div>
       <a href="post-ad.html?cat=Jobs" class="btn btn-accent">Post a Job</a>
     </div>
   </div>
@@ -683,22 +683,24 @@ function getJobType(ad){
 }
 const JOB_COLORS=['#1A3A8F','#7c3aed','#059669','#dc2626','#d97706','#0891b2','#9333ea','#be185d'];
 function makeJobCard(ad){
-  const init=(ad.seller_name||ad.name||'E')[0].toUpperCase();
+  const seller=ad.sellerName||ad.seller_name||ad.name||'Employer';
+  const init=seller[0].toUpperCase();
   const color=JOB_COLORS[(ad.title||'').charCodeAt(0)%JOB_COLORS.length];
   const jtype=getJobType(ad);
+  const loc=ad.city?(ad.prov?ad.city+', '+ad.prov:ad.city):(ad.prov||'Zimbabwe');
   const salary=ad.price?`<div class="job-salary">${ad.currency==='USD'?'$':'ZiG '}${Number(ad.price).toLocaleString()}/mo</div>`:'';
   return`<a class="job-card" href="detail.html?id=${ad.id}">
     <div class="job-logo" style="background:${color}">${init}</div>
     <div class="job-info">
       <div class="job-title">${escHtml(ad.title)}</div>
-      <div class="job-company">${escHtml(ad.seller_name||ad.name||'Employer')} &bull; ${escHtml(ad.location||'Zimbabwe')}</div>
+      <div class="job-company">${escHtml(seller)} &bull; ${escHtml(loc)}</div>
       <div class="job-tags">
         <span class="job-tag type">${jtype}</span>
-        <span class="job-tag">${escHtml(ad.location||'Zimbabwe')}</span>
+        <span class="job-tag">${escHtml(loc)}</span>
       </div>
       <div class="job-meta">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        ${timeAgo(ad.created_at)}
+        ${timeAgo(ad.createdAt||ad.created_at)}
       </div>
       ${salary}
     </div>
@@ -724,16 +726,16 @@ function loadMoreJobs(){shownJobs+=20;renderJobs()}
 async function applyJobFilters(){
   const loc=document.getElementById('fLoc')?.value||'';
   const sort=document.getElementById('fSort')?.value||'newest';
-  let q='select=*&status=eq.active&category=eq.Jobs';
-  if(loc)q+='&location=eq.'+encodeURIComponent(loc);
-  q+=sort==='oldest'?'&order=created_at.asc':'&order=created_at.desc';
+  let q='select=*&status=eq.active&cat=eq.Jobs';
+  if(loc)q+='&city=eq.'+encodeURIComponent(loc);
+  q+=sort==='oldest'?'&order=createdAt.asc':'&order=createdAt.desc';
   q+='&limit=200';
   allJobs=await sbGet('listings',q);
   shownJobs=20;renderJobs();
 }
 async function loadJobs(){
   document.getElementById('jobsGrid').innerHTML=`<div class="skel" style="height:110px"></div><div class="skel" style="height:110px"></div><div class="skel" style="height:110px"></div><div class="skel" style="height:110px"></div>`;
-  allJobs=await sbGet('listings','select=*&status=eq.active&category=eq.Jobs&order=created_at.desc&limit=200');
+  allJobs=await sbGet('listings','select=*&status=eq.active&cat=eq.Jobs&order=createdAt.desc&limit=200');
   shownJobs=20;renderJobs();
 }
 
@@ -1029,5 +1031,6 @@ async function submitProfile(){
 renderJobFilters();
 loadJobs();
 </script>
+<script src="auth.js"></script>
 </body>
 </html>
