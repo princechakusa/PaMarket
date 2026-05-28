@@ -1,4 +1,4 @@
-/* Hostly bundle — built 2026-05-28T05:46:49Z */
+/* Hostly bundle — built 2026-05-28T05:56:46Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -403,20 +403,20 @@ window.H = {
     if(this.state.currentUserId&&this.checkBan()) return;
     const _nav = document.getElementById('bottomNav');
     _nav.style.display='flex';
-    // Measure actual safe area via probe and apply directly (CSS env() can return 0 if cached)
+    // Probe safe area bottom: use padding-bottom trick (more reliable than height), then iPhone X+ fallback
     (function() {
       var p = document.createElement('div');
-      p.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom,0);visibility:hidden;pointer-events:none';
+      p.style.cssText = 'position:fixed;bottom:0;left:0;width:0;height:0;padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:content-box;visibility:hidden;pointer-events:none';
       document.documentElement.appendChild(p);
-      requestAnimationFrame(function() {
-        var sab = Math.round(p.getBoundingClientRect().height);
-        document.documentElement.removeChild(p);
-        if (sab > 0) {
-          _nav.style.height = (64 + sab) + 'px';
-          _nav.style.paddingBottom = sab + 'px';
-          document.documentElement.style.setProperty('--sab', sab + 'px');
-        }
-      });
+      var sab = p.clientHeight; // synchronous — clientHeight = 0 + padding-bottom
+      document.documentElement.removeChild(p);
+      // Fallback: iOS iPhone X+ (screen.height in CSS px >= 780) when env() returns 0
+      if (sab === 0 && /iPhone/.test(navigator.userAgent) && window.screen.height >= 780) sab = 34;
+      if (sab > 0) {
+        _nav.style.height = (64 + sab) + 'px';
+        _nav.style.paddingBottom = sab + 'px';
+        document.documentElement.style.setProperty('--sab', sab + 'px');
+      }
     })();
     await this.navTo('Home');
     // Handle deep links: ?listing=ID  or  ?action=post|browse
@@ -1433,6 +1433,7 @@ window.H = {
       </div>
 
       ${item('My Profile',I.user,'Profile','')}
+      ${item('My Activity',I.search,'MyActivity','')}
       ${item('My Listings',I.doc,'MyListings',activeAds||'')}
       ${item('Saved & Favorites',I.heart,'Favorites',savedAds||'')}
       ${item('Advertisements',I.ads,'Ads','')}
@@ -10702,6 +10703,44 @@ H.init();
         H.openInner('BlockedUsers');
       }
     };
+  };
+
+  pages.MyActivity = function () {
+    const u = H.currentUser();
+    if (!u) return H.requireAuth('Login to view your activity');
+
+    const searches = (u.recentSearches || []);
+    const rvIds    = JSON.parse(localStorage.getItem('pamarket_rv') || '[]');
+    const viewed   = rvIds.map(id => (H.state.listings || []).find(l => l.id === id)).filter(Boolean);
+
+    const searchSection = searches.length
+      ? `<div class="mi-section-title">Recent Searches</div>
+         ${searches.map(q => `
+           <button class="mi" onclick="H.closeSheet&&H.closeSheet();H.navTo('Browse',document.querySelector('[data-nav=Search]'));setTimeout(()=>{var el=document.getElementById('searchInput');if(el){el.value=${JSON.stringify(q)};el.dispatchEvent(new Event('input'));}},200)">
+             <span class="mi-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+             <span class="mi-label">${H.escHtml(q)}</span>
+             <button onclick="event.stopPropagation();var u=H.currentUser();u.recentSearches=(u.recentSearches||[]).filter(s=>s!==${JSON.stringify(q)});H.saveState();H.openInner('MyActivity')" style="background:none;border:none;color:var(--text-sub);font-size:18px;padding:0 4px;line-height:1;cursor:pointer">&times;</button>
+           </button>`).join('')}
+         <button class="mi danger" style="color:var(--red)" onclick="var u=H.currentUser();u.recentSearches=[];H.saveState();H.openInner('MyActivity')">
+           <span class="mi-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></span>
+           <span class="mi-label">Clear all searches</span>
+         </button>`
+      : `<div class="mi-section-title">Recent Searches</div>
+         <div style="padding:16px 20px;color:var(--text-sub);font-size:13px">No recent searches yet.</div>`;
+
+    const viewedSection = viewed.length
+      ? `<div class="mi-section-title" style="margin-top:16px">Recently Viewed</div>
+         ${viewed.map(l => H.renderListCard(l)).join('')}`
+      : `<div class="mi-section-title" style="margin-top:16px">Recently Viewed</div>
+         <div style="padding:16px 20px;color:var(--text-sub);font-size:13px">No recently viewed listings.</div>`;
+
+    return `<div class="page active">
+      ${H.innerTopbar('My Activity')}
+      <div class="form-wrap">
+        ${searchSection}
+        ${viewedSection}
+      </div>
+    </div>`;
   };
 
 })(window.H = window.H || {});
