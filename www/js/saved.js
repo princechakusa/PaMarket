@@ -131,11 +131,40 @@
   pages.MyListings = function () {
     const u    = currentUser();
     const list = (state.listings || []).filter(l => l.sellerId === u.id).sort((a, b) => b.createdAt - a.createdAt);
+    const now  = Date.now();
+    const TWENTY_FIVE_DAYS = 25 * 24 * 60 * 60 * 1000;
+    const THIRTY_DAYS      = 30 * 24 * 60 * 60 * 1000;
 
     return `<div class="page active">${innerTopbar('My Listings')}
       <div style="padding-bottom:90px">
         ${list.length ? list.map(l => {
-          const statusClass = l.status === 'active' ? 'status-active' : l.status === 'banned' ? 'status-banned' : 'status-pending';
+          const age = now - (l.createdAt || now);
+          const isExpired     = age > THIRTY_DAYS;
+          const isExpiringSoon = !isExpired && age > TWENTY_FIVE_DAYS;
+
+          // Saves count: number of userIds who have this listing in their saves array
+          const savesCount = Object.values(state.saves || {}).filter(arr => Array.isArray(arr) && arr.includes(l.id)).length;
+
+          // Enquiries count: conversations referencing this listing
+          const enquiriesCount = (state.conversations || []).filter(conv => conv.listingId === l.id).length;
+
+          // Status pill / expiry logic
+          let statusPill;
+          if (isExpired) {
+            statusPill = `<span class="status-pill status-banned">Expired</span>`;
+          } else {
+            const statusClass = l.status === 'active' ? 'status-active' : l.status === 'banned' ? 'status-banned' : 'status-pending';
+            statusPill = `<span class="status-pill ${statusClass}">${l.status}</span>`;
+          }
+
+          const expiryWarning = isExpiringSoon
+            ? `<span style="font-size:11px;font-weight:700;color:#b45309;background:#fef3c7;border-radius:8px;padding:1px 7px;margin-left:4px">Expiring soon</span>`
+            : '';
+
+          const renewBtn = (isExpired || isExpiringSoon)
+            ? `<button class="ml-act-btn" onclick="(function(){var l=H.state.listings.find(function(x){return x.id==='${l.id}';});if(l){l.createdAt=Date.now();if(l.status==='expired')l.status='active';H.saveState();H.openInner('MyListings');}})()">Renew</button>`
+            : '';
+
           return `<div class="my-listing-card">
             <div class="ml-thumb">
               ${l.photos && l.photos[0] ? `<img src="${l.photos[0]}">` : ((CATEGORIES.find(c => c.id === l.cat) || {}).icon || '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#ccc"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>')}
@@ -144,13 +173,19 @@
               <div class="ml-title">${escHtml(l.title)}</div>
               <div class="ml-price">${escHtml(fmtPrice(l.price, l.currency))}</div>
               <div class="ml-meta">
-                <span class="status-pill ${statusClass}">${l.status}</span>
-                · ${l.views || 0} views · ${timeAgo(l.createdAt)}
+                ${statusPill}${expiryWarning}
+                <span style="color:var(--sub)"> · ${l.views || 0} views · ${timeAgo(l.createdAt)}</span>
+              </div>
+              <div style="display:inline-flex;gap:10px;align-items:center;font-size:11px;color:var(--sub);margin-top:4px;flex-wrap:wrap">
+                <span>&#128065; ${l.views || 0} views</span>
+                <span>&#9825; ${savesCount} saves</span>
+                <span>&#128172; ${enquiriesCount} enquiries</span>
               </div>
               <div class="ml-actions">
                 <button class="ml-act-btn" onclick="H.openListing('${l.id}')">View</button>
-                <button class="ml-act-btn" onclick="H.openInner('Boost',{listingId:'${l.id}'})">⚡ Boost</button>
-                ${l.status === 'active'
+                <button class="ml-act-btn" onclick="H.openInner('Boost',{listingId:'${l.id}'})">&#9889; Boost</button>
+                ${renewBtn}
+                ${!isExpired && l.status === 'active'
                   ? `<button class="ml-act-btn red" onclick="H.deleteListing('${l.id}')">Delete</button>`
                   : ''}
               </div>
