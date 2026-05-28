@@ -1,4 +1,4 @@
-/* Hostly bundle — built 2026-05-28T05:31:53Z */
+/* Hostly bundle — built 2026-05-28T05:46:49Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -401,7 +401,23 @@ window.H = {
     this.applyTheme();
     this.applyLanguage();
     if(this.state.currentUserId&&this.checkBan()) return;
-    document.getElementById('bottomNav').style.display='flex';
+    const _nav = document.getElementById('bottomNav');
+    _nav.style.display='flex';
+    // Measure actual safe area via probe and apply directly (CSS env() can return 0 if cached)
+    (function() {
+      var p = document.createElement('div');
+      p.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom,0);visibility:hidden;pointer-events:none';
+      document.documentElement.appendChild(p);
+      requestAnimationFrame(function() {
+        var sab = Math.round(p.getBoundingClientRect().height);
+        document.documentElement.removeChild(p);
+        if (sab > 0) {
+          _nav.style.height = (64 + sab) + 'px';
+          _nav.style.paddingBottom = sab + 'px';
+          document.documentElement.style.setProperty('--sab', sab + 'px');
+        }
+      });
+    })();
     await this.navTo('Home');
     // Handle deep links: ?listing=ID  or  ?action=post|browse
     const _qs = new URLSearchParams(window.location.search);
