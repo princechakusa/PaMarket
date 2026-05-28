@@ -117,8 +117,32 @@
             : `<button class="msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')">${S.message} Message in App</button>`;
           const callBtn = sellerPhone ? `<button class="call-btn" onclick="H.callSeller('${sellerPhone}')">${S.phone} Call ${H.escHtml(sellerPhone)}</button>` : '';
           const rptBtn  = `<button class="report-btn" onclick="H.reportListing('${l.id}')">${S.flag} Report this Listing</button>`;
-          if (cm === 'phone') return callBtn + waBtn + chatBtn + rptBtn;
-          return chatBtn + waBtn + callBtn + rptBtn;
+
+          const shareLink = 'https://princechakusa.github.io/PaMarket/?listing=' + encodeURIComponent(l.id);
+          const shareText = encodeURIComponent('Check out this listing on PaMarket:\n*' + l.title + '*\n\u{1F4B0} ' + H.fmtPrice(l.price, l.currency) + '\n\n' + shareLink);
+          const shareWaBtn = `<button onclick="window.open('https://wa.me/?text=${shareText}','_blank')" style="width:100%;padding:13px;background:transparent;color:var(--text);border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share via WhatsApp</button>`;
+
+          const cu = H.currentUser();
+          let rateSection = '';
+          if (cu && cu.id !== seller.id) {
+            const ratings = H.state.ratings && H.state.ratings[seller.id] ? H.state.ratings[seller.id] : [];
+            const myRating = ratings.find(r => r.userId === cu.id);
+            let avgLine = '';
+            if (ratings.length) {
+              const avg = (ratings.reduce((s, r) => s + r.rating, 0) / ratings.length).toFixed(1);
+              avgLine = `<div style="font-size:12px;color:var(--sub);margin-bottom:8px">${avg} avg from ${ratings.length} rating${ratings.length===1?'':'s'}</div>`;
+            }
+            const stars = [1,2,3,4,5].map(n => {
+              const filled = myRating && myRating.rating >= n;
+              return `<span onclick="H._rateSeller('${seller.id}',${n},'${l.id}')" style="font-size:28px;cursor:pointer;color:${filled?'#F5A623':'var(--border)'};line-height:1">${filled?'&#9733;':'&#9734;'}</span>`;
+            }).join('');
+            rateSection = `<div style="margin-top:16px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px"><div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">Rate this Seller</div>${avgLine}<div style="display:flex;gap:4px;align-items:center">${stars}</div>${myRating?`<div style="font-size:12px;color:var(--sub);margin-top:6px">Your rating: ${myRating.rating}/5</div>`:''}</div>`;
+          }
+
+          let buttons = '';
+          if (cm === 'phone') buttons = callBtn + waBtn + chatBtn + rptBtn;
+          else buttons = chatBtn + waBtn + callBtn + rptBtn;
+          return buttons + shareWaBtn + rateSection;
         })()}
       </div>
     </div>`;
@@ -126,6 +150,19 @@
 
   H.pages.Detail_after = function(params) {
     H._initSwipe();
+
+    H._rateSeller = function(sellerId, rating, listingId) {
+      const u = H.currentUser();
+      if (!u) { H.toast('Sign in to rate sellers'); return; }
+      if (!H.state.ratings) H.state.ratings = {};
+      if (!H.state.ratings[sellerId]) H.state.ratings[sellerId] = [];
+      H.state.ratings[sellerId] = H.state.ratings[sellerId].filter(r => r.userId !== u.id);
+      H.state.ratings[sellerId].push({ userId: u.id, rating: rating, at: Date.now() });
+      H.saveState();
+      H.toast('Thanks for your rating!');
+      H.openInner('Detail', { id: listingId || params.id });
+    };
+
     const l = H.state.listings.find(x => x.id === params.id);
     if (!l) return;
     const similar = (H.state.listings||[]).filter(x => x.id!==l.id && x.cat===l.cat && x.status==='active').slice(0,4);
