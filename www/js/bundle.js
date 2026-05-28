@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-28T17:59:16Z */
+/* PaMarket bundle — built 2026-05-28T18:21:00Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -57,12 +57,6 @@ window.H = {
     {id:'other',       name:'Other',       icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="12" x2="15" y2="12"/></svg>'}
   ],
 
-  BOOST_PLANS: [
-    {id:'standard', name:'Standard Boost', price:2,  days:7,  desc:'Featured at the top of your category for 7 days.',  badgeText:''},
-    {id:'premium',  name:'Premium Boost',  price:5,  days:14, desc:'Prime placement across category and search for 14 days.', badge:'hot', badgeText:'Most Popular'},
-    {id:'mega',     name:'Mega Boost',     price:10, days:30, desc:'30 days of maximum visibility across all sections.', badgeText:'Best Value'}
-  ],
-
   state:            {},
   pageStack:        [],
   currentPageName:  'Home',
@@ -76,7 +70,7 @@ window.H = {
     users:[], listings:[], conversations:[], reports:[], txns:[],
     saves:{}, notifs:{}, currentUserId:null, cityFilter:'All Zimbabwe',
     _sortMode:'newest', _priceMin:'', _priceMax:'',
-    adminLogs:[], supportTickets:[], topupRequests:[], paidAds:[]
+    adminLogs:[], supportTickets:[], paidAds:[]
   },
 
   loadState() {
@@ -199,9 +193,6 @@ window.H = {
       if ((l.price||0)<pMin || (l.price||0)>pMax) return false;
       return true;
     }).sort((a,b) => {
-      const ba = (a.boost&&a.boost.until>Date.now())?1:0;
-      const bb = (b.boost&&b.boost.until>Date.now())?1:0;
-      if (ba!==bb) return bb-ba;
       if (sort==='newest')     return b.createdAt-a.createdAt;
       if (sort==='oldest')     return a.createdAt-b.createdAt;
       if (sort==='price_asc')  return (a.price||0)-(b.price||0);
@@ -317,7 +308,6 @@ window.H = {
     const photo  = (l.photos&&l.photos[0])
       ? `<img src="${l.photos[0]}" alt="${H.escHtml(l.title)}" loading="lazy">`
       : `<div class="ph">${H.categoryIcon(l.cat)}</div>`;
-    const boosted = l.boost&&l.boost.until>Date.now();
     return `<div class="list-card-wrap" onclick="H.openListing('${l.id}')">
       <button class="share-card-btn" onclick="event.stopPropagation();H.shareListing&&H.shareListing('${l.id}')" title="Share">${H.ICONS.share}</button>
       <div class="list-card">
@@ -330,7 +320,6 @@ window.H = {
             <span class="tag">&middot; ${H.timeAgo(l.createdAt)}</span>
             <span class="tag">&middot; ${H.ICONS.eye} ${l.views||0}</span>
             ${seller&&seller.verified?`<span class="blue-check" title="ID Verified"><svg viewBox="0 0 24 24" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg></span>`:''}
-            ${boosted?`<span class="boost-pill">${H.ICONS.boost} Boosted</span>`:''}
           </div>
         </div>
       </div>
@@ -469,7 +458,6 @@ window.H = {
     else if (_lid) { setTimeout(()=>this.openListing(_lid), 200); }
     else if (_act === 'post')   { if(this.currentUser()) setTimeout(()=>this.navTo('Post',null), 200); }
     else if (_act === 'browse') { setTimeout(()=>this.navTo('Browse',null), 200); }
-    else if (_act === 'topup')  { setTimeout(()=>{ if(this.currentUser()) this.openInner('Ads'); else this.requireAuth('Sign in to advertise'); }, 300); }
     try {
       await this.fetchListingsFromSupabase();
       H._checkEngagementAlerts();
@@ -533,7 +521,7 @@ window.H = {
 
   async openInner(name, params) {
     const H=window.H;
-    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsBoost','AdsContact','MyAds','Boost','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob'];
+    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob'];
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
     try {
@@ -1291,7 +1279,7 @@ window.H = {
         +'<div class="about-card"><div class="about-sec-title">What is PaMarket?</div><div class="about-body">PaMarket is a free Zimbabwean online marketplace connecting buyers and sellers. Whether you are looking for goods, services, vehicles, property, or jobs, PaMarket makes it easy to post, browse, and connect with people in your province and across Zimbabwe.</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Who is it for?</div><div class="about-body">PaMarket is for anyone in Zimbabwe — individuals selling personal items, small businesses promoting services, employers posting vacancies, and buyers searching for the best local deals. The app is free to download and free to use.</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Key Features</div><div class="about-grid">'
-        +['Free Listings','Secure Messaging','WhatsApp Connect','All Categories','Province Filters','Boost Your Ads','Job Board','Photo Uploads'].map(f=>'<div class="about-feat">'+f+'</div>').join('')
+        +['Free Listings','Secure Messaging','WhatsApp Connect','All Categories','Province Filters','Verified Sellers','Job Board','Photo Uploads'].map(f=>'<div class="about-feat">'+f+'</div>').join('')
         +'</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Legal &amp; Compliance</div><div class="about-body">PaMarket operates as a platform for user-generated listings. We do not own, sell, or warrant any items listed. Users are responsible for ensuring their listings comply with applicable Zimbabwean law. Prohibited content (counterfeit goods, illegal services, misleading listings) will be removed and accounts suspended. By using PaMarket you agree to our Terms of Service and Privacy Policy.</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Contact Us</div>'
@@ -1310,14 +1298,14 @@ window.H = {
         +'<div class="about-card"><div class="about-sec-title">What We Offer</div>'
         +'<div class="about-body" style="margin-bottom:0">'
         +'<div style="display:flex;flex-direction:column;gap:10px">'
-        +[['Listing Boost','Get your listing seen first in search results and category pages.'],['Banner Ad','Eye-catching banner placement on the home screen.'],['Category Spotlight','Pin your business to the top of a category of your choice.'],['Custom Campaign','Tailored multi-placement campaign for maximum reach.']]
+        +[['Banner Ad','Eye-catching banner placement on the home screen.'],['Category Spotlight','Pin your business to the top of a category of your choice.'],['Custom Campaign','Tailored multi-placement campaign for maximum reach.']]
           .map(([t,d])=>'<div style="background:var(--bg,#f5f7fb);border-radius:10px;padding:12px 14px"><div style="font-weight:700;font-size:14px;color:var(--text,#1a1a1a);margin-bottom:3px">'+t+'</div><div style="font-size:13px;color:var(--text-muted,#666)">'+d+'</div></div>')
           .join('')
         +'</div></div></div>'
         +'<div class="about-card"><div class="about-sec-title">Send an Enquiry</div>'
         +'<div class="fg"><div class="fl">Business Name</div><input class="fi" id="adsBiz" placeholder="Your business name"></div>'
         +'<div class="fg"><div class="fl">Contact Email</div><input class="fi" id="adsEmail" type="email" placeholder="your@email.com"></div>'
-        +'<div class="fg"><div class="fl">Ad Type</div><select class="fi" id="adsType"><option value="Listing Boost">Listing Boost</option><option value="Banner Ad">Banner Ad</option><option value="Category Spotlight">Category Spotlight</option><option value="Custom Campaign">Custom Campaign</option></select></div>'
+        +'<div class="fg"><div class="fl">Ad Type</div><select class="fi" id="adsType"><option value="Banner Ad">Banner Ad</option><option value="Category Spotlight">Category Spotlight</option><option value="Custom Campaign">Custom Campaign</option></select></div>'
         +'<div class="fg"><div class="fl">Message</div><textarea class="fi" rows="4" id="adsMsg" placeholder="Tell us about your product or service and what you\'d like to achieve..."></textarea></div>'
         +'<button onclick="H._submitAdsEnquiry()" style="width:100%;padding:15px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px">Send Enquiry</button>'
         +'</div>'
@@ -2160,7 +2148,7 @@ H.init();
       }
       var userId = res.data.user.id;
       await c.from('profiles').upsert({id:userId, name:name, phone:phone||null, verified:false});
-      var u = {id:userId,email:email,name:name,phone:phone||'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]};
+      var u = {id:userId,email:email,name:name,phone:phone||'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]};
       (H.state.users = H.state.users||[]).push(u);
       H.state.currentUserId = userId;
       H.saveState();
@@ -2177,7 +2165,7 @@ H.init();
     var exists = (H.state.users||[]).some(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase(); });
     if (exists) { H.toast('Email already registered. Sign in instead.'); setAuthBusy(false); return; }
     var uid2 = H.uid();
-    (H.state.users = H.state.users||[]).push({id:uid2,email:email,name:name,phone:phone||'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[],_localPassword:password});
+    (H.state.users = H.state.users||[]).push({id:uid2,email:email,name:name,phone:phone||'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[],_localPassword:password});
     H.state.currentUserId = uid2;
     H.saveState(); setAuthBusy(false);
     H.toast('Account created! Welcome to PaMarket');
@@ -2230,13 +2218,13 @@ H.init();
     var res = await c.from('profiles').select('*').eq('id',userId).single();
     if (res.error||!res.data) {
       var u = (H.state.users||[]).find(function(x){return x.id===userId;});
-      if (!u) { u={id:userId,email:'',name:'User',phone:'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]}; H.state.users.push(u); }
+      if (!u) { u={id:userId,email:'',name:'User',phone:'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]}; H.state.users.push(u); }
       return;
     }
     var profile = res.data;
     var u = (H.state.users||[]).find(function(x){return x.id===userId;});
     if (!u) {
-      u = {id:userId,email:'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,walletUSD:profile.wallet_usd||0,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
+      u = {id:userId,email:'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
       H.state.users.push(u);
     } else {
       u.name=profile.name||u.name; u.phone=profile.phone||u.phone; u.avatar=profile.avatar||u.avatar; u.verified=profile.verified||false; u.role=profile.role||u.role||'user';
@@ -2403,21 +2391,19 @@ H.init();
       + '<p>The following are strictly prohibited on PaMarket: stolen or counterfeit goods; illegal drugs, weapons, or firearms; adult or explicit content; hate speech or content that promotes discrimination; spam, pyramid schemes, or fraudulent offers; impersonation of any person or business.</p>'
       + '<h3>5. Transactions</h3>'
       + '<p>PaMarket is a listing and communication platform only. We do not process payments, hold funds, or guarantee the quality of any item. All transactions are solely between buyer and seller. PaMarket accepts no liability for disputes, losses, or damages arising from transactions.</p>'
-      + '<h3>6. Wallet &amp; Top-Ups</h3>'
-      + '<p>The in-app wallet is used exclusively for boosting listings. Top-up amounts that have not yet been used may be refunded upon written request to chakusaprince@gmail.com within 30 days of payment. Used credits are non-refundable. Wallet balances have no cash value and cannot be transferred.</p>'
-      + '<h3>7. Intellectual Property</h3>'
+      + '<h3>6. Intellectual Property</h3>'
       + '<p>All content you post on PaMarket (photos, descriptions, etc.) remains yours. By posting, you grant PaMarket a non-exclusive, royalty-free licence to display your content within the app. The PaMarket name, logo, and app design are our intellectual property and may not be copied or reused.</p>'
-      + '<h3>8. Privacy</h3>'
+      + '<h3>7. Privacy</h3>'
       + '<p>Your use of the app is also governed by our Privacy Policy, which is incorporated into these Terms by reference.</p>'
-      + '<h3>9. Termination</h3>'
+      + '<h3>8. Termination</h3>'
       + '<p>We may suspend or permanently ban any account that violates these Terms, with or without notice. You may delete your account at any time via Settings → Security → Delete Account.</p>'
-      + '<h3>10. Limitation of Liability</h3>'
+      + '<h3>9. Limitation of Liability</h3>'
       + '<p>PaMarket is provided "as is" without warranties of any kind. To the maximum extent permitted by law, PaMarket shall not be liable for any indirect, incidental, or consequential damages arising from your use of the app.</p>'
-      + '<h3>11. Changes to Terms</h3>'
+      + '<h3>10. Changes to Terms</h3>'
       + '<p>We may update these Terms from time to time. Continued use of the app after changes are posted constitutes acceptance of the revised Terms.</p>'
-      + '<h3>12. Governing Law</h3>'
+      + '<h3>11. Governing Law</h3>'
       + '<p>These Terms are governed by the laws of Zimbabwe. Any disputes shall be resolved in the courts of Zimbabwe.</p>'
-      + '<h3>13. Contact</h3>'
+      + '<h3>12. Contact</h3>'
       + '<p>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>'
       + '</div>';
   };
@@ -2489,7 +2475,6 @@ H.init();
         ${photo
           ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.onerror=null;this.style.display='none'">`
           : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>'}
-        ${l.boost && l.boost.until > Date.now() ? '<span style="position:absolute;top:6px;left:6px;background:#1A3A8F;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">SPONSORED</span>' : ''}
         ${l.negotiable ? '<span style="position:absolute;top:6px;right:6px;background:#F5A623;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">NEG</span>' : ''}
       </div>
       <div style="padding:8px 10px 11px">
@@ -2508,7 +2493,6 @@ H.init();
       Array.isArray(cv.members) && cv.members.includes(u.id) && (cv.messages || []).some(m => m.from !== u.id && !m.read)).length : 0;
     const activeListings = (H.state.listings || []).filter(l => l.status === 'active');
     const filtered       = filterListings(activeListings);
-    const featured       = filtered.filter(l => l.boost && l.boost.until > Date.now()).slice(0, 6);
 
     const catSections = CATEGORIES.map(c => ({
       ...c, items: filtered.filter(l => l.cat === c.id).slice(0, 4)
@@ -2652,21 +2636,6 @@ H.init();
           </button>
         </div>
 
-        <!-- FEATURED -->
-        ${featured.length ? `
-        <div style="padding:20px 0 0">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:6px">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="#F5A623" stroke="#F5A623" stroke-width="1"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              <span style="font-size:16px;font-weight:800;color:var(--text)">Featured Ads</span>
-            </div>
-            <span onclick="H.navTo('Browse',null)" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>
-          </div>
-          <div style="display:flex;gap:12px;padding:0 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-            ${featured.map(l => `<div style="flex-shrink:0">${renderFeatCard(l)}</div>`).join('')}
-          </div>
-        </div>` : ''}
-
         <!-- SEARCH RESULTS (shown when typing) -->
         <div id="searchResults" style="display:none;padding:16px 12px 0">
           <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:12px;padding:0 4px">Search Results</div>
@@ -2778,25 +2747,7 @@ H.init();
 
   function renderListingsWithSponsored(filteredList) {
     if (!filteredList.length) return '';
-    const now = Date.now();
-    const sponsored = (H.state.listings || []).filter(l =>
-      l.status === 'active' && l.boost && l.boost.until > now
-    );
-    if (!sponsored.length) return filteredList.map(renderListCard).join('');
-    const shownIds = new Set(filteredList.map(l => l.id));
-    const pool = sponsored.filter(l => !shownIds.has(l.id));
-    if (!pool.length) return filteredList.map(renderListCard).join('');
-    const parts = [];
-    let pi = 0;
-    filteredList.forEach((l, i) => {
-      parts.push(renderListCard(l));
-      if ((i + 1) % 5 === 0) {
-        const s = pool[pi % pool.length];
-        pi++;
-        parts.push(`<div style="position:relative">${renderListCard(s)}<span style="position:absolute;top:10px;left:10px;background:#1A3A8F;color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px;pointer-events:none;z-index:1">SPONSORED</span></div>`);
-      }
-    });
-    return parts.join('');
+    return filteredList.map(renderListCard).join('');
   }
 
   pages.Browse = function () {
@@ -2886,7 +2837,6 @@ H.init();
         <div class="filter-section">
           <div class="filter-title">Other</div>
           <label class="filter-checkbox"><input type="checkbox" id="verifiedOnly" onchange="H._browse.onFilterChange()"><span>Verified Sellers Only</span></label>
-          <label class="filter-checkbox"><input type="checkbox" id="boostedOnly" onchange="H._browse.onFilterChange()"><span>Premium Ads Only</span></label>
         </div>
 
         <div class="filter-actions">
@@ -3255,7 +3205,7 @@ H.init();
         prov: s.prov, city: s.city, suburb: s.suburb,
         photos: s.photos, createdAt: Date.now(),
         status: needsApproval ? 'pending' : 'active',
-        boost: null, views: 0
+        views: 0
       };
       H.state.listings.unshift(l);
       H.saveState();
@@ -3339,7 +3289,6 @@ H.init();
     const saved       = u ? (H.state.saves[u.id]||[]).includes(id) : false;
     const isMine      = u && u.id && seller.id && seller.id === u.id;
     const photos      = l.photos && l.photos.length ? l.photos : [];
-    const boosted     = l.boost && l.boost.until > Date.now();
     const sellerPhone = seller.phone || l.sellerPhone || '';
     const sellerName  = seller.name  || l.sellerName  || 'Seller';
 
@@ -3372,7 +3321,6 @@ H.init();
           <div class="photo-dots">${photos.map((_,i)=>`<div class="pdot ${i===0?'on':''}" onclick="H.setPhoto('${l.id}',${i})"></div>`).join('')}</div>
           <div style="position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.5);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600" id="photoCount">1 / ${photos.length}</div>
         ` : ''}
-        ${boosted ? `<div style="position:absolute;top:12px;left:12px;background:#F5A623;color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700">Featured</div>` : ''}
       </div>
 
       <div class="det-content">
@@ -3408,7 +3356,6 @@ H.init();
         <div id="similarListingsPlaceholder" class="similar-loading" style="height:120px;background:var(--card);border-radius:14px;margin:16px 0;opacity:.5;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--sub)">Loading similar listings...</div>
 
         ${isMine ? `
-          <button class="btn-pri" onclick="H.openBoostPage('${l.id}')" style="margin-bottom:8px">${S.boost} Boost this Listing</button>
           <button style="width:100%;padding:13px;background:#fee2e2;color:#dc2626;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" onclick="if(!confirm('Are you sure you want to delete this listing?')) return; H.deleteListing('${l.id}')">Delete Listing</button>
         ` : (function(){
           const cm = l.contactMethod || 'chat';
@@ -3650,8 +3597,6 @@ H.init();
       }
     });
   };
-
-  H.openBoostPage = function(listingId) { H.openInner('Boost', {listingId}); };
 
   function pvHTML(photos, idx) {
     var dots = '';
@@ -5018,7 +4963,6 @@ H.init();
     const rows = [
       ['newEnq',    'New Enquiries',          'When someone messages you about a listing',         'message'],
       ['priceDrop', 'Price Drops',            'When a saved ad drops in price',                    'dollar'],
-      ['boostExp',  'Boost Expiry Reminders', '2 days before your boost ends',                     'clock'],
       ['sec',       'Security Alerts',        'New sign-in or suspicious account activity',        'shield'],
       ['promo',     'Tips & Promotions',      'Selling tips, platform updates, discounts',         'star'],
       ['sms',       'SMS Alerts',             'Critical alerts via SMS (carrier rates may apply)', 'smartphone']
@@ -5317,7 +5261,6 @@ H.init();
               </div>
               <div class="ml-actions">
                 <button class="ml-act-btn" onclick="H.openListing('${l.id}')">View</button>
-                <button class="ml-act-btn" onclick="H.openInner('Boost',{listingId:'${l.id}'})">&#9889; Boost</button>
                 ${renewBtn}
                 ${!isExpired && l.status === 'active'
                   ? `<button class="ml-act-btn red" onclick="H.deleteListing('${l.id}')">Delete</button>`
@@ -5404,7 +5347,6 @@ H.init();
       ['users',         `Users (${(H.state.users||[]).length})`],
       ['listings',      `Listings (${(H.state.listings||[]).length})`],
       ['reports',       `Reports (${(H.state.reports||[]).filter(r=>r.status==='open').length})`],
-      ['payments',      'Payments'],
       ['analytics',     'Analytics'],
       ['verifications',  `Verify (${(H.state.users||[]).filter(u=>u.verificationPending&&!u.verified).length})`],
       ['settings',      'Settings'],
@@ -5491,7 +5433,6 @@ H.init();
       case 'users':          return renderUsers();
       case 'listings':       return renderListings();
       case 'reports':        return renderReports();
-      case 'payments':       return renderPayments();
       case 'analytics':      return renderAnalytics();
       case 'verifications':  return renderVerifications();
       case 'settings':       return renderSettings();
@@ -5566,7 +5507,6 @@ H.init();
     const listings = H.state.listings || [];
     const reports  = H.state.reports || [];
     const txns     = H.state.txns || [];
-    const revenue  = txns.filter(t=>t.type==='boost').reduce((s,t)=>s+Math.abs(t.amt),0);
     const today    = Date.now() - 86400000;
     const newToday = listings.filter(l=>l.createdAt>today).length;
     const usersToday = users.filter(u=>(u.joinedAt||u.createdAt||0)>today).length;
@@ -5574,7 +5514,6 @@ H.init();
     const pending  = listings.filter(l=>l.status==='pending').length;
     const expiring = listings.filter(l=>l.expiresAt&&l.expiresAt-Date.now()<7*86400000&&l.expiresAt>Date.now()).length;
     const openTickets = (H.state.supportTickets||[]).filter(t=>t.status!=='closed').length;
-    const topupQueue = (H.state.topupRequests||[]).filter(r=>r.status==='pending').length;
     const convos = H.state.conversations || [];
     let msgUnread = 0;
     convos.forEach(function (c) { (c.messages||[]).forEach(function (m) { if (!m.read) msgUnread++; }); });
@@ -5588,9 +5527,9 @@ H.init();
       <div class="stats" style="margin:0 0 10px">
         <div class="stat"><div class="stat-n">${listings.filter(l=>l.status==='active').length}</div><div class="stat-l">Active Ads</div></div>
         <div class="stat"><div class="stat-n">+${newToday}</div><div class="stat-l">New Today</div></div>
-        <div class="stat"><div class="stat-n">$${revenue.toFixed(0)}</div><div class="stat-l">Revenue</div></div>
+        <div class="stat"><div class="stat-n">${listings.filter(l=>l.status==='pending').length}</div><div class="stat-l">Pending</div></div>
       </div>
-      ${(pending||openReports||expiring||openTickets||topupQueue) ? `
+      ${(pending||openReports||expiring||openTickets) ? `
       <div style="padding:12px 0 4px;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px">Needs Attention</div>
       <div class="section-card" style="padding:0">
         ${pending ? `<div class="admin-alert-row" onclick="H._admin.setTab('listings');H._admin.filterListingsByStatus('pending')">
@@ -5607,10 +5546,6 @@ H.init();
         </div>` : ''}
         ${openTickets ? `<div class="admin-alert-row" onclick="H._admin.setTab('support')">
           <span style="color:#7c3aed;font-weight:700">${openTickets} support ticket${openTickets>1?'s':''}</span> open
-          <span style="color:#1A3A8F;font-weight:700;margin-left:auto">View →</span>
-        </div>` : ''}
-        ${topupQueue ? `<div class="admin-alert-row" onclick="H._admin.setTab('payments')">
-          <span style="color:#059669;font-weight:700">${topupQueue} top-up request${topupQueue>1?'s':''}</span> pending
           <span style="color:#1A3A8F;font-weight:700;margin-left:auto">View →</span>
         </div>` : ''}
       </div>` : ''}
@@ -5630,7 +5565,6 @@ H.init();
   function renderAnalytics() {
     const listings = H.state.listings || [];
     const users    = H.state.users || [];
-    const txns     = H.state.txns || [];
 
     // Listings by category
     const catCounts = {};
@@ -5639,9 +5573,6 @@ H.init();
     const maxCat = catEntries[0]?.[1] || 1;
 
     // Revenue by type
-    const boostRev = txns.filter(t=>t.type==='boost').reduce((s,t)=>s+Math.abs(t.amt),0);
-    const topupRev = txns.filter(t=>t.type==='topup').reduce((s,t)=>s+Math.abs(t.amt),0);
-
     // New users by week (last 4 weeks)
     const now = Date.now();
     const weeks = [0,1,2,3].map(w => {
@@ -5699,13 +5630,6 @@ H.init();
         <div style="display:flex;gap:8px;margin-top:4px">
           ${weeks.map(w=>`<div style="flex:1;font-size:10px;color:var(--text-hint);text-align:center">${w.label}</div>`).join('')}
         </div>
-      </div>
-
-      <div style="padding:14px 0 10px;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px">Revenue</div>
-      <div class="stats" style="margin:0">
-        <div class="stat"><div class="stat-n">$${boostRev.toFixed(0)}</div><div class="stat-l">Boost Revenue</div></div>
-        <div class="stat"><div class="stat-n">$${topupRev.toFixed(0)}</div><div class="stat-l">Top-ups</div></div>
-        <div class="stat"><div class="stat-n">$${(boostRev+topupRev).toFixed(0)}</div><div class="stat-l">Total</div></div>
       </div>`;
   }
 
@@ -5831,31 +5755,6 @@ H.init();
   }
 
   // ── PAYMENTS ──────────────────────────────────────────────
-  function renderPayments() {
-    const txns    = [...(H.state.txns||[])].sort((a,b)=>b.t-a.t).slice(0,50);
-    const revenue = txns.filter(t=>t.type==='boost').reduce((s,t)=>s+Math.abs(t.amt),0);
-    const topups  = txns.filter(t=>t.type==='topup').reduce((s,t)=>s+Math.abs(t.amt),0);
-    return `
-      <div class="stats" style="margin:0 0 14px">
-        <div class="stat"><div class="stat-n">$${revenue.toFixed(2)}</div><div class="stat-l">Boost Revenue</div></div>
-        <div class="stat"><div class="stat-n">$${topups.toFixed(2)}</div><div class="stat-l">Top-ups</div></div>
-        <div class="stat"><div class="stat-n">${txns.length}</div><div class="stat-l">Transactions</div></div>
-      </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Transaction History</div>
-      <div class="section-card">
-        ${txns.length ? txns.map(t => `
-          <div class="tx-item">
-            <div class="tx-icon ${t.type==='topup'?'green':t.type==='boost'?'amber':'red'}">${t.type==='topup'?'↓':t.type==='boost'?'⚡':'↑'}</div>
-            <div class="tx-body">
-              <div class="tx-title">${escHtml(t.note||t.type)}</div>
-              <div class="tx-date">${new Date(t.t).toLocaleString()}</div>
-            </div>
-            <div class="tx-amount ${t.amt>=0?'plus':'minus'}">${t.amt>=0?'+':''}$${Math.abs(t.amt).toFixed(2)}</div>
-          </div>`).join('')
-        : '<div style="padding:24px;text-align:center;color:var(--text-sub)">No transactions yet</div>'}
-      </div>`;
-  }
-
   // ── SETTINGS ──────────────────────────────────────────────
   function renderSettings() {
     const tog = (key, label, sub) => `
@@ -5874,9 +5773,6 @@ H.init();
       <div class="menu-group-label" style="padding:16px 0 10px">Security & Access</div>
       ${tog('signupPaused','Pause new registrations','Temporarily disable new account signup')}
       ${tog('requirePhoneVerification','Require phone verification','Users must verify phone to post')}
-      <div class="menu-group-label" style="padding:16px 0 10px">Monetization</div>
-      ${tog('enablePremiumListings','Enable premium listings','Allow users to boost their listings')}
-      ${tog('freeOnly','Free listings only','Disable all paid features')}
       <div class="menu-group-label" style="padding:16px 0 10px">System</div>
       <button class="btn-pri" style="margin-bottom:8px" onclick="H._admin.exportData()">${S.download} Export All Data</button>
       <button class="btn-sec" style="margin-bottom:8px" onclick="H._admin.clearOldData()">${S.trash} Clear Old Data (30+ days)</button>
@@ -6124,33 +6020,6 @@ H.init();
       if (body) body.innerHTML = renderReports(f);
     },
 
-    approveTopup(rid) {
-      if (!adminGuard()) return;
-      const r = (H.state.topupRequests||[]).find(x=>x.id===rid); if (!r) return;
-      const u = (H.state.users||[]).find(x=>x.id===r.userId); if (!u) return;
-      r.status = 'approved';
-      const amount = Number(r.amount);
-      H.state.txns = H.state.txns||[];
-      H.state.txns.unshift({id:uid(),userId:u.id,type:'topup',amt:amount,note:`Top-up via ${r.method||'EcoCash'} (ref: ${r.reference||r.ref||'—'})`,t:Date.now()});
-      alog(`Approved top-up $${amount} for ${u.name}`);
-      // Sync to Supabase
-      const sb = window.supabase;
-      if (sb && typeof sb.from === 'function') {
-        sb.from('topup_requests').update({ status: 'approved' }).eq('id', rid);
-      }
-      saveState(); toast(`$${amount.toFixed(2)} credited to ${u.name}`); this.setTab('payments');
-    },
-
-    rejectTopup(rid) {
-      if (!adminGuard()) return;
-      const r = (H.state.topupRequests||[]).find(x=>x.id===rid); if (!r) return;
-      const u = (H.state.users||[]).find(x=>x.id===r.userId);
-      r.status = 'rejected';
-      if (u) pushNotif(u.id,'Top-up Rejected','Your top-up could not be verified. Contact support if this is an error.');
-      alog(`Rejected top-up ${rid}`);
-      saveState(); toast('Top-up rejected'); this.setTab('payments');
-    },
-
     banUser(uid_, type, reportId) {
       if (!adminGuard()) return;
       modal({
@@ -6375,7 +6244,7 @@ H.init();
       const sb = window.supabase;
       if (sb && typeof sb.from === 'function') {
         const KEYS = ['requireListingApproval','autoApproveVerified','allowImageUploads',
-                      'signupPaused','requirePhoneVerification','enablePremiumListings','freeOnly'];
+                      'signupPaused','requirePhoneVerification'];
         const settingsObj = {};
         KEYS.forEach(key => { settingsObj[key] = !!H.state[key]; });
         sb.from('app_settings').upsert({ id: 1, settings: settingsObj, updated_at: new Date().toISOString() })
@@ -10826,7 +10695,7 @@ H.init();
       <div class="form-wrap">
         <div class="section-box" style="border:1.5px solid rgba(192,57,43,.2);text-align:center;padding:24px">
           <div class="verify-title" style="color:var(--red)">Delete Account</div>
-          <div class="verify-sub">This permanently deletes your account, listings, messages and wallet. Cannot be undone.</div>
+          <div class="verify-sub">This permanently deletes your account, listings and messages. Cannot be undone.</div>
         </div>
         <div class="section-box">
           <div class="section-title">What will be deleted</div>
@@ -10972,7 +10841,7 @@ H.init();
       },
       {
         q: 'How much does it cost to post?',
-        a: 'Posting an ad is completely free! We only charge for optional premium features like boosting your listing or featured placement.'
+        a: 'Posting an ad is completely free. Browsing, messaging, applying for jobs, and getting verified are all free too. No subscriptions, no hidden fees, no commission on sales.'
       },
       {
         q: 'How long do listings stay active?',
@@ -11120,17 +10989,12 @@ H.init();
       {
         tags:['post','create listing','add listing','sell','post ad','how to post','new listing','list item','publish listing','upload item','add item'],
         answer:'To post a listing:\n1. Tap the orange ✚ Post button at the bottom of the screen\n2. Choose the right category (Electronics, Jobs, Rentals, etc.)\n3. Add 3–5 clear photos, a descriptive title, honest description, and price\n4. Set your location and tap Publish\n\nListings are reviewed and go live within minutes. Clear photos and honest descriptions get up to 3× more responses!',
-        chips:['Edit a Listing','Boost a Listing','Mark as Sold']
+        chips:['Edit a Listing','Mark as Sold','Get Verified']
       },
       {
         tags:['verify','verification','id','identity','badge','blue badge','verified seller','document','selfie','id document','get verified'],
         answer:'To earn your verified ✓ badge:\n1. Go to Profile (bottom nav)\n2. Tap "Verify Identity"\n3. Upload a clear photo of your national ID or passport\n4. Take a selfie — your face must match the ID\n5. Submit and wait up to 24 hours\n\nVerified sellers rank higher in search results and buyers trust them significantly more.',
         chips:['Edit Profile','Post a Listing','Contact Support']
-      },
-      {
-        tags:['boost','promote','advertise','spotlight','feature','credits','ad credit','visibility','top of results','top listing','sponsored'],
-        answer:'Boost puts your listing at the very top of search results and category pages!\n\nHow to boost:\n1. Open any of your active listings\n2. Tap "Boost Listing"\n3. Choose a package (duration/reach)\n4. Pay via EcoCash, OneMoney, or bank transfer\n\nNote: Credits are non-refundable once applied to a listing. Unused credits can be refunded within 7 days — contact us to request this.',
-        chips:['Payment Methods','Post a Listing','Contact Support']
       },
       {
         tags:['message','chat','messaging','inbox','not receiving','send message','conversation','message seller','not syncing','not delivered','no reply','messages disappear'],
@@ -11150,7 +11014,7 @@ H.init();
       {
         tags:['payment','pay','ecocash','onemoney','bank transfer','mobile money','zipit','rtgs','how to pay','transaction'],
         answer:'PaMarket uses direct peer-to-peer payments between buyers and sellers.\n\nAccepted methods:\n• EcoCash — send to seller\'s registered number\n• OneMoney — same process\n• Bank transfer (ZIPIT / RTGS)\n• Cash on delivery (meet in person)\n\n⚠️ PaMarket does NOT hold or process payments. Deal directly with sellers. Always inspect items before paying — never pay sight-unseen.',
-        chips:['Boost a Listing','Report a Scam','Ask Another Question']
+        chips:['Payment Methods','Report a Scam','Ask Another Question']
       },
       {
         tags:['job','apply','application','vacancy','hire','employer','employee','applied','apply for job','job not showing','job listing'],
@@ -11175,7 +11039,7 @@ H.init();
       {
         tags:['edit','update listing','change price','modify listing','update ad','change description','change photo','edit my listing'],
         answer:'To edit a listing:\n1. Tap the Profile icon (bottom nav) → My Listings\n2. Tap the listing you want to change\n3. Tap "Edit"\n4. Update the title, price, photos, description, or location\n5. Tap Save — changes appear live within seconds',
-        chips:['Mark as Sold','Boost a Listing','Delete a Listing']
+        chips:['Mark as Sold','Delete a Listing','Get Verified']
       },
       {
         tags:['delete listing','remove listing','take down','delete ad','remove ad'],
@@ -11199,8 +11063,8 @@ H.init();
       },
       {
         tags:['free','cost','price','fee','how much','charges','paid feature','subscription','pricing'],
-        answer:'PaMarket is 100% free for buyers and sellers!\n\nAlways free:\n✓ Post unlimited listings\n✓ Message any seller or buyer\n✓ Apply for jobs\n✓ Browse all categories\n✓ Create your profile and CV\n✓ Get verified\n\nOptional paid upgrades:\n• Boost — pushes your listing to the top of search results\n• Spotlight Ad — featured placement on the home page\n\nNo subscription. No hidden fees. No commission on sales.',
-        chips:['Boost a Listing','Post a Listing','Ask Another Question']
+        answer:'PaMarket is 100% free for buyers and sellers!\n\nEverything is free:\n✓ Post unlimited listings\n✓ Message any seller or buyer\n✓ Apply for jobs\n✓ Browse all categories\n✓ Create your profile and CV\n✓ Get verified\n\nNo subscription. No hidden fees. No commission on sales.',
+        chips:['Post a Listing','Get Verified','Ask Another Question']
       },
       {
         tags:['profile','update profile','edit profile','change name','change photo','profile picture','bio','city','avatar'],
@@ -11225,7 +11089,7 @@ H.init();
       {
         tags:['renew','expired listing','30 days','listing expired','listing removed','disappeared','no longer showing','listing gone'],
         answer:'Listings stay active for 30 days, then automatically archive.\n\nTo renew an expired listing:\n1. Go to My Listings\n2. Find the expired listing (marked "Expired")\n3. Tap "Renew"\n\nThis re-publishes it free for another 30 days.\n\nIf your listing disappeared before 30 days, it may have been reported and removed. Check your notification inbox or contact us for details.',
-        chips:['Edit a Listing','Boost a Listing','Contact Support']
+        chips:['Edit a Listing','Post a Listing','Contact Support']
       },
       {
         tags:['search','find listing','browse','can\'t find','not showing up','listing not found','search not working','search results'],
@@ -11250,14 +11114,13 @@ H.init();
     var history  = [];
     var msgCount = 0;
 
-    var INIT_CHIPS = ['Sign In Issue','Post a Listing','Get Verified','Messaging Issue','Report a Scam','Boost a Listing','Job / CV Help','App Not Working','Pricing Info','Account Banned'];
+    var INIT_CHIPS = ['Sign In Issue','Post a Listing','Get Verified','Messaging Issue','Report a Scam','Job / CV Help','App Not Working','Pricing Info','Account Banned'];
     var CHIP_MAP   = {
       'Sign In Issue':    'sign in login forgot password',
       'Post a Listing':   'post create listing sell publish',
       'Get Verified':     'verify verification badge identity',
       'Messaging Issue':  'message chat not working inbox',
       'Report a Scam':    'scam fraud fake suspicious',
-      'Boost a Listing':  'boost promote advertise credits',
       'Job / CV Help':    'job apply cv resume vacancy',
       'App Not Working':  'crash not loading freeze error bug',
       'Pricing Info':     'free cost price fee subscription',
@@ -11498,10 +11361,7 @@ H.init();
             <li>Human trafficking, exploitation, or domestic workers without consent</li>
           </ul>
 
-          <h2>6. Advertising Credits (Boost Feature)</h2>
-          <p>PaMarket offers optional paid advertising credits ("Boost") to increase the visibility of your listings. These credits are purchased as a business service via external payment methods (EcoCash, OneMoney, or bank transfer). Advertising credits are not processed by Google Play or the Apple App Store. Credits are non-refundable once applied to a listing. Unused credits may be refunded at our discretion within 7 days of purchase — contact us to request a refund.</p>
-
-          <h2>7. User Conduct</h2>
+          <h2>6. User Conduct</h2>
           <p>You agree not to:</p>
           <ul>
             <li>Harass, threaten, abuse, or discriminate against other users</li>
@@ -11513,28 +11373,28 @@ H.init();
             <li>Use automated tools to scrape or access the platform</li>
           </ul>
 
-          <h2>8. User Content License</h2>
+          <h2>7. User Content License</h2>
           <p>By posting photos, text, or any content on PaMarket, you grant us a non-exclusive, worldwide, royalty-free license to display, reproduce, and distribute that content within the App and for promotional purposes. You confirm that you own or have the rights to all content you post and that it does not infringe any third-party rights.</p>
 
-          <h2>9. Intellectual Property</h2>
+          <h2>8. Intellectual Property</h2>
           <p>All design, branding, logos, code, and content created by PaMarket are protected by copyright and intellectual property law. You may not copy, reproduce, reverse-engineer, or redistribute any part of the App without our written consent.</p>
 
-          <h2>10. Moderation and Enforcement</h2>
+          <h2>9. Moderation and Enforcement</h2>
           <p>We reserve the right to remove any listing, suspend, or permanently ban any account that violates these Terms at any time, with or without notice. Serious violations including fraud, scams, or illegal activity may be reported to relevant Zimbabwean authorities. Banned users may appeal by contacting chakusaprince@gmail.com within 14 days of the ban.</p>
 
-          <h2>11. Disclaimer of Warranties</h2>
+          <h2>10. Disclaimer of Warranties</h2>
           <p>PaMarket is provided "as is" and "as available" without any warranties, express or implied. We do not guarantee that the App will be uninterrupted, error-free, or that listings are accurate. We are not responsible for the quality, safety, legality, or availability of listed items.</p>
 
-          <h2>12. Limitation of Liability</h2>
+          <h2>11. Limitation of Liability</h2>
           <p>To the maximum extent permitted by law, PaMarket and its operators shall not be liable for any indirect, incidental, punitive, or consequential damages arising from your use of the App, including loss of money, data, or business opportunity resulting from transactions between users.</p>
 
-          <h2>13. Governing Law</h2>
+          <h2>12. Governing Law</h2>
           <p>These Terms are governed exclusively by the laws of the Republic of Zimbabwe. Any legal disputes shall be subject to the jurisdiction of the courts of Zimbabwe.</p>
 
-          <h2>14. Changes to These Terms</h2>
+          <h2>13. Changes to These Terms</h2>
           <p>We may update these Terms from time to time. We will notify users of significant changes through the App. Continued use of the App after any update constitutes your acceptance of the revised Terms. You may stop using the App at any time if you disagree with the updated Terms.</p>
 
-          <h2>15. Contact Us</h2>
+          <h2>14. Contact Us</h2>
           <p>For questions about these Terms, contact us at:</p>
           <ul>
             <li>Email: chakusaprince@gmail.com</li>
@@ -11561,7 +11421,6 @@ pages.HelpPrivacy = function () {
             <li><strong>Profile data:</strong> Profile photo, bio, city/province location</li>
             <li><strong>Listing data:</strong> Photos, descriptions, prices, and location of items you post</li>
             <li><strong>Messages:</strong> In-app conversations between buyers and sellers</li>
-            <li><strong>Transaction data:</strong> Advertising credit balance and top-up reference history</li>
             <li><strong>Device data:</strong> Device type, operating system version, app version</li>
             <li><strong>Usage data:</strong> Pages viewed, search queries, and listing interactions</li>
           </ul>
@@ -11571,7 +11430,6 @@ pages.HelpPrivacy = function () {
             <li>To create and manage your user account</li>
             <li>To display your listings to other users across Zimbabwe</li>
             <li>To facilitate secure in-app messaging between buyers and sellers</li>
-            <li>To verify advertising credit purchases and apply boosts to listings</li>
             <li>To detect, investigate, and prevent fraud and policy violations</li>
             <li>To improve the App, fix bugs, and enhance user experience</li>
             <li>To send you important notifications about your account and listings</li>
@@ -11894,7 +11752,7 @@ pages.HelpCommunity = function () {
 
 H.pages.LegalHub = function() {
   var sections = [
-    { title: 'Terms', items: ['Terms of Use','Acceptable Use Policy','Seller Terms','Buyer Protection','Boost Terms'] },
+    { title: 'Terms', items: ['Terms of Use','Acceptable Use Policy','Seller Terms','Buyer Protection'] },
     { title: 'Privacy', items: ['Privacy Policy','Cookie Policy','Data Deletion','GDPR Compliance'] },
     { title: 'Platform Policies', items: ['Community Guidelines','Prohibited Items','Anti-Fraud Policy','Dispute Resolution'] }
   ];
@@ -12134,9 +11992,6 @@ H.pages.LegalHub = function() {
 
     var sort = f.sort || 'newest';
     all.sort(function (a, b) {
-      var ba = (a.boost && a.boost.until > Date.now()) ? 1 : 0;
-      var bb = (b.boost && b.boost.until > Date.now()) ? 1 : 0;
-      if (ba !== bb) return bb - ba;
       if (sort === 'price_asc') return (a.price || 0) - (b.price || 0);
       if (sort === 'price_desc') return (b.price || 0) - (a.price || 0);
       if (sort === 'oldest') return a.createdAt - b.createdAt;
@@ -12418,7 +12273,7 @@ H.pages.LegalHub = function() {
       var profile = pr.data;
       if (!profile) {
         await window.supabase.from('profiles').upsert({ id: userId, name: name, avatar: avatar });
-        profile = { id: userId, name: name, avatar: avatar, role: 'user', status: 'active', wallet_usd: 0, verified: false };
+        profile = { id: userId, name: name, avatar: avatar, role: 'user', status: 'active', verified: false };
       }
       var attempts = 0;
       var trySetup = function() {
@@ -12429,13 +12284,12 @@ H.pages.LegalHub = function() {
         var users = window.H.state.users = window.H.state.users || [];
         var existing = users.find(function(u){ return u.id === userId; });
         if (!existing) {
-          users.push({ id: userId, email: email, name: profile.name || name, phone: profile.phone || '', avatar: profile.avatar || avatar, verified: !!profile.verified, walletUSD: parseFloat(profile.wallet_usd) || 0, language: 'English', joinedAt: new Date(profile.created_at || Date.now()).getTime(), role: profile.role || 'user', status: profile.status || 'active', banReason: null, banUntil: null, blocked: [] });
+          users.push({ id: userId, email: email, name: profile.name || name, phone: profile.phone || '', avatar: profile.avatar || avatar, verified: !!profile.verified, language: 'English', joinedAt: new Date(profile.created_at || Date.now()).getTime(), role: profile.role || 'user', status: profile.status || 'active', banReason: null, banUntil: null, blocked: [] });
         } else {
           existing.name = profile.name || existing.name;
           existing.avatar = profile.avatar || existing.avatar;
           existing.role = profile.role || existing.role;
           existing.verified = !!profile.verified;
-          existing.walletUSD = parseFloat(profile.wallet_usd) || existing.walletUSD || 0;
         }
         window.H.state.currentUserId = userId;
         if (typeof window.H.saveState === 'function') window.H.saveState();
@@ -12523,26 +12377,6 @@ H.pages.LegalHub = function() {
       })
       .subscribe();
 
-    // Wallet top-up approvals channel
-    sb.channel('rt-topup')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'topup_requests' }, function(payload) {
-        var row = payload.new;
-        if (!row || !window.H || !window.H.state) return;
-        var req = (window.H.state.topupRequests || []).find(function(r){ return r.reference === row.reference; });
-        if (req && row.status === 'approved') {
-          req.status = 'approved';
-          var u = window.H.currentUser && window.H.currentUser();
-          if (u && u.id === req.userId) {
-            u.walletUSD = +((u.walletUSD || 0) + (req.amount || 0)).toFixed(2);
-            window.H.state.txns = window.H.state.txns || [];
-            window.H.state.txns.unshift({ id: window.H.uid(), userId: u.id, type: 'topup', amt: req.amount, t: Date.now(), note: 'Wallet Top Up · ' + req.method });
-            if (typeof window.H.saveState === 'function') window.H.saveState();
-            if (typeof window.H.toast === 'function') window.H.toast('Wallet credited $' + req.amount.toFixed(2) + '!');
-          }
-        }
-      })
-      .subscribe();
-
     // Profile verification approvals
     sb.channel('rt-profiles')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, function(payload) {
@@ -12553,7 +12387,6 @@ H.pages.LegalHub = function() {
           var wasUnverified = !u.verified;
           u.verified = !!row.verified;
           u.role     = row.role || u.role;
-          u.walletUSD = row.wallet_usd != null ? parseFloat(row.wallet_usd) : u.walletUSD;
           if (typeof window.H.saveState === 'function') window.H.saveState();
           if (wasUnverified && u.verified && u.id === (window.H.state.currentUserId)) {
             if (typeof window.H.toast === 'function') window.H.toast('Your identity has been verified!');

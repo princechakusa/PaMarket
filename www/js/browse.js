@@ -31,25 +31,7 @@
 
   function renderListingsWithSponsored(filteredList) {
     if (!filteredList.length) return '';
-    const now = Date.now();
-    const sponsored = (H.state.listings || []).filter(l =>
-      l.status === 'active' && l.boost && l.boost.until > now
-    );
-    if (!sponsored.length) return filteredList.map(renderListCard).join('');
-    const shownIds = new Set(filteredList.map(l => l.id));
-    const pool = sponsored.filter(l => !shownIds.has(l.id));
-    if (!pool.length) return filteredList.map(renderListCard).join('');
-    const parts = [];
-    let pi = 0;
-    filteredList.forEach((l, i) => {
-      parts.push(renderListCard(l));
-      if ((i + 1) % 5 === 0) {
-        const s = pool[pi % pool.length];
-        pi++;
-        parts.push(`<div style="position:relative">${renderListCard(s)}<span style="position:absolute;top:10px;left:10px;background:#1A3A8F;color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px;pointer-events:none;z-index:1">SPONSORED</span></div>`);
-      }
-    });
-    return parts.join('');
+    return filteredList.map(renderListCard).join('');
   }
 
   pages.Browse = function () {
@@ -139,7 +121,6 @@
         <div class="filter-section">
           <div class="filter-title">Other</div>
           <label class="filter-checkbox"><input type="checkbox" id="verifiedOnly" onchange="H._browse.onFilterChange()"><span>Verified Sellers Only</span></label>
-          <label class="filter-checkbox"><input type="checkbox" id="boostedOnly" onchange="H._browse.onFilterChange()"><span>Premium Ads Only</span></label>
         </div>
 
         <div class="filter-actions">
