@@ -459,10 +459,11 @@ window.H = {
       }
     })();
     await this.navTo('Home');
-    // Handle deep links: ?listing=ID  or  ?action=post|browse
+    // Handle deep links: ?listing=ID  or  ?action=post|browse  or  ?deeplink=route
     const _qs = new URLSearchParams(window.location.search);
-    const _lid = _qs.get('listing'), _act = _qs.get('action');
-    if (_lid) { setTimeout(()=>this.openListing(_lid), 200); }
+    const _lid = _qs.get('listing'), _act = _qs.get('action'), _dl = _qs.get('deeplink');
+    if (_dl) { setTimeout(()=>H._handleDeepLink(decodeURIComponent(_dl)), 300); }
+    else if (_lid) { setTimeout(()=>this.openListing(_lid), 200); }
     else if (_act === 'post')   { if(this.currentUser()) setTimeout(()=>this.navTo('Post',null), 200); }
     else if (_act === 'browse') { setTimeout(()=>this.navTo('Browse',null), 200); }
     else if (_act === 'topup')  { setTimeout(()=>{ if(this.currentUser()) this.openInner('Ads'); else this.requireAuth('Sign in to advertise'); }, 300); }
@@ -479,6 +480,7 @@ window.H = {
     if(typeof H.syncNotifications==='function') H.syncNotifications();
     if(typeof H._setupRealtimeNotifs==='function') H._setupRealtimeNotifs();
     if(typeof H.startRealtime==='function') H.startRealtime();
+    if(typeof H.setupPush==='function') H.setupPush();
     this._initPullToRefresh();
     if(typeof window._hideSplash==='function') window._hideSplash();
   },
@@ -1669,6 +1671,57 @@ H._handleDeepLink = function(route) {
     H.navTo(route);
   }
 };
+
+// ── Web Push subscription ─────────────────────────────────
+(function() {
+  function _b64ToUint8(b64) {
+    var pad = '='.repeat((4 - b64.length % 4) % 4);
+    var raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    var arr = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return arr;
+  }
+
+  var VAPID_PUBLIC = 'BLvNYB1n3GhDxaVExMavxUemiy58qfz9u-L5cRjsLja-k2uPCF6SU-nYdfbC-XpMmyU1kALGPqbN0d6j9piU0F0';
+
+  H.setupPush = async function() {
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      const u = H.currentUser(); if (!u) return;
+      if (Notification.permission === 'denied') return;
+      const c = window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null;
+      if (!c) return;
+
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+
+      if (!sub) {
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') return;
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: _b64ToUint8(VAPID_PUBLIC)
+        });
+      }
+
+      // Save/refresh subscription in profiles
+      const subJson = JSON.stringify(sub.toJSON());
+      c.from('profiles').update({ push_subscription: subJson }).eq('id', u.id)
+        .then(function(r) { if (r && r.error) console.warn('push_sub save:', r.error.message); });
+    } catch(e) {
+      console.warn('Push setup:', e.message);
+    }
+  };
+
+  // Handle deeplink sent from the service worker when user taps a notification
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'deeplink' && event.data.route) {
+        H._handleDeepLink(event.data.route);
+      }
+    });
+  }
+})();
 
 H._checkEngagementAlerts = function () {
   try {
