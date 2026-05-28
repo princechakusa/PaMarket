@@ -389,7 +389,11 @@
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
             </button>
           </div>`;
-        }).join('') : H.emptyState('All caught up', 'New notifications about your listings and messages will appear here.', null, null)}
+        }).join('') : `<div style="text-align:center;padding:60px 20px">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--sub)" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px">No notifications yet</div>
+          <div style="font-size:13px;color:var(--sub)">You'll be notified about messages, saves, and activity on your listings.</div>
+        </div>`}
       </div>
 
       <div class="menu-group-label">Notification Settings</div>
@@ -407,6 +411,16 @@
 
   pages.Notifications_after = function () {
     if (!H.currentUser()) return;
+    // Fix 1 & 3 — Mark all notifications as read when the page opens and clear the badge
+    const u = H.currentUser();
+    const list = (H.state.notifs && H.state.notifs[u.id]) || [];
+    const hadUnread = list.some(n => !n.read);
+    if (hadUnread) {
+      list.forEach(n => { n.read = true; });
+      saveState();
+      H._updateNotifBadge();
+      if (H.updateNotifBadge) H.updateNotifBadge();
+    }
     // Sync from Supabase whenever the page is opened
     if (typeof H.syncNotifications === 'function') H.syncNotifications();
     // Make sure real-time subscription is alive
