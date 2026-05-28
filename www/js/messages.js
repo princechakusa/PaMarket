@@ -142,8 +142,9 @@
         return (bm.t || 0) - (am.t || 0);
       });
 
+    const totalUnread = convos.reduce((sum, c) => sum + (c.messages || []).filter(m => m.from !== u.id && !m.read).length, 0);
     return `<div class="page active">${H.innerTopbar('Messages')}
-      <div style="padding:10px 14px;font-size:12px;color:var(--sub)">${convos.length} conversation${convos.length === 1 ? '' : 's'}</div>
+      <div style="padding:10px 14px;font-size:12px;color:var(--sub);display:flex;align-items:center;justify-content:space-between">${convos.length} conversation${convos.length === 1 ? '' : 's'}${totalUnread > 0 ? '<button onclick="H._markAllRead()" style="background:none;border:none;font-size:12px;font-weight:600;color:#1A3A8F;cursor:pointer;padding:4px 8px;font-family:Inter,sans-serif">Mark all read</button>' : ''}</div>
       <div>
         ${convos.length ? convos.map(c => {
           const otherId = c.members.find(m => m !== u.id);
@@ -606,6 +607,21 @@
           created_at: new Date(rep.t).toISOString(), status: 'open' }).catch(() => {});
       }
     },
+  };
+
+  H._markAllRead = function() {
+    const u = H.currentUser();
+    if (!u) return;
+    (H.state.conversations || []).forEach(c => {
+      if (Array.isArray(c.messages)) {
+        c.messages.forEach(m => {
+          if (m.from !== u.id) m.read = true;
+        });
+      }
+    });
+    H.saveState();
+    H.updateMsgBadge && H.updateMsgBadge();
+    H.openInner('Messages');
   };
 
 })(window.H);

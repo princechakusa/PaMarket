@@ -213,6 +213,14 @@
     submit() {
       if (H.checkBan && H.checkBan()) return;
       const s = postState;
+
+      // Re-validate all required fields before posting
+      if (!s.title || !s.title.trim()) { H.toast('Please add a title for your listing'); return; }
+      if (!H.state.freeOnly && (s.price === '' || s.price === null || s.price === undefined || isNaN(Number(s.price)) || Number(s.price) < 0)) { H.toast('Please enter a valid price'); return; }
+      if (!s.cat) { H.toast('Please select a category'); return; }
+      if (!s.desc || !s.desc.trim()) { H.toast('Please add a description'); return; }
+      if (H.state.allowImageUploads !== false && !s.photos.length) { H.toast('Please add at least one photo'); return; }
+
       const u = H.currentUser();
       const needsApproval = !!(H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified));
       const l = {

@@ -290,6 +290,7 @@
           <circle cx="12" cy="7" r="4"/>
         </svg>
         <span>Account</span>
+        <span class="badge" id="notifBadge" style="display:none">0</span>
       </button>
     </nav>
   </div>
@@ -433,6 +434,21 @@
     };
     H.updateMsgBadge();
     window._msgBadgeInterval = setInterval(H.updateMsgBadge, 5000);
+
+    // ── Notification badge updater ───────────────────────
+    H.updateNotifBadge = function() {
+      try {
+        const u = H.currentUser && H.currentUser();
+        const badge = document.getElementById('notifBadge');
+        if (!badge) return;
+        if (!u) { badge.style.display = 'none'; return; }
+        const unseen = (H.state.notifications || []).filter(n => !n.read && n.userId === u.id).length;
+        badge.textContent = unseen > 9 ? '9+' : unseen;
+        badge.style.display = unseen > 0 ? 'flex' : 'none';
+      } catch(e) {}
+    };
+    H.updateNotifBadge();
+    window._notifBadgeInterval = setInterval(H.updateNotifBadge, 5000);
 
     // ── Admin page local login fallback ──────────────────
     window.addEventListener('load', () => {

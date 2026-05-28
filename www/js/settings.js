@@ -135,6 +135,7 @@
       approvals: true,
       promotions: true,
       favorites: true,
+      priceDrops: true,
       security: true
     };
 
@@ -191,10 +192,21 @@
           <div class="toggle-item">
             <div class="toggle-label">
               <span class="toggle-icon">${I.heart}</span>
-              <span>Favorites Alerts</span>
+              <span>Saves on My Listings</span>
             </div>
             <label class="toggle-switch">
               <input type="checkbox" ${prefs.favorites ? 'checked' : ''} onchange="H._notifSettings.toggle('favorites')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-item">
+            <div class="toggle-label">
+              <span class="toggle-icon">${I.alert}</span>
+              <span>Price Drop Alerts</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" ${prefs.priceDrops !== false ? 'checked' : ''} onchange="H._notifSettings.toggle('priceDrops')">
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -215,7 +227,7 @@
   };
 
   pages.NotificationSettings_after = function () {
-    const DEFAULTS = { messages: true, listings: true, approvals: true, promotions: true, favorites: true, security: true };
+    const DEFAULTS = { messages: true, listings: true, approvals: true, promotions: true, favorites: true, priceDrops: true, security: true };
     H._notifSettings = {
       toggle: (key) => {
         const u = H.currentUser();
@@ -386,39 +398,6 @@
   };
 
   // --- Language Settings ------------------------------------
-  pages.LanguageSettings = function () {
-    return `<div class="page active">
-      ${H.innerTopbar('Language')}
-      <div class="form-wrap">
-        <div class="section-box">
-          <label class="lang-option selected" style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border,#e5e0d6)">
-            <input type="radio" name="language" checked disabled>
-            <div style="flex:1">
-              <div style="font-weight:700;color:var(--text)">English</div>
-              <div style="font-size:12px;color:var(--muted)">Current language</div>
-            </div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent,#1A3A8F)" stroke-width="2.5" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg>
-          </label>
-          <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border,#e5e0d6);opacity:.5">
-            <input type="radio" name="language" disabled>
-            <div style="flex:1">
-              <div style="font-weight:700;color:var(--text)">Shona · ChiShona</div>
-              <div style="font-size:12px;color:var(--muted)">Not available in this version</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;padding:14px 0;opacity:.5">
-            <input type="radio" name="language" disabled>
-            <div style="flex:1">
-              <div style="font-weight:700;color:var(--text)">Ndebele · IsiNdebele</div>
-              <div style="font-size:12px;color:var(--muted)">Not available in this version</div>
-            </div>
-          </div>
-        </div>
-        <p style="font-size:13px;color:var(--muted);text-align:center;margin-top:8px">PaMarket uses English for app screens and account communication.</p>
-      </div>
-    </div>`;
-  };
-
   pages.LanguageSettings = function () {
     const current = H.getLanguage ? H.getLanguage() : ((H.currentUser() && H.currentUser().language) || H.state.language || 'English');
     return `<div class="page active">

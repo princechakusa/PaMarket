@@ -520,8 +520,10 @@ window.H = {
       if(target)target.classList.add('active');
       await H.renderPage(name);
     } catch(e) {
-      console.error('navTo error:', e);
-      H.toast('Could not open this page. Please try again.', 4000, true);
+      console.warn('navTo error:', e);
+      H.toast('Page not found');
+      const area=document.getElementById('mainArea');
+      if(area) area.innerHTML='<div class="page active" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#1A3A8F" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Page not found</div><div style="font-size:14px;color:var(--sub);margin-bottom:24px">This page doesn\'t exist or couldn\'t load.</div><button onclick="H.navTo(\'Home\')" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Go Home</button></div>';
     }
   },
 
@@ -536,9 +538,11 @@ window.H = {
       document.getElementById('bottomNav').style.display='none';
       await this.renderPage(name,params);
     } catch(e) {
-      console.error('openInner error:',e);
+      console.warn('openInner error:',e);
       document.getElementById('bottomNav').style.display='flex';
-      H.toast('Something went wrong. Please try again.');
+      H.toast('Page not found');
+      const area=document.getElementById('mainArea');
+      if(area) area.innerHTML='<div class="page active" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#1A3A8F" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Page not found</div><div style="font-size:14px;color:var(--sub);margin-bottom:24px">This page doesn\'t exist or couldn\'t load.</div><button onclick="H.navTo(\'Home\')" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Go Home</button></div>';
     }
   },
 
@@ -576,7 +580,12 @@ window.H = {
     const scrollTo=(opts&&opts.scrollTo)||0;
     if(this.canAccessPage&&!this.canAccessPage(name)){this.toast('Access denied');await this.navTo('Home');return;}
     this.currentPageName=name; this.currentPageParams=params||{};
-    const fn=this.pages[name]||this.pages.Home;
+    if(!this.pages[name]) {
+      H.toast('Page not found');
+      if(area) area.innerHTML='<div class="page active" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#1A3A8F" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Page not found</div><div style="font-size:14px;color:var(--sub);margin-bottom:24px">This page doesn\'t exist or couldn\'t load.</div><button onclick="H.navTo(\'Home\')" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Go Home</button></div>';
+      return;
+    }
+    const fn=this.pages[name];
     if(!area) return;
     const res=fn(params||{});
     if(res instanceof Promise) {

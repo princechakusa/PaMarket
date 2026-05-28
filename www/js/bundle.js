@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-28T09:47:18Z */
+/* PaMarket bundle — built 2026-05-28T10:44:14Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -523,8 +523,10 @@ window.H = {
       if(target)target.classList.add('active');
       await H.renderPage(name);
     } catch(e) {
-      console.error('navTo error:', e);
-      H.toast('Could not open this page. Please try again.', 4000, true);
+      console.warn('navTo error:', e);
+      H.toast('Page not found');
+      const area=document.getElementById('mainArea');
+      if(area) area.innerHTML='<div class="page active" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#1A3A8F" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Page not found</div><div style="font-size:14px;color:var(--sub);margin-bottom:24px">This page doesn\'t exist or couldn\'t load.</div><button onclick="H.navTo(\'Home\')" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Go Home</button></div>';
     }
   },
 
@@ -539,9 +541,11 @@ window.H = {
       document.getElementById('bottomNav').style.display='none';
       await this.renderPage(name,params);
     } catch(e) {
-      console.error('openInner error:',e);
+      console.warn('openInner error:',e);
       document.getElementById('bottomNav').style.display='flex';
-      H.toast('Something went wrong. Please try again.');
+      H.toast('Page not found');
+      const area=document.getElementById('mainArea');
+      if(area) area.innerHTML='<div class="page active" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#1A3A8F" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Page not found</div><div style="font-size:14px;color:var(--sub);margin-bottom:24px">This page doesn\'t exist or couldn\'t load.</div><button onclick="H.navTo(\'Home\')" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Go Home</button></div>';
     }
   },
 
@@ -579,7 +583,12 @@ window.H = {
     const scrollTo=(opts&&opts.scrollTo)||0;
     if(this.canAccessPage&&!this.canAccessPage(name)){this.toast('Access denied');await this.navTo('Home');return;}
     this.currentPageName=name; this.currentPageParams=params||{};
-    const fn=this.pages[name]||this.pages.Home;
+    if(!this.pages[name]) {
+      H.toast('Page not found');
+      if(area) area.innerHTML='<div class="page active" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#1A3A8F" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Page not found</div><div style="font-size:14px;color:var(--sub);margin-bottom:24px">This page doesn\'t exist or couldn\'t load.</div><button onclick="H.navTo(\'Home\')" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Go Home</button></div>';
+      return;
+    }
+    const fn=this.pages[name];
     if(!area) return;
     const res=fn(params||{});
     if(res instanceof Promise) {
@@ -3129,6 +3138,14 @@ H.init();
     submit() {
       if (H.checkBan && H.checkBan()) return;
       const s = postState;
+
+      // Re-validate all required fields before posting
+      if (!s.title || !s.title.trim()) { H.toast('Please add a title for your listing'); return; }
+      if (!H.state.freeOnly && (s.price === '' || s.price === null || s.price === undefined || isNaN(Number(s.price)) || Number(s.price) < 0)) { H.toast('Please enter a valid price'); return; }
+      if (!s.cat) { H.toast('Please select a category'); return; }
+      if (!s.desc || !s.desc.trim()) { H.toast('Please add a description'); return; }
+      if (H.state.allowImageUploads !== false && !s.photos.length) { H.toast('Please add at least one photo'); return; }
+
       const u = H.currentUser();
       const needsApproval = !!(H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified));
       const l = {
@@ -3973,8 +3990,9 @@ H.init();
         return (bm.t || 0) - (am.t || 0);
       });
 
+    const totalUnread = convos.reduce((sum, c) => sum + (c.messages || []).filter(m => m.from !== u.id && !m.read).length, 0);
     return `<div class="page active">${H.innerTopbar('Messages')}
-      <div style="padding:10px 14px;font-size:12px;color:var(--sub)">${convos.length} conversation${convos.length === 1 ? '' : 's'}</div>
+      <div style="padding:10px 14px;font-size:12px;color:var(--sub);display:flex;align-items:center;justify-content:space-between">${convos.length} conversation${convos.length === 1 ? '' : 's'}${totalUnread > 0 ? '<button onclick="H._markAllRead()" style="background:none;border:none;font-size:12px;font-weight:600;color:#1A3A8F;cursor:pointer;padding:4px 8px;font-family:Inter,sans-serif">Mark all read</button>' : ''}</div>
       <div>
         ${convos.length ? convos.map(c => {
           const otherId = c.members.find(m => m !== u.id);
@@ -4439,6 +4457,21 @@ H.init();
     },
   };
 
+  H._markAllRead = function() {
+    const u = H.currentUser();
+    if (!u) return;
+    (H.state.conversations || []).forEach(c => {
+      if (Array.isArray(c.messages)) {
+        c.messages.forEach(m => {
+          if (m.from !== u.id) m.read = true;
+        });
+      }
+    });
+    H.saveState();
+    H.updateMsgBadge && H.updateMsgBadge();
+    H.openInner('Messages');
+  };
+
 })(window.H);
 
 ;/* === www/js/notifications.js === */
@@ -4833,7 +4866,11 @@ H.init();
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
             </button>
           </div>`;
-        }).join('') : H.emptyState('All caught up', 'New notifications about your listings and messages will appear here.', null, null)}
+        }).join('') : `<div style="text-align:center;padding:60px 20px">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--sub)" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px">No notifications yet</div>
+          <div style="font-size:13px;color:var(--sub)">You'll be notified about messages, saves, and activity on your listings.</div>
+        </div>`}
       </div>
 
       <div class="menu-group-label">Notification Settings</div>
@@ -4851,6 +4888,16 @@ H.init();
 
   pages.Notifications_after = function () {
     if (!H.currentUser()) return;
+    // Fix 1 & 3 — Mark all notifications as read when the page opens and clear the badge
+    const u = H.currentUser();
+    const list = (H.state.notifs && H.state.notifs[u.id]) || [];
+    const hadUnread = list.some(n => !n.read);
+    if (hadUnread) {
+      list.forEach(n => { n.read = true; });
+      saveState();
+      H._updateNotifBadge();
+      if (H.updateNotifBadge) H.updateNotifBadge();
+    }
     // Sync from Supabase whenever the page is opened
     if (typeof H.syncNotifications === 'function') H.syncNotifications();
     // Make sure real-time subscription is alive
@@ -10842,39 +10889,6 @@ H.init();
   };
 
   // --- Language Settings ------------------------------------
-  pages.LanguageSettings = function () {
-    return `<div class="page active">
-      ${H.innerTopbar('Language')}
-      <div class="form-wrap">
-        <div class="section-box">
-          <label class="lang-option selected" style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border,#e5e0d6)">
-            <input type="radio" name="language" checked disabled>
-            <div style="flex:1">
-              <div style="font-weight:700;color:var(--text)">English</div>
-              <div style="font-size:12px;color:var(--muted)">Current language</div>
-            </div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent,#1A3A8F)" stroke-width="2.5" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg>
-          </label>
-          <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border,#e5e0d6);opacity:.5">
-            <input type="radio" name="language" disabled>
-            <div style="flex:1">
-              <div style="font-weight:700;color:var(--text)">Shona · ChiShona</div>
-              <div style="font-size:12px;color:var(--muted)">Not available in this version</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;padding:14px 0;opacity:.5">
-            <input type="radio" name="language" disabled>
-            <div style="flex:1">
-              <div style="font-weight:700;color:var(--text)">Ndebele · IsiNdebele</div>
-              <div style="font-size:12px;color:var(--muted)">Not available in this version</div>
-            </div>
-          </div>
-        </div>
-        <p style="font-size:13px;color:var(--muted);text-align:center;margin-top:8px">PaMarket uses English for app screens and account communication.</p>
-      </div>
-    </div>`;
-  };
-
   pages.LanguageSettings = function () {
     const current = H.getLanguage ? H.getLanguage() : ((H.currentUser() && H.currentUser().language) || H.state.language || 'English');
     return `<div class="page active">
