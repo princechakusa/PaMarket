@@ -48,6 +48,12 @@
     const sellerPhone = seller.phone || l.sellerPhone || '';
     const sellerName  = seller.name  || l.sellerName  || 'Seller';
 
+    // Increment view count once per render, but not for the seller's own listing
+    if (!isMine) {
+      l.views = (l.views || 0) + 1;
+      H.saveState();
+    }
+
     return `<div class="page active">
       <div class="det-topbar">
         <button class="back" onclick="H.goBack()">
@@ -104,9 +110,11 @@
 
         <div class="desc-text" style="white-space:pre-line">${H.escHtml(l.desc||'No description provided.')}</div>
 
+        <div id="similarListingsPlaceholder" class="similar-loading" style="height:120px;background:var(--card);border-radius:14px;margin:16px 0;opacity:.5;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--sub)">Loading similar listings...</div>
+
         ${isMine ? `
           <button class="btn-pri" onclick="H.openBoostPage('${l.id}')" style="margin-bottom:8px">${S.boost} Boost this Listing</button>
-          <button style="width:100%;padding:13px;background:#fee2e2;color:#dc2626;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" onclick="H.deleteListing('${l.id}')">Delete Listing</button>
+          <button style="width:100%;padding:13px;background:#fee2e2;color:#dc2626;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" onclick="if(!confirm('Are you sure you want to delete this listing?')) return; H.deleteListing('${l.id}')">Delete Listing</button>
         ` : (function(){
           const cm = l.contactMethod || 'chat';
           const waBtn   = `<button class="wa-btn" onclick="H.openWA('${l.id}')">${S.wa} Chat on WhatsApp</button>`;
@@ -164,14 +172,18 @@
     };
 
     const l = H.state.listings.find(x => x.id === params.id);
-    if (!l) return;
+    const placeholder = document.getElementById('similarListingsPlaceholder');
+    if (!l) { if (placeholder) placeholder.remove(); return; }
     const similar = (H.state.listings||[]).filter(x => x.id!==l.id && x.cat===l.cat && x.status==='active').slice(0,4);
-    if (!similar.length) return;
-    const det = document.querySelector('.det-content');
-    if (!det) return;
+    if (!similar.length) { if (placeholder) placeholder.remove(); return; }
     const sec = document.createElement('div');
     sec.innerHTML = '<div class="sec-head" style="margin-top:24px"><div class="sec-title">Similar Listings</div></div><div class="listing-list">'+similar.map(H.renderListCard).join('')+'</div>';
-    det.appendChild(sec);
+    if (placeholder) {
+      placeholder.replaceWith(sec);
+    } else {
+      const det = document.querySelector('.det-content');
+      if (det) det.appendChild(sec);
+    }
   };
 
   H._initSwipe = function() {
@@ -542,7 +554,6 @@
   H.openListing = window.openListing = function(id) {
     const l = (H.state.listings||[]).find(x => x.id === id); if (!l) return;
     if (l.cat === 'jobs') { l.views=(l.views||0)+1; H.saveState(); H.openInner('JobDetail',{id}); return; }
-    l.views = (l.views||0)+1; H.saveState();
     H.openInner('Detail', {id});
   };
 
