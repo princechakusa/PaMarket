@@ -34,25 +34,29 @@
     if (!u) return H.emptyState('Not logged in', 'Please sign in to continue', 'Sign In', "H.authPage()");
 
     const isOwn      = !viewId || (H.currentUser() && viewId === H.currentUser().id);
+    const uPrivacy   = u.privacySettings || {};
     const verified   = u.verified
       ? `<span class="verified">${IC.check} Verified</span>`
       : `<span class="unverified">${IC.alert} Not Verified</span>`;
     const avgRating  = (u.ratings && u.ratings.length)
       ? (u.ratings.reduce((a,b) => a+b, 0) / u.ratings.length).toFixed(1) : '0';
     const ratingCount = u.ratings ? u.ratings.length : 0;
+    const showActivityDot = uPrivacy.showActivity === true;
 
     return `<div class="page active">
       ${H.innerTopbar(isOwn ? 'My Profile' : H.escHtml(u.name))}
       <div class="profile-hero">
-        <div class="profile-pic">
+        <div class="profile-pic" style="position:relative">
           ${u.avatar
             ? `<img src="${u.avatar}" alt="${H.escHtml(u.name)}">`
             : `<div class="profile-initials">${H.initials(u.name)}</div>`}
+          ${showActivityDot ? `<div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid var(--card,#fff)"></div>` : ''}
         </div>
         <div class="profile-info">
           <div class="profile-name">${H.escHtml(u.name || 'User')}</div>
           <div class="profile-phone">${IC.phone} ${H.escHtml(u.phone || 'No phone')}</div>
           <div class="profile-status">${verified}</div>
+          ${isOwn && uPrivacy.profilePublic === false ? `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:20px;font-size:11px;font-weight:700;color:#92400e"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Your profile is set to private</div>` : ''}
         </div>
       </div>
 
@@ -69,7 +73,9 @@
         <button class="btn-sec" onclick="H.openInner('Reviews')">${IC.star} Reviews & Ratings</button>
       </div>` : `
       <div class="form-wrap">
-        <button class="btn-pri" onclick="H.startChatWith('${u.id}', null)">Message ${H.escHtml(u.name)}</button>
+        ${uPrivacy.allowMessages === false
+          ? `<button class="btn-pri" disabled style="opacity:0.5;cursor:not-allowed">Messaging turned off</button>`
+          : `<button class="btn-pri" onclick="H.startChatWith('${u.id}', null)">Message ${H.escHtml(u.name)}</button>`}
         <button class="btn-sec" onclick="H.reportUser('${u.id}')">Report User</button>
       </div>`}
 
