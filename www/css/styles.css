@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   HOSTLY — Zimbabwe's Marketplace
+   PaMarket — Zimbabwe's Marketplace
    Royal Blue · Gold · Inter · Clean Professional
    ═══════════════════════════════════════════════════════════════ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -23,6 +23,9 @@
   --text-hint:    #9AA3B2;
   --text:         var(--text-primary);
   --sub:          var(--text-sub);
+  --sub2:         #b0b8cc;
+  --n1:           #1a1f36;
+  --n5:           #f0f2f8;
   --red:          #D92D20;
   --red-light:    #FEE4E2;
   --green:        #12B76A;
@@ -59,6 +62,9 @@
   --gold-light:   #2A2010;
   --red-light:    #2A1010;
   --green-light:  #0D2A1A;
+  --sub2:         #666e82;
+  --n1:           #e8eaf0;
+  --n5:           #2a2d3a;
 }
 
 /* ── RESET ───────────────────────────────────────────────────── */
