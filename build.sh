@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hostly JS bundler - concatenates all modules for production
+# PaMarket JS bundler - concatenates all modules for production
 # Usage: ./build.sh
 # Output: www/js/bundle.js (reference this single file instead of 30+ script tags)
 set -euo pipefail
@@ -7,7 +7,7 @@ set -euo pipefail
 OUT="www/js/bundle.js"
 TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-echo "/* Hostly bundle — built ${TS} */" > "$OUT"
+echo "/* PaMarket bundle — built ${TS} */" > "$OUT"
 
 # app.js must come first — it defines window.H
 # auth.js must come second — boots the login flow on page load
