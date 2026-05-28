@@ -53,19 +53,45 @@
     }
     .splash-wordmark {
       font-size: 52px; font-weight: 900;
-      color: #fff; letter-spacing: -2px;
+      color: #fff; letter-spacing: -2px; line-height: 1;
       animation: splashBounce .65s cubic-bezier(0.34,1.56,0.64,1) both;
     }
     .splash-wordmark em { font-style: normal; color: #F5A623; }
-    .splash-tag {
-      font-size: 13px; font-weight: 500;
-      color: rgba(255,255,255,.6);
-      margin-top: 6px;
+
+    .splash-divider {
+      width: 36px; height: 2px; border-radius: 2px;
+      background: rgba(255,255,255,.22);
+      margin: 14px 0 14px;
+      animation: splashFade .5s .3s both;
+    }
+
+    /* Lines 2 + 3 — word-column layout */
+    .splash-slogan-row {
+      display: flex; align-items: flex-start; gap: 14px;
       animation: splashFade .5s .35s both;
     }
+    .splash-word-col {
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .splash-slogan-word {
+      font-size: 19px; font-weight: 700;
+      color: #fff; letter-spacing: .3px; line-height: 1.2;
+      white-space: nowrap;
+    }
+    /* Line 3 — the 12:00 PM shadow */
+    .splash-shadow-word {
+      font-size: 19px; font-weight: 700;
+      color: #8faae8; letter-spacing: .3px; line-height: 1;
+      white-space: nowrap;
+      margin-top: 4px;
+      filter: blur(2px);
+      opacity: .58;
+      pointer-events: none;
+    }
+
     .splash-dots {
-      display: flex; gap: 6px; margin-top: 48px;
-      animation: splashFade .5s .5s both;
+      display: flex; gap: 6px; margin-top: 44px;
+      animation: splashFade .5s .55s both;
     }
     .splash-dots span {
       width: 6px; height: 6px; border-radius: 50%;
@@ -188,7 +214,21 @@
   <!-- Splash -->
   <div id="pamarketSplash">
     <div class="splash-wordmark">Pa<em>Market</em></div>
-    <div class="splash-tag">#1 Zim Buy. Sell. Hire. Get Hired.</div>
+    <div class="splash-divider"></div>
+    <div class="splash-slogan-row">
+      <div class="splash-word-col">
+        <span class="splash-slogan-word">Konke</span>
+        <span class="splash-shadow-word">tenga</span>
+      </div>
+      <div class="splash-word-col">
+        <span class="splash-slogan-word">Endaweni</span>
+        <span class="splash-shadow-word">tengesa</span>
+      </div>
+      <div class="splash-word-col">
+        <span class="splash-slogan-word">Eyodwa</span>
+        <span class="splash-shadow-word">Qhatsha</span>
+      </div>
+    </div>
     <div class="splash-dots">
       <span></span><span></span><span></span>
     </div>
