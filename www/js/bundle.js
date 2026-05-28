@@ -1,4 +1,4 @@
-/* Hostly bundle — built 2026-05-28T05:59:11Z */
+/* Hostly bundle — built 2026-05-28T06:02:42Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -11950,30 +11950,113 @@ pages.HelpCommunity = function () {
   // --- About PaMarket -----------------------------------------
   pages.About = function () {
     const year = new Date().getFullYear();
+
+    const sec = (title) => `<p style="font-size:16px;font-weight:800;color:var(--text);margin:28px 0 10px;letter-spacing:-.2px">${title}</p>`;
+
+    const featureCard = ([icon, title, desc]) => `
+      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px;text-align:center">
+        <div style="font-size:26px;margin-bottom:7px">${icon}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${title}</div>
+        <div style="font-size:11px;color:var(--sub);line-height:1.55">${desc}</div>
+      </div>`;
+
+    const valueCard = ([icon, title, body]) => `
+      <div style="display:flex;align-items:flex-start;gap:14px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px">
+        <div style="font-size:22px;flex-shrink:0;margin-top:1px">${icon}</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">${title}</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.6">${body}</div>
+        </div>
+      </div>`;
+
+    const stepCard = (num, title, body) => `
+      <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px">
+        <div style="width:32px;height:32px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${num}</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">${title}</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.6">${body}</div>
+        </div>
+      </div>`;
+
     return `<div class="page active">
       ${H.innerTopbar('About PaMarket')}
+
+      <!-- Hero -->
       <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);padding:36px 20px 32px;text-align:center">
         <div style="width:72px;height:72px;background:rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px">Pa</div>
-        <div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.5px">PaMarket</div>
+        <div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px">Pa<span style="color:#F5A623">Market</span></div>
         <div style="font-size:13px;color:rgba(255,255,255,.75);margin-top:6px">Zimbabwe's Free Marketplace</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:10px;font-weight:600">Version 2.0.0</div>
+        <div style="display:flex;justify-content:center;gap:16px;margin-top:18px">
+          <div style="text-align:center">
+            <div style="font-size:18px;font-weight:900;color:#F5A623">2026</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Founded</div>
+          </div>
+          <div style="width:1px;background:rgba(255,255,255,.2)"></div>
+          <div style="text-align:center">
+            <div style="font-size:18px;font-weight:900;color:#F5A623">10+</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Categories</div>
+          </div>
+          <div style="width:1px;background:rgba(255,255,255,.2)"></div>
+          <div style="text-align:center">
+            <div style="font-size:18px;font-weight:900;color:#F5A623">Free</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Always</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:18px;font-weight:600">Version 2.0.0</div>
       </div>
 
-      <div class="doc-content" style="padding-top:20px">
-        <p style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Our Mission</p>
-        <p>PaMarket connects Zimbabweans to buy, sell, rent, and find jobs — for free. We believe commerce should be accessible to everyone, not just those who can afford platform fees.</p>
+      <div class="doc-content" style="padding-top:4px">
 
-        <p style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;margin-top:20px">What We Offer</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-          ${[['🛒','Buy & Sell','Post ads and find deals across Zimbabwe'],['💼','Jobs Board','Real job listings from real employers'],['🏠','Rentals','Houses, rooms, and commercial spaces'],['🔒','Safe & Trusted','Verified sellers and ID badges']].map(([icon, title, desc]) => `
-          <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px;text-align:center">
-            <div style="font-size:24px;margin-bottom:6px">${icon}</div>
-            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${title}</div>
-            <div style="font-size:11px;color:var(--sub);line-height:1.5">${desc}</div>
-          </div>`).join('')}
+        ${sec('Our Story')}
+        <p style="font-size:13px;color:var(--sub);line-height:1.75">PaMarket was born in 2026 out of a simple observation: Zimbabweans needed a modern, free, and reliable place to buy, sell, and connect online. Existing platforms were either too expensive, too complicated, or not built for the Zimbabwean context.</p>
+        <p style="font-size:13px;color:var(--sub);line-height:1.75;margin-top:10px">We set out to build something different. PaMarket is designed from the ground up for Zimbabwe, covering all 10 provinces, supporting local pricing in USD and ZiG, and making it as easy as possible to post an ad, browse listings, and get in touch with buyers and sellers.</p>
+
+        ${sec('Our Mission')}
+        <p style="font-size:13px;color:var(--sub);line-height:1.75">To make commerce accessible to every Zimbabwean, regardless of location or budget. Buying, selling, renting, and finding work should be free and simple for everyone.</p>
+
+        ${sec('What We Offer')}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
+          ${[
+            ['🛒','Buy and Sell','Post ads and find deals on goods across all categories'],
+            ['💼','Jobs Board','Post vacancies and find work across all industries'],
+            ['🏠','Property and Rooms','Houses, flats, rooms, and commercial spaces for rent or sale'],
+            ['🚗','Vehicles','Cars, trucks, motorbikes, and farming equipment'],
+            ['👗','Fashion','Clothes, shoes, and accessories at local prices'],
+            ['📱','Electronics','Phones, laptops, appliances, and gadgets'],
+            ['🛋️','Furniture','Home furniture, office furniture, and decor'],
+            ['🐾','Pets and Agriculture','Animals, livestock, seeds, and farming supplies'],
+            ['🔧','Services','Plumbers, electricians, drivers, and skilled tradespeople'],
+            ['👶','Baby and Kids','Baby gear, toys, and children\'s items']
+          ].map(featureCard).join('')}
         </div>
 
-        <p style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;margin-top:20px">Legal</p>
+        ${sec('How It Works')}
+        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:16px 16px 4px">
+          ${stepCard(1, 'Create a free account', 'Sign up in seconds using your email, Google, or Apple account. No subscription fees, no hidden charges.')}
+          ${stepCard(2, 'Post your listing', 'Add photos, a description, and your price. Your ad goes live instantly and reaches buyers across Zimbabwe.')}
+          ${stepCard(3, 'Connect and close the deal', 'Buyers reach out via in-app messaging or WhatsApp. Arrange a viewing, negotiate, and complete the sale safely.')}
+        </div>
+
+        ${sec('Who Is PaMarket For?')}
+        ${[
+          ['👤', 'Individuals', 'Sell items you no longer need, find second-hand bargains, or rent out a spare room.'],
+          ['🏢', 'Small Businesses', 'Promote your products and services to active buyers in your city and province.'],
+          ['👔', 'Employers', 'Post job vacancies and find qualified candidates from across Zimbabwe.'],
+          ['🔍', 'Job Seekers', 'Browse real job listings and apply directly through the app.'],
+          ['🏗️', 'Property Owners', 'List properties and rooms for rent or sale and manage enquiries in one place.'],
+          ['🚜', 'Farmers and Traders', 'Buy and sell agricultural produce, livestock, and equipment.']
+        ].map(valueCard).join('')}
+
+        ${sec('Our Values')}
+        ${[
+          ['🇿🇼', 'Made for Zimbabwe', 'Every feature is designed with Zimbabwean users in mind, from province-based filtering to ZiG and USD pricing support.'],
+          ['🆓', 'Free to Use', 'Posting and browsing are always free. We believe access to a marketplace should not cost money.'],
+          ['🔒', 'Safety First', 'We verify seller identities, moderate listings, and give users tools to report and block bad actors.'],
+          ['⚡', 'Simple and Fast', 'The app is lightweight and designed to work well on any smartphone and connection speed.'],
+          ['🤝', 'Community Driven', 'PaMarket grows through the trust of its community. We listen to feedback and improve constantly.']
+        ].map(valueCard).join('')}
+
+        ${sec('Legal')}
         <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;overflow:hidden">
           <div onclick="H.openInner('HelpPrivacy')" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer">
             <span style="font-size:14px;font-weight:600;color:var(--text)">Privacy Policy</span>
@@ -11988,21 +12071,33 @@ pages.HelpCommunity = function () {
             <span style="color:var(--sub)">›</span>
           </div>
         </div>
+        <p style="font-size:12px;color:var(--sub);line-height:1.7;margin-top:12px">PaMarket operates as a platform for user-generated listings. We do not own, sell, or warrant any items listed. Users are responsible for ensuring their listings comply with applicable Zimbabwean law. Prohibited content will be removed and accounts suspended.</p>
 
-        <p style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;margin-top:20px">Contact Us</p>
+        ${sec('Contact Us')}
         <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;overflow:hidden">
-          <a href="mailto:chakusaprince@gmail.com" style="display:flex;align-items:center;gap:12px;padding:14px 16px;text-decoration:none;border-bottom:1px solid var(--border)">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            <span style="font-size:13px;font-weight:600;color:#1A3A8F">chakusaprince@gmail.com</span>
+          <a href="mailto:chakusaprince@gmail.com" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;border-bottom:1px solid var(--border)">
+            <div style="width:36px;height:36px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Support Email</div>
+              <div style="font-size:13px;font-weight:700;color:#1A3A8F;margin-top:2px">chakusaprince@gmail.com</div>
+            </div>
           </a>
-          <a href="https://wa.me/971589772645" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;padding:14px 16px;text-decoration:none">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-            <span style="font-size:13px;font-weight:600;color:#25D366">WhatsApp: +971 589 772 645</span>
+          <a href="https://wa.me/971589772645" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none">
+            <div style="width:36px;height:36px;border-radius:10px;background:#E8FFF2;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.5px">WhatsApp Support</div>
+              <div style="font-size:13px;font-weight:700;color:#25D366;margin-top:2px">+971 589 772 645</div>
+            </div>
           </a>
         </div>
 
-        <div style="text-align:center;padding:28px 0 0;font-size:12px;color:var(--sub)">
-          © ${year} PaMarket · Made in Zimbabwe 🇿🇼
+        <div style="text-align:center;padding:32px 0 8px">
+          <div style="font-size:12px;color:var(--sub)">© ${year} PaMarket · Made in Zimbabwe 🇿🇼</div>
+          <div style="font-size:11px;color:var(--text-hint,#bbb);margin-top:4px">Version 2.0.0 · Built with care for Zimbabwe</div>
         </div>
       </div>
     </div>`;
