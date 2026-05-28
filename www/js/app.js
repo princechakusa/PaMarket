@@ -1684,30 +1684,80 @@ H._handleDeepLink = function(route) {
 
   var VAPID_PUBLIC = 'BLvNYB1n3GhDxaVExMavxUemiy58qfz9u-L5cRjsLja-k2uPCF6SU-nYdfbC-XpMmyU1kALGPqbN0d6j9piU0F0';
 
+  function _isNative() {
+    return !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+  }
+
+  // Native (installed app): register for FCM and save push_token.
+  // The Android WebView does not support the Web Push API, so the app
+  // must use the Capacitor PushNotifications plugin (FCM under the hood).
+  async function _setupNativePush(c, u) {
+    var PN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications;
+    if (!PN) return;
+
+    var perm = await PN.checkPermissions();
+    if (perm.receive === 'prompt' || perm.receive === 'prompt-with-rationale') {
+      perm = await PN.requestPermissions();
+    }
+    if (perm.receive !== 'granted') return;
+
+    if (!H._nativePushListeners) {
+      H._nativePushListeners = true;
+
+      PN.addListener('registration', function(token) {
+        if (!token || !token.value) return;
+        c.from('profiles').update({ push_token: token.value }).eq('id', u.id)
+          .then(function(r) { if (r && r.error) console.warn('push_token save:', r.error.message); });
+      });
+
+      PN.addListener('registrationError', function(err) {
+        console.warn('FCM registration error:', err && err.error);
+      });
+
+      // User tapped a notification — route to the deep link if present
+      PN.addListener('pushNotificationActionPerformed', function(action) {
+        var data = action && action.notification && action.notification.data;
+        var link = data && (data.deepLink || data.deep_link);
+        if (link) H._handleDeepLink(link);
+      });
+    }
+
+    await PN.register();
+  }
+
+  // Web / PWA: use Web Push (VAPID) and save push_subscription.
+  async function _setupWebPush(c, u) {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    if (Notification.permission === 'denied') return;
+
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+
+    if (!sub) {
+      var perm = await Notification.requestPermission();
+      if (perm !== 'granted') return;
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: _b64ToUint8(VAPID_PUBLIC)
+      });
+    }
+
+    var subJson = JSON.stringify(sub.toJSON());
+    c.from('profiles').update({ push_subscription: subJson }).eq('id', u.id)
+      .then(function(r) { if (r && r.error) console.warn('push_sub save:', r.error.message); });
+  }
+
   H.setupPush = async function() {
     try {
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-      const u = H.currentUser(); if (!u) return;
-      if (Notification.permission === 'denied') return;
-      const c = window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null;
+      var u = H.currentUser(); if (!u) return;
+      var c = window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null;
       if (!c) return;
 
-      const reg = await navigator.serviceWorker.ready;
-      let sub = await reg.pushManager.getSubscription();
-
-      if (!sub) {
-        const perm = await Notification.requestPermission();
-        if (perm !== 'granted') return;
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: _b64ToUint8(VAPID_PUBLIC)
-        });
+      if (_isNative()) {
+        await _setupNativePush(c, u);
+      } else {
+        await _setupWebPush(c, u);
       }
-
-      // Save/refresh subscription in profiles
-      const subJson = JSON.stringify(sub.toJSON());
-      c.from('profiles').update({ push_subscription: subJson }).eq('id', u.id)
-        .then(function(r) { if (r && r.error) console.warn('push_sub save:', r.error.message); });
     } catch(e) {
       console.warn('Push setup:', e.message);
     }
