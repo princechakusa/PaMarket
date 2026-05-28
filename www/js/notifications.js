@@ -324,7 +324,7 @@
     // No deep link — navigate based on notification type
     const t = type || '';
     if (t === 'message')                    { H.navTo('Messages'); return; }
-    if (t === 'sale' || t === 'wallet')     { H.navTo('Account'); return; }
+    if (t === 'sale')                        { H.navTo('Account'); return; }
     if (t === 'boost' || t === 'verify' || t === 'review' || t === 'ban' || t === 'report') {
       H.navTo('Account'); return;
     }
@@ -365,7 +365,7 @@
           const safeLink = n.deepLink ? escHtml(n.deepLink) : '';
           const tapAction = `H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)';H._notifNavigate(${safeLink ? `'${safeLink}'` : 'null'},'${type}');`;
           const navHint = type === 'message' ? 'Open Messages ›'
-            : (type === 'sale' || type === 'wallet') ? 'Open Account ›'
+            : type === 'sale' ? 'Open Account ›'
             : n.deepLink ? 'Tap to open ›'
             : type === 'info' || type === 'system' ? 'Tap to view ›'
             : 'Open ›';
