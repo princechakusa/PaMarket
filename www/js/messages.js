@@ -228,7 +228,7 @@
       + '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">'
       + '<div style="width:34px;height:34px;flex-shrink:0">' + otherAvatar + '</div>'
       + '<div style="min-width:0"><div class="det-topbar-title" style="margin:0;text-align:left">' + escHtml(otherDisplayName) + '</div>'
-      + (other.verified ? '<div style="font-size:10px;color:#22c55e;font-weight:600;display:flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Verified</div>' : '<div style="font-size:10px;color:rgba(255,255,255,.5)">Tap to view profile</div>') + '</div>'
+      + (other.verified ? '<div style="font-size:10px;color:#22c55e;font-weight:600;display:flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Verified</div>' : ((other.privacySettings && other.privacySettings.showActivity) ? '<div style="font-size:10px;color:#22c55e;font-weight:600;display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0"></span>Online</div>' : '<div style="font-size:10px;color:rgba(255,255,255,.5)">Tap to view profile</div>')) + '</div>'
       + '</div>'
       + '<button onclick="H._chat.openMenu(\'' + otherIdSafe + '\')" style="padding:8px;background:none;border:none;color:#fff;cursor:pointer;flex-shrink:0;margin-left:4px"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
       + '</div>'
@@ -260,6 +260,12 @@
     if (!u) { H.requireAuth('Sign in to message sellers'); return; }
     if (!otherId) { H.toast('Seller profile is not available yet'); return; }
     if (otherId === u.id) { H.toast('You cannot message yourself'); return; }
+    // Check if the target user has turned off direct messages
+    const targetUser = (H.state.users || []).find(function(x) { return x.id === otherId; });
+    if (targetUser && targetUser.privacySettings && targetUser.privacySettings.allowMessages === false) {
+      H.toast('This seller has turned off direct messages');
+      return;
+    }
     // Use deterministic ID so both users get same conversation
     const ids = [u.id, otherId].sort();
     const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId||'').slice(-6);

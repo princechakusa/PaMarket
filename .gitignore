@@ -9,7 +9,6 @@ package - Copy.json
 
 hostly-release.jks
 android/keystore.properties
-js/
 scripts/
 package-lock.json
 !qa-system/package-lock.json
