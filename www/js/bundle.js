@@ -1,4 +1,4 @@
-/* Hostly bundle — built 2026-05-28T07:32:12Z */
+/* Hostly bundle — built 2026-05-28T07:50:20Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -10837,31 +10837,47 @@ H.init();
     const rvIds    = JSON.parse(localStorage.getItem('pamarket_rv') || '[]');
     const viewed   = rvIds.map(id => (H.state.listings || []).find(l => l.id === id)).filter(Boolean);
 
+    const sectionLabel = (text) =>
+      `<div style="padding:16px 16px 8px;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.06em">${text}</div>`;
+
+    const emptyCard = (msg) =>
+      `<div style="margin:0 16px 8px;background:var(--card);border-radius:14px;padding:32px 16px;text-align:center">
+         <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="var(--sub)" stroke-width="1.5" style="opacity:.5;margin-bottom:10px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+         <div style="font-size:14px;color:var(--sub)">${msg}</div>
+       </div>`;
+
     const searchSection = searches.length
-      ? `<div class="mi-section-title">Recent Searches</div>
-         ${searches.map(q => `
-           <button class="mi" onclick="H.closeSheet&&H.closeSheet();H.navTo('Browse',document.querySelector('[data-nav=Search]'));setTimeout(()=>{var el=document.getElementById('searchInput');if(el){el.value=${JSON.stringify(q)};el.dispatchEvent(new Event('input'));}},200)">
-             <span class="mi-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-             <span class="mi-label">${H.escHtml(q)}</span>
-             <button onclick="event.stopPropagation();var u=H.currentUser();u.recentSearches=(u.recentSearches||[]).filter(s=>s!==${JSON.stringify(q)});H.saveState();H.openInner('MyActivity')" style="background:none;border:none;color:var(--text-sub);font-size:18px;padding:0 4px;line-height:1;cursor:pointer">&times;</button>
-           </button>`).join('')}
-         <button class="mi danger" style="color:var(--red)" onclick="var u=H.currentUser();u.recentSearches=[];H.saveState();H.openInner('MyActivity')">
-           <span class="mi-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></span>
-           <span class="mi-label">Clear all searches</span>
-         </button>`
-      : `<div class="mi-section-title">Recent Searches</div>
-         <div style="padding:16px 20px;color:var(--text-sub);font-size:13px">No recent searches yet.</div>`;
+      ? `${sectionLabel('Recent Searches')}
+         <div style="margin:0 16px 4px;background:var(--card);border-radius:14px;overflow:hidden">
+           ${searches.map((q, i) => `
+             <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;${i ? 'border-top:1px solid var(--border)' : ''};cursor:pointer"
+                  onclick="H.navTo('Browse');setTimeout(()=>{var el=document.getElementById('searchInput');if(el){el.value=${JSON.stringify(q)};el.dispatchEvent(new Event('input'));}},220)">
+               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+               <span style="flex:1;font-size:14px;color:var(--text)">${H.escHtml(q)}</span>
+               <button onclick="event.stopPropagation();var u=H.currentUser();u.recentSearches=(u.recentSearches||[]).filter(s=>s!==${JSON.stringify(q)});H.saveState();H.openInner('MyActivity')"
+                       style="background:none;border:none;color:var(--sub);font-size:20px;padding:0 2px;line-height:1;cursor:pointer">&times;</button>
+             </div>`).join('')}
+         </div>
+         <div style="padding:4px 16px 8px;text-align:right">
+           <button onclick="var u=H.currentUser();u.recentSearches=[];H.saveState();H.openInner('MyActivity')"
+                   style="background:none;border:none;font-size:12px;color:#EF4444;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;padding:4px 0">
+             Clear all
+           </button>
+         </div>`
+      : `${sectionLabel('Recent Searches')}${emptyCard('No recent searches yet')}`;
 
     const viewedSection = viewed.length
-      ? `<div class="mi-section-title" style="margin-top:16px">Recently Viewed</div>
-         ${viewed.map(l => H.renderListCard(l)).join('')}`
-      : `<div class="mi-section-title" style="margin-top:16px">Recently Viewed</div>
-         <div style="padding:16px 20px;color:var(--text-sub);font-size:13px">No recently viewed listings.</div>`;
+      ? `${sectionLabel('Recently Viewed')}
+         <div style="padding:0 16px 8px;display:flex;flex-direction:column;gap:10px">
+           ${viewed.map(l => H.renderListCard(l)).join('')}
+         </div>`
+      : `${sectionLabel('Recently Viewed')}${emptyCard('No recently viewed listings')}`;
 
     return `<div class="page active">
       ${H.innerTopbar('My Activity')}
-      <div class="form-wrap">
+      <div style="padding-top:8px;padding-bottom:32px">
         ${searchSection}
+        <div style="margin-top:12px"></div>
         ${viewedSection}
       </div>
     </div>`;
