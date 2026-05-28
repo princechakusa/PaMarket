@@ -89,7 +89,6 @@
       <div class="stats">
         <div class="stat"><div class="stat-n">${active}</div><div class="stat-l">Active Ads</div></div>
         <div class="stat"><div class="stat-n">${saves}</div><div class="stat-l">Saved</div></div>
-        <div class="stat"><div class="stat-n">$${(u.walletUSD || 0).toFixed(0)}</div><div class="stat-l">Wallet</div></div>
       </div>
 
       <div class="menu-group-label">My Account</div>
