@@ -491,4 +491,42 @@
     };
   };
 
+  pages.MyActivity = function () {
+    const u = H.currentUser();
+    if (!u) return H.requireAuth('Login to view your activity');
+
+    const searches = (u.recentSearches || []);
+    const rvIds    = JSON.parse(localStorage.getItem('pamarket_rv') || '[]');
+    const viewed   = rvIds.map(id => (H.state.listings || []).find(l => l.id === id)).filter(Boolean);
+
+    const searchSection = searches.length
+      ? `<div class="mi-section-title">Recent Searches</div>
+         ${searches.map(q => `
+           <button class="mi" onclick="H.closeSheet&&H.closeSheet();H.navTo('Browse',document.querySelector('[data-nav=Search]'));setTimeout(()=>{var el=document.getElementById('searchInput');if(el){el.value=${JSON.stringify(q)};el.dispatchEvent(new Event('input'));}},200)">
+             <span class="mi-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+             <span class="mi-label">${H.escHtml(q)}</span>
+             <button onclick="event.stopPropagation();var u=H.currentUser();u.recentSearches=(u.recentSearches||[]).filter(s=>s!==${JSON.stringify(q)});H.saveState();H.openInner('MyActivity')" style="background:none;border:none;color:var(--text-sub);font-size:18px;padding:0 4px;line-height:1;cursor:pointer">&times;</button>
+           </button>`).join('')}
+         <button class="mi danger" style="color:var(--red)" onclick="var u=H.currentUser();u.recentSearches=[];H.saveState();H.openInner('MyActivity')">
+           <span class="mi-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></span>
+           <span class="mi-label">Clear all searches</span>
+         </button>`
+      : `<div class="mi-section-title">Recent Searches</div>
+         <div style="padding:16px 20px;color:var(--text-sub);font-size:13px">No recent searches yet.</div>`;
+
+    const viewedSection = viewed.length
+      ? `<div class="mi-section-title" style="margin-top:16px">Recently Viewed</div>
+         ${viewed.map(l => H.renderListCard(l)).join('')}`
+      : `<div class="mi-section-title" style="margin-top:16px">Recently Viewed</div>
+         <div style="padding:16px 20px;color:var(--text-sub);font-size:13px">No recently viewed listings.</div>`;
+
+    return `<div class="page active">
+      ${H.innerTopbar('My Activity')}
+      <div class="form-wrap">
+        ${searchSection}
+        ${viewedSection}
+      </div>
+    </div>`;
+  };
+
 })(window.H = window.H || {});
