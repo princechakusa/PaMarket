@@ -1,4 +1,4 @@
-const CACHE = 'pamarket-v69';
+const CACHE = 'pamarket-v70';
 
 // Never cache these — auth tokens, API data, realtime
 const NO_CACHE = [
@@ -19,7 +19,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE).then(cache =>
       cache.addAll([
-        './', './index.html', './manifest.json', './css/styles.css', './wallet.html', './ads.html',
+        './', './index.html', './manifest.json', './css/styles.css', './offline.html', './wallet.html', './ads.html',
         './js/app.js', './js/auth.js', './js/home.js', './js/post.js',
         './js/messages.js', './js/detail.js', './js/browse.js',
         './js/wallet.js', './js/account.js', './js/profile.js',
@@ -57,8 +57,10 @@ self.addEventListener('fetch', event => {
         }
         return response;
       })
-      .catch(() => caches.match(event.request)
-        .then(r => r || new Response('Offline', { status: 503 }))
-      )
+      .catch(() => caches.match(event.request).then(r => {
+        if (r) return r;
+        if (event.request.mode === 'navigate') return caches.match('./offline.html');
+        return new Response('Offline', { status: 503 });
+      }))
   );
 });

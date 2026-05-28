@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1A3A8F" />
+  <title>PaMarket - Offline</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #1A3A8F 0%, #0f2260 60%, #091540 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      color: #ffffff;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .logo-wrap {
+      background: rgba(255, 255, 255, 0.12);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 24px;
+      width: 96px;
+      height: 96px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .logo-text {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .logo-pa {
+      color: #ffffff;
+    }
+
+    .logo-market {
+      color: #F5A623;
+    }
+
+    .wifi-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 24px;
+      opacity: 0.85;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+    }
+
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.78);
+      max-width: 320px;
+      margin-bottom: 40px;
+    }
+
+    .btn-retry {
+      background: #F5A623;
+      color: #1A3A8F;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 40px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.2px;
+      box-shadow: 0 4px 16px rgba(245, 166, 35, 0.35);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .btn-retry:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 8px rgba(245, 166, 35, 0.25);
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-wrap">
+    <span class="logo-text">
+      <span class="logo-pa">Pa</span><span class="logo-market">M</span>
+    </span>
+  </div>
+
+  <svg class="wifi-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M8 22C16.5 13.5 27.5 9 32 9s15.5 4.5 24 13" stroke="rgba(255,255,255,0.35)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M15 30c4.5-4.5 10.5-7 17-7s12.5 2.5 17 7" stroke="rgba(255,255,255,0.5)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M22 38c2.5-2.5 6-4 10-4s7.5 1.5 10 4" stroke="rgba(255,255,255,0.7)" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="32" cy="47" r="4" fill="white"/>
+    <line x1="10" y1="8" x2="54" y2="56" stroke="#F5A623" stroke-width="4" stroke-linecap="round"/>
+  </svg>
+
+  <h1>You're offline</h1>
+  <p>Check your internet connection and try again. Your recently viewed listings are still available.</p>
+
+  <button class="btn-retry" onclick="window.location.reload()">Try Again</button>
+</body>
+</html>
