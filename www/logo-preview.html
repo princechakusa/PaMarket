@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaMarket — Logo Design</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      background: #eef1f9;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 48px 24px;
+    }
+
+    /* ─── Label ─── */
+    .variant-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #8899cc;
+      margin-bottom: -32px;
+      align-self: flex-start;
+      margin-left: calc(50% - 200px);
+    }
+
+    /* ─── Card (the logo field) ─── */
+    .logo-card {
+      width: 420px;
+      max-width: 100%;
+      background: linear-gradient(145deg, #1A3A8F 0%, #2952cc 100%);
+      border-radius: 32px;
+      padding: 52px 56px 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow:
+        0 32px 72px rgba(26, 58, 143, .40),
+        0  6px 20px rgba(0, 0, 0, .16);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* very subtle inner grain */
+    .logo-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 32px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    /* ─── Line 1 · Brand Name ─── */
+    .brand {
+      font-size: 58px;
+      font-weight: 900;
+      letter-spacing: -2.5px;
+      line-height: 1;
+      margin-bottom: 16px;
+      user-select: none;
+    }
+    .brand .pa  { color: #ffffff; }
+    .brand .mkt { color: #F5A623; }
+
+    /* ─── Divider ─── */
+    .divider {
+      width: 40px;
+      height: 2px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, .22);
+      margin-bottom: 16px;
+    }
+
+    /* ─── Lines 2 + 3 · Word-column layout ─── */
+    /*
+      Each .word-col stacks:
+        [slogan word]   ← Line 2 (white, solid)
+        [shadow word]   ← Line 3 (blurred, dark, centred under Line 2 word)
+      Because both sit inside a column with align-items:center,
+      the shadow word is always perfectly centred under its partner
+      regardless of differing character widths.
+    */
+    .slogan-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .word-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Line 2 */
+    .slogan-word {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: .35px;
+      line-height: 1.2;
+      white-space: nowrap;
+      display: block;
+    }
+
+    /*
+      Line 3 — the "12:00 PM shadow"
+      · 0 horizontal offset  → align-items:center handles it
+      · margin-top: 3px      → shadow falls just below, not beside
+      · filter:blur(3.5px)   → soft, not sharp
+      · opacity:.34          → present but not competing
+      · scaleX(1.06)         → midday shadow spreads slightly outward
+    */
+    .shadow-word {
+      font-size: 20px;
+      font-weight: 700;
+      color: #020c22;
+      letter-spacing: .35px;
+      line-height: 1;
+      white-space: nowrap;
+      display: block;
+      margin-top: 3px;
+      filter: blur(3.5px);
+      opacity: .34;
+      transform: scaleX(1.06);
+      transform-origin: center top;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* ─── Second card · Light / "on white" variant ─── */
+    .logo-card.light {
+      background: #ffffff;
+      box-shadow:
+        0 16px 48px rgba(26, 58, 143, .12),
+        0  2px  8px rgba(0, 0, 0, .06);
+    }
+    .logo-card.light .brand .pa  { color: #1A3A8F; }
+    .logo-card.light .brand .mkt { color: #F5A623; }
+    .logo-card.light .divider    { background: rgba(26, 58, 143, .18); }
+    .logo-card.light .slogan-word { color: #1A3A8F; }
+    .logo-card.light .shadow-word {
+      color: #c8d0e8;
+      opacity: .55;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Variant A · Dark (primary) ── -->
+  <div class="logo-card">
+
+    <!-- Line 1 -->
+    <div class="brand">
+      <span class="pa">Pa</span><span class="mkt">Market</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Lines 2 + 3 -->
+    <div class="slogan-row">
+
+      <div class="word-col">
+        <span class="slogan-word">Konke</span>
+        <span class="shadow-word">tenga</span>
+      </div>
+
+      <div class="word-col">
+        <span class="slogan-word">Endaweni</span>
+        <span class="shadow-word">tengesa</span>
+      </div>
+
+      <div class="word-col">
+        <span class="slogan-word">Eyodwa</span>
+        <span class="shadow-word">Qhatsha</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Variant B · Light ── -->
+  <div class="logo-card light">
+
+    <div class="brand">
+      <span class="pa">Pa</span><span class="mkt">Market</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="slogan-row">
+
+      <div class="word-col">
+        <span class="slogan-word">Konke</span>
+        <span class="shadow-word">tenga</span>
+      </div>
+
+      <div class="word-col">
+        <span class="slogan-word">Endaweni</span>
+        <span class="shadow-word">tengesa</span>
+      </div>
+
+      <div class="word-col">
+        <span class="slogan-word">Eyodwa</span>
+        <span class="shadow-word">Qhatsha</span>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
