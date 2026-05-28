@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-28T09:19:19Z */
+/* PaMarket bundle — built 2026-05-28T09:46:25Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -10,6 +10,7 @@
 'use strict';
 window.H = {
   KEY:          'pamarket.v2',
+  STATE_VERSION: 1,
 
   PROVINCES: ['Harare','Bulawayo','Manicaland','Mashonaland West','Mashonaland East','Mashonaland Central','Midlands','Masvingo','Matabeleland North','Matabeleland South'],
   CITIES_BY_PROV: {
@@ -83,17 +84,60 @@ window.H = {
     try {
       const raw = localStorage.getItem(this.KEY);
       if (!raw) return JSON.parse(JSON.stringify(this.defaultState));
-      return Object.assign(JSON.parse(JSON.stringify(this.defaultState)), JSON.parse(raw));
+      const loaded = JSON.parse(raw);
+      const base   = JSON.parse(JSON.stringify(this.defaultState));
+      if (loaded._v !== this.STATE_VERSION) {
+        console.warn(
+          '[PaMarket] State schema mismatch (stored _v=' + loaded._v +
+          ', expected ' + this.STATE_VERSION + '). Migrating — preserving listings, users, conversations.'
+        );
+        // Preserve critical user-generated data; reset ephemeral/structural fields.
+        const migrated = Object.assign(base, {
+          users:         Array.isArray(loaded.users)         ? loaded.users         : base.users,
+          listings:      Array.isArray(loaded.listings)      ? loaded.listings      : base.listings,
+          conversations: Array.isArray(loaded.conversations) ? loaded.conversations : base.conversations,
+          saves:         loaded.saves  && typeof loaded.saves  === 'object' ? loaded.saves  : base.saves,
+          notifs:        loaded.notifs && typeof loaded.notifs === 'object' ? loaded.notifs : base.notifs,
+          currentUserId: loaded.currentUserId || base.currentUserId,
+          cityFilter:    loaded.cityFilter    || base.cityFilter,
+          txns:          Array.isArray(loaded.txns)          ? loaded.txns          : base.txns,
+        });
+        migrated._v = this.STATE_VERSION;
+        return migrated;
+      }
+      return Object.assign(base, loaded);
     } catch { return JSON.parse(JSON.stringify(this.defaultState)); }
   },
 
   saveState() {
+    const safe = JSON.parse(JSON.stringify(this.state));
+    if (safe.users) safe.users.forEach(u => { delete u._localPassword; });
+    safe._v = this.STATE_VERSION;
+    const payload = JSON.stringify(safe);
     try {
-      const safe = JSON.parse(JSON.stringify(this.state));
-      if (safe.users) safe.users.forEach(u => { delete u._localPassword; });
-      localStorage.setItem(this.KEY, JSON.stringify(safe));
+      localStorage.setItem(this.KEY, payload);
+    } catch(e) {
+      if (e.name !== 'QuotaExceededError') return;
+      this.toast('Storage full — clearing old data to free space');
+      // Remove non-critical cached keys to reclaim space.
+      const evictKeys = ['pamarket_rv', 'pamarket_search_cache', 'pamarket_img_cache'];
+      evictKeys.forEach(k => { try { localStorage.removeItem(k); } catch(_) {} });
+      // Also evict any unknown keys that are not our primary state key.
+      try {
+        const allKeys = Object.keys(localStorage);
+        allKeys.forEach(k => {
+          if (k !== this.KEY && k.startsWith('pamarket_')) {
+            try { localStorage.removeItem(k); } catch(_) {}
+          }
+        });
+      } catch(_) {}
+      // Retry once after freeing space.
+      try {
+        localStorage.setItem(this.KEY, payload);
+      } catch(e2) {
+        this.toast('Could not save — please clear some browser storage');
+      }
     }
-    catch(e) { if(e.name==='QuotaExceededError') this.toast('Storage full — try deleting old listings'); }
   },
 
   uid() {
@@ -3024,21 +3068,38 @@ H.init();
     onProv(p)    { postState.prov = p; postState.city = CITIES_BY_PROV[p][0]; refreshBody(); },
     removePhoto(i) { postState.photos.splice(i, 1); document.getElementById('photoGrid').innerHTML = renderPhotoGrid(); },
     onPhotos(e)  {
+      if (H._post._compressing) return;
       const ALLOWED = ['image/jpeg','image/png','image/gif','image/webp'];
       const MAX_BYTES = 5 * 1024 * 1024;
       const files = Array.from(e.target.files || []);
       const remaining = 8 - postState.photos.length;
       let rejected = 0;
+      const valid = [];
       files.slice(0, remaining).forEach(f => {
         if (!ALLOWED.includes(f.type)) { rejected++; return; }
         if (f.size > MAX_BYTES) { rejected++; return; }
-        H.compressImage(f, 1200, 0.78).then(d => {
-          postState.photos.push(d);
-          document.getElementById('photoGrid').innerHTML = renderPhotoGrid();
-        });
+        valid.push(f);
       });
       if (rejected) H.toast(rejected + ' photo(s) skipped — use JPG/PNG under 5 MB', 4000, true);
       e.target.value = '';
+      if (!valid.length) return;
+
+      // Show loading state
+      H._post._compressing = true;
+      const zone = document.querySelector('.img-upload-zone');
+      const zoneTitle = zone && zone.querySelector('.img-upload-title');
+      const origTitle = zoneTitle ? zoneTitle.textContent : null;
+      if (zone) zone.style.pointerEvents = 'none';
+      if (zoneTitle) zoneTitle.textContent = 'Processing…';
+
+      Promise.all(valid.map(f => H.compressImage(f, 1200, 0.78))).then(results => {
+        results.forEach(d => postState.photos.push(d));
+        document.getElementById('photoGrid').innerHTML = renderPhotoGrid();
+      }).finally(() => {
+        H._post._compressing = false;
+        if (zone) zone.style.pointerEvents = '';
+        if (zoneTitle && origTitle !== null) zoneTitle.textContent = origTitle;
+      });
     },
     next() {
       const s = postState;
@@ -3164,6 +3225,12 @@ H.init();
     const sellerPhone = seller.phone || l.sellerPhone || '';
     const sellerName  = seller.name  || l.sellerName  || 'Seller';
 
+    // Increment view count once per render, but not for the seller's own listing
+    if (!isMine) {
+      l.views = (l.views || 0) + 1;
+      H.saveState();
+    }
+
     return `<div class="page active">
       <div class="det-topbar">
         <button class="back" onclick="H.goBack()">
@@ -3220,9 +3287,11 @@ H.init();
 
         <div class="desc-text" style="white-space:pre-line">${H.escHtml(l.desc||'No description provided.')}</div>
 
+        <div id="similarListingsPlaceholder" class="similar-loading" style="height:120px;background:var(--card);border-radius:14px;margin:16px 0;opacity:.5;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--sub)">Loading similar listings...</div>
+
         ${isMine ? `
           <button class="btn-pri" onclick="H.openBoostPage('${l.id}')" style="margin-bottom:8px">${S.boost} Boost this Listing</button>
-          <button style="width:100%;padding:13px;background:#fee2e2;color:#dc2626;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" onclick="H.deleteListing('${l.id}')">Delete Listing</button>
+          <button style="width:100%;padding:13px;background:#fee2e2;color:#dc2626;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" onclick="if(!confirm('Are you sure you want to delete this listing?')) return; H.deleteListing('${l.id}')">Delete Listing</button>
         ` : (function(){
           const cm = l.contactMethod || 'chat';
           const waBtn   = `<button class="wa-btn" onclick="H.openWA('${l.id}')">${S.wa} Chat on WhatsApp</button>`;
@@ -3280,14 +3349,18 @@ H.init();
     };
 
     const l = H.state.listings.find(x => x.id === params.id);
-    if (!l) return;
+    const placeholder = document.getElementById('similarListingsPlaceholder');
+    if (!l) { if (placeholder) placeholder.remove(); return; }
     const similar = (H.state.listings||[]).filter(x => x.id!==l.id && x.cat===l.cat && x.status==='active').slice(0,4);
-    if (!similar.length) return;
-    const det = document.querySelector('.det-content');
-    if (!det) return;
+    if (!similar.length) { if (placeholder) placeholder.remove(); return; }
     const sec = document.createElement('div');
     sec.innerHTML = '<div class="sec-head" style="margin-top:24px"><div class="sec-title">Similar Listings</div></div><div class="listing-list">'+similar.map(H.renderListCard).join('')+'</div>';
-    det.appendChild(sec);
+    if (placeholder) {
+      placeholder.replaceWith(sec);
+    } else {
+      const det = document.querySelector('.det-content');
+      if (det) det.appendChild(sec);
+    }
   };
 
   H._initSwipe = function() {
@@ -3658,7 +3731,6 @@ H.init();
   H.openListing = window.openListing = function(id) {
     const l = (H.state.listings||[]).find(x => x.id === id); if (!l) return;
     if (l.cat === 'jobs') { l.views=(l.views||0)+1; H.saveState(); H.openInner('JobDetail',{id}); return; }
-    l.views = (l.views||0)+1; H.saveState();
     H.openInner('Detail', {id});
   };
 
@@ -3859,10 +3931,12 @@ H.init();
   function otherAvatarFor(c, u) {
     const otherId = c && Array.isArray(c.members) ? c.members.find(m => m !== u.id) : null;
     const other = otherId ? users().find(x => x.id === otherId) : null;
-    const ini = initials((other && other.name) || 'U');
+    const ini = other ? initials(other.name || 'Deleted User') : '?';
+    const initialsDiv = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + ini + '</div>';
     return (other && other.avatar)
-      ? '<img src="' + escHtml(other.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
-      : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + ini + '</div>';
+      ? '<img src="' + escHtml(other.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
+        + '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + ini + '</div>'
+      : initialsDiv;
   }
 
   function appendThemMessage(thread, avatarHtml, m) {
@@ -3894,8 +3968,8 @@ H.init();
     const convos = conversations()
       .filter(c => Array.isArray(c.members) && c.members.includes(u.id) && Array.isArray(c.messages) && c.messages.length)
       .sort((a, b) => {
-        const am = a.messages[a.messages.length - 1] || {};
-        const bm = b.messages[b.messages.length - 1] || {};
+        const am = (a.messages || [])[( a.messages || []).length - 1] || {};
+        const bm = (b.messages || [])[(b.messages || []).length - 1] || {};
         return (bm.t || 0) - (am.t || 0);
       });
 
@@ -3906,15 +3980,16 @@ H.init();
           const otherId = c.members.find(m => m !== u.id);
           // Backfill c.otherName from any message senderName we have
           if (!c.otherName) {
-            const sn = (c.messages.find(function(m){ return m.from===otherId && m.senderName; })||{}).senderName;
+            const sn = ((c.messages || []).find(function(m){ return m.from===otherId && m.senderName; })||{}).senderName;
             if (sn) { c.otherName = sn; H.saveState(); }
           }
-          const other   = users().find(x => x.id === otherId) || { name: c.otherName || '' };
+          const other   = otherId ? users().find(x => x.id === otherId) : null;
           // If name is still blank, trigger async profile fetch which will re-render when resolved
-          if (!other.name && otherId) { H._resolveOtherName(otherId, c); }
-          const otherDisplayName = other.name || c.otherName || 'Unknown User';
-          const last    = c.messages[c.messages.length - 1];
-          const unread  = c.messages.some(m => m.from !== u.id && !m.read);
+          if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
+          else if (!other && otherId && !(c.otherName)) { H._resolveOtherName(otherId, c); }
+          const otherDisplayName = (other && other.name) || c.otherName || 'Deleted User';
+          const last    = (c.messages || [])[( c.messages || []).length - 1];
+          const unread  = (c.messages || []).some(m => m.from !== u.id && !m.read);
           return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item" data-cid="${escHtml(c.id)}" onclick="H.openChat('${c.id}')">
             <div class="msg-av">${initials(otherDisplayName)}</div>
             <div class="msg-body">
@@ -3946,13 +4021,14 @@ H.init();
     const otherId = c.members.find(m => m !== u.id);
     // Backfill c.otherName from any message senderName we have
     if (!c.otherName) {
-      const sn = (c.messages.find(function(msg){ return msg.from===otherId && msg.senderName; })||{}).senderName;
+      const sn = ((c.messages || []).find(function(msg){ return msg.from===otherId && msg.senderName; })||{}).senderName;
       if (sn) { c.otherName = sn; H.saveState(); }
     }
-    const other = users().find(x => x.id === otherId) || { name: c.otherName || '' };
+    const other = otherId ? (users().find(x => x.id === otherId) || null) : null;
     // If name is still blank, trigger async profile fetch — will re-render when resolved
-    if (!other.name && otherId) { H._resolveOtherName(otherId, c); }
-    const otherDisplayName = other.name || c.otherName || 'Unknown User';
+    if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
+    else if (!other && otherId && !c.otherName) { H._resolveOtherName(otherId, c); }
+    const otherDisplayName = (other && other.name) || c.otherName || 'Deleted User';
     const listing = (state.listings || []).find(l => l.id === c.listingId);
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
     H.saveState();
@@ -3960,8 +4036,10 @@ H.init();
     H._activeChat = id;
 
     const otherIni = initials(otherDisplayName);
-    const otherAvatar = other.avatar
-      ? '<img src="' + escHtml(other.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+    const otherAvatarUrl = other && other.avatar;
+    const otherAvatar = otherAvatarUrl
+      ? '<img src="' + escHtml(otherAvatarUrl) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
+        + '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>'
       : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>';
 
     const msgs = c.messages.map(function(m) {
@@ -4293,7 +4371,7 @@ H.init();
       const listings = (H.state.listings || []).filter(l => l.sellerId === userId && l.status === 'active');
       const ini = H.initials(other.name || 'U');
       const avatar = other.avatar
-        ? `<img src="${escHtml(other.avatar)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover">`
+        ? `<img src="${escHtml(other.avatar)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='flex')"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">${ini}</div>`
         : `<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">${ini}</div>`;
       const listingCards = listings.slice(0, 4).map(l => {
         const ph = (l.photos && l.photos[0])
@@ -4883,20 +4961,56 @@ H.init();
   pages.Saved = function () {
     const u    = currentUser();
     const ids  = state.saves[u.id] || [];
-    const list = ids.map(id => state.listings.find(l => l.id === id)).filter(Boolean);
+
+    // Map each saved ID to either the listing object or null (deleted/not found)
+    const resolved = ids.map(id => ({ id, listing: state.listings.find(l => l.id === id) || null }));
+
+    // Helper: render a status pill for non-active listings
+    function statusPillFor(listing) {
+      if (!listing || listing.status === 'active') return '';
+      if (listing.status === 'sold')
+        return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#ef4444;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Sold</span>`;
+      if (listing.status === 'expired')
+        return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#f59e0b;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Expired</span>`;
+      // inactive or any other status
+      return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#6b7280;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Unavailable</span>`;
+    }
+
+    // Render a single saved entry
+    function renderEntry({ id, listing }) {
+      // Deleted listing — ghost card
+      if (!listing) {
+        return `<div style="padding:14px 16px;background:var(--card);border-radius:14px;margin:8px 16px;opacity:.5;border:1px dashed var(--border)">
+  <div style="font-size:13px;color:var(--sub)">This listing is no longer available</div>
+</div>`;
+      }
+      // Unavailable listing — greyed-out card with status pill injected
+      const isUnavailable = listing.status !== 'active';
+      const card = renderListCard(listing);
+      if (!isUnavailable) return card;
+      // Wrap with opacity and inject the status pill right after the card opens
+      const pill = statusPillFor(listing);
+      // Insert pill into the rendered card by appending it into the title line if possible,
+      // otherwise wrap the whole card with a relative-positioned overlay container
+      return `<div style="opacity:0.65;position:relative">${card}${
+        pill ? `<div style="position:absolute;top:10px;left:10px;pointer-events:none">${pill}</div>` : ''
+      }</div>`;
+    }
+
+    const hasAny = resolved.length > 0;
 
     return `<div class="page active">
       <div class="app-header" style="padding-bottom:16px">
         <div class="app-header-row">
           <div class="logo">Saved <em>Ads</em></div>
           <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.6);padding:4px 10px;background:rgba(255,255,255,.1);border-radius:20px">
-            ${list.length} saved
+            ${ids.length} saved
           </div>
         </div>
       </div>
       <div class="listing-list">
-        ${list.length
-          ? list.map(renderListCard).join('')
+        ${hasAny
+          ? resolved.map(renderEntry).join('')
           : emptyState('Nothing saved yet', 'Tap the ♡ on any listing to save it for later', 'Browse Listings', "H.navTo('Browse',document.querySelector('[data-nav=Browse]'))")}
       </div>
     </div>`;
@@ -8686,7 +8800,7 @@ H.init();
       <!-- Profile Hero -->
       <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);padding:24px 20px 28px;display:flex;align-items:center;gap:16px">
         <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px;font-weight:800;color:#fff;border:2.5px solid rgba(255,255,255,.4)">
-          ${u.avatar ? `<img src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover">` : H.initials(u.name)}
+          ${u.avatar ? `<img src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML=H.initials('${H.escHtml(u.name||'')}')">` : H.initials(u.name)}
         </div>
         <div style="flex:1;min-width:0">
           <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${H.escHtml(u.name || 'User')}</div>
@@ -8789,7 +8903,7 @@ H.init();
       <div class="profile-hero">
         <div class="profile-pic" style="position:relative">
           ${u.avatar
-            ? `<img src="${u.avatar}" alt="${H.escHtml(u.name)}">`
+            ? `<img src="${u.avatar}" alt="${H.escHtml(u.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${u.name.replace(/'/g, "\\'")}'))">`
             : `<div class="profile-initials">${H.initials(u.name)}</div>`}
           ${showActivityDot ? `<div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid var(--card,#fff)"></div>` : ''}
         </div>
@@ -8848,7 +8962,7 @@ H.init();
       <div class="form-wrap">
         <div style="display:flex;flex-direction:column;align-items:center;padding:8px 0 16px">
           <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#1A3A8F;margin-bottom:10px;border:2.5px solid #1A3A8F22">
-            ${u.avatar ? `<img id="avatarPreview" src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover">` : `<span id="avatarPreview">${H.initials(u.name)}</span>`}
+            ${u.avatar ? `<img id="avatarPreview" src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${u.name.replace(/'/g, "\\'")}'))">` : `<span id="avatarPreview">${H.initials(u.name)}</span>`}
           </div>
           <label for="profilePicFile" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer;background:#1A3A8F14;padding:7px 16px;border-radius:20px">Change Photo</label>
           <input type="file" id="profilePicFile" accept="image/*" capture="user" style="display:none" onchange="H._editProfile.onPicChange(event)">
@@ -8894,7 +9008,7 @@ H.init();
         u.avatar = compressed;
         H.saveState();
         const prev = document.getElementById('avatarPreview');
-        if (prev) { prev.outerHTML = `<img id="avatarPreview" src="${compressed}" style="width:100%;height:100%;object-fit:cover">`; }
+        if (prev) { prev.outerHTML = `<img id="avatarPreview" src="${compressed}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g,"\\'")}'))">`; }
       },
       save: async () => {
         const u = H.currentUser();
@@ -9505,7 +9619,7 @@ H.init();
         <!-- Profile Header Card -->
         <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:20px;padding:20px;margin:14px 0;display:flex;gap:14px;align-items:flex-start">
           <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;font-weight:800;color:#fff;border:2.5px solid rgba(255,255,255,.4)">
-            ${u.avatar?`<img src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:H.initials(u.name)}
+            ${u.avatar?`<img src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${u.name.replace(/'/g, "\\'")}'))">`:H.initials(u.name)}
           </div>
           <div style="flex:1;min-width:0">
             <div style="font-size:17px;font-weight:800;color:#fff">${H.escHtml(u.name||'')}</div>
