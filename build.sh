@@ -34,7 +34,6 @@ ORDERED=(
   www/js/rooms.js
   www/js/account.js
   www/js/profile.js
-  www/js/wallet.js
   www/js/settings.js
   www/js/security_pages.js
   www/js/help.js
