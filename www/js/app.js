@@ -400,20 +400,20 @@ window.H = {
     if(this.state.currentUserId&&this.checkBan()) return;
     const _nav = document.getElementById('bottomNav');
     _nav.style.display='flex';
-    // Measure actual safe area via probe and apply directly (CSS env() can return 0 if cached)
+    // Probe safe area bottom: use padding-bottom trick (more reliable than height), then iPhone X+ fallback
     (function() {
       var p = document.createElement('div');
-      p.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom,0);visibility:hidden;pointer-events:none';
+      p.style.cssText = 'position:fixed;bottom:0;left:0;width:0;height:0;padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:content-box;visibility:hidden;pointer-events:none';
       document.documentElement.appendChild(p);
-      requestAnimationFrame(function() {
-        var sab = Math.round(p.getBoundingClientRect().height);
-        document.documentElement.removeChild(p);
-        if (sab > 0) {
-          _nav.style.height = (64 + sab) + 'px';
-          _nav.style.paddingBottom = sab + 'px';
-          document.documentElement.style.setProperty('--sab', sab + 'px');
-        }
-      });
+      var sab = p.clientHeight; // synchronous — clientHeight = 0 + padding-bottom
+      document.documentElement.removeChild(p);
+      // Fallback: iOS iPhone X+ (screen.height in CSS px >= 780) when env() returns 0
+      if (sab === 0 && /iPhone/.test(navigator.userAgent) && window.screen.height >= 780) sab = 34;
+      if (sab > 0) {
+        _nav.style.height = (64 + sab) + 'px';
+        _nav.style.paddingBottom = sab + 'px';
+        document.documentElement.style.setProperty('--sab', sab + 'px');
+      }
     })();
     await this.navTo('Home');
     // Handle deep links: ?listing=ID  or  ?action=post|browse
@@ -1430,6 +1430,7 @@ window.H = {
       </div>
 
       ${item('My Profile',I.user,'Profile','')}
+      ${item('My Activity',I.search,'MyActivity','')}
       ${item('My Listings',I.doc,'MyListings',activeAds||'')}
       ${item('Saved & Favorites',I.heart,'Favorites',savedAds||'')}
       ${item('Advertisements',I.ads,'Ads','')}
