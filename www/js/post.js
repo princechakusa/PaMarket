@@ -152,21 +152,38 @@
     onProv(p)    { postState.prov = p; postState.city = CITIES_BY_PROV[p][0]; refreshBody(); },
     removePhoto(i) { postState.photos.splice(i, 1); document.getElementById('photoGrid').innerHTML = renderPhotoGrid(); },
     onPhotos(e)  {
+      if (H._post._compressing) return;
       const ALLOWED = ['image/jpeg','image/png','image/gif','image/webp'];
       const MAX_BYTES = 5 * 1024 * 1024;
       const files = Array.from(e.target.files || []);
       const remaining = 8 - postState.photos.length;
       let rejected = 0;
+      const valid = [];
       files.slice(0, remaining).forEach(f => {
         if (!ALLOWED.includes(f.type)) { rejected++; return; }
         if (f.size > MAX_BYTES) { rejected++; return; }
-        H.compressImage(f, 1200, 0.78).then(d => {
-          postState.photos.push(d);
-          document.getElementById('photoGrid').innerHTML = renderPhotoGrid();
-        });
+        valid.push(f);
       });
       if (rejected) H.toast(rejected + ' photo(s) skipped — use JPG/PNG under 5 MB', 4000, true);
       e.target.value = '';
+      if (!valid.length) return;
+
+      // Show loading state
+      H._post._compressing = true;
+      const zone = document.querySelector('.img-upload-zone');
+      const zoneTitle = zone && zone.querySelector('.img-upload-title');
+      const origTitle = zoneTitle ? zoneTitle.textContent : null;
+      if (zone) zone.style.pointerEvents = 'none';
+      if (zoneTitle) zoneTitle.textContent = 'Processing…';
+
+      Promise.all(valid.map(f => H.compressImage(f, 1200, 0.78))).then(results => {
+        results.forEach(d => postState.photos.push(d));
+        document.getElementById('photoGrid').innerHTML = renderPhotoGrid();
+      }).finally(() => {
+        H._post._compressing = false;
+        if (zone) zone.style.pointerEvents = '';
+        if (zoneTitle && origTitle !== null) zoneTitle.textContent = origTitle;
+      });
     },
     next() {
       const s = postState;

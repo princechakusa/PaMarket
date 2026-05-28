@@ -100,10 +100,12 @@
   function otherAvatarFor(c, u) {
     const otherId = c && Array.isArray(c.members) ? c.members.find(m => m !== u.id) : null;
     const other = otherId ? users().find(x => x.id === otherId) : null;
-    const ini = initials((other && other.name) || 'U');
+    const ini = other ? initials(other.name || 'Deleted User') : '?';
+    const initialsDiv = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + ini + '</div>';
     return (other && other.avatar)
-      ? '<img src="' + escHtml(other.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
-      : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + ini + '</div>';
+      ? '<img src="' + escHtml(other.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
+        + '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + ini + '</div>'
+      : initialsDiv;
   }
 
   function appendThemMessage(thread, avatarHtml, m) {
@@ -135,8 +137,8 @@
     const convos = conversations()
       .filter(c => Array.isArray(c.members) && c.members.includes(u.id) && Array.isArray(c.messages) && c.messages.length)
       .sort((a, b) => {
-        const am = a.messages[a.messages.length - 1] || {};
-        const bm = b.messages[b.messages.length - 1] || {};
+        const am = (a.messages || [])[( a.messages || []).length - 1] || {};
+        const bm = (b.messages || [])[(b.messages || []).length - 1] || {};
         return (bm.t || 0) - (am.t || 0);
       });
 
@@ -147,15 +149,16 @@
           const otherId = c.members.find(m => m !== u.id);
           // Backfill c.otherName from any message senderName we have
           if (!c.otherName) {
-            const sn = (c.messages.find(function(m){ return m.from===otherId && m.senderName; })||{}).senderName;
+            const sn = ((c.messages || []).find(function(m){ return m.from===otherId && m.senderName; })||{}).senderName;
             if (sn) { c.otherName = sn; H.saveState(); }
           }
-          const other   = users().find(x => x.id === otherId) || { name: c.otherName || '' };
+          const other   = otherId ? users().find(x => x.id === otherId) : null;
           // If name is still blank, trigger async profile fetch which will re-render when resolved
-          if (!other.name && otherId) { H._resolveOtherName(otherId, c); }
-          const otherDisplayName = other.name || c.otherName || 'Unknown User';
-          const last    = c.messages[c.messages.length - 1];
-          const unread  = c.messages.some(m => m.from !== u.id && !m.read);
+          if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
+          else if (!other && otherId && !(c.otherName)) { H._resolveOtherName(otherId, c); }
+          const otherDisplayName = (other && other.name) || c.otherName || 'Deleted User';
+          const last    = (c.messages || [])[( c.messages || []).length - 1];
+          const unread  = (c.messages || []).some(m => m.from !== u.id && !m.read);
           return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item" data-cid="${escHtml(c.id)}" onclick="H.openChat('${c.id}')">
             <div class="msg-av">${initials(otherDisplayName)}</div>
             <div class="msg-body">
@@ -187,13 +190,14 @@
     const otherId = c.members.find(m => m !== u.id);
     // Backfill c.otherName from any message senderName we have
     if (!c.otherName) {
-      const sn = (c.messages.find(function(msg){ return msg.from===otherId && msg.senderName; })||{}).senderName;
+      const sn = ((c.messages || []).find(function(msg){ return msg.from===otherId && msg.senderName; })||{}).senderName;
       if (sn) { c.otherName = sn; H.saveState(); }
     }
-    const other = users().find(x => x.id === otherId) || { name: c.otherName || '' };
+    const other = otherId ? (users().find(x => x.id === otherId) || null) : null;
     // If name is still blank, trigger async profile fetch — will re-render when resolved
-    if (!other.name && otherId) { H._resolveOtherName(otherId, c); }
-    const otherDisplayName = other.name || c.otherName || 'Unknown User';
+    if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
+    else if (!other && otherId && !c.otherName) { H._resolveOtherName(otherId, c); }
+    const otherDisplayName = (other && other.name) || c.otherName || 'Deleted User';
     const listing = (state.listings || []).find(l => l.id === c.listingId);
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
     H.saveState();
@@ -201,8 +205,10 @@
     H._activeChat = id;
 
     const otherIni = initials(otherDisplayName);
-    const otherAvatar = other.avatar
-      ? '<img src="' + escHtml(other.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+    const otherAvatarUrl = other && other.avatar;
+    const otherAvatar = otherAvatarUrl
+      ? '<img src="' + escHtml(otherAvatarUrl) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
+        + '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>'
       : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>';
 
     const msgs = c.messages.map(function(m) {
@@ -534,7 +540,7 @@
       const listings = (H.state.listings || []).filter(l => l.sellerId === userId && l.status === 'active');
       const ini = H.initials(other.name || 'U');
       const avatar = other.avatar
-        ? `<img src="${escHtml(other.avatar)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover">`
+        ? `<img src="${escHtml(other.avatar)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='flex')"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">${ini}</div>`
         : `<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">${ini}</div>`;
       const listingCards = listings.slice(0, 4).map(l => {
         const ph = (l.photos && l.photos[0])

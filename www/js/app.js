@@ -7,6 +7,7 @@
 'use strict';
 window.H = {
   KEY:          'pamarket.v2',
+  STATE_VERSION: 1,
 
   PROVINCES: ['Harare','Bulawayo','Manicaland','Mashonaland West','Mashonaland East','Mashonaland Central','Midlands','Masvingo','Matabeleland North','Matabeleland South'],
   CITIES_BY_PROV: {
@@ -80,17 +81,60 @@ window.H = {
     try {
       const raw = localStorage.getItem(this.KEY);
       if (!raw) return JSON.parse(JSON.stringify(this.defaultState));
-      return Object.assign(JSON.parse(JSON.stringify(this.defaultState)), JSON.parse(raw));
+      const loaded = JSON.parse(raw);
+      const base   = JSON.parse(JSON.stringify(this.defaultState));
+      if (loaded._v !== this.STATE_VERSION) {
+        console.warn(
+          '[PaMarket] State schema mismatch (stored _v=' + loaded._v +
+          ', expected ' + this.STATE_VERSION + '). Migrating — preserving listings, users, conversations.'
+        );
+        // Preserve critical user-generated data; reset ephemeral/structural fields.
+        const migrated = Object.assign(base, {
+          users:         Array.isArray(loaded.users)         ? loaded.users         : base.users,
+          listings:      Array.isArray(loaded.listings)      ? loaded.listings      : base.listings,
+          conversations: Array.isArray(loaded.conversations) ? loaded.conversations : base.conversations,
+          saves:         loaded.saves  && typeof loaded.saves  === 'object' ? loaded.saves  : base.saves,
+          notifs:        loaded.notifs && typeof loaded.notifs === 'object' ? loaded.notifs : base.notifs,
+          currentUserId: loaded.currentUserId || base.currentUserId,
+          cityFilter:    loaded.cityFilter    || base.cityFilter,
+          txns:          Array.isArray(loaded.txns)          ? loaded.txns          : base.txns,
+        });
+        migrated._v = this.STATE_VERSION;
+        return migrated;
+      }
+      return Object.assign(base, loaded);
     } catch { return JSON.parse(JSON.stringify(this.defaultState)); }
   },
 
   saveState() {
+    const safe = JSON.parse(JSON.stringify(this.state));
+    if (safe.users) safe.users.forEach(u => { delete u._localPassword; });
+    safe._v = this.STATE_VERSION;
+    const payload = JSON.stringify(safe);
     try {
-      const safe = JSON.parse(JSON.stringify(this.state));
-      if (safe.users) safe.users.forEach(u => { delete u._localPassword; });
-      localStorage.setItem(this.KEY, JSON.stringify(safe));
+      localStorage.setItem(this.KEY, payload);
+    } catch(e) {
+      if (e.name !== 'QuotaExceededError') return;
+      this.toast('Storage full — clearing old data to free space');
+      // Remove non-critical cached keys to reclaim space.
+      const evictKeys = ['pamarket_rv', 'pamarket_search_cache', 'pamarket_img_cache'];
+      evictKeys.forEach(k => { try { localStorage.removeItem(k); } catch(_) {} });
+      // Also evict any unknown keys that are not our primary state key.
+      try {
+        const allKeys = Object.keys(localStorage);
+        allKeys.forEach(k => {
+          if (k !== this.KEY && k.startsWith('pamarket_')) {
+            try { localStorage.removeItem(k); } catch(_) {}
+          }
+        });
+      } catch(_) {}
+      // Retry once after freeing space.
+      try {
+        localStorage.setItem(this.KEY, payload);
+      } catch(e2) {
+        this.toast('Could not save — please clear some browser storage');
+      }
     }
-    catch(e) { if(e.name==='QuotaExceededError') this.toast('Storage full — try deleting old listings'); }
   },
 
   uid() {
