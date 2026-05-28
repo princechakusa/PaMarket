@@ -83,10 +83,13 @@
         <div class="det-loc-row">${S.location} ${H.escHtml((l.suburb||l.city||'')+(l.prov?', '+l.prov:''))} · ${H.timeAgo(l.createdAt)} · ${S.eye} ${l.views||0} views</div>
 
         <div class="seller-card" onclick="H.openUserProfile('${seller.id}')">
-          <div class="seller-av" style="background:#1A3A8F;color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center">
-            ${seller.avatar
-              ? `<img src="${seller.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`
-              : H.initials(sellerName)}
+          <div style="position:relative;flex-shrink:0">
+            <div class="seller-av" style="background:#1A3A8F;color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center">
+              ${seller.avatar
+                ? `<img src="${seller.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`
+                : H.initials(sellerName)}
+            </div>
+            ${(seller.privacySettings && seller.privacySettings.showActivity) ? `<div style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid var(--card,#fff)"></div>` : ''}
           </div>
           <div class="seller-info">
             <div class="seller-name-row">
@@ -107,7 +110,11 @@
         ` : (function(){
           const cm = l.contactMethod || 'chat';
           const waBtn   = `<button class="wa-btn" onclick="H.openWA('${l.id}')">${S.wa} Chat on WhatsApp</button>`;
-          const chatBtn = `<button class="msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')">${S.message} Message in App</button>`;
+          const sellerPrivacy = seller.privacySettings || {};
+          const msgDisabled = sellerPrivacy.allowMessages === false;
+          const chatBtn = msgDisabled
+            ? `<button class="msg-btn" disabled style="opacity:0.5;cursor:not-allowed">${S.message} Messaging turned off</button>`
+            : `<button class="msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')">${S.message} Message in App</button>`;
           const callBtn = sellerPhone ? `<button class="call-btn" onclick="H.callSeller('${sellerPhone}')">${S.phone} Call ${H.escHtml(sellerPhone)}</button>` : '';
           const rptBtn  = `<button class="report-btn" onclick="H.reportListing('${l.id}')">${S.flag} Report this Listing</button>`;
           if (cm === 'phone') return callBtn + waBtn + chatBtn + rptBtn;
@@ -518,6 +525,33 @@
     const me   = H.currentUser();
     const isMe = !!(me && String(me.id)===id);
 
+    // profilePublic check — only applies when viewing another user's profile
+    const uPrivacy = u.privacySettings || {};
+    if (!isMe && uPrivacy.profilePublic === false) {
+      // Show a stripped-down private profile screen
+      return `<div class="page active">
+        <div class="det-topbar">
+          <button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <div class="det-topbar-title">${H.escHtml(u.name)}</div>
+          <div style="width:40px"></div>
+        </div>
+        <div class="prof-top" style="text-align:center;padding:32px 20px">
+          <div class="prof-av" style="background:#1A3A8F;color:#fff;font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+            ${u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(u.name)}
+          </div>
+          <div class="prof-name">${H.escHtml(u.name)}</div>
+          <div style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:7px 16px;background:rgba(255,255,255,0.12);border-radius:20px;border:1px solid rgba(255,255,255,0.25)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.85)">Private Profile</span>
+          </div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:10px">This user has set their profile to private</div>
+        </div>
+      </div>`;
+    }
+
+    // showActivity dot for the profile avatar
+    const showDot = uPrivacy.showActivity === true;
+
     return `<div class="page active">
       <div class="det-topbar">
         <button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -528,15 +562,21 @@
       </div>
 
       <div class="prof-top">
-        <div class="prof-av" style="background:#1A3A8F;color:#fff;font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center">
-          ${u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(u.name)}
+        <div style="position:relative;display:inline-block;margin-bottom:0">
+          <div class="prof-av" style="background:#1A3A8F;color:#fff;font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center">
+            ${u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(u.name)}
+          </div>
+          ${showDot ? `<div style="position:absolute;bottom:3px;right:3px;width:13px;height:13px;border-radius:50%;background:#22c55e;border:2.5px solid #1A3A8F"></div>` : ''}
         </div>
         <div class="prof-name">${H.escHtml(u.name)}</div>
+        ${showDot ? `<div style="font-size:11px;color:#86efac;font-weight:600;display:flex;align-items:center;gap:4px;justify-content:center;margin-top:4px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e"></span>Online</div>` : ''}
         ${u.phone ? `<div style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:4px">${H.escHtml(u.phone)}</div>` : ''}
         ${u.verified ? `<div class="prof-badges"><span class="pbadge pbadge-verified">ID Verified</span></div>` : ''}
         <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:8px">Member since ${new Date(u.joinedAt||Date.now()).toLocaleDateString()}</div>
         ${!isMe && me ? `<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
-          <button onclick="H.startChatWith('${u.id}','')" style="flex:1;min-width:90px;padding:10px;background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Message</button>
+          ${(uPrivacy.allowMessages === false)
+            ? `<button disabled style="flex:1;min-width:90px;padding:10px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:Inter,sans-serif">Messaging turned off</button>`
+            : `<button onclick="H.startChatWith('${u.id}','')" style="flex:1;min-width:90px;padding:10px;background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Message</button>`}
           ${u.phone ? `<button onclick="H.callSeller('${H.escHtml(u.phone)}')" style="flex:1;min-width:80px;padding:10px;background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Call</button>` : ''}
           <button onclick="H.leaveReview('${u.id}')" style="flex:1;min-width:100px;padding:10px;background:rgba(245,166,35,0.25);color:#F5A623;border:1.5px solid rgba(245,166,35,0.4);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">★ Review</button>
         </div>` : ''}

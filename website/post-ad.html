@@ -1032,13 +1032,33 @@ function setCurrency(cur){
   document.getElementById('btnZIG').classList.toggle('active',cur==='ZiG');
 }
 
-function handlePhotos(input){
-  const files=Array.from(input.files).slice(0,8-photoDataUrls.length);
-  files.forEach(file=>{
-    if(!file.type.startsWith('image/')) return;
-    const reader=new FileReader();
-    reader.onload=e=>{photoDataUrls.push(e.target.result);renderPreviews()};
+function compressImage(file,maxDim,quality){
+  return new Promise(function(resolve){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var w=img.width,h=img.height;
+        if(w>h&&w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}
+        else if(h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}
+        var canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg',quality));
+      };
+      img.src=e.target.result;
+    };
     reader.readAsDataURL(file);
+  });
+}
+function handlePhotos(input){
+  var files=Array.from(input.files).slice(0,8-photoDataUrls.length);
+  files.forEach(function(file){
+    if(!file.type.startsWith('image/')) return;
+    compressImage(file,800,0.75).then(function(dataUrl){
+      photoDataUrls.push(dataUrl);
+      renderPreviews();
+    });
   });
 }
 function renderPreviews(){
