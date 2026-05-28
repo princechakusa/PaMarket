@@ -1513,11 +1513,10 @@ window.H = {
       </div>
       <div class="login-modal-illustration">
         <svg viewBox="0 0 120 90" fill="none" aria-hidden="true">
-          <path d="M24 76V38l36-26 36 26v38" fill="#EEF2FF"/>
-          <path d="M32 76V42l28-20 28 20v34" stroke="#1A3A8F" stroke-width="5" stroke-linejoin="round"/>
-          <path d="M53 76V56h16v20M43 49h12M65 49h12" stroke="#F5A623" stroke-width="5" stroke-linecap="round"/>
-          <circle cx="87" cy="27" r="14" fill="#fff" stroke="#1A3A8F" stroke-width="5"/>
-          <path d="M98 38l13 13" stroke="#1A3A8F" stroke-width="6" stroke-linecap="round"/>
+          <rect x="22" y="36" width="52" height="40" rx="8" fill="#EEF2FF" stroke="#1A3A8F" stroke-width="4.5"/>
+          <path d="M35 36V28a13 13 0 0 1 26 0v8" stroke="#1A3A8F" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+          <circle cx="87" cy="27" r="16" fill="#F5A623"/>
+          <path d="M87 19v16M79 27h16" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
         </svg>
       </div>
       <div class="auth-card" id="authCard"></div>
