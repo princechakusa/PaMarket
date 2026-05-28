@@ -8,6 +8,8 @@ package-lock - Copy.json
 package - Copy.json
 
 hostly-release.jks
+*.keystore
+*.jks
 android/keystore.properties
 scripts/
 package-lock.json
