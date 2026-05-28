@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-28T11:03:19Z */
+/* PaMarket bundle — built 2026-05-28T11:13:17Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -1516,11 +1516,10 @@ window.H = {
       </div>
       <div class="login-modal-illustration">
         <svg viewBox="0 0 120 90" fill="none" aria-hidden="true">
-          <path d="M24 76V38l36-26 36 26v38" fill="#EEF2FF"/>
-          <path d="M32 76V42l28-20 28 20v34" stroke="#1A3A8F" stroke-width="5" stroke-linejoin="round"/>
-          <path d="M53 76V56h16v20M43 49h12M65 49h12" stroke="#F5A623" stroke-width="5" stroke-linecap="round"/>
-          <circle cx="87" cy="27" r="14" fill="#fff" stroke="#1A3A8F" stroke-width="5"/>
-          <path d="M98 38l13 13" stroke="#1A3A8F" stroke-width="6" stroke-linecap="round"/>
+          <rect x="22" y="36" width="52" height="40" rx="8" fill="#EEF2FF" stroke="#1A3A8F" stroke-width="4.5"/>
+          <path d="M35 36V28a13 13 0 0 1 26 0v8" stroke="#1A3A8F" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+          <circle cx="87" cy="27" r="16" fill="#F5A623"/>
+          <path d="M87 19v16M79 27h16" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
         </svg>
       </div>
       <div class="auth-card" id="authCard"></div>
@@ -9986,9 +9985,76 @@ H.init();
     </div>`;
   };
 
-  pages.Wallet   = pages.Ads;
-  pages.Payments = pages.Ads;
-  pages.TopUp    = pages.Ads;
+  pages.Wallet = function () {
+    return `<div class="page active">
+      ${H.innerTopbar('Wallet')}
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;gap:20px">
+        <svg viewBox="0 0 64 64" width="80" height="80" fill="none">
+          <rect x="4" y="16" width="56" height="40" rx="8" fill="#EEF2FF" stroke="#1A3A8F" stroke-width="3"/>
+          <path d="M4 26h56" stroke="#1A3A8F" stroke-width="3"/>
+          <circle cx="44" cy="40" r="8" fill="#F5A623"/>
+          <path d="M44 34v12M38 40h12" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M10 34h16M10 40h10" stroke="#1A3A8F" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <h2 style="font-size:1.35rem;font-weight:700;color:var(--n1);margin:0 0 8px">Wallet &mdash; Coming Soon</h2>
+          <p style="color:var(--sub);max-width:280px;margin:0;line-height:1.55;font-size:0.95rem">Manage your PaMarket balance, send money to other users, and track every transaction.</p>
+        </div>
+        <div style="background:var(--n5);border-radius:14px;padding:18px 20px;max-width:300px;width:100%;text-align:left">
+          <p style="font-size:0.82rem;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px">Features in development</p>
+          <ul style="color:var(--n1);margin:0;padding-left:18px;line-height:2;font-size:0.92rem">
+            <li>PaMarket Wallet balance</li>
+            <li>Peer-to-peer payments</li>
+            <li>Ecocash &amp; bank top-up</li>
+            <li>Full transaction history</li>
+          </ul>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  pages.Payments = function () {
+    return `<div class="page active">
+      ${H.innerTopbar('Payment History')}
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;gap:20px">
+        <svg viewBox="0 0 64 64" width="80" height="80" fill="none">
+          <rect x="4" y="12" width="56" height="44" rx="8" fill="#EEF2FF" stroke="#1A3A8F" stroke-width="3"/>
+          <path d="M4 24h56" stroke="#1A3A8F" stroke-width="3"/>
+          <rect x="10" y="32" width="18" height="12" rx="3" fill="#1A3A8F"/>
+          <path d="M36 35h16M36 41h10" stroke="#1A3A8F" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <h2 style="font-size:1.35rem;font-weight:700;color:var(--n1);margin:0 0 8px">Payments &mdash; Coming Soon</h2>
+          <p style="color:var(--sub);max-width:280px;margin:0;line-height:1.55;font-size:0.95rem">Your full payment history and transaction records will appear here once the wallet is live.</p>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  pages.TopUp = function () {
+    return `<div class="page active">
+      ${H.innerTopbar('Top Up')}
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;gap:20px">
+        <svg viewBox="0 0 64 64" width="80" height="80" fill="none">
+          <circle cx="32" cy="32" r="28" fill="#EEF2FF" stroke="#1A3A8F" stroke-width="3"/>
+          <path d="M32 20v24M20 32h24" stroke="#F5A623" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <h2 style="font-size:1.35rem;font-weight:700;color:var(--n1);margin:0 0 8px">Top Up &mdash; Coming Soon</h2>
+          <p style="color:var(--sub);max-width:280px;margin:0;line-height:1.55;font-size:0.95rem">Add funds to your PaMarket Wallet via Ecocash, Zipit, or bank transfer.</p>
+        </div>
+        <div style="background:var(--n5);border-radius:14px;padding:18px 20px;max-width:300px;width:100%;text-align:left">
+          <p style="font-size:0.82rem;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px">Payment methods planned</p>
+          <ul style="color:var(--n1);margin:0;padding-left:18px;line-height:2;font-size:0.92rem">
+            <li>Ecocash</li>
+            <li>Zipit / RTGS</li>
+            <li>Visa / Mastercard</li>
+            <li>Bank transfer</li>
+          </ul>
+        </div>
+      </div>
+    </div>`;
+  };
 
   // ─── Ad creation form (for category cards) ───────────────────────────────────
   pages.AdsCreate = function ({ category } = {}) {
