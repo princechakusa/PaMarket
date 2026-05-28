@@ -1018,10 +1018,10 @@ select.fi {
 /* ── DOC SHEET (Terms / Privacy) ────────────────────────────── */
 #docSheet { position: fixed; inset: 0; background: var(--card); z-index: 10000; display: none; }
 #docSheet.open { display: block; }
-#docSheetBar { position: absolute; top: 0; left: 0; right: 0; height: 54px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--card); z-index: 1; }
-#docSheetClose { background: none; border: none; cursor: pointer; color: var(--text-primary); padding: 4px; display: flex; align-items: center; flex-shrink: 0; }
+#docSheetBar { position: absolute; top: 0; left: 0; right: 0; height: calc(54px + env(safe-area-inset-top, 0px)); display: flex; align-items: flex-end; gap: 12px; padding: 0 16px 8px; padding-top: env(safe-area-inset-top, 0px); border-bottom: 1px solid var(--border); background: var(--card); z-index: 1; }
+#docSheetClose { background: none; border: none; cursor: pointer; color: var(--text-primary); padding: 8px; display: flex; align-items: center; flex-shrink: 0; min-width: 44px; min-height: 44px; }
 #docSheetTitle { font-size: 16px; font-weight: 700; color: var(--text-primary); }
-#docSheetBody { position: absolute; top: 54px; bottom: 0; left: 0; right: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
+#docSheetBody { position: absolute; top: calc(54px + env(safe-area-inset-top, 0px)); bottom: 0; left: 0; right: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
 
 /* ── TOAST ───────────────────────────────────────────────────── */
 .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--text-primary); color: #fff; font-size: 13px; padding: 11px 22px; border-radius: var(--r-pill); opacity: 0; transition: all .3s var(--ease); pointer-events: none; z-index: 9999; font-weight: 600; box-shadow: var(--shadow-lg); max-width: 320px; text-align: center; white-space: nowrap; }

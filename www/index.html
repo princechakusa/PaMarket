@@ -376,11 +376,6 @@
       document.documentElement.style.background = '';
       setTimeout(() => splash.remove(), 450);
     };
-    // On Android PWA the OS already shows the manifest splash — skip the JS one to avoid doubling
-    if (/Android/.test(navigator.userAgent) && window.matchMedia('(display-mode: standalone)').matches) {
-      var _as = document.getElementById('pamarketSplash');
-      if (_as) { _as.style.display = 'none'; document.documentElement.style.background = ''; }
-    }
     // Fallback: hide after 4s max in case boot is very slow
     window.addEventListener('load', () => setTimeout(window._hideSplash, 4000));
 
