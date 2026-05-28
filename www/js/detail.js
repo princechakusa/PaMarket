@@ -214,7 +214,14 @@
     const i = H.state.saves[u.id].indexOf(id);
     const removing = i >= 0;
     if (removing) { H.state.saves[u.id].splice(i,1); H.toast('Removed from saved'); }
-    else { H.state.saves[u.id].push(id); H.toast('Saved'); }
+    else {
+      H.state.saves[u.id].push(id);
+      H.toast('Saved');
+      // Track price at save time for price-drop alerts
+      if (!H.state.savedPrices) H.state.savedPrices = {};
+      var listing = (H.state.listings || []).find(function(l) { return l.id === id; });
+      if (listing) H.state.savedPrices[id] = listing.price;
+    }
     H.saveState();
     var _sb = window.supabase;
     if (_sb && typeof _sb.from === 'function') {
