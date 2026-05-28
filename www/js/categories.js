@@ -69,9 +69,6 @@
 
     var sort = f.sort || 'newest';
     all.sort(function (a, b) {
-      var ba = (a.boost && a.boost.until > Date.now()) ? 1 : 0;
-      var bb = (b.boost && b.boost.until > Date.now()) ? 1 : 0;
-      if (ba !== bb) return bb - ba;
       if (sort === 'price_asc') return (a.price || 0) - (b.price || 0);
       if (sort === 'price_desc') return (b.price || 0) - (a.price || 0);
       if (sort === 'oldest') return a.createdAt - b.createdAt;

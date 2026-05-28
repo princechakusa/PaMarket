@@ -54,12 +54,6 @@ window.H = {
     {id:'other',       name:'Other',       icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="12" x2="15" y2="12"/></svg>'}
   ],
 
-  BOOST_PLANS: [
-    {id:'standard', name:'Standard Boost', price:2,  days:7,  desc:'Featured at the top of your category for 7 days.',  badgeText:''},
-    {id:'premium',  name:'Premium Boost',  price:5,  days:14, desc:'Prime placement across category and search for 14 days.', badge:'hot', badgeText:'Most Popular'},
-    {id:'mega',     name:'Mega Boost',     price:10, days:30, desc:'30 days of maximum visibility across all sections.', badgeText:'Best Value'}
-  ],
-
   state:            {},
   pageStack:        [],
   currentPageName:  'Home',
@@ -73,7 +67,7 @@ window.H = {
     users:[], listings:[], conversations:[], reports:[], txns:[],
     saves:{}, notifs:{}, currentUserId:null, cityFilter:'All Zimbabwe',
     _sortMode:'newest', _priceMin:'', _priceMax:'',
-    adminLogs:[], supportTickets:[], topupRequests:[], paidAds:[]
+    adminLogs:[], supportTickets:[], paidAds:[]
   },
 
   loadState() {
@@ -196,9 +190,6 @@ window.H = {
       if ((l.price||0)<pMin || (l.price||0)>pMax) return false;
       return true;
     }).sort((a,b) => {
-      const ba = (a.boost&&a.boost.until>Date.now())?1:0;
-      const bb = (b.boost&&b.boost.until>Date.now())?1:0;
-      if (ba!==bb) return bb-ba;
       if (sort==='newest')     return b.createdAt-a.createdAt;
       if (sort==='oldest')     return a.createdAt-b.createdAt;
       if (sort==='price_asc')  return (a.price||0)-(b.price||0);
@@ -314,7 +305,6 @@ window.H = {
     const photo  = (l.photos&&l.photos[0])
       ? `<img src="${l.photos[0]}" alt="${H.escHtml(l.title)}" loading="lazy">`
       : `<div class="ph">${H.categoryIcon(l.cat)}</div>`;
-    const boosted = l.boost&&l.boost.until>Date.now();
     return `<div class="list-card-wrap" onclick="H.openListing('${l.id}')">
       <button class="share-card-btn" onclick="event.stopPropagation();H.shareListing&&H.shareListing('${l.id}')" title="Share">${H.ICONS.share}</button>
       <div class="list-card">
@@ -327,7 +317,6 @@ window.H = {
             <span class="tag">&middot; ${H.timeAgo(l.createdAt)}</span>
             <span class="tag">&middot; ${H.ICONS.eye} ${l.views||0}</span>
             ${seller&&seller.verified?`<span class="blue-check" title="ID Verified"><svg viewBox="0 0 24 24" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg></span>`:''}
-            ${boosted?`<span class="boost-pill">${H.ICONS.boost} Boosted</span>`:''}
           </div>
         </div>
       </div>
@@ -466,7 +455,6 @@ window.H = {
     else if (_lid) { setTimeout(()=>this.openListing(_lid), 200); }
     else if (_act === 'post')   { if(this.currentUser()) setTimeout(()=>this.navTo('Post',null), 200); }
     else if (_act === 'browse') { setTimeout(()=>this.navTo('Browse',null), 200); }
-    else if (_act === 'topup')  { setTimeout(()=>{ if(this.currentUser()) this.openInner('Ads'); else this.requireAuth('Sign in to advertise'); }, 300); }
     try {
       await this.fetchListingsFromSupabase();
       H._checkEngagementAlerts();
@@ -530,7 +518,7 @@ window.H = {
 
   async openInner(name, params) {
     const H=window.H;
-    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsBoost','AdsContact','MyAds','Boost','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob'];
+    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob'];
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
     try {
@@ -1288,7 +1276,7 @@ window.H = {
         +'<div class="about-card"><div class="about-sec-title">What is PaMarket?</div><div class="about-body">PaMarket is a free Zimbabwean online marketplace connecting buyers and sellers. Whether you are looking for goods, services, vehicles, property, or jobs, PaMarket makes it easy to post, browse, and connect with people in your province and across Zimbabwe.</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Who is it for?</div><div class="about-body">PaMarket is for anyone in Zimbabwe — individuals selling personal items, small businesses promoting services, employers posting vacancies, and buyers searching for the best local deals. The app is free to download and free to use.</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Key Features</div><div class="about-grid">'
-        +['Free Listings','Secure Messaging','WhatsApp Connect','All Categories','Province Filters','Boost Your Ads','Job Board','Photo Uploads'].map(f=>'<div class="about-feat">'+f+'</div>').join('')
+        +['Free Listings','Secure Messaging','WhatsApp Connect','All Categories','Province Filters','Verified Sellers','Job Board','Photo Uploads'].map(f=>'<div class="about-feat">'+f+'</div>').join('')
         +'</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Legal &amp; Compliance</div><div class="about-body">PaMarket operates as a platform for user-generated listings. We do not own, sell, or warrant any items listed. Users are responsible for ensuring their listings comply with applicable Zimbabwean law. Prohibited content (counterfeit goods, illegal services, misleading listings) will be removed and accounts suspended. By using PaMarket you agree to our Terms of Service and Privacy Policy.</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Contact Us</div>'
@@ -1307,14 +1295,14 @@ window.H = {
         +'<div class="about-card"><div class="about-sec-title">What We Offer</div>'
         +'<div class="about-body" style="margin-bottom:0">'
         +'<div style="display:flex;flex-direction:column;gap:10px">'
-        +[['Listing Boost','Get your listing seen first in search results and category pages.'],['Banner Ad','Eye-catching banner placement on the home screen.'],['Category Spotlight','Pin your business to the top of a category of your choice.'],['Custom Campaign','Tailored multi-placement campaign for maximum reach.']]
+        +[['Banner Ad','Eye-catching banner placement on the home screen.'],['Category Spotlight','Pin your business to the top of a category of your choice.'],['Custom Campaign','Tailored multi-placement campaign for maximum reach.']]
           .map(([t,d])=>'<div style="background:var(--bg,#f5f7fb);border-radius:10px;padding:12px 14px"><div style="font-weight:700;font-size:14px;color:var(--text,#1a1a1a);margin-bottom:3px">'+t+'</div><div style="font-size:13px;color:var(--text-muted,#666)">'+d+'</div></div>')
           .join('')
         +'</div></div></div>'
         +'<div class="about-card"><div class="about-sec-title">Send an Enquiry</div>'
         +'<div class="fg"><div class="fl">Business Name</div><input class="fi" id="adsBiz" placeholder="Your business name"></div>'
         +'<div class="fg"><div class="fl">Contact Email</div><input class="fi" id="adsEmail" type="email" placeholder="your@email.com"></div>'
-        +'<div class="fg"><div class="fl">Ad Type</div><select class="fi" id="adsType"><option value="Listing Boost">Listing Boost</option><option value="Banner Ad">Banner Ad</option><option value="Category Spotlight">Category Spotlight</option><option value="Custom Campaign">Custom Campaign</option></select></div>'
+        +'<div class="fg"><div class="fl">Ad Type</div><select class="fi" id="adsType"><option value="Banner Ad">Banner Ad</option><option value="Category Spotlight">Category Spotlight</option><option value="Custom Campaign">Custom Campaign</option></select></div>'
         +'<div class="fg"><div class="fl">Message</div><textarea class="fi" rows="4" id="adsMsg" placeholder="Tell us about your product or service and what you\'d like to achieve..."></textarea></div>'
         +'<button onclick="H._submitAdsEnquiry()" style="width:100%;padding:15px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px">Send Enquiry</button>'
         +'</div>'

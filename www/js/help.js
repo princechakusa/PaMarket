@@ -100,7 +100,7 @@
       },
       {
         q: 'How much does it cost to post?',
-        a: 'Posting an ad is completely free! We only charge for optional premium features like boosting your listing or featured placement.'
+        a: 'Posting an ad is completely free. Browsing, messaging, applying for jobs, and getting verified are all free too. No subscriptions, no hidden fees, no commission on sales.'
       },
       {
         q: 'How long do listings stay active?',
@@ -248,17 +248,12 @@
       {
         tags:['post','create listing','add listing','sell','post ad','how to post','new listing','list item','publish listing','upload item','add item'],
         answer:'To post a listing:\n1. Tap the orange ✚ Post button at the bottom of the screen\n2. Choose the right category (Electronics, Jobs, Rentals, etc.)\n3. Add 3–5 clear photos, a descriptive title, honest description, and price\n4. Set your location and tap Publish\n\nListings are reviewed and go live within minutes. Clear photos and honest descriptions get up to 3× more responses!',
-        chips:['Edit a Listing','Boost a Listing','Mark as Sold']
+        chips:['Edit a Listing','Mark as Sold','Get Verified']
       },
       {
         tags:['verify','verification','id','identity','badge','blue badge','verified seller','document','selfie','id document','get verified'],
         answer:'To earn your verified ✓ badge:\n1. Go to Profile (bottom nav)\n2. Tap "Verify Identity"\n3. Upload a clear photo of your national ID or passport\n4. Take a selfie — your face must match the ID\n5. Submit and wait up to 24 hours\n\nVerified sellers rank higher in search results and buyers trust them significantly more.',
         chips:['Edit Profile','Post a Listing','Contact Support']
-      },
-      {
-        tags:['boost','promote','advertise','spotlight','feature','credits','ad credit','visibility','top of results','top listing','sponsored'],
-        answer:'Boost puts your listing at the very top of search results and category pages!\n\nHow to boost:\n1. Open any of your active listings\n2. Tap "Boost Listing"\n3. Choose a package (duration/reach)\n4. Pay via EcoCash, OneMoney, or bank transfer\n\nNote: Credits are non-refundable once applied to a listing. Unused credits can be refunded within 7 days — contact us to request this.',
-        chips:['Payment Methods','Post a Listing','Contact Support']
       },
       {
         tags:['message','chat','messaging','inbox','not receiving','send message','conversation','message seller','not syncing','not delivered','no reply','messages disappear'],
@@ -278,7 +273,7 @@
       {
         tags:['payment','pay','ecocash','onemoney','bank transfer','mobile money','zipit','rtgs','how to pay','transaction'],
         answer:'PaMarket uses direct peer-to-peer payments between buyers and sellers.\n\nAccepted methods:\n• EcoCash — send to seller\'s registered number\n• OneMoney — same process\n• Bank transfer (ZIPIT / RTGS)\n• Cash on delivery (meet in person)\n\n⚠️ PaMarket does NOT hold or process payments. Deal directly with sellers. Always inspect items before paying — never pay sight-unseen.',
-        chips:['Boost a Listing','Report a Scam','Ask Another Question']
+        chips:['Payment Methods','Report a Scam','Ask Another Question']
       },
       {
         tags:['job','apply','application','vacancy','hire','employer','employee','applied','apply for job','job not showing','job listing'],
@@ -303,7 +298,7 @@
       {
         tags:['edit','update listing','change price','modify listing','update ad','change description','change photo','edit my listing'],
         answer:'To edit a listing:\n1. Tap the Profile icon (bottom nav) → My Listings\n2. Tap the listing you want to change\n3. Tap "Edit"\n4. Update the title, price, photos, description, or location\n5. Tap Save — changes appear live within seconds',
-        chips:['Mark as Sold','Boost a Listing','Delete a Listing']
+        chips:['Mark as Sold','Delete a Listing','Get Verified']
       },
       {
         tags:['delete listing','remove listing','take down','delete ad','remove ad'],
@@ -327,8 +322,8 @@
       },
       {
         tags:['free','cost','price','fee','how much','charges','paid feature','subscription','pricing'],
-        answer:'PaMarket is 100% free for buyers and sellers!\n\nAlways free:\n✓ Post unlimited listings\n✓ Message any seller or buyer\n✓ Apply for jobs\n✓ Browse all categories\n✓ Create your profile and CV\n✓ Get verified\n\nOptional paid upgrades:\n• Boost — pushes your listing to the top of search results\n• Spotlight Ad — featured placement on the home page\n\nNo subscription. No hidden fees. No commission on sales.',
-        chips:['Boost a Listing','Post a Listing','Ask Another Question']
+        answer:'PaMarket is 100% free for buyers and sellers!\n\nEverything is free:\n✓ Post unlimited listings\n✓ Message any seller or buyer\n✓ Apply for jobs\n✓ Browse all categories\n✓ Create your profile and CV\n✓ Get verified\n\nNo subscription. No hidden fees. No commission on sales.',
+        chips:['Post a Listing','Get Verified','Ask Another Question']
       },
       {
         tags:['profile','update profile','edit profile','change name','change photo','profile picture','bio','city','avatar'],
@@ -353,7 +348,7 @@
       {
         tags:['renew','expired listing','30 days','listing expired','listing removed','disappeared','no longer showing','listing gone'],
         answer:'Listings stay active for 30 days, then automatically archive.\n\nTo renew an expired listing:\n1. Go to My Listings\n2. Find the expired listing (marked "Expired")\n3. Tap "Renew"\n\nThis re-publishes it free for another 30 days.\n\nIf your listing disappeared before 30 days, it may have been reported and removed. Check your notification inbox or contact us for details.',
-        chips:['Edit a Listing','Boost a Listing','Contact Support']
+        chips:['Edit a Listing','Post a Listing','Contact Support']
       },
       {
         tags:['search','find listing','browse','can\'t find','not showing up','listing not found','search not working','search results'],
@@ -378,14 +373,13 @@
     var history  = [];
     var msgCount = 0;
 
-    var INIT_CHIPS = ['Sign In Issue','Post a Listing','Get Verified','Messaging Issue','Report a Scam','Boost a Listing','Job / CV Help','App Not Working','Pricing Info','Account Banned'];
+    var INIT_CHIPS = ['Sign In Issue','Post a Listing','Get Verified','Messaging Issue','Report a Scam','Job / CV Help','App Not Working','Pricing Info','Account Banned'];
     var CHIP_MAP   = {
       'Sign In Issue':    'sign in login forgot password',
       'Post a Listing':   'post create listing sell publish',
       'Get Verified':     'verify verification badge identity',
       'Messaging Issue':  'message chat not working inbox',
       'Report a Scam':    'scam fraud fake suspicious',
-      'Boost a Listing':  'boost promote advertise credits',
       'Job / CV Help':    'job apply cv resume vacancy',
       'App Not Working':  'crash not loading freeze error bug',
       'Pricing Info':     'free cost price fee subscription',
@@ -626,10 +620,7 @@
             <li>Human trafficking, exploitation, or domestic workers without consent</li>
           </ul>
 
-          <h2>6. Advertising Credits (Boost Feature)</h2>
-          <p>PaMarket offers optional paid advertising credits ("Boost") to increase the visibility of your listings. These credits are purchased as a business service via external payment methods (EcoCash, OneMoney, or bank transfer). Advertising credits are not processed by Google Play or the Apple App Store. Credits are non-refundable once applied to a listing. Unused credits may be refunded at our discretion within 7 days of purchase — contact us to request a refund.</p>
-
-          <h2>7. User Conduct</h2>
+          <h2>6. User Conduct</h2>
           <p>You agree not to:</p>
           <ul>
             <li>Harass, threaten, abuse, or discriminate against other users</li>
@@ -641,28 +632,28 @@
             <li>Use automated tools to scrape or access the platform</li>
           </ul>
 
-          <h2>8. User Content License</h2>
+          <h2>7. User Content License</h2>
           <p>By posting photos, text, or any content on PaMarket, you grant us a non-exclusive, worldwide, royalty-free license to display, reproduce, and distribute that content within the App and for promotional purposes. You confirm that you own or have the rights to all content you post and that it does not infringe any third-party rights.</p>
 
-          <h2>9. Intellectual Property</h2>
+          <h2>8. Intellectual Property</h2>
           <p>All design, branding, logos, code, and content created by PaMarket are protected by copyright and intellectual property law. You may not copy, reproduce, reverse-engineer, or redistribute any part of the App without our written consent.</p>
 
-          <h2>10. Moderation and Enforcement</h2>
+          <h2>9. Moderation and Enforcement</h2>
           <p>We reserve the right to remove any listing, suspend, or permanently ban any account that violates these Terms at any time, with or without notice. Serious violations including fraud, scams, or illegal activity may be reported to relevant Zimbabwean authorities. Banned users may appeal by contacting chakusaprince@gmail.com within 14 days of the ban.</p>
 
-          <h2>11. Disclaimer of Warranties</h2>
+          <h2>10. Disclaimer of Warranties</h2>
           <p>PaMarket is provided "as is" and "as available" without any warranties, express or implied. We do not guarantee that the App will be uninterrupted, error-free, or that listings are accurate. We are not responsible for the quality, safety, legality, or availability of listed items.</p>
 
-          <h2>12. Limitation of Liability</h2>
+          <h2>11. Limitation of Liability</h2>
           <p>To the maximum extent permitted by law, PaMarket and its operators shall not be liable for any indirect, incidental, punitive, or consequential damages arising from your use of the App, including loss of money, data, or business opportunity resulting from transactions between users.</p>
 
-          <h2>13. Governing Law</h2>
+          <h2>12. Governing Law</h2>
           <p>These Terms are governed exclusively by the laws of the Republic of Zimbabwe. Any legal disputes shall be subject to the jurisdiction of the courts of Zimbabwe.</p>
 
-          <h2>14. Changes to These Terms</h2>
+          <h2>13. Changes to These Terms</h2>
           <p>We may update these Terms from time to time. We will notify users of significant changes through the App. Continued use of the App after any update constitutes your acceptance of the revised Terms. You may stop using the App at any time if you disagree with the updated Terms.</p>
 
-          <h2>15. Contact Us</h2>
+          <h2>14. Contact Us</h2>
           <p>For questions about these Terms, contact us at:</p>
           <ul>
             <li>Email: chakusaprince@gmail.com</li>
@@ -689,7 +680,6 @@ pages.HelpPrivacy = function () {
             <li><strong>Profile data:</strong> Profile photo, bio, city/province location</li>
             <li><strong>Listing data:</strong> Photos, descriptions, prices, and location of items you post</li>
             <li><strong>Messages:</strong> In-app conversations between buyers and sellers</li>
-            <li><strong>Transaction data:</strong> Advertising credit balance and top-up reference history</li>
             <li><strong>Device data:</strong> Device type, operating system version, app version</li>
             <li><strong>Usage data:</strong> Pages viewed, search queries, and listing interactions</li>
           </ul>
@@ -699,7 +689,6 @@ pages.HelpPrivacy = function () {
             <li>To create and manage your user account</li>
             <li>To display your listings to other users across Zimbabwe</li>
             <li>To facilitate secure in-app messaging between buyers and sellers</li>
-            <li>To verify advertising credit purchases and apply boosts to listings</li>
             <li>To detect, investigate, and prevent fraud and policy violations</li>
             <li>To improve the App, fix bugs, and enhance user experience</li>
             <li>To send you important notifications about your account and listings</li>
@@ -1022,7 +1011,7 @@ pages.HelpCommunity = function () {
 
 H.pages.LegalHub = function() {
   var sections = [
-    { title: 'Terms', items: ['Terms of Use','Acceptable Use Policy','Seller Terms','Buyer Protection','Boost Terms'] },
+    { title: 'Terms', items: ['Terms of Use','Acceptable Use Policy','Seller Terms','Buyer Protection'] },
     { title: 'Privacy', items: ['Privacy Policy','Cookie Policy','Data Deletion','GDPR Compliance'] },
     { title: 'Platform Policies', items: ['Community Guidelines','Prohibited Items','Anti-Fraud Policy','Dispute Resolution'] }
   ];

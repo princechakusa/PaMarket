@@ -31,7 +31,6 @@
         ${photo
           ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.onerror=null;this.style.display='none'">`
           : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>'}
-        ${l.boost && l.boost.until > Date.now() ? '<span style="position:absolute;top:6px;left:6px;background:#1A3A8F;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">SPONSORED</span>' : ''}
         ${l.negotiable ? '<span style="position:absolute;top:6px;right:6px;background:#F5A623;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">NEG</span>' : ''}
       </div>
       <div style="padding:8px 10px 11px">
@@ -50,7 +49,6 @@
       Array.isArray(cv.members) && cv.members.includes(u.id) && (cv.messages || []).some(m => m.from !== u.id && !m.read)).length : 0;
     const activeListings = (H.state.listings || []).filter(l => l.status === 'active');
     const filtered       = filterListings(activeListings);
-    const featured       = filtered.filter(l => l.boost && l.boost.until > Date.now()).slice(0, 6);
 
     const catSections = CATEGORIES.map(c => ({
       ...c, items: filtered.filter(l => l.cat === c.id).slice(0, 4)
@@ -193,21 +191,6 @@
             Post a Free Ad
           </button>
         </div>
-
-        <!-- FEATURED -->
-        ${featured.length ? `
-        <div style="padding:20px 0 0">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:6px">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="#F5A623" stroke="#F5A623" stroke-width="1"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              <span style="font-size:16px;font-weight:800;color:var(--text)">Featured Ads</span>
-            </div>
-            <span onclick="H.navTo('Browse',null)" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>
-          </div>
-          <div style="display:flex;gap:12px;padding:0 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-            ${featured.map(l => `<div style="flex-shrink:0">${renderFeatCard(l)}</div>`).join('')}
-          </div>
-        </div>` : ''}
 
         <!-- SEARCH RESULTS (shown when typing) -->
         <div id="searchResults" style="display:none;padding:16px 12px 0">

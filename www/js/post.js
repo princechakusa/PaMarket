@@ -229,7 +229,7 @@
         prov: s.prov, city: s.city, suburb: s.suburb,
         photos: s.photos, createdAt: Date.now(),
         status: needsApproval ? 'pending' : 'active',
-        boost: null, views: 0
+        views: 0
       };
       H.state.listings.unshift(l);
       H.saveState();

@@ -65,7 +65,6 @@
       ['users',         `Users (${(H.state.users||[]).length})`],
       ['listings',      `Listings (${(H.state.listings||[]).length})`],
       ['reports',       `Reports (${(H.state.reports||[]).filter(r=>r.status==='open').length})`],
-      ['payments',      'Payments'],
       ['analytics',     'Analytics'],
       ['verifications',  `Verify (${(H.state.users||[]).filter(u=>u.verificationPending&&!u.verified).length})`],
       ['settings',      'Settings'],
@@ -152,7 +151,6 @@
       case 'users':          return renderUsers();
       case 'listings':       return renderListings();
       case 'reports':        return renderReports();
-      case 'payments':       return renderPayments();
       case 'analytics':      return renderAnalytics();
       case 'verifications':  return renderVerifications();
       case 'settings':       return renderSettings();
@@ -227,7 +225,6 @@
     const listings = H.state.listings || [];
     const reports  = H.state.reports || [];
     const txns     = H.state.txns || [];
-    const revenue  = txns.filter(t=>t.type==='boost').reduce((s,t)=>s+Math.abs(t.amt),0);
     const today    = Date.now() - 86400000;
     const newToday = listings.filter(l=>l.createdAt>today).length;
     const usersToday = users.filter(u=>(u.joinedAt||u.createdAt||0)>today).length;
@@ -235,7 +232,6 @@
     const pending  = listings.filter(l=>l.status==='pending').length;
     const expiring = listings.filter(l=>l.expiresAt&&l.expiresAt-Date.now()<7*86400000&&l.expiresAt>Date.now()).length;
     const openTickets = (H.state.supportTickets||[]).filter(t=>t.status!=='closed').length;
-    const topupQueue = (H.state.topupRequests||[]).filter(r=>r.status==='pending').length;
     const convos = H.state.conversations || [];
     let msgUnread = 0;
     convos.forEach(function (c) { (c.messages||[]).forEach(function (m) { if (!m.read) msgUnread++; }); });
@@ -249,9 +245,9 @@
       <div class="stats" style="margin:0 0 10px">
         <div class="stat"><div class="stat-n">${listings.filter(l=>l.status==='active').length}</div><div class="stat-l">Active Ads</div></div>
         <div class="stat"><div class="stat-n">+${newToday}</div><div class="stat-l">New Today</div></div>
-        <div class="stat"><div class="stat-n">$${revenue.toFixed(0)}</div><div class="stat-l">Revenue</div></div>
+        <div class="stat"><div class="stat-n">${listings.filter(l=>l.status==='pending').length}</div><div class="stat-l">Pending</div></div>
       </div>
-      ${(pending||openReports||expiring||openTickets||topupQueue) ? `
+      ${(pending||openReports||expiring||openTickets) ? `
       <div style="padding:12px 0 4px;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px">Needs Attention</div>
       <div class="section-card" style="padding:0">
         ${pending ? `<div class="admin-alert-row" onclick="H._admin.setTab('listings');H._admin.filterListingsByStatus('pending')">
@@ -268,10 +264,6 @@
         </div>` : ''}
         ${openTickets ? `<div class="admin-alert-row" onclick="H._admin.setTab('support')">
           <span style="color:#7c3aed;font-weight:700">${openTickets} support ticket${openTickets>1?'s':''}</span> open
-          <span style="color:#1A3A8F;font-weight:700;margin-left:auto">View →</span>
-        </div>` : ''}
-        ${topupQueue ? `<div class="admin-alert-row" onclick="H._admin.setTab('payments')">
-          <span style="color:#059669;font-weight:700">${topupQueue} top-up request${topupQueue>1?'s':''}</span> pending
           <span style="color:#1A3A8F;font-weight:700;margin-left:auto">View →</span>
         </div>` : ''}
       </div>` : ''}
@@ -291,7 +283,6 @@
   function renderAnalytics() {
     const listings = H.state.listings || [];
     const users    = H.state.users || [];
-    const txns     = H.state.txns || [];
 
     // Listings by category
     const catCounts = {};
@@ -300,9 +291,6 @@
     const maxCat = catEntries[0]?.[1] || 1;
 
     // Revenue by type
-    const boostRev = txns.filter(t=>t.type==='boost').reduce((s,t)=>s+Math.abs(t.amt),0);
-    const topupRev = txns.filter(t=>t.type==='topup').reduce((s,t)=>s+Math.abs(t.amt),0);
-
     // New users by week (last 4 weeks)
     const now = Date.now();
     const weeks = [0,1,2,3].map(w => {
@@ -360,13 +348,6 @@
         <div style="display:flex;gap:8px;margin-top:4px">
           ${weeks.map(w=>`<div style="flex:1;font-size:10px;color:var(--text-hint);text-align:center">${w.label}</div>`).join('')}
         </div>
-      </div>
-
-      <div style="padding:14px 0 10px;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px">Revenue</div>
-      <div class="stats" style="margin:0">
-        <div class="stat"><div class="stat-n">$${boostRev.toFixed(0)}</div><div class="stat-l">Boost Revenue</div></div>
-        <div class="stat"><div class="stat-n">$${topupRev.toFixed(0)}</div><div class="stat-l">Top-ups</div></div>
-        <div class="stat"><div class="stat-n">$${(boostRev+topupRev).toFixed(0)}</div><div class="stat-l">Total</div></div>
       </div>`;
   }
 
@@ -492,31 +473,6 @@
   }
 
   // ── PAYMENTS ──────────────────────────────────────────────
-  function renderPayments() {
-    const txns    = [...(H.state.txns||[])].sort((a,b)=>b.t-a.t).slice(0,50);
-    const revenue = txns.filter(t=>t.type==='boost').reduce((s,t)=>s+Math.abs(t.amt),0);
-    const topups  = txns.filter(t=>t.type==='topup').reduce((s,t)=>s+Math.abs(t.amt),0);
-    return `
-      <div class="stats" style="margin:0 0 14px">
-        <div class="stat"><div class="stat-n">$${revenue.toFixed(2)}</div><div class="stat-l">Boost Revenue</div></div>
-        <div class="stat"><div class="stat-n">$${topups.toFixed(2)}</div><div class="stat-l">Top-ups</div></div>
-        <div class="stat"><div class="stat-n">${txns.length}</div><div class="stat-l">Transactions</div></div>
-      </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Transaction History</div>
-      <div class="section-card">
-        ${txns.length ? txns.map(t => `
-          <div class="tx-item">
-            <div class="tx-icon ${t.type==='topup'?'green':t.type==='boost'?'amber':'red'}">${t.type==='topup'?'↓':t.type==='boost'?'⚡':'↑'}</div>
-            <div class="tx-body">
-              <div class="tx-title">${escHtml(t.note||t.type)}</div>
-              <div class="tx-date">${new Date(t.t).toLocaleString()}</div>
-            </div>
-            <div class="tx-amount ${t.amt>=0?'plus':'minus'}">${t.amt>=0?'+':''}$${Math.abs(t.amt).toFixed(2)}</div>
-          </div>`).join('')
-        : '<div style="padding:24px;text-align:center;color:var(--text-sub)">No transactions yet</div>'}
-      </div>`;
-  }
-
   // ── SETTINGS ──────────────────────────────────────────────
   function renderSettings() {
     const tog = (key, label, sub) => `
@@ -535,9 +491,6 @@
       <div class="menu-group-label" style="padding:16px 0 10px">Security & Access</div>
       ${tog('signupPaused','Pause new registrations','Temporarily disable new account signup')}
       ${tog('requirePhoneVerification','Require phone verification','Users must verify phone to post')}
-      <div class="menu-group-label" style="padding:16px 0 10px">Monetization</div>
-      ${tog('enablePremiumListings','Enable premium listings','Allow users to boost their listings')}
-      ${tog('freeOnly','Free listings only','Disable all paid features')}
       <div class="menu-group-label" style="padding:16px 0 10px">System</div>
       <button class="btn-pri" style="margin-bottom:8px" onclick="H._admin.exportData()">${S.download} Export All Data</button>
       <button class="btn-sec" style="margin-bottom:8px" onclick="H._admin.clearOldData()">${S.trash} Clear Old Data (30+ days)</button>
@@ -785,33 +738,6 @@
       if (body) body.innerHTML = renderReports(f);
     },
 
-    approveTopup(rid) {
-      if (!adminGuard()) return;
-      const r = (H.state.topupRequests||[]).find(x=>x.id===rid); if (!r) return;
-      const u = (H.state.users||[]).find(x=>x.id===r.userId); if (!u) return;
-      r.status = 'approved';
-      const amount = Number(r.amount);
-      H.state.txns = H.state.txns||[];
-      H.state.txns.unshift({id:uid(),userId:u.id,type:'topup',amt:amount,note:`Top-up via ${r.method||'EcoCash'} (ref: ${r.reference||r.ref||'—'})`,t:Date.now()});
-      alog(`Approved top-up $${amount} for ${u.name}`);
-      // Sync to Supabase
-      const sb = window.supabase;
-      if (sb && typeof sb.from === 'function') {
-        sb.from('topup_requests').update({ status: 'approved' }).eq('id', rid);
-      }
-      saveState(); toast(`$${amount.toFixed(2)} credited to ${u.name}`); this.setTab('payments');
-    },
-
-    rejectTopup(rid) {
-      if (!adminGuard()) return;
-      const r = (H.state.topupRequests||[]).find(x=>x.id===rid); if (!r) return;
-      const u = (H.state.users||[]).find(x=>x.id===r.userId);
-      r.status = 'rejected';
-      if (u) pushNotif(u.id,'Top-up Rejected','Your top-up could not be verified. Contact support if this is an error.');
-      alog(`Rejected top-up ${rid}`);
-      saveState(); toast('Top-up rejected'); this.setTab('payments');
-    },
-
     banUser(uid_, type, reportId) {
       if (!adminGuard()) return;
       modal({
@@ -1036,7 +962,7 @@
       const sb = window.supabase;
       if (sb && typeof sb.from === 'function') {
         const KEYS = ['requireListingApproval','autoApproveVerified','allowImageUploads',
-                      'signupPaused','requirePhoneVerification','enablePremiumListings','freeOnly'];
+                      'signupPaused','requirePhoneVerification'];
         const settingsObj = {};
         KEYS.forEach(key => { settingsObj[key] = !!H.state[key]; });
         sb.from('app_settings').upsert({ id: 1, settings: settingsObj, updated_at: new Date().toISOString() })

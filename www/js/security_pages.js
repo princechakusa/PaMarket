@@ -291,7 +291,7 @@
       <div class="form-wrap">
         <div class="section-box" style="border:1.5px solid rgba(192,57,43,.2);text-align:center;padding:24px">
           <div class="verify-title" style="color:var(--red)">Delete Account</div>
-          <div class="verify-sub">This permanently deletes your account, listings, messages and wallet. Cannot be undone.</div>
+          <div class="verify-sub">This permanently deletes your account, listings and messages. Cannot be undone.</div>
         </div>
         <div class="section-box">
           <div class="section-title">What will be deleted</div>

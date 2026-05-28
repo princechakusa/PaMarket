@@ -440,7 +440,6 @@
     const rows = [
       ['newEnq',    'New Enquiries',          'When someone messages you about a listing',         'message'],
       ['priceDrop', 'Price Drops',            'When a saved ad drops in price',                    'dollar'],
-      ['boostExp',  'Boost Expiry Reminders', '2 days before your boost ends',                     'clock'],
       ['sec',       'Security Alerts',        'New sign-in or suspicious account activity',        'shield'],
       ['promo',     'Tips & Promotions',      'Selling tips, platform updates, discounts',         'star'],
       ['sms',       'SMS Alerts',             'Critical alerts via SMS (carrier rates may apply)', 'smartphone']
