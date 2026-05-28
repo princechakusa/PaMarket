@@ -10,20 +10,56 @@
   pages.Saved = function () {
     const u    = currentUser();
     const ids  = state.saves[u.id] || [];
-    const list = ids.map(id => state.listings.find(l => l.id === id)).filter(Boolean);
+
+    // Map each saved ID to either the listing object or null (deleted/not found)
+    const resolved = ids.map(id => ({ id, listing: state.listings.find(l => l.id === id) || null }));
+
+    // Helper: render a status pill for non-active listings
+    function statusPillFor(listing) {
+      if (!listing || listing.status === 'active') return '';
+      if (listing.status === 'sold')
+        return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#ef4444;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Sold</span>`;
+      if (listing.status === 'expired')
+        return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#f59e0b;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Expired</span>`;
+      // inactive or any other status
+      return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#6b7280;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Unavailable</span>`;
+    }
+
+    // Render a single saved entry
+    function renderEntry({ id, listing }) {
+      // Deleted listing — ghost card
+      if (!listing) {
+        return `<div style="padding:14px 16px;background:var(--card);border-radius:14px;margin:8px 16px;opacity:.5;border:1px dashed var(--border)">
+  <div style="font-size:13px;color:var(--sub)">This listing is no longer available</div>
+</div>`;
+      }
+      // Unavailable listing — greyed-out card with status pill injected
+      const isUnavailable = listing.status !== 'active';
+      const card = renderListCard(listing);
+      if (!isUnavailable) return card;
+      // Wrap with opacity and inject the status pill right after the card opens
+      const pill = statusPillFor(listing);
+      // Insert pill into the rendered card by appending it into the title line if possible,
+      // otherwise wrap the whole card with a relative-positioned overlay container
+      return `<div style="opacity:0.65;position:relative">${card}${
+        pill ? `<div style="position:absolute;top:10px;left:10px;pointer-events:none">${pill}</div>` : ''
+      }</div>`;
+    }
+
+    const hasAny = resolved.length > 0;
 
     return `<div class="page active">
       <div class="app-header" style="padding-bottom:16px">
         <div class="app-header-row">
           <div class="logo">Saved <em>Ads</em></div>
           <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.6);padding:4px 10px;background:rgba(255,255,255,.1);border-radius:20px">
-            ${list.length} saved
+            ${ids.length} saved
           </div>
         </div>
       </div>
       <div class="listing-list">
-        ${list.length
-          ? list.map(renderListCard).join('')
+        ${hasAny
+          ? resolved.map(renderEntry).join('')
           : emptyState('Nothing saved yet', 'Tap the ♡ on any listing to save it for later', 'Browse Listings', "H.navTo('Browse',document.querySelector('[data-nav=Browse]'))")}
       </div>
     </div>`;
