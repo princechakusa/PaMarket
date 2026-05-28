@@ -289,11 +289,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           Send Notification
         </button>
-        <button class="nav-item" data-tab="topups" onclick="showTab('topups')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          Top-ups
-          <span class="nav-badge amber" id="badge-topups" style="display:none">0</span>
-        </button>
         <button class="nav-item" data-tab="reports" onclick="showTab('reports')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
           Reports
@@ -369,13 +364,12 @@ try {
 // ── State ─────────────────────────────────────────────────
 var DATA = {
   users:[], listings:[], verifications:[], reports:[],
-  topups:[], ads:[], settings:{}, notifHistory:[], chats:[]
+  ads:[], settings:{}, notifHistory:[], chats:[]
 };
 var currentTab = 'overview';
 var _listingFilter = 'pending';
 var _userSearch = '';
 var _reportFilter = 'open';
-var _topupFilter = 'pending';
 var _adminEmail = '';
 
 // ── Helpers ───────────────────────────────────────────────
@@ -452,7 +446,7 @@ function closeSidebar(){ document.getElementById('sidebar').classList.remove('op
 // ── Tab navigation ────────────────────────────────────────
 var TAB_TITLES = {
   overview:'Overview', listings:'Listings', users:'Users', verifications:'Verifications',
-  notifications:'Send Notification', topups:'Top-ups', reports:'Reports',
+  notifications:'Send Notification', reports:'Reports',
   ads:'Ads & Boosts', chats:'User Chats', analytics:'Analytics', settings:'Settings'
 };
 function showTab(name) {
@@ -468,7 +462,7 @@ function renderTab() {
   var fn = {
     overview: renderOverview, listings: renderListings, users: renderUsers,
     verifications: renderVerifications, notifications: renderNotifications,
-    topups: renderTopups, reports: renderReports, ads: renderAds,
+    reports: renderReports, ads: renderAds,
     chats: renderChats, analytics: renderAnalytics, settings: renderSettings
   }[currentTab];
   if(fn) fn();
@@ -537,7 +531,7 @@ async function showDash() {
 // ── Data loading ──────────────────────────────────────────
 async function loadAllData() {
   document.getElementById('mainContent').innerHTML = '<div class="loading-msg">Loading dashboard data…</div>';
-  await Promise.allSettled([loadUsers(), loadListings(), loadVerifications(), loadReports(), loadTopups(), loadAds(), loadSettings(), loadNotifHistory(), loadChats()]);
+  await Promise.allSettled([loadUsers(), loadListings(), loadVerifications(), loadReports(), loadAds(), loadSettings(), loadNotifHistory(), loadChats()]);
   updateBadges();
   renderTab();
 }
@@ -552,7 +546,7 @@ async function refreshAll() {
 
 async function loadUsers() {
   try {
-    var r = await sb.from('profiles').select('id,name,phone,email,role,status,verified,verification_pending,ban_reason,ban_until,wallet_usd,created_at').order('created_at',{ascending:false}).limit(500);
+    var r = await sb.from('profiles').select('id,name,phone,email,role,status,verified,verification_pending,ban_reason,ban_until,created_at').order('created_at',{ascending:false}).limit(500);
     if(!r.error && r.data) { DATA.users = r.data; return; }
     var r2 = await sb.from('profiles').select('id,name,phone,email,role,status,verified,verification_pending,created_at').order('created_at',{ascending:false}).limit(500);
     if(!r2.error && r2.data) { DATA.users = r2.data; return; }
@@ -581,13 +575,6 @@ async function loadReports() {
     else DATA.reports = [];
   } catch(e){ DATA.reports=[]; }
 }
-async function loadTopups() {
-  try {
-    var r = await sb.from('topup_requests').select('*').order('created_at',{ascending:false}).limit(200);
-    if(!r.error && r.data) DATA.topups = r.data;
-    else DATA.topups=[];
-  } catch(e){ DATA.topups=[]; }
-}
 async function loadAds() {
   try {
     var r = await sb.from('paid_ads').select('*').order('created_at',{ascending:false}).limit(100);
@@ -614,7 +601,6 @@ function updateBadges() {
   var pendingV = DATA.verifications.filter(function(v){ return v.status==='pending'; }).length
     + DATA.users.filter(function(u){ return u.verification_pending && !DATA.verifications.find(function(v){ return v.user_id===u.id; }); }).length;
   var openR = DATA.reports.filter(function(r){ return r.status==='open'; }).length;
-  var pendingT = DATA.topups.filter(function(t){ return t.status==='pending'; }).length;
 
   function setBadge(id, count) {
     var el=document.getElementById(id); if(!el) return;
@@ -623,8 +609,7 @@ function updateBadges() {
   setBadge('badge-listings', pendingL);
   setBadge('badge-verif', pendingV);
   setBadge('badge-reports', openR);
-  setBadge('badge-topups', pendingT);
-  document.getElementById('badge-overview').style.display = (pendingL||pendingV||openR||pendingT) ? '' : 'none';
+  document.getElementById('badge-overview').style.display = (pendingL||pendingV||openR) ? '' : 'none';
 }
 
 // ════════════════════════════════════════════════════════════
@@ -812,8 +797,8 @@ function renderUsers() {
   html += '<input class="search-input" placeholder="Search name, phone, email…" value="'+esc(_userSearch)+'" oninput="_userSearch=this.value;renderUsers()" id="userSearch">';
   html += '</div></div>';
 
-  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Status</th><th>Wallet</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
-  if(!filtered.length) html += '<tr><td colspan="7"><div class="empty-msg">No users found</div></td></tr>';
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
+  if(!filtered.length) html += '<tr><td colspan="6"><div class="empty-msg">No users found</div></td></tr>';
   filtered.forEach(function(u){
     var statusBadge = u.status==='banned'?'<span class="badge badge-banned">Banned</span>':u.verified?'<span class="badge badge-verified"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>':'<span class="badge badge-pending">Unverified</span>';
     html += '<tr>';
@@ -821,13 +806,11 @@ function renderUsers() {
     html += '<td style="color:var(--sub);font-size:13px">'+esc(u.phone||'—')+'</td>';
     html += '<td style="color:var(--sub);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(u.email||'—')+'</td>';
     html += '<td>'+statusBadge+'</td>';
-    html += '<td style="font-size:12px">$'+fmt(u.wallet_usd||0)+'</td>';
     html += '<td style="color:var(--sub);font-size:12px">'+fmtDate(u.created_at)+'</td>';
     html += '<td><div style="display:flex;gap:4px;flex-wrap:wrap">';
     if(u.status==='banned') html += '<button class="ab ab-approve" onclick="unbanUser(\''+u.id+'\')">Unban</button>';
     else html += '<button class="ab ab-ban" onclick="banUser(\''+u.id+'\')">Ban</button>';
     if(!u.verified) html += '<button class="ab ab-approve" onclick="verifyUser(\''+u.id+'\')">Verify</button>';
-    html += '<button class="ab ab-edit" onclick="editWallet(\''+u.id+'\','+fmt(u.wallet_usd||0)+')">Wallet</button>';
     html += '<button class="ab ab-view" onclick="msgUser(\''+u.id+'\',\''+esc(u.name||'User')+'\')">Notify</button>';
     html += '</div></td></tr>';
   });
@@ -873,20 +856,6 @@ async function verifyUser(userId) {
     if(u){ u.verified=true; u.verification_pending=false; }
     await sb.from('notifications').insert({user_id:userId,title:'Identity Verified',body:'Congratulations! Your blue verified badge is now active.',type:'verify',read:false,created_at:Date.now()});
     renderTab(); toast('User verified and notified');
-  } catch(e){ toast('Error: '+e.message,'error'); }
-}
-
-async function editWallet(userId, currentBal) {
-  var val = await confirm2('Adjust Wallet','Enter new USD balance (current: $'+currentBal+'):','Save','green',true,'e.g. 25.00');
-  if(val===null||val===true) return;
-  var amount = parseFloat(val);
-  if(isNaN(amount)||amount<0){ toast('Invalid amount','error'); return; }
-  try {
-    var r = await sb.from('profiles').update({wallet_usd:amount}).eq('id',userId);
-    if(r.error) throw r.error;
-    var u = DATA.users.find(function(x){ return x.id===userId; });
-    if(u) u.wallet_usd=amount;
-    renderTab(); toast('Wallet updated to $'+amount.toFixed(2));
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
 
@@ -1245,62 +1214,6 @@ async function sendNotification() {
   }
 }
 
-// ── TOP-UPS ───────────────────────────────────────────────
-function renderTopups() {
-  var filtered = DATA.topups.filter(function(t){ return _topupFilter==='all'||t.status===_topupFilter; });
-  var counts = {all:DATA.topups.length,pending:DATA.topups.filter(function(t){return t.status==='pending';}).length,approved:DATA.topups.filter(function(t){return t.status==='approved';}).length,rejected:DATA.topups.filter(function(t){return t.status==='rejected';}).length};
-
-  var html = '<div class="sec-head"><div class="sec-title">Top-up Requests</div><div class="sec-actions">';
-  ['all','pending','approved','rejected'].forEach(function(f){
-    html+='<button class="filter-btn'+((_topupFilter===f)?' on':'')+'" onclick="_topupFilter=\''+f+'\';renderTopups()">'+f.charAt(0).toUpperCase()+f.slice(1)+' ('+counts[f]+')</button>';
-  });
-  html += '</div></div>';
-
-  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>User</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
-  if(!filtered.length) html+='<tr><td colspan="6"><div class="empty-msg">No top-up requests</div></td></tr>';
-  filtered.forEach(function(t){
-    var u = DATA.users.find(function(x){ return x.id===(t.userId||t.user_id); })||{};
-    html+='<tr><td style="font-weight:600">'+esc(u.name||t.userId||'—')+'</td>';
-    html+='<td style="font-weight:700;color:var(--green)">$'+fmt(t.amount)+' '+esc(t.currency||'USD')+'</td>';
-    html+='<td style="color:var(--sub);font-size:12px">'+esc(t.method||'—')+'</td>';
-    html+='<td><span class="badge badge-'+(t.status==='approved'?'active':t.status==='pending'?'pending':'rejected')+'">'+esc(t.status)+'</span></td>';
-    html+='<td style="color:var(--sub);font-size:12px">'+fmtDate(t.created_at)+'</td>';
-    html+='<td><div style="display:flex;gap:4px">';
-    if(t.status==='pending'){
-      html+='<button class="ab ab-approve" onclick="approveTopup(\''+t.id+'\',\''+(t.userId||t.user_id)+'\','+t.amount+')">Approve</button>';
-      html+='<button class="ab ab-reject" onclick="rejectTopup(\''+t.id+'\')">Reject</button>';
-    }
-    html+='</div></td></tr>';
-  });
-  html+='</tbody></table></div>';
-  document.getElementById('mainContent').innerHTML=html;
-}
-
-async function approveTopup(id, userId, amount) {
-  var ok = await confirm2('Approve Top-up','Add $'+fmt(amount)+' to user wallet?','Approve','green');
-  if(!ok) return;
-  try {
-    var u = DATA.users.find(function(x){ return x.id===userId; });
-    var newBal = parseFloat(u?u.wallet_usd||0:0)+parseFloat(amount);
-    await sb.from('profiles').update({wallet_usd:newBal}).eq('id',userId);
-    await sb.from('topup_requests').update({status:'approved'}).eq('id',id);
-    if(u){ u.wallet_usd=newBal; }
-    var t=DATA.topups.find(function(x){return x.id===id;}); if(t) t.status='approved';
-    await sb.from('notifications').insert({user_id:userId,title:'Wallet Topped Up',body:'$'+fmt(amount)+' has been added to your wallet.',type:'sale',read:false,created_at:Date.now()});
-    updateBadges(); renderTopups(); toast('Top-up approved, wallet updated');
-  } catch(e){ toast('Error: '+e.message,'error'); }
-}
-
-async function rejectTopup(id) {
-  var ok = await confirm2('Reject Top-up','Reject this payment request?','Reject','red');
-  if(!ok) return;
-  try {
-    await sb.from('topup_requests').update({status:'rejected'}).eq('id',id);
-    var t=DATA.topups.find(function(x){return x.id===id;}); if(t) t.status='rejected';
-    updateBadges(); renderTopups(); toast('Top-up rejected','info');
-  } catch(e){ toast('Error: '+e.message,'error'); }
-}
-
 // ── REPORTS ───────────────────────────────────────────────
 function renderReports() {
   var filtered = DATA.reports.filter(function(r){ return _reportFilter==='all'||r.status===_reportFilter; });
@@ -1637,13 +1550,11 @@ function renderAnalytics() {
   });
   var maxDay = Math.max.apply(null, dayCounts.concat([1]));
 
-  var totalRevenue = DATA.topups.filter(function(t){return t.status==='approved';}).reduce(function(s,t){return s+parseFloat(t.amount||0);},0);
   var totalAdsRev = DATA.ads.reduce(function(s,a){return s+parseFloat(a.price_paid||0);},0);
 
   var html = '<div class="stats-grid">';
   html+=statCard('Total Users','blue',DATA.users.length,'');
   html+=statCard('Total Listings','green',DATA.listings.length,'');
-  html+=statCard('Wallet Revenue','accent','$'+fmt(totalRevenue),'from top-ups');
   html+=statCard('Ads Revenue','amber','$'+fmt(totalAdsRev),'from paid ads');
   html+='</div>';
 
@@ -1689,7 +1600,6 @@ function renderSettings() {
     ['allowNewRegistrations','Allow New Registrations','Users can create new accounts'],
     ['maintenanceMode','Maintenance Mode','Shows a maintenance banner in the app to all users'],
     ['autoApproveVerified','Auto-approve Verified Users','Skip review for listings from verified sellers'],
-    ['enableWallet','Enable Wallet','Show wallet and top-up features in the app'],
     ['showSponsoredAds','Show Sponsored Ads','Display sponsored listing injection in browse feed'],
   ];
 
