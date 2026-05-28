@@ -12,7 +12,7 @@
     var lines = (l.desc || '').split('\n');
     var company  = l.company || l.sellerName || parseLine(lines, 'COMPANY') || 'Company';
     var jobType  = parseLine(lines, 'JOB TYPE') || '';
-    var salary   = parseLine(lines, 'SALARY') || '';
+    var salary   = parseLine(lines, 'SALARY') || 'Negotiable';
     var industry = parseLine(lines, 'INDUSTRY') || '';
     var seller   = (H.state.users || []).find(function(u){ return u.id === l.sellerId; });
     var coVerified = seller && (seller.companyVerified || seller.verified);
@@ -653,8 +653,8 @@
       + '<option>Remote</option><option>Multiple Locations</option></select></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Job Type</label>'
       + '<div style="display:flex;flex-wrap:wrap;gap:10px">' + ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'].map(function (t, i) { return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="jType" value="' + t + '"' + (i === 0 ? ' checked' : '') + ' style="accent-color:#1A3A8F"><span style="font-size:13px;font-weight:600;color:var(--text)">' + t + '</span></label>'; }).join('') + '</div></div>'
-      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Salary Range (USD)</label>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input id="jSalMin" type="number" placeholder="Min" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"><input id="jSalMax" type="number" placeholder="Max" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"></div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Salary (USD)</label>'
+      + '<input id="jSalary" type="text" inputmode="numeric" placeholder="e.g. 500, 500-1000, or Negotiable" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"></div>'
       + _textarea('jDesc', 'Job Description *', 'Describe the role, responsibilities, company culture…', 6)
       + _textarea('jReqs', 'Requirements & Qualifications', 'List qualifications, experience, skills required…', 4)
       + _textarea('jResp', 'Key Responsibilities', 'List the main duties and responsibilities…', 4)
@@ -700,9 +700,11 @@
     if (!u.verified) { H.toast('Company must be verified to post jobs. Go to Profile → Verify Identity.', 4000); return; }
     var jobType = 'Full-time';
     document.querySelectorAll('input[name="jType"]').forEach(function (r) { if (r.checked) jobType = r.value; });
-    var salMin = (document.getElementById('jSalMin') || {}).value || '';
-    var salMax = (document.getElementById('jSalMax') || {}).value || '';
-    var salary = salMin && salMax ? '$' + salMin + ' - $' + salMax : salMin ? 'From $' + salMin : 'Negotiable';
+    var salaryRaw = ((document.getElementById('jSalary') || {}).value || '').trim();
+    if (salaryRaw && !/^(\d+(\.\d+)?(\s*-\s*\d+(\.\d+)?)?|negotiable|competitive|tbd)$/i.test(salaryRaw)) {
+      H.toast('Please enter a valid salary amount or "Negotiable"'); return;
+    }
+    var salary = salaryRaw || 'Negotiable';
     var reqs = (document.getElementById('jReqs') || {}).value || '';
     var resp = (document.getElementById('jResp') || {}).value || '';
     var email = (document.getElementById('jEmail') || {}).value || '';
@@ -715,7 +717,7 @@
       + ((email || phone) ? '\n\nHOW TO APPLY:\n' + (email ? 'Email: ' + email + '\n' : '') + (phone ? 'WhatsApp: ' + phone : '') : '');
     var listing = {
       id: H.uid(), cat: 'jobs', title: title.trim(), desc: fullDesc,
-      price: salMin ? +salMin : 0, currency: 'USD', city: location, prov: prov || location,
+      price: (parseFloat(salary) || 0), currency: 'USD', city: location, prov: prov || location,
       sellerId: u.id, sellerName: anon ? company : (u.name || company),
       sellerPhone: u.phone || '', company: company,
       createdAt: Date.now(), status: 'active', photos: [],
@@ -808,8 +810,8 @@
       + '<div style="display:flex;flex-wrap:wrap;gap:10px">'
       + ['Full-time','Part-time','Contract','Freelance','Internship'].map(function(t){ return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="jType" value="' + t + '"' + (t === jobType ? ' checked' : '') + ' style="accent-color:#1A3A8F"><span style="font-size:13px;font-weight:600;color:var(--text)">' + t + '</span></label>'; }).join('')
       + '</div></div>'
-      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Salary Range (USD)</label>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input id="jSalMin" type="number" placeholder="Min" value="' + H.escHtml(salMin) + '" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"><input id="jSalMax" type="number" placeholder="Max" value="' + H.escHtml(salMax) + '" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"></div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Salary (USD)</label>'
+      + '<input id="jSalary" type="text" inputmode="numeric" placeholder="e.g. 500, 500-1000, or Negotiable" value="' + H.escHtml(salaryStr || '') + '" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"></div>'
       + _textareaVal('jDesc', 'Job Description *', 'Describe the role, responsibilities, company culture…', 6, description)
       + _textareaVal('jReqs', 'Requirements & Qualifications', 'List qualifications, experience, skills required…', 4, requirements)
       + _textareaVal('jResp', 'Key Responsibilities', 'List the main duties and responsibilities…', 4, responsibilities)
@@ -844,9 +846,11 @@
 
     var jobType = 'Full-time';
     document.querySelectorAll('input[name="jType"]').forEach(function(r){ if (r.checked) jobType = r.value; });
-    var salMin = (document.getElementById('jSalMin') || {}).value || '';
-    var salMax = (document.getElementById('jSalMax') || {}).value || '';
-    var salary = salMin && salMax ? '$' + salMin + ' - $' + salMax : salMin ? 'From $' + salMin : 'Negotiable';
+    var salaryRaw = ((document.getElementById('jSalary') || {}).value || '').trim();
+    if (salaryRaw && !/^(\d+(\.\d+)?(\s*-\s*\d+(\.\d+)?)?|negotiable|competitive|tbd)$/i.test(salaryRaw)) {
+      H.toast('Please enter a valid salary amount or "Negotiable"'); return;
+    }
+    var salary = salaryRaw || 'Negotiable';
     var reqs  = (document.getElementById('jReqs')  || {}).value || '';
     var resp  = (document.getElementById('jResp')  || {}).value || '';
     var email = ((document.getElementById('jEmail') || {}).value || '').trim();
@@ -865,7 +869,7 @@
     if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
     l.title = title; l.company = company; l.desc = fullDesc;
-    l.price = salMin ? +salMin : 0; l.city = location; l.prov = prov || location;
+    l.price = (parseFloat(salary) || 0); l.city = location; l.prov = prov || location;
     l.custom_questions = H._jobQuestionsArr ? H._jobQuestionsArr.slice() : [];
     l.updatedAt = Date.now();
     H.saveState();
