@@ -425,6 +425,7 @@ window.H = {
     else if (_act === 'topup')  { setTimeout(()=>{ if(this.currentUser()) this.openInner('Ads'); else this.requireAuth('Sign in to advertise'); }, 300); }
     try {
       await this.fetchListingsFromSupabase();
+      H._checkEngagementAlerts();
       await Promise.all([this.fetchAdsFromSupabase(), this.fetchAppSettings()]);
       await this.renderPage(this.currentPageName, this.currentPageParams);
     } catch(e) { console.warn('Boot fetch failed:', e); }
@@ -1615,6 +1616,49 @@ H._handleDeepLink = function(route) {
   } else {
     // Named pages: Home, Jobs, Messages, Account, Ads, etc.
     H.navTo(route);
+  }
+};
+
+H._checkEngagementAlerts = function () {
+  try {
+    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+    const u = H.currentUser();
+
+    if (u) {
+      // A. Auto-expire listings older than 30 days
+      let changed = false;
+      (H.state.listings || []).forEach(function (l) {
+        if (l.sellerId === u.id && l.status === 'active' && (Date.now() - l.createdAt) > THIRTY_DAYS) {
+          l.status = 'expired';
+          changed = true;
+        }
+      });
+      if (changed) {
+        H.saveState();
+        H.toast('Some of your listings have expired. Renew them in My Listings.');
+      }
+
+      // B. Price drop alerts
+      const savedPrices = H.state.savedPrices || {};
+      const saves = (H.state.saves || {})[u.id] || [];
+      const priceDrops = [];
+      saves.forEach(function (lid) {
+        const listing = (H.state.listings || []).find(function (l) { return l.id === lid; });
+        if (!listing || !savedPrices[lid]) return;
+        if (listing.price < savedPrices[lid]) {
+          priceDrops.push({ title: listing.title, oldPrice: savedPrices[lid], newPrice: listing.price, currency: listing.currency });
+          savedPrices[lid] = listing.price;
+        }
+      });
+      if (priceDrops.length > 0) {
+        H.state.savedPrices = savedPrices;
+        H.saveState();
+        const first = priceDrops[0];
+        H.toast('Price drop: ' + first.title + ' is now ' + H.fmtPrice(first.newPrice, first.currency) + ' (was ' + H.fmtPrice(first.oldPrice, first.currency) + ')');
+      }
+    }
+  } catch (e) {
+    console.warn('_checkEngagementAlerts:', e);
   }
 };
 
