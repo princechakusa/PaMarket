@@ -40,6 +40,12 @@
 
   if (!H.state.adminLogs) H.state.adminLogs = [];
 
+  function adminGuard() {
+    const u = currentUser();
+    if (!u || u.role !== 'admin') { toast('Unauthorized'); return false; }
+    return true;
+  }
+
   let _adminTab = 'overview';
 
   // ── ADMIN LOG HELPER ──────────────────────────────────────
@@ -379,6 +385,7 @@
       </div>
       <div class="admin-row-meta">${escHtml(u.email||'no email')} · ${escHtml(u.phone||'no phone')} · ${listings.length} listings · Joined ${new Date(u.joinedAt||u.createdAt||Date.now()).toLocaleDateString()}</div>
       <div class="admin-actions">
+        <button class="ml-act-btn" onclick="H._admin.setTab('listings');H._admin.filterListings('${escHtml(u.name)}')">${S.eye} Listings</button>
         ${u.status==='active' ? `
           <button class="ml-act-btn" onclick="H._admin.banUser('${u.id}','temp')">${S.suspend} Suspend</button>
           <button class="ml-act-btn red" onclick="H._admin.banUser('${u.id}','perm')">${S.ban} Ban</button>
@@ -489,31 +496,12 @@
     const txns    = [...(H.state.txns||[])].sort((a,b)=>b.t-a.t).slice(0,50);
     const revenue = txns.filter(t=>t.type==='boost').reduce((s,t)=>s+Math.abs(t.amt),0);
     const topups  = txns.filter(t=>t.type==='topup').reduce((s,t)=>s+Math.abs(t.amt),0);
-    const pending = (H.state.topupRequests||[]).filter(r=>r.status==='pending');
     return `
       <div class="stats" style="margin:0 0 14px">
         <div class="stat"><div class="stat-n">$${revenue.toFixed(2)}</div><div class="stat-l">Boost Revenue</div></div>
         <div class="stat"><div class="stat-n">$${topups.toFixed(2)}</div><div class="stat-l">Top-ups</div></div>
         <div class="stat"><div class="stat-n">${txns.length}</div><div class="stat-l">Transactions</div></div>
       </div>
-      ${pending.length ? `
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Pending Top-up Requests</div>
-      <div class="section-card" style="margin-bottom:14px">
-        ${pending.map(r => {
-          const u = (H.state.users||[]).find(x=>x.id===r.userId)||{name:'Unknown'};
-          return `<div class="admin-row" style="padding:12px 14px">
-            <div class="admin-row-head">
-              <div class="admin-row-name">${escHtml(u.name)}</div>
-              <span class="status-pill status-pending">Pending</span>
-            </div>
-            <div class="admin-row-meta">$${r.amount} via ${escHtml(r.method||'EcoCash')} · Ref: ${escHtml(r.ref||'—')} · ${new Date(r.t||Date.now()).toLocaleDateString()}</div>
-            <div class="admin-actions">
-              <button class="ml-act-btn" onclick="H._admin.approveTopup('${r.id}')">${S.approve} Approve</button>
-              <button class="ml-act-btn red" onclick="H._admin.rejectTopup('${r.id}')">${S.reject} Reject</button>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>` : ''}
       <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Transaction History</div>
       <div class="section-card">
         ${txns.length ? txns.map(t => `
@@ -553,7 +541,7 @@
       <div class="menu-group-label" style="padding:16px 0 10px">System</div>
       <button class="btn-pri" style="margin-bottom:8px" onclick="H._admin.exportData()">${S.download} Export All Data</button>
       <button class="btn-sec" style="margin-bottom:8px" onclick="H._admin.clearOldData()">${S.trash} Clear Old Data (30+ days)</button>
-      <button class="btn-sec" style="background:var(--red2);color:var(--red);border-color:rgba(192,57,43,.2)" onclick="H._admin.resetApp()">${S.reload} Reset App (Dangerous)</button>
+      <button class="btn-sec" style="background:var(--red-light);color:var(--red);border-color:rgba(192,57,43,.2)" onclick="H._admin.resetApp()">${S.reload} Reset App (Dangerous)</button>
     </div>`;
   }
 
@@ -578,15 +566,6 @@
       <div class="fg">
         <div class="fl">Message</div>
         <textarea class="fi" rows="4" id="bcastMsg" placeholder="Write your message to all selected users..."></textarea>
-      </div>
-      <div class="fg">
-        <div class="fl">Image URL <span style="font-size:11px;color:var(--sub)">(optional — shown in notification card)</span></div>
-        <input class="fi" id="bcastImage" placeholder="https://... image to display with notification">
-        <div style="font-size:11px;color:var(--sub);margin-top:4px">Tip: upload image to Supabase Storage and paste the public URL here</div>
-      </div>
-      <div class="fg">
-        <div class="fl">Tap Destination URL <span style="font-size:11px;color:var(--sub)">(optional — where to go when user taps)</span></div>
-        <input class="fi" id="bcastLink" placeholder="https://... or listing URL (e.g. detail?id=abc123)">
       </div>
       <button class="btn-pri" id="bcastSendBtn" onclick="H._admin.broadcast()">${S.broadcast} Send Broadcast</button>
     </div>`;
@@ -613,8 +592,8 @@
               <span class="status-pill ${t.status==='open'?'status-pending':t.status==='in-progress'?'status-active':'status-active'}">${t.status}</span>
             </div>
             <div class="admin-row-meta">${escHtml(u.name)} · ${new Date(t.createdAt||Date.now()).toLocaleDateString()}</div>
-            ${t.message?`<div style="font-size:13px;color:var(--charcoal-soft);padding:8px 0;border-top:1px solid var(--linen-dark);margin-top:6px">${escHtml(t.message)}</div>`:''}
-            ${(t.replies||[]).map(r=>`<div style="background:var(--linen);border-radius:8px;padding:8px 10px;margin-top:6px;font-size:12px"><strong>Admin:</strong> ${escHtml(r.text)}</div>`).join('')}
+            ${t.message?`<div style="font-size:13px;color:var(--text-sub);padding:8px 0;border-top:1px solid var(--border);margin-top:6px">${escHtml(t.message)}</div>`:''}
+            ${(t.replies||[]).map(r=>`<div style="background:var(--n5);border-radius:8px;padding:8px 10px;margin-top:6px;font-size:12px"><strong>Admin:</strong> ${escHtml(r.text)}</div>`).join('')}
             <div class="admin-actions" style="margin-top:8px">
               ${t.status!=='closed'?`
                 <button class="ml-act-btn" onclick="H._admin.respondToTicket('${t.id}')">${S.support} Respond</button>
@@ -623,7 +602,7 @@
               `:`<button class="ml-act-btn" onclick="H._admin.reopenTicket('${t.id}')">${S.reload} Reopen</button>`}
             </div>
           </div>`;
-        }).join('') : '<div style="padding:24px;text-align:center;color:var(--ash)">No tickets</div>'}
+        }).join('') : '<div style="padding:24px;text-align:center;color:var(--text-hint)">No tickets</div>'}
       </div>`;
   }
 
@@ -636,11 +615,11 @@
       </div>
       <div class="section-card">
         ${logs.length ? logs.map(l=>`
-          <div style="padding:10px 14px;border-bottom:1px solid var(--linen-dark)">
-            <div style="font-size:13px;font-weight:500;color:var(--charcoal)">${escHtml(l.action)}</div>
-            <div style="font-size:11px;color:var(--ash);margin-top:2px">${escHtml(l.adminName||'Admin')} · ${new Date(l.t).toLocaleString()}</div>
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+            <div style="font-size:13px;font-weight:500;color:var(--text-mid)">${escHtml(l.action)}</div>
+            <div style="font-size:11px;color:var(--text-hint);margin-top:2px">${escHtml(l.adminName||'Admin')} · ${new Date(l.t).toLocaleString()}</div>
           </div>`).join('')
-        : '<div style="padding:24px;text-align:center;color:var(--ash)">No logs yet</div>'}
+        : '<div style="padding:24px;text-align:center;color:var(--text-hint)">No logs yet</div>'}
       </div>`;
   }
 
@@ -685,12 +664,12 @@
         const senderName = escHtml(getUserName(m.senderId || m.from || ''));
         const msgTime    = new Date(m.createdAt || m.t || Date.now()).toLocaleString();
         const isAdmin    = (users.find(function (x) { return x.id === (m.senderId || m.from); }) || {}).role === 'admin';
-        return `<div style="padding:6px 10px;border-left:3px solid ${isAdmin?'#1A3A8F':'#e5e7eb'};margin-bottom:6px;background:${isAdmin?'#eff6ff':'var(--linen)'};border-radius:0 6px 6px 0">
-          <div style="font-size:11px;font-weight:700;color:${isAdmin?'#1A3A8F':'var(--charcoal)'};margin-bottom:2px">${senderName}</div>
-          <div style="font-size:13px;color:var(--charcoal)">${escHtml((m.text||m.body||'').slice(0,300))}</div>
-          <div style="font-size:10px;color:var(--ash);margin-top:3px">${msgTime}</div>
+        return `<div style="padding:6px 10px;border-left:3px solid ${isAdmin?'#1A3A8F':'#e5e7eb'};margin-bottom:6px;background:${isAdmin?'#eff6ff':'var(--n5)'};border-radius:0 6px 6px 0">
+          <div style="font-size:11px;font-weight:700;color:${isAdmin?'#1A3A8F':'var(--text-mid)'};margin-bottom:2px">${senderName}</div>
+          <div style="font-size:13px;color:var(--text-mid)">${escHtml((m.text||m.body||'').slice(0,300))}</div>
+          <div style="font-size:10px;color:var(--text-hint);margin-top:3px">${msgTime}</div>
         </div>`;
-      }).join('') : '<div style="font-size:12px;color:var(--ash);padding:6px">No messages in this conversation</div>';
+      }).join('') : '<div style="font-size:12px;color:var(--text-hint);padding:6px">No messages in this conversation</div>';
 
       return `<div class="admin-row" style="padding:12px 14px">
         <div class="admin-row-head" style="cursor:pointer" onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('conv-msgs-${convId}'))">
@@ -704,7 +683,7 @@
             <span style="color:var(--sub)">&#9660;</span>
           </div>
         </div>
-        <div id="conv-msgs-${convId}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--linen-dark)">
+        <div id="conv-msgs-${convId}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           ${msgsHtml}
         </div>
       </div>`;
@@ -807,6 +786,7 @@
     },
 
     approveTopup(rid) {
+      if (!adminGuard()) return;
       const r = (H.state.topupRequests||[]).find(x=>x.id===rid); if (!r) return;
       const u = (H.state.users||[]).find(x=>x.id===r.userId); if (!u) return;
       r.status = 'approved';
@@ -818,12 +798,12 @@
       const sb = window.supabase;
       if (sb && typeof sb.from === 'function') {
         sb.from('topup_requests').update({ status: 'approved' }).eq('id', rid);
-        sb.from('profiles').update({ wallet_usd: u.walletUSD }).eq('id', u.id);
       }
       saveState(); toast(`$${amount.toFixed(2)} credited to ${u.name}`); this.setTab('payments');
     },
 
     rejectTopup(rid) {
+      if (!adminGuard()) return;
       const r = (H.state.topupRequests||[]).find(x=>x.id===rid); if (!r) return;
       const u = (H.state.users||[]).find(x=>x.id===r.userId);
       r.status = 'rejected';
@@ -833,6 +813,7 @@
     },
 
     banUser(uid_, type, reportId) {
+      if (!adminGuard()) return;
       modal({
         title: type==='perm' ? 'Permanently Ban User' : 'Suspend User 7 Days',
         body: '<div class="fl">Reason</div><input class="fi" id="banReason" placeholder="Enter reason for action">',
@@ -843,6 +824,10 @@
           u.status = type==='perm' ? 'banned' : 'banned_temp';
           u.banReason = reason;
           if (type==='temp') u.banUntil = Date.now() + 7*86400000;
+          const sb = window.supabase;
+          if (sb && typeof sb.from === 'function') {
+            sb.from('profiles').update({ status: u.status, ban_reason: reason }).eq('id', uid_).catch(()=>{});
+          }
           if (reportId) { const r=(H.state.reports||[]).find(x=>x.id===reportId); if(r) r.status='resolved'; }
           alog(`${type==='perm'?'Banned':'Suspended'}: ${u.name} — ${reason}`);
           saveState(); toast(`User ${type==='perm'?'banned':'suspended'}`);
@@ -852,14 +837,20 @@
     },
 
     unban(uid_, reportId) {
+      if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       u.status='active'; u.banReason=null; u.banUntil=null;
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ status: 'active', ban_reason: null }).eq('id', uid_).catch(()=>{});
+      }
       if (reportId) { const r=(H.state.reports||[]).find(x=>x.id===reportId); if(r) r.status='resolved'; }
       alog(`Unbanned: ${u.name}`);
       saveState(); toast('User unbanned'); this.setTab('users');
     },
 
     deleteUser(uid_) {
+      if (!adminGuard()) return;
       modal({
         title: 'Delete User',
         body: 'This permanently deletes this user and all their listings. Cannot be undone.',
@@ -875,6 +866,7 @@
     },
 
     makeAdmin(uid_) {
+      if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       modal({
         title: 'Make Admin',
@@ -882,6 +874,10 @@
         confirmText: 'Make Admin',
         onConfirm: () => {
           u.role='admin';
+          const sb = window.supabase;
+          if (sb && typeof sb.from === 'function') {
+            sb.from('profiles').update({ role: 'admin' }).eq('id', uid_).catch(()=>{});
+          }
           alog(`Made admin: ${u.name}`);
           saveState(); toast(`${u.name} is now an admin`); this.setTab('users');
         }
@@ -889,13 +885,19 @@
     },
 
     verifyUser(uid_) {
+      if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       u.verified=true; u.verifiedAt=Date.now();
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ verified: true }).eq('id', uid_).catch(()=>{});
+      }
       alog(`Verified: ${u.name}`);
       saveState(); toast(`${u.name} verified`); this.setTab('users');
     },
 
     approveVerification(uid_) {
+      if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       u.verified=true; u.verifiedAt=Date.now(); u.verificationPending=false;
       alog(`Verification approved: ${u.name}`);
@@ -908,6 +910,7 @@
     },
 
     rejectVerification(uid_) {
+      if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       u.verificationPending=false;
       alog(`Verification rejected: ${u.name}`);
@@ -921,6 +924,7 @@
     },
 
     revokeVerification(uid_) {
+      if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       u.verified=false; u.verifiedAt=null;
       alog(`Verification revoked: ${u.name}`);
@@ -932,6 +936,7 @@
     },
 
     verifyCompany(uid_) {
+      if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       u.companyVerified = true; u.companyVerifiedAt = Date.now();
       alog(`Company verified: ${u.name}`);
@@ -940,6 +945,7 @@
     },
 
     revokeCompany(uid_) {
+      if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       u.companyVerified = false;
       alog(`Company verification revoked: ${u.name}`);
@@ -947,14 +953,20 @@
     },
 
     approveListing(lid) {
+      if (!adminGuard()) return;
       const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
       l.status='active';
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('listings').update({ status: 'active' }).eq('id', lid).catch(()=>{});
+      }
       pushNotif(l.sellerId,'Listing Approved',`Your listing "${l.title}" is now live!`);
       alog(`Approved listing: ${l.title}`);
       saveState(); toast('Listing approved and live'); this.setTab('listings');
     },
 
     rejectListing(lid) {
+      if (!adminGuard()) return;
       const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
       modal({
         title: 'Reject Listing',
@@ -963,6 +975,10 @@
         onConfirm: () => {
           const reason = document.getElementById('rejectReason')?.value || 'Policy violation';
           l.status='rejected'; l.rejectReason=reason;
+          const sb = window.supabase;
+          if (sb && typeof sb.from === 'function') {
+            sb.from('listings').update({ status: 'rejected', reject_reason: reason }).eq('id', lid).catch(()=>{});
+          }
           pushNotif(l.sellerId,'Listing Rejected',`Your listing "${l.title}" was rejected: ${reason}`);
           alog(`Rejected listing: ${l.title} — ${reason}`);
           saveState(); toast('Listing rejected'); this.setTab('listings');
@@ -971,6 +987,7 @@
     },
 
     banListing(lid, reportId) {
+      if (!adminGuard()) return;
       const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
       modal({
         title: 'Remove Listing',
@@ -978,6 +995,10 @@
         confirmText: 'Remove Listing',
         onConfirm: () => {
           l.status='banned';
+          const sb = window.supabase;
+          if (sb && typeof sb.from === 'function') {
+            sb.from('listings').update({ status: 'banned' }).eq('id', lid).catch(()=>{});
+          }
           if (reportId) { const r=(H.state.reports||[]).find(x=>x.id===reportId); if(r) r.status='resolved'; }
           pushNotif(l.sellerId,'Listing Removed',`Your listing "${l.title}" was removed for policy violation.`);
           alog(`Removed listing: ${l.title}`);
@@ -987,13 +1008,19 @@
     },
 
     restoreListing(lid) {
+      if (!adminGuard()) return;
       const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
       l.status='active';
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('listings').update({ status: 'active' }).eq('id', lid).catch(()=>{});
+      }
       alog(`Restored listing: ${l.title}`);
       saveState(); toast('Listing restored'); this.setTab('listings');
     },
 
     resolveReport(rid) {
+      if (!adminGuard()) return;
       const r = (H.state.reports||[]).find(x=>x.id===rid); if (!r) return;
       r.status='resolved';
       alog(`Resolved report: ${rid}`);
@@ -1001,6 +1028,7 @@
     },
 
     toggleSetting(k) {
+      if (!adminGuard()) return;
       H.state[k] = !H.state[k];
       alog(`Toggled setting: ${k} = ${H.state[k]}`);
       saveState(); toast('Setting updated');
@@ -1018,11 +1046,10 @@
     },
 
     async broadcast() {
-      const title    = (document.getElementById('bcastTitle')?.value  || '').trim();
-      const msg      = (document.getElementById('bcastMsg')?.value    || '').trim();
-      const target   = document.getElementById('bcastTarget')?.value  || 'all';
-      const imageUrl = (document.getElementById('bcastImage')?.value  || '').trim() || null;
-      const deepLink = (document.getElementById('bcastLink')?.value   || '').trim() || null;
+      if (!adminGuard()) return;
+      const title  = (document.getElementById('bcastTitle')?.value  || '').trim();
+      const msg    = (document.getElementById('bcastMsg')?.value    || '').trim();
+      const target = document.getElementById('bcastTarget')?.value  || 'all';
       if (!title || !msg) { toast('Enter title and message'); return; }
 
       const btn = document.getElementById('bcastSendBtn');
@@ -1070,14 +1097,12 @@
         return;
       }
 
-      userIds.forEach(id => H.pushNotif(id, title, msg, 'system', imageUrl, deepLink));
+      userIds.forEach(id => H.pushNotif(id, title, msg, 'system'));
       alog(`Broadcast (${target}) to ${userIds.length} users: ${msg.slice(0,50)}`);
       saveState();
       toast(`✓ Broadcast sent to ${userIds.length} user${userIds.length!==1?'s':''}`);
       document.getElementById('bcastTitle').value = '';
       document.getElementById('bcastMsg').value = '';
-      if (document.getElementById('bcastImage')) document.getElementById('bcastImage').value = '';
-      if (document.getElementById('bcastLink'))  document.getElementById('bcastLink').value = '';
       if (btn) { btn.disabled = false; btn.textContent = 'Send Broadcast'; }
     },
 
@@ -1118,6 +1143,7 @@
     },
 
     exportData() {
+      if (!adminGuard()) return;
       const data = JSON.stringify(H.state, null, 2);
       const blob = new Blob([data], {type:'application/json'});
       const url = URL.createObjectURL(blob);
@@ -1131,6 +1157,7 @@
     },
 
     clearOldData() {
+      if (!adminGuard()) return;
       modal({
         title: 'Clear Old Data',
         body: 'Delete listings, transactions, and logs older than 30 days. Active listings are kept. Cannot be undone.',
@@ -1149,6 +1176,7 @@
     },
 
     resetApp() {
+      if (!adminGuard()) return;
       modal({
         title: 'Reset App',
         body: '<p style="color:var(--red);font-weight:700;margin-bottom:10px">WARNING: Deletes ALL data including users, listings, and messages. Irreversible.</p><div class="fl">Type RESET to confirm</div><input class="fi" id="resetConfirm" placeholder="Type RESET">',
@@ -1173,6 +1201,7 @@
     },
 
     clearLogs() {
+      if (!adminGuard()) return;
       modal({
         title: 'Clear Logs',
         body: 'This will delete all admin logs. Cannot be undone.',
@@ -1185,6 +1214,7 @@
     },
 
     showAdForm(id) {
+      if (!adminGuard()) return;
       const ad = id ? (H.state.paidAds||[]).find(a=>a.id===id) : null;
       const today = new Date().toISOString().slice(0,10);
       const inAMonth = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
