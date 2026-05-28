@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-28T10:44:14Z */
+/* PaMarket bundle — built 2026-05-28T10:49:53Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -10638,6 +10638,7 @@ H.init();
       approvals: true,
       promotions: true,
       favorites: true,
+      priceDrops: true,
       security: true
     };
 
@@ -10694,10 +10695,21 @@ H.init();
           <div class="toggle-item">
             <div class="toggle-label">
               <span class="toggle-icon">${I.heart}</span>
-              <span>Favorites Alerts</span>
+              <span>Saves on My Listings</span>
             </div>
             <label class="toggle-switch">
               <input type="checkbox" ${prefs.favorites ? 'checked' : ''} onchange="H._notifSettings.toggle('favorites')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-item">
+            <div class="toggle-label">
+              <span class="toggle-icon">${I.alert}</span>
+              <span>Price Drop Alerts</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" ${prefs.priceDrops !== false ? 'checked' : ''} onchange="H._notifSettings.toggle('priceDrops')">
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -10718,7 +10730,7 @@ H.init();
   };
 
   pages.NotificationSettings_after = function () {
-    const DEFAULTS = { messages: true, listings: true, approvals: true, promotions: true, favorites: true, security: true };
+    const DEFAULTS = { messages: true, listings: true, approvals: true, promotions: true, favorites: true, priceDrops: true, security: true };
     H._notifSettings = {
       toggle: (key) => {
         const u = H.currentUser();
