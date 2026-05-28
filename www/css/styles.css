@@ -64,6 +64,7 @@
 /* ── RESET ───────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; overflow: hidden; overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
+html { background: var(--card); }
 body { background: var(--bg); font-family: var(--font); font-size: 14px; color: var(--text-primary); -webkit-font-smoothing: antialiased; }
 input, textarea, select, button { font-family: inherit; }
 button { cursor: pointer; border: none; background: none; touch-action: manipulation; }
@@ -1062,7 +1063,7 @@ select.fi {
 /* ── ACCESSIBILITY & SAFE AREA ───────────────────────────────── */
 :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 4px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
-@supports (padding-bottom: env(safe-area-inset-bottom)) { .bottom-nav { padding-bottom: env(safe-area-inset-bottom); height: calc(64px + env(safe-area-inset-bottom)); } }
+.bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px); height: calc(64px + env(safe-area-inset-bottom, 0px)); }
 
 /* ── TEXTURE BACKGROUNDS (listing placeholders) ──────────────── */
 .texture-plaster { background: linear-gradient(160deg, #D8D4CC 0%, #C8C4BC 100%); }
