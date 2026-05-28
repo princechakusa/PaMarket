@@ -115,25 +115,24 @@
 
     /*
       Line 3 — the "12:00 PM shadow"
-      · 0 horizontal offset  → align-items:center handles it
-      · margin-top: 3px      → shadow falls just below, not beside
-      · filter:blur(3.5px)   → soft, not sharp
-      · opacity:.34          → present but not competing
-      · scaleX(1.06)         → midday shadow spreads slightly outward
+      · 0 horizontal offset  → align-items:center on .word-col handles it
+      · margin-top: 4px      → shadow falls just below, not beside
+      · filter:blur(2px)     → soft edge, still legible
+      · opacity:.58          → visible enough to read, subdued enough to read as shadow
+      · color: #8faae8       → mid-blue-grey that sits BETWEEN the white text
+                               and the dark background — readable on both
     */
     .shadow-word {
       font-size: 20px;
       font-weight: 700;
-      color: #020c22;
+      color: #8faae8;
       letter-spacing: .35px;
       line-height: 1;
       white-space: nowrap;
       display: block;
-      margin-top: 3px;
-      filter: blur(3.5px);
-      opacity: .34;
-      transform: scaleX(1.06);
-      transform-origin: center top;
+      margin-top: 4px;
+      filter: blur(2px);
+      opacity: .58;
       pointer-events: none;
       user-select: none;
     }
@@ -150,8 +149,9 @@
     .logo-card.light .divider    { background: rgba(26, 58, 143, .18); }
     .logo-card.light .slogan-word { color: #1A3A8F; }
     .logo-card.light .shadow-word {
-      color: #c8d0e8;
-      opacity: .55;
+      color: #a0b4d8;
+      opacity: .65;
+      filter: blur(2px);
     }
   </style>
 </head>
