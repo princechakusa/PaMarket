@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 <!-- © 2026 PaMarket. All rights reserved. Unauthorised copying or distribution is prohibited. -->
-<html lang="en">
+<html lang="en" style="background:#0f2460">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -332,6 +332,7 @@
       const splash = document.getElementById('pamarketSplash');
       if (!splash) return;
       splash.classList.add('hiding');
+      document.documentElement.style.background = '';
       setTimeout(() => splash.remove(), 450);
     };
     // Fallback: hide after 4s max in case boot is very slow
