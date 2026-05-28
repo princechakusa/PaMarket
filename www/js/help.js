@@ -868,10 +868,10 @@ pages.HelpCommunity = function () {
     return `<div class="page active">
       ${H.innerTopbar('About PaMarket')}
       <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);padding:36px 20px 32px;text-align:center">
-        <div style="width:72px;height:72px;background:rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:36px;font-weight:900;color:#fff;letter-spacing:-2px">H</div>
+        <div style="width:72px;height:72px;background:rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px">Pa</div>
         <div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.5px">PaMarket</div>
         <div style="font-size:13px;color:rgba(255,255,255,.75);margin-top:6px">Zimbabwe's Free Marketplace</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:10px;font-weight:600">Version 1.0.0</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:10px;font-weight:600">Version 2.0.0</div>
       </div>
 
       <div class="doc-content" style="padding-top:20px">
