@@ -336,7 +336,7 @@
       }
       var userId = res.data.user.id;
       await c.from('profiles').upsert({id:userId, name:name, phone:phone||null, verified:false});
-      var u = {id:userId,email:email,name:name,phone:phone||'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]};
+      var u = {id:userId,email:email,name:name,phone:phone||'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]};
       (H.state.users = H.state.users||[]).push(u);
       H.state.currentUserId = userId;
       H.saveState();
@@ -353,7 +353,7 @@
     var exists = (H.state.users||[]).some(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase(); });
     if (exists) { H.toast('Email already registered. Sign in instead.'); setAuthBusy(false); return; }
     var uid2 = H.uid();
-    (H.state.users = H.state.users||[]).push({id:uid2,email:email,name:name,phone:phone||'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[],_localPassword:password});
+    (H.state.users = H.state.users||[]).push({id:uid2,email:email,name:name,phone:phone||'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[],_localPassword:password});
     H.state.currentUserId = uid2;
     H.saveState(); setAuthBusy(false);
     H.toast('Account created! Welcome to PaMarket');
@@ -406,13 +406,13 @@
     var res = await c.from('profiles').select('*').eq('id',userId).single();
     if (res.error||!res.data) {
       var u = (H.state.users||[]).find(function(x){return x.id===userId;});
-      if (!u) { u={id:userId,email:'',name:'User',phone:'',avatar:null,verified:false,walletUSD:0,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]}; H.state.users.push(u); }
+      if (!u) { u={id:userId,email:'',name:'User',phone:'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]}; H.state.users.push(u); }
       return;
     }
     var profile = res.data;
     var u = (H.state.users||[]).find(function(x){return x.id===userId;});
     if (!u) {
-      u = {id:userId,email:'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,walletUSD:profile.wallet_usd||0,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
+      u = {id:userId,email:'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
       H.state.users.push(u);
     } else {
       u.name=profile.name||u.name; u.phone=profile.phone||u.phone; u.avatar=profile.avatar||u.avatar; u.verified=profile.verified||false; u.role=profile.role||u.role||'user';
@@ -579,21 +579,19 @@
       + '<p>The following are strictly prohibited on PaMarket: stolen or counterfeit goods; illegal drugs, weapons, or firearms; adult or explicit content; hate speech or content that promotes discrimination; spam, pyramid schemes, or fraudulent offers; impersonation of any person or business.</p>'
       + '<h3>5. Transactions</h3>'
       + '<p>PaMarket is a listing and communication platform only. We do not process payments, hold funds, or guarantee the quality of any item. All transactions are solely between buyer and seller. PaMarket accepts no liability for disputes, losses, or damages arising from transactions.</p>'
-      + '<h3>6. Wallet &amp; Top-Ups</h3>'
-      + '<p>The in-app wallet is used exclusively for boosting listings. Top-up amounts that have not yet been used may be refunded upon written request to chakusaprince@gmail.com within 30 days of payment. Used credits are non-refundable. Wallet balances have no cash value and cannot be transferred.</p>'
-      + '<h3>7. Intellectual Property</h3>'
+      + '<h3>6. Intellectual Property</h3>'
       + '<p>All content you post on PaMarket (photos, descriptions, etc.) remains yours. By posting, you grant PaMarket a non-exclusive, royalty-free licence to display your content within the app. The PaMarket name, logo, and app design are our intellectual property and may not be copied or reused.</p>'
-      + '<h3>8. Privacy</h3>'
+      + '<h3>7. Privacy</h3>'
       + '<p>Your use of the app is also governed by our Privacy Policy, which is incorporated into these Terms by reference.</p>'
-      + '<h3>9. Termination</h3>'
+      + '<h3>8. Termination</h3>'
       + '<p>We may suspend or permanently ban any account that violates these Terms, with or without notice. You may delete your account at any time via Settings → Security → Delete Account.</p>'
-      + '<h3>10. Limitation of Liability</h3>'
+      + '<h3>9. Limitation of Liability</h3>'
       + '<p>PaMarket is provided "as is" without warranties of any kind. To the maximum extent permitted by law, PaMarket shall not be liable for any indirect, incidental, or consequential damages arising from your use of the app.</p>'
-      + '<h3>11. Changes to Terms</h3>'
+      + '<h3>10. Changes to Terms</h3>'
       + '<p>We may update these Terms from time to time. Continued use of the app after changes are posted constitutes acceptance of the revised Terms.</p>'
-      + '<h3>12. Governing Law</h3>'
+      + '<h3>11. Governing Law</h3>'
       + '<p>These Terms are governed by the laws of Zimbabwe. Any disputes shall be resolved in the courts of Zimbabwe.</p>'
-      + '<h3>13. Contact</h3>'
+      + '<h3>12. Contact</h3>'
       + '<p>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>'
       + '</div>';
   };

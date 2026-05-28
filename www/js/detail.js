@@ -44,7 +44,6 @@
     const saved       = u ? (H.state.saves[u.id]||[]).includes(id) : false;
     const isMine      = u && u.id && seller.id && seller.id === u.id;
     const photos      = l.photos && l.photos.length ? l.photos : [];
-    const boosted     = l.boost && l.boost.until > Date.now();
     const sellerPhone = seller.phone || l.sellerPhone || '';
     const sellerName  = seller.name  || l.sellerName  || 'Seller';
 
@@ -77,7 +76,6 @@
           <div class="photo-dots">${photos.map((_,i)=>`<div class="pdot ${i===0?'on':''}" onclick="H.setPhoto('${l.id}',${i})"></div>`).join('')}</div>
           <div style="position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.5);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600" id="photoCount">1 / ${photos.length}</div>
         ` : ''}
-        ${boosted ? `<div style="position:absolute;top:12px;left:12px;background:#F5A623;color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700">Featured</div>` : ''}
       </div>
 
       <div class="det-content">
@@ -113,7 +111,6 @@
         <div id="similarListingsPlaceholder" class="similar-loading" style="height:120px;background:var(--card);border-radius:14px;margin:16px 0;opacity:.5;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--sub)">Loading similar listings...</div>
 
         ${isMine ? `
-          <button class="btn-pri" onclick="H.openBoostPage('${l.id}')" style="margin-bottom:8px">${S.boost} Boost this Listing</button>
           <button style="width:100%;padding:13px;background:#fee2e2;color:#dc2626;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" onclick="if(!confirm('Are you sure you want to delete this listing?')) return; H.deleteListing('${l.id}')">Delete Listing</button>
         ` : (function(){
           const cm = l.contactMethod || 'chat';
@@ -355,8 +352,6 @@
       }
     });
   };
-
-  H.openBoostPage = function(listingId) { H.openInner('Boost', {listingId}); };
 
   function pvHTML(photos, idx) {
     var dots = '';

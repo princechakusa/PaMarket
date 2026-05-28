@@ -61,7 +61,7 @@
       var profile = pr.data;
       if (!profile) {
         await window.supabase.from('profiles').upsert({ id: userId, name: name, avatar: avatar });
-        profile = { id: userId, name: name, avatar: avatar, role: 'user', status: 'active', wallet_usd: 0, verified: false };
+        profile = { id: userId, name: name, avatar: avatar, role: 'user', status: 'active', verified: false };
       }
       var attempts = 0;
       var trySetup = function() {
@@ -72,13 +72,12 @@
         var users = window.H.state.users = window.H.state.users || [];
         var existing = users.find(function(u){ return u.id === userId; });
         if (!existing) {
-          users.push({ id: userId, email: email, name: profile.name || name, phone: profile.phone || '', avatar: profile.avatar || avatar, verified: !!profile.verified, walletUSD: parseFloat(profile.wallet_usd) || 0, language: 'English', joinedAt: new Date(profile.created_at || Date.now()).getTime(), role: profile.role || 'user', status: profile.status || 'active', banReason: null, banUntil: null, blocked: [] });
+          users.push({ id: userId, email: email, name: profile.name || name, phone: profile.phone || '', avatar: profile.avatar || avatar, verified: !!profile.verified, language: 'English', joinedAt: new Date(profile.created_at || Date.now()).getTime(), role: profile.role || 'user', status: profile.status || 'active', banReason: null, banUntil: null, blocked: [] });
         } else {
           existing.name = profile.name || existing.name;
           existing.avatar = profile.avatar || existing.avatar;
           existing.role = profile.role || existing.role;
           existing.verified = !!profile.verified;
-          existing.walletUSD = parseFloat(profile.wallet_usd) || existing.walletUSD || 0;
         }
         window.H.state.currentUserId = userId;
         if (typeof window.H.saveState === 'function') window.H.saveState();
@@ -166,26 +165,6 @@
       })
       .subscribe();
 
-    // Wallet top-up approvals channel
-    sb.channel('rt-topup')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'topup_requests' }, function(payload) {
-        var row = payload.new;
-        if (!row || !window.H || !window.H.state) return;
-        var req = (window.H.state.topupRequests || []).find(function(r){ return r.reference === row.reference; });
-        if (req && row.status === 'approved') {
-          req.status = 'approved';
-          var u = window.H.currentUser && window.H.currentUser();
-          if (u && u.id === req.userId) {
-            u.walletUSD = +((u.walletUSD || 0) + (req.amount || 0)).toFixed(2);
-            window.H.state.txns = window.H.state.txns || [];
-            window.H.state.txns.unshift({ id: window.H.uid(), userId: u.id, type: 'topup', amt: req.amount, t: Date.now(), note: 'Wallet Top Up · ' + req.method });
-            if (typeof window.H.saveState === 'function') window.H.saveState();
-            if (typeof window.H.toast === 'function') window.H.toast('Wallet credited $' + req.amount.toFixed(2) + '!');
-          }
-        }
-      })
-      .subscribe();
-
     // Profile verification approvals
     sb.channel('rt-profiles')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, function(payload) {
@@ -196,7 +175,6 @@
           var wasUnverified = !u.verified;
           u.verified = !!row.verified;
           u.role     = row.role || u.role;
-          u.walletUSD = row.wallet_usd != null ? parseFloat(row.wallet_usd) : u.walletUSD;
           if (typeof window.H.saveState === 'function') window.H.saveState();
           if (wasUnverified && u.verified && u.id === (window.H.state.currentUserId)) {
             if (typeof window.H.toast === 'function') window.H.toast('Your identity has been verified!');
