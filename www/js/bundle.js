@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-29T15:42:48Z */
+/* PaMarket bundle — built 2026-05-29T15:46:00Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -3620,13 +3620,14 @@ H.init();
             <textarea class="fi" id="reportNote" rows="3" placeholder="Tell us more (optional)" style="width:100%;margin-top:4px"></textarea>`,
       confirmText:'Submit Report',
       onConfirm:() => {
+        const cu = H.currentUser(); if (!cu) { H.requireAuth('Sign in to report'); return; }
         const reason = document.getElementById('reportReason')?.value||'';
         const note   = document.getElementById('reportNote')?.value||'';
         H.state.reports = H.state.reports||[];
-        H.state.reports.push({id:H.uid(), reporterId:H.currentUser().id, targetType:'listing', targetId:id, reason:reason+(note?' - '+note:''), t:Date.now(), status:'open'});
+        H.state.reports.push({id:H.uid(), reporterId:cu.id, targetType:'listing', targetId:id, reason:reason+(note?' - '+note:''), t:Date.now(), status:'open'});
         H.saveState();
         var _sb = window.supabase;
-        if (_sb) _sb.from('reports').insert({target_type:'listing', target_id:id, reason:reason+(note?' - '+note:''), reporter_id:String(H.currentUser().id), status:'open'}).then(function(r){ if(r&&r.error) console.warn('report save:',r.error.message); });
+        if (_sb) _sb.from('reports').insert({target_type:'listing', target_id:id, reason:reason+(note?' - '+note:''), reporter_id:String(cu.id), status:'open'}).then(function(r){ if(r&&r.error) console.warn('report save:',r.error.message); });
         H.toast('Report submitted. Thank you.');
       }
     });
@@ -3641,13 +3642,14 @@ H.init();
             <textarea class="fi" id="reportNote" rows="3" placeholder="More details (optional)" style="width:100%;margin-top:4px"></textarea>`,
       confirmText:'Submit Report',
       onConfirm:() => {
+        const cu = H.currentUser(); if (!cu) { H.requireAuth('Sign in to report'); return; }
         const reason = document.getElementById('reportReason')?.value||'';
         const note   = document.getElementById('reportNote')?.value||'';
         H.state.reports = H.state.reports||[];
-        H.state.reports.push({id:H.uid(), reporterId:H.currentUser().id, targetType:'user', targetId:id, reason:reason+(note?' - '+note:''), t:Date.now(), status:'open'});
+        H.state.reports.push({id:H.uid(), reporterId:cu.id, targetType:'user', targetId:id, reason:reason+(note?' - '+note:''), t:Date.now(), status:'open'});
         H.saveState();
         var _sb = window.supabase;
-        if (_sb) _sb.from('reports').insert({target_type:'user', target_id:id, reason:reason+(note?' - '+note:''), reporter_id:String(H.currentUser().id), status:'open'}).then(function(r){ if(r&&r.error) console.warn('report save:',r.error.message); });
+        if (_sb) _sb.from('reports').insert({target_type:'user', target_id:id, reason:reason+(note?' - '+note:''), reporter_id:String(cu.id), status:'open'}).then(function(r){ if(r&&r.error) console.warn('report save:',r.error.message); });
         H.toast('Report submitted');
       }
     });
@@ -4116,8 +4118,10 @@ H.init();
           if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
           else if (!other && otherId && !(c.otherName)) { H._resolveOtherName(otherId, c); }
           const otherDisplayName = (other && other.name) || c.otherName || 'Deleted User';
-          const last    = (c.messages || [])[( c.messages || []).length - 1];
-          const unread  = (c.messages || []).some(m => m.from !== u.id && !m.read);
+          const msgs   = c.messages || [];
+          const last   = msgs[msgs.length - 1];
+          if (!last) return '';
+          const unread  = msgs.some(m => m.from !== u.id && !m.read);
           return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item" data-cid="${escHtml(c.id)}" onclick="H.openChat('${c.id}')">
             <div class="msg-av">${initials(otherDisplayName)}</div>
             <div class="msg-body">
@@ -4125,7 +4129,7 @@ H.init();
                 <div class="msg-name">${escHtml(otherDisplayName)}</div>
                 <div class="msg-time">${timeAgo(last.t)}</div>
               </div>
-              <div class="msg-preview">${last.from === u.id ? 'You: ' : ''}${escHtml(last.text)}</div>
+              <div class="msg-preview">${last.from === u.id ? 'You: ' : ''}${escHtml(last.text || '')}</div>
             </div>
             ${unread ? '<div class="msg-unread-dot"></div>' : ''}
           </div></div>`;
