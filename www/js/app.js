@@ -567,8 +567,13 @@ window.H = {
 
   async renderPage(name, params, opts) {
     const area=document.getElementById('mainArea');
+    // Clean up chat keyboard listener before navigating away
+    if (window._chatVPHandler && window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', window._chatVPHandler);
+      window._chatVPHandler = null;
+    }
     // Always restore mainArea scroll when navigating — Chat locks it to prevent topbar from scrolling off
-    if(area) area.style.overflowY='auto';
+    if(area) { area.style.overflowY='auto'; area.style.height=''; area.style.position=''; }
     const scrollTo=(opts&&opts.scrollTo)||0;
     if(this.canAccessPage&&!this.canAccessPage(name)){this.toast('Access denied');await this.navTo('Home');return;}
     this.currentPageName=name; this.currentPageParams=params||{};
