@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-29T08:19:43Z */
+/* PaMarket bundle — built 2026-05-29T08:30:25Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -4004,18 +4004,18 @@ H.init();
 
   function appendThemMessage(thread, avatarHtml, m) {
     if (!thread || !m || thread.querySelector('[data-msg-id="' + escHtml(m.id) + '"]')) return;
-    const wrap = document.createElement('div');
-    wrap.setAttribute('data-msg-id', m.id);
-    wrap.style.cssText = 'display:flex;align-items:flex-end;gap:6px';
+    const row = document.createElement('div');
+    row.className = 'chat-msg-row them';
+    row.setAttribute('data-msg-id', m.id);
     const avaEl = document.createElement('div');
-    avaEl.style.cssText = 'width:28px;height:28px;flex-shrink:0';
+    avaEl.className = 'chat-row-av';
     avaEl.innerHTML = avatarHtml;
-    const div = document.createElement('div');
-    div.className = 'chat-bubble them';
-    div.innerHTML = escHtml(m.text) + '<div style="font-size:10px;opacity:.6;margin-top:3px">' + timeAgo(m.t) + '</div>';
-    wrap.appendChild(avaEl);
-    wrap.appendChild(div);
-    thread.appendChild(wrap);
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble them';
+    bubble.innerHTML = escHtml(m.text) + '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>';
+    row.appendChild(avaEl);
+    row.appendChild(bubble);
+    thread.appendChild(row);
   }
 
   // ---------------------------------------------------
@@ -4109,34 +4109,41 @@ H.init();
     const msgs = c.messages.map(function(m) {
       const mine = m.from === u.id;
       if (mine) {
-        return '<div class="chat-bubble me" data-msg-id="' + escHtml(m.id) + '">'
+        return '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
+          + '<div class="chat-bubble me">'
           + escHtml(m.text)
-          + '<div style="font-size:10px;opacity:.6;margin-top:3px;text-align:right">' + timeAgo(m.t) + '</div>'
-          + '</div>';
+          + '<div class="chat-bubble-meta" style="text-align:right">' + timeAgo(m.t) + '</div>'
+          + '</div></div>';
       }
-      return '<div data-msg-id="' + escHtml(m.id) + '" style="display:flex;align-items:flex-end;gap:6px">'
-        + '<div style="width:28px;height:28px;flex-shrink:0">' + otherAvatar + '</div>'
+      return '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
+        + '<div class="chat-row-av">' + otherAvatar + '</div>'
         + '<div class="chat-bubble them">'
         + escHtml(m.text)
-        + '<div style="font-size:10px;opacity:.6;margin-top:3px">' + timeAgo(m.t) + '</div>'
+        + '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>'
         + '</div></div>';
     }).join('');
 
-    const otherPhone = other.phone || '';
     const otherIdSafe = escHtml(otherId || '');
+    const hdrSub = (other && other.verified)
+      ? '<div class="chat-hdr-sub"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="color:#4ade80">Verified</span></div>'
+      : ((other && other.privacySettings && other.privacySettings.showActivity)
+         ? '<div class="chat-hdr-sub"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4ade80;flex-shrink:0"></span><span style="color:#4ade80">Online</span></div>'
+         : '<div class="chat-hdr-sub">Tap to view profile</div>');
     return '<div class="page active" style="display:flex;flex-direction:column;overflow:hidden;height:100%">'
-      + '<div class="det-topbar" style="flex-shrink:0"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
-      + '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">'
-      + '<div style="width:34px;height:34px;flex-shrink:0">' + otherAvatar + '</div>'
-      + '<div style="min-width:0"><div class="det-topbar-title" style="margin:0;text-align:left">' + escHtml(otherDisplayName) + '</div>'
-      + (other.verified ? '<div style="font-size:10px;color:#22c55e;font-weight:600;display:flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Verified</div>' : ((other.privacySettings && other.privacySettings.showActivity) ? '<div style="font-size:10px;color:#22c55e;font-weight:600;display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0"></span>Online</div>' : '<div style="font-size:10px;color:rgba(255,255,255,.5)">Tap to view profile</div>')) + '</div>'
+      + '<div class="chat-header">'
+      + '<button class="chat-hdr-back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      + '<div class="chat-hdr-av" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">' + otherAvatar + '</div>'
+      + '<div class="chat-hdr-info" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">'
+      + '<div class="chat-hdr-name">' + escHtml(otherDisplayName) + '</div>'
+      + hdrSub + '</div>'
+      + '<button class="chat-hdr-menu" onclick="H._chat.openMenu(\'' + otherIdSafe + '\')"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
       + '</div>'
-      + '<button onclick="H._chat.openMenu(\'' + otherIdSafe + '\')" style="padding:8px;background:none;border:none;color:#fff;cursor:pointer;flex-shrink:0;margin-left:4px"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
+      + (listing ? '<div class="chat-context-strip"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>' + escHtml(listing.title) + '</div>' : '')
+      + '<div class="chat-thread" id="chatThread"><div class="chat-thread-spacer"></div>'
+      + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">No messages yet. Say hello!</div>')
       + '</div>'
-      + (listing ? '<div style="flex-shrink:0;padding:8px 14px;background:var(--card);border-bottom:1px solid var(--border);font-size:13px;color:var(--sub)">Re: ' + escHtml(listing.title) + '</div>' : '')
-      + '<div class="chat-thread" id="chatThread" style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"><div style="flex:1;min-height:0"></div>' + (msgs || '<div style="text-align:center;color:var(--sub);padding:40px 20px;font-size:14px">No messages yet. Say hello!</div>') + '</div>'
-      + '<div class="chat-input-bar" style="flex-shrink:0">'
-      + '<input id="chatIn" placeholder="Type a message..." onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}" style="flex:1">'
+      + '<div class="chat-input-bar">'
+      + '<input id="chatIn" placeholder="Type a message…" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}">'
       + '<button class="chat-send" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
       + '</div></div>';
   };
@@ -4312,11 +4319,14 @@ H.init();
     // Append to DOM directly — no full page re-render to avoid flicker
     const thread = document.getElementById('chatThread');
     if (thread) {
-      const div = document.createElement('div');
-      div.className = 'chat-bubble me';
-      div.setAttribute('data-msg-id', msgId);
-      div.innerHTML = escHtml(text) + '<div style="font-size:10px;opacity:.6;margin-top:3px">just now</div>';
-      thread.appendChild(div);
+      const row = document.createElement('div');
+      row.className = 'chat-msg-row me';
+      row.setAttribute('data-msg-id', msgId);
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble me';
+      bubble.innerHTML = escHtml(text) + '<div class="chat-bubble-meta" style="text-align:right">just now</div>';
+      row.appendChild(bubble);
+      thread.appendChild(row);
       thread.scrollTop = thread.scrollHeight;
     }
     try {
