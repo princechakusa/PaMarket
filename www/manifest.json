@@ -19,36 +19,6 @@
     { "src": "img/icon-512.png?v=5", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "img/icon-512.png?v=5", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
-  "screenshots": [
-    {
-      "src": "img/screenshot-home.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Home screen — browse listings across Zimbabwe"
-    },
-    {
-      "src": "img/screenshot-browse.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Browse categories — Electronics, Jobs, Rentals and more"
-    },
-    {
-      "src": "img/screenshot-post.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Post a free listing in under 2 minutes"
-    },
-    {
-      "src": "img/screenshot-messages.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Message sellers and buyers in real time"
-    }
-  ],
   "shortcuts": [
     {
       "name": "Post an Ad",
