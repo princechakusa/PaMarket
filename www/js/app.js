@@ -1095,6 +1095,7 @@ window.H = {
       let changed = false;
 
       // Phase 1: discover from conversations table (may not exist — silent fail)
+      const deletedIds = new Set(Array.isArray(H.state.deletedConvIds) ? H.state.deletedConvIds : []);
       const knownIds = new Set(H.state.conversations.map(c => c.id));
       try {
         const { data: convs, error } = await sb.from('conversations')
@@ -1104,6 +1105,8 @@ window.H = {
         if (!error && convs) {
           for (const c of convs) {
             knownIds.add(c.id);
+            // Skip conversations the user has locally deleted — don't re-add them during sync
+            if (deletedIds.has(c.id)) continue;
             let local = H.state.conversations.find(x => x.id === c.id);
             if (!local) {
               local = { id: c.id, members: c.members || [], listingId: c.listing_id || null, messages: [] };
@@ -1127,6 +1130,8 @@ window.H = {
         ]);
         for (const row of [...(sentRes.data||[]), ...(recvRes.data||[])]) {
           if (!row.conversation_id || knownIds.has(row.conversation_id)) continue;
+          // Skip conversations the user has locally deleted — don't re-add them during sync
+          if (deletedIds.has(row.conversation_id)) continue;
           knownIds.add(row.conversation_id);
           const otherId = row.sender_id !== u.id ? row.sender_id : null;
           const members = otherId ? [u.id, otherId] : [u.id];

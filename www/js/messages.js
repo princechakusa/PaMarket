@@ -31,11 +31,13 @@
   // Fetch a single user profile from Supabase and cache it, then re-render the current page.
   // Prevents repeated network calls using a per-session pending map.
   H._pendingProfileFetch = H._pendingProfileFetch || {};
+  H._resolvedProfileFetch = H._resolvedProfileFetch || {};
   H._resolveOtherName = function(otherId, conv) {
-    if (!otherId || H._pendingProfileFetch[otherId]) return;
+    // Skip if a fetch is already in-flight OR if we've already resolved a non-empty name
+    if (!otherId || H._pendingProfileFetch[otherId] || H._resolvedProfileFetch[otherId]) return;
     H._pendingProfileFetch[otherId] = true;
     var sb = window.supabase;
-    if (!sb || typeof sb.from !== 'function') return;
+    if (!sb || typeof sb.from !== 'function') { delete H._pendingProfileFetch[otherId]; return; }
     sb.from('profiles')
       .select('id,name,phone,email,avatar,verified,role,status,created_at')
       .eq('id', otherId)
@@ -46,7 +48,7 @@
         if (p) {
           var existing = (H.state.users||[]).find(function(x){ return x.id === p.id; });
           if (existing) {
-            if (p.name && !existing.name) { existing.name = p.name; }
+            if (p.name) { existing.name = p.name; }
             if (p.avatar && !existing.avatar) { existing.avatar = p.avatar; }
             nameResolved = existing.name;
           } else {
@@ -72,12 +74,19 @@
         }
         if (nameResolved && conv && !conv.otherName) { conv.otherName = nameResolved; }
         if (nameResolved) {
+          // Mark as permanently resolved so we don't re-fetch
+          H._resolvedProfileFetch[otherId] = true;
           H.saveState();
           var page = H.currentPageName;
           if (page === 'Messages' || page === 'Chat') { H.renderPage(page); }
         }
+        // Always clear the in-flight flag so a future render can retry if name is still empty
+        delete H._pendingProfileFetch[otherId];
       })
-      .catch(function() {});
+      .catch(function() {
+        // Clear the in-flight flag on error so the next render can retry
+        delete H._pendingProfileFetch[otherId];
+      });
   };
 
   function conversationSignature() {
@@ -293,14 +302,21 @@
     const otherName = (otherUser && otherUser.name) || (listingObj && listingObj.sellerName) || '';
     let c = conversations().find(x => x.id === convId);
     if (!c) {
+      // Conversation not in state (was deleted and pruned, or never created locally).
+      // Re-create it with the correct members so the chat is immediately usable.
       c = { id: convId, members: [u.id, otherId], listingId: listingId||null, messages: [], otherName: otherName };
       if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
       H.state.conversations.push(c);
       H.saveState();
       if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c);
-    } else if (!c.otherName && otherName) {
-      c.otherName = otherName;
-      H.saveState();
+    } else {
+      // Conversation exists — ensure members array is complete (sync may have added it with
+      // an incomplete members list, e.g. only [u.id] when no received messages were found).
+      let dirty = false;
+      if (!Array.isArray(c.members)) { c.members = [u.id, otherId]; dirty = true; }
+      else if (!c.members.includes(otherId)) { c.members = [u.id, otherId]; dirty = true; }
+      if (!c.otherName && otherName) { c.otherName = otherName; dirty = true; }
+      if (dirty) H.saveState();
     }
     H.openInner('Chat', { id: convId });
   };
