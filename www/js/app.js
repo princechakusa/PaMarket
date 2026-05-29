@@ -235,15 +235,18 @@ window.H = {
       <div class="modal-footer">
         <div class="modal-btns">
           ${cancelText?`<button class="modal-btn cancel" onclick="H.closeModal()">${cancelText}</button>`:''}
-          <button class="modal-btn ${danger?'danger':'confirm'}" id="mConfirm">${confirmText}</button>
+          ${confirmText?`<button class="modal-btn ${danger?'danger':'confirm'}" id="mConfirm">${confirmText}</button>`:''}
         </div>
       </div>`;
     bg.classList.add('open');
-    document.getElementById('mConfirm').onclick = () => {
-      if (onConfirm && onConfirm()===false) return;
-      H.closeModal();
-    };
-    setTimeout(()=>document.getElementById('mConfirm')?.focus({preventScroll:true}), 50);
+    const mConfirmBtn = document.getElementById('mConfirm');
+    if (mConfirmBtn) {
+      mConfirmBtn.onclick = () => {
+        if (onConfirm && onConfirm()===false) return;
+        H.closeModal();
+      };
+      setTimeout(()=>mConfirmBtn.focus({preventScroll:true}), 50);
+    }
   },
   closeModal() { document.getElementById('modalBg').classList.remove('open'); },
   closeLoginModal() {
