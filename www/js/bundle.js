@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-29T05:28:09Z */
+/* PaMarket bundle — built 2026-05-29T08:19:43Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -6961,7 +6961,7 @@ H.init();
   }
 
   H.pages.Jobs = function () {
-    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'jobs'; });
+    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat||'').toLowerCase() === 'jobs'; });
     var candidates = (H.state.users || []).filter(function (u) { return u.openToWork; });
     var recent = jobs.slice().sort(function (a, b) { return b.createdAt - a.createdAt; }).slice(0, 5);
 
@@ -7013,7 +7013,7 @@ H.init();
 
   H.pages.FindJobs = function (params) {
     params = params || {};
-    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'jobs'; })
+    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat||'').toLowerCase() === 'jobs'; })
       .sort(function (a, b) { return b.createdAt - a.createdAt; });
 
     var filterHtml = H._sel('findjobs', 'subcat', 'Job Category', [['all', 'All Categories']].concat(JOB_CATS.map(function (c) { return [c, c]; })).concat([['Other', 'Other']]))
@@ -7060,7 +7060,7 @@ H.init();
     var el = document.getElementById('cl_findjobs');
     if (!el) return;
     var f = H._filters['findjobs'] || {};
-    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'jobs'; });
+    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat||'').toLowerCase() === 'jobs'; });
     var q = ((document.getElementById('cs_findjobs') || {}).value || '').toLowerCase().trim();
     if (q) jobs = jobs.filter(function (l) { return (l.title + ' ' + (l.desc || '') + ' ' + (l.city || '') + ' ' + (l.sellerName || '')).toLowerCase().includes(q); });
     if (f.city && f.city !== 'all') jobs = jobs.filter(function (l) { return (l.city + ' ' + (l.prov || '')).toLowerCase().includes(f.city.toLowerCase()); });
@@ -7641,7 +7641,7 @@ H.init();
       + (reqs ? '\n\nREQUIREMENTS:\n' + reqs : '')
       + ((email || phone) ? '\n\nHOW TO APPLY:\n' + (email ? 'Email: ' + email + '\n' : '') + (phone ? 'WhatsApp: ' + phone : '') : '');
     var listing = {
-      id: H.uid(), cat: 'jobs', title: title.trim(), desc: fullDesc,
+      id: H.uid(), cat: 'Jobs', title: title.trim(), desc: fullDesc,
       price: (parseFloat(salary) || 0), currency: 'USD', city: location, prov: prov || location,
       sellerId: u.id, sellerName: anon ? company : (u.name || company),
       sellerPhone: u.phone || '', company: company,
@@ -7894,7 +7894,12 @@ H.init();
 
       + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
       + (isMine
-        ? '<button onclick="H.openInner(\'JobApplications\',{jobId:\'' + id + '\'})" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer">View Applications (' + appCount + ')</button>'
+        ? '<button onclick="H.openInner(\'JobApplications\',{jobId:\'' + id + '\'})" style="width:100%;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:13px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:8px">View Applications (' + appCount + ')</button>'
+        + '<div style="display:flex;gap:8px">'
+        + '<button onclick="H.openInner(\'EditJob\',{listingId:\'' + id + '\'})" style="flex:1;padding:10px;background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer">Edit</button>'
+        + '<button onclick="H._markJobFilled(\'' + id + '\')" style="flex:1;padding:10px;background:#22c55e15;color:#15803d;border:1.5px solid #22c55e40;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer">Mark Filled</button>'
+        + '<button onclick="H._deleteJob(\'' + id + '\')" style="flex:1;padding:10px;background:#ef444415;color:#dc2626;border:1.5px solid #ef444440;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer">Delete</button>'
+        + '</div>'
         : myApp
           ? '<div style="padding:14px;background:#dcfce7;border-radius:13px;text-align:center;font-size:14px;font-weight:700;color:#15803d;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Application Submitted · ' + H.timeAgo(myApp.appliedAt) + '</div>'
           : '<button onclick="H._applyToJob(\'' + id + '\')" style="width:100%;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>Easy Apply in App</button>'
@@ -8039,9 +8044,10 @@ H.init();
 
     return '<div class="page active">'
       + H.innerTopbar('Applications for ' + H.escHtml(title))
-      + '<div style="padding:12px 14px 16px;background:var(--card);border-bottom:1px solid var(--border)">'
-      + '<div style="font-size:22px;font-weight:800;color:var(--text)">' + apps.length + ' Application' + (apps.length===1?'':'s') + '</div>'
-      + '<div style="font-size:13px;color:var(--sub);margin-top:2px">' + H.escHtml(title) + '</div>'
+      + '<div style="padding:12px 14px 16px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px">'
+      + '<div><div style="font-size:22px;font-weight:800;color:var(--text)">' + apps.length + ' Application' + (apps.length===1?'':'s') + '</div>'
+      + '<div style="font-size:13px;color:var(--sub);margin-top:2px">' + H.escHtml(title) + '</div></div>'
+      + (l ? '<button onclick="H._markJobFilled(\'' + jobId + '\')" style="flex-shrink:0;padding:8px 14px;background:#22c55e15;color:#15803d;border:1.5px solid #22c55e40;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">Position Filled ✓</button>' : '')
       + '</div>'
       + '<div style="padding:12px 14px 88px">'
       + (apps.length ? apps.map(function(app) {
@@ -8110,6 +8116,48 @@ H.init();
         H._syncingJobApplications = false;
       });
     }
+  };
+
+  H._deleteJob = function (id) {
+    H.modal({
+      title: 'Delete Job',
+      body: '<div style="font-size:13px;color:var(--sub);line-height:1.6">This will permanently remove the job listing and all its applications. This cannot be undone.</div>',
+      confirmText: 'Delete Job',
+      danger: true,
+      onConfirm: function () {
+        var idx = (H.state.listings || []).findIndex(function(l){ return l.id === id; });
+        if (idx > -1) H.state.listings.splice(idx, 1);
+        H.saveState();
+        var _sb = window.supabase;
+        if (_sb && typeof _sb.from === 'function') {
+          _sb.from('listings').update({ status: 'removed' }).eq('id', id)
+            .then(function(r){ if(r&&r.error) console.warn('delete job:', r.error.message); });
+        }
+        H.toast('Job deleted');
+        H.goBack(); H.goBack();
+      }
+    });
+  };
+
+  H._markJobFilled = function (id) {
+    H.modal({
+      title: 'Position Filled?',
+      body: '<div style="font-size:13px;color:var(--sub);line-height:1.6">Mark this job as filled. It will be removed from active listings so no new applications come in.</div>',
+      confirmText: 'Yes, Mark as Filled',
+      onConfirm: function () {
+        var l = (H.state.listings || []).find(function(x){ return x.id === id; });
+        if (!l) return;
+        l.status = 'filled';
+        H.saveState();
+        var _sb = window.supabase;
+        if (_sb && typeof _sb.from === 'function') {
+          _sb.from('listings').update({ status: 'filled' }).eq('id', id)
+            .then(function(r){ if(r&&r.error) console.warn('mark filled:', r.error.message); });
+        }
+        H.toast('Job marked as filled — removed from active listings');
+        H.goBack(); H.goBack();
+      }
+    });
   };
 
   H._openApplicationChat = function(appId) {
