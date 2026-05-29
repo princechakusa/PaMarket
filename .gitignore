@@ -9,6 +9,7 @@ package - Copy.json
 
 hostly-release.jks
 *.keystore
+!pamarket.keystore
 *.jks
 android/keystore.properties
 scripts/
