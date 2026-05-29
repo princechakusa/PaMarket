@@ -270,34 +270,14 @@
     const ma = document.getElementById('mainArea');
     if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
 
-    // When an input is focused the browser fires scroll-into-view on ancestor elements even
-    // when they have overflow:hidden.  Intercept it on #mainArea and snap back to 0 immediately
-    // so the header can never be pushed off screen.
+    // Browsers fire scroll-into-view on ancestors when an input is focused, even when the
+    // ancestor has overflow:hidden. Snap #mainArea scrollTop back to 0 the instant it moves
+    // so the chat header can never be pushed off the top of the screen.
     function _lockScroll() {
-      const m = document.getElementById('mainArea');
-      if (m && m.scrollTop !== 0) m.scrollTop = 0;
+      if (ma && ma.scrollTop !== 0) ma.scrollTop = 0;
     }
     window._chatScrollLock = _lockScroll;
     if (ma) ma.addEventListener('scroll', _lockScroll, { passive: true });
-
-    // In a mobile browser (Capacitor handles its own keyboard via resize:body), the layout
-    // viewport does not shrink when the keyboard appears, so the input bar ends up behind the
-    // keyboard.  Use visualViewport to measure the visible area and resize #mainArea to fit,
-    // which makes the internal flex layout (header + thread + input) fill only the visible area.
-    const inCapacitor = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
-    if (!inCapacitor && window.visualViewport && ma) {
-      function _chatVPResize() {
-        const m = document.getElementById('mainArea');
-        if (!m) { window.visualViewport.removeEventListener('resize', _chatVPResize); return; }
-        const vph = window.visualViewport.height;
-        m.style.height = vph + 'px';
-        m.style.flexGrow = '0';
-        m.style.flexShrink = '0';
-      }
-      window._chatVPHandler = _chatVPResize;
-      window.visualViewport.addEventListener('resize', _chatVPResize);
-      _chatVPResize();
-    }
 
     setTimeout(() => document.getElementById('chatIn')?.focus(), 200);
     if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);
