@@ -568,6 +568,10 @@ window.H = {
 
   async renderPage(name, params, opts) {
     const area=document.getElementById('mainArea');
+    // Close any open modal/sheet so overlays don't block the new page
+    const _mb = document.getElementById('modalBg');
+    if (_mb && _mb.classList.contains('open')) _mb.classList.remove('open');
+    this.closeSheet();
     // Remove chat keyboard listeners when navigating away from Chat
     if (window._chatKBShow) { try { window._chatKBShow.remove(); } catch(e){} window._chatKBShow = null; }
     if (window._chatKBHide) { try { window._chatKBHide.remove(); } catch(e){} window._chatKBHide = null; }

@@ -481,6 +481,7 @@
     const c = conversations().find(function(x){ return x.id === H._activeChat; });
     if (!c) return;
     const u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in to send messages'); return; }
     var msgId = H.uid();
     var msgT = Date.now();
     c.messages.push({ id: msgId, from: u.id, senderName: u.name||'', text: text, t: msgT, read: false });
