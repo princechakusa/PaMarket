@@ -7,7 +7,6 @@ ios/
 package-lock - Copy.json
 package - Copy.json
 
-hostly-release.jks
 *.keystore
 !pamarket.keystore
 *.jks
