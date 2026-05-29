@@ -567,18 +567,13 @@ window.H = {
 
   async renderPage(name, params, opts) {
     const area=document.getElementById('mainArea');
-    // Clean up chat scroll-lock and keyboard listeners before navigating away
+    // Remove chat scroll-lock listener when navigating away from Chat
     if (window._chatScrollLock) {
-      const _ma = document.getElementById('mainArea');
-      if (_ma) _ma.removeEventListener('scroll', window._chatScrollLock);
+      if (area) area.removeEventListener('scroll', window._chatScrollLock);
       window._chatScrollLock = null;
     }
-    if (window._chatVPHandler && window.visualViewport) {
-      window.visualViewport.removeEventListener('resize', window._chatVPHandler);
-      window._chatVPHandler = null;
-    }
-    // Always restore mainArea styles when navigating — Chat overrides these
-    if(area) { area.style.overflowY='auto'; area.style.height=''; area.style.flexGrow=''; area.style.flexShrink=''; area.style.position=''; }
+    // Restore mainArea styles that Chat overrides
+    if(area) { area.style.overflowY='auto'; area.style.position=''; }
     const scrollTo=(opts&&opts.scrollTo)||0;
     if(this.canAccessPage&&!this.canAccessPage(name)){this.toast('Access denied');await this.navTo('Home');return;}
     this.currentPageName=name; this.currentPageParams=params||{};
