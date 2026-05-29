@@ -1083,7 +1083,7 @@
     H.state.applications.push(app);
     H.saveState();
     if (typeof H.saveApplicationToCloud === 'function') H.saveApplicationToCloud(app);
-    if (l.sellerId) H.pushNotif(l.sellerId, 'New Application', u.name + ' applied for ' + l.title, 'message');
+    if (l.sellerId) H.pushNotif(l.sellerId, 'New Application', (u.name || 'Someone') + ' applied for ' + (l.title || 'your job'), 'message');
     if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
     var ids = [u.id, l.sellerId].sort();
     var convId = 'job_' + jobId.slice(-8) + '_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
