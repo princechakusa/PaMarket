@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-29T15:46:00Z */
+/* PaMarket bundle — built 2026-05-29T15:48:51Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -571,6 +571,10 @@ window.H = {
 
   async renderPage(name, params, opts) {
     const area=document.getElementById('mainArea');
+    // Close any open modal/sheet so overlays don't block the new page
+    const _mb = document.getElementById('modalBg');
+    if (_mb && _mb.classList.contains('open')) _mb.classList.remove('open');
+    this.closeSheet();
     // Remove chat keyboard listeners when navigating away from Chat
     if (window._chatKBShow) { try { window._chatKBShow.remove(); } catch(e){} window._chatKBShow = null; }
     if (window._chatKBHide) { try { window._chatKBHide.remove(); } catch(e){} window._chatKBHide = null; }
@@ -4432,6 +4436,7 @@ H.init();
     const c = conversations().find(function(x){ return x.id === H._activeChat; });
     if (!c) return;
     const u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in to send messages'); return; }
     var msgId = H.uid();
     var msgT = Date.now();
     c.messages.push({ id: msgId, from: u.id, senderName: u.name||'', text: text, t: msgT, read: false });
@@ -8151,7 +8156,7 @@ H.init();
     H.state.applications.push(app);
     H.saveState();
     if (typeof H.saveApplicationToCloud === 'function') H.saveApplicationToCloud(app);
-    if (l.sellerId) H.pushNotif(l.sellerId, 'New Application', u.name + ' applied for ' + l.title, 'message');
+    if (l.sellerId) H.pushNotif(l.sellerId, 'New Application', (u.name || 'Someone') + ' applied for ' + (l.title || 'your job'), 'message');
     if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
     var ids = [u.id, l.sellerId].sort();
     var convId = 'job_' + jobId.slice(-8) + '_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
