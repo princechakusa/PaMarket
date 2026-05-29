@@ -67,7 +67,7 @@ window.H = {
     users:[], listings:[], conversations:[], reports:[], txns:[],
     saves:{}, notifs:{}, currentUserId:null, cityFilter:'All Zimbabwe',
     _sortMode:'newest', _priceMin:'', _priceMax:'',
-    adminLogs:[], supportTickets:[], paidAds:[]
+    adminLogs:[], supportTickets:[], paidAds:[], deletedConvIds:[]
   },
 
   loadState() {
@@ -83,14 +83,15 @@ window.H = {
         );
         // Preserve critical user-generated data; reset ephemeral/structural fields.
         const migrated = Object.assign(base, {
-          users:         Array.isArray(loaded.users)         ? loaded.users         : base.users,
-          listings:      Array.isArray(loaded.listings)      ? loaded.listings      : base.listings,
-          conversations: Array.isArray(loaded.conversations) ? loaded.conversations : base.conversations,
-          saves:         loaded.saves  && typeof loaded.saves  === 'object' ? loaded.saves  : base.saves,
-          notifs:        loaded.notifs && typeof loaded.notifs === 'object' ? loaded.notifs : base.notifs,
-          currentUserId: loaded.currentUserId || base.currentUserId,
-          cityFilter:    loaded.cityFilter    || base.cityFilter,
-          txns:          Array.isArray(loaded.txns)          ? loaded.txns          : base.txns,
+          users:           Array.isArray(loaded.users)           ? loaded.users           : base.users,
+          listings:        Array.isArray(loaded.listings)        ? loaded.listings        : base.listings,
+          conversations:   Array.isArray(loaded.conversations)   ? loaded.conversations   : base.conversations,
+          saves:           loaded.saves  && typeof loaded.saves  === 'object' ? loaded.saves  : base.saves,
+          notifs:          loaded.notifs && typeof loaded.notifs === 'object' ? loaded.notifs : base.notifs,
+          currentUserId:   loaded.currentUserId || base.currentUserId,
+          cityFilter:      loaded.cityFilter    || base.cityFilter,
+          txns:            Array.isArray(loaded.txns)            ? loaded.txns            : base.txns,
+          deletedConvIds:  Array.isArray(loaded.deletedConvIds)  ? loaded.deletedConvIds  : base.deletedConvIds,
         });
         migrated._v = this.STATE_VERSION;
         return migrated;
@@ -1137,25 +1138,102 @@ window.H = {
 
       // Phase 2: discover from messages table — works without conversations table.
       // Conv IDs embed the last 6 chars of each member UUID, so LIKE finds them.
+      // We collect ALL rows first so we can pair sent+received for the same conv to
+      // extract the other member's ID even when only sent-side rows are found.
       try {
         const uidSuffix = u.id.slice(-6);
         const [sentRes, recvRes] = await Promise.all([
           sb.from('messages').select('conversation_id,sender_id,sender_name').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(300),
           sb.from('messages').select('conversation_id,sender_id,sender_name').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(300)
         ]);
-        for (const row of [...(sentRes.data||[]), ...(recvRes.data||[])]) {
+        // Build a map: convId -> first other-user sender_id found across both result sets
+        const convOtherMap = {};
+        for (const row of [...(recvRes.data||[]), ...(sentRes.data||[])]) {
+          if (!row.conversation_id) continue;
+          if (row.sender_id !== u.id && !convOtherMap[row.conversation_id]) {
+            convOtherMap[row.conversation_id] = row.sender_id;
+          }
+        }
+        const allRows = [...(sentRes.data||[]), ...(recvRes.data||[])];
+        for (const row of allRows) {
           if (!row.conversation_id || knownIds.has(row.conversation_id)) continue;
           // Skip conversations the user has locally deleted — don't re-add them during sync
           if (deletedIds.has(row.conversation_id)) continue;
           knownIds.add(row.conversation_id);
-          const otherId = row.sender_id !== u.id ? row.sender_id : null;
+          const otherId = convOtherMap[row.conversation_id] || null;
           const members = otherId ? [u.id, otherId] : [u.id];
           H.state.conversations.push({ id: row.conversation_id, members, listingId: null, messages: [] });
           changed = true;
         }
       } catch(e) { /* messages table scan failed */ }
 
-      // Phase 3: fetch profiles for all unknown or nameless conversation members (fixes "Unknown User")
+      // Phase 3 (profile fetch) runs AFTER Phase 4 (message sync) so that messages
+      // are loaded first — this ensures we have all sender_id values needed to populate
+      // members arrays and collect the full set of other-user IDs for the profile fetch.
+
+      // Phase 4: sync messages for EVERY known conversation
+      for (const local of H.state.conversations) {
+        if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
+        const { data: msgs, error: msgErr } = await sb.from('messages')
+          .select('id, sender_id, sender_name, text, read, created_at')
+          .eq('conversation_id', local.id)
+          .order('created_at', { ascending: true })
+          .limit(200);
+        if (msgErr || !msgs) continue;
+        const existing = new Map(local.messages.map(m => [m.id, m]));
+        msgs.forEach(m => {
+          const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
+          const found = existing.get(m.id);
+          const read = found && found.read ? true : !!m.read;
+          if (!found) {
+            local.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, t, read });
+            changed = true;
+          } else if (found.read !== read || found.from !== m.sender_id || found.senderName !== (m.sender_name||'')) {
+            found.from = m.sender_id;
+            found.senderName = m.sender_name || found.senderName || '';
+            found.read = read;
+            changed = true;
+          }
+        });
+        local.messages.sort((a,b) => (a.t||0) - (b.t||0));
+        // Backfill missing other-member into the members array from message sender IDs
+        if (!Array.isArray(local.members)) local.members = [u.id];
+        if (!local.members.includes(u.id)) local.members.unshift(u.id);
+        (msgs||[]).forEach(function(m) {
+          if (m.sender_id && m.sender_id !== u.id && !local.members.includes(m.sender_id)) {
+            local.members.push(m.sender_id);
+            changed = true;
+          }
+        });
+      }
+
+      // Phase 4.5: backfill profile names from message sender_name where name is still empty
+      // This covers cases where the profiles table is unavailable or the entry has no name
+      H.state.conversations.forEach(function(conv) {
+        (conv.members||[]).forEach(function(memberId) {
+          if (memberId === u.id) return;
+          const existingUser = (H.state.users||[]).find(function(x){ return x.id === memberId; });
+          if (existingUser && existingUser.name) return; // already resolved
+          // Find the first message from this member that carries a non-empty sender_name
+          const nameFromMsg = ((conv.messages||[]).find(function(m){ return m.from === memberId && m.senderName; })||{}).senderName;
+          if (!nameFromMsg) return;
+          if (existingUser) {
+            existingUser.name = nameFromMsg;
+          } else {
+            (H.state.users = H.state.users||[]).push({
+              id: memberId, name: nameFromMsg, phone: '', email: '',
+              avatar: null, verified: false, role: 'user', status: 'active',
+              joinedAt: Date.now()
+            });
+          }
+          if (!conv.otherName) { conv.otherName = nameFromMsg; }
+          changed = true;
+        });
+      });
+
+      // Phase 5 (was Phase 3): fetch profiles for all unknown or nameless conversation members.
+      // This runs AFTER message sync so members arrays are fully populated and sender_name
+      // fallbacks have already been applied — we only hit the network for IDs still nameless.
       const allMemberIds = new Set();
       H.state.conversations.forEach(c => (c.members||[]).forEach(id => allMemberIds.add(id)));
       // Include IDs missing from state OR cached but with an empty name — so names are backfilled
@@ -1187,59 +1265,16 @@ window.H = {
               changed = true;
             }
           });
+          // After profile fetch, also update conv.otherName for any conversation still missing it
+          H.state.conversations.forEach(function(conv) {
+            if (conv.otherName) return;
+            const otherId = (conv.members||[]).find(function(id){ return id !== u.id; });
+            if (!otherId) return;
+            const otherUser = (H.state.users||[]).find(function(x){ return x.id === otherId; });
+            if (otherUser && otherUser.name) { conv.otherName = otherUser.name; changed = true; }
+          });
         } catch(e) {}
       }
-
-      // Phase 4: sync messages for EVERY known conversation
-      for (const local of H.state.conversations) {
-        if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
-        const { data: msgs, error: msgErr } = await sb.from('messages')
-          .select('id, sender_id, sender_name, text, read, created_at')
-          .eq('conversation_id', local.id)
-          .order('created_at', { ascending: true })
-          .limit(200);
-        if (msgErr || !msgs) continue;
-        const existing = new Map(local.messages.map(m => [m.id, m]));
-        msgs.forEach(m => {
-          const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
-          const found = existing.get(m.id);
-          const read = found && found.read ? true : !!m.read;
-          if (!found) {
-            local.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, t, read });
-            changed = true;
-          } else if (found.read !== read || found.from !== m.sender_id || found.senderName !== (m.sender_name||'')) {
-            found.from = m.sender_id;
-            found.senderName = m.sender_name || found.senderName || '';
-            found.read = read;
-            changed = true;
-          }
-        });
-        local.messages.sort((a,b) => (a.t||0) - (b.t||0));
-      }
-
-      // Phase 4.5: backfill profile names from message sender_name where name is still empty
-      // This covers cases where the profiles table is unavailable or the entry has no name
-      H.state.conversations.forEach(function(conv) {
-        (conv.members||[]).forEach(function(memberId) {
-          if (memberId === u.id) return;
-          const existingUser = (H.state.users||[]).find(function(x){ return x.id === memberId; });
-          if (existingUser && existingUser.name) return; // already resolved
-          // Find the first message from this member that carries a non-empty sender_name
-          const nameFromMsg = ((conv.messages||[]).find(function(m){ return m.from === memberId && m.senderName; })||{}).senderName;
-          if (!nameFromMsg) return;
-          if (existingUser) {
-            existingUser.name = nameFromMsg;
-          } else {
-            (H.state.users = H.state.users||[]).push({
-              id: memberId, name: nameFromMsg, phone: '', email: '',
-              avatar: null, verified: false, role: 'user', status: 'active',
-              joinedAt: Date.now()
-            });
-          }
-          if (!conv.otherName) { conv.otherName = nameFromMsg; }
-          changed = true;
-        });
-      });
 
       if (changed) H.saveState();
       return changed;
