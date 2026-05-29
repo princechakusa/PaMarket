@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-29T10:54:11Z */
+/* PaMarket bundle — built 2026-05-29T11:19:23Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -570,10 +570,15 @@ window.H = {
 
   async renderPage(name, params, opts) {
     const area=document.getElementById('mainArea');
-    // Remove chat scroll-lock listener when navigating away from Chat
+    // Remove chat keyboard listeners when navigating away from Chat
     if (window._chatScrollLock) {
       if (area) area.removeEventListener('scroll', window._chatScrollLock);
       window._chatScrollLock = null;
+    }
+    if (window._chatVPHandler && window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', window._chatVPHandler);
+      window.visualViewport.removeEventListener('scroll', window._chatVPHandler);
+      window._chatVPHandler = null;
     }
     // Restore mainArea styles that Chat overrides
     if(area) { area.style.overflowY='auto'; area.style.position=''; }
@@ -4174,17 +4179,44 @@ H.init();
     if (window._messagesPoll) { clearInterval(window._messagesPoll); window._messagesPoll = null; }
     const t = document.getElementById('chatThread');
     if (t) t.scrollTop = t.scrollHeight;
-    const ma = document.getElementById('mainArea');
-    if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+    const ma  = document.getElementById('mainArea');
+    const wrap = document.getElementById('chatPageWrap');
 
-    // Browsers fire scroll-into-view on ancestors when an input is focused, even when the
-    // ancestor has overflow:hidden. Snap #mainArea scrollTop back to 0 the instant it moves
-    // so the chat header can never be pushed off the top of the screen.
-    function _lockScroll() {
-      if (ma && ma.scrollTop !== 0) ma.scrollTop = 0;
+    const inCapacitor = !!(window.Capacitor &&
+      typeof window.Capacitor.isNativePlatform === 'function' &&
+      window.Capacitor.isNativePlatform());
+
+    if (inCapacitor) {
+      // Capacitor uses resize:body — the body/mainArea shrink when keyboard appears,
+      // so the absolute-positioned wrap already fills the correct area automatically.
+      if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+      function _lockScroll() { if (ma && ma.scrollTop !== 0) ma.scrollTop = 0; }
+      window._chatScrollLock = _lockScroll;
+      if (ma) ma.addEventListener('scroll', _lockScroll, { passive: true });
+    } else {
+      // Browser: iOS/Android browsers pan the visual viewport when keyboard appears.
+      // position:fixed is misaligned on iOS when the viewport pans — the element
+      // stays at its layout-viewport position and scrolls off the visible area.
+      // Fix: switch wrap to position:fixed, then use visualViewport.scroll + resize
+      // to explicitly realign it with the visible area on every keyboard/pan change.
+      if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
+      if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+
+      function _syncToViewport() {
+        const w = document.getElementById('chatPageWrap');
+        const vp = window.visualViewport;
+        if (!w || !vp) return;
+        w.style.top    = vp.offsetTop + 'px';
+        w.style.height = vp.height + 'px';
+        w.style.bottom = 'auto';
+      }
+      window._chatVPHandler = _syncToViewport;
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', _syncToViewport);
+        window.visualViewport.addEventListener('scroll', _syncToViewport);
+        _syncToViewport();
+      }
     }
-    window._chatScrollLock = _lockScroll;
-    if (ma) ma.addEventListener('scroll', _lockScroll, { passive: true });
 
     setTimeout(() => document.getElementById('chatIn')?.focus(), 200);
     if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);

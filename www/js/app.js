@@ -567,10 +567,15 @@ window.H = {
 
   async renderPage(name, params, opts) {
     const area=document.getElementById('mainArea');
-    // Remove chat scroll-lock listener when navigating away from Chat
+    // Remove chat keyboard listeners when navigating away from Chat
     if (window._chatScrollLock) {
       if (area) area.removeEventListener('scroll', window._chatScrollLock);
       window._chatScrollLock = null;
+    }
+    if (window._chatVPHandler && window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', window._chatVPHandler);
+      window.visualViewport.removeEventListener('scroll', window._chatVPHandler);
+      window._chatVPHandler = null;
     }
     // Restore mainArea styles that Chat overrides
     if(area) { area.style.overflowY='auto'; area.style.position=''; }
