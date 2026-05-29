@@ -567,9 +567,10 @@ window.H = {
 
   async renderPage(name, params, opts) {
     const area=document.getElementById('mainArea');
-    // Clean up chat keyboard listener before navigating away
+    // Clean up chat keyboard listeners before navigating away
     if (window._chatVPHandler && window.visualViewport) {
       window.visualViewport.removeEventListener('resize', window._chatVPHandler);
+      window.visualViewport.removeEventListener('scroll', window._chatVPHandler);
       window._chatVPHandler = null;
     }
     // Always restore mainArea scroll when navigating — Chat locks it to prevent topbar from scrolling off

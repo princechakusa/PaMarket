@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-29T10:07:42Z */
+/* PaMarket bundle — built 2026-05-29T10:16:12Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -570,9 +570,10 @@ window.H = {
 
   async renderPage(name, params, opts) {
     const area=document.getElementById('mainArea');
-    // Clean up chat keyboard listener before navigating away
+    // Clean up chat keyboard listeners before navigating away
     if (window._chatVPHandler && window.visualViewport) {
       window.visualViewport.removeEventListener('resize', window._chatVPHandler);
+      window.visualViewport.removeEventListener('scroll', window._chatVPHandler);
       window._chatVPHandler = null;
     }
     // Always restore mainArea scroll when navigating — Chat locks it to prevent topbar from scrolling off
@@ -4151,7 +4152,7 @@ H.init();
       : ((other && other.privacySettings && other.privacySettings.showActivity)
          ? '<div class="chat-hdr-sub"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4ade80;flex-shrink:0"></span><span style="color:#4ade80">Online</span></div>'
          : '<div class="chat-hdr-sub">Tap to view profile</div>');
-    return '<div id="chatPageWrap" class="page active" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;overflow:hidden;">'
+    return '<div id="chatPageWrap" class="page active" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;display:flex;flex-direction:column;overflow:hidden;">'
       + '<div class="chat-header">'
       + '<button class="chat-hdr-back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
       + '<div class="chat-hdr-av" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">' + otherAvatar + '</div>'
@@ -4175,21 +4176,31 @@ H.init();
     const t = document.getElementById('chatThread');
     if (t) t.scrollTop = t.scrollHeight;
     const ma = document.getElementById('mainArea');
-    if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+    if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
 
-    // When the virtual keyboard appears, the visual viewport shrinks but the DOM layout does not.
-    // Without this, the browser scrolls #mainArea content upward to reveal the input, hiding the chat header.
-    // We resize #chatPageWrap to match the visual viewport so the flex layout (header + thread + input)
-    // always fits exactly the visible area — header stays pinned at top, input stays above keyboard.
-    if (window.visualViewport) {
-      function _chatVPResize() {
-        const wrap = document.getElementById('chatPageWrap');
-        if (!wrap) { window.visualViewport.removeEventListener('resize', _chatVPResize); return; }
-        wrap.style.height = window.visualViewport.height + 'px';
+    // #chatPageWrap is position:fixed so the browser cannot scroll it off screen when the keyboard
+    // appears. We listen to visualViewport to shrink the height to the visible area above the keyboard,
+    // so the flex layout (header pinned top + scrollable thread + input bar) always fits exactly.
+    function _chatVPResize() {
+      const wrap = document.getElementById('chatPageWrap');
+      if (!wrap) {
+        if (window.visualViewport) {
+          window.visualViewport.removeEventListener('resize', _chatVPResize);
+          window.visualViewport.removeEventListener('scroll', _chatVPResize);
+        }
+        return;
+      }
+      const vp = window.visualViewport;
+      if (vp) {
+        wrap.style.top = vp.offsetTop + 'px';
+        wrap.style.height = vp.height + 'px';
         wrap.style.bottom = 'auto';
       }
-      window._chatVPHandler = _chatVPResize;
+    }
+    window._chatVPHandler = _chatVPResize;
+    if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', _chatVPResize);
+      window.visualViewport.addEventListener('scroll', _chatVPResize);
       _chatVPResize();
     }
 
