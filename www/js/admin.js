@@ -804,8 +804,8 @@
           if (sb && typeof sb.from === 'function') {
             sb.from('profiles').update({ role: 'admin' }).eq('id', uid_).catch(()=>{});
           }
-          alog(`Made admin: ${u.name}`);
-          saveState(); toast(`${u.name} is now an admin`); this.setTab('users');
+          alog(`Made admin: ${u.name||'User'}`);
+          saveState(); toast(`${u.name||'User'} is now an admin`); this.setTab('users');
         }
       });
     },
@@ -818,47 +818,47 @@
       if (sb && typeof sb.from === 'function') {
         sb.from('profiles').update({ verified: true }).eq('id', uid_).catch(()=>{});
       }
-      alog(`Verified: ${u.name}`);
-      saveState(); toast(`${u.name} verified`); this.setTab('users');
+      alog(`Verified: ${u.name||'User'}`);
+      saveState(); toast(`${u.name||'User'} verified`); this.setTab('users');
     },
 
     approveVerification(uid_) {
       if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       u.verified=true; u.verifiedAt=Date.now(); u.verificationPending=false;
-      alog(`Verification approved: ${u.name}`);
+      alog(`Verification approved: ${u.name||'User'}`);
       pushNotif(uid_,'Identity Verified ✓','Congratulations! Your identity has been verified on PaMarket.','verify');
       const sb = window.supabase;
       if (sb && typeof sb.from === 'function') {
         sb.from('profiles').update({ verified: true, updated_at: new Date().toISOString() }).eq('id', uid_);
       }
-      saveState(); toast(`${u.name} verified ✓`); this.setTab('verifications');
+      saveState(); toast(`${u.name||'User'} verified ✓`); this.setTab('verifications');
     },
 
     rejectVerification(uid_) {
       if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       u.verificationPending=false;
-      alog(`Verification rejected: ${u.name}`);
+      alog(`Verification rejected: ${u.name||'User'}`);
       pushNotif(uid_,'Verification Unsuccessful','Your ID verification could not be approved. Contact support for help.','warn');
       const sb = window.supabase;
       if (sb && typeof sb.from === 'function') {
         sb.from('profiles').update({ verification_pending: false }).eq('id', uid_);
         sb.from('verifications').delete().eq('user_id', uid_);
       }
-      saveState(); toast(`Verification rejected for ${u.name}`); this.setTab('verifications');
+      saveState(); toast(`Verification rejected for ${u.name||'User'}`); this.setTab('verifications');
     },
 
     revokeVerification(uid_) {
       if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       u.verified=false; u.verifiedAt=null;
-      alog(`Verification revoked: ${u.name}`);
+      alog(`Verification revoked: ${u.name||'User'}`);
       const sb = window.supabase;
       if (sb && typeof sb.from === 'function') {
         sb.from('profiles').update({ verified: false }).eq('id', uid_);
       }
-      saveState(); toast(`Verification revoked for ${u.name}`); this.setTab('verifications');
+      saveState(); toast(`Verification revoked for ${u.name||'User'}`); this.setTab('verifications');
     },
 
     verifyCompany(uid_) {
@@ -867,7 +867,7 @@
       u.companyVerified = true; u.companyVerifiedAt = Date.now();
       alog(`Company verified: ${u.name}`);
       pushNotif(uid_,'Company Verified ✓','Your company account has been verified on PaMarket.','verify');
-      saveState(); toast(`${u.name} company verified`); this.setTab('users');
+      saveState(); toast(`${u.name||'User'} company verified`); this.setTab('users');
     },
 
     revokeCompany(uid_) {
@@ -886,7 +886,7 @@
       if (sb && typeof sb.from === 'function') {
         sb.from('listings').update({ status: 'active' }).eq('id', lid).catch(()=>{});
       }
-      pushNotif(l.sellerId,'Listing Approved',`Your listing "${l.title}" is now live!`);
+      pushNotif(l.sellerId,'Listing Approved',`Your listing "${l.title||'your listing'}" is now live!`);
       alog(`Approved listing: ${l.title}`);
       saveState(); toast('Listing approved and live'); this.setTab('listings');
     },
@@ -905,7 +905,7 @@
           if (sb && typeof sb.from === 'function') {
             sb.from('listings').update({ status: 'rejected', reject_reason: reason }).eq('id', lid).catch(()=>{});
           }
-          pushNotif(l.sellerId,'Listing Rejected',`Your listing "${l.title}" was rejected: ${reason}`);
+          pushNotif(l.sellerId,'Listing Rejected',`Your listing "${l.title||'your listing'}" was rejected: ${reason}`);
           alog(`Rejected listing: ${l.title} — ${reason}`);
           saveState(); toast('Listing rejected'); this.setTab('listings');
         }
@@ -926,7 +926,7 @@
             sb.from('listings').update({ status: 'banned' }).eq('id', lid).catch(()=>{});
           }
           if (reportId) { const r=(H.state.reports||[]).find(x=>x.id===reportId); if(r) r.status='resolved'; }
-          pushNotif(l.sellerId,'Listing Removed',`Your listing "${l.title}" was removed for policy violation.`);
+          pushNotif(l.sellerId,'Listing Removed',`Your listing "${l.title||'your listing'}" was removed for policy violation.`);
           alog(`Removed listing: ${l.title}`);
           saveState(); toast('Listing removed'); this.setTab('listings');
         }
