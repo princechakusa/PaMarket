@@ -244,7 +244,7 @@
       : ((other && other.privacySettings && other.privacySettings.showActivity)
          ? '<div class="chat-hdr-sub"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4ade80;flex-shrink:0"></span><span style="color:#4ade80">Online</span></div>'
          : '<div class="chat-hdr-sub">Tap to view profile</div>');
-    return '<div id="chatPageWrap" class="page active" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;display:flex;flex-direction:column;overflow:hidden;">'
+    return '<div id="chatPageWrap" class="page active" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;overflow:hidden;">'
       + '<div class="chat-header">'
       + '<button class="chat-hdr-back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
       + '<div class="chat-hdr-av" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">' + otherAvatar + '</div>'
@@ -268,31 +268,34 @@
     const t = document.getElementById('chatThread');
     if (t) t.scrollTop = t.scrollHeight;
     const ma = document.getElementById('mainArea');
-    if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+    if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
 
-    // #chatPageWrap is position:fixed so the browser cannot scroll it off screen when the keyboard
-    // appears. We listen to visualViewport to shrink the height to the visible area above the keyboard,
-    // so the flex layout (header pinned top + scrollable thread + input bar) always fits exactly.
-    function _chatVPResize() {
-      const wrap = document.getElementById('chatPageWrap');
-      if (!wrap) {
-        if (window.visualViewport) {
-          window.visualViewport.removeEventListener('resize', _chatVPResize);
-          window.visualViewport.removeEventListener('scroll', _chatVPResize);
-        }
-        return;
-      }
-      const vp = window.visualViewport;
-      if (vp) {
-        wrap.style.top = vp.offsetTop + 'px';
-        wrap.style.height = vp.height + 'px';
-        wrap.style.bottom = 'auto';
-      }
+    // When an input is focused the browser fires scroll-into-view on ancestor elements even
+    // when they have overflow:hidden.  Intercept it on #mainArea and snap back to 0 immediately
+    // so the header can never be pushed off screen.
+    function _lockScroll() {
+      const m = document.getElementById('mainArea');
+      if (m && m.scrollTop !== 0) m.scrollTop = 0;
     }
-    window._chatVPHandler = _chatVPResize;
-    if (window.visualViewport) {
+    window._chatScrollLock = _lockScroll;
+    if (ma) ma.addEventListener('scroll', _lockScroll, { passive: true });
+
+    // In a mobile browser (Capacitor handles its own keyboard via resize:body), the layout
+    // viewport does not shrink when the keyboard appears, so the input bar ends up behind the
+    // keyboard.  Use visualViewport to measure the visible area and resize #mainArea to fit,
+    // which makes the internal flex layout (header + thread + input) fill only the visible area.
+    const inCapacitor = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+    if (!inCapacitor && window.visualViewport && ma) {
+      function _chatVPResize() {
+        const m = document.getElementById('mainArea');
+        if (!m) { window.visualViewport.removeEventListener('resize', _chatVPResize); return; }
+        const vph = window.visualViewport.height;
+        m.style.height = vph + 'px';
+        m.style.flexGrow = '0';
+        m.style.flexShrink = '0';
+      }
+      window._chatVPHandler = _chatVPResize;
       window.visualViewport.addEventListener('resize', _chatVPResize);
-      window.visualViewport.addEventListener('scroll', _chatVPResize);
       _chatVPResize();
     }
 
