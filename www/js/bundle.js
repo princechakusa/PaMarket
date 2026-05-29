@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-29T11:19:23Z */
+/* PaMarket bundle — built 2026-05-29T11:25:03Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -571,6 +571,8 @@ window.H = {
   async renderPage(name, params, opts) {
     const area=document.getElementById('mainArea');
     // Remove chat keyboard listeners when navigating away from Chat
+    if (window._chatKBShow) { try { window._chatKBShow.remove(); } catch(e){} window._chatKBShow = null; }
+    if (window._chatKBHide) { try { window._chatKBHide.remove(); } catch(e){} window._chatKBHide = null; }
     if (window._chatScrollLock) {
       if (area) area.removeEventListener('scroll', window._chatScrollLock);
       window._chatScrollLock = null;
@@ -4187,12 +4189,23 @@ H.init();
       window.Capacitor.isNativePlatform());
 
     if (inCapacitor) {
-      // Capacitor uses resize:body — the body/mainArea shrink when keyboard appears,
-      // so the absolute-positioned wrap already fills the correct area automatically.
+      // #app is position:fixed so resize:body (which only shrinks <body>) has no effect.
+      // Use the Capacitor Keyboard plugin events to shrink the chat wrap from the bottom
+      // by the exact keyboard height — keeps header at top and input visible above keyboard.
       if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
-      function _lockScroll() { if (ma && ma.scrollTop !== 0) ma.scrollTop = 0; }
-      window._chatScrollLock = _lockScroll;
-      if (ma) ma.addEventListener('scroll', _lockScroll, { passive: true });
+      const KB = window.Capacitor.Plugins && window.Capacitor.Plugins.Keyboard;
+      if (KB) {
+        KB.addListener('keyboardWillShow', function(info) {
+          const w = document.getElementById('chatPageWrap');
+          if (w) w.style.bottom = (info.keyboardHeight || 0) + 'px';
+          const th = document.getElementById('chatThread');
+          if (th) setTimeout(function() { th.scrollTop = th.scrollHeight; }, 50);
+        }).then(function(h) { window._chatKBShow = h; });
+        KB.addListener('keyboardWillHide', function() {
+          const w = document.getElementById('chatPageWrap');
+          if (w) w.style.bottom = '0px';
+        }).then(function(h) { window._chatKBHide = h; });
+      }
     } else {
       // Browser: iOS/Android browsers pan the visual viewport when keyboard appears.
       // position:fixed is misaligned on iOS when the viewport pans — the element
