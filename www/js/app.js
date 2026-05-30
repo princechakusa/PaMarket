@@ -579,6 +579,10 @@ window.H = {
       if (area) area.removeEventListener('scroll', window._chatScrollLock);
       window._chatScrollLock = null;
     }
+    if (window._chatKBResizeHandler) {
+      window.removeEventListener('resize', window._chatKBResizeHandler);
+      window._chatKBResizeHandler = null;
+    }
     if (window._chatVPHandler && window.visualViewport) {
       window.visualViewport.removeEventListener('resize', window._chatVPHandler);
       window.visualViewport.removeEventListener('scroll', window._chatVPHandler);

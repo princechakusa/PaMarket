@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-30T12:11:49.081Z */
+/* PaMarket bundle — built 2026-05-30T13:37:54.338Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -581,6 +581,10 @@ window.H = {
     if (window._chatScrollLock) {
       if (area) area.removeEventListener('scroll', window._chatScrollLock);
       window._chatScrollLock = null;
+    }
+    if (window._chatKBResizeHandler) {
+      window.removeEventListener('resize', window._chatKBResizeHandler);
+      window._chatKBResizeHandler = null;
     }
     if (window._chatVPHandler && window.visualViewport) {
       window.visualViewport.removeEventListener('resize', window._chatVPHandler);
@@ -2348,32 +2352,28 @@ H.init();
   };
 
   async function _oauthInCap(c, provider) {
-    const Browser = window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
-    const App     = window.Capacitor.Plugins && window.Capacitor.Plugins.App;
-
-    // Get the OAuth URL from Supabase without redirecting the WebView
-    const { data, error } = await c.auth.signInWithOAuth({
-      provider: provider,
-      options: { redirectTo: 'com.pamarket.app://login-callback', skipBrowserRedirect: true }
-    });
-    if (error) { H.toast(error.message || 'Sign-in failed'); return; }
-    if (!data || !data.url) { H.toast('Could not start sign-in'); return; }
+    const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+    const App     = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
 
     if (Browser && App) {
-      // Open a Chrome Custom Tab — looks and feels in-app
+      // @capacitor/browser is synced — use Chrome Custom Tab (stays inside the app)
+      const { data, error } = await c.auth.signInWithOAuth({
+        provider: provider,
+        options: { redirectTo: 'com.pamarket.app://login-callback', skipBrowserRedirect: true }
+      });
+      if (error) { H.toast(error.message || 'Sign-in failed'); return; }
+      if (!data || !data.url) { H.toast('Could not start sign-in'); return; }
       let urlListener;
       urlListener = await App.addListener('appUrlOpen', async function(event) {
-        await urlListener.remove();
+        try { await urlListener.remove(); } catch(e) {}
         try { if (Browser.close) await Browser.close(); } catch(e) {}
         if (!event.url || !event.url.includes('login-callback')) return;
         try {
-          // PKCE flow: exchange the code for a session
           const code = new URL(event.url).searchParams.get('code');
           if (code) {
             const { error: ex } = await c.auth.exchangeCodeForSession(code);
             if (!ex) { window.location.reload(); return; }
           }
-          // Implicit flow fallback: session already stored
           const { data: sd } = await c.auth.getSession();
           if (sd && sd.session) { window.location.reload(); return; }
           H.toast('Sign-in failed. Please try again.');
@@ -2381,15 +2381,12 @@ H.init();
       });
       await Browser.open({ url: data.url });
     } else {
-      // Plugin not yet synced — fall back to system browser + visibility check
-      window.open(data.url, '_system');
-      var _vis = async function() {
-        if (document.visibilityState !== 'visible') return;
-        document.removeEventListener('visibilitychange', _vis);
-        const { data: sd } = await c.auth.getSession();
-        if (sd && sd.session) window.location.reload();
-      };
-      document.addEventListener('visibilitychange', _vis);
+      // Plugins not yet synced — standard OAuth (opens Chrome, user signs in there)
+      const { error } = await c.auth.signInWithOAuth({
+        provider: provider,
+        options: { redirectTo: window.location.origin + window.location.pathname }
+      });
+      if (error) H.toast(error.message || 'Sign-in failed');
     }
   }
 
@@ -4290,46 +4287,55 @@ H.init();
       typeof window.Capacitor.isNativePlatform === 'function' &&
       window.Capacitor.isNativePlatform());
 
-    // Use visualViewport to track keyboard for both Capacitor and browser.
-    // When the soft keyboard appears, visualViewport.height shrinks; syncing the
-    // wrap to the visible viewport keeps the input bar above the keyboard on Android.
-    if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
-    if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
-    if (inCapacitor && ma) ma.style.position = 'relative';
-
-    function _syncToViewport() {
-      const w = document.getElementById('chatPageWrap');
-      const vp = window.visualViewport;
-      if (!w || !vp) return;
-      w.style.top    = vp.offsetTop + 'px';
-      w.style.height = vp.height + 'px';
-      w.style.left   = vp.offsetLeft + 'px';
-      w.style.width  = vp.width + 'px';
-      w.style.bottom = 'auto';
-      const th = document.getElementById('chatThread');
-      if (th) th.scrollTop = th.scrollHeight;
-    }
-    window._chatVPHandler = _syncToViewport;
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', _syncToViewport);
-      window.visualViewport.addEventListener('scroll', _syncToViewport);
-      _syncToViewport();
-    }
-
-    // Capacitor Keyboard plugin enhances the above with predictive bottom adjustment
     if (inCapacitor) {
+      // Keep chatPageWrap as position:absolute inside mainArea (position:relative).
+      // When the keyboard appears, push chatPageWrap up by setting its bottom offset.
+      if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
       const KB = window.Capacitor.Plugins && window.Capacitor.Plugins.Keyboard;
       if (KB) {
         KB.addListener('keyboardWillShow', function(info) {
           const w = document.getElementById('chatPageWrap');
-          if (w) { w.style.bottom = (info.keyboardHeight || 0) + 'px'; w.style.height = 'auto'; }
+          if (w) w.style.bottom = (info.keyboardHeight || 0) + 'px';
           const th = document.getElementById('chatThread');
           if (th) setTimeout(function() { th.scrollTop = th.scrollHeight; }, 50);
         }).then(function(h) { window._chatKBShow = h; });
         KB.addListener('keyboardWillHide', function() {
           const w = document.getElementById('chatPageWrap');
-          if (w) { w.style.bottom = '0px'; w.style.height = 'auto'; }
+          if (w) w.style.bottom = '0px';
         }).then(function(h) { window._chatKBHide = h; });
+      } else {
+        // Fallback: window resize fires when the soft keyboard appears (adjustResize mode)
+        var _baseH = window.innerHeight;
+        function _onCapKBResize() {
+          const w = document.getElementById('chatPageWrap');
+          if (!w) { window.removeEventListener('resize', _onCapKBResize); return; }
+          var diff = _baseH - window.innerHeight;
+          w.style.bottom = (diff > 50 ? diff : 0) + 'px';
+          if (diff > 50) {
+            const th = document.getElementById('chatThread');
+            if (th) setTimeout(function() { th.scrollTop = th.scrollHeight; }, 50);
+          }
+        }
+        window.addEventListener('resize', _onCapKBResize);
+        window._chatKBResizeHandler = _onCapKBResize;
+      }
+    } else {
+      // Browser: position:fixed + visualViewport keeps the wrap inside the visible area
+      if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
+      if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+      function _syncToViewport() {
+        const w = document.getElementById('chatPageWrap');
+        const vp = window.visualViewport;
+        if (!w || !vp) return;
+        w.style.top    = vp.offsetTop + 'px';
+        w.style.height = vp.height + 'px';
+        w.style.bottom = 'auto';
+      }
+      window._chatVPHandler = _syncToViewport;
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', _syncToViewport);
+        window.visualViewport.addEventListener('scroll', _syncToViewport);
+        _syncToViewport();
       }
     }
     if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);
