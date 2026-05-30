@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-30T16:59:09.728Z */
+/* PaMarket bundle — built 2026-05-30T17:33:50Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -3113,6 +3113,275 @@ H.init();
 
 })(window.H);
 
+;/* === www/js/post.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
+'use strict';
+(function (H) {
+  const pages = H.pages;
+  
+  const { CATEGORIES, PROVINCES, CITIES_BY_PROV } = H;
+
+  let postState = {};
+
+  pages.Post = function () {
+    if (!H.currentUser()) {
+      return `<div class="page active">${H.innerTopbar('Post a Listing')}<div style="padding: 20px;">${H.emptyState('Sign In Required', 'Sign in to post listings and reach millions of buyers.', 'Sign In', "H.requireAuth('Sign in to post listings')")}</div></div>`;
+    }
+    postState = {
+      step: 1, cat: null, title: '', desc: '', price: '',
+      currency: 'USD', prov: PROVINCES[0],
+      city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: []
+    };
+    return renderPostShell();
+  };
+
+  function renderPostShell() {
+    return `<div class="page active">
+      <div class="post-header">
+        <div class="post-h">Post a Free Ad</div>
+        <div class="post-sub-txt">Reach buyers across Zimbabwe in minutes</div>
+      </div>
+      <div class="steps-bar" id="stepsBar">
+        ${[1, 2, 3, 4].map(n => `<div class="sdot ${n < postState.step ? 'done' : n === postState.step ? 'cur' : ''}"></div>`).join('')}
+      </div>
+      <div class="form-wrap" id="postBody">${renderPostStep()}</div>
+    </div>`;
+  }
+
+  function renderPostStep() {
+    const s = postState;
+    if (s.step === 1) return `
+      <div class="fg">
+        <div class="fl">Category</div>
+        <div class="cat-3">
+          ${CATEGORIES.map(c => `
+            <div class="cat-opt ${s.cat === c.id ? 'sel' : ''}" onclick="H._post.setCat('${c.id}')">
+              <div style="font-size:22px">${c.icon}</div>
+              <div class="cat-opt-label">${c.name}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="fg"><div class="fl">Title</div>
+        <input class="fi" id="postTitle" value="${H.escHtml(s.title)}" placeholder="e.g. 3 Bedroom Flat in Avondale" maxlength="80">
+      </div>
+      <div class="fg"><div class="fl">Description</div>
+        <textarea class="fi" rows="4" id="postDesc" placeholder="Describe what you're selling · condition, features, why you're selling..." maxlength="2000">${H.escHtml(s.desc)}</textarea>
+      </div>
+      <div class="step-btns"><button class="btn-next" onclick="H._post.next()">Continue →</button></div>`;
+
+    if (s.step === 2) return `
+      <div class="fg"><div class="fl">Price</div>
+        ${H.state.freeOnly
+          ? `<div class="fi" style="color:var(--sub);cursor:default;background:var(--bg2)">Free / Negotiable (set by platform)</div><input type="hidden" id="priceInput" value="0">`
+          : `<div class="price-row">
+              <input class="fi" style="flex:1" type="number" placeholder="0" id="priceInput" value="${H.escHtml(s.price)}" min="0">
+              <div class="cur-toggle">
+                <button class="cur ${s.currency === 'USD' ? 'on' : ''}" onclick="H._post.setCur('USD')">USD</button>
+                <button class="cur ${s.currency === 'ZiG' ? 'on' : ''}" onclick="H._post.setCur('ZiG')">ZiG</button>
+              </div>
+            </div>`
+        }
+      </div>
+      <div class="fg"><div class="fl">Province</div>
+        <select class="fi" id="provinceSel" onchange="H._post.onProv(this.value)">
+          ${PROVINCES.map(p => `<option ${s.prov === p ? 'selected' : ''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><div class="fl">City / Town</div>
+        <select class="fi" id="citySel">
+          ${(CITIES_BY_PROV[s.prov] || []).map(c => `<option ${s.city === c ? 'selected' : ''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><div class="fl">Suburb / Area (optional)</div>
+        <input class="fi" id="suburbIn" value="${H.escHtml(s.suburb)}" placeholder="e.g. Avondale West">
+      </div>
+      <div class="step-btns">
+        <button class="btn-prev" onclick="H._post.prev()">← Back</button>
+        <button class="btn-next" onclick="H._post.next()">Continue →</button>
+      </div>`;
+
+    if (s.step === 3) return `
+      <div class="fg">
+        <div class="fl">Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--sub2)">(up to 8 · first is the cover)</span></div>
+        ${H.state.allowImageUploads === false
+          ? `<div style="padding:18px;background:var(--bg2);border-radius:12px;text-align:center;color:var(--sub);font-size:13px;border:1px dashed var(--border)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Photo uploads are currently disabled by the admin.</div>`
+          : `<label class="img-upload-zone" for="photoFile">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <div class="img-upload-title">Tap to add photos</div>
+              <div class="img-upload-sub">JPG, PNG · Max 8 photos · auto-compressed</div>
+            </label>
+            <input type="file" id="photoFile" accept="image/*" multiple capture="environment" style="display:none" onchange="H._post.onPhotos(event)">
+            <div class="photo-grid" id="photoGrid">${renderPhotoGrid()}</div>`
+        }
+      </div>
+      <div class="tip-box">
+        <div class="tip-title"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Photos sell 3× faster</div>
+        <div class="tip-body">Listings with 5+ clear photos in good lighting get 3× more enquiries.</div>
+      </div>
+      <div class="step-btns">
+        <button class="btn-prev" onclick="H._post.prev()">← Back</button>
+        <button class="btn-next" onclick="H._post.next()">Preview →</button>
+      </div>`;
+
+    if (s.step === 4) return `
+      <div class="preview-card">
+        <div class="preview-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ad Preview</div>
+        <div class="preview-title">${H.escHtml(s.title || 'Untitled')}</div>
+        <div class="preview-price">${H.escHtml(H.fmtPrice(s.price, s.currency))}</div>
+        <div class="preview-meta"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${H.escHtml(s.suburb || s.city)}, ${H.escHtml(s.prov)} · ${(CATEGORIES.find(c => c.id === s.cat) || {}).name || 'Other'} · ${s.photos.length} photo${s.photos.length === 1 ? '' : 's'}</div>
+      </div>
+      <div class="tip-box">
+        <div class="tip-title"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>Listing Rules</div>
+        <div class="tip-body">By posting you confirm this item is legal, you own it, and the photos are real. Scam listings result in account suspension.</div>
+      </div>
+      <div class="step-btns">
+        <button class="btn-prev" onclick="H._post.prev()">← Back</button>
+        <button class="btn-submit" onclick="H._post.submit()">Post Ad →</button>
+      </div>`;
+  }
+
+  function renderPhotoGrid() {
+    return postState.photos.map((p, i) =>
+      `<div class="photo-thumb"><img src="${p}"><button class="rm" onclick="H._post.removePhoto(${i})">×</button></div>`
+    ).join('');
+  }
+
+  function refreshBody() {
+    document.getElementById('postBody').innerHTML = renderPostStep();
+  }
+
+  function refreshSteps() {
+    const bar = document.getElementById('stepsBar');
+    if (bar) bar.innerHTML = [1, 2, 3, 4].map(n =>
+      `<div class="sdot ${n < postState.step ? 'done' : n === postState.step ? 'cur' : ''}"></div>`).join('');
+  }
+
+  // Namespace for onclick calls
+  H._post = {
+    setCat(c)    { if(c==='jobs'){H.openInner('PostJob');return;} postState.cat = c; refreshBody(); },
+    setCur(c)    { postState.currency = c; refreshBody(); },
+    onProv(p)    { postState.prov = p; postState.city = CITIES_BY_PROV[p][0]; refreshBody(); },
+    removePhoto(i) { postState.photos.splice(i, 1); document.getElementById('photoGrid').innerHTML = renderPhotoGrid(); },
+    onPhotos(e)  {
+      if (H._post._compressing) return;
+      const ALLOWED = ['image/jpeg','image/png','image/gif','image/webp'];
+      const MAX_BYTES = 5 * 1024 * 1024;
+      const files = Array.from(e.target.files || []);
+      const remaining = 8 - postState.photos.length;
+      let rejected = 0;
+      const valid = [];
+      files.slice(0, remaining).forEach(f => {
+        if (!ALLOWED.includes(f.type)) { rejected++; return; }
+        if (f.size > MAX_BYTES) { rejected++; return; }
+        valid.push(f);
+      });
+      if (rejected) H.toast(rejected + ' photo(s) skipped — use JPG/PNG under 5 MB', 4000, true);
+      e.target.value = '';
+      if (!valid.length) return;
+
+      // Show loading state
+      H._post._compressing = true;
+      const zone = document.querySelector('.img-upload-zone');
+      const zoneTitle = zone && zone.querySelector('.img-upload-title');
+      const origTitle = zoneTitle ? zoneTitle.textContent : null;
+      if (zone) zone.style.pointerEvents = 'none';
+      if (zoneTitle) zoneTitle.textContent = 'Processing…';
+
+      Promise.all(valid.map(f => H.compressImage(f, 1200, 0.78))).then(results => {
+        results.forEach(d => postState.photos.push(d));
+        document.getElementById('photoGrid').innerHTML = renderPhotoGrid();
+      }).finally(() => {
+        H._post._compressing = false;
+        if (zone) zone.style.pointerEvents = '';
+        if (zoneTitle && origTitle !== null) zoneTitle.textContent = origTitle;
+      });
+    },
+    next() {
+      const s = postState;
+      if (s.step === 1) {
+        s.title = document.getElementById('postTitle').value.trim();
+        s.desc  = document.getElementById('postDesc').value.trim();
+        if (!s.cat)               { H.toast('Pick a category'); return; }
+        if (s.title.length < 5)   { H.toast('Title needs at least 5 characters'); return; }
+        if (s.desc.length < 10)   { H.toast('Description needs at least 10 characters'); return; }
+      } else if (s.step === 2) {
+        s.price  = document.getElementById('priceInput').value;
+        s.prov   = document.getElementById('provinceSel').value;
+        s.city   = document.getElementById('citySel').value;
+        s.suburb = document.getElementById('suburbIn').value.trim();
+        if (!H.state.freeOnly && (!s.price || Number(s.price) <= 0)) { H.toast('Enter a valid price'); return; }
+        if (H.state.freeOnly) s.price = '0';
+      } else if (s.step === 3) {
+        if (H.state.allowImageUploads !== false && !s.photos.length) { H.toast('Add at least one photo'); return; }
+      }
+      s.step++;
+      refreshSteps();
+      refreshBody();
+    },
+    prev() {
+      if (postState.step > 1) { postState.step--; refreshSteps(); refreshBody(); }
+    },
+    submit() {
+      if (H.checkBan && H.checkBan()) return;
+      const s = postState;
+
+      // Re-validate all required fields before posting
+      if (!s.title || !s.title.trim()) { H.toast('Please add a title for your listing'); return; }
+      if (!H.state.freeOnly && (s.price === '' || s.price === null || s.price === undefined || isNaN(Number(s.price)) || Number(s.price) < 0)) { H.toast('Please enter a valid price'); return; }
+      if (!s.cat) { H.toast('Please select a category'); return; }
+      if (!s.desc || !s.desc.trim()) { H.toast('Please add a description'); return; }
+      if (H.state.allowImageUploads !== false && !s.photos.length) { H.toast('Please add at least one photo'); return; }
+
+      const u = H.currentUser();
+      const needsApproval = !!(H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified));
+      const l = {
+        id: H.uid(), sellerId: u.id, sellerName: u.name || '', sellerPhone: u.phone || '', title: s.title, desc: s.desc,
+        price: s.price, currency: s.currency, cat: s.cat,
+        prov: s.prov, city: s.city, suburb: s.suburb,
+        photos: s.photos, createdAt: Date.now(),
+        status: needsApproval ? 'pending' : 'active',
+        views: 0
+      };
+      H.state.listings.unshift(l);
+      H.saveState();
+      if (typeof H.saveListingToCloud === "function") H.saveListingToCloud(l);
+      if (needsApproval) {
+        H.toast('Ad submitted! It will go live after admin review.', 5000);
+        H.openInner('MyListings');
+      } else {
+        H.toast('Your ad is live!');
+        H.navTo('Home', document.querySelector('[data-nav="Home"]'));
+      }
+    }
+  };
+
+  H.compressImage = function compressImage(file, maxDim = 1200, q = 0.8) {
+    return new Promise(res => {
+      const r = new FileReader();
+      r.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else if (h > maxDim)     { w = Math.round(w * maxDim / h); h = maxDim; }
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          res(c.toDataURL('image/jpeg', q));
+        };
+        img.src = ev.target.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }
+
+})(window.H);
+
 ;/* === www/js/detail.js === */
 /*!
  * PaMarket — Zimbabwe's Free Marketplace
@@ -3764,275 +4033,6 @@ H.init();
 
 })(window.H);
 
-;/* === www/js/post.js === */
-/*!
- * PaMarket — Zimbabwe's Free Marketplace
- * © 2026 PaMarket. All rights reserved.
- * Unauthorised copying, modification, distribution or use of this
- * software without written permission from the owner is strictly prohibited.
- */
-'use strict';
-(function (H) {
-  const pages = H.pages;
-  
-  const { CATEGORIES, PROVINCES, CITIES_BY_PROV } = H;
-
-  let postState = {};
-
-  pages.Post = function () {
-    if (!H.currentUser()) {
-      return `<div class="page active">${H.innerTopbar('Post a Listing')}<div style="padding: 20px;">${H.emptyState('Sign In Required', 'Sign in to post listings and reach millions of buyers.', 'Sign In', "H.requireAuth('Sign in to post listings')")}</div></div>`;
-    }
-    postState = {
-      step: 1, cat: null, title: '', desc: '', price: '',
-      currency: 'USD', prov: PROVINCES[0],
-      city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: []
-    };
-    return renderPostShell();
-  };
-
-  function renderPostShell() {
-    return `<div class="page active">
-      <div class="post-header">
-        <div class="post-h">Post a Free Ad</div>
-        <div class="post-sub-txt">Reach buyers across Zimbabwe in minutes</div>
-      </div>
-      <div class="steps-bar" id="stepsBar">
-        ${[1, 2, 3, 4].map(n => `<div class="sdot ${n < postState.step ? 'done' : n === postState.step ? 'cur' : ''}"></div>`).join('')}
-      </div>
-      <div class="form-wrap" id="postBody">${renderPostStep()}</div>
-    </div>`;
-  }
-
-  function renderPostStep() {
-    const s = postState;
-    if (s.step === 1) return `
-      <div class="fg">
-        <div class="fl">Category</div>
-        <div class="cat-3">
-          ${CATEGORIES.map(c => `
-            <div class="cat-opt ${s.cat === c.id ? 'sel' : ''}" onclick="H._post.setCat('${c.id}')">
-              <div style="font-size:22px">${c.icon}</div>
-              <div class="cat-opt-label">${c.name}</div>
-            </div>`).join('')}
-        </div>
-      </div>
-      <div class="fg"><div class="fl">Title</div>
-        <input class="fi" id="postTitle" value="${H.escHtml(s.title)}" placeholder="e.g. 3 Bedroom Flat in Avondale" maxlength="80">
-      </div>
-      <div class="fg"><div class="fl">Description</div>
-        <textarea class="fi" rows="4" id="postDesc" placeholder="Describe what you're selling · condition, features, why you're selling..." maxlength="2000">${H.escHtml(s.desc)}</textarea>
-      </div>
-      <div class="step-btns"><button class="btn-next" onclick="H._post.next()">Continue →</button></div>`;
-
-    if (s.step === 2) return `
-      <div class="fg"><div class="fl">Price</div>
-        ${H.state.freeOnly
-          ? `<div class="fi" style="color:var(--sub);cursor:default;background:var(--bg2)">Free / Negotiable (set by platform)</div><input type="hidden" id="priceInput" value="0">`
-          : `<div class="price-row">
-              <input class="fi" style="flex:1" type="number" placeholder="0" id="priceInput" value="${H.escHtml(s.price)}" min="0">
-              <div class="cur-toggle">
-                <button class="cur ${s.currency === 'USD' ? 'on' : ''}" onclick="H._post.setCur('USD')">USD</button>
-                <button class="cur ${s.currency === 'ZiG' ? 'on' : ''}" onclick="H._post.setCur('ZiG')">ZiG</button>
-              </div>
-            </div>`
-        }
-      </div>
-      <div class="fg"><div class="fl">Province</div>
-        <select class="fi" id="provinceSel" onchange="H._post.onProv(this.value)">
-          ${PROVINCES.map(p => `<option ${s.prov === p ? 'selected' : ''}>${p}</option>`).join('')}
-        </select>
-      </div>
-      <div class="fg"><div class="fl">City / Town</div>
-        <select class="fi" id="citySel">
-          ${(CITIES_BY_PROV[s.prov] || []).map(c => `<option ${s.city === c ? 'selected' : ''}>${c}</option>`).join('')}
-        </select>
-      </div>
-      <div class="fg"><div class="fl">Suburb / Area (optional)</div>
-        <input class="fi" id="suburbIn" value="${H.escHtml(s.suburb)}" placeholder="e.g. Avondale West">
-      </div>
-      <div class="step-btns">
-        <button class="btn-prev" onclick="H._post.prev()">← Back</button>
-        <button class="btn-next" onclick="H._post.next()">Continue →</button>
-      </div>`;
-
-    if (s.step === 3) return `
-      <div class="fg">
-        <div class="fl">Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--sub2)">(up to 8 · first is the cover)</span></div>
-        ${H.state.allowImageUploads === false
-          ? `<div style="padding:18px;background:var(--bg2);border-radius:12px;text-align:center;color:var(--sub);font-size:13px;border:1px dashed var(--border)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Photo uploads are currently disabled by the admin.</div>`
-          : `<label class="img-upload-zone" for="photoFile">
-              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <div class="img-upload-title">Tap to add photos</div>
-              <div class="img-upload-sub">JPG, PNG · Max 8 photos · auto-compressed</div>
-            </label>
-            <input type="file" id="photoFile" accept="image/*" multiple capture="environment" style="display:none" onchange="H._post.onPhotos(event)">
-            <div class="photo-grid" id="photoGrid">${renderPhotoGrid()}</div>`
-        }
-      </div>
-      <div class="tip-box">
-        <div class="tip-title"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Photos sell 3× faster</div>
-        <div class="tip-body">Listings with 5+ clear photos in good lighting get 3× more enquiries.</div>
-      </div>
-      <div class="step-btns">
-        <button class="btn-prev" onclick="H._post.prev()">← Back</button>
-        <button class="btn-next" onclick="H._post.next()">Preview →</button>
-      </div>`;
-
-    if (s.step === 4) return `
-      <div class="preview-card">
-        <div class="preview-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ad Preview</div>
-        <div class="preview-title">${H.escHtml(s.title || 'Untitled')}</div>
-        <div class="preview-price">${H.escHtml(H.fmtPrice(s.price, s.currency))}</div>
-        <div class="preview-meta"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${H.escHtml(s.suburb || s.city)}, ${H.escHtml(s.prov)} · ${(CATEGORIES.find(c => c.id === s.cat) || {}).name || 'Other'} · ${s.photos.length} photo${s.photos.length === 1 ? '' : 's'}</div>
-      </div>
-      <div class="tip-box">
-        <div class="tip-title"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>Listing Rules</div>
-        <div class="tip-body">By posting you confirm this item is legal, you own it, and the photos are real. Scam listings result in account suspension.</div>
-      </div>
-      <div class="step-btns">
-        <button class="btn-prev" onclick="H._post.prev()">← Back</button>
-        <button class="btn-submit" onclick="H._post.submit()">Post Ad →</button>
-      </div>`;
-  }
-
-  function renderPhotoGrid() {
-    return postState.photos.map((p, i) =>
-      `<div class="photo-thumb"><img src="${p}"><button class="rm" onclick="H._post.removePhoto(${i})">×</button></div>`
-    ).join('');
-  }
-
-  function refreshBody() {
-    document.getElementById('postBody').innerHTML = renderPostStep();
-  }
-
-  function refreshSteps() {
-    const bar = document.getElementById('stepsBar');
-    if (bar) bar.innerHTML = [1, 2, 3, 4].map(n =>
-      `<div class="sdot ${n < postState.step ? 'done' : n === postState.step ? 'cur' : ''}"></div>`).join('');
-  }
-
-  // Namespace for onclick calls
-  H._post = {
-    setCat(c)    { if(c==='jobs'){H.openInner('PostJob');return;} postState.cat = c; refreshBody(); },
-    setCur(c)    { postState.currency = c; refreshBody(); },
-    onProv(p)    { postState.prov = p; postState.city = CITIES_BY_PROV[p][0]; refreshBody(); },
-    removePhoto(i) { postState.photos.splice(i, 1); document.getElementById('photoGrid').innerHTML = renderPhotoGrid(); },
-    onPhotos(e)  {
-      if (H._post._compressing) return;
-      const ALLOWED = ['image/jpeg','image/png','image/gif','image/webp'];
-      const MAX_BYTES = 5 * 1024 * 1024;
-      const files = Array.from(e.target.files || []);
-      const remaining = 8 - postState.photos.length;
-      let rejected = 0;
-      const valid = [];
-      files.slice(0, remaining).forEach(f => {
-        if (!ALLOWED.includes(f.type)) { rejected++; return; }
-        if (f.size > MAX_BYTES) { rejected++; return; }
-        valid.push(f);
-      });
-      if (rejected) H.toast(rejected + ' photo(s) skipped — use JPG/PNG under 5 MB', 4000, true);
-      e.target.value = '';
-      if (!valid.length) return;
-
-      // Show loading state
-      H._post._compressing = true;
-      const zone = document.querySelector('.img-upload-zone');
-      const zoneTitle = zone && zone.querySelector('.img-upload-title');
-      const origTitle = zoneTitle ? zoneTitle.textContent : null;
-      if (zone) zone.style.pointerEvents = 'none';
-      if (zoneTitle) zoneTitle.textContent = 'Processing…';
-
-      Promise.all(valid.map(f => H.compressImage(f, 1200, 0.78))).then(results => {
-        results.forEach(d => postState.photos.push(d));
-        document.getElementById('photoGrid').innerHTML = renderPhotoGrid();
-      }).finally(() => {
-        H._post._compressing = false;
-        if (zone) zone.style.pointerEvents = '';
-        if (zoneTitle && origTitle !== null) zoneTitle.textContent = origTitle;
-      });
-    },
-    next() {
-      const s = postState;
-      if (s.step === 1) {
-        s.title = document.getElementById('postTitle').value.trim();
-        s.desc  = document.getElementById('postDesc').value.trim();
-        if (!s.cat)               { H.toast('Pick a category'); return; }
-        if (s.title.length < 5)   { H.toast('Title needs at least 5 characters'); return; }
-        if (s.desc.length < 10)   { H.toast('Description needs at least 10 characters'); return; }
-      } else if (s.step === 2) {
-        s.price  = document.getElementById('priceInput').value;
-        s.prov   = document.getElementById('provinceSel').value;
-        s.city   = document.getElementById('citySel').value;
-        s.suburb = document.getElementById('suburbIn').value.trim();
-        if (!H.state.freeOnly && (!s.price || Number(s.price) <= 0)) { H.toast('Enter a valid price'); return; }
-        if (H.state.freeOnly) s.price = '0';
-      } else if (s.step === 3) {
-        if (H.state.allowImageUploads !== false && !s.photos.length) { H.toast('Add at least one photo'); return; }
-      }
-      s.step++;
-      refreshSteps();
-      refreshBody();
-    },
-    prev() {
-      if (postState.step > 1) { postState.step--; refreshSteps(); refreshBody(); }
-    },
-    submit() {
-      if (H.checkBan && H.checkBan()) return;
-      const s = postState;
-
-      // Re-validate all required fields before posting
-      if (!s.title || !s.title.trim()) { H.toast('Please add a title for your listing'); return; }
-      if (!H.state.freeOnly && (s.price === '' || s.price === null || s.price === undefined || isNaN(Number(s.price)) || Number(s.price) < 0)) { H.toast('Please enter a valid price'); return; }
-      if (!s.cat) { H.toast('Please select a category'); return; }
-      if (!s.desc || !s.desc.trim()) { H.toast('Please add a description'); return; }
-      if (H.state.allowImageUploads !== false && !s.photos.length) { H.toast('Please add at least one photo'); return; }
-
-      const u = H.currentUser();
-      const needsApproval = !!(H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified));
-      const l = {
-        id: H.uid(), sellerId: u.id, sellerName: u.name || '', sellerPhone: u.phone || '', title: s.title, desc: s.desc,
-        price: s.price, currency: s.currency, cat: s.cat,
-        prov: s.prov, city: s.city, suburb: s.suburb,
-        photos: s.photos, createdAt: Date.now(),
-        status: needsApproval ? 'pending' : 'active',
-        views: 0
-      };
-      H.state.listings.unshift(l);
-      H.saveState();
-      if (typeof H.saveListingToCloud === "function") H.saveListingToCloud(l);
-      if (needsApproval) {
-        H.toast('Ad submitted! It will go live after admin review.', 5000);
-        H.openInner('MyListings');
-      } else {
-        H.toast('Your ad is live!');
-        H.navTo('Home', document.querySelector('[data-nav="Home"]'));
-      }
-    }
-  };
-
-  H.compressImage = function compressImage(file, maxDim = 1200, q = 0.8) {
-    return new Promise(res => {
-      const r = new FileReader();
-      r.onload = ev => {
-        const img = new Image();
-        img.onload = () => {
-          let w = img.width, h = img.height;
-          if (w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
-          else if (h > maxDim)     { w = Math.round(w * maxDim / h); h = maxDim; }
-          const c = document.createElement('canvas');
-          c.width = w; c.height = h;
-          c.getContext('2d').drawImage(img, 0, 0, w, h);
-          res(c.toDataURL('image/jpeg', q));
-        };
-        img.src = ev.target.result;
-      };
-      r.readAsDataURL(file);
-    });
-  }
-
-})(window.H);
-
 ;/* === www/js/messages.js === */
 /*!
  * PaMarket — Zimbabwe's Free Marketplace
@@ -4167,8 +4167,13 @@ H.init();
     avaEl.className = 'chat-row-av';
     avaEl.innerHTML = avatarHtml;
     const bubble = document.createElement('div');
-    bubble.className = 'chat-bubble them';
-    bubble.innerHTML = escHtml(m.text) + '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>';
+    bubble.className = 'chat-bubble them' + (m.image ? ' chat-bubble-img' : '');
+    if (m.image) {
+      bubble.innerHTML = '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">';
+    } else {
+      bubble.innerHTML = escHtml(m.text);
+    }
+    bubble.innerHTML += '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>';
     row.appendChild(avaEl);
     row.appendChild(bubble);
     thread.appendChild(row);
@@ -4266,17 +4271,20 @@ H.init();
 
     const msgs = c.messages.map(function(m) {
       const mine = m.from === u.id;
+      const content = m.image
+        ? '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">'
+        : escHtml(m.text);
       if (mine) {
         return '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
-          + '<div class="chat-bubble me">'
-          + escHtml(m.text)
+          + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
+          + content
           + '<div class="chat-bubble-meta" style="text-align:right">' + timeAgo(m.t) + '</div>'
           + '</div></div>';
       }
       return '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
         + '<div class="chat-row-av">' + otherAvatar + '</div>'
-        + '<div class="chat-bubble them">'
-        + escHtml(m.text)
+        + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
+        + content
         + '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>'
         + '</div></div>';
     }).join('');
@@ -4301,9 +4309,13 @@ H.init();
       + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">No messages yet. Say hello!</div>')
       + '</div>'
       + '<div class="chat-input-bar">'
-      + '<input id="chatIn" type="text" inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Type a message…" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}" oninput="H._chatInputChange&&H._chatInputChange()">'
+      + '<button class="chat-attach-btn" onclick="H._chat.openAttach()" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
+      + '<input id="chatIn" type="text" inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Type a message…" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}">'
       + '<button class="chat-send" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
-      + '</div></div>';
+      + '</div>'
+      + '<input type="file" id="chatImgGallery" accept="image/*" style="display:none" onchange="H._chat.handleImageFile(this,false)">'
+      + '<input type="file" id="chatImgCamera" accept="image/*" capture="environment" style="display:none" onchange="H._chat.handleImageFile(this,true)">'
+      + '</div>';
   };
 
   pages.Chat_after = function () {
@@ -4520,6 +4532,121 @@ H.init();
 
   // syncConversations is defined in app.js (cloud-aware version)
 
+
+  H._chat = H._chat || {};
+
+  H._chat.openAttach = function() {
+    const sheet = document.getElementById('actionSheet');
+    const bg    = document.getElementById('sheetBg');
+    if (!sheet || !bg) return;
+    sheet.innerHTML =
+      '<div class="sheet-header">Send a photo</div>'
+      + '<button class="sheet-item" onclick="H.closeSheet();setTimeout(()=>document.getElementById(\'chatImgCamera\').click(),120)">'
+      + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
+      + '<span class="sheet-label">Take Photo</span></button>'
+      + '<button class="sheet-item" onclick="H.closeSheet();setTimeout(()=>document.getElementById(\'chatImgGallery\').click(),120)">'
+      + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+      + '<span class="sheet-label">Choose from Gallery</span></button>'
+      + '<button class="sheet-close" onclick="H.closeSheet()">Cancel</button>';
+    sheet.classList.add('open');
+    bg.classList.add('open');
+  };
+
+  H._chat.handleImageFile = async function(input) {
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    const c = conversations().find(function(x){ return x.id === H._activeChat; });
+    if (!c) return;
+    const u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in to send photos'); return; }
+    H.toast('Sending photo…');
+    try {
+      // Compress to max 900px, 75% quality
+      const dataUrl = await H.compressImage(file, 900, 0.75);
+      // Try Supabase Storage first; fall back to base64 inline
+      let imageUrl = dataUrl;
+      try {
+        const sb = window.supabase;
+        if (sb && typeof sb.storage === 'object') {
+          const ext  = 'jpg';
+          const path = u.id + '/' + H.uid() + '.' + ext;
+          const blob = await (await fetch(dataUrl)).blob();
+          const { data: upData, error: upErr } = await sb.storage.from('chat-images').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+          if (!upErr && upData) {
+            const { data: urlData } = sb.storage.from('chat-images').getPublicUrl(path);
+            if (urlData && urlData.publicUrl) imageUrl = urlData.publicUrl;
+          }
+        }
+      } catch(e) { /* storage not configured — use base64 */ }
+      await H._chat.sendImageMessage(c, u, imageUrl);
+    } catch(e) {
+      console.warn('Image send error:', e);
+      H.toast('Could not send photo. Please try again.');
+    }
+  };
+
+  H._chat.sendImageMessage = async function(c, u, imageUrl) {
+    var msgId = H.uid();
+    var msgT  = Date.now();
+    var msg   = { id: msgId, from: u.id, senderName: u.name || '', text: '[Photo]', image: imageUrl, t: msgT, read: false };
+    c.messages.push(msg);
+    H.saveState();
+    // Append image bubble immediately
+    const thread = document.getElementById('chatThread');
+    if (thread) {
+      const row = document.createElement('div');
+      row.className = 'chat-msg-row me';
+      row.setAttribute('data-msg-id', msgId);
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble me chat-bubble-img';
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.className = 'chat-img';
+      img.onclick = function() { H._chat.viewImg(imageUrl); };
+      bubble.appendChild(img);
+      const meta = document.createElement('div');
+      meta.className = 'chat-bubble-meta';
+      meta.style.textAlign = 'right';
+      meta.textContent = 'just now';
+      bubble.appendChild(meta);
+      row.appendChild(bubble);
+      thread.appendChild(row);
+      thread.scrollTop = thread.scrollHeight;
+    }
+    // Persist to cloud
+    try {
+      if (window.supabase && typeof window.supabase.from === 'function') {
+        await window.supabase.from('messages').insert({
+          id: msgId, conversation_id: c.id,
+          sender_id: u.id, sender_name: u.name || '',
+          text: '[Photo]', image_url: imageUrl,
+          created_at: new Date(msgT).toISOString(), read: false
+        });
+      }
+      var otherId = c.members.find(function(m){ return m !== u.id; });
+      if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Photo', (u.name || 'Someone') + ' sent you a photo', 'message');
+    } catch(e) { console.warn('Image cloud sync:', e.message); }
+  };
+
+  H._chat.viewImg = function(url) {
+    // Full-screen image viewer
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:16px';
+    var img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:8px';
+    var close = document.createElement('button');
+    close.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    close.style.cssText = 'position:absolute;top:env(safe-area-inset-top,16px);right:16px;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation';
+    var dismiss = function() { document.body.removeChild(overlay); };
+    overlay.onclick = dismiss;
+    close.onclick   = dismiss;
+    close.addEventListener('click', function(e){ e.stopPropagation(); dismiss(); });
+    overlay.appendChild(img);
+    overlay.appendChild(close);
+    document.body.appendChild(overlay);
+  };
 
   H.sendChat = async function () {
     if (H.checkBan && H.checkBan()) return;
@@ -5281,1082 +5408,1888 @@ H.init();
 
 })(window.H);
 
-;/* === www/js/account.js === */
-/*!
- * PaMarket — Zimbabwe's Free Marketplace
- * © 2026 PaMarket. All rights reserved.
- * Unauthorised copying, modification, distribution or use of this
- * software without written permission from the owner is strictly prohibited.
- */
+;/* === www/js/saved.js === */
 'use strict';
 (function (H) {
   const pages = H.pages;
+  const state = H.state;
+  const { currentUser, escHtml, timeAgo, uid, toast, modal,
+          innerTopbar, emptyState, openInner, goBack, renderPage,
+          saveState, fmtPrice, initials, renderListCard, navTo,
+          pushNotif, CATEGORIES } = H;
 
-  pages.Account = function () {
-    const u = H.currentUser();
-    if (!u) return H.guestAccountPage();
-    return pages.AccountHub();
-  };
+  pages.Saved = function () {
+    const u    = currentUser();
+    const ids  = state.saves[u.id] || [];
 
-  // ── Account Hub ───────────────────────────────────────────
-  // A full-screen version of the account centre, reachable via
-  // H.openInner('AccountHub') if needed; the bottom-nav tab still
-  // opens the compact sheet via H.showAccountMenu().
-  pages.AccountHub = function () {
-    const u = H.currentUser();
-    if (!u) {
-      return `<div class="page active">
-        ${H.innerTopbar('Account')}
-        ${H.emptyState('Not signed in', 'Sign in to manage your account.', 'Sign In', 'H.authPage()')}
-      </div>`;
+    // Map each saved ID to either the listing object or null (deleted/not found)
+    const resolved = ids.map(id => ({ id, listing: state.listings.find(l => l.id === id) || null }));
+
+    // Helper: render a status pill for non-active listings
+    function statusPillFor(listing) {
+      if (!listing || listing.status === 'active') return '';
+      if (listing.status === 'sold')
+        return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#ef4444;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Sold</span>`;
+      if (listing.status === 'expired')
+        return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#f59e0b;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Expired</span>`;
+      // inactive or any other status
+      return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#6b7280;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Unavailable</span>`;
     }
 
-    const activeAds = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active').length;
-    const savedAds  = ((H.state.saves || {})[u.id] || []).length;
-    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
-    const unread    = H.state.conversations.reduce((n, c) =>
-      Array.isArray(c.members) && c.members.includes(u.id) ? n + (c.messages || []).filter(m => m.from !== u.id && !m.read).length : n, 0);
+    // Render a single saved entry
+    function renderEntry({ id, listing }) {
+      // Deleted listing — ghost card
+      if (!listing) {
+        return `<div style="padding:14px 16px;background:var(--card);border-radius:14px;margin:8px 16px;opacity:.5;border:1px dashed var(--border)">
+  <div style="font-size:13px;color:var(--sub)">This listing is no longer available</div>
+</div>`;
+      }
+      // Unavailable listing — greyed-out card with status pill injected
+      const isUnavailable = listing.status !== 'active';
+      const card = renderListCard(listing);
+      if (!isUnavailable) return card;
+      // Wrap with opacity and inject the status pill right after the card opens
+      const pill = statusPillFor(listing);
+      // Insert pill into the rendered card by appending it into the title line if possible,
+      // otherwise wrap the whole card with a relative-positioned overlay container
+      return `<div style="opacity:0.65;position:relative">${card}${
+        pill ? `<div style="position:absolute;top:10px;left:10px;pointer-events:none">${pill}</div>` : ''
+      }</div>`;
+    }
 
-    const row = (icon, label, page, badge) => `
-      <div onclick="H.openInner('${page}')"
-          style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent">
-        <div style="width:38px;height:38px;border-radius:12px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">${icon}</div>
-        <div style="flex:1;font-size:15px;font-weight:600;color:var(--text)">${label}</div>
-        ${badge ? `<span style="background:#F5A623;color:#1A3A8F;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800">${badge}</span>` : ''}
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>`;
-
-    return `<div class="page active">
-      ${H.innerTopbar('Account')}
-
-      <!-- Profile Hero -->
-      <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);padding:24px 20px 28px;display:flex;align-items:center;gap:16px">
-        <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px;font-weight:800;color:#fff;border:2.5px solid rgba(255,255,255,.4)">
-          ${u.avatar ? `<img src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML=H.initials('${H.escHtml(u.name||'')}')">` : H.initials(u.name)}
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${H.escHtml(u.name || 'User')}</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.8);margin-bottom:3px">${H.escHtml(u.email || '')}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.65)">${H.escHtml(u.phone || 'No phone number')}</div>
-        </div>
-        ${u.verified ? '<span style="background:#22C55E;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>' : ''}
-      </div>
-
-      <!-- Quick Stats -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border-bottom:1px solid var(--border)">
-        ${[['Active Ads', activeAds, "H.openInner('MyListings')"], ['Saved', savedAds, "H.openInner('Favorites')"], ['Messages', unread || 0, "H.navTo('Messages')"]].map(([l, v, fn]) => `
-          <div onclick="${fn}" style="padding:16px 8px;text-align:center;cursor:pointer;border-right:1px solid var(--border)">
-            <div style="font-size:22px;font-weight:800;color:#1A3A8F">${v}</div>
-            <div style="font-size:11px;color:var(--sub);font-weight:500;margin-top:2px">${l}</div>
-          </div>`).join('')}
-      </div>
-
-      <!-- Menu Rows -->
-      <div style="margin-top:12px">
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', 'My Profile', 'Profile', '')}
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>', 'My Activity', 'MyActivity', '')}
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>', 'Edit Profile', 'EditProfile', '')}
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', 'My Listings', 'MyListings', activeAds || '')}
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>', 'Saved & Favorites', 'Favorites', savedAds || '')}
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>', 'My Job Applications', 'AppliedJobs', ((H.state.applications||[]).filter(a=>a.applicantId===u.id).length || ''))}
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>', 'My Job Profile / CV', 'JobSeekerProfile', u.cv && u.cv.headline ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : '')}
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>', 'Advertisements', 'Ads', '')}
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', 'My Advertisements', 'MyAds', '')}
-      </div>
-
-      <div style="margin-top:12px">
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>', 'Settings', 'Settings', '')}
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', 'Security & Password', 'SecuritySettings', '')}
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>', 'Help & Support', 'Help', '')}
-      </div>
-
-      <div style="padding:20px 16px 36px">
-        <button onclick="H.logout()" style="width:100%;padding:14px;background:#FFF1F0;color:#EF4444;border:1.5px solid #FECACA;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">
-          Sign Out
-        </button>
-        <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--sub);line-height:1.8">
-          © ${new Date().getFullYear()} PaMarket · Made in Zimbabwe 🇿🇼<br>
-          <span style="font-size:10px;color:var(--sub2,#bbb)">All rights reserved · <span onclick="H.openInner('HelpTerms')" style="cursor:pointer;text-decoration:underline">Terms</span> · <span onclick="H.openInner('HelpPrivacy')" style="cursor:pointer;text-decoration:underline">Privacy</span></span>
-        </div>
-      </div>
-    </div>`;
-  };
-
-})(window.H = window.H || {});
-
-;/* === www/js/profile.js === */
-/*!
- * PaMarket — Zimbabwe's Free Marketplace
- * © 2026 PaMarket. All rights reserved.
- * Unauthorised copying, modification, distribution or use of this
- * software without written permission from the owner is strictly prohibited.
- */
-'use strict';
-(function (H) {
-  const pages = H.pages;
-
-  const activeCount = uid => (H.state.listings || []).filter(l => l.sellerId === uid && l.status === 'active').length;
-  const soldCount   = uid => (H.state.listings || []).filter(l => l.sellerId === uid && l.status === 'sold').length;
-
-  const IC = {
-    pencil: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/><line x1="15" y1="5" x2="19" y2="9"/></svg>',
-    shield: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-    star:   '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-    phone:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 2.1.74 3.26a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c1.16.38 2.3.61 3.26.74a2 2 0 0 1 1.72 2.03z"/></svg>',
-    idCard: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M10 14h4"/><circle cx="10" cy="17" r="1"/></svg>',
-    check:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>',
-    alert:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-  };
-
-  const starFill  = '<svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
-  const starEmpty = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
-  const stars = n => Array.from({length:5}, (_,i) => i < Math.round(n) ? starFill : starEmpty).join('');
-
-  pages.Profile = function (params) {
-    const viewId = params && params.id;
-    const u = viewId
-      ? (H.state.users || []).find(x => x.id === viewId)
-      : H.currentUser();
-
-    if (!u) return H.emptyState('Not logged in', 'Please sign in to continue', 'Sign In', "H.authPage()");
-
-    const isOwn      = !viewId || (H.currentUser() && viewId === H.currentUser().id);
-    const uPrivacy   = u.privacySettings || {};
-    const verified   = u.verified
-      ? `<span class="verified">${IC.check} Verified</span>`
-      : `<span class="unverified">${IC.alert} Not Verified</span>`;
-    const avgRating  = (u.ratings && u.ratings.length)
-      ? (u.ratings.reduce((a,b) => a+b, 0) / u.ratings.length).toFixed(1) : '0';
-    const ratingCount = u.ratings ? u.ratings.length : 0;
-    const showActivityDot = uPrivacy.showActivity === true;
+    const hasAny = resolved.length > 0;
 
     return `<div class="page active">
-      ${H.innerTopbar(isOwn ? 'My Profile' : H.escHtml(u.name))}
-      <div class="profile-hero">
-        <div class="profile-pic" style="position:relative">
-          ${u.avatar
-            ? `<img src="${u.avatar}" alt="${H.escHtml(u.name||'')}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">`
-            : `<div class="profile-initials">${H.initials(u.name)}</div>`}
-          ${showActivityDot ? `<div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid var(--card,#fff)"></div>` : ''}
-        </div>
-        <div class="profile-info">
-          <div class="profile-name">${H.escHtml(u.name || 'User')}</div>
-          <div class="profile-phone">${IC.phone} ${H.escHtml(u.phone || 'No phone')}</div>
-          <div class="profile-status">${verified}</div>
-          ${isOwn && uPrivacy.profilePublic === false ? `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:20px;font-size:11px;font-weight:700;color:#92400e"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Your profile is set to private</div>` : ''}
-        </div>
-      </div>
-
-      <div class="profile-stats">
-        <div class="stat-box"><div class="stat-val">${activeCount(u.id)}</div><div class="stat-label">Active Ads</div></div>
-        <div class="stat-box"><div class="stat-val">${avgRating}</div><div class="stat-label">Rating (${ratingCount})</div></div>
-        <div class="stat-box"><div class="stat-val">${soldCount(u.id)}</div><div class="stat-label">Sold</div></div>
-      </div>
-
-      ${isOwn ? `
-      <div class="form-wrap">
-        <button class="btn-pri" onclick="H.openInner('EditProfile')">${IC.pencil} Edit Profile</button>
-        <button class="btn-sec" onclick="H.openInner('ProfileVerify')">${IC.shield} Verify Identity</button>
-        <button class="btn-sec" onclick="H.openInner('Reviews')">${IC.star} Reviews & Ratings</button>
-      </div>` : `
-      <div class="form-wrap">
-        ${uPrivacy.allowMessages === false
-          ? `<button class="btn-pri" disabled style="opacity:0.5;cursor:not-allowed">Messaging turned off</button>`
-          : `<button class="btn-pri" onclick="H.startChatWith('${u.id}', null)">Message ${H.escHtml(u.name || 'User')}</button>`}
-        <button class="btn-sec" onclick="H.reportUser('${u.id}')">Report User</button>
-      </div>`}
-
-      <div class="section-box">
-        <div class="section-title">Account Info</div>
-        <div class="info-row"><span class="info-label">Email</span><span class="info-val">${H.escHtml(u.email || 'N/A')}</span></div>
-        <div class="info-row"><span class="info-label">Joined</span><span class="info-val">${new Date(u.joinedAt || u.createdAt || Date.now()).toLocaleDateString()}</span></div>
-        <div class="info-row"><span class="info-label">Status</span><span class="info-val">${H.escHtml(u.status || 'Active')}</span></div>
-        ${u.bio ? `<div class="info-row"><span class="info-label">Bio</span><span class="info-val">${H.escHtml(u.bio)}</span></div>` : ''}
-      </div>
-
-      <div class="section-box">
-        <div class="section-title">Active Listings</div>
-        <div class="listing-list">
-          ${(H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active').slice(0,6).map(H.renderListCard).join('')
-            || '<div style="color:var(--sub);padding:16px;font-size:13px">No active listings</div>'}
-        </div>
-      </div>
-      <div style="height:24px"></div>
-    </div>`;
-  };
-
-  pages.EditProfile = function () {
-    const u = H.currentUser();
-    if (!u) return H.emptyState('Not logged in', 'Please sign in');
-
-    return `<div class="page active">
-      ${H.innerTopbar('Edit Profile')}
-      <div class="form-wrap">
-        <div style="display:flex;flex-direction:column;align-items:center;padding:8px 0 16px">
-          <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#1A3A8F;margin-bottom:10px;border:2.5px solid #1A3A8F22">
-            ${u.avatar ? `<img id="avatarPreview" src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">` : `<span id="avatarPreview">${H.initials(u.name||'')}</span>`}
+      <div class="app-header" style="padding-bottom:16px">
+        <div class="app-header-row">
+          <div class="logo">Saved <em>Ads</em></div>
+          <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.6);padding:4px 10px;background:rgba(255,255,255,.1);border-radius:20px">
+            ${ids.length} saved
           </div>
-          <label for="profilePicFile" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer;background:#1A3A8F14;padding:7px 16px;border-radius:20px">Change Photo</label>
-          <input type="file" id="profilePicFile" accept="image/*" capture="user" style="display:none" onchange="H._editProfile.onPicChange(event)">
         </div>
-        <div class="fg"><div class="fl">Full Name <span style="color:#EF4444">*</span></div>
-          <input class="fi" id="editName" value="${H.escHtml(u.name || '')}" placeholder="Your full name" maxlength="60">
-        </div>
-        <div class="fg"><div class="fl">Phone Number</div>
-          <input class="fi" id="editPhone" value="${H.escHtml(u.phone || '')}" placeholder="+263 77 123 4567" type="tel" maxlength="16">
-          <div style="font-size:11px;color:var(--sub);margin-top:4px">International format, e.g. +263 77 123 4567</div>
-        </div>
-        <div class="fg"><div class="fl">Email</div>
-          <input class="fi" value="${H.escHtml(u.email || '')}" disabled style="opacity:.6;cursor:not-allowed">
-          <div style="font-size:11px;color:var(--sub);margin-top:4px">Email cannot be changed here</div>
-        </div>
-        <div class="fg"><div class="fl">Bio</div>
-          <textarea class="fi" rows="3" id="editBio" placeholder="Tell buyers about yourself..." maxlength="200">${H.escHtml(u.bio || '')}</textarea>
-        </div>
-        <div id="editSaveMsg" style="display:none;font-size:13px;color:#16A34A;text-align:center;padding:8px 0;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#16A34A" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Saved!</div>
-        <div id="editErrMsg"  style="display:none;font-size:13px;color:#EF4444;text-align:center;padding:8px 0"></div>
-        <div class="btn-group">
-          <button id="editSaveBtn" class="btn-pri" onclick="H._editProfile.save()">Save Changes</button>
-          <button class="btn-sec" onclick="H.openInner('ChangePassword')">Change Password</button>
-          <button class="btn-sec" onclick="H.goBack()">Cancel</button>
-        </div>
-        <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px">
-          <div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Danger Zone</div>
-          <button onclick="H._editProfile.deleteCV()" style="width:100%;padding:13px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">Delete My CV / Candidate Profile</button>
-          <button onclick="H._editProfile.deleteAccount()" style="width:100%;padding:13px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#DC2626" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Delete Account</button>
-        </div>
+      </div>
+      <div class="listing-list">
+        ${hasAny
+          ? resolved.map(renderEntry).join('')
+          : emptyState('Nothing saved yet', 'Tap the ♡ on any listing to save it for later', 'Browse Listings', "H.navTo('Browse',document.querySelector('[data-nav=Browse]'))")}
       </div>
     </div>`;
   };
 
-  pages.EditProfile_after = function () {
-    H._editProfile = {
-      onPicChange: async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 3 * 1024 * 1024) { H.toast('Photo must be under 3 MB'); return; }
-        const compressed = await H.compressImage(file, 400, 0.82);
-        const u = H.currentUser();
-        u.avatar = compressed;
-        H.saveState();
-        const prev = document.getElementById('avatarPreview');
-        if (prev) { prev.outerHTML = `<img id="avatarPreview" src="${compressed}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g,"\\'")}'))">`; }
-      },
-      save: async () => {
-        const u = H.currentUser();
-        const name  = (document.getElementById('editName')?.value || '').trim();
-        const phone = (document.getElementById('editPhone')?.value || '').trim();
-        const bio   = (document.getElementById('editBio')?.value || '').trim();
-        const btn   = document.getElementById('editSaveBtn');
-        const errEl = document.getElementById('editErrMsg');
-        const okEl  = document.getElementById('editSaveMsg');
-        const showErr = (msg) => { if(errEl){errEl.textContent=msg;errEl.style.display='';} H.toast(msg); };
-        if (!name || name.length < 2) { showErr('Please enter your full name (min 2 characters)'); return; }
-        if (phone && !/^\+?[0-9\s\-]{7,16}$/.test(phone)) { showErr('Phone number looks invalid. Use format: +263 77 123 4567'); return; }
-        if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
-        if (errEl) errEl.style.display = 'none';
-        u.name  = name;
-        if (phone) u.phone = phone;
-        u.bio   = bio;
-        H.saveState();
-        const c = window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null;
-        if (c) {
-          const res = await c.from('profiles').upsert({ id: u.id, name: u.name, phone: u.phone || null, bio: u.bio || null, avatar: u.avatar || null, updated_at: new Date().toISOString() });
-          if (res && res.error) console.warn('Profile sync failed:', res.error.message);
-        }
-        if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
-        if (okEl) { okEl.style.display = ''; setTimeout(() => { if(okEl) okEl.style.display='none'; }, 2500); }
-        H.toast('Profile updated!');
-      },
-      deleteCV() {
-        H.modal({
-          title: 'Delete CV / Candidate Profile?',
-          body: 'This will permanently remove your professional profile and CV from PaMarket. Your listings will not be affected.',
-          confirmText: 'Delete CV',
-          cancelText: 'Cancel',
-          danger: true,
-          onConfirm() {
-            const u = H.currentUser();
-            if (!u) return;
-            delete u.cv;
-            delete u.jobTitle;
-            delete u.skills;
-            H.saveState();
-            if (window.supabase && typeof window.supabase.from === 'function') {
-              window.supabase.from('profiles').update({ cv: null, job_title: null, skills: null }, { returning: 'minimal' }).eq('id', u.id).catch(() => {});
-            }
-            H.toast('CV deleted');
-            H.renderPage('EditProfile');
-          },
-        });
-      },
-      deleteAccount() {
-        H.modal({
-          title: 'Delete Account?',
-          body: `<div style="font-size:14px;color:var(--text);line-height:1.7">
-            <p style="margin:0 0 10px;color:#DC2626;font-weight:700;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#DC2626" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> This cannot be undone.</p>
-            <p style="margin:0 0 8px">All your listings, messages, and profile data will be permanently removed.</p>
-            <p style="margin:0">Type <strong>DELETE</strong> below to confirm:</p>
-            <input id="deleteConfirmInput" class="fi" style="margin-top:10px" placeholder="Type DELETE">
-          </div>`,
-          confirmText: 'Delete My Account',
-          cancelText: 'Cancel',
-          danger: true,
-          onConfirm() {
-            const inp = document.getElementById('deleteConfirmInput');
-            if (!inp || inp.value.trim() !== 'DELETE') { H.toast('Type DELETE to confirm'); return; }
-            const u = H.currentUser();
-            if (!u) return;
-            H.state.listings = (H.state.listings || []).filter(l => l.sellerId !== u.id);
-            H.state.conversations = (H.state.conversations || []).filter(c => !(c.members || []).includes(u.id));
-            H.state.users = (H.state.users || []).filter(x => x.id !== u.id);
-            H.state.currentUserId = null;
-            H.saveState();
-            if (window.supabase && window.supabase.auth) {
-              window.supabase.auth.signOut().catch(() => {}).finally(() => window.location.reload());
-            } else {
-              window.location.reload();
-            }
-          },
-        });
-      },
-    };
+  pages.Profile = function () {
+    const u         = currentUser();
+    const myListings = (state.listings || []).filter(l => l.sellerId === u.id);
+    const active    = myListings.filter(l => l.status === 'active').length;
+    const saves     = (state.saves[u.id] || []).length;
+    const txns      = (state.txns || []).filter(t => t.userId === u.id);
+
+    return `<div class="page active">
+      <div class="prof-top">
+        <div class="prof-av">${u.avatar ? `<img src="${u.avatar}">` : initials(u.name)}</div>
+        <div class="prof-name">${escHtml(u.name)}</div>
+        <div class="prof-phone-display">${escHtml(u.phone)}</div>
+        <div class="prof-badges">
+          ${u.verified ? `<span class="pbadge pbadge-verified">
+            <span class="blue-check" style="width:12px;height:12px;margin-right:2px">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>ID Verified</span>` : ''}
+          ${u.role === 'admin' ? '<span class="pbadge pbadge-admin">Admin</span>' : ''}
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-n">${active}</div><div class="stat-l">Active Ads</div></div>
+        <div class="stat"><div class="stat-n">${saves}</div><div class="stat-l">Saved</div></div>
+      </div>
+
+      <div class="menu-group-label">My Account</div>
+      <div class="menu-items">
+        <div class="mi" onclick="H.openInner('MyListings')">
+          <div class="mi-icon blue-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/></svg></div>
+          <div class="mi-label">My Listings</div>
+          <span class="mi-badge-green">${active}</span>
+          <div class="mi-arrow">›</div>
+        </div>
+        <div class="mi" onclick="H.openInner('Ads')">
+          <div class="mi-icon blue-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg></div>
+          <div class="mi-label">Advertisements</div>
+          <div class="mi-arrow">›</div>
+        </div>
+        <div class="mi" onclick="H.openInner('Verify')">
+          <div class="mi-icon ${u.verified ? 'blue-ic' : 'green-ic'}">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="mi-label">${u.verified ? 'Verified ✓' : 'Get Verified'}</div>
+          ${!u.verified ? '<span style="font-size:11px;color:var(--o);font-weight:700">Boost trust</span>' : ''}
+          <div class="mi-arrow">›</div>
+        </div>
+      </div>
+
+      <div class="menu-group-label">Preferences</div>
+      <div class="menu-items">
+        <div class="mi" onclick="H.openInner('NotifSettings')">
+          <div class="mi-icon"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+          <div class="mi-label">Notifications</div>
+          <div class="mi-arrow">›</div>
+        </div>
+        <div class="mi" onclick="H.openInner('LanguageSettings')">
+          <div class="mi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+          <div class="mi-label">Language</div>
+          <div class="mi-arrow">›</div>
+        </div>
+        <div class="mi" onclick="H.openInner('PrivacySettings')">
+          <div class="mi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="mi-label">Privacy Policy</div>
+          <div class="mi-arrow">›</div>
+        </div>
+        <div class="mi" onclick="H.openInner('HelpTerms')">
+          <div class="mi-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="mi-label">Terms of Service</div>
+          <div class="mi-arrow">›</div>
+        </div>
+        <div class="mi" onclick="H.openInner('About')">
+          <div class="mi-icon green-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="mi-label">About PaMarket</div>
+          <div class="mi-arrow">›</div>
+        </div>
+        ${u.role === 'admin' ? `
+        <div class="mi" onclick="H.navTo('Admin',null)">
+          <div class="mi-icon amber-ic"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+          <div class="mi-label">Admin Panel</div>
+          <div class="mi-arrow">›</div>
+        </div>` : ''}
+      </div>
+
+      <div class="menu-group-label">Danger Zone</div>
+      <div class="menu-items" style="padding-bottom:90px">
+        <div class="mi" onclick="H.logOut()">
+          <div class="mi-icon red-ic"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+          <div class="mi-label red-lbl">Sign Out</div>
+        </div>
+        <div class="mi" onclick="H.openInner('DeleteAccount')">
+          <div class="mi-icon red-ic"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></div>
+          <div class="mi-label red-lbl">Delete Account</div>
+        </div>
+      </div>
+    </div>`;
   };
 
   pages.MyListings = function () {
-    const u = H.currentUser();
-    if (!u) return H.emptyState('Not logged in', 'Please sign in');
-    const all      = (H.state.listings || []).filter(l => l.sellerId === u.id);
-    const active   = all.filter(l => l.status === 'active');
-    const pending  = all.filter(l => l.status === 'pending');
-    const sold     = all.filter(l => l.status === 'sold');
-    const rejected = all.filter(l => l.status === 'rejected');
-    const btn = (label, fn, c, bg, bo) =>
-      `<button onclick="${fn}" style="flex:1;padding:8px 2px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:${bg};color:${c};border:1.5px solid ${bo};font-family:inherit;white-space:nowrap">${label}</button>`;
-    const actionBars = {
-      active:   (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); const isJob=l&&l.cat==='jobs'; return btn('Edit',`H._myListings.edit('${id}')`,'#1A3A8F','#EFF6FF','#BFDBFE')+btn(isJob?'Mark Filled':'Mark Sold',`H._myListings.markSold('${id}')`,'#16a34a','#dcfce7','#bbf7d0')+btn('Delete',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'); },
-      pending:  (id) => btn('Edit',`H._myListings.edit('${id}')`,'#1A3A8F','#EFF6FF','#BFDBFE')+btn('Delete',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'),
-      sold:     (id) => btn('Post Again',`H._myListings.reactivate('${id}')`,'#1A3A8F','#EFF6FF','#BFDBFE')+btn('Delete',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'),
-      rejected: (id) => btn('Edit & Resubmit',`H._myListings.edit('${id}')`,'#D97706','#FFFBEB','#FDE68A')+btn('Delete',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'),
-    };
-    const myCard = (l, status) => `<div style="margin-bottom:14px">${H.renderListCard(l)}<div style="display:flex;gap:6px;margin-top:6px">${(actionBars[status]||actionBars.active)(l.id)}</div></div>`;
-    const section = (list, label, status) => list.length
-      ? `<div style="padding:12px">${list.map(l => myCard(l, status)).join('')}</div>`
-      : `<div style="color:var(--sub);padding:32px 20px;text-align:center;font-size:13px">No ${label.toLowerCase()} listings</div>`;
-    return `<div class="page active">
-      ${H.innerTopbar('My Listings')}
-      <div class="listing-tabs">
-        <button class="tab active" data-tab="active">Active (${active.length})</button>
-        <button class="tab" data-tab="pending">Pending (${pending.length})</button>
-        <button class="tab" data-tab="sold">Sold / Filled (${sold.length})</button>
-        <button class="tab" data-tab="rejected">Rejected (${rejected.length})</button>
-      </div>
-      <div class="tabs-content">
-        <div class="tab-content active" data-tab="active">${section(active,'Active','active')}</div>
-        <div class="tab-content" data-tab="pending">${section(pending,'Pending','pending')}</div>
-        <div class="tab-content" data-tab="sold">${section(sold,'Sold / Filled','sold')}</div>
-        <div class="tab-content" data-tab="rejected">${section(rejected,'Rejected','rejected')}</div>
-      </div>
-      <div style="height:24px"></div>
-    </div>`;
-  };
+    const u    = currentUser();
+    const list = (state.listings || []).filter(l => l.sellerId === u.id).sort((a, b) => b.createdAt - a.createdAt);
+    const now  = Date.now();
+    const TWENTY_FIVE_DAYS = 25 * 24 * 60 * 60 * 1000;
+    const THIRTY_DAYS      = 30 * 24 * 60 * 60 * 1000;
 
-  pages.MyListings_after = function () {
-    document.querySelectorAll('.listing-tabs .tab').forEach(btn => {
-      btn.addEventListener('click', e => {
-        document.querySelectorAll('.listing-tabs .tab').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        e.target.classList.add('active');
-        const el = document.querySelector(`.tab-content[data-tab="${e.target.dataset.tab}"]`);
-        if (el) el.classList.add('active');
-      });
-    });
-    H._myListings = {
-      edit: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); H.openInner(l&&l.cat==='jobs'?'EditJob':'EditListing',{listingId:id}); },
-      markSold: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='sold'; l.soldAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'sold'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job marked as filled' : 'Listing marked as sold'); H.renderPage('MyListings'); },
-      del: (id) => { if(!window.confirm('Delete this listing permanently?'))return; H.state.listings=(H.state.listings||[]).filter(x=>x.id!==id); H.saveState(); H.toast('Listing deleted'); H.renderPage('MyListings'); },
-      reactivate: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='active'; delete l.soldAt; l.renewedAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'active'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job reopened!' : 'Listing reactivated!'); H.renderPage('MyListings'); },
-    };
-  };
+    return `<div class="page active">${innerTopbar('My Listings')}
+      <div style="padding-bottom:90px">
+        ${list.length ? list.map(l => {
+          const age = now - (l.createdAt || now);
+          const isExpired     = age > THIRTY_DAYS;
+          const isExpiringSoon = !isExpired && age > TWENTY_FIVE_DAYS;
 
-  pages.EditListing = function (params) {
-    const id = params && params.listingId;
-    const l  = id ? (H.state.listings || []).find(x => x.id === id) : null;
-    if (!l) return `<div class="page active">${H.innerTopbar('Edit Listing')}${H.emptyState('Listing not found','')}</div>`;
-    return `<div class="page active">
-      ${H.innerTopbar('Edit Listing')}
-      <div class="form-wrap">
-        <div class="fg"><div class="fl">Title</div><input class="fi" id="elTitle" value="${H.escHtml(l.title || '')}" placeholder="Listing title" maxlength="80"></div>
-        <div class="fg"><div class="fl">Price (USD)</div><input class="fi" id="elPrice" type="number" min="0" value="${H.escHtml(String(l.price || ''))}" placeholder="0"></div>
-        <div class="fg"><div class="fl">Description</div><textarea class="fi" id="elDesc" rows="5" placeholder="Describe your item...">${H.escHtml(l.description || '')}</textarea></div>
-        <div id="elErr" style="display:none;color:#ef4444;font-size:13px;font-weight:600;padding:6px 0"></div>
-        <button id="elSaveBtn" class="btn-pri" onclick="H._editListing.save('${id}')">Save Changes</button>
-        <button class="btn-sec" onclick="H.goBack()">Cancel</button>
+          // Saves count: number of userIds who have this listing in their saves array
+          const savesCount = Object.values(state.saves || {}).filter(arr => Array.isArray(arr) && arr.includes(l.id)).length;
+
+          // Enquiries count: conversations referencing this listing
+          const enquiriesCount = (state.conversations || []).filter(conv => conv.listingId === l.id).length;
+
+          // Status pill / expiry logic
+          let statusPill;
+          if (isExpired) {
+            statusPill = `<span class="status-pill status-banned">Expired</span>`;
+          } else {
+            const statusClass = l.status === 'active' ? 'status-active' : l.status === 'banned' ? 'status-banned' : 'status-pending';
+            statusPill = `<span class="status-pill ${statusClass}">${l.status}</span>`;
+          }
+
+          const expiryWarning = isExpiringSoon
+            ? `<span style="font-size:11px;font-weight:700;color:#b45309;background:#fef3c7;border-radius:8px;padding:1px 7px;margin-left:4px">Expiring soon</span>`
+            : '';
+
+          const renewBtn = (isExpired || isExpiringSoon)
+            ? `<button class="ml-act-btn" onclick="(function(){var l=H.state.listings.find(function(x){return x.id==='${l.id}';});if(l){l.createdAt=Date.now();if(l.status==='expired')l.status='active';H.saveState();H.openInner('MyListings');}})()">Renew</button>`
+            : '';
+
+          return `<div class="my-listing-card">
+            <div class="ml-thumb">
+              ${l.photos && l.photos[0] ? `<img src="${l.photos[0]}">` : ((CATEGORIES.find(c => c.id === l.cat) || {}).icon || '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#ccc"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>')}
+            </div>
+            <div class="ml-body">
+              <div class="ml-title">${escHtml(l.title)}</div>
+              <div class="ml-price">${escHtml(fmtPrice(l.price, l.currency))}</div>
+              <div class="ml-meta">
+                ${statusPill}${expiryWarning}
+                <span style="color:var(--sub)"> · ${l.views || 0} views · ${timeAgo(l.createdAt)}</span>
+              </div>
+              <div style="display:inline-flex;gap:10px;align-items:center;font-size:11px;color:var(--sub);margin-top:4px;flex-wrap:wrap">
+                <span>&#128065; ${l.views || 0} views</span>
+                <span>&#9825; ${savesCount} saves</span>
+                <span>&#128172; ${enquiriesCount} enquiries</span>
+              </div>
+              <div class="ml-actions">
+                <button class="ml-act-btn" onclick="H.openListing('${l.id}')">View</button>
+                ${renewBtn}
+                ${!isExpired && l.status === 'active'
+                  ? `<button class="ml-act-btn red" onclick="H.deleteListing('${l.id}')">Delete</button>`
+                  : ''}
+              </div>
+            </div>
+          </div>`;
+        }).join('') : emptyState('No listings yet', 'Your posted ads will appear here.', 'Post an Ad', "H.navTo('Post',null)")}
       </div>
     </div>`;
   };
 
-  pages.EditListing_after = function () {
-    H._editListing = {
-      save: (id) => {
-        const title = document.getElementById('elTitle')?.value.trim();
-        const price = parseFloat(document.getElementById('elPrice')?.value);
-        const desc  = document.getElementById('elDesc')?.value.trim();
-        const errEl = document.getElementById('elErr');
-        const btn   = document.getElementById('elSaveBtn');
-        const showErr = (m) => { if(errEl){errEl.textContent=m;errEl.style.display='';} };
-        if (!title) { showErr('Title is required'); return; }
-        if (isNaN(price) || price < 0) { showErr('Enter a valid price'); return; }
-        if (!desc) { showErr('Description is required'); return; }
-        const l = (H.state.listings || []).find(x => x.id === id);
-        if (!l) { showErr('Listing not found'); return; }
-        l.title=title; l.price=price; l.description=desc; l.updatedAt=Date.now();
-        if (l.status === 'rejected') l.status = 'pending';
-        if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
-        H.saveState();
-        H.toast('Listing updated!');
-        H.goBack();
-      }
-    };
+  H.logOut = function () {
+    H.logout();
   };
 
-  pages.Favorites = function () {
-    const u = H.currentUser();
-    if (!u) return H.emptyState('Not logged in', 'Please sign in');
-    const saved = (H.state.saves && H.state.saves[u.id]) || [];
-    const list  = (H.state.listings || []).filter(l => saved.includes(l.id) && l.status === 'active');
-    const savedCard = (l) =>
-      `<div style="margin-bottom:14px">
-        ${H.renderListCard(l)}
-        <div style="display:flex;gap:6px;margin-top:6px">
-          <button onclick="H._favorites.unsave('${l.id}')" style="flex:1;padding:9px 4px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fef2f2;color:#ef4444;border:1.5px solid #fecaca;font-family:inherit">Remove</button>
-          <button onclick="H.openListing('${l.id}')" style="flex:2;padding:9px 4px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#EFF6FF;color:#1A3A8F;border:1.5px solid #BFDBFE;font-family:inherit">View Listing</button>
+})(window.H);
+
+;/* === www/js/admin.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
+'use strict';
+(function (H) {
+  const pages = H.pages;
+  const getState = () => H.state || {};
+  const { escHtml, timeAgo, uid, toast, modal, fmtPrice, initials, pushNotif } = H;
+  // Methods that use `this` must go through H so binding is correct
+  const currentUser = () => H.currentUser();
+  const innerTopbar = (...a) => H.innerTopbar(...a);
+  const emptyState  = (...a) => H.emptyState(...a);
+  const saveState   = () => H.saveState();
+  const renderPage  = (...a) => H.renderPage(...a);
+
+  const S = {
+    deny:     '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+    eye:      '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    ban:      '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+    unban:    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>',
+    verify:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>',
+    approve:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+    reject:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    delete:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+    suspend:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 12 16 12"/></svg>',
+    restore:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+    edit:     '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>',
+    download: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+    trash:    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+    reload:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
+    lock:     '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+    settings: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    support:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    broadcast:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>',
+    admin:    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+  };
+
+  if (!H.state.adminLogs) H.state.adminLogs = [];
+
+  function adminGuard() {
+    const u = currentUser();
+    if (!u || u.role !== 'admin') { toast('Unauthorized'); return false; }
+    return true;
+  }
+
+  let _adminTab = 'overview';
+
+  // ── ADMIN LOG HELPER ──────────────────────────────────────
+  function alog(action) {
+    H.state.adminLogs.unshift({ action, adminName: currentUser().name, t: Date.now() });
+  }
+
+  // ── MAIN PAGE ─────────────────────────────────────────────
+  pages.Admin = function () {
+    const u = currentUser();
+    if (u.role !== 'admin') return `<div class="page active">${innerTopbar('Admin')}
+      <div class="empty-state"><div class="empty-icon">${S.deny}</div><div class="empty-title">Access Denied</div></div>
+    </div>`;
+
+    const tabs = [
+      ['overview',      'Overview'],
+      ['users',         `Users (${(H.state.users||[]).length})`],
+      ['listings',      `Listings (${(H.state.listings||[]).length})`],
+      ['reports',       `Reports (${(H.state.reports||[]).filter(r=>r.status==='open').length})`],
+      ['analytics',     'Analytics'],
+      ['verifications',  `Verify (${(H.state.users||[]).filter(u=>u.verificationPending&&!u.verified).length})`],
+      ['settings',      'Settings'],
+      ['ads',           `Ads (${((H.state.paidAds||[]).filter(a=>a.active&&a.endsAt>Date.now())).length} live)`],
+      ['notifications', 'Notify'],
+      ['support',       `Support (${(H.state.supportTickets||[]).filter(t=>t.status!=='closed').length})`],
+      ['logs',          `Logs (${(H.state.adminLogs||[]).length})`],
+      ['messages',      `Messages (${(H.state.conversations||[]).length})`]
+    ];
+
+    return `<div class="page active">${innerTopbar('Admin Panel')}
+      <div style="display:flex;gap:6px;padding:12px 12px 10px;overflow-x:auto;scrollbar-width:none">
+        ${tabs.map(([k,l]) => `<button class="admin-tab ${_adminTab===k?'on':''}" data-tab="${k}" onclick="H._admin.setTab('${k}')">${l}</button>`).join('')}
+      </div>
+      <div class="inner-content" style="padding-top:0" id="adminBody">${renderBody()}</div>
+    </div>`;
+  };
+
+  pages.Admin_after = function () {
+    const body = document.getElementById('adminBody');
+    const reRender = function () { if (body) body.innerHTML = renderBody(); };
+    const syncs = [syncVerificationsFromSupabase()];
+    if (typeof H.syncReports === 'function') syncs.push(H.syncReports());
+    if (typeof H.syncConversations === 'function') syncs.push(H.syncConversations());
+    Promise.all(syncs).then(reRender);
+  };
+
+  function syncVerificationsFromSupabase() {
+    const sb = window.supabase;
+    if (!sb || typeof sb.from !== 'function') return Promise.resolve();
+
+    const p1 = sb.from('profiles')
+      .select('id,name,email,phone,verification_pending,id_type,verified,verified_at,avatar_url,role')
+      .or('verification_pending.eq.true,verified.eq.true')
+      .then(function (res) {
+        const data = res && res.data;
+        if (!data || !data.length) return;
+        if (!H.state.users) H.state.users = [];
+        data.forEach(function (p) {
+          let u = H.state.users.find(function (x) { return x.id === p.id; });
+          if (u) {
+            if (p.verification_pending !== undefined) u.verificationPending = p.verification_pending;
+            if (p.id_type) u.verificationIdType = p.id_type;
+            if (p.verified !== undefined) u.verified = p.verified;
+            if (p.verified_at) u.verifiedAt = new Date(p.verified_at).getTime();
+            if (p.name)  u.name  = p.name;
+            if (p.email) u.email = p.email;
+            if (p.phone) u.phone = p.phone;
+          } else {
+            H.state.users.push({
+              id: p.id,
+              name:  p.name  || 'Unknown',
+              email: p.email || '',
+              phone: p.phone || '',
+              avatar: p.avatar_url || '',
+              role:  p.role  || 'user',
+              verificationPending: p.verification_pending || false,
+              verificationIdType:  p.id_type || '',
+              verified:   p.verified   || false,
+              verifiedAt: p.verified_at ? new Date(p.verified_at).getTime() : null,
+              joinedAt:   Date.now()
+            });
+          }
+        });
+      })
+      .catch(function () {});
+
+    const p2 = sb.from('verifications')
+      .select('user_id,id_doc,selfie,status,submitted_at')
+      .then(function (res) {
+        const data = res && res.data;
+        if (!data) return;
+        H.state._verifications = {};
+        data.forEach(function (v) { H.state._verifications[v.user_id] = v; });
+      })
+      .catch(function () {});
+
+    return Promise.all([p1, p2]);
+  }
+
+  function renderBody() {
+    switch (_adminTab) {
+      case 'overview':       return renderOverview();
+      case 'users':          return renderUsers();
+      case 'listings':       return renderListings();
+      case 'reports':        return renderReports();
+      case 'analytics':      return renderAnalytics();
+      case 'verifications':  return renderVerifications();
+      case 'settings':       return renderSettings();
+      case 'ads':            return renderAds();
+      case 'notifications':  return renderNotifications();
+      case 'support':        return renderSupport();
+      case 'logs':           return renderLogs();
+      case 'messages':       return renderMessages();
+      default: return '';
+    }
+  }
+
+  function renderVerifications() {
+    const pending = (H.state.users||[]).filter(u=>u.verificationPending && !u.verified);
+    const verified = (H.state.users||[]).filter(u=>u.verified);
+    const vdocs = H.state._verifications || {};
+    return `
+      <div class="stats" style="margin:0 0 14px">
+        <div class="stat"><div class="stat-n">${pending.length}</div><div class="stat-l">Pending</div></div>
+        <div class="stat"><div class="stat-n">${verified.length}</div><div class="stat-l">Verified</div></div>
+        <div class="stat"><div class="stat-n">${(H.state.users||[]).length}</div><div class="stat-l">Total Users</div></div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Pending Verification Requests</div>
+      ${pending.length ? `
+      <div class="section-card" style="margin-bottom:16px">
+        ${pending.map(u => {
+          const vd = vdocs[u.id];
+          const idDocHtml  = vd && vd.id_doc  ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">ID Document</div><img src="${vd.id_doc}" style="width:140px;border-radius:8px;border:1px solid var(--n3);display:block"></div>` : '';
+          const selfieHtml = vd && vd.selfie   ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">Selfie</div><img src="${vd.selfie}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--n3);display:block"></div>` : '';
+          const noPhotos   = !vd ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">No photos received — verifications table may be missing</div>` : (!vd.id_doc && !vd.selfie) ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">No photos in submission</div>` : '';
+          return `
+          <div class="admin-row" style="padding:14px">
+            <div class="admin-row-head">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:40px;height:40px;border-radius:50%;background:#1A3A8F20;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#1A3A8F;flex-shrink:0">${H.initials(u.name||'U')}</div>
+                <div>
+                  <div class="admin-row-name" style="font-size:14px;font-weight:700">${escHtml(u.name||'Unknown')}</div>
+                  <div class="admin-row-meta">${escHtml(u.email||'')} · ${escHtml(u.phone||'No phone')}</div>
+                  ${u.cv && u.cv.headline ? `<div style="font-size:12px;color:#1A3A8F;font-weight:600;margin-top:2px">${escHtml(u.cv.headline)}</div>` : ''}
+                </div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:var(--sub);margin:8px 0">${u.verificationIdType ? `ID Type: ${escHtml(u.verificationIdType)}` : 'Standard verification request'}</div>
+            ${noPhotos}
+            ${(idDocHtml || selfieHtml) ? `<div style="display:flex;gap:12px;margin:10px 0;flex-wrap:wrap;align-items:flex-start">${idDocHtml}${selfieHtml}</div>` : ''}
+            <div class="admin-actions">
+              <button class="ml-act-btn" onclick="H._admin.approveVerification('${u.id}')">${S.verify} Approve &amp; Verify</button>
+              <button class="ml-act-btn red" onclick="H._admin.rejectVerification('${u.id}')">${S.reject} Reject</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>` : `<div style="text-align:center;padding:32px 20px;color:var(--sub);font-size:14px">No pending verification requests</div>`}
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Verified Users</div>
+      <div class="section-card">
+        ${verified.length ? verified.slice(0,20).map(u => `
+          <div class="admin-row">
+            <div class="admin-row-head">
+              <div class="admin-row-name">${escHtml(u.name||'Unknown')} <span style="color:#059669;font-size:11px">✓ Verified</span></div>
+              <span style="font-size:11px;color:var(--sub)">${new Date(u.verifiedAt||u.joinedAt||Date.now()).toLocaleDateString()}</span>
+            </div>
+            <div class="admin-row-meta">${escHtml(u.email||u.phone||'')}</div>
+            <div class="admin-actions">
+              <button class="ml-act-btn red" onclick="H._admin.revokeVerification('${u.id}')">Revoke</button>
+            </div>
+          </div>`).join('') : '<div style="padding:16px;text-align:center;color:var(--sub)">No verified users yet</div>'}
+      </div>`;
+  }
+
+  // ── OVERVIEW ──────────────────────────────────────────────
+  function renderOverview() {
+    const users    = H.state.users || [];
+    const listings = H.state.listings || [];
+    const reports  = H.state.reports || [];
+    const txns     = H.state.txns || [];
+    const today    = Date.now() - 86400000;
+    const newToday = listings.filter(l=>l.createdAt>today).length;
+    const usersToday = users.filter(u=>(u.joinedAt||u.createdAt||0)>today).length;
+    const openReports = reports.filter(r=>r.status==='open').length;
+    const pending  = listings.filter(l=>l.status==='pending').length;
+    const expiring = listings.filter(l=>l.expiresAt&&l.expiresAt-Date.now()<7*86400000&&l.expiresAt>Date.now()).length;
+    const openTickets = (H.state.supportTickets||[]).filter(t=>t.status!=='closed').length;
+    const convos = H.state.conversations || [];
+    let msgUnread = 0;
+    convos.forEach(function (c) { (c.messages||[]).forEach(function (m) { if (!m.read) msgUnread++; }); });
+
+    return `
+      <div class="stats" style="margin:0 0 10px">
+        <div class="stat"><div class="stat-n">${users.length}</div><div class="stat-l">Users</div></div>
+        <div class="stat"><div class="stat-n">+${usersToday}</div><div class="stat-l">New Today</div></div>
+        <div class="stat"><div class="stat-n">${users.filter(u=>u.verified).length}</div><div class="stat-l">Verified</div></div>
+      </div>
+      <div class="stats" style="margin:0 0 10px">
+        <div class="stat"><div class="stat-n">${listings.filter(l=>l.status==='active').length}</div><div class="stat-l">Active Ads</div></div>
+        <div class="stat"><div class="stat-n">+${newToday}</div><div class="stat-l">New Today</div></div>
+        <div class="stat"><div class="stat-n">${listings.filter(l=>l.status==='pending').length}</div><div class="stat-l">Pending</div></div>
+      </div>
+      ${(pending||openReports||expiring||openTickets) ? `
+      <div style="padding:12px 0 4px;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px">Needs Attention</div>
+      <div class="section-card" style="padding:0">
+        ${pending ? `<div class="admin-alert-row" onclick="H._admin.setTab('listings');H._admin.filterListingsByStatus('pending')">
+          <span style="color:#f59e0b;font-weight:700">${pending} pending listing${pending>1?'s':''}</span> awaiting review
+          <span style="color:#1A3A8F;font-weight:700;margin-left:auto">Review →</span>
+        </div>` : ''}
+        ${openReports ? `<div class="admin-alert-row" onclick="H._admin.setTab('reports')">
+          <span style="color:#dc2626;font-weight:700">${openReports} open report${openReports>1?'s':''}</span> need action
+          <span style="color:#1A3A8F;font-weight:700;margin-left:auto">View →</span>
+        </div>` : ''}
+        ${expiring ? `<div class="admin-alert-row" onclick="H._admin.setTab('listings');H._admin.filterListingsByStatus('active')">
+          <span style="color:#f59e0b;font-weight:700">${expiring} listing${expiring>1?'s':''}</span> expiring within 7 days
+          <span style="color:#1A3A8F;font-weight:700;margin-left:auto">View →</span>
+        </div>` : ''}
+        ${openTickets ? `<div class="admin-alert-row" onclick="H._admin.setTab('support')">
+          <span style="color:#7c3aed;font-weight:700">${openTickets} support ticket${openTickets>1?'s':''}</span> open
+          <span style="color:#1A3A8F;font-weight:700;margin-left:auto">View →</span>
+        </div>` : ''}
+      </div>` : ''}
+      <div class="stats" style="margin:10px 0 0">
+        <div class="stat"><div class="stat-n">${txns.length}</div><div class="stat-l">Transactions</div></div>
+        <div class="stat"><div class="stat-n">${users.filter(u=>u.status!=='active').length}</div><div class="stat-l">Banned</div></div>
+        <div class="stat"><div class="stat-n">${listings.filter(l=>l.status==='pending').length}</div><div class="stat-l">Pending</div></div>
+      </div>
+      <div class="stats" style="margin:10px 0 0" onclick="H._admin.setTab('messages')" style="cursor:pointer">
+        <div class="stat" style="cursor:pointer" onclick="H._admin.setTab('messages')"><div class="stat-n">${convos.length}</div><div class="stat-l">Conversations</div></div>
+        <div class="stat" style="cursor:pointer" onclick="H._admin.setTab('messages')"><div class="stat-n">${msgUnread}</div><div class="stat-l">Unread Msgs</div></div>
+        <div class="stat" style="cursor:pointer" onclick="H._admin.setTab('messages')"><div class="stat-n">${(H.state.users||[]).filter(u=>u.verificationPending&&!u.verified).length}</div><div class="stat-l">Verify Queue</div></div>
+      </div>`;
+  }
+
+  // ── ANALYTICS ─────────────────────────────────────────────
+  function renderAnalytics() {
+    const listings = H.state.listings || [];
+    const users    = H.state.users || [];
+
+    // Listings by category
+    const catCounts = {};
+    listings.forEach(l => { catCounts[l.cat] = (catCounts[l.cat]||0)+1; });
+    const catEntries = Object.entries(catCounts).sort((a,b)=>b[1]-a[1]);
+    const maxCat = catEntries[0]?.[1] || 1;
+
+    // Revenue by type
+    // New users by week (last 4 weeks)
+    const now = Date.now();
+    const weeks = [0,1,2,3].map(w => {
+      const start = now - (w+1)*7*86400000;
+      const end   = now - w*7*86400000;
+      return { label: `${w===0?'This':w===1?'Last':w+'w ago'} week`, count: users.filter(u=>(u.joinedAt||u.createdAt||0)>start&&(u.joinedAt||u.createdAt||0)<=end).length };
+    }).reverse();
+    const maxWeek = Math.max(1, ...weeks.map(w=>w.count));
+
+    // Listing status breakdown
+    const active  = listings.filter(l=>l.status==='active').length;
+    const pending = listings.filter(l=>l.status==='pending').length;
+    const banned  = listings.filter(l=>l.status==='banned').length;
+    const total   = listings.length || 1;
+
+    return `
+      <div style="padding:4px 0 10px;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px">Listings by Category</div>
+      <div class="section-card" style="padding:14px">
+        ${catEntries.length ? catEntries.map(([cat, count]) => {
+          const pct = Math.round(count/maxCat*100);
+          const catObj = (H.CATEGORIES||[]).find(c=>c.id===cat)||{name:cat,icon:''};
+          return `<div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--text-mid);margin-bottom:4px">
+              <span>${catObj.icon||''} ${escHtml(catObj.name)}</span><span>${count}</span>
+            </div>
+            <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:#1A3A8F;border-radius:3px;transition:width .3s"></div>
+            </div>
+          </div>`;
+        }).join('') : '<div style="color:var(--text-sub);font-size:13px">No listings yet</div>'}
+      </div>
+
+      <div style="padding:14px 0 10px;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px">Listing Status</div>
+      <div class="section-card" style="padding:14px">
+        <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;margin-bottom:10px">
+          <div style="width:${Math.round(active/total*100)}%;background:#059669" title="Active"></div>
+          <div style="width:${Math.round(pending/total*100)}%;background:#f59e0b" title="Pending"></div>
+          <div style="width:${Math.round(banned/total*100)}%;background:#dc2626" title="Banned"></div>
+        </div>
+        <div style="display:flex;gap:16px;font-size:12px">
+          <span style="color:#059669;font-weight:600">● Active: ${active}</span>
+          <span style="color:#f59e0b;font-weight:600">● Pending: ${pending}</span>
+          <span style="color:#dc2626;font-weight:600">● Removed: ${banned}</span>
+        </div>
+      </div>
+
+      <div style="padding:14px 0 10px;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px">New Users (weekly)</div>
+      <div class="section-card" style="padding:14px">
+        <div style="display:flex;align-items:flex-end;gap:8px;height:64px">
+          ${weeks.map(w=>`<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+            <div style="width:100%;background:#1A3A8F;border-radius:4px 4px 0 0;height:${Math.max(4,Math.round(w.count/maxWeek*52))}px"></div>
+            <div style="font-size:10px;color:var(--text-sub);white-space:nowrap">${w.count}</div>
+          </div>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          ${weeks.map(w=>`<div style="flex:1;font-size:10px;color:var(--text-hint);text-align:center">${w.label}</div>`).join('')}
         </div>
       </div>`;
-    return `<div class="page active">
-      ${H.innerTopbar(list.length ? `Saved & Favorites (${list.length})` : 'Saved & Favorites')}
-      <div style="padding:14px">
-        ${list.length ? list.map(savedCard).join('') : H.emptyState('No saved listings', 'Tap the heart on any listing to save it', 'Browse', "H.navTo('Browse')")}
-      </div>
-      <div style="height:24px"></div>
-    </div>`;
-  };
+  }
 
-  pages.Favorites_after = function () {
-    H._favorites = {
-      unsave: (id) => {
-        const u = H.currentUser(); if (!u) return;
-        H.state.saves = H.state.saves || {};
-        H.state.saves[u.id] = (H.state.saves[u.id] || []).filter(sid => sid !== id);
-        H.saveState();
-        H.toast('Removed from saved');
-        H.renderPage('Favorites');
+  // ── USERS ─────────────────────────────────────────────────
+  function userRow(u) {
+    const listings = (H.state.listings||[]).filter(l=>l.sellerId===u.id);
+    const status = u.status==='active'
+      ? `<span class="status-pill status-active">Active</span>`
+      : u.status==='banned_temp'
+        ? `<span class="status-pill status-pending">Suspended</span>`
+        : `<span class="status-pill status-banned">Banned</span>`;
+    return `<div class="admin-row">
+      <div class="admin-row-head">
+        <div class="admin-row-name">${escHtml(u.name)} ${u.role==='admin'?'👑':''} ${u.verified?'✓':''}</div>
+        ${status}
+      </div>
+      <div class="admin-row-meta">${escHtml(u.email||'no email')} · ${escHtml(u.phone||'no phone')} · ${listings.length} listings · Joined ${new Date(u.joinedAt||u.createdAt||Date.now()).toLocaleDateString()}</div>
+      <div class="admin-actions">
+        <button class="ml-act-btn" onclick="H._admin.setTab('listings');H._admin.filterListings('${escHtml(u.name)}')">${S.eye} Listings</button>
+        ${u.status==='active' ? `
+          <button class="ml-act-btn" onclick="H._admin.banUser('${u.id}','temp')">${S.suspend} Suspend</button>
+          <button class="ml-act-btn red" onclick="H._admin.banUser('${u.id}','perm')">${S.ban} Ban</button>
+        ` : `<button class="ml-act-btn" onclick="H._admin.unban('${u.id}')">${S.unban} Unban</button>`}
+        ${!u.verified?`<button class="ml-act-btn" onclick="H._admin.verifyUser('${u.id}')">${S.verify} Verify</button>`:''}
+        ${!u.companyVerified?`<button class="ml-act-btn" onclick="H._admin.verifyCompany('${u.id}')">🏢 Company ✓</button>`:`<button class="ml-act-btn" onclick="H._admin.revokeCompany('${u.id}')">🏢 Revoke Co.</button>`}
+        ${u.role!=='admin'?`<button class="ml-act-btn" onclick="H._admin.makeAdmin('${u.id}')">${S.admin} Make Admin</button>`:''}
+        ${u.id!==currentUser().id?`<button class="ml-act-btn red" onclick="H._admin.deleteUser('${u.id}')">${S.delete} Delete</button>`:''}
+      </div>
+    </div>`;
+  }
+
+  function renderUsers() {
+    return `<input class="fi" placeholder="Search users..." oninput="H._admin.filterUsers(this.value)" style="margin-bottom:10px">
+      <div id="adminUsersList">${(H.state.users||[]).map(userRow).join('')}</div>`;
+  }
+
+  // ── LISTINGS ──────────────────────────────────────────────
+  function listingRow(l) {
+    const seller = (H.state.users||[]).find(u=>u.id===l.sellerId)||{name:'?'};
+    const statusClass = l.status==='active'?'status-active':l.status==='pending'?'status-pending':'status-banned';
+    return `<div class="admin-row">
+      <div class="admin-row-head">
+        <div class="admin-row-name">${escHtml(l.title)}</div>
+        <span class="status-pill ${statusClass}">${l.status}</span>
+      </div>
+      <div class="admin-row-meta">${escHtml(fmtPrice(l.price,l.currency))} · ${escHtml(l.city||'')} · by ${escHtml(seller.name)} · ${new Date(l.createdAt).toLocaleDateString()}</div>
+      <div class="admin-actions">
+        <button class="ml-act-btn" onclick="H.openListing('${l.id}')">${S.eye} View</button>
+        ${l.status==='pending'?`
+          <button class="ml-act-btn" onclick="H._admin.approveListing('${l.id}')">${S.approve} Approve</button>
+          <button class="ml-act-btn red" onclick="H._admin.rejectListing('${l.id}')">${S.reject} Reject</button>
+        `:''}
+        ${l.status==='active'?`<button class="ml-act-btn red" onclick="H._admin.banListing('${l.id}')">${S.ban} Remove</button>`:''}
+        ${l.status!=='active'&&l.status!=='pending'?`<button class="ml-act-btn" onclick="H._admin.restoreListing('${l.id}')">${S.restore} Restore</button>`:''}
+      </div>
+    </div>`;
+  }
+
+  function renderListings() {
+    const all      = H.state.listings||[];
+    const pending  = all.filter(l=>l.status==='pending').length;
+    const active   = all.filter(l=>l.status==='active').length;
+    const rejected = all.filter(l=>l.status==='rejected').length;
+    const banned   = all.filter(l=>l.status==='banned').length;
+    return `
+      <input class="fi" placeholder="Search listings..." oninput="H._admin.filterListings(this.value)" style="margin-bottom:10px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="admin-tab on" data-lstatus="all" onclick="H._admin.filterListingsByStatus('all')">All (${all.length})</button>
+        <button class="admin-tab" data-lstatus="pending" onclick="H._admin.filterListingsByStatus('pending')">Pending (${pending})</button>
+        <button class="admin-tab" data-lstatus="active" onclick="H._admin.filterListingsByStatus('active')">Active (${active})</button>
+        <button class="admin-tab" data-lstatus="rejected" onclick="H._admin.filterListingsByStatus('rejected')">Rejected (${rejected})</button>
+        <button class="admin-tab" data-lstatus="banned" onclick="H._admin.filterListingsByStatus('banned')">Removed (${banned})</button>
+      </div>
+      <div id="adminLList">${all.slice().sort((a,b)=>b.createdAt-a.createdAt).map(listingRow).join('')}</div>`;
+  }
+
+  // ── REPORTS ───────────────────────────────────────────────
+  let _reportFilter = 'all';
+  function renderReports(filter) {
+    if (filter !== undefined) _reportFilter = filter;
+    const all  = [...(H.state.reports||[])].sort((a,b)=>(b.t||b.createdAt||0)-(a.t||a.createdAt||0));
+    const open = all.filter(r=>r.status==='open');
+    const list = _reportFilter==='open' ? open
+               : _reportFilter==='listing' ? all.filter(r=>r.targetType==='listing')
+               : _reportFilter==='user' ? all.filter(r=>r.targetType==='user')
+               : all;
+    if (!all.length) return emptyState('No reports','All clear!',null,null);
+    const filterBar = `<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="admin-tab ${_reportFilter==='all'?'on':''}" onclick="H._admin.filterReports('all')">All (${all.length})</button>
+      <button class="admin-tab ${_reportFilter==='open'?'on':''}" onclick="H._admin.filterReports('open')">Open (${open.length})</button>
+      <button class="admin-tab ${_reportFilter==='listing'?'on':''}" onclick="H._admin.filterReports('listing')">Listings</button>
+      <button class="admin-tab ${_reportFilter==='user'?'on':''}" onclick="H._admin.filterReports('user')">Users</button>
+    </div>`;
+    if (!list.length) return filterBar + emptyState('No reports','Nothing here',null,null);
+    return filterBar + list.map(r => {
+      let target = '', actions = '';
+      if (r.targetType==='listing') {
+        const l = (H.state.listings||[]).find(x=>x.id===r.targetId);
+        target = l ? `Listing: ${escHtml(l.title)}` : '(deleted listing)';
+        if (l) actions = `
+          <button class="ml-act-btn" onclick="H.openListing('${l.id}')">${S.eye} View</button>
+          <button class="ml-act-btn red" onclick="H._admin.banListing('${l.id}','${r.id}')">${S.ban} Remove</button>`;
+      } else {
+        const u = (H.state.users||[]).find(x=>x.id===r.targetId);
+        target = u ? `User: ${escHtml(u.name)}` : '(deleted user)';
+        if (u) actions = `
+          <button class="ml-act-btn" onclick="H._admin.banUser('${u.id}','temp','${r.id}')">${S.suspend} Suspend</button>
+          <button class="ml-act-btn red" onclick="H._admin.banUser('${u.id}','perm','${r.id}')">${S.ban} Ban</button>
+          ${u.status!=='active'?`<button class="ml-act-btn" onclick="H._admin.unban('${u.id}','${r.id}')">${S.unban} Unban</button>`:''}`;
       }
-    };
-  };
+      return `<div class="admin-row" style="${r.status==='resolved'?'opacity:.55':''}">
+        <div class="admin-row-head">
+          <div class="admin-row-name">${target}</div>
+          <span class="status-pill ${r.status==='open'?'status-pending':'status-active'}">${r.status}</span>
+        </div>
+        <div class="admin-row-meta">${escHtml(r.reason||r.description||'No reason given')} · ${new Date(r.t||r.createdAt||Date.now()).toLocaleDateString()}</div>
+        <div class="admin-actions">
+          ${actions}
+          ${r.status==='open'?`<button class="ml-act-btn" onclick="H._admin.resolveReport('${r.id}')">${S.approve} Resolve</button>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }
 
-  pages.ProfileVerify = function () {
-    const u = H.currentUser();
-    if (!u) return H.emptyState('Not logged in', 'Please sign in');
-    if (u.verified) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="margin-bottom:12px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Identity Verified</div><div style="font-size:14px;color:var(--sub)">You have a verified badge on all your listings.</div><div style="font-size:12px;color:var(--sub);margin-top:8px">Verified on ${new Date(u.verifiedAt || Date.now()).toLocaleDateString()}</div></div></div>`;
-    if (u.verificationPending) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="margin-bottom:12px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Verification Pending</div><div style="font-size:14px;color:var(--sub)">Your request is under review. We will notify you within 24 hours.</div><button onclick="H._profileVerify.cancelPending()" style="margin-top:18px;padding:10px 28px;background:var(--bg);color:var(--sub);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel request</button></div></div>`;
-    return `<div class="page active">
-      ${H.innerTopbar('Verify Identity')}
-      <div class="section-box" style="text-align:center;padding:20px 20px 14px">
-        <div style="margin-bottom:10px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">Identity Verification</div>
-        <div style="font-size:13px;color:var(--sub)">Submit your ID and a selfie. Review takes up to 24 hours.</div>
+  // ── PAYMENTS ──────────────────────────────────────────────
+  // ── SETTINGS ──────────────────────────────────────────────
+  function renderSettings() {
+    const tog = (key, label, sub) => `
+      <div class="notif-toggle-row">
+        <div class="notif-toggle-info">
+          <div class="notif-toggle-title">${label}</div>
+          <div class="notif-toggle-sub">${sub}</div>
+        </div>
+        <button class="toggle-sw ${H.state[key]?'on':''}" onclick="H._admin.toggleSetting('${key}')"></button>
+      </div>`;
+    return `<div class="section-card" style="padding:14px">
+      <div class="menu-group-label" style="padding:0 0 10px">Listing Moderation</div>
+      ${tog('requireListingApproval','Require listing approval','New ads start as pending before going live')}
+      ${tog('autoApproveVerified','Auto-approve verified sellers','Skip moderation for verified users')}
+      ${tog('allowImageUploads','Allow image uploads','Users can upload photos with listings')}
+      <div class="menu-group-label" style="padding:16px 0 10px">Security & Access</div>
+      ${tog('signupPaused','Pause new registrations','Temporarily disable new account signup')}
+      ${tog('requirePhoneVerification','Require phone verification','Users must verify phone to post')}
+      <div class="menu-group-label" style="padding:16px 0 10px">System</div>
+      <button class="btn-pri" style="margin-bottom:8px" onclick="H._admin.exportData()">${S.download} Export All Data</button>
+      <button class="btn-sec" style="margin-bottom:8px" onclick="H._admin.clearOldData()">${S.trash} Clear Old Data (30+ days)</button>
+      <button class="btn-sec" style="background:var(--red-light);color:var(--red);border-color:rgba(192,57,43,.2)" onclick="H._admin.resetApp()">${S.reload} Reset App (Dangerous)</button>
+    </div>`;
+  }
+
+  // ── NOTIFICATIONS ─────────────────────────────────────────
+  function renderNotifications() {
+    return `<div class="section-card" style="padding:14px">
+      <div class="menu-group-label" style="padding:0 0 14px">Send Broadcast</div>
+      <div class="fg">
+        <div class="fl">Target Audience</div>
+        <select class="fi" id="bcastTarget">
+          <option value="all">All Users</option>
+          <option value="verified">Verified Users Only</option>
+          <option value="unverified">Unverified Users Only</option>
+          <option value="sellers">Users with Listings</option>
+          <option value="inactive">Users with No Listings</option>
+        </select>
       </div>
-      <div class="form-wrap">
-        <div class="fg"><div class="fl">ID Type</div><select class="fi" id="idType"><option>National ID</option><option>Passport</option><option>Driver&#39;s License</option></select></div>
-        <div class="fg"><div class="fl">ID Number</div><input class="fi" id="idNum" placeholder="Enter your ID number"></div>
-        <div class="fg">
-          <div class="fl">Selfie Photo <span style="font-weight:400;color:var(--sub);font-size:11px">(center your face in the oval)</span></div>
-          <div style="position:relative;width:220px;height:280px;margin:0 auto 10px;border-radius:14px;overflow:hidden;background:#111">
-            <div id="selfiePH" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a2e;gap:8px">
-              <div style="display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-              <div style="font-size:12px;color:rgba(255,255,255,.65);text-align:center;padding:0 16px">Tap Camera or Upload to add your selfie</div>
+      <div class="fg">
+        <div class="fl">Notification Title</div>
+        <input class="fi" id="bcastTitle" placeholder="e.g. New feature available">
+      </div>
+      <div class="fg">
+        <div class="fl">Message</div>
+        <textarea class="fi" rows="4" id="bcastMsg" placeholder="Write your message to all selected users..."></textarea>
+      </div>
+      <button class="btn-pri" id="bcastSendBtn" onclick="H._admin.broadcast()">${S.broadcast} Send Broadcast</button>
+    </div>`;
+  }
+
+  // ── SUPPORT ───────────────────────────────────────────────
+  function renderSupport(filter) {
+    const tickets = (H.state.supportTickets||[]);
+    const f = filter || 'all';
+    const filtered = f==='open' ? tickets.filter(t=>t.status!=='closed')
+                   : f==='closed' ? tickets.filter(t=>t.status==='closed') : tickets;
+    return `
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button class="admin-tab ${f==='all'?'on':''}" onclick="H._admin.filterTickets('all')">All (${tickets.length})</button>
+        <button class="admin-tab ${f==='open'?'on':''}" onclick="H._admin.filterTickets('open')">Open (${tickets.filter(t=>t.status!=='closed').length})</button>
+        <button class="admin-tab ${f==='closed'?'on':''}" onclick="H._admin.filterTickets('closed')">Closed (${tickets.filter(t=>t.status==='closed').length})</button>
+      </div>
+      <div id="ticketsList">
+        ${filtered.length ? filtered.map(t => {
+          const u = (H.state.users||[]).find(x=>x.id===t.userId)||{name:'Unknown'};
+          return `<div class="admin-row" style="${t.status==='closed'?'opacity:.6':''}">
+            <div class="admin-row-head">
+              <div class="admin-row-name">${escHtml(t.subject||'Support ticket')}</div>
+              <span class="status-pill ${t.status==='open'?'status-pending':t.status==='in-progress'?'status-active':'status-active'}">${t.status}</span>
             </div>
-            <video id="selfieVid" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)"></video>
-            <canvas id="selfieCanvas" style="display:none"></canvas>
-            <div id="selfiePrev" style="display:none;position:absolute;inset:0"><img id="selfieImg" style="width:100%;height:100%;object-fit:cover"></div>
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
-              <div style="width:130px;height:170px;border-radius:50%;border:3px solid rgba(255,255,255,.88);box-shadow:0 0 0 9999px rgba(0,0,0,.48)"></div>
+            <div class="admin-row-meta">${escHtml(u.name)} · ${new Date(t.createdAt||Date.now()).toLocaleDateString()}</div>
+            ${t.message?`<div style="font-size:13px;color:var(--text-sub);padding:8px 0;border-top:1px solid var(--border);margin-top:6px">${escHtml(t.message)}</div>`:''}
+            ${(t.replies||[]).map(r=>`<div style="background:var(--n5);border-radius:8px;padding:8px 10px;margin-top:6px;font-size:12px"><strong>Admin:</strong> ${escHtml(r.text)}</div>`).join('')}
+            <div class="admin-actions" style="margin-top:8px">
+              ${t.status!=='closed'?`
+                <button class="ml-act-btn" onclick="H._admin.respondToTicket('${t.id}')">${S.support} Respond</button>
+                <button class="ml-act-btn" onclick="H._admin.updateTicketStatus('${t.id}','in-progress')">In Progress</button>
+                <button class="ml-act-btn" onclick="H._admin.updateTicketStatus('${t.id}','closed')">${S.approve} Close</button>
+              `:`<button class="ml-act-btn" onclick="H._admin.reopenTicket('${t.id}')">${S.reload} Reopen</button>`}
             </div>
+          </div>`;
+        }).join('') : '<div style="padding:24px;text-align:center;color:var(--text-hint)">No tickets</div>'}
+      </div>`;
+  }
+
+  // ── LOGS ──────────────────────────────────────────────────
+  function renderLogs() {
+    const logs = (H.state.adminLogs||[]).slice(0,50);
+    return `
+      <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+        <button class="ml-act-btn red" onclick="H._admin.clearLogs()">${S.trash} Clear Logs</button>
+      </div>
+      <div class="section-card">
+        ${logs.length ? logs.map(l=>`
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+            <div style="font-size:13px;font-weight:500;color:var(--text-mid)">${escHtml(l.action)}</div>
+            <div style="font-size:11px;color:var(--text-hint);margin-top:2px">${escHtml(l.adminName||'Admin')} · ${new Date(l.t).toLocaleString()}</div>
+          </div>`).join('')
+        : '<div style="padding:24px;text-align:center;color:var(--text-hint)">No logs yet</div>'}
+      </div>`;
+  }
+
+  // ── MESSAGES ──────────────────────────────────────────────
+  function renderMessages() {
+    const convos = H.state.conversations || [];
+    const users  = H.state.users || [];
+
+    // Count totals
+    let totalMessages = 0;
+    let unreadCount   = 0;
+    convos.forEach(function (c) {
+      const msgs = c.messages || [];
+      totalMessages += msgs.length;
+      msgs.forEach(function (m) { if (!m.read) unreadCount++; });
+    });
+
+    function getUserName(id) {
+      const u = users.find(function (x) { return x.id === id; });
+      return u ? (u.name || u.email || u.phone || 'Unknown') : 'Unknown';
+    }
+
+    const rows = convos.length ? convos.map(function (c) {
+      const msgs     = c.messages || [];
+      const last     = msgs[msgs.length - 1];
+      const lastText = last ? escHtml((last.text || last.body || '').slice(0, 80)) : '<em>No messages</em>';
+      const lastTime = last ? timeAgo(last.createdAt || last.t || 0) : '';
+      const unread   = msgs.filter(function (m) { return !m.read; }).length;
+
+      // Build participant display
+      const participants = (c.participants || c.participantIds || []);
+      const names = participants.length
+        ? participants.map(function (id) { return escHtml(getUserName(id)); }).join(', ')
+        : (c.buyerId && c.sellerId
+            ? escHtml(getUserName(c.buyerId)) + ' &amp; ' + escHtml(getUserName(c.sellerId))
+            : 'Unknown participants');
+
+      const convId = escHtml(c.id || '');
+
+      // Expandable messages block
+      const msgsHtml = msgs.length ? msgs.map(function (m) {
+        const senderName = escHtml(getUserName(m.senderId || m.from || ''));
+        const msgTime    = new Date(m.createdAt || m.t || Date.now()).toLocaleString();
+        const isAdmin    = (users.find(function (x) { return x.id === (m.senderId || m.from); }) || {}).role === 'admin';
+        return `<div style="padding:6px 10px;border-left:3px solid ${isAdmin?'#1A3A8F':'#e5e7eb'};margin-bottom:6px;background:${isAdmin?'#eff6ff':'var(--n5)'};border-radius:0 6px 6px 0">
+          <div style="font-size:11px;font-weight:700;color:${isAdmin?'#1A3A8F':'var(--text-mid)'};margin-bottom:2px">${senderName}</div>
+          <div style="font-size:13px;color:var(--text-mid)">${escHtml((m.text||m.body||'').slice(0,300))}</div>
+          <div style="font-size:10px;color:var(--text-hint);margin-top:3px">${msgTime}</div>
+        </div>`;
+      }).join('') : '<div style="font-size:12px;color:var(--text-hint);padding:6px">No messages in this conversation</div>';
+
+      return `<div class="admin-row" style="padding:12px 14px">
+        <div class="admin-row-head" style="cursor:pointer" onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('conv-msgs-${convId}'))">
+          <div>
+            <div class="admin-row-name" style="font-size:13px;font-weight:700">${names}</div>
+            <div class="admin-row-meta" style="margin-top:3px">${lastText} &middot; ${lastTime}</div>
           </div>
-          <div style="display:flex;gap:8px;max-width:220px;margin:0 auto">
-            <button id="selfieStartBtn" onclick="H._profileVerify.startCamera()" style="flex:1;padding:10px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Camera</button>
-            <button id="selfieCapBtn" onclick="H._profileVerify.captureSelfie()" style="display:none;flex:1;padding:10px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Capture</button>
-            <button id="selfieRetakeBtn" onclick="H._profileVerify.retakeSelfie()" style="display:none;flex:1;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg> Retake</button>
-            <label for="selfieFile" style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">Upload</label>
-            <input type="file" id="selfieFile" accept="image/*" capture="user" style="display:none" onchange="H._profileVerify.handleSelfieFile(this)">
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            ${unread ? `<span style="background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">${unread} unread</span>` : ''}
+            <span style="font-size:11px;color:var(--sub);white-space:nowrap">${msgs.length} msg${msgs.length!==1?'s':''}</span>
+            <span style="color:var(--sub)">&#9660;</span>
           </div>
         </div>
-        <div class="fg"><div class="fl">ID Photo (Front)</div>
-          <label class="img-upload-zone" for="idPhotoFront"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-upload-title" id="idPhotoLabel">Upload front of ID</div><div class="img-upload-sub">National ID, Passport or Driver&#39;s License</div></label>
-          <input type="file" id="idPhotoFront" accept="image/*" capture="environment" style="display:none" onchange="H._profileVerify.previewIdPhoto(this)">
+        <div id="conv-msgs-${convId}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          ${msgsHtml}
         </div>
-        <button class="btn-pri" onclick="H._profileVerify.submit()">Submit for Verification</button>
+      </div>`;
+    }).join('') : '<div style="text-align:center;padding:40px 20px;color:var(--sub);font-size:14px">No conversations found.<br>Sync from Cloud to load messages.</div>';
+
+    return `
+      <div class="stats" style="margin:0 0 14px">
+        <div class="stat"><div class="stat-n">${convos.length}</div><div class="stat-l">Conversations</div></div>
+        <div class="stat"><div class="stat-n">${totalMessages}</div><div class="stat-l">Total Messages</div></div>
+        <div class="stat"><div class="stat-n">${unreadCount}</div><div class="stat-l">Unread</div></div>
+      </div>
+      <button class="btn-pri" style="width:100%;margin-bottom:14px" onclick="H._admin.syncAllMessages()">${S.reload} Sync from Cloud</button>
+      <div class="section-card" style="padding:0">${rows}</div>`;
+  }
+
+  // ── ADS MANAGEMENT ───────────────────────────────────────
+  const CATS = ['property','vehicles','electronics','furniture','fashion','services','agriculture','pets','kids','other','rooms','jobs'];
+
+  function renderAds() {
+    var now = Date.now();
+    var ads = H.state.paidAds || [];
+    var live = ads.filter(function(a){ return a.active && a.endsAt > now; });
+    return `
+      <div class="stats" style="margin:0 0 14px">
+        <div class="stat"><div class="stat-n">${live.length}</div><div class="stat-l">Live</div></div>
+        <div class="stat"><div class="stat-n">${ads.filter(function(a){return a.type==='banner';}).length}</div><div class="stat-l">Banners</div></div>
+        <div class="stat"><div class="stat-n">${ads.filter(function(a){return a.type==='spotlight';}).length}</div><div class="stat-l">Spotlights</div></div>
+      </div>
+      <div style="padding:0 4px">
+        <button class="btn-submit" onclick="H._admin.showAdForm()" style="width:100%;margin-bottom:14px">+ Create New Ad</button>
+        ${ads.length ? ads.map(function(a){ return renderAdRow(a, now); }).join('') : '<div style="text-align:center;padding:30px 16px;color:var(--sub)">No paid ads yet.<br>Create one to start showing businesses on the app.</div>'}
+      </div>`;
+  }
+
+  function renderAdRow(a, now) {
+    var isLive = a.active && a.endsAt > now;
+    var endDate = new Date(a.endsAt).toLocaleDateString('en-ZW', {day:'numeric',month:'short',year:'numeric'});
+    var typeLabel = a.type === 'banner' ? '🖼 Banner' : ('⭐ Spotlight · ' + (a.targetCat || ''));
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        ${a.imageUrl ? '<img src="'+escHtml(a.imageUrl)+'" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex-shrink:0">' : '<div style="width:44px;height:44px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">'+(a.type==='banner'?'🖼':'⭐')+'</div>'}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(a.businessName)}</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:2px">${typeLabel} · ends ${endDate}</div>
+        </div>
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;flex-shrink:0;${isLive?'background:#F0FDF4;color:#00A651':'background:var(--border);color:var(--sub)'}">${isLive?'LIVE':'OFF'}</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="ml-act-btn" onclick="H._admin.toggleAd('${a.id}')">${isLive ? 'Pause' : 'Activate'}</button>
+        <button class="ml-act-btn" onclick="H._admin.showAdForm('${a.id}')">Edit</button>
+        <button class="ml-act-btn red" onclick="H._admin.deleteAd('${a.id}')">Delete</button>
       </div>
     </div>`;
-  };
+  }
 
-  pages.ProfileVerify_after = function () {
-    H._profileVerify = {
-      _stream: null,
-      _selfieData: null,
+  // ── ADMIN ACTIONS ─────────────────────────────────────────
+  H._admin = {
+    setTab(t) {
+      _adminTab = t;
+      document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab===t));
+      const body = document.getElementById('adminBody');
+      if (body) body.innerHTML = renderBody();
+      if (t === 'verifications') {
+        syncVerificationsFromSupabase().then(function () { if (body) body.innerHTML = renderBody(); });
+      } else if (t === 'reports' && typeof H.syncReports === 'function') {
+        H.syncReports().then(function () { if (body) body.innerHTML = renderBody(); });
+      } else if (t === 'messages' && typeof H.syncConversations === 'function') {
+        H.syncConversations().then(function () { if (body) body.innerHTML = renderBody(); });
+      }
+    },
 
-      startCamera() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          H.toast('Camera not available — please upload a selfie photo.');
-          return;
-        }
-        const btn = document.getElementById('selfieStartBtn');
-        if (btn) btn.style.display = 'none';
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 640 } } })
-          .then(stream => {
-            this._stream = stream;
-            const vid = document.getElementById('selfieVid');
-            const ph  = document.getElementById('selfiePH');
-            const cap = document.getElementById('selfieCapBtn');
-            if (vid) { vid.srcObject = stream; vid.style.display = 'block'; }
-            if (ph)  ph.style.display = 'none';
-            if (cap) cap.style.display = 'flex';
-          })
-          .catch(() => {
-            H.toast('Camera permission denied — use Upload instead.');
-            const btn2 = document.getElementById('selfieStartBtn');
-            if (btn2) btn2.style.display = 'flex';
-          });
-      },
+    filterUsers(q) {
+      const ql = q.toLowerCase();
+      const el = document.getElementById('adminUsersList');
+      if (el) el.innerHTML = (H.state.users||[]).filter(u=>(u.name+u.email+u.phone).toLowerCase().includes(ql)).map(userRow).join('');
+    },
 
-      captureSelfie() {
-        const vid    = document.getElementById('selfieVid');
-        const canvas = document.getElementById('selfieCanvas');
-        if (!vid || !canvas) return;
-        canvas.width  = vid.videoWidth  || 480;
-        canvas.height = vid.videoHeight || 640;
-        const ctx = canvas.getContext('2d');
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(vid, 0, 0);
-        this._selfieData = canvas.toDataURL('image/jpeg', 0.85);
-        if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
-        vid.style.display = 'none';
-        const prev    = document.getElementById('selfiePrev');
-        const img     = document.getElementById('selfieImg');
-        const capBtn  = document.getElementById('selfieCapBtn');
-        const retake  = document.getElementById('selfieRetakeBtn');
-        if (prev)   prev.style.display = 'block';
-        if (img)    img.src = this._selfieData;
-        if (capBtn) capBtn.style.display = 'none';
-        if (retake) retake.style.display = 'flex';
-        H.toast('Selfie captured');
-      },
+    filterListings(q) {
+      const ql = q.toLowerCase();
+      const el = document.getElementById('adminLList');
+      if (el) el.innerHTML = (H.state.listings||[]).filter(l=>(l.title+l.city).toLowerCase().includes(ql)).sort((a,b)=>b.createdAt-a.createdAt).map(listingRow).join('');
+    },
 
-      retakeSelfie() {
-        this._selfieData = null;
-        const prev   = document.getElementById('selfiePrev');
-        const retake = document.getElementById('selfieRetakeBtn');
-        if (prev)   prev.style.display = 'none';
-        if (retake) retake.style.display = 'none';
-        this.startCamera();
-      },
+    filterListingsByStatus(status) {
+      const el = document.getElementById('adminLList');
+      if (!el) return;
+      const list = (H.state.listings||[]).filter(l=>status==='all'?true:l.status===status);
+      el.innerHTML = list.sort((a,b)=>b.createdAt-a.createdAt).map(listingRow).join('');
+      document.querySelectorAll('[data-lstatus]').forEach(b=>b.classList.toggle('on',b.dataset.lstatus===status));
+    },
 
-      handleSelfieFile(input) {
-        const file = input.files && input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-          this._selfieData = e.target.result;
-          const ph      = document.getElementById('selfiePH');
-          const vid     = document.getElementById('selfieVid');
-          const prev    = document.getElementById('selfiePrev');
-          const img     = document.getElementById('selfieImg');
-          const startBtn = document.getElementById('selfieStartBtn');
-          const capBtn  = document.getElementById('selfieCapBtn');
-          const retake  = document.getElementById('selfieRetakeBtn');
-          if (ph)       ph.style.display = 'none';
-          if (vid)      vid.style.display = 'none';
-          if (prev)     prev.style.display = 'block';
-          if (img)      img.src = this._selfieData;
-          if (startBtn) startBtn.style.display = 'none';
-          if (capBtn)   capBtn.style.display = 'none';
-          if (retake)   retake.style.display = 'flex';
-        };
-        reader.readAsDataURL(file);
-      },
+    filterTickets(f) {
+      const body = document.getElementById('adminBody');
+      if (body) body.innerHTML = renderSupport(f);
+    },
 
-      previewIdPhoto(input) {
-        const label = document.getElementById('idPhotoLabel');
-        if (input.files && input.files[0] && label) label.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> ID photo selected';
-      },
+    filterReports(f) {
+      const body = document.getElementById('adminBody');
+      if (body) body.innerHTML = renderReports(f);
+    },
 
-      async submit() {
-        const idType = document.getElementById('idType')?.value || 'National ID';
-        const idNum  = (document.getElementById('idNum')?.value || '').trim();
-        if (!idNum) { H.toast('Please enter your ID number'); return; }
-        if (!this._selfieData) { H.toast('Please take or upload a selfie photo'); return; }
-        if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
-        const btn = document.querySelector('.btn-pri[onclick="H._profileVerify.submit()"]');
-        if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
-        const u = H.currentUser();
-        const sb = window.supabase;
-
-        const doSubmit = async (idDocData) => {
-          try {
-            if (!sb) throw new Error('Not connected to server');
-            const { error: vErr } = await sb.from('verifications').upsert({
-              user_id: u.id,
-              id_doc: idDocData || null,
-              selfie: this._selfieData,
-              status: 'pending',
-              submitted_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
-            if (vErr) throw vErr;
-            const { error: pErr } = await sb.from('profiles').update({
-              verification_pending: true,
-              updated_at: new Date().toISOString()
-            }).eq('id', u.id);
-            if (pErr) throw pErr;
-            u.verificationPending    = true;
-            u.verification_pending   = true;
-            u.verificationIdType     = idType;
-            u.verificationIdNum      = idNum;
-            H.saveState();
-            H.toast('Verification submitted! Admin will review within 24 hours.');
-            H.goBack();
-          } catch (e) {
-            if (btn) { btn.disabled = false; btn.textContent = 'Submit for Verification'; }
-            H.toast('Failed to submit: ' + (e.message || 'Check your connection'));
+    banUser(uid_, type, reportId) {
+      if (!adminGuard()) return;
+      modal({
+        title: type==='perm' ? 'Permanently Ban User' : 'Suspend User 7 Days',
+        body: '<div class="fl">Reason</div><input class="fi" id="banReason" placeholder="Enter reason for action">',
+        confirmText: type==='perm' ? 'Ban Permanently' : 'Suspend 7 Days',
+        onConfirm: () => {
+          const reason = document.getElementById('banReason')?.value || 'Policy violation';
+          const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+          u.status = type==='perm' ? 'banned' : 'banned_temp';
+          u.banReason = reason;
+          if (type==='temp') u.banUntil = Date.now() + 7*86400000;
+          const sb = window.supabase;
+          if (sb && typeof sb.from === 'function') {
+            sb.from('profiles').update({ status: u.status, ban_reason: reason }).eq('id', uid_).catch(()=>{});
           }
-        };
+          if (reportId) { const r=(H.state.reports||[]).find(x=>x.id===reportId); if(r) r.status='resolved'; }
+          alog(`${type==='perm'?'Banned':'Suspended'}: ${u.name} — ${reason}`);
+          saveState(); toast(`User ${type==='perm'?'banned':'suspended'}`);
+          this.setTab('users');
+        }
+      });
+    },
 
-        const idFile = document.getElementById('idPhotoFront');
-        if (idFile && idFile.files && idFile.files[0]) {
-          const reader = new FileReader();
-          reader.onload = e => doSubmit(e.target.result);
-          reader.readAsDataURL(idFile.files[0]);
+    unban(uid_, reportId) {
+      if (!adminGuard()) return;
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.status='active'; u.banReason=null; u.banUntil=null;
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ status: 'active', ban_reason: null }).eq('id', uid_).catch(()=>{});
+      }
+      if (reportId) { const r=(H.state.reports||[]).find(x=>x.id===reportId); if(r) r.status='resolved'; }
+      alog(`Unbanned: ${u.name}`);
+      saveState(); toast('User unbanned'); this.setTab('users');
+    },
+
+    deleteUser(uid_) {
+      if (!adminGuard()) return;
+      modal({
+        title: 'Delete User',
+        body: 'This permanently deletes this user and all their listings. Cannot be undone.',
+        confirmText: 'Delete User',
+        onConfirm: () => {
+          const u = (H.state.users||[]).find(x=>x.id===uid_);
+          alog(`Deleted user: ${u?u.name:uid_}`);
+          H.state.users = (H.state.users||[]).filter(x=>x.id!==uid_);
+          H.state.listings = (H.state.listings||[]).filter(x=>x.sellerId!==uid_);
+          saveState(); toast('User deleted'); this.setTab('users');
+        }
+      });
+    },
+
+    makeAdmin(uid_) {
+      if (!adminGuard()) return;
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      modal({
+        title: 'Make Admin',
+        body: `Give admin access to ${escHtml(u.name)}? They will have full control of the platform.`,
+        confirmText: 'Make Admin',
+        onConfirm: () => {
+          u.role='admin';
+          const sb = window.supabase;
+          if (sb && typeof sb.from === 'function') {
+            sb.from('profiles').update({ role: 'admin' }).eq('id', uid_).catch(()=>{});
+          }
+          alog(`Made admin: ${u.name||'User'}`);
+          saveState(); toast(`${u.name||'User'} is now an admin`); this.setTab('users');
+        }
+      });
+    },
+
+    verifyUser(uid_) {
+      if (!adminGuard()) return;
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.verified=true; u.verifiedAt=Date.now();
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ verified: true }).eq('id', uid_).catch(()=>{});
+      }
+      alog(`Verified: ${u.name||'User'}`);
+      saveState(); toast(`${u.name||'User'} verified`); this.setTab('users');
+    },
+
+    approveVerification(uid_) {
+      if (!adminGuard()) return;
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.verified=true; u.verifiedAt=Date.now(); u.verificationPending=false;
+      alog(`Verification approved: ${u.name||'User'}`);
+      pushNotif(uid_,'Identity Verified ✓','Congratulations! Your identity has been verified on PaMarket.','verify');
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ verified: true, updated_at: new Date().toISOString() }).eq('id', uid_);
+      }
+      saveState(); toast(`${u.name||'User'} verified ✓`); this.setTab('verifications');
+    },
+
+    rejectVerification(uid_) {
+      if (!adminGuard()) return;
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.verificationPending=false;
+      alog(`Verification rejected: ${u.name||'User'}`);
+      pushNotif(uid_,'Verification Unsuccessful','Your ID verification could not be approved. Contact support for help.','warn');
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ verification_pending: false }).eq('id', uid_);
+        sb.from('verifications').delete().eq('user_id', uid_);
+      }
+      saveState(); toast(`Verification rejected for ${u.name||'User'}`); this.setTab('verifications');
+    },
+
+    revokeVerification(uid_) {
+      if (!adminGuard()) return;
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.verified=false; u.verifiedAt=null;
+      alog(`Verification revoked: ${u.name||'User'}`);
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ verified: false }).eq('id', uid_);
+      }
+      saveState(); toast(`Verification revoked for ${u.name||'User'}`); this.setTab('verifications');
+    },
+
+    verifyCompany(uid_) {
+      if (!adminGuard()) return;
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.companyVerified = true; u.companyVerifiedAt = Date.now();
+      alog(`Company verified: ${u.name}`);
+      pushNotif(uid_,'Company Verified ✓','Your company account has been verified on PaMarket.','verify');
+      saveState(); toast(`${u.name||'User'} company verified`); this.setTab('users');
+    },
+
+    revokeCompany(uid_) {
+      if (!adminGuard()) return;
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.companyVerified = false;
+      alog(`Company verification revoked: ${u.name}`);
+      saveState(); toast(`Company verification revoked`); this.setTab('users');
+    },
+
+    approveListing(lid) {
+      if (!adminGuard()) return;
+      const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
+      l.status='active';
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('listings').update({ status: 'active' }).eq('id', lid).catch(()=>{});
+      }
+      pushNotif(l.sellerId,'Listing Approved',`Your listing "${l.title||'your listing'}" is now live!`);
+      alog(`Approved listing: ${l.title}`);
+      saveState(); toast('Listing approved and live'); this.setTab('listings');
+    },
+
+    rejectListing(lid) {
+      if (!adminGuard()) return;
+      const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
+      modal({
+        title: 'Reject Listing',
+        body: '<div class="fl">Reason for rejection</div><input class="fi" id="rejectReason" placeholder="e.g. Misleading content, prohibited item">',
+        confirmText: 'Reject Listing',
+        onConfirm: () => {
+          const reason = document.getElementById('rejectReason')?.value || 'Policy violation';
+          l.status='rejected'; l.rejectReason=reason;
+          const sb = window.supabase;
+          if (sb && typeof sb.from === 'function') {
+            sb.from('listings').update({ status: 'rejected', reject_reason: reason }).eq('id', lid).catch(()=>{});
+          }
+          pushNotif(l.sellerId,'Listing Rejected',`Your listing "${l.title||'your listing'}" was rejected: ${reason}`);
+          alog(`Rejected listing: ${l.title} — ${reason}`);
+          saveState(); toast('Listing rejected'); this.setTab('listings');
+        }
+      });
+    },
+
+    banListing(lid, reportId) {
+      if (!adminGuard()) return;
+      const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
+      modal({
+        title: 'Remove Listing',
+        body: `Remove "${escHtml(l.title)}" from the marketplace? The seller will be notified.`,
+        confirmText: 'Remove Listing',
+        onConfirm: () => {
+          l.status='banned';
+          const sb = window.supabase;
+          if (sb && typeof sb.from === 'function') {
+            sb.from('listings').update({ status: 'banned' }).eq('id', lid).catch(()=>{});
+          }
+          if (reportId) { const r=(H.state.reports||[]).find(x=>x.id===reportId); if(r) r.status='resolved'; }
+          pushNotif(l.sellerId,'Listing Removed',`Your listing "${l.title||'your listing'}" was removed for policy violation.`);
+          alog(`Removed listing: ${l.title}`);
+          saveState(); toast('Listing removed'); this.setTab('listings');
+        }
+      });
+    },
+
+    restoreListing(lid) {
+      if (!adminGuard()) return;
+      const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
+      l.status='active';
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('listings').update({ status: 'active' }).eq('id', lid).catch(()=>{});
+      }
+      alog(`Restored listing: ${l.title}`);
+      saveState(); toast('Listing restored'); this.setTab('listings');
+    },
+
+    resolveReport(rid) {
+      if (!adminGuard()) return;
+      const r = (H.state.reports||[]).find(x=>x.id===rid); if (!r) return;
+      r.status='resolved';
+      alog(`Resolved report: ${rid}`);
+      saveState(); toast('Report resolved'); this.setTab('reports');
+    },
+
+    toggleSetting(k) {
+      if (!adminGuard()) return;
+      H.state[k] = !H.state[k];
+      alog(`Toggled setting: ${k} = ${H.state[k]}`);
+      saveState(); toast('Setting updated');
+      // Persist to Supabase so settings survive page reloads
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        const KEYS = ['requireListingApproval','autoApproveVerified','allowImageUploads',
+                      'signupPaused','requirePhoneVerification'];
+        const settingsObj = {};
+        KEYS.forEach(key => { settingsObj[key] = !!H.state[key]; });
+        sb.from('app_settings').upsert({ id: 1, settings: settingsObj, updated_at: new Date().toISOString() })
+          .then(r => { if (r && r.error) console.warn('settings save:', r.error.message); });
+      }
+      this.setTab('settings');
+    },
+
+    async broadcast() {
+      if (!adminGuard()) return;
+      const title  = (document.getElementById('bcastTitle')?.value  || '').trim();
+      const msg    = (document.getElementById('bcastMsg')?.value    || '').trim();
+      const target = document.getElementById('bcastTarget')?.value  || 'all';
+      if (!title || !msg) { toast('Enter title and message'); return; }
+
+      const btn = document.getElementById('bcastSendBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+
+      const c = window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null;
+      let userIds = [];
+      try {
+        if (c && target !== 'sellers' && target !== 'inactive') {
+          let q = c.from('profiles').select('id');
+          if (target === 'verified')   q = q.eq('verified', true);
+          if (target === 'unverified') q = q.eq('verified', false);
+          const res = await q.limit(5000);
+          if (res.data) userIds = res.data.map(p => p.id).filter(Boolean);
+        } else if (c) {
+          const [uRes, lRes] = await Promise.all([
+            c.from('profiles').select('id').limit(5000),
+            c.from('listings').select('seller_id').neq('status','banned').limit(10000)
+          ]);
+          const sellerSet = new Set((lRes.data||[]).map(l => l.seller_id).filter(Boolean));
+          const allIds    = (uRes.data||[]).map(p => p.id).filter(Boolean);
+          userIds = allIds.filter(id => target === 'sellers' ? sellerSet.has(id) : !sellerSet.has(id));
         } else {
-          doSubmit(null);
+          // Fallback to local state when Supabase unavailable
+          const localUsers = H.state.users || [];
+          const localSellers = new Set((H.state.listings||[]).map(l=>l.sellerId));
+          userIds = localUsers.filter(u => {
+            if (target==='verified')   return u.verified;
+            if (target==='unverified') return !u.verified;
+            if (target==='sellers')    return localSellers.has(u.id);
+            if (target==='inactive')   return !localSellers.has(u.id);
+            return true;
+          }).map(u => u.id);
         }
-      },
+      } catch(e) {
+        console.warn('broadcast fetch error:', e);
+        toast('Failed to fetch users. Please try again.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Send Broadcast'; }
+        return;
+      }
 
-      async cancelPending() {
-        const u = H.currentUser();
-        u.verificationPending  = false;
-        u.verification_pending = false;
+      if (!userIds.length) {
+        toast('No users found for this filter');
+        if (btn) { btn.disabled = false; btn.textContent = 'Send Broadcast'; }
+        return;
+      }
+
+      userIds.forEach(id => H.pushNotif(id, title, msg, 'system'));
+      alog(`Broadcast (${target}) to ${userIds.length} users: ${msg.slice(0,50)}`);
+      saveState();
+      toast(`✓ Broadcast sent to ${userIds.length} user${userIds.length!==1?'s':''}`);
+      document.getElementById('bcastTitle').value = '';
+      document.getElementById('bcastMsg').value = '';
+      if (btn) { btn.disabled = false; btn.textContent = 'Send Broadcast'; }
+    },
+
+    respondToTicket(tid) {
+      const t = (H.state.supportTickets||[]).find(x=>x.id===tid); if (!t) return;
+      const u = (H.state.users||[]).find(x=>x.id===t.userId)||{name:'User'};
+      modal({
+        title: `Reply to ${escHtml(u.name)}`,
+        body: `<div class="fl">Ticket: ${escHtml(t.subject||'')}</div>
+               <div class="fl" style="margin-top:10px">Your Response</div>
+               <textarea class="fi" rows="4" id="ticketReply" placeholder="Type your response to the user..."></textarea>`,
+        confirmText: 'Send Response',
+        onConfirm: () => {
+          const reply = document.getElementById('ticketReply')?.value?.trim();
+          if (!reply) { toast('Enter a response'); return false; }
+          if (!t.replies) t.replies = [];
+          t.replies.push({ text: reply, from: 'admin', t: Date.now() });
+          t.status = 'in-progress';
+          pushNotif(t.userId, 'Support Reply', `Admin replied to: ${t.subject}`);
+          alog(`Replied to ticket: ${t.subject}`);
+          saveState(); toast('Response sent'); this.filterTickets('all');
+        }
+      });
+    },
+
+    updateTicketStatus(tid, status) {
+      const t = (H.state.supportTickets||[]).find(x=>x.id===tid); if (!t) return;
+      t.status = status;
+      alog(`Ticket ${status}: ${t.subject||tid}`);
+      saveState(); toast(`Ticket marked as ${status}`); this.filterTickets('all');
+    },
+
+    reopenTicket(tid) {
+      const t = (H.state.supportTickets||[]).find(x=>x.id===tid); if (!t) return;
+      t.status = 'open';
+      alog(`Reopened ticket: ${t.subject||tid}`);
+      saveState(); toast('Ticket reopened'); this.filterTickets('all');
+    },
+
+    exportData() {
+      if (!adminGuard()) return;
+      const data = JSON.stringify(H.state, null, 2);
+      const blob = new Blob([data], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pamarket-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      alog('Exported all data');
+      saveState(); toast('Data exported');
+    },
+
+    clearOldData() {
+      if (!adminGuard()) return;
+      modal({
+        title: 'Clear Old Data',
+        body: 'Delete listings, transactions, and logs older than 30 days. Active listings are kept. Cannot be undone.',
+        confirmText: 'Clear Old Data',
+        onConfirm: () => {
+          const cutoff = Date.now() - 30*86400000;
+          const before = (H.state.listings||[]).length;
+          H.state.listings  = (H.state.listings||[]).filter(l=>l.createdAt>cutoff||l.status==='active');
+          H.state.txns      = (H.state.txns||[]).filter(t=>t.t>cutoff);
+          H.state.adminLogs = (H.state.adminLogs||[]).filter(l=>l.t>cutoff);
+          H.state.reports   = (H.state.reports||[]).filter(r=>r.t>cutoff||r.status==='open');
+          alog(`Cleared old data: ${before-(H.state.listings||[]).length} listings removed`);
+          saveState(); toast('Old data cleared'); this.setTab('settings');
+        }
+      });
+    },
+
+    resetApp() {
+      if (!adminGuard()) return;
+      modal({
+        title: 'Reset App',
+        body: '<p style="color:var(--red);font-weight:700;margin-bottom:10px">WARNING: Deletes ALL data including users, listings, and messages. Irreversible.</p><div class="fl">Type RESET to confirm</div><input class="fi" id="resetConfirm" placeholder="Type RESET">',
+        confirmText: 'Reset Everything',
+        onConfirm: () => {
+          if (document.getElementById('resetConfirm')?.value?.trim()!=='RESET') {
+            toast('Type RESET to confirm'); return false;
+          }
+          const admin = currentUser();
+          H.state.users = [admin];
+          H.state.listings = [];
+          H.state.conversations = [];
+          H.state.reports = [];
+          H.state.txns = [];
+          H.state.saves = {};
+          H.state.notifs = {};
+          H.state.supportTickets = [];
+          H.state.adminLogs = [{action:'App reset by admin',adminName:admin.name,t:Date.now()}];
+          saveState(); toast('App reset complete'); this.setTab('overview');
+        }
+      });
+    },
+
+    clearLogs() {
+      if (!adminGuard()) return;
+      modal({
+        title: 'Clear Logs',
+        body: 'This will delete all admin logs. Cannot be undone.',
+        confirmText: 'Clear Logs',
+        onConfirm: () => {
+          H.state.adminLogs = [];
+          saveState(); toast('Logs cleared'); this.setTab('logs');
+        }
+      });
+    },
+
+    showAdForm(id) {
+      if (!adminGuard()) return;
+      const ad = id ? (H.state.paidAds||[]).find(a=>a.id===id) : null;
+      const today = new Date().toISOString().slice(0,10);
+      const inAMonth = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+      const catOptions = CATS.map(c=>`<option value="${c}" ${ad&&ad.targetCat===c?'selected':''}>${c}</option>`).join('');
+      H.modal({
+        title: ad ? 'Edit Ad' : 'Create Paid Ad',
+        body: `
+          <div class="fg" style="margin-top:8px"><div class="fl">Ad Type</div>
+            <select class="fi" id="_adType" onchange="document.getElementById('_spotlightRow').style.display=this.value==='spotlight'?'':'none'">
+              <option value="banner" ${!ad||ad.type==='banner'?'selected':''}>🖼 Home Banner</option>
+              <option value="spotlight" ${ad&&ad.type==='spotlight'?'selected':''}>⭐ Category Spotlight</option>
+            </select></div>
+          <div class="fg"><div class="fl">Business Name</div><input class="fi" id="_adBiz" value="${escHtml(ad?ad.businessName:'')}" placeholder="e.g. Mega Furniture Harare"></div>
+          <div class="fg"><div class="fl">Headline / Tagline</div><input class="fi" id="_adHead" value="${escHtml(ad?ad.headline||'':'')}" placeholder="e.g. Best prices in Harare!"></div>
+          <div class="fg"><div class="fl">Sub-tagline (optional)</div><input class="fi" id="_adTag" value="${escHtml(ad?ad.tagline||'':'')}" placeholder="e.g. Free delivery on orders over $50"></div>
+          <div class="fg"><div class="fl">Image URL (optional)</div><input class="fi" id="_adImg" value="${escHtml(ad?ad.imageUrl||'':'')}" placeholder="https://... or leave blank for colour card"></div>
+          <div class="fg"><div class="fl">Background Colour</div><div style="display:flex;align-items:center;gap:8px"><input type="color" id="_adColor" value="${ad?ad.bgColor||'#1A3A8F':'#1A3A8F'}" style="width:44px;height:36px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><span id="_adColorHex" style="font-size:13px;color:var(--sub)">${ad?ad.bgColor||'#1A3A8F':'#1A3A8F'}</span></div></div>
+          <div class="fg"><div class="fl">Tap Destination URL (optional)</div><input class="fi" id="_adLink" value="${escHtml(ad?ad.linkUrl||'':'')}" placeholder="https://wa.me/2637... or leave blank"></div>
+          <div class="fg" id="_spotlightRow" style="display:${ad&&ad.type==='spotlight'?'':'none'}"><div class="fl">Target Category</div><select class="fi" id="_adCat">${catOptions}</select></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="fg"><div class="fl">Start Date</div><input class="fi" type="date" id="_adStart" value="${ad?new Date(ad.startsAt).toISOString().slice(0,10):today}"></div>
+            <div class="fg"><div class="fl">End Date</div><input class="fi" type="date" id="_adEnd" value="${ad?new Date(ad.endsAt).toISOString().slice(0,10):inAMonth}"></div>
+          </div>`,
+        confirmText: ad ? 'Save Changes' : 'Create Ad',
+        onConfirm: () => H._admin.saveAd(id)
+      });
+      setTimeout(()=>{
+        const colorInput = document.getElementById('_adColor');
+        if (colorInput) colorInput.oninput = function(){ const hex=document.getElementById('_adColorHex'); if(hex) hex.textContent=this.value; };
+      }, 100);
+    },
+
+    saveAd(id) {
+      const type  = (document.getElementById('_adType')||{}).value || 'banner';
+      const biz   = ((document.getElementById('_adBiz')||{}).value||'').trim();
+      const head  = ((document.getElementById('_adHead')||{}).value||'').trim();
+      const tag   = ((document.getElementById('_adTag')||{}).value||'').trim();
+      const img   = ((document.getElementById('_adImg')||{}).value||'').trim();
+      const color = ((document.getElementById('_adColor')||{}).value||'#1A3A8F');
+      const link  = ((document.getElementById('_adLink')||{}).value||'').trim();
+      const cat   = ((document.getElementById('_adCat')||{}).value)||'';
+      const start = new Date(((document.getElementById('_adStart')||{}).value)||new Date().toISOString().slice(0,10)).getTime();
+      const end   = new Date(((document.getElementById('_adEnd')||{}).value)||new Date(Date.now()+30*86400000).toISOString().slice(0,10)).getTime();
+      if (!biz) { toast('Enter business name', 4000, true); return false; }
+      if (end <= start) { toast('End date must be after start date', 4000, true); return false; }
+      H.state.paidAds = H.state.paidAds || [];
+      if (id) {
+        const ad = H.state.paidAds.find(a=>a.id===id);
+        if (ad) Object.assign(ad, {type,businessName:biz,headline:head,tagline:tag,imageUrl:img,bgColor:color,linkUrl:link,targetCat:cat,startsAt:start,endsAt:end});
+        alog(`Updated ad: ${biz}`);
+      } else {
+        H.state.paidAds.unshift({id:uid(),type,businessName:biz,headline:head,tagline:tag,imageUrl:img,bgColor:color,linkUrl:link,targetCat:cat,startsAt:start,endsAt:end,active:true,createdAt:Date.now()});
+        alog(`Created ad: ${biz} (${type})`);
+      }
+      saveState(); toast('Ad saved!'); this.setTab('ads');
+    },
+
+    toggleAd(id) {
+      const ad = (H.state.paidAds||[]).find(a=>a.id===id); if (!ad) return;
+      ad.active = !ad.active;
+      alog(`${ad.active?'Activated':'Paused'} ad: ${ad.businessName}`);
+      saveState(); this.setTab('ads');
+    },
+
+    async syncAllMessages() {
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') {
+        toast('Supabase not available'); return;
+      }
+      const body = document.getElementById('adminBody');
+      try {
+        // Fetch messages and conversations in parallel
+        const [msgsRes, convosRes] = await Promise.all([
+          sb.from('messages').select('*').order('created_at', { ascending: false }).limit(500),
+          sb.from('conversations').select('*').limit(200)
+        ]);
+
+        const msgs   = (msgsRes  && msgsRes.data)  || [];
+        const convos = (convosRes && convosRes.data) || [];
+
+        // Build conversations map from DB rows
+        if (!H.state.conversations) H.state.conversations = [];
+        const convoMap = {};
+        H.state.conversations.forEach(function (c) { convoMap[c.id] = c; });
+
+        convos.forEach(function (c) {
+          const cid = c.id;
+          if (!convoMap[cid]) {
+            convoMap[cid] = {
+              id: cid,
+              participants: c.participant_ids || c.participants || [c.buyer_id, c.seller_id].filter(Boolean),
+              buyerId:  c.buyer_id  || null,
+              sellerId: c.seller_id || null,
+              listingId: c.listing_id || null,
+              createdAt: c.created_at ? new Date(c.created_at).getTime() : Date.now(),
+              messages: []
+            };
+          } else {
+            // Merge fields
+            const existing = convoMap[cid];
+            if (!existing.participants || !existing.participants.length) {
+              existing.participants = c.participant_ids || c.participants || [c.buyer_id, c.seller_id].filter(Boolean);
+            }
+          }
+        });
+
+        // Attach messages to conversations
+        msgs.forEach(function (m) {
+          const cid = m.conversation_id;
+          if (!cid) return;
+          if (!convoMap[cid]) {
+            convoMap[cid] = { id: cid, participants: [], messages: [], createdAt: Date.now() };
+          }
+          const c = convoMap[cid];
+          if (!c.messages) c.messages = [];
+          const exists = c.messages.some(function (x) { return x.id === m.id; });
+          if (!exists) {
+            c.messages.push({
+              id:        m.id,
+              senderId:  m.sender_id  || m.senderId  || null,
+              text:      m.content    || m.text       || m.body || '',
+              createdAt: m.created_at ? new Date(m.created_at).getTime() : Date.now(),
+              read:      m.is_read    || m.read       || false
+            });
+          }
+        });
+
+        // Sort messages within each conversation
+        Object.values(convoMap).forEach(function (c) {
+          (c.messages || []).sort(function (a, b) { return a.createdAt - b.createdAt; });
+        });
+
+        H.state.conversations = Object.values(convoMap);
+
+        // Collect all participant IDs and fetch missing profiles
+        const knownIds = new Set((H.state.users || []).map(function (u) { return u.id; }));
+        const missingIds = [];
+        H.state.conversations.forEach(function (c) {
+          (c.participants || []).forEach(function (id) { if (id && !knownIds.has(id)) missingIds.push(id); });
+          if (c.buyerId  && !knownIds.has(c.buyerId))  missingIds.push(c.buyerId);
+          if (c.sellerId && !knownIds.has(c.sellerId)) missingIds.push(c.sellerId);
+        });
+        const uniqueMissing = [...new Set(missingIds)];
+        if (uniqueMissing.length) {
+          const profilesRes = await sb.from('profiles').select('id,name,phone,email').in('id', uniqueMissing);
+          const profiles = (profilesRes && profilesRes.data) || [];
+          if (!H.state.users) H.state.users = [];
+          profiles.forEach(function (p) {
+            if (!H.state.users.find(function (u) { return u.id === p.id; })) {
+              H.state.users.push({
+                id: p.id, name: p.name || 'Unknown',
+                email: p.email || '', phone: p.phone || '',
+                role: 'user', status: 'active', joinedAt: Date.now()
+              });
+            }
+          });
+        }
+
         H.saveState();
-        const sb = window.supabase;
-        if (sb) {
-          await sb.from('profiles').update({ verification_pending: false }).eq('id', u.id);
-          await sb.from('verifications').delete().eq('user_id', u.id);
+        alog('Synced messages from cloud');
+        if (body) body.innerHTML = renderBody();
+        toast('Messages synced');
+      } catch (e) {
+        console.error('syncAllMessages error:', e);
+        toast('Failed to sync messages');
+      }
+    },
+
+    deleteAd(id) {
+      const ad = (H.state.paidAds||[]).find(a=>a.id===id); if (!ad) return;
+      modal({
+        title: 'Delete Ad',
+        body: `Remove the ad for <strong>${escHtml(ad.businessName)}</strong>? This cannot be undone.`,
+        confirmText: 'Delete', danger: true,
+        onConfirm: () => {
+          H.state.paidAds = (H.state.paidAds||[]).filter(a=>a.id!==id);
+          alog(`Deleted ad: ${ad.businessName}`);
+          saveState(); toast('Ad deleted'); this.setTab('ads');
         }
-        H.toast('Verification request cancelled');
-        H.renderPage('ProfileVerify');
-      }
-    };
-  };
-
-  pages.Reviews = function (params) {
-    const viewId = params && params.id;
-    const me = H.currentUser();
-    const u  = viewId ? (H.state.users || []).find(x => x.id === viewId) : me;
-    if (!u) return '<div class="page active">' + H.innerTopbar('Reviews') + H.emptyState('User not found', '', null, null) + '</div>';
-    const isOwn = !viewId || (me && viewId === me.id);
-    const reviews = u.reviews || [];
-    const avg = reviews.length ? (reviews.reduce((a,r) => a + (r.rating||0), 0) / reviews.length).toFixed(1) : null;
-    const dist = [5,4,3,2,1].map(n => ({ n, count: reviews.filter(r => Math.round(r.rating||0)===n).length }));
-    const maxDist = Math.max(1, ...dist.map(d => d.count));
-    const alreadyReviewed = me && reviews.some(r => r.reviewerId === me.id);
-    return `<div class="page active">
-      ${H.innerTopbar(isOwn ? 'My Reviews' : H.escHtml(u.name) + '\'s Reviews')}
-      <div style="background:var(--card);padding:20px 16px;border-bottom:1px solid var(--border)">
-        <div style="display:flex;gap:20px;align-items:center">
-          <div style="text-align:center">
-            <div style="font-size:52px;font-weight:900;color:var(--text);line-height:1">${avg || '–'}</div>
-            <div style="display:flex;justify-content:center;gap:2px;margin:6px 0">${avg ? stars(parseFloat(avg)) : stars(0)}</div>
-            <div style="font-size:12px;color:var(--sub)">${reviews.length} review${reviews.length===1?'':'s'}</div>
-          </div>
-          <div style="flex:1">
-            ${dist.map(d => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><div style="font-size:11px;color:var(--sub);width:8px">${d.n}</div><div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;background:#f59e0b;width:${Math.round((d.count/maxDist)*100)}%;border-radius:3px;transition:width .3s"></div></div><div style="font-size:11px;color:var(--sub);width:14px;text-align:right">${d.count}</div></div>`).join('')}
-          </div>
-        </div>
-        ${!isOwn && me && !alreadyReviewed ? `<button onclick="H.leaveReview('${u.id}')" style="width:100%;margin-top:16px;padding:12px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Leave a Review</button>` : ''}
-        ${!isOwn && me && alreadyReviewed ? `<div style="text-align:center;margin-top:14px;font-size:13px;color:var(--sub)">You have already reviewed this seller</div>` : ''}
-      </div>
-      <div style="padding:12px 14px 88px">
-        ${reviews.length ? reviews.slice().sort((a,b) => b.date - a.date).slice(0,20).map(r => `
-          <div style="background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid var(--border)">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-              <div><div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(r.reviewerName || 'Anonymous')}</div><div style="display:flex;gap:2px;margin-top:3px">${stars(r.rating||0)}</div></div>
-              <div style="font-size:12px;color:var(--sub)">${H.timeAgo(r.date)}</div>
-            </div>
-            ${r.text ? `<div style="font-size:13px;color:var(--text);line-height:1.6;margin-top:8px">${H.escHtml(r.text)}</div>` : ''}
-          </div>`).join('') : `<div style="text-align:center;padding:48px 20px"><div style="display:flex;justify-content:center;margin-bottom:12px"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">No reviews yet</div><div style="font-size:13px;color:var(--sub)">Reviews from buyers will appear here after transactions</div></div>`}
-      </div>
-    </div>`;
-  };
-
-  H.leaveReview = function (sellerId) {
-    const me = H.currentUser();
-    if (!me) { H.requireAuth('Sign in to leave a review'); return; }
-    if (sellerId === me.id) { H.toast('You cannot review yourself'); return; }
-    H.modal({
-      title: 'Leave a Review',
-      body: `<div style="text-align:center;margin-bottom:14px"><div style="font-size:13px;color:var(--sub);margin-bottom:10px">Tap to rate your experience</div><div id="starPicker" style="display:flex;justify-content:center;gap:8px">${[1,2,3,4,5].map(n => `<button data-star="${n}" onclick="H._pickStar(${n})" style="background:none;border:none;cursor:pointer;padding:4px;line-height:1"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--sub)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>`).join('')}</div></div><textarea id="reviewText" rows="3" placeholder="Share your experience with this seller…" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif"></textarea>`,
-      confirmText: 'Submit Review',
-      onConfirm: () => {
-        const rating = H._selectedStar || 0;
-        const text   = (document.getElementById('reviewText') || {}).value || '';
-        if (!rating) { H.toast('Please select a star rating'); return false; }
-        H._submitReview(sellerId, rating, text);
-      }
-    });
-  };
-
-  H._selectedStar = 0;
-  H._pickStar = function (n) {
-    H._selectedStar = n;
-    const btns = document.querySelectorAll('#starPicker button');
-    btns.forEach(function(b) {
-      const v = parseInt(b.getAttribute('data-star'));
-      const filled = v <= n;
-      b.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" fill="${filled ? '#f59e0b' : 'none'}" stroke="${filled ? '#f59e0b' : 'currentColor'}" stroke-width="2" style="color:${filled ? '#f59e0b' : 'var(--sub)'}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
-    });
-  };
-
-  H._submitReview = function (sellerId, rating, text) {
-    const me = H.currentUser(); if (!me) return;
-    const seller = (H.state.users || []).find(x => x.id === sellerId); if (!seller) return;
-    seller.reviews  = seller.reviews  || [];
-    seller.ratings  = seller.ratings  || [];
-    const dup = seller.reviews.find(r => r.reviewerId === me.id);
-    if (dup) { H.toast('You have already reviewed this seller'); return; }
-    const review = { id: H.uid(), reviewerId: me.id, reviewerName: me.name || 'User', rating, text, date: Date.now() };
-    seller.reviews.unshift(review);
-    seller.ratings.push(rating);
-    H.saveState();
-    var _sb = window.supabase;
-    if (_sb && typeof _sb.from === 'function') {
-      _sb.from('reviews').insert({
-        seller_id: sellerId, reviewer_id: me.id,
-        reviewer_name: me.name || 'User', rating: rating,
-        body: text || null, created_at: new Date().toISOString()
-      }).then(function(res) {
-        if (res && res.error) console.warn('Review sync failed:', res.error.message);
       });
     }
-    H.pushNotif(sellerId, 'New Review', me.name + ' left you a ' + rating + '-star review', 'review');
-    H.toast('Review submitted. Thank you!');
-    H.renderPage('Reviews', {id: sellerId});
-  };
-
-  H._openAppliedJobs = function () { H.openInner('AppliedJobs'); };
-
-  // ── JOB SEEKER PROFILE — READ-ONLY VIEW (LinkedIn-style) ──
-  pages.JobSeekerProfile = function () {
-    const u = H.currentUser();
-    if (!u) return H.emptyState('Not logged in', 'Please sign in');
-
-    const cv       = u.cv || {};
-    const exp      = cv.experience || [];
-    const edu      = cv.education  || [];
-    const skills   = (u.skills || (cv.skills || []).join(',') || '').split(',').map(s => s.trim()).filter(Boolean);
-    const headline = u.jobTitle || cv.headline || '';
-    const bio      = u.bio || cv.summary || '';
-    const location = u.city || cv.location || '';
-    const jobTypes = (u.jobTypes || '').split(',').map(s => s.trim()).filter(Boolean);
-    const salary   = u.expectedSalary || cv.expectedSalary || '';
-    const hasProfile = !!(headline || bio || skills.length || exp.length || edu.length);
-
-    const sec = (title, icon, content) => `
-      <div style="background:#fff;border-radius:16px;margin-bottom:12px;border:1px solid #E4E8F0;overflow:hidden">
-        <div style="padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #F0F4FF">
-          <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.5px">${icon}${title}</div>
-          ${title==='Experience'?`<button onclick="H._cvProfile.addExp()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>`:''}
-          ${title==='Education'?`<button onclick="H._cvProfile.addEdu()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>`:''}
-        </div>
-        <div style="padding:14px 16px">${content}</div>
-      </div>`;
-
-    const expHtml = exp.length ? exp.map((e, i) => `
-      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #F0F4FF">
-        <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(e.title||'')}</div>
-        <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.company||'')}</div>
-        <div style="font-size:12px;color:#667085;margin-top:2px">${H.escHtml(e.duration||'')}${e.current?' · Current':''}</div>
-        ${e.desc?`<div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.55">${H.escHtml(e.desc)}</div>`:''}
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button onclick="H._cvProfile.editExp(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
-          <button onclick="H._cvProfile.delExp(${i})"  style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
-        </div>
-      </div>`).join('')
-      : '<div style="color:#667085;font-size:13px">No experience added yet</div>';
-
-    const eduHtml = edu.length ? edu.map((e, i) => `
-      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #F0F4FF">
-        <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(e.degree||'')}</div>
-        <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.school||'')}</div>
-        <div style="font-size:12px;color:#667085;margin-top:2px">${H.escHtml(e.year||'')}</div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button onclick="H._cvProfile.editEdu(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
-          <button onclick="H._cvProfile.delEdu(${i})"  style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
-        </div>
-      </div>`).join('')
-      : '<div style="color:#667085;font-size:13px">No education added yet</div>';
-
-    const skillsHtml = skills.length
-      ? skills.map(s => `<span style="display:inline-block;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">${H.escHtml(s)}</span>`).join('')
-      : '<div style="color:#667085;font-size:13px">No skills added yet</div>';
-
-    const jtHtml = jobTypes.length
-      ? jobTypes.map(t => `<span style="display:inline-block;background:#F0FDF4;color:#15803d;border:1px solid #BBF7D0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">${H.escHtml(t)}</span>`).join('')
-      : '<div style="color:#667085;font-size:13px">Not set</div>';
-
-    const contactHtml = (() => {
-      const rows = [];
-      if (u.whatsappFull || u.whatsappNum) rows.push(`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span style="font-size:13px;color:var(--text)">+${H.escHtml(u.whatsappFull||u.whatsappNum||'')}</span></div>`);
-      if (u.contactMethod) rows.push(`<div style="font-size:13px;color:#667085">Preferred: <strong style="color:var(--text)">${H.escHtml(u.contactMethod)}</strong></div>`);
-      if (u.linkedinUrl)   rows.push(`<div style="margin-top:6px;font-size:13px"><a href="${H.escHtml(u.linkedinUrl)}" target="_blank" style="color:#1A3A8F;font-weight:600">LinkedIn Profile</a></div>`);
-      if (u.websiteUrl)    rows.push(`<div style="margin-top:4px;font-size:13px"><a href="${H.escHtml(u.websiteUrl)}" target="_blank" style="color:#1A3A8F;font-weight:600">Portfolio / Website</a></div>`);
-      return rows.length ? rows.join('') : '<div style="color:#667085;font-size:13px">No contact info added yet</div>';
-    })();
-
-    const resumeHtml = (u.cvFileUrl || u.cvFileName)
-      ? `<div style="display:flex;align-items:center;gap:10px;background:#F8FAFF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 14px">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${H.escHtml(u.cvFileName||'Resume')}</div></div>
-          ${u.cvFileUrl?`<a href="${H.escHtml(u.cvFileUrl)}" target="_blank" style="font-size:12px;font-weight:700;color:#1A3A8F;text-decoration:none;flex-shrink:0">View</a>`:''}
-        </div>`
-      : '<div style="color:#667085;font-size:13px">No resume uploaded yet</div>';
-
-    if (!hasProfile) {
-      return `<div class="page active">
-        ${H.innerTopbar('My Job Profile')}
-        <div style="padding:40px 24px;text-align:center">
-          <div style="width:72px;height:72px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
-            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#1A3A8F" stroke-width="1.5"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
-          </div>
-          <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">You don't have a job profile yet</div>
-          <div style="font-size:13px;color:#667085;line-height:1.6;margin-bottom:24px">Create your profile so employers in Hire Talent can find and contact you.</div>
-          <button onclick="H.openInner('CandidateProfile')" style="width:100%;max-width:280px;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Create Job Profile</button>
-        </div>
-      </div>`;
-    }
-
-    return `<div class="page active">
-      ${H.innerTopbar('My Job Profile')}
-      <div style="padding:0 14px 100px">
-
-        <!-- Profile Header Card -->
-        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:20px;padding:20px;margin:14px 0;display:flex;gap:14px;align-items:flex-start">
-          <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;font-weight:800;color:#fff;border:2.5px solid rgba(255,255,255,.4)">
-            ${u.avatar?`<img src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">`:H.initials(u.name||'')}
-          </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:17px;font-weight:800;color:#fff">${H.escHtml(u.name||'')}</div>
-            ${headline?`<div style="font-size:13px;color:rgba(255,255,255,.9);font-weight:600;margin-top:3px">${H.escHtml(headline)}</div>`:''}
-            ${location?`<div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:2px;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${H.escHtml(location)}</div>`:''}
-            ${u.openToWork?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.25);border:1px solid rgba(34,197,94,.5);border-radius:20px;padding:3px 10px;margin-top:6px"><svg viewBox="0 0 24 24" width="10" height="10" fill="#22c55e" stroke="none"><circle cx="12" cy="12" r="12"/></svg><span style="font-size:11px;font-weight:700;color:#86efac">Open to Work</span></div>`:''}
-          </div>
-        </div>
-
-        ${u.verified?`<div style="display:flex;align-items:center;gap:6px;background:#ECFDF5;border:1.5px solid #6EE7B7;border-radius:10px;padding:10px 14px;margin-bottom:12px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;font-weight:700;color:#059669">Identity Verified</span></div>`:''}
-
-        ${bio?sec('About','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg> ',`<div style="font-size:13px;color:var(--text);line-height:1.65">${H.escHtml(bio)}</div>`):''}
-
-        ${sec('Skills','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> ', skillsHtml)}
-        ${jobTypes.length?sec('Job Type / Availability','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> ', jtHtml):''}
-        ${salary?sec('Expected Salary','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> ',`<div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(String(salary))}</div>`):''}
-        ${sec('Work Experience','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> ', expHtml)}
-        ${sec('Education','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> ', eduHtml)}
-        ${sec('Contact & Links','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> ', contactHtml)}
-        ${sec('Resume / CV','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ', resumeHtml)}
-
-      </div>
-
-      <!-- Fixed bottom Edit button -->
-      <div style="position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #E4E8F0;z-index:200">
-        <button onclick="H.openInner('CandidateProfile')" style="width:100%;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Edit Profile
-        </button>
-      </div>
-    </div>`;
-  };
-
-  pages.JobSeekerProfile_after = function () {
-    function captureDraft() {
-      const u = H.currentUser();
-      if (!u) return;
-      u.cv = u.cv || {};
-      const headlineEl = document.getElementById('cvHeadline');
-      const summaryEl = document.getElementById('cvSummary');
-      const skillsEl = document.getElementById('cvSkills');
-      const certsEl = document.getElementById('cvCerts');
-      const salaryEl = document.getElementById('cvSalary');
-      const locationEl = document.getElementById('cvLocation');
-      const visibleEl = document.getElementById('cvVisible');
-      if (headlineEl) u.cv.headline = headlineEl.value.trim();
-      if (summaryEl) u.cv.summary = summaryEl.value.trim();
-      if (skillsEl) u.cv.skills = skillsEl.value.split(',').map(s => s.trim()).filter(Boolean);
-      if (certsEl) u.cv.certs = certsEl.value.split('\n').map(s => s.trim()).filter(Boolean);
-      if (salaryEl) u.cv.expectedSalary = parseFloat(salaryEl.value) || null;
-      if (locationEl) u.cv.location = locationEl.value.trim();
-      if (visibleEl) u.cv.visible = visibleEl.checked;
-    }
-    H._cvProfile = {
-      save() {
-        const u = H.currentUser();
-        if (!u) return;
-        captureDraft();
-        // Make visible in HireTalent if they have a headline or experience
-        if (u.cv.visible && (u.cv.headline || u.cv.summary || (u.cv.experience && u.cv.experience.length))) {
-          u.openToWork = true;
-        }
-        u.jobTitle = u.cv.headline || u.jobTitle || '';
-        u.skills = (u.cv.skills || []).join(', ');
-        H.saveState();
-        const sb = window.supabase;
-        if (sb && typeof sb.from === 'function') {
-          sb.from('profiles').upsert({
-            id: u.id, cv: u.cv,
-            job_title: u.jobTitle || null,
-            skills: u.skills || null,
-            city: u.cv.location || null,
-            open_to_work: u.openToWork || false,
-            updated_at: new Date().toISOString()
-          }).then(r => { if (r && r.error) console.warn('CV sync:', r.error.message); });
-        }
-        H.toast('Job profile saved!');
-        H.goBack();
-      },
-      addExp() {
-        captureDraft();
-        H.modal({
-          title: 'Add Work Experience',
-          body: `<div style="display:flex;flex-direction:column;gap:8px">
-            <input id="expTitle" class="fi" placeholder="Job Title *">
-            <input id="expCompany" class="fi" placeholder="Company Name *">
-            <input id="expDuration" class="fi" placeholder="Duration e.g. Jan 2020 – Dec 2022">
-            <label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer"><input type="checkbox" id="expCurrent">Still working here</label>
-            <textarea id="expDesc" class="fi" rows="3" placeholder="Role description / responsibilities..."></textarea>
-          </div>`,
-          confirmText: 'Add',
-          onConfirm: () => {
-            const title   = (document.getElementById('expTitle')?.value || '').trim();
-            const company = (document.getElementById('expCompany')?.value || '').trim();
-            if (!title || !company) { H.toast('Title and company are required'); return false; }
-            const u = H.currentUser();
-            u.cv = u.cv || {};
-            u.cv.experience = u.cv.experience || [];
-            u.cv.experience.push({
-              title, company,
-              duration: (document.getElementById('expDuration')?.value || '').trim(),
-              current:  document.getElementById('expCurrent')?.checked || false,
-              desc:     (document.getElementById('expDesc')?.value || '').trim()
-            });
-            H.saveState();
-            H.renderPage('JobSeekerProfile');
-          }
-        });
-      },
-      addEdu() {
-        captureDraft();
-        H.modal({
-          title: 'Add Education',
-          body: `<div style="display:flex;flex-direction:column;gap:8px">
-            <input id="eduDegree" class="fi" placeholder="Degree / Certificate *">
-            <input id="eduSchool" class="fi" placeholder="School / University *">
-            <input id="eduYear" class="fi" placeholder="Year e.g. 2018">
-          </div>`,
-          confirmText: 'Add',
-          onConfirm: () => {
-            const degree = (document.getElementById('eduDegree')?.value || '').trim();
-            const school = (document.getElementById('eduSchool')?.value || '').trim();
-            if (!degree || !school) { H.toast('Degree and school are required'); return false; }
-            const u = H.currentUser();
-            u.cv = u.cv || {};
-            u.cv.education = u.cv.education || [];
-            u.cv.education.push({
-              degree, school,
-              year: (document.getElementById('eduYear')?.value || '').trim()
-            });
-            H.saveState();
-            H.renderPage('JobSeekerProfile');
-          }
-        });
-      },
-      editExp(i) {
-        captureDraft();
-        const u = H.currentUser();
-        const e = (u.cv && u.cv.experience && u.cv.experience[i]) || {};
-        H.modal({
-          title: 'Edit Work Experience',
-          body: `<div style="display:flex;flex-direction:column;gap:8px">
-            <input id="expTitle" class="fi" value="${H.escHtml(e.title||'')}" placeholder="Job Title *">
-            <input id="expCompany" class="fi" value="${H.escHtml(e.company||'')}" placeholder="Company Name *">
-            <input id="expDuration" class="fi" value="${H.escHtml(e.duration||'')}" placeholder="Duration">
-            <label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer"><input type="checkbox" id="expCurrent" ${e.current?'checked':''}>Still working here</label>
-            <textarea id="expDesc" class="fi" rows="3" placeholder="Description...">${H.escHtml(e.desc||'')}</textarea>
-          </div>`,
-          confirmText: 'Save',
-          onConfirm: () => {
-            const title   = (document.getElementById('expTitle')?.value || '').trim();
-            const company = (document.getElementById('expCompany')?.value || '').trim();
-            if (!title || !company) { H.toast('Title and company are required'); return false; }
-            u.cv.experience[i] = {
-              title, company,
-              duration: (document.getElementById('expDuration')?.value || '').trim(),
-              current:  document.getElementById('expCurrent')?.checked || false,
-              desc:     (document.getElementById('expDesc')?.value || '').trim()
-            };
-            H.saveState();
-            H.renderPage('JobSeekerProfile');
-          }
-        });
-      },
-      editEdu(i) {
-        captureDraft();
-        const u = H.currentUser();
-        const e = (u.cv && u.cv.education && u.cv.education[i]) || {};
-        H.modal({
-          title: 'Edit Education',
-          body: `<div style="display:flex;flex-direction:column;gap:8px">
-            <input id="eduDegree" class="fi" value="${H.escHtml(e.degree||'')}" placeholder="Degree *">
-            <input id="eduSchool" class="fi" value="${H.escHtml(e.school||'')}" placeholder="School *">
-            <input id="eduYear" class="fi" value="${H.escHtml(e.year||'')}" placeholder="Year">
-          </div>`,
-          confirmText: 'Save',
-          onConfirm: () => {
-            const degree = (document.getElementById('eduDegree')?.value || '').trim();
-            const school = (document.getElementById('eduSchool')?.value || '').trim();
-            if (!degree || !school) { H.toast('Required fields missing'); return false; }
-            u.cv.education[i] = { degree, school, year: (document.getElementById('eduYear')?.value || '').trim() };
-            H.saveState();
-            H.renderPage('JobSeekerProfile');
-          }
-        });
-      },
-      delExp(i) {
-        const u = H.currentUser();
-        if (!u.cv || !u.cv.experience) return;
-        u.cv.experience.splice(i, 1);
-        H.saveState();
-        H.renderPage('JobSeekerProfile');
-      },
-      delEdu(i) {
-        const u = H.currentUser();
-        if (!u.cv || !u.cv.education) return;
-        u.cv.education.splice(i, 1);
-        H.saveState();
-        H.renderPage('JobSeekerProfile');
-      }
-    };
   };
 
 })(window.H = window.H || {});
 
+
+
+;/* === www/js/verify.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
+'use strict';
+(function (H) {
+  const pages = H.pages;
+  const state = H.state;
+  const { escHtml, uid, toast, pushNotif } = H;
+  // Methods that use `this` must go through H so binding is correct
+  const currentUser = () => H.currentUser();
+  const innerTopbar = (...a) => H.innerTopbar(...a);
+  const saveState   = () => H.saveState();
+  const goBack      = () => H.goBack();
+  const renderPage  = (...a) => H.renderPage(...a);
+
+  // Fallback SVG icons in case H.ICONS is not ready
+  const icons = {
+    check: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>',
+    cross: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    lock:  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+    id:    '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M10 14h4"/><circle cx="10" cy="17" r="1"/></svg>',
+    camera:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+    phone: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 2.1.74 3.26a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c1.16.38 2.3.61 3.26.74a2 2 0 0 1 1.72 2.03z"/></svg>',
+  };
+
+  // Prefer H.ICONS if available, else fall back
+  const I = window.H && H.ICONS ? { ...icons, ...H.ICONS } : icons;
+
+  let camStream   = null;
+  let livenessTimer = null;
+
+  function stopCam() {
+    if (livenessTimer) { clearInterval(livenessTimer); livenessTimer = null; }
+    if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  }
+
+  // ---------------------------------------------------
+  // VERIFY PAGE
+  // ---------------------------------------------------
+  pages.Verify = function () {
+    const u         = currentUser();
+    const hasId     = !!u.idDocs;
+    const hasSelfie = !!u.selfie;
+    const isPending = !!u.verification_pending;
+
+    if (u.verified) {
+      return `<div class="page active">${innerTopbar('Identity Verified')}
+        <div class="inner-content">
+          <div class="verify-badge-preview">
+            <div class="vbp-icon" style="color:#22c55e">${I.check}</div>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:#22c55e">You are verified <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#22c55e" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div style="font-size:12px;color:var(--sub);margin-top:2px">Buyers trust verified sellers more.</div>
+            </div>
+          </div>
+          <div class="tip-box"><div class="tip-title">${I.lock} Blue badge active</div>
+            <div class="tip-body">Your blue verified badge is now showing on all your listings and profile.</div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    if (isPending) {
+      return `<div class="page active">${innerTopbar('Verify Identity')}
+        <div class="inner-content">
+          <div style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.4);border-radius:16px;padding:20px;text-align:center;margin-bottom:18px">
+            <div style="margin-bottom:8px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div style="font-size:15px;font-weight:700;color:#fbbf24">Verification Pending</div>
+            <div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.5">
+              Your ID and selfie have been submitted.<br>An admin will review your documents and approve your badge — usually within 24 hours.
+            </div>
+          </div>
+          <div class="tip-box">
+            <div class="tip-title">${I.lock} What happens next?</div>
+            <div class="tip-body">Once approved you will get a notification and your blue <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg> badge will appear on all your listings automatically.</div>
+          </div>
+          <button class="ml-act-btn" style="width:100%;padding:12px;margin-top:12px" onclick="H._verify.cancelPending()">Cancel request</button>
+        </div>
+      </div>`;
+    }
+
+    return `<div class="page active">${innerTopbar('Verify Identity')}
+      <div class="inner-content">
+        <div class="verify-badge-preview">
+          <div class="vbp-icon">${I.shield || I.check}</div>
+          <div>
+            <div style="font-size:14px;font-weight:700">Get your Blue Verified Badge</div>
+            <div style="font-size:12px;color:var(--sub);margin-top:1px">Verified sellers get 4× more enquiries</div>
+          </div>
+        </div>
+
+        <div class="verify-step">
+          <div class="verify-num done">${I.check}</div>
+          <div>
+            <div class="verify-step-title">Phone verified</div>
+            <div class="verify-step-sub">${escHtml(u.phone)}</div>
+          </div>
+        </div>
+
+        <div class="verify-step">
+          <div class="verify-num ${hasId ? 'done' : ''}">${hasId ? I.check : `<span style="font-size:15px;font-weight:600">2</span>`}</div>
+          <div style="flex:1">
+            <div class="verify-step-title">Upload ID document</div>
+            <div class="verify-step-sub">National ID, passport or driver's licence. Both sides if applicable.</div>
+            <input type="file" id="idFile" accept="image/*" capture="environment" style="display:none" onchange="H._verify.onIdUpload(event)">
+            <button class="verify-step-btn" onclick="document.getElementById('idFile').click()">
+              ${I.camera} ${hasId ? 'Replace ID' : 'Upload ID'}
+            </button>
+            ${hasId ? `<img src="${u.idDocs}" style="width:100%;max-width:240px;border-radius:12px;margin-top:10px">` : ''}
+          </div>
+        </div>
+
+        <div class="verify-step">
+          <div class="verify-num ${hasSelfie ? 'done' : ''}">${hasSelfie ? I.check : `<span style="font-size:15px;font-weight:600">3</span>`}</div>
+          <div style="flex:1">
+            <div class="verify-step-title">Face Selfie</div>
+            <div class="verify-step-sub">Take a clear photo of your face. An admin will review it alongside your ID.</div>
+            <button class="verify-step-btn" onclick="H.openInner('SelfieCam')">
+              ${I.camera} ${hasSelfie ? 'Re-take Selfie' : 'Take Selfie'}
+            </button>
+            ${hasSelfie ? `<img src="${u.selfie}" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin-top:10px;border:3px solid var(--n4)">` : ''}
+          </div>
+        </div>
+
+        ${hasId && hasSelfie ? `
+          <button class="btn-pri" id="submitVerifyBtn" onclick="H._verify.submitForReview()">Submit for Admin Review</button>
+          <div style="font-size:12px;color:var(--sub);text-align:center;margin-top:8px">Reviewed by our team within 24 hours.</div>
+        ` : ''}
+
+        <div class="tip-box" style="margin-top:14px">
+          <div class="tip-title">${I.lock} Your data is secure</div>
+          <div class="tip-body">Your ID and selfie are sent securely and used solely for identity verification. Never sold or shared.</div>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  // ---------------------------------------------------
+  // SELFIE CAM
+  // ---------------------------------------------------
+  pages.SelfieCam = function () {
+    return `<div class="page active">${innerTopbar('Take Selfie')}
+      <div class="inner-content">
+        <div style="font-size:13px;color:var(--sub);text-align:center;margin-bottom:12px;line-height:1.5">
+          Position your face clearly in the oval.<br>An admin will manually review your photo.
+        </div>
+        <div class="cam-wrap" id="camWrap">
+          <video id="camVideo" playsinline autoplay muted></video>
+          <div class="face-guide"></div>
+          <div class="cam-state" id="camState">Initializing camera…</div>
+          <div class="cam-instr" id="camInstr">Position your face inside the oval</div>
+        </div>
+        <canvas id="camCanvas" style="display:none"></canvas>
+        <button class="btn-pri" id="capBtn" onclick="H._verify.captureSelfie()" disabled>Take Photo</button>
+        <button class="ml-act-btn" style="width:100%;padding:12px;margin-top:8px" onclick="H._verify.cancel()">Cancel</button>
+      </div>
+    </div>`;
+  };
+
+  pages.SelfieCam_after = async function () {
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 640 }, audio: false });
+      const v = document.getElementById('camVideo');
+      v.srcObject = camStream;
+      v.onloadedmetadata = () => {
+        v.play();
+        document.getElementById('camState').textContent = 'Ready';
+        document.getElementById('capBtn').disabled = false;
+        detectFace();
+      };
+    } catch (e) {
+      document.getElementById('camState').textContent = 'Camera blocked';
+      document.getElementById('camInstr').textContent = 'Please allow camera access in settings';
+      toast('Camera permission denied');
+    }
+  };
+
+  function detectFace() {
+    const v = document.getElementById('camVideo');
+    const c = document.getElementById('camCanvas');
+    const ctx = c.getContext('2d');
+    c.width = 160; c.height = 160;
+    livenessTimer = setInterval(() => {
+      if (!v.videoWidth) return;
+      const sx = (v.videoWidth - Math.min(v.videoWidth, v.videoHeight)) / 2;
+      const sy = (v.videoHeight - Math.min(v.videoWidth, v.videoHeight)) / 2;
+      const sz = Math.min(v.videoWidth, v.videoHeight);
+      ctx.drawImage(v, sx, sy, sz, sz, 0, 0, 160, 160);
+      // Sample center-face region only (not edges — reduces hand false positives)
+      const d = ctx.getImageData(50, 25, 60, 80).data;
+      let skinPx = 0, total = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i+1], b = d[i+2];
+        // Strict skin tone — requires reddish cast, not just warm
+        if (r > 100 && g > 50 && b > 30 && r > g + 15 && r > b + 20 && Math.abs(r-g) > 15) skinPx++;
+        total++;
+      }
+      const faceDetected = (skinPx / total) > 0.30; // 30% skin coverage required
+      const el = document.getElementById('camState');
+      if (el) el.textContent = faceDetected ? 'Face detected — tap Take Photo' : 'Position your face in the oval';
+    }, 400);
+  }
+
+  // Namespace for onclick calls
+  H._verify = {
+    cancel() { stopCam(); goBack(); },
+
+    onIdUpload(e) {
+      const f = e.target.files[0]; if (!f) return;
+      compressImage(f, 1400, 0.82).then(d => {
+        const u = currentUser(); u.idDocs = d; saveState(); renderPage('Verify'); toast('ID uploaded');
+      });
+    },
+
+    async cancelPending() {
+      const u = currentUser();
+      u.verification_pending = false;
+      saveState();
+      if (window.supabase) {
+        await window.supabase.from('profiles').update({ verification_pending: false }).eq('id', u.id);
+      }
+      toast('Verification request cancelled');
+      renderPage('Verify');
+    },
+
+    async submitForReview() {
+      const u = currentUser();
+      if (!u.idDocs || !u.selfie) { toast('Complete both steps first'); return; }
+      const btn = document.getElementById('submitVerifyBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+      try {
+        if (!window.supabase) throw new Error('Not connected');
+        // Save verification record with photos for admin review
+        const { error: vErr } = await window.supabase.from('verifications').upsert({
+          user_id: u.id,
+          id_doc: u.idDocs,
+          selfie: u.selfie,
+          status: 'pending',
+          submitted_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+        if (vErr) throw vErr;
+        // Mark profile as pending
+        const { error: pErr } = await window.supabase.from('profiles')
+          .update({ verification_pending: true })
+          .eq('id', u.id);
+        if (pErr) throw pErr;
+        u.verification_pending = true;
+        saveState();
+        toast('Documents submitted! Admin will review within 24 hours.', 5000);
+        renderPage('Verify');
+      } catch (e) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit for Admin Review'; }
+        toast('Failed to submit: ' + (e.message || 'Check your connection'), 4000, true);
+      }
+    },
+
+    async captureSelfie() {
+      const btn = document.getElementById('capBtn');
+      btn.disabled = true;
+      btn.textContent = 'Capturing…';
+      const v = document.getElementById('camVideo');
+      const c = document.getElementById('camCanvas');
+      const ctx = c.getContext('2d');
+      // Short countdown then snap
+      document.getElementById('camInstr').textContent = 'Hold still — capturing…';
+      document.getElementById('camState').textContent = '3…';
+      await new Promise(r => setTimeout(r, 800));
+      document.getElementById('camState').textContent = '2…';
+      await new Promise(r => setTimeout(r, 800));
+      document.getElementById('camState').textContent = '1…';
+      await new Promise(r => setTimeout(r, 800));
+
+      const sz = Math.min(v.videoWidth, v.videoHeight);
+      c.width = 480; c.height = 480;
+      ctx.drawImage(v, (v.videoWidth - sz) / 2, (v.videoHeight - sz) / 2, sz, sz, 0, 0, 480, 480);
+      const dataUrl = c.toDataURL('image/jpeg', 0.85);
+
+      document.getElementById('camState').textContent = 'Photo taken';
+      document.getElementById('camInstr').textContent = 'Saving selfie…';
+      await new Promise(r => setTimeout(r, 600));
+
+      const u = currentUser(); u.selfie = dataUrl; saveState();
+      toast('Selfie saved');
+      stopCam();
+      renderPage('Verify');
+    }
+  };
+
+  function compressImage(file, maxDim = 1200, q = 0.8) {
+    return new Promise(res => {
+      const r = new FileReader();
+      r.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > h && w > maxDim) { h = h * maxDim / w; w = maxDim; }
+          else if (h > maxDim)     { w = w * maxDim / h; h = maxDim; }
+          const c = document.createElement('canvas'); c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          res(c.toDataURL('image/jpeg', q));
+        };
+        img.src = ev.target.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }
+
+})(window.H);
 ;/* === www/js/jobs.js === */
 'use strict';
 (function (H) {
@@ -8066,6 +8999,1295 @@ H.init();
 
 })(window.H);
 
+;/* === www/js/vehicles.js === */
+'use strict';
+(function (H) {
+
+  H.pages.Vehicles = function () {
+    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'vehicles'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+
+    var f = H._sel('vehicles', 'subcat', 'Vehicle Type', [['all', 'All Types'], ['car', 'Car'], ['suv', 'SUV / 4x4'], ['truck', 'Truck / Pickup'], ['van', 'Van / Minibus'], ['motorcycle', 'Motorcycle'], ['bus', 'Bus'], ['tractor', 'Tractor'], ['boat', 'Boat']])
+      + H._sel('vehicles', 'condition', 'Condition', [['all', 'All'], ['new', 'Brand New'], ['used', 'Used'], ['accident-free', 'Accident Free']])
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+      + '<div><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Year From</div>'
+      + '<input type="number" min="1960" max="2026" placeholder="e.g. 2015" oninput="H._setFilter(\'vehicles\',\'yearMin\',this.value)" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none;box-sizing:border-box"></div>'
+      + '<div><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Year To</div>'
+      + '<input type="number" min="1960" max="2026" placeholder="e.g. 2024" oninput="H._setFilter(\'vehicles\',\'yearMax\',this.value)" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none;box-sizing:border-box"></div>'
+      + '</div>'
+      + H._sel('vehicles', 'fuelType', 'Fuel Type', [['all', 'All'], ['petrol', 'Petrol'], ['diesel', 'Diesel'], ['electric', 'Electric'], ['hybrid', 'Hybrid'], ['lpg', 'LPG']])
+      + H._txtInput('vehicles', 'brand', 'Make / Brand', 'e.g. Toyota, Honda, BMW')
+      + H._citysel('vehicles') + H._priceRange('vehicles') + H._sortsel('vehicles');
+
+    return '<div class="page active">'
+      + H._catTopbar('Vehicles', '#e53935')
+      + H._catHeader('vehicles', 'Vehicles', '#e53935', f)
+      + '<div id="cl_vehicles" style="padding-bottom:88px">'
+      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No vehicles listed', 'Be the first to sell!', 'Post an Ad', "H.navTo('Post')"))
+      + '</div></div>';
+  };
+
+  H.pages.Vehicles_after = function () { H._applyFilters('vehicles'); };
+
+})(window.H);
+
+;/* === www/js/property.js === */
+'use strict';
+(function (H) {
+
+  H.pages.Property = function () {
+    var all = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'property'; });
+    var sale = all.filter(function (l) { return !l.rentalType; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var rent = all.filter(function (l) { return !!l.rentalType; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+
+    var fSale = H._sel('property_sale', 'propType', 'Property Type', [['all', 'All Types'], ['residential', 'Residential'], ['commercial', 'Commercial'], ['land', 'Land / Stand'], ['units', 'Units / Flats']])
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      + H._sel('property_sale', 'beds', 'Bedrooms', [['any', 'Any'], ['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+'], ['5', '5+']])
+      + H._sel('property_sale', 'baths', 'Bathrooms', [['any', 'Any'], ['1', '1+'], ['2', '2+'], ['3', '3+']])
+      + '</div>'
+      + H._sel('property_sale', 'furnishing', 'Furnishing', [['all', 'All'], ['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['semi-furnished', 'Semi-Furnished']])
+      + H._citysel('property_sale') + H._priceRange('property_sale') + H._sortsel('property_sale');
+
+    var fRent = H._sel('property_rent', 'propType', 'Category', [['all', 'All'], ['residential', 'Residential'], ['rooms', 'Rooms'], ['commercial', 'Commercial']])
+      + H._sel('property_rent', 'rentalType', 'Rental Type', [['all', 'All'], ['monthly', 'Monthly'], ['daily', 'Daily'], ['nightly', 'Nightly']])
+      + H._sel('property_rent', 'furnishing', 'Furnishing', [['all', 'All'], ['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['semi-furnished', 'Semi-Furnished']])
+      + H._citysel('property_rent') + H._priceRange('property_rent') + H._sortsel('property_rent');
+
+    return '<div class="page active">'
+      + H._catTopbar('Property', '#1A3A8F')
+      + '<div style="background:#1A3A8F;padding:0 14px">'
+      + '<div style="display:flex;border-bottom:2px solid rgba(255,255,255,.15)">'
+      + '<button id="ptab_sale" onclick="H._propTab(\'sale\')" style="flex:1;padding:12px 0;background:none;border:none;border-bottom:3px solid #F5A623;margin-bottom:-2px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">For Sale</button>'
+      + '<button id="ptab_rent" onclick="H._propTab(\'rent\')" style="flex:1;padding:12px 0;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;color:rgba(255,255,255,.6);font-size:14px;font-weight:600;cursor:pointer">For Rent</button>'
+      + '</div></div>'
+      + '<div id="pp_sale">'
+      + H._catHeader('property_sale', 'Property for Sale', '#1A3A8F', fSale)
+      + '<div id="cl_property_sale" style="padding-bottom:88px">'
+      + (sale.length ? '<div class="listing-list">' + sale.map(H.renderListCard).join('') + '</div>' : H.emptyState('No properties for sale', 'Be the first to list one!', 'Post an Ad', "H.navTo('Post')"))
+      + '</div></div>'
+      + '<div id="pp_rent" style="display:none">'
+      + H._catHeader('property_rent', 'Property for Rent', '#1A3A8F', fRent)
+      + '<div id="cl_property_rent" style="padding-bottom:88px">'
+      + (rent.length ? '<div class="listing-list">' + rent.map(H.renderListCard).join('') + '</div>' : H.emptyState('No rental properties', 'Be the first to list one!', 'Post an Ad', "H.navTo('Post')"))
+      + '</div></div>'
+      + '</div>';
+  };
+
+  H.pages.Property_after = function () { H._propTab('sale'); };
+
+  H._propTab = function (tab) {
+    var ps = document.getElementById('pp_sale'), pr = document.getElementById('pp_rent');
+    var ts = document.getElementById('ptab_sale'), tr = document.getElementById('ptab_rent');
+    if (!ps) return;
+    var isSale = tab === 'sale';
+    ps.style.display = isSale ? '' : 'none';
+    pr.style.display = isSale ? 'none' : '';
+    ts.style.color = isSale ? '#fff' : 'rgba(255,255,255,.6)';
+    ts.style.fontWeight = isSale ? '700' : '600';
+    ts.style.borderBottomColor = isSale ? '#F5A623' : 'transparent';
+    tr.style.color = isSale ? 'rgba(255,255,255,.6)' : '#fff';
+    tr.style.fontWeight = isSale ? '600' : '700';
+    tr.style.borderBottomColor = isSale ? 'transparent' : '#F5A623';
+    H._applyFilters(isSale ? 'property_sale' : 'property_rent');
+  };
+
+})(window.H);
+
+;/* === www/js/electronics.js === */
+'use strict';
+(function (H) {
+
+  H.pages.Electronics = function () {
+    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'electronics'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+
+    var f = H._sel('electronics', 'subcat', 'Category', [['all', 'All'], ['phones', 'Phones & Tablets'], ['computers', 'Computers & Laptops'], ['tvs', 'TVs & Screens'], ['audio', 'Audio & Speakers'], ['cameras', 'Cameras'], ['gaming', 'Gaming'], ['appliances', 'Appliances'], ['accessories', 'Accessories']])
+      + H._txtInput('electronics', 'brand', 'Brand', 'e.g. Samsung, Apple, Dell')
+      + H._sel('electronics', 'condition', 'Condition', [['all', 'All'], ['new', 'Brand New'], ['like-new', 'Like New'], ['good', 'Good'], ['fair', 'Fair']])
+      + H._citysel('electronics') + H._priceRange('electronics') + H._sortsel('electronics');
+
+    return '<div class="page active">'
+      + H._catTopbar('Electronics', '#8E24AA')
+      + H._catHeader('electronics', 'Electronics', '#8E24AA', f)
+      + '<div id="cl_electronics" style="padding-bottom:88px">'
+      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No electronics listed', 'Buy & sell gadgets!', 'Post an Ad', "H.navTo('Post')"))
+      + '</div></div>';
+  };
+
+  H.pages.Electronics_after = function () { H._applyFilters('electronics'); };
+
+})(window.H);
+
+;/* === www/js/fashion.js === */
+'use strict';
+(function (H) {
+
+  H.pages.Fashion = function () {
+    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'fashion'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+
+    var f = H._sel('fashion', 'gender', 'Category', [['all', 'All'], ['women', 'Women'], ['men', 'Men'], ['kids', 'Kids'], ['unisex', 'Unisex']])
+      + H._sel('fashion', 'subcat', 'Type', [['all', 'All'], ['clothes', 'Clothes'], ['shoes', 'Shoes'], ['bags', 'Bags & Purses'], ['accessories', 'Accessories'], ['watches', 'Watches & Jewellery'], ['sportswear', 'Sportswear'], ['traditional', 'Traditional Wear']])
+      + H._sel('fashion', 'size', 'Size', [['all', 'Any Size'], ['xs', 'XS'], ['s', 'S'], ['m', 'M'], ['l', 'L'], ['xl', 'XL'], ['xxl', '2XL'], ['xxxl', '3XL+']])
+      + H._txtInput('fashion', 'brand', 'Brand', 'e.g. Nike, Zara, H&M')
+      + H._sel('fashion', 'condition', 'Condition', [['all', 'All'], ['new', 'Brand New'], ['like-new', 'Like New'], ['good', 'Good'], ['fair', 'Fair']])
+      + H._citysel('fashion') + H._priceRange('fashion') + H._sortsel('fashion');
+
+    return '<div class="page active">'
+      + H._catTopbar('Fashion', '#F06292')
+      + H._catHeader('fashion', 'Fashion', '#F06292', f)
+      + '<div id="cl_fashion" style="padding-bottom:88px">'
+      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No fashion items listed', 'Style up Zimbabwe!', 'Post an Ad', "H.navTo('Post')"))
+      + '</div></div>';
+  };
+
+  H.pages.Fashion_after = function () { H._applyFilters('fashion'); };
+
+})(window.H);
+
+;/* === www/js/furniture.js === */
+'use strict';
+(function (H) {
+
+  H.pages.Furniture = function () {
+    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'furniture'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+
+    var f = H._sel('furniture', 'subcat', 'Furniture Type', [['all', 'All'], ['sofas', 'Sofas & Lounge'], ['bedroom', 'Bedroom Sets'], ['dining', 'Dining Room'], ['office', 'Office Furniture'], ['outdoor', 'Outdoor'], ['kitchen', 'Kitchen'], ['wardrobes', 'Wardrobes'], ['decor', 'Home Décor']])
+      + H._sel('furniture', 'condition', 'Condition', [['all', 'All'], ['new', 'Brand New'], ['like-new', 'Like New'], ['good', 'Good'], ['fair', 'Fair']])
+      + H._txtInput('furniture', 'brand', 'Material', 'e.g. Wood, Leather, Fabric')
+      + H._citysel('furniture') + H._priceRange('furniture') + H._sortsel('furniture');
+
+    return '<div class="page active">'
+      + H._catTopbar('Furniture', '#6D4C41')
+      + H._catHeader('furniture', 'Furniture', '#6D4C41', f)
+      + '<div id="cl_furniture" style="padding-bottom:88px">'
+      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No furniture listed', 'Furnish your home!', 'Post an Ad', "H.navTo('Post')"))
+      + '</div></div>';
+  };
+
+  H.pages.Furniture_after = function () { H._applyFilters('furniture'); };
+
+})(window.H);
+
+;/* === www/js/services.js === */
+'use strict';
+(function (H) {
+
+  H.pages.Services = function () {
+    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'services'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+
+    var f = H._sel('services', 'subcat', 'Service Type', [['all', 'All Services'], ['cleaning', 'Cleaning'], ['construction', 'Construction & Building'], ['plumbing', 'Plumbing'], ['electrical', 'Electrical'], ['painting', 'Painting'], ['gardening', 'Gardening & Landscaping'], ['transport', 'Transport & Delivery'], ['photography', 'Photography & Video'], ['catering', 'Catering & Events'], ['it', 'IT & Tech Support'], ['tutoring', 'Tutoring & Education'], ['beauty', 'Beauty & Wellness'], ['security', 'Security'], ['legal', 'Legal & Finance']])
+      + H._citysel('services') + H._priceRange('services') + H._sortsel('services');
+
+    return '<div class="page active">'
+      + H._catTopbar('Services', '#00897B')
+      + H._catHeader('services', 'Services', '#00897B', f)
+      + '<div id="cl_services" style="padding-bottom:88px">'
+      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No services listed', 'Offer your skills in Zimbabwe!', 'Post a Service', "H.navTo('Post')"))
+      + '</div></div>';
+  };
+
+  H.pages.Services_after = function () { H._applyFilters('services'); };
+
+})(window.H);
+
+;/* === www/js/rooms.js === */
+'use strict';
+(function (H) {
+
+  H.pages.Rooms = function () {
+    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'rooms'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+
+    var f = H._sel('rooms', 'subcat', 'Room Type', [['all', 'All'], ['single', 'Single Room'], ['double', 'Double Room'], ['self-contained', 'Self-Contained'], ['shared', 'Shared'], ['bachelor', 'Bachelor Flat'], ['cottage', 'Cottage']])
+      + H._sel('rooms', 'furnishing', 'Furnishing', [['all', 'All'], ['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['semi-furnished', 'Semi-Furnished']])
+      + H._sel('rooms', 'rentalType', 'Rental Type', [['all', 'All'], ['monthly', 'Monthly'], ['daily', 'Daily'], ['nightly', 'Nightly']])
+      + H._citysel('rooms') + H._priceRange('rooms') + H._sortsel('rooms');
+
+    return '<div class="page active">'
+      + H._catTopbar('Rooms for Rent', '#00838F')
+      + H._catHeader('rooms', 'Rooms', '#00838F', f)
+      + '<div id="cl_rooms" style="padding-bottom:88px">'
+      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No rooms listed', 'Find the perfect room!', 'Post a Room', "H.navTo('Post')"))
+      + '</div></div>';
+  };
+
+  H.pages.Rooms_after = function () { H._applyFilters('rooms'); };
+
+})(window.H);
+
+;/* === www/js/account.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
+'use strict';
+(function (H) {
+  const pages = H.pages;
+
+  pages.Account = function () {
+    const u = H.currentUser();
+    if (!u) return H.guestAccountPage();
+    return pages.AccountHub();
+  };
+
+  // ── Account Hub ───────────────────────────────────────────
+  // A full-screen version of the account centre, reachable via
+  // H.openInner('AccountHub') if needed; the bottom-nav tab still
+  // opens the compact sheet via H.showAccountMenu().
+  pages.AccountHub = function () {
+    const u = H.currentUser();
+    if (!u) {
+      return `<div class="page active">
+        ${H.innerTopbar('Account')}
+        ${H.emptyState('Not signed in', 'Sign in to manage your account.', 'Sign In', 'H.authPage()')}
+      </div>`;
+    }
+
+    const activeAds = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active').length;
+    const savedAds  = ((H.state.saves || {})[u.id] || []).length;
+    if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
+    const unread    = H.state.conversations.reduce((n, c) =>
+      Array.isArray(c.members) && c.members.includes(u.id) ? n + (c.messages || []).filter(m => m.from !== u.id && !m.read).length : n, 0);
+
+    const row = (icon, label, page, badge) => `
+      <div onclick="H.openInner('${page}')"
+          style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent">
+        <div style="width:38px;height:38px;border-radius:12px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">${icon}</div>
+        <div style="flex:1;font-size:15px;font-weight:600;color:var(--text)">${label}</div>
+        ${badge ? `<span style="background:#F5A623;color:#1A3A8F;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800">${badge}</span>` : ''}
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`;
+
+    return `<div class="page active">
+      ${H.innerTopbar('Account')}
+
+      <!-- Profile Hero -->
+      <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);padding:24px 20px 28px;display:flex;align-items:center;gap:16px">
+        <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px;font-weight:800;color:#fff;border:2.5px solid rgba(255,255,255,.4)">
+          ${u.avatar ? `<img src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML=H.initials('${H.escHtml(u.name||'')}')">` : H.initials(u.name)}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${H.escHtml(u.name || 'User')}</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.8);margin-bottom:3px">${H.escHtml(u.email || '')}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.65)">${H.escHtml(u.phone || 'No phone number')}</div>
+        </div>
+        ${u.verified ? '<span style="background:#22C55E;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>' : ''}
+      </div>
+
+      <!-- Quick Stats -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border-bottom:1px solid var(--border)">
+        ${[['Active Ads', activeAds, "H.openInner('MyListings')"], ['Saved', savedAds, "H.openInner('Favorites')"], ['Messages', unread || 0, "H.navTo('Messages')"]].map(([l, v, fn]) => `
+          <div onclick="${fn}" style="padding:16px 8px;text-align:center;cursor:pointer;border-right:1px solid var(--border)">
+            <div style="font-size:22px;font-weight:800;color:#1A3A8F">${v}</div>
+            <div style="font-size:11px;color:var(--sub);font-weight:500;margin-top:2px">${l}</div>
+          </div>`).join('')}
+      </div>
+
+      <!-- Menu Rows -->
+      <div style="margin-top:12px">
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', 'My Profile', 'Profile', '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>', 'My Activity', 'MyActivity', '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>', 'Edit Profile', 'EditProfile', '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', 'My Listings', 'MyListings', activeAds || '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>', 'Saved & Favorites', 'Favorites', savedAds || '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>', 'My Job Applications', 'AppliedJobs', ((H.state.applications||[]).filter(a=>a.applicantId===u.id).length || ''))}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>', 'My Job Profile / CV', 'JobSeekerProfile', u.cv && u.cv.headline ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>', 'Advertisements', 'Ads', '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', 'My Advertisements', 'MyAds', '')}
+      </div>
+
+      <div style="margin-top:12px">
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>', 'Settings', 'Settings', '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', 'Security & Password', 'SecuritySettings', '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>', 'Help & Support', 'Help', '')}
+      </div>
+
+      <div style="padding:20px 16px 36px">
+        <button onclick="H.logout()" style="width:100%;padding:14px;background:#FFF1F0;color:#EF4444;border:1.5px solid #FECACA;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">
+          Sign Out
+        </button>
+        <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--sub);line-height:1.8">
+          © ${new Date().getFullYear()} PaMarket · Made in Zimbabwe 🇿🇼<br>
+          <span style="font-size:10px;color:var(--sub2,#bbb)">All rights reserved · <span onclick="H.openInner('HelpTerms')" style="cursor:pointer;text-decoration:underline">Terms</span> · <span onclick="H.openInner('HelpPrivacy')" style="cursor:pointer;text-decoration:underline">Privacy</span></span>
+        </div>
+      </div>
+    </div>`;
+  };
+
+})(window.H = window.H || {});
+
+;/* === www/js/profile.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
+'use strict';
+(function (H) {
+  const pages = H.pages;
+
+  const activeCount = uid => (H.state.listings || []).filter(l => l.sellerId === uid && l.status === 'active').length;
+  const soldCount   = uid => (H.state.listings || []).filter(l => l.sellerId === uid && l.status === 'sold').length;
+
+  const IC = {
+    pencil: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/><line x1="15" y1="5" x2="19" y2="9"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    star:   '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    phone:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 2.1.74 3.26a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c1.16.38 2.3.61 3.26.74a2 2 0 0 1 1.72 2.03z"/></svg>',
+    idCard: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M10 14h4"/><circle cx="10" cy="17" r="1"/></svg>',
+    check:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>',
+    alert:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  };
+
+  const starFill  = '<svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+  const starEmpty = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+  const stars = n => Array.from({length:5}, (_,i) => i < Math.round(n) ? starFill : starEmpty).join('');
+
+  pages.Profile = function (params) {
+    const viewId = params && params.id;
+    const u = viewId
+      ? (H.state.users || []).find(x => x.id === viewId)
+      : H.currentUser();
+
+    if (!u) return H.emptyState('Not logged in', 'Please sign in to continue', 'Sign In', "H.authPage()");
+
+    const isOwn      = !viewId || (H.currentUser() && viewId === H.currentUser().id);
+    const uPrivacy   = u.privacySettings || {};
+    const verified   = u.verified
+      ? `<span class="verified">${IC.check} Verified</span>`
+      : `<span class="unverified">${IC.alert} Not Verified</span>`;
+    const avgRating  = (u.ratings && u.ratings.length)
+      ? (u.ratings.reduce((a,b) => a+b, 0) / u.ratings.length).toFixed(1) : '0';
+    const ratingCount = u.ratings ? u.ratings.length : 0;
+    const showActivityDot = uPrivacy.showActivity === true;
+
+    return `<div class="page active">
+      ${H.innerTopbar(isOwn ? 'My Profile' : H.escHtml(u.name))}
+      <div class="profile-hero">
+        <div class="profile-pic" style="position:relative">
+          ${u.avatar
+            ? `<img src="${u.avatar}" alt="${H.escHtml(u.name||'')}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">`
+            : `<div class="profile-initials">${H.initials(u.name)}</div>`}
+          ${showActivityDot ? `<div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid var(--card,#fff)"></div>` : ''}
+        </div>
+        <div class="profile-info">
+          <div class="profile-name">${H.escHtml(u.name || 'User')}</div>
+          <div class="profile-phone">${IC.phone} ${H.escHtml(u.phone || 'No phone')}</div>
+          <div class="profile-status">${verified}</div>
+          ${isOwn && uPrivacy.profilePublic === false ? `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:20px;font-size:11px;font-weight:700;color:#92400e"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Your profile is set to private</div>` : ''}
+        </div>
+      </div>
+
+      <div class="profile-stats">
+        <div class="stat-box"><div class="stat-val">${activeCount(u.id)}</div><div class="stat-label">Active Ads</div></div>
+        <div class="stat-box"><div class="stat-val">${avgRating}</div><div class="stat-label">Rating (${ratingCount})</div></div>
+        <div class="stat-box"><div class="stat-val">${soldCount(u.id)}</div><div class="stat-label">Sold</div></div>
+      </div>
+
+      ${isOwn ? `
+      <div class="form-wrap">
+        <button class="btn-pri" onclick="H.openInner('EditProfile')">${IC.pencil} Edit Profile</button>
+        <button class="btn-sec" onclick="H.openInner('ProfileVerify')">${IC.shield} Verify Identity</button>
+        <button class="btn-sec" onclick="H.openInner('Reviews')">${IC.star} Reviews & Ratings</button>
+      </div>` : `
+      <div class="form-wrap">
+        ${uPrivacy.allowMessages === false
+          ? `<button class="btn-pri" disabled style="opacity:0.5;cursor:not-allowed">Messaging turned off</button>`
+          : `<button class="btn-pri" onclick="H.startChatWith('${u.id}', null)">Message ${H.escHtml(u.name || 'User')}</button>`}
+        <button class="btn-sec" onclick="H.reportUser('${u.id}')">Report User</button>
+      </div>`}
+
+      <div class="section-box">
+        <div class="section-title">Account Info</div>
+        <div class="info-row"><span class="info-label">Email</span><span class="info-val">${H.escHtml(u.email || 'N/A')}</span></div>
+        <div class="info-row"><span class="info-label">Joined</span><span class="info-val">${new Date(u.joinedAt || u.createdAt || Date.now()).toLocaleDateString()}</span></div>
+        <div class="info-row"><span class="info-label">Status</span><span class="info-val">${H.escHtml(u.status || 'Active')}</span></div>
+        ${u.bio ? `<div class="info-row"><span class="info-label">Bio</span><span class="info-val">${H.escHtml(u.bio)}</span></div>` : ''}
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">Active Listings</div>
+        <div class="listing-list">
+          ${(H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active').slice(0,6).map(H.renderListCard).join('')
+            || '<div style="color:var(--sub);padding:16px;font-size:13px">No active listings</div>'}
+        </div>
+      </div>
+      <div style="height:24px"></div>
+    </div>`;
+  };
+
+  pages.EditProfile = function () {
+    const u = H.currentUser();
+    if (!u) return H.emptyState('Not logged in', 'Please sign in');
+
+    return `<div class="page active">
+      ${H.innerTopbar('Edit Profile')}
+      <div class="form-wrap">
+        <div style="display:flex;flex-direction:column;align-items:center;padding:8px 0 16px">
+          <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#1A3A8F;margin-bottom:10px;border:2.5px solid #1A3A8F22">
+            ${u.avatar ? `<img id="avatarPreview" src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">` : `<span id="avatarPreview">${H.initials(u.name||'')}</span>`}
+          </div>
+          <label for="profilePicFile" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer;background:#1A3A8F14;padding:7px 16px;border-radius:20px">Change Photo</label>
+          <input type="file" id="profilePicFile" accept="image/*" capture="user" style="display:none" onchange="H._editProfile.onPicChange(event)">
+        </div>
+        <div class="fg"><div class="fl">Full Name <span style="color:#EF4444">*</span></div>
+          <input class="fi" id="editName" value="${H.escHtml(u.name || '')}" placeholder="Your full name" maxlength="60">
+        </div>
+        <div class="fg"><div class="fl">Phone Number</div>
+          <input class="fi" id="editPhone" value="${H.escHtml(u.phone || '')}" placeholder="+263 77 123 4567" type="tel" maxlength="16">
+          <div style="font-size:11px;color:var(--sub);margin-top:4px">International format, e.g. +263 77 123 4567</div>
+        </div>
+        <div class="fg"><div class="fl">Email</div>
+          <input class="fi" value="${H.escHtml(u.email || '')}" disabled style="opacity:.6;cursor:not-allowed">
+          <div style="font-size:11px;color:var(--sub);margin-top:4px">Email cannot be changed here</div>
+        </div>
+        <div class="fg"><div class="fl">Bio</div>
+          <textarea class="fi" rows="3" id="editBio" placeholder="Tell buyers about yourself..." maxlength="200">${H.escHtml(u.bio || '')}</textarea>
+        </div>
+        <div id="editSaveMsg" style="display:none;font-size:13px;color:#16A34A;text-align:center;padding:8px 0;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#16A34A" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Saved!</div>
+        <div id="editErrMsg"  style="display:none;font-size:13px;color:#EF4444;text-align:center;padding:8px 0"></div>
+        <div class="btn-group">
+          <button id="editSaveBtn" class="btn-pri" onclick="H._editProfile.save()">Save Changes</button>
+          <button class="btn-sec" onclick="H.openInner('ChangePassword')">Change Password</button>
+          <button class="btn-sec" onclick="H.goBack()">Cancel</button>
+        </div>
+        <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Danger Zone</div>
+          <button onclick="H._editProfile.deleteCV()" style="width:100%;padding:13px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">Delete My CV / Candidate Profile</button>
+          <button onclick="H._editProfile.deleteAccount()" style="width:100%;padding:13px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#DC2626" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Delete Account</button>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  pages.EditProfile_after = function () {
+    H._editProfile = {
+      onPicChange: async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 3 * 1024 * 1024) { H.toast('Photo must be under 3 MB'); return; }
+        const compressed = await H.compressImage(file, 400, 0.82);
+        const u = H.currentUser();
+        u.avatar = compressed;
+        H.saveState();
+        const prev = document.getElementById('avatarPreview');
+        if (prev) { prev.outerHTML = `<img id="avatarPreview" src="${compressed}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g,"\\'")}'))">`; }
+      },
+      save: async () => {
+        const u = H.currentUser();
+        const name  = (document.getElementById('editName')?.value || '').trim();
+        const phone = (document.getElementById('editPhone')?.value || '').trim();
+        const bio   = (document.getElementById('editBio')?.value || '').trim();
+        const btn   = document.getElementById('editSaveBtn');
+        const errEl = document.getElementById('editErrMsg');
+        const okEl  = document.getElementById('editSaveMsg');
+        const showErr = (msg) => { if(errEl){errEl.textContent=msg;errEl.style.display='';} H.toast(msg); };
+        if (!name || name.length < 2) { showErr('Please enter your full name (min 2 characters)'); return; }
+        if (phone && !/^\+?[0-9\s\-]{7,16}$/.test(phone)) { showErr('Phone number looks invalid. Use format: +263 77 123 4567'); return; }
+        if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+        if (errEl) errEl.style.display = 'none';
+        u.name  = name;
+        if (phone) u.phone = phone;
+        u.bio   = bio;
+        H.saveState();
+        const c = window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null;
+        if (c) {
+          const res = await c.from('profiles').upsert({ id: u.id, name: u.name, phone: u.phone || null, bio: u.bio || null, avatar: u.avatar || null, updated_at: new Date().toISOString() });
+          if (res && res.error) console.warn('Profile sync failed:', res.error.message);
+        }
+        if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
+        if (okEl) { okEl.style.display = ''; setTimeout(() => { if(okEl) okEl.style.display='none'; }, 2500); }
+        H.toast('Profile updated!');
+      },
+      deleteCV() {
+        H.modal({
+          title: 'Delete CV / Candidate Profile?',
+          body: 'This will permanently remove your professional profile and CV from PaMarket. Your listings will not be affected.',
+          confirmText: 'Delete CV',
+          cancelText: 'Cancel',
+          danger: true,
+          onConfirm() {
+            const u = H.currentUser();
+            if (!u) return;
+            delete u.cv;
+            delete u.jobTitle;
+            delete u.skills;
+            H.saveState();
+            if (window.supabase && typeof window.supabase.from === 'function') {
+              window.supabase.from('profiles').update({ cv: null, job_title: null, skills: null }, { returning: 'minimal' }).eq('id', u.id).catch(() => {});
+            }
+            H.toast('CV deleted');
+            H.renderPage('EditProfile');
+          },
+        });
+      },
+      deleteAccount() {
+        H.modal({
+          title: 'Delete Account?',
+          body: `<div style="font-size:14px;color:var(--text);line-height:1.7">
+            <p style="margin:0 0 10px;color:#DC2626;font-weight:700;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#DC2626" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> This cannot be undone.</p>
+            <p style="margin:0 0 8px">All your listings, messages, and profile data will be permanently removed.</p>
+            <p style="margin:0">Type <strong>DELETE</strong> below to confirm:</p>
+            <input id="deleteConfirmInput" class="fi" style="margin-top:10px" placeholder="Type DELETE">
+          </div>`,
+          confirmText: 'Delete My Account',
+          cancelText: 'Cancel',
+          danger: true,
+          onConfirm() {
+            const inp = document.getElementById('deleteConfirmInput');
+            if (!inp || inp.value.trim() !== 'DELETE') { H.toast('Type DELETE to confirm'); return; }
+            const u = H.currentUser();
+            if (!u) return;
+            H.state.listings = (H.state.listings || []).filter(l => l.sellerId !== u.id);
+            H.state.conversations = (H.state.conversations || []).filter(c => !(c.members || []).includes(u.id));
+            H.state.users = (H.state.users || []).filter(x => x.id !== u.id);
+            H.state.currentUserId = null;
+            H.saveState();
+            if (window.supabase && window.supabase.auth) {
+              window.supabase.auth.signOut().catch(() => {}).finally(() => window.location.reload());
+            } else {
+              window.location.reload();
+            }
+          },
+        });
+      },
+    };
+  };
+
+  pages.MyListings = function () {
+    const u = H.currentUser();
+    if (!u) return H.emptyState('Not logged in', 'Please sign in');
+    const all      = (H.state.listings || []).filter(l => l.sellerId === u.id);
+    const active   = all.filter(l => l.status === 'active');
+    const pending  = all.filter(l => l.status === 'pending');
+    const sold     = all.filter(l => l.status === 'sold');
+    const rejected = all.filter(l => l.status === 'rejected');
+    const btn = (label, fn, c, bg, bo) =>
+      `<button onclick="${fn}" style="flex:1;padding:8px 2px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:${bg};color:${c};border:1.5px solid ${bo};font-family:inherit;white-space:nowrap">${label}</button>`;
+    const actionBars = {
+      active:   (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); const isJob=l&&l.cat==='jobs'; return btn('Edit',`H._myListings.edit('${id}')`,'#1A3A8F','#EFF6FF','#BFDBFE')+btn(isJob?'Mark Filled':'Mark Sold',`H._myListings.markSold('${id}')`,'#16a34a','#dcfce7','#bbf7d0')+btn('Delete',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'); },
+      pending:  (id) => btn('Edit',`H._myListings.edit('${id}')`,'#1A3A8F','#EFF6FF','#BFDBFE')+btn('Delete',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'),
+      sold:     (id) => btn('Post Again',`H._myListings.reactivate('${id}')`,'#1A3A8F','#EFF6FF','#BFDBFE')+btn('Delete',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'),
+      rejected: (id) => btn('Edit & Resubmit',`H._myListings.edit('${id}')`,'#D97706','#FFFBEB','#FDE68A')+btn('Delete',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'),
+    };
+    const myCard = (l, status) => `<div style="margin-bottom:14px">${H.renderListCard(l)}<div style="display:flex;gap:6px;margin-top:6px">${(actionBars[status]||actionBars.active)(l.id)}</div></div>`;
+    const section = (list, label, status) => list.length
+      ? `<div style="padding:12px">${list.map(l => myCard(l, status)).join('')}</div>`
+      : `<div style="color:var(--sub);padding:32px 20px;text-align:center;font-size:13px">No ${label.toLowerCase()} listings</div>`;
+    return `<div class="page active">
+      ${H.innerTopbar('My Listings')}
+      <div class="listing-tabs">
+        <button class="tab active" data-tab="active">Active (${active.length})</button>
+        <button class="tab" data-tab="pending">Pending (${pending.length})</button>
+        <button class="tab" data-tab="sold">Sold / Filled (${sold.length})</button>
+        <button class="tab" data-tab="rejected">Rejected (${rejected.length})</button>
+      </div>
+      <div class="tabs-content">
+        <div class="tab-content active" data-tab="active">${section(active,'Active','active')}</div>
+        <div class="tab-content" data-tab="pending">${section(pending,'Pending','pending')}</div>
+        <div class="tab-content" data-tab="sold">${section(sold,'Sold / Filled','sold')}</div>
+        <div class="tab-content" data-tab="rejected">${section(rejected,'Rejected','rejected')}</div>
+      </div>
+      <div style="height:24px"></div>
+    </div>`;
+  };
+
+  pages.MyListings_after = function () {
+    document.querySelectorAll('.listing-tabs .tab').forEach(btn => {
+      btn.addEventListener('click', e => {
+        document.querySelectorAll('.listing-tabs .tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        e.target.classList.add('active');
+        const el = document.querySelector(`.tab-content[data-tab="${e.target.dataset.tab}"]`);
+        if (el) el.classList.add('active');
+      });
+    });
+    H._myListings = {
+      edit: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); H.openInner(l&&l.cat==='jobs'?'EditJob':'EditListing',{listingId:id}); },
+      markSold: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='sold'; l.soldAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'sold'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job marked as filled' : 'Listing marked as sold'); H.renderPage('MyListings'); },
+      del: (id) => { if(!window.confirm('Delete this listing permanently?'))return; H.state.listings=(H.state.listings||[]).filter(x=>x.id!==id); H.saveState(); H.toast('Listing deleted'); H.renderPage('MyListings'); },
+      reactivate: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='active'; delete l.soldAt; l.renewedAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'active'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job reopened!' : 'Listing reactivated!'); H.renderPage('MyListings'); },
+    };
+  };
+
+  pages.EditListing = function (params) {
+    const id = params && params.listingId;
+    const l  = id ? (H.state.listings || []).find(x => x.id === id) : null;
+    if (!l) return `<div class="page active">${H.innerTopbar('Edit Listing')}${H.emptyState('Listing not found','')}</div>`;
+    return `<div class="page active">
+      ${H.innerTopbar('Edit Listing')}
+      <div class="form-wrap">
+        <div class="fg"><div class="fl">Title</div><input class="fi" id="elTitle" value="${H.escHtml(l.title || '')}" placeholder="Listing title" maxlength="80"></div>
+        <div class="fg"><div class="fl">Price (USD)</div><input class="fi" id="elPrice" type="number" min="0" value="${H.escHtml(String(l.price || ''))}" placeholder="0"></div>
+        <div class="fg"><div class="fl">Description</div><textarea class="fi" id="elDesc" rows="5" placeholder="Describe your item...">${H.escHtml(l.description || '')}</textarea></div>
+        <div id="elErr" style="display:none;color:#ef4444;font-size:13px;font-weight:600;padding:6px 0"></div>
+        <button id="elSaveBtn" class="btn-pri" onclick="H._editListing.save('${id}')">Save Changes</button>
+        <button class="btn-sec" onclick="H.goBack()">Cancel</button>
+      </div>
+    </div>`;
+  };
+
+  pages.EditListing_after = function () {
+    H._editListing = {
+      save: (id) => {
+        const title = document.getElementById('elTitle')?.value.trim();
+        const price = parseFloat(document.getElementById('elPrice')?.value);
+        const desc  = document.getElementById('elDesc')?.value.trim();
+        const errEl = document.getElementById('elErr');
+        const btn   = document.getElementById('elSaveBtn');
+        const showErr = (m) => { if(errEl){errEl.textContent=m;errEl.style.display='';} };
+        if (!title) { showErr('Title is required'); return; }
+        if (isNaN(price) || price < 0) { showErr('Enter a valid price'); return; }
+        if (!desc) { showErr('Description is required'); return; }
+        const l = (H.state.listings || []).find(x => x.id === id);
+        if (!l) { showErr('Listing not found'); return; }
+        l.title=title; l.price=price; l.description=desc; l.updatedAt=Date.now();
+        if (l.status === 'rejected') l.status = 'pending';
+        if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+        H.saveState();
+        H.toast('Listing updated!');
+        H.goBack();
+      }
+    };
+  };
+
+  pages.Favorites = function () {
+    const u = H.currentUser();
+    if (!u) return H.emptyState('Not logged in', 'Please sign in');
+    const saved = (H.state.saves && H.state.saves[u.id]) || [];
+    const list  = (H.state.listings || []).filter(l => saved.includes(l.id) && l.status === 'active');
+    const savedCard = (l) =>
+      `<div style="margin-bottom:14px">
+        ${H.renderListCard(l)}
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button onclick="H._favorites.unsave('${l.id}')" style="flex:1;padding:9px 4px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fef2f2;color:#ef4444;border:1.5px solid #fecaca;font-family:inherit">Remove</button>
+          <button onclick="H.openListing('${l.id}')" style="flex:2;padding:9px 4px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#EFF6FF;color:#1A3A8F;border:1.5px solid #BFDBFE;font-family:inherit">View Listing</button>
+        </div>
+      </div>`;
+    return `<div class="page active">
+      ${H.innerTopbar(list.length ? `Saved & Favorites (${list.length})` : 'Saved & Favorites')}
+      <div style="padding:14px">
+        ${list.length ? list.map(savedCard).join('') : H.emptyState('No saved listings', 'Tap the heart on any listing to save it', 'Browse', "H.navTo('Browse')")}
+      </div>
+      <div style="height:24px"></div>
+    </div>`;
+  };
+
+  pages.Favorites_after = function () {
+    H._favorites = {
+      unsave: (id) => {
+        const u = H.currentUser(); if (!u) return;
+        H.state.saves = H.state.saves || {};
+        H.state.saves[u.id] = (H.state.saves[u.id] || []).filter(sid => sid !== id);
+        H.saveState();
+        H.toast('Removed from saved');
+        H.renderPage('Favorites');
+      }
+    };
+  };
+
+  pages.ProfileVerify = function () {
+    const u = H.currentUser();
+    if (!u) return H.emptyState('Not logged in', 'Please sign in');
+    if (u.verified) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="margin-bottom:12px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Identity Verified</div><div style="font-size:14px;color:var(--sub)">You have a verified badge on all your listings.</div><div style="font-size:12px;color:var(--sub);margin-top:8px">Verified on ${new Date(u.verifiedAt || Date.now()).toLocaleDateString()}</div></div></div>`;
+    if (u.verificationPending) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="margin-bottom:12px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Verification Pending</div><div style="font-size:14px;color:var(--sub)">Your request is under review. We will notify you within 24 hours.</div><button onclick="H._profileVerify.cancelPending()" style="margin-top:18px;padding:10px 28px;background:var(--bg);color:var(--sub);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel request</button></div></div>`;
+    return `<div class="page active">
+      ${H.innerTopbar('Verify Identity')}
+      <div class="section-box" style="text-align:center;padding:20px 20px 14px">
+        <div style="margin-bottom:10px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">Identity Verification</div>
+        <div style="font-size:13px;color:var(--sub)">Submit your ID and a selfie. Review takes up to 24 hours.</div>
+      </div>
+      <div class="form-wrap">
+        <div class="fg"><div class="fl">ID Type</div><select class="fi" id="idType"><option>National ID</option><option>Passport</option><option>Driver&#39;s License</option></select></div>
+        <div class="fg"><div class="fl">ID Number</div><input class="fi" id="idNum" placeholder="Enter your ID number"></div>
+        <div class="fg">
+          <div class="fl">Selfie Photo <span style="font-weight:400;color:var(--sub);font-size:11px">(center your face in the oval)</span></div>
+          <div style="position:relative;width:220px;height:280px;margin:0 auto 10px;border-radius:14px;overflow:hidden;background:#111">
+            <div id="selfiePH" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a2e;gap:8px">
+              <div style="display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+              <div style="font-size:12px;color:rgba(255,255,255,.65);text-align:center;padding:0 16px">Tap Camera or Upload to add your selfie</div>
+            </div>
+            <video id="selfieVid" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)"></video>
+            <canvas id="selfieCanvas" style="display:none"></canvas>
+            <div id="selfiePrev" style="display:none;position:absolute;inset:0"><img id="selfieImg" style="width:100%;height:100%;object-fit:cover"></div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
+              <div style="width:130px;height:170px;border-radius:50%;border:3px solid rgba(255,255,255,.88);box-shadow:0 0 0 9999px rgba(0,0,0,.48)"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;max-width:220px;margin:0 auto">
+            <button id="selfieStartBtn" onclick="H._profileVerify.startCamera()" style="flex:1;padding:10px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Camera</button>
+            <button id="selfieCapBtn" onclick="H._profileVerify.captureSelfie()" style="display:none;flex:1;padding:10px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Capture</button>
+            <button id="selfieRetakeBtn" onclick="H._profileVerify.retakeSelfie()" style="display:none;flex:1;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg> Retake</button>
+            <label for="selfieFile" style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">Upload</label>
+            <input type="file" id="selfieFile" accept="image/*" capture="user" style="display:none" onchange="H._profileVerify.handleSelfieFile(this)">
+          </div>
+        </div>
+        <div class="fg"><div class="fl">ID Photo (Front)</div>
+          <label class="img-upload-zone" for="idPhotoFront"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-upload-title" id="idPhotoLabel">Upload front of ID</div><div class="img-upload-sub">National ID, Passport or Driver&#39;s License</div></label>
+          <input type="file" id="idPhotoFront" accept="image/*" capture="environment" style="display:none" onchange="H._profileVerify.previewIdPhoto(this)">
+        </div>
+        <button class="btn-pri" onclick="H._profileVerify.submit()">Submit for Verification</button>
+      </div>
+    </div>`;
+  };
+
+  pages.ProfileVerify_after = function () {
+    H._profileVerify = {
+      _stream: null,
+      _selfieData: null,
+
+      startCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          H.toast('Camera not available — please upload a selfie photo.');
+          return;
+        }
+        const btn = document.getElementById('selfieStartBtn');
+        if (btn) btn.style.display = 'none';
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 640 } } })
+          .then(stream => {
+            this._stream = stream;
+            const vid = document.getElementById('selfieVid');
+            const ph  = document.getElementById('selfiePH');
+            const cap = document.getElementById('selfieCapBtn');
+            if (vid) { vid.srcObject = stream; vid.style.display = 'block'; }
+            if (ph)  ph.style.display = 'none';
+            if (cap) cap.style.display = 'flex';
+          })
+          .catch(() => {
+            H.toast('Camera permission denied — use Upload instead.');
+            const btn2 = document.getElementById('selfieStartBtn');
+            if (btn2) btn2.style.display = 'flex';
+          });
+      },
+
+      captureSelfie() {
+        const vid    = document.getElementById('selfieVid');
+        const canvas = document.getElementById('selfieCanvas');
+        if (!vid || !canvas) return;
+        canvas.width  = vid.videoWidth  || 480;
+        canvas.height = vid.videoHeight || 640;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(vid, 0, 0);
+        this._selfieData = canvas.toDataURL('image/jpeg', 0.85);
+        if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
+        vid.style.display = 'none';
+        const prev    = document.getElementById('selfiePrev');
+        const img     = document.getElementById('selfieImg');
+        const capBtn  = document.getElementById('selfieCapBtn');
+        const retake  = document.getElementById('selfieRetakeBtn');
+        if (prev)   prev.style.display = 'block';
+        if (img)    img.src = this._selfieData;
+        if (capBtn) capBtn.style.display = 'none';
+        if (retake) retake.style.display = 'flex';
+        H.toast('Selfie captured');
+      },
+
+      retakeSelfie() {
+        this._selfieData = null;
+        const prev   = document.getElementById('selfiePrev');
+        const retake = document.getElementById('selfieRetakeBtn');
+        if (prev)   prev.style.display = 'none';
+        if (retake) retake.style.display = 'none';
+        this.startCamera();
+      },
+
+      handleSelfieFile(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          this._selfieData = e.target.result;
+          const ph      = document.getElementById('selfiePH');
+          const vid     = document.getElementById('selfieVid');
+          const prev    = document.getElementById('selfiePrev');
+          const img     = document.getElementById('selfieImg');
+          const startBtn = document.getElementById('selfieStartBtn');
+          const capBtn  = document.getElementById('selfieCapBtn');
+          const retake  = document.getElementById('selfieRetakeBtn');
+          if (ph)       ph.style.display = 'none';
+          if (vid)      vid.style.display = 'none';
+          if (prev)     prev.style.display = 'block';
+          if (img)      img.src = this._selfieData;
+          if (startBtn) startBtn.style.display = 'none';
+          if (capBtn)   capBtn.style.display = 'none';
+          if (retake)   retake.style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+      },
+
+      previewIdPhoto(input) {
+        const label = document.getElementById('idPhotoLabel');
+        if (input.files && input.files[0] && label) label.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> ID photo selected';
+      },
+
+      async submit() {
+        const idType = document.getElementById('idType')?.value || 'National ID';
+        const idNum  = (document.getElementById('idNum')?.value || '').trim();
+        if (!idNum) { H.toast('Please enter your ID number'); return; }
+        if (!this._selfieData) { H.toast('Please take or upload a selfie photo'); return; }
+        if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
+        const btn = document.querySelector('.btn-pri[onclick="H._profileVerify.submit()"]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+        const u = H.currentUser();
+        const sb = window.supabase;
+
+        const doSubmit = async (idDocData) => {
+          try {
+            if (!sb) throw new Error('Not connected to server');
+            const { error: vErr } = await sb.from('verifications').upsert({
+              user_id: u.id,
+              id_doc: idDocData || null,
+              selfie: this._selfieData,
+              status: 'pending',
+              submitted_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+            if (vErr) throw vErr;
+            const { error: pErr } = await sb.from('profiles').update({
+              verification_pending: true,
+              updated_at: new Date().toISOString()
+            }).eq('id', u.id);
+            if (pErr) throw pErr;
+            u.verificationPending    = true;
+            u.verification_pending   = true;
+            u.verificationIdType     = idType;
+            u.verificationIdNum      = idNum;
+            H.saveState();
+            H.toast('Verification submitted! Admin will review within 24 hours.');
+            H.goBack();
+          } catch (e) {
+            if (btn) { btn.disabled = false; btn.textContent = 'Submit for Verification'; }
+            H.toast('Failed to submit: ' + (e.message || 'Check your connection'));
+          }
+        };
+
+        const idFile = document.getElementById('idPhotoFront');
+        if (idFile && idFile.files && idFile.files[0]) {
+          const reader = new FileReader();
+          reader.onload = e => doSubmit(e.target.result);
+          reader.readAsDataURL(idFile.files[0]);
+        } else {
+          doSubmit(null);
+        }
+      },
+
+      async cancelPending() {
+        const u = H.currentUser();
+        u.verificationPending  = false;
+        u.verification_pending = false;
+        H.saveState();
+        const sb = window.supabase;
+        if (sb) {
+          await sb.from('profiles').update({ verification_pending: false }).eq('id', u.id);
+          await sb.from('verifications').delete().eq('user_id', u.id);
+        }
+        H.toast('Verification request cancelled');
+        H.renderPage('ProfileVerify');
+      }
+    };
+  };
+
+  pages.Reviews = function (params) {
+    const viewId = params && params.id;
+    const me = H.currentUser();
+    const u  = viewId ? (H.state.users || []).find(x => x.id === viewId) : me;
+    if (!u) return '<div class="page active">' + H.innerTopbar('Reviews') + H.emptyState('User not found', '', null, null) + '</div>';
+    const isOwn = !viewId || (me && viewId === me.id);
+    const reviews = u.reviews || [];
+    const avg = reviews.length ? (reviews.reduce((a,r) => a + (r.rating||0), 0) / reviews.length).toFixed(1) : null;
+    const dist = [5,4,3,2,1].map(n => ({ n, count: reviews.filter(r => Math.round(r.rating||0)===n).length }));
+    const maxDist = Math.max(1, ...dist.map(d => d.count));
+    const alreadyReviewed = me && reviews.some(r => r.reviewerId === me.id);
+    return `<div class="page active">
+      ${H.innerTopbar(isOwn ? 'My Reviews' : H.escHtml(u.name) + '\'s Reviews')}
+      <div style="background:var(--card);padding:20px 16px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;gap:20px;align-items:center">
+          <div style="text-align:center">
+            <div style="font-size:52px;font-weight:900;color:var(--text);line-height:1">${avg || '–'}</div>
+            <div style="display:flex;justify-content:center;gap:2px;margin:6px 0">${avg ? stars(parseFloat(avg)) : stars(0)}</div>
+            <div style="font-size:12px;color:var(--sub)">${reviews.length} review${reviews.length===1?'':'s'}</div>
+          </div>
+          <div style="flex:1">
+            ${dist.map(d => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><div style="font-size:11px;color:var(--sub);width:8px">${d.n}</div><div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;background:#f59e0b;width:${Math.round((d.count/maxDist)*100)}%;border-radius:3px;transition:width .3s"></div></div><div style="font-size:11px;color:var(--sub);width:14px;text-align:right">${d.count}</div></div>`).join('')}
+          </div>
+        </div>
+        ${!isOwn && me && !alreadyReviewed ? `<button onclick="H.leaveReview('${u.id}')" style="width:100%;margin-top:16px;padding:12px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Leave a Review</button>` : ''}
+        ${!isOwn && me && alreadyReviewed ? `<div style="text-align:center;margin-top:14px;font-size:13px;color:var(--sub)">You have already reviewed this seller</div>` : ''}
+      </div>
+      <div style="padding:12px 14px 88px">
+        ${reviews.length ? reviews.slice().sort((a,b) => b.date - a.date).slice(0,20).map(r => `
+          <div style="background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+              <div><div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(r.reviewerName || 'Anonymous')}</div><div style="display:flex;gap:2px;margin-top:3px">${stars(r.rating||0)}</div></div>
+              <div style="font-size:12px;color:var(--sub)">${H.timeAgo(r.date)}</div>
+            </div>
+            ${r.text ? `<div style="font-size:13px;color:var(--text);line-height:1.6;margin-top:8px">${H.escHtml(r.text)}</div>` : ''}
+          </div>`).join('') : `<div style="text-align:center;padding:48px 20px"><div style="display:flex;justify-content:center;margin-bottom:12px"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">No reviews yet</div><div style="font-size:13px;color:var(--sub)">Reviews from buyers will appear here after transactions</div></div>`}
+      </div>
+    </div>`;
+  };
+
+  H.leaveReview = function (sellerId) {
+    const me = H.currentUser();
+    if (!me) { H.requireAuth('Sign in to leave a review'); return; }
+    if (sellerId === me.id) { H.toast('You cannot review yourself'); return; }
+    H.modal({
+      title: 'Leave a Review',
+      body: `<div style="text-align:center;margin-bottom:14px"><div style="font-size:13px;color:var(--sub);margin-bottom:10px">Tap to rate your experience</div><div id="starPicker" style="display:flex;justify-content:center;gap:8px">${[1,2,3,4,5].map(n => `<button data-star="${n}" onclick="H._pickStar(${n})" style="background:none;border:none;cursor:pointer;padding:4px;line-height:1"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--sub)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>`).join('')}</div></div><textarea id="reviewText" rows="3" placeholder="Share your experience with this seller…" style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif"></textarea>`,
+      confirmText: 'Submit Review',
+      onConfirm: () => {
+        const rating = H._selectedStar || 0;
+        const text   = (document.getElementById('reviewText') || {}).value || '';
+        if (!rating) { H.toast('Please select a star rating'); return false; }
+        H._submitReview(sellerId, rating, text);
+      }
+    });
+  };
+
+  H._selectedStar = 0;
+  H._pickStar = function (n) {
+    H._selectedStar = n;
+    const btns = document.querySelectorAll('#starPicker button');
+    btns.forEach(function(b) {
+      const v = parseInt(b.getAttribute('data-star'));
+      const filled = v <= n;
+      b.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" fill="${filled ? '#f59e0b' : 'none'}" stroke="${filled ? '#f59e0b' : 'currentColor'}" stroke-width="2" style="color:${filled ? '#f59e0b' : 'var(--sub)'}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+    });
+  };
+
+  H._submitReview = function (sellerId, rating, text) {
+    const me = H.currentUser(); if (!me) return;
+    const seller = (H.state.users || []).find(x => x.id === sellerId); if (!seller) return;
+    seller.reviews  = seller.reviews  || [];
+    seller.ratings  = seller.ratings  || [];
+    const dup = seller.reviews.find(r => r.reviewerId === me.id);
+    if (dup) { H.toast('You have already reviewed this seller'); return; }
+    const review = { id: H.uid(), reviewerId: me.id, reviewerName: me.name || 'User', rating, text, date: Date.now() };
+    seller.reviews.unshift(review);
+    seller.ratings.push(rating);
+    H.saveState();
+    var _sb = window.supabase;
+    if (_sb && typeof _sb.from === 'function') {
+      _sb.from('reviews').insert({
+        seller_id: sellerId, reviewer_id: me.id,
+        reviewer_name: me.name || 'User', rating: rating,
+        body: text || null, created_at: new Date().toISOString()
+      }).then(function(res) {
+        if (res && res.error) console.warn('Review sync failed:', res.error.message);
+      });
+    }
+    H.pushNotif(sellerId, 'New Review', me.name + ' left you a ' + rating + '-star review', 'review');
+    H.toast('Review submitted. Thank you!');
+    H.renderPage('Reviews', {id: sellerId});
+  };
+
+  H._openAppliedJobs = function () { H.openInner('AppliedJobs'); };
+
+  // ── JOB SEEKER PROFILE — READ-ONLY VIEW (LinkedIn-style) ──
+  pages.JobSeekerProfile = function () {
+    const u = H.currentUser();
+    if (!u) return H.emptyState('Not logged in', 'Please sign in');
+
+    const cv       = u.cv || {};
+    const exp      = cv.experience || [];
+    const edu      = cv.education  || [];
+    const skills   = (u.skills || (cv.skills || []).join(',') || '').split(',').map(s => s.trim()).filter(Boolean);
+    const headline = u.jobTitle || cv.headline || '';
+    const bio      = u.bio || cv.summary || '';
+    const location = u.city || cv.location || '';
+    const jobTypes = (u.jobTypes || '').split(',').map(s => s.trim()).filter(Boolean);
+    const salary   = u.expectedSalary || cv.expectedSalary || '';
+    const hasProfile = !!(headline || bio || skills.length || exp.length || edu.length);
+
+    const sec = (title, icon, content) => `
+      <div style="background:#fff;border-radius:16px;margin-bottom:12px;border:1px solid #E4E8F0;overflow:hidden">
+        <div style="padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #F0F4FF">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.5px">${icon}${title}</div>
+          ${title==='Experience'?`<button onclick="H._cvProfile.addExp()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>`:''}
+          ${title==='Education'?`<button onclick="H._cvProfile.addEdu()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>`:''}
+        </div>
+        <div style="padding:14px 16px">${content}</div>
+      </div>`;
+
+    const expHtml = exp.length ? exp.map((e, i) => `
+      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #F0F4FF">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(e.title||'')}</div>
+        <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.company||'')}</div>
+        <div style="font-size:12px;color:#667085;margin-top:2px">${H.escHtml(e.duration||'')}${e.current?' · Current':''}</div>
+        ${e.desc?`<div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.55">${H.escHtml(e.desc)}</div>`:''}
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button onclick="H._cvProfile.editExp(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
+          <button onclick="H._cvProfile.delExp(${i})"  style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
+        </div>
+      </div>`).join('')
+      : '<div style="color:#667085;font-size:13px">No experience added yet</div>';
+
+    const eduHtml = edu.length ? edu.map((e, i) => `
+      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #F0F4FF">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(e.degree||'')}</div>
+        <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.school||'')}</div>
+        <div style="font-size:12px;color:#667085;margin-top:2px">${H.escHtml(e.year||'')}</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button onclick="H._cvProfile.editEdu(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
+          <button onclick="H._cvProfile.delEdu(${i})"  style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
+        </div>
+      </div>`).join('')
+      : '<div style="color:#667085;font-size:13px">No education added yet</div>';
+
+    const skillsHtml = skills.length
+      ? skills.map(s => `<span style="display:inline-block;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">${H.escHtml(s)}</span>`).join('')
+      : '<div style="color:#667085;font-size:13px">No skills added yet</div>';
+
+    const jtHtml = jobTypes.length
+      ? jobTypes.map(t => `<span style="display:inline-block;background:#F0FDF4;color:#15803d;border:1px solid #BBF7D0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">${H.escHtml(t)}</span>`).join('')
+      : '<div style="color:#667085;font-size:13px">Not set</div>';
+
+    const contactHtml = (() => {
+      const rows = [];
+      if (u.whatsappFull || u.whatsappNum) rows.push(`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span style="font-size:13px;color:var(--text)">+${H.escHtml(u.whatsappFull||u.whatsappNum||'')}</span></div>`);
+      if (u.contactMethod) rows.push(`<div style="font-size:13px;color:#667085">Preferred: <strong style="color:var(--text)">${H.escHtml(u.contactMethod)}</strong></div>`);
+      if (u.linkedinUrl)   rows.push(`<div style="margin-top:6px;font-size:13px"><a href="${H.escHtml(u.linkedinUrl)}" target="_blank" style="color:#1A3A8F;font-weight:600">LinkedIn Profile</a></div>`);
+      if (u.websiteUrl)    rows.push(`<div style="margin-top:4px;font-size:13px"><a href="${H.escHtml(u.websiteUrl)}" target="_blank" style="color:#1A3A8F;font-weight:600">Portfolio / Website</a></div>`);
+      return rows.length ? rows.join('') : '<div style="color:#667085;font-size:13px">No contact info added yet</div>';
+    })();
+
+    const resumeHtml = (u.cvFileUrl || u.cvFileName)
+      ? `<div style="display:flex;align-items:center;gap:10px;background:#F8FAFF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 14px">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${H.escHtml(u.cvFileName||'Resume')}</div></div>
+          ${u.cvFileUrl?`<a href="${H.escHtml(u.cvFileUrl)}" target="_blank" style="font-size:12px;font-weight:700;color:#1A3A8F;text-decoration:none;flex-shrink:0">View</a>`:''}
+        </div>`
+      : '<div style="color:#667085;font-size:13px">No resume uploaded yet</div>';
+
+    if (!hasProfile) {
+      return `<div class="page active">
+        ${H.innerTopbar('My Job Profile')}
+        <div style="padding:40px 24px;text-align:center">
+          <div style="width:72px;height:72px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#1A3A8F" stroke-width="1.5"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+          </div>
+          <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">You don't have a job profile yet</div>
+          <div style="font-size:13px;color:#667085;line-height:1.6;margin-bottom:24px">Create your profile so employers in Hire Talent can find and contact you.</div>
+          <button onclick="H.openInner('CandidateProfile')" style="width:100%;max-width:280px;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Create Job Profile</button>
+        </div>
+      </div>`;
+    }
+
+    return `<div class="page active">
+      ${H.innerTopbar('My Job Profile')}
+      <div style="padding:0 14px 100px">
+
+        <!-- Profile Header Card -->
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:20px;padding:20px;margin:14px 0;display:flex;gap:14px;align-items:flex-start">
+          <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;font-weight:800;color:#fff;border:2.5px solid rgba(255,255,255,.4)">
+            ${u.avatar?`<img src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">`:H.initials(u.name||'')}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:17px;font-weight:800;color:#fff">${H.escHtml(u.name||'')}</div>
+            ${headline?`<div style="font-size:13px;color:rgba(255,255,255,.9);font-weight:600;margin-top:3px">${H.escHtml(headline)}</div>`:''}
+            ${location?`<div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:2px;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${H.escHtml(location)}</div>`:''}
+            ${u.openToWork?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.25);border:1px solid rgba(34,197,94,.5);border-radius:20px;padding:3px 10px;margin-top:6px"><svg viewBox="0 0 24 24" width="10" height="10" fill="#22c55e" stroke="none"><circle cx="12" cy="12" r="12"/></svg><span style="font-size:11px;font-weight:700;color:#86efac">Open to Work</span></div>`:''}
+          </div>
+        </div>
+
+        ${u.verified?`<div style="display:flex;align-items:center;gap:6px;background:#ECFDF5;border:1.5px solid #6EE7B7;border-radius:10px;padding:10px 14px;margin-bottom:12px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;font-weight:700;color:#059669">Identity Verified</span></div>`:''}
+
+        ${bio?sec('About','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg> ',`<div style="font-size:13px;color:var(--text);line-height:1.65">${H.escHtml(bio)}</div>`):''}
+
+        ${sec('Skills','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> ', skillsHtml)}
+        ${jobTypes.length?sec('Job Type / Availability','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> ', jtHtml):''}
+        ${salary?sec('Expected Salary','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> ',`<div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(String(salary))}</div>`):''}
+        ${sec('Work Experience','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> ', expHtml)}
+        ${sec('Education','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> ', eduHtml)}
+        ${sec('Contact & Links','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> ', contactHtml)}
+        ${sec('Resume / CV','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ', resumeHtml)}
+
+      </div>
+
+      <!-- Fixed bottom Edit button -->
+      <div style="position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #E4E8F0;z-index:200">
+        <button onclick="H.openInner('CandidateProfile')" style="width:100%;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Profile
+        </button>
+      </div>
+    </div>`;
+  };
+
+  pages.JobSeekerProfile_after = function () {
+    function captureDraft() {
+      const u = H.currentUser();
+      if (!u) return;
+      u.cv = u.cv || {};
+      const headlineEl = document.getElementById('cvHeadline');
+      const summaryEl = document.getElementById('cvSummary');
+      const skillsEl = document.getElementById('cvSkills');
+      const certsEl = document.getElementById('cvCerts');
+      const salaryEl = document.getElementById('cvSalary');
+      const locationEl = document.getElementById('cvLocation');
+      const visibleEl = document.getElementById('cvVisible');
+      if (headlineEl) u.cv.headline = headlineEl.value.trim();
+      if (summaryEl) u.cv.summary = summaryEl.value.trim();
+      if (skillsEl) u.cv.skills = skillsEl.value.split(',').map(s => s.trim()).filter(Boolean);
+      if (certsEl) u.cv.certs = certsEl.value.split('\n').map(s => s.trim()).filter(Boolean);
+      if (salaryEl) u.cv.expectedSalary = parseFloat(salaryEl.value) || null;
+      if (locationEl) u.cv.location = locationEl.value.trim();
+      if (visibleEl) u.cv.visible = visibleEl.checked;
+    }
+    H._cvProfile = {
+      save() {
+        const u = H.currentUser();
+        if (!u) return;
+        captureDraft();
+        // Make visible in HireTalent if they have a headline or experience
+        if (u.cv.visible && (u.cv.headline || u.cv.summary || (u.cv.experience && u.cv.experience.length))) {
+          u.openToWork = true;
+        }
+        u.jobTitle = u.cv.headline || u.jobTitle || '';
+        u.skills = (u.cv.skills || []).join(', ');
+        H.saveState();
+        const sb = window.supabase;
+        if (sb && typeof sb.from === 'function') {
+          sb.from('profiles').upsert({
+            id: u.id, cv: u.cv,
+            job_title: u.jobTitle || null,
+            skills: u.skills || null,
+            city: u.cv.location || null,
+            open_to_work: u.openToWork || false,
+            updated_at: new Date().toISOString()
+          }).then(r => { if (r && r.error) console.warn('CV sync:', r.error.message); });
+        }
+        H.toast('Job profile saved!');
+        H.goBack();
+      },
+      addExp() {
+        captureDraft();
+        H.modal({
+          title: 'Add Work Experience',
+          body: `<div style="display:flex;flex-direction:column;gap:8px">
+            <input id="expTitle" class="fi" placeholder="Job Title *">
+            <input id="expCompany" class="fi" placeholder="Company Name *">
+            <input id="expDuration" class="fi" placeholder="Duration e.g. Jan 2020 – Dec 2022">
+            <label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer"><input type="checkbox" id="expCurrent">Still working here</label>
+            <textarea id="expDesc" class="fi" rows="3" placeholder="Role description / responsibilities..."></textarea>
+          </div>`,
+          confirmText: 'Add',
+          onConfirm: () => {
+            const title   = (document.getElementById('expTitle')?.value || '').trim();
+            const company = (document.getElementById('expCompany')?.value || '').trim();
+            if (!title || !company) { H.toast('Title and company are required'); return false; }
+            const u = H.currentUser();
+            u.cv = u.cv || {};
+            u.cv.experience = u.cv.experience || [];
+            u.cv.experience.push({
+              title, company,
+              duration: (document.getElementById('expDuration')?.value || '').trim(),
+              current:  document.getElementById('expCurrent')?.checked || false,
+              desc:     (document.getElementById('expDesc')?.value || '').trim()
+            });
+            H.saveState();
+            H.renderPage('JobSeekerProfile');
+          }
+        });
+      },
+      addEdu() {
+        captureDraft();
+        H.modal({
+          title: 'Add Education',
+          body: `<div style="display:flex;flex-direction:column;gap:8px">
+            <input id="eduDegree" class="fi" placeholder="Degree / Certificate *">
+            <input id="eduSchool" class="fi" placeholder="School / University *">
+            <input id="eduYear" class="fi" placeholder="Year e.g. 2018">
+          </div>`,
+          confirmText: 'Add',
+          onConfirm: () => {
+            const degree = (document.getElementById('eduDegree')?.value || '').trim();
+            const school = (document.getElementById('eduSchool')?.value || '').trim();
+            if (!degree || !school) { H.toast('Degree and school are required'); return false; }
+            const u = H.currentUser();
+            u.cv = u.cv || {};
+            u.cv.education = u.cv.education || [];
+            u.cv.education.push({
+              degree, school,
+              year: (document.getElementById('eduYear')?.value || '').trim()
+            });
+            H.saveState();
+            H.renderPage('JobSeekerProfile');
+          }
+        });
+      },
+      editExp(i) {
+        captureDraft();
+        const u = H.currentUser();
+        const e = (u.cv && u.cv.experience && u.cv.experience[i]) || {};
+        H.modal({
+          title: 'Edit Work Experience',
+          body: `<div style="display:flex;flex-direction:column;gap:8px">
+            <input id="expTitle" class="fi" value="${H.escHtml(e.title||'')}" placeholder="Job Title *">
+            <input id="expCompany" class="fi" value="${H.escHtml(e.company||'')}" placeholder="Company Name *">
+            <input id="expDuration" class="fi" value="${H.escHtml(e.duration||'')}" placeholder="Duration">
+            <label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer"><input type="checkbox" id="expCurrent" ${e.current?'checked':''}>Still working here</label>
+            <textarea id="expDesc" class="fi" rows="3" placeholder="Description...">${H.escHtml(e.desc||'')}</textarea>
+          </div>`,
+          confirmText: 'Save',
+          onConfirm: () => {
+            const title   = (document.getElementById('expTitle')?.value || '').trim();
+            const company = (document.getElementById('expCompany')?.value || '').trim();
+            if (!title || !company) { H.toast('Title and company are required'); return false; }
+            u.cv.experience[i] = {
+              title, company,
+              duration: (document.getElementById('expDuration')?.value || '').trim(),
+              current:  document.getElementById('expCurrent')?.checked || false,
+              desc:     (document.getElementById('expDesc')?.value || '').trim()
+            };
+            H.saveState();
+            H.renderPage('JobSeekerProfile');
+          }
+        });
+      },
+      editEdu(i) {
+        captureDraft();
+        const u = H.currentUser();
+        const e = (u.cv && u.cv.education && u.cv.education[i]) || {};
+        H.modal({
+          title: 'Edit Education',
+          body: `<div style="display:flex;flex-direction:column;gap:8px">
+            <input id="eduDegree" class="fi" value="${H.escHtml(e.degree||'')}" placeholder="Degree *">
+            <input id="eduSchool" class="fi" value="${H.escHtml(e.school||'')}" placeholder="School *">
+            <input id="eduYear" class="fi" value="${H.escHtml(e.year||'')}" placeholder="Year">
+          </div>`,
+          confirmText: 'Save',
+          onConfirm: () => {
+            const degree = (document.getElementById('eduDegree')?.value || '').trim();
+            const school = (document.getElementById('eduSchool')?.value || '').trim();
+            if (!degree || !school) { H.toast('Required fields missing'); return false; }
+            u.cv.education[i] = { degree, school, year: (document.getElementById('eduYear')?.value || '').trim() };
+            H.saveState();
+            H.renderPage('JobSeekerProfile');
+          }
+        });
+      },
+      delExp(i) {
+        const u = H.currentUser();
+        if (!u.cv || !u.cv.experience) return;
+        u.cv.experience.splice(i, 1);
+        H.saveState();
+        H.renderPage('JobSeekerProfile');
+      },
+      delEdu(i) {
+        const u = H.currentUser();
+        if (!u.cv || !u.cv.education) return;
+        u.cv.education.splice(i, 1);
+        H.saveState();
+        H.renderPage('JobSeekerProfile');
+      }
+    };
+  };
+
+})(window.H = window.H || {});
+
 ;/* === www/js/settings.js === */
 'use strict';
 (function (H) {
@@ -8595,2033 +10817,6 @@ H.init();
 
 })(window.H = window.H || {});
 
-;/* === www/js/saved.js === */
-'use strict';
-(function (H) {
-  const pages = H.pages;
-  const state = H.state;
-  const { currentUser, escHtml, timeAgo, uid, toast, modal,
-          innerTopbar, emptyState, openInner, goBack, renderPage,
-          saveState, fmtPrice, initials, renderListCard, navTo,
-          pushNotif, CATEGORIES } = H;
-
-  pages.Saved = function () {
-    const u    = currentUser();
-    const ids  = state.saves[u.id] || [];
-
-    // Map each saved ID to either the listing object or null (deleted/not found)
-    const resolved = ids.map(id => ({ id, listing: state.listings.find(l => l.id === id) || null }));
-
-    // Helper: render a status pill for non-active listings
-    function statusPillFor(listing) {
-      if (!listing || listing.status === 'active') return '';
-      if (listing.status === 'sold')
-        return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#ef4444;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Sold</span>`;
-      if (listing.status === 'expired')
-        return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#f59e0b;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Expired</span>`;
-      // inactive or any other status
-      return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#6b7280;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Unavailable</span>`;
-    }
-
-    // Render a single saved entry
-    function renderEntry({ id, listing }) {
-      // Deleted listing — ghost card
-      if (!listing) {
-        return `<div style="padding:14px 16px;background:var(--card);border-radius:14px;margin:8px 16px;opacity:.5;border:1px dashed var(--border)">
-  <div style="font-size:13px;color:var(--sub)">This listing is no longer available</div>
-</div>`;
-      }
-      // Unavailable listing — greyed-out card with status pill injected
-      const isUnavailable = listing.status !== 'active';
-      const card = renderListCard(listing);
-      if (!isUnavailable) return card;
-      // Wrap with opacity and inject the status pill right after the card opens
-      const pill = statusPillFor(listing);
-      // Insert pill into the rendered card by appending it into the title line if possible,
-      // otherwise wrap the whole card with a relative-positioned overlay container
-      return `<div style="opacity:0.65;position:relative">${card}${
-        pill ? `<div style="position:absolute;top:10px;left:10px;pointer-events:none">${pill}</div>` : ''
-      }</div>`;
-    }
-
-    const hasAny = resolved.length > 0;
-
-    return `<div class="page active">
-      <div class="app-header" style="padding-bottom:16px">
-        <div class="app-header-row">
-          <div class="logo">Saved <em>Ads</em></div>
-          <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.6);padding:4px 10px;background:rgba(255,255,255,.1);border-radius:20px">
-            ${ids.length} saved
-          </div>
-        </div>
-      </div>
-      <div class="listing-list">
-        ${hasAny
-          ? resolved.map(renderEntry).join('')
-          : emptyState('Nothing saved yet', 'Tap the ♡ on any listing to save it for later', 'Browse Listings', "H.navTo('Browse',document.querySelector('[data-nav=Browse]'))")}
-      </div>
-    </div>`;
-  };
-
-  pages.Profile = function () {
-    const u         = currentUser();
-    const myListings = (state.listings || []).filter(l => l.sellerId === u.id);
-    const active    = myListings.filter(l => l.status === 'active').length;
-    const saves     = (state.saves[u.id] || []).length;
-    const txns      = (state.txns || []).filter(t => t.userId === u.id);
-
-    return `<div class="page active">
-      <div class="prof-top">
-        <div class="prof-av">${u.avatar ? `<img src="${u.avatar}">` : initials(u.name)}</div>
-        <div class="prof-name">${escHtml(u.name)}</div>
-        <div class="prof-phone-display">${escHtml(u.phone)}</div>
-        <div class="prof-badges">
-          ${u.verified ? `<span class="pbadge pbadge-verified">
-            <span class="blue-check" style="width:12px;height:12px;margin-right:2px">
-              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            </span>ID Verified</span>` : ''}
-          ${u.role === 'admin' ? '<span class="pbadge pbadge-admin">Admin</span>' : ''}
-        </div>
-      </div>
-
-      <div class="stats">
-        <div class="stat"><div class="stat-n">${active}</div><div class="stat-l">Active Ads</div></div>
-        <div class="stat"><div class="stat-n">${saves}</div><div class="stat-l">Saved</div></div>
-      </div>
-
-      <div class="menu-group-label">My Account</div>
-      <div class="menu-items">
-        <div class="mi" onclick="H.openInner('MyListings')">
-          <div class="mi-icon blue-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/></svg></div>
-          <div class="mi-label">My Listings</div>
-          <span class="mi-badge-green">${active}</span>
-          <div class="mi-arrow">›</div>
-        </div>
-        <div class="mi" onclick="H.openInner('Ads')">
-          <div class="mi-icon blue-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg></div>
-          <div class="mi-label">Advertisements</div>
-          <div class="mi-arrow">›</div>
-        </div>
-        <div class="mi" onclick="H.openInner('Verify')">
-          <div class="mi-icon ${u.verified ? 'blue-ic' : 'green-ic'}">
-            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <div class="mi-label">${u.verified ? 'Verified ✓' : 'Get Verified'}</div>
-          ${!u.verified ? '<span style="font-size:11px;color:var(--o);font-weight:700">Boost trust</span>' : ''}
-          <div class="mi-arrow">›</div>
-        </div>
-      </div>
-
-      <div class="menu-group-label">Preferences</div>
-      <div class="menu-items">
-        <div class="mi" onclick="H.openInner('NotifSettings')">
-          <div class="mi-icon"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
-          <div class="mi-label">Notifications</div>
-          <div class="mi-arrow">›</div>
-        </div>
-        <div class="mi" onclick="H.openInner('LanguageSettings')">
-          <div class="mi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
-          <div class="mi-label">Language</div>
-          <div class="mi-arrow">›</div>
-        </div>
-        <div class="mi" onclick="H.openInner('PrivacySettings')">
-          <div class="mi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-          <div class="mi-label">Privacy Policy</div>
-          <div class="mi-arrow">›</div>
-        </div>
-        <div class="mi" onclick="H.openInner('HelpTerms')">
-          <div class="mi-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-          <div class="mi-label">Terms of Service</div>
-          <div class="mi-arrow">›</div>
-        </div>
-        <div class="mi" onclick="H.openInner('About')">
-          <div class="mi-icon green-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-          <div class="mi-label">About PaMarket</div>
-          <div class="mi-arrow">›</div>
-        </div>
-        ${u.role === 'admin' ? `
-        <div class="mi" onclick="H.navTo('Admin',null)">
-          <div class="mi-icon amber-ic"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
-          <div class="mi-label">Admin Panel</div>
-          <div class="mi-arrow">›</div>
-        </div>` : ''}
-      </div>
-
-      <div class="menu-group-label">Danger Zone</div>
-      <div class="menu-items" style="padding-bottom:90px">
-        <div class="mi" onclick="H.logOut()">
-          <div class="mi-icon red-ic"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
-          <div class="mi-label red-lbl">Sign Out</div>
-        </div>
-        <div class="mi" onclick="H.openInner('DeleteAccount')">
-          <div class="mi-icon red-ic"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></div>
-          <div class="mi-label red-lbl">Delete Account</div>
-        </div>
-      </div>
-    </div>`;
-  };
-
-  pages.MyListings = function () {
-    const u    = currentUser();
-    const list = (state.listings || []).filter(l => l.sellerId === u.id).sort((a, b) => b.createdAt - a.createdAt);
-    const now  = Date.now();
-    const TWENTY_FIVE_DAYS = 25 * 24 * 60 * 60 * 1000;
-    const THIRTY_DAYS      = 30 * 24 * 60 * 60 * 1000;
-
-    return `<div class="page active">${innerTopbar('My Listings')}
-      <div style="padding-bottom:90px">
-        ${list.length ? list.map(l => {
-          const age = now - (l.createdAt || now);
-          const isExpired     = age > THIRTY_DAYS;
-          const isExpiringSoon = !isExpired && age > TWENTY_FIVE_DAYS;
-
-          // Saves count: number of userIds who have this listing in their saves array
-          const savesCount = Object.values(state.saves || {}).filter(arr => Array.isArray(arr) && arr.includes(l.id)).length;
-
-          // Enquiries count: conversations referencing this listing
-          const enquiriesCount = (state.conversations || []).filter(conv => conv.listingId === l.id).length;
-
-          // Status pill / expiry logic
-          let statusPill;
-          if (isExpired) {
-            statusPill = `<span class="status-pill status-banned">Expired</span>`;
-          } else {
-            const statusClass = l.status === 'active' ? 'status-active' : l.status === 'banned' ? 'status-banned' : 'status-pending';
-            statusPill = `<span class="status-pill ${statusClass}">${l.status}</span>`;
-          }
-
-          const expiryWarning = isExpiringSoon
-            ? `<span style="font-size:11px;font-weight:700;color:#b45309;background:#fef3c7;border-radius:8px;padding:1px 7px;margin-left:4px">Expiring soon</span>`
-            : '';
-
-          const renewBtn = (isExpired || isExpiringSoon)
-            ? `<button class="ml-act-btn" onclick="(function(){var l=H.state.listings.find(function(x){return x.id==='${l.id}';});if(l){l.createdAt=Date.now();if(l.status==='expired')l.status='active';H.saveState();H.openInner('MyListings');}})()">Renew</button>`
-            : '';
-
-          return `<div class="my-listing-card">
-            <div class="ml-thumb">
-              ${l.photos && l.photos[0] ? `<img src="${l.photos[0]}">` : ((CATEGORIES.find(c => c.id === l.cat) || {}).icon || '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#ccc"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>')}
-            </div>
-            <div class="ml-body">
-              <div class="ml-title">${escHtml(l.title)}</div>
-              <div class="ml-price">${escHtml(fmtPrice(l.price, l.currency))}</div>
-              <div class="ml-meta">
-                ${statusPill}${expiryWarning}
-                <span style="color:var(--sub)"> · ${l.views || 0} views · ${timeAgo(l.createdAt)}</span>
-              </div>
-              <div style="display:inline-flex;gap:10px;align-items:center;font-size:11px;color:var(--sub);margin-top:4px;flex-wrap:wrap">
-                <span>&#128065; ${l.views || 0} views</span>
-                <span>&#9825; ${savesCount} saves</span>
-                <span>&#128172; ${enquiriesCount} enquiries</span>
-              </div>
-              <div class="ml-actions">
-                <button class="ml-act-btn" onclick="H.openListing('${l.id}')">View</button>
-                ${renewBtn}
-                ${!isExpired && l.status === 'active'
-                  ? `<button class="ml-act-btn red" onclick="H.deleteListing('${l.id}')">Delete</button>`
-                  : ''}
-              </div>
-            </div>
-          </div>`;
-        }).join('') : emptyState('No listings yet', 'Your posted ads will appear here.', 'Post an Ad', "H.navTo('Post',null)")}
-      </div>
-    </div>`;
-  };
-
-  H.logOut = function () {
-    H.logout();
-  };
-
-})(window.H);
-
-;/* === www/js/moderation.js === */
-/*!
- * PaMarket — Zimbabwe's Free Marketplace
- * © 2026 PaMarket. All rights reserved.
- * Unauthorised copying, modification, distribution or use of this
- * software without written permission from the owner is strictly prohibited.
- */
-'use strict';
-(function (H) {
-
-  // -- BANNED WORDS -------------------------------------------
-  const BANNED = [
-    'crypto','bitcoin','investment scheme','send money first',
-    'western union','moneygram','wire transfer','advance fee',
-    'nude','xxx','escort','adult only','whatsapp only no calls',
-    'guaranteed returns','double your money','mlm','pyramid'
-  ];
-
-  // -- CATEGORY RISK ------------------------------------------
-  const RISK = {
-    jobs: 'high', rentals: 'high', property: 'high',
-    vehicles: 'medium', services: 'medium',
-    electronics: 'low', furniture: 'low',
-    fashion: 'low', agriculture: 'low',
-    pets: 'low', other: 'low'
-  };
-
-  // -- TRUST SCORE --------------------------------------------
-  H.getTrustScore = function (user) {
-    let score = 50;
-    if (user.verified)                    score += 20;
-    if (user.email)                       score += 10;
-    const reports = (H.state.reports || []).filter(r => r.targetId === user.id).length;
-    const rejected = (H.state.listings || []).filter(l => l.sellerId === user.id && l.status === 'rejected').length;
-    score -= reports * 10;
-    score -= rejected * 5;
-    const approved = (H.state.listings || []).filter(l => l.sellerId === user.id && l.status === 'active').length;
-    score += Math.min(approved * 3, 20);
-    return Math.max(0, Math.min(100, score));
-  };
-
-  // -- MODERATION ENGINE --------------------------------------
-  H.moderateListing = function (listing, user) {
-    const text = (listing.title + ' ' + listing.desc).toLowerCase();
-
-    // 1. Banned word check
-    for (const w of BANNED) {
-      if (text.includes(w)) {
-        return { status: 'rejected', reason: 'Content violates community guidelines: banned terms detected.' };
-      }
-    }
-
-    // 2. Duplicate check
-    const duplicate = (H.state.listings || []).find(l =>
-      l.sellerId === user.id &&
-      l.title.toLowerCase() === listing.title.toLowerCase() &&
-      l.status !== 'rejected' && l.id !== listing.id
-    );
-    if (duplicate) {
-      return { status: 'rejected', reason: 'Duplicate listing detected. Please edit your existing ad instead.' };
-    }
-
-    // 3. Spam check — more than 5 posts in last 24h
-    const last24h = Date.now() - 86400000;
-    const recentPosts = (H.state.listings || []).filter(l =>
-      l.sellerId === user.id && l.createdAt > last24h
-    ).length;
-    if (recentPosts >= 5) {
-      return { status: 'rejected', reason: 'Too many listings posted today. Please wait 24 hours.' };
-    }
-
-    // 4. Risk scoring
-    const risk = RISK[listing.cat] || 'low';
-    const trust = H.getTrustScore(user);
-
-    // High trust users skip review
-    if (trust >= 70) {
-      return { status: 'active', reason: null };
-    }
-
-    if (risk === 'high') {
-      return { status: 'pending', reason: 'This category requires admin review before going live.' };
-    }
-    if (risk === 'medium') {
-      listing.flaggedForReview = true;
-      return { status: 'active', reason: null };
-    }
-
-    // low risk — publish immediately
-    return { status: 'active', reason: null };
-  };
-
-  // -- REPORT THRESHOLD ---------------------------------------
-  H.checkReportThreshold = function (listingId) {
-    const count = (H.state.reports || []).filter(
-      r => r.targetId === listingId && r.targetType === 'listing' && r.status === 'open'
-    ).length;
-    if (count >= 3) {
-      const l = (H.state.listings || []).find(x => x.id === listingId);
-      if (l && l.status === 'active') {
-        l.status = 'flagged';
-        H.saveState();
-        return true;
-      }
-    }
-    return false;
-  };
-
-  // -- CHAT SPAM DETECTION ------------------------------------
-  H.isChatSpam = function (convoId, userId) {
-    const c = (H.state.conversations || []).find(x => x.id === convoId);
-    if (!c) return false;
-    const last10s = Date.now() - 10000;
-    const recent = c.messages.filter(m => m.from === userId && m.t > last10s).length;
-    return recent >= 5;
-  };
-
-  H.containsLink = function (text) {
-    return /https?:\/\/|www\.|\.com|\.net|\.org|bit\.ly|wa\.me/i.test(text);
-  };
-
-  // -- DAILY HEALTH CHECK -------------------------------------
-  H.runDailyHealthCheck = function () {
-    const listings = H.state.listings || [];
-
-    // Auto-hide listings with 3+ reports
-    listings.forEach(l => {
-      if (l.status === 'active') H.checkReportThreshold(l.id);
-    });
-
-    // Remove expired boosts
-    listings.forEach(l => {
-      if (l.boost && l.boost.until < Date.now()) l.boost = null;
-    });
-
-    H.saveState();
-  };
-
-  // Run health check once on load
-  window.addEventListener("load", () => setTimeout(() => { if (H.state) H.runDailyHealthCheck(); }, 3000));
-
-})(window.H = window.H || {});
-
-
-
-;/* === www/js/admin.js === */
-/*!
- * PaMarket — Zimbabwe's Free Marketplace
- * © 2026 PaMarket. All rights reserved.
- * Unauthorised copying, modification, distribution or use of this
- * software without written permission from the owner is strictly prohibited.
- */
-'use strict';
-(function (H) {
-  const pages = H.pages;
-  const getState = () => H.state || {};
-  const { escHtml, timeAgo, uid, toast, modal, fmtPrice, initials, pushNotif } = H;
-  // Methods that use `this` must go through H so binding is correct
-  const currentUser = () => H.currentUser();
-  const innerTopbar = (...a) => H.innerTopbar(...a);
-  const emptyState  = (...a) => H.emptyState(...a);
-  const saveState   = () => H.saveState();
-  const renderPage  = (...a) => H.renderPage(...a);
-
-  const S = {
-    deny:     '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
-    eye:      '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-    ban:      '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
-    unban:    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>',
-    verify:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>',
-    approve:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
-    reject:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-    delete:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
-    suspend:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 12 16 12"/></svg>',
-    restore:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
-    edit:     '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>',
-    download: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-    trash:    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
-    reload:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
-    lock:     '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
-    settings: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-    support:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-    broadcast:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>',
-    admin:    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
-  };
-
-  if (!H.state.adminLogs) H.state.adminLogs = [];
-
-  function adminGuard() {
-    const u = currentUser();
-    if (!u || u.role !== 'admin') { toast('Unauthorized'); return false; }
-    return true;
-  }
-
-  let _adminTab = 'overview';
-
-  // ── ADMIN LOG HELPER ──────────────────────────────────────
-  function alog(action) {
-    H.state.adminLogs.unshift({ action, adminName: currentUser().name, t: Date.now() });
-  }
-
-  // ── MAIN PAGE ─────────────────────────────────────────────
-  pages.Admin = function () {
-    const u = currentUser();
-    if (u.role !== 'admin') return `<div class="page active">${innerTopbar('Admin')}
-      <div class="empty-state"><div class="empty-icon">${S.deny}</div><div class="empty-title">Access Denied</div></div>
-    </div>`;
-
-    const tabs = [
-      ['overview',      'Overview'],
-      ['users',         `Users (${(H.state.users||[]).length})`],
-      ['listings',      `Listings (${(H.state.listings||[]).length})`],
-      ['reports',       `Reports (${(H.state.reports||[]).filter(r=>r.status==='open').length})`],
-      ['analytics',     'Analytics'],
-      ['verifications',  `Verify (${(H.state.users||[]).filter(u=>u.verificationPending&&!u.verified).length})`],
-      ['settings',      'Settings'],
-      ['ads',           `Ads (${((H.state.paidAds||[]).filter(a=>a.active&&a.endsAt>Date.now())).length} live)`],
-      ['notifications', 'Notify'],
-      ['support',       `Support (${(H.state.supportTickets||[]).filter(t=>t.status!=='closed').length})`],
-      ['logs',          `Logs (${(H.state.adminLogs||[]).length})`],
-      ['messages',      `Messages (${(H.state.conversations||[]).length})`]
-    ];
-
-    return `<div class="page active">${innerTopbar('Admin Panel')}
-      <div style="display:flex;gap:6px;padding:12px 12px 10px;overflow-x:auto;scrollbar-width:none">
-        ${tabs.map(([k,l]) => `<button class="admin-tab ${_adminTab===k?'on':''}" data-tab="${k}" onclick="H._admin.setTab('${k}')">${l}</button>`).join('')}
-      </div>
-      <div class="inner-content" style="padding-top:0" id="adminBody">${renderBody()}</div>
-    </div>`;
-  };
-
-  pages.Admin_after = function () {
-    const body = document.getElementById('adminBody');
-    const reRender = function () { if (body) body.innerHTML = renderBody(); };
-    const syncs = [syncVerificationsFromSupabase()];
-    if (typeof H.syncReports === 'function') syncs.push(H.syncReports());
-    if (typeof H.syncConversations === 'function') syncs.push(H.syncConversations());
-    Promise.all(syncs).then(reRender);
-  };
-
-  function syncVerificationsFromSupabase() {
-    const sb = window.supabase;
-    if (!sb || typeof sb.from !== 'function') return Promise.resolve();
-
-    const p1 = sb.from('profiles')
-      .select('id,name,email,phone,verification_pending,id_type,verified,verified_at,avatar_url,role')
-      .or('verification_pending.eq.true,verified.eq.true')
-      .then(function (res) {
-        const data = res && res.data;
-        if (!data || !data.length) return;
-        if (!H.state.users) H.state.users = [];
-        data.forEach(function (p) {
-          let u = H.state.users.find(function (x) { return x.id === p.id; });
-          if (u) {
-            if (p.verification_pending !== undefined) u.verificationPending = p.verification_pending;
-            if (p.id_type) u.verificationIdType = p.id_type;
-            if (p.verified !== undefined) u.verified = p.verified;
-            if (p.verified_at) u.verifiedAt = new Date(p.verified_at).getTime();
-            if (p.name)  u.name  = p.name;
-            if (p.email) u.email = p.email;
-            if (p.phone) u.phone = p.phone;
-          } else {
-            H.state.users.push({
-              id: p.id,
-              name:  p.name  || 'Unknown',
-              email: p.email || '',
-              phone: p.phone || '',
-              avatar: p.avatar_url || '',
-              role:  p.role  || 'user',
-              verificationPending: p.verification_pending || false,
-              verificationIdType:  p.id_type || '',
-              verified:   p.verified   || false,
-              verifiedAt: p.verified_at ? new Date(p.verified_at).getTime() : null,
-              joinedAt:   Date.now()
-            });
-          }
-        });
-      })
-      .catch(function () {});
-
-    const p2 = sb.from('verifications')
-      .select('user_id,id_doc,selfie,status,submitted_at')
-      .then(function (res) {
-        const data = res && res.data;
-        if (!data) return;
-        H.state._verifications = {};
-        data.forEach(function (v) { H.state._verifications[v.user_id] = v; });
-      })
-      .catch(function () {});
-
-    return Promise.all([p1, p2]);
-  }
-
-  function renderBody() {
-    switch (_adminTab) {
-      case 'overview':       return renderOverview();
-      case 'users':          return renderUsers();
-      case 'listings':       return renderListings();
-      case 'reports':        return renderReports();
-      case 'analytics':      return renderAnalytics();
-      case 'verifications':  return renderVerifications();
-      case 'settings':       return renderSettings();
-      case 'ads':            return renderAds();
-      case 'notifications':  return renderNotifications();
-      case 'support':        return renderSupport();
-      case 'logs':           return renderLogs();
-      case 'messages':       return renderMessages();
-      default: return '';
-    }
-  }
-
-  function renderVerifications() {
-    const pending = (H.state.users||[]).filter(u=>u.verificationPending && !u.verified);
-    const verified = (H.state.users||[]).filter(u=>u.verified);
-    const vdocs = H.state._verifications || {};
-    return `
-      <div class="stats" style="margin:0 0 14px">
-        <div class="stat"><div class="stat-n">${pending.length}</div><div class="stat-l">Pending</div></div>
-        <div class="stat"><div class="stat-n">${verified.length}</div><div class="stat-l">Verified</div></div>
-        <div class="stat"><div class="stat-n">${(H.state.users||[]).length}</div><div class="stat-l">Total Users</div></div>
-      </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Pending Verification Requests</div>
-      ${pending.length ? `
-      <div class="section-card" style="margin-bottom:16px">
-        ${pending.map(u => {
-          const vd = vdocs[u.id];
-          const idDocHtml  = vd && vd.id_doc  ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">ID Document</div><img src="${vd.id_doc}" style="width:140px;border-radius:8px;border:1px solid var(--n3);display:block"></div>` : '';
-          const selfieHtml = vd && vd.selfie   ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">Selfie</div><img src="${vd.selfie}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--n3);display:block"></div>` : '';
-          const noPhotos   = !vd ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">No photos received — verifications table may be missing</div>` : (!vd.id_doc && !vd.selfie) ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">No photos in submission</div>` : '';
-          return `
-          <div class="admin-row" style="padding:14px">
-            <div class="admin-row-head">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:40px;height:40px;border-radius:50%;background:#1A3A8F20;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#1A3A8F;flex-shrink:0">${H.initials(u.name||'U')}</div>
-                <div>
-                  <div class="admin-row-name" style="font-size:14px;font-weight:700">${escHtml(u.name||'Unknown')}</div>
-                  <div class="admin-row-meta">${escHtml(u.email||'')} · ${escHtml(u.phone||'No phone')}</div>
-                  ${u.cv && u.cv.headline ? `<div style="font-size:12px;color:#1A3A8F;font-weight:600;margin-top:2px">${escHtml(u.cv.headline)}</div>` : ''}
-                </div>
-              </div>
-            </div>
-            <div style="font-size:12px;color:var(--sub);margin:8px 0">${u.verificationIdType ? `ID Type: ${escHtml(u.verificationIdType)}` : 'Standard verification request'}</div>
-            ${noPhotos}
-            ${(idDocHtml || selfieHtml) ? `<div style="display:flex;gap:12px;margin:10px 0;flex-wrap:wrap;align-items:flex-start">${idDocHtml}${selfieHtml}</div>` : ''}
-            <div class="admin-actions">
-              <button class="ml-act-btn" onclick="H._admin.approveVerification('${u.id}')">${S.verify} Approve &amp; Verify</button>
-              <button class="ml-act-btn red" onclick="H._admin.rejectVerification('${u.id}')">${S.reject} Reject</button>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>` : `<div style="text-align:center;padding:32px 20px;color:var(--sub);font-size:14px">No pending verification requests</div>`}
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Verified Users</div>
-      <div class="section-card">
-        ${verified.length ? verified.slice(0,20).map(u => `
-          <div class="admin-row">
-            <div class="admin-row-head">
-              <div class="admin-row-name">${escHtml(u.name||'Unknown')} <span style="color:#059669;font-size:11px">✓ Verified</span></div>
-              <span style="font-size:11px;color:var(--sub)">${new Date(u.verifiedAt||u.joinedAt||Date.now()).toLocaleDateString()}</span>
-            </div>
-            <div class="admin-row-meta">${escHtml(u.email||u.phone||'')}</div>
-            <div class="admin-actions">
-              <button class="ml-act-btn red" onclick="H._admin.revokeVerification('${u.id}')">Revoke</button>
-            </div>
-          </div>`).join('') : '<div style="padding:16px;text-align:center;color:var(--sub)">No verified users yet</div>'}
-      </div>`;
-  }
-
-  // ── OVERVIEW ──────────────────────────────────────────────
-  function renderOverview() {
-    const users    = H.state.users || [];
-    const listings = H.state.listings || [];
-    const reports  = H.state.reports || [];
-    const txns     = H.state.txns || [];
-    const today    = Date.now() - 86400000;
-    const newToday = listings.filter(l=>l.createdAt>today).length;
-    const usersToday = users.filter(u=>(u.joinedAt||u.createdAt||0)>today).length;
-    const openReports = reports.filter(r=>r.status==='open').length;
-    const pending  = listings.filter(l=>l.status==='pending').length;
-    const expiring = listings.filter(l=>l.expiresAt&&l.expiresAt-Date.now()<7*86400000&&l.expiresAt>Date.now()).length;
-    const openTickets = (H.state.supportTickets||[]).filter(t=>t.status!=='closed').length;
-    const convos = H.state.conversations || [];
-    let msgUnread = 0;
-    convos.forEach(function (c) { (c.messages||[]).forEach(function (m) { if (!m.read) msgUnread++; }); });
-
-    return `
-      <div class="stats" style="margin:0 0 10px">
-        <div class="stat"><div class="stat-n">${users.length}</div><div class="stat-l">Users</div></div>
-        <div class="stat"><div class="stat-n">+${usersToday}</div><div class="stat-l">New Today</div></div>
-        <div class="stat"><div class="stat-n">${users.filter(u=>u.verified).length}</div><div class="stat-l">Verified</div></div>
-      </div>
-      <div class="stats" style="margin:0 0 10px">
-        <div class="stat"><div class="stat-n">${listings.filter(l=>l.status==='active').length}</div><div class="stat-l">Active Ads</div></div>
-        <div class="stat"><div class="stat-n">+${newToday}</div><div class="stat-l">New Today</div></div>
-        <div class="stat"><div class="stat-n">${listings.filter(l=>l.status==='pending').length}</div><div class="stat-l">Pending</div></div>
-      </div>
-      ${(pending||openReports||expiring||openTickets) ? `
-      <div style="padding:12px 0 4px;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px">Needs Attention</div>
-      <div class="section-card" style="padding:0">
-        ${pending ? `<div class="admin-alert-row" onclick="H._admin.setTab('listings');H._admin.filterListingsByStatus('pending')">
-          <span style="color:#f59e0b;font-weight:700">${pending} pending listing${pending>1?'s':''}</span> awaiting review
-          <span style="color:#1A3A8F;font-weight:700;margin-left:auto">Review →</span>
-        </div>` : ''}
-        ${openReports ? `<div class="admin-alert-row" onclick="H._admin.setTab('reports')">
-          <span style="color:#dc2626;font-weight:700">${openReports} open report${openReports>1?'s':''}</span> need action
-          <span style="color:#1A3A8F;font-weight:700;margin-left:auto">View →</span>
-        </div>` : ''}
-        ${expiring ? `<div class="admin-alert-row" onclick="H._admin.setTab('listings');H._admin.filterListingsByStatus('active')">
-          <span style="color:#f59e0b;font-weight:700">${expiring} listing${expiring>1?'s':''}</span> expiring within 7 days
-          <span style="color:#1A3A8F;font-weight:700;margin-left:auto">View →</span>
-        </div>` : ''}
-        ${openTickets ? `<div class="admin-alert-row" onclick="H._admin.setTab('support')">
-          <span style="color:#7c3aed;font-weight:700">${openTickets} support ticket${openTickets>1?'s':''}</span> open
-          <span style="color:#1A3A8F;font-weight:700;margin-left:auto">View →</span>
-        </div>` : ''}
-      </div>` : ''}
-      <div class="stats" style="margin:10px 0 0">
-        <div class="stat"><div class="stat-n">${txns.length}</div><div class="stat-l">Transactions</div></div>
-        <div class="stat"><div class="stat-n">${users.filter(u=>u.status!=='active').length}</div><div class="stat-l">Banned</div></div>
-        <div class="stat"><div class="stat-n">${listings.filter(l=>l.status==='pending').length}</div><div class="stat-l">Pending</div></div>
-      </div>
-      <div class="stats" style="margin:10px 0 0" onclick="H._admin.setTab('messages')" style="cursor:pointer">
-        <div class="stat" style="cursor:pointer" onclick="H._admin.setTab('messages')"><div class="stat-n">${convos.length}</div><div class="stat-l">Conversations</div></div>
-        <div class="stat" style="cursor:pointer" onclick="H._admin.setTab('messages')"><div class="stat-n">${msgUnread}</div><div class="stat-l">Unread Msgs</div></div>
-        <div class="stat" style="cursor:pointer" onclick="H._admin.setTab('messages')"><div class="stat-n">${(H.state.users||[]).filter(u=>u.verificationPending&&!u.verified).length}</div><div class="stat-l">Verify Queue</div></div>
-      </div>`;
-  }
-
-  // ── ANALYTICS ─────────────────────────────────────────────
-  function renderAnalytics() {
-    const listings = H.state.listings || [];
-    const users    = H.state.users || [];
-
-    // Listings by category
-    const catCounts = {};
-    listings.forEach(l => { catCounts[l.cat] = (catCounts[l.cat]||0)+1; });
-    const catEntries = Object.entries(catCounts).sort((a,b)=>b[1]-a[1]);
-    const maxCat = catEntries[0]?.[1] || 1;
-
-    // Revenue by type
-    // New users by week (last 4 weeks)
-    const now = Date.now();
-    const weeks = [0,1,2,3].map(w => {
-      const start = now - (w+1)*7*86400000;
-      const end   = now - w*7*86400000;
-      return { label: `${w===0?'This':w===1?'Last':w+'w ago'} week`, count: users.filter(u=>(u.joinedAt||u.createdAt||0)>start&&(u.joinedAt||u.createdAt||0)<=end).length };
-    }).reverse();
-    const maxWeek = Math.max(1, ...weeks.map(w=>w.count));
-
-    // Listing status breakdown
-    const active  = listings.filter(l=>l.status==='active').length;
-    const pending = listings.filter(l=>l.status==='pending').length;
-    const banned  = listings.filter(l=>l.status==='banned').length;
-    const total   = listings.length || 1;
-
-    return `
-      <div style="padding:4px 0 10px;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px">Listings by Category</div>
-      <div class="section-card" style="padding:14px">
-        ${catEntries.length ? catEntries.map(([cat, count]) => {
-          const pct = Math.round(count/maxCat*100);
-          const catObj = (H.CATEGORIES||[]).find(c=>c.id===cat)||{name:cat,icon:''};
-          return `<div style="margin-bottom:10px">
-            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--text-mid);margin-bottom:4px">
-              <span>${catObj.icon||''} ${escHtml(catObj.name)}</span><span>${count}</span>
-            </div>
-            <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
-              <div style="height:100%;width:${pct}%;background:#1A3A8F;border-radius:3px;transition:width .3s"></div>
-            </div>
-          </div>`;
-        }).join('') : '<div style="color:var(--text-sub);font-size:13px">No listings yet</div>'}
-      </div>
-
-      <div style="padding:14px 0 10px;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px">Listing Status</div>
-      <div class="section-card" style="padding:14px">
-        <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;margin-bottom:10px">
-          <div style="width:${Math.round(active/total*100)}%;background:#059669" title="Active"></div>
-          <div style="width:${Math.round(pending/total*100)}%;background:#f59e0b" title="Pending"></div>
-          <div style="width:${Math.round(banned/total*100)}%;background:#dc2626" title="Banned"></div>
-        </div>
-        <div style="display:flex;gap:16px;font-size:12px">
-          <span style="color:#059669;font-weight:600">● Active: ${active}</span>
-          <span style="color:#f59e0b;font-weight:600">● Pending: ${pending}</span>
-          <span style="color:#dc2626;font-weight:600">● Removed: ${banned}</span>
-        </div>
-      </div>
-
-      <div style="padding:14px 0 10px;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px">New Users (weekly)</div>
-      <div class="section-card" style="padding:14px">
-        <div style="display:flex;align-items:flex-end;gap:8px;height:64px">
-          ${weeks.map(w=>`<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-            <div style="width:100%;background:#1A3A8F;border-radius:4px 4px 0 0;height:${Math.max(4,Math.round(w.count/maxWeek*52))}px"></div>
-            <div style="font-size:10px;color:var(--text-sub);white-space:nowrap">${w.count}</div>
-          </div>`).join('')}
-        </div>
-        <div style="display:flex;gap:8px;margin-top:4px">
-          ${weeks.map(w=>`<div style="flex:1;font-size:10px;color:var(--text-hint);text-align:center">${w.label}</div>`).join('')}
-        </div>
-      </div>`;
-  }
-
-  // ── USERS ─────────────────────────────────────────────────
-  function userRow(u) {
-    const listings = (H.state.listings||[]).filter(l=>l.sellerId===u.id);
-    const status = u.status==='active'
-      ? `<span class="status-pill status-active">Active</span>`
-      : u.status==='banned_temp'
-        ? `<span class="status-pill status-pending">Suspended</span>`
-        : `<span class="status-pill status-banned">Banned</span>`;
-    return `<div class="admin-row">
-      <div class="admin-row-head">
-        <div class="admin-row-name">${escHtml(u.name)} ${u.role==='admin'?'👑':''} ${u.verified?'✓':''}</div>
-        ${status}
-      </div>
-      <div class="admin-row-meta">${escHtml(u.email||'no email')} · ${escHtml(u.phone||'no phone')} · ${listings.length} listings · Joined ${new Date(u.joinedAt||u.createdAt||Date.now()).toLocaleDateString()}</div>
-      <div class="admin-actions">
-        <button class="ml-act-btn" onclick="H._admin.setTab('listings');H._admin.filterListings('${escHtml(u.name)}')">${S.eye} Listings</button>
-        ${u.status==='active' ? `
-          <button class="ml-act-btn" onclick="H._admin.banUser('${u.id}','temp')">${S.suspend} Suspend</button>
-          <button class="ml-act-btn red" onclick="H._admin.banUser('${u.id}','perm')">${S.ban} Ban</button>
-        ` : `<button class="ml-act-btn" onclick="H._admin.unban('${u.id}')">${S.unban} Unban</button>`}
-        ${!u.verified?`<button class="ml-act-btn" onclick="H._admin.verifyUser('${u.id}')">${S.verify} Verify</button>`:''}
-        ${!u.companyVerified?`<button class="ml-act-btn" onclick="H._admin.verifyCompany('${u.id}')">🏢 Company ✓</button>`:`<button class="ml-act-btn" onclick="H._admin.revokeCompany('${u.id}')">🏢 Revoke Co.</button>`}
-        ${u.role!=='admin'?`<button class="ml-act-btn" onclick="H._admin.makeAdmin('${u.id}')">${S.admin} Make Admin</button>`:''}
-        ${u.id!==currentUser().id?`<button class="ml-act-btn red" onclick="H._admin.deleteUser('${u.id}')">${S.delete} Delete</button>`:''}
-      </div>
-    </div>`;
-  }
-
-  function renderUsers() {
-    return `<input class="fi" placeholder="Search users..." oninput="H._admin.filterUsers(this.value)" style="margin-bottom:10px">
-      <div id="adminUsersList">${(H.state.users||[]).map(userRow).join('')}</div>`;
-  }
-
-  // ── LISTINGS ──────────────────────────────────────────────
-  function listingRow(l) {
-    const seller = (H.state.users||[]).find(u=>u.id===l.sellerId)||{name:'?'};
-    const statusClass = l.status==='active'?'status-active':l.status==='pending'?'status-pending':'status-banned';
-    return `<div class="admin-row">
-      <div class="admin-row-head">
-        <div class="admin-row-name">${escHtml(l.title)}</div>
-        <span class="status-pill ${statusClass}">${l.status}</span>
-      </div>
-      <div class="admin-row-meta">${escHtml(fmtPrice(l.price,l.currency))} · ${escHtml(l.city||'')} · by ${escHtml(seller.name)} · ${new Date(l.createdAt).toLocaleDateString()}</div>
-      <div class="admin-actions">
-        <button class="ml-act-btn" onclick="H.openListing('${l.id}')">${S.eye} View</button>
-        ${l.status==='pending'?`
-          <button class="ml-act-btn" onclick="H._admin.approveListing('${l.id}')">${S.approve} Approve</button>
-          <button class="ml-act-btn red" onclick="H._admin.rejectListing('${l.id}')">${S.reject} Reject</button>
-        `:''}
-        ${l.status==='active'?`<button class="ml-act-btn red" onclick="H._admin.banListing('${l.id}')">${S.ban} Remove</button>`:''}
-        ${l.status!=='active'&&l.status!=='pending'?`<button class="ml-act-btn" onclick="H._admin.restoreListing('${l.id}')">${S.restore} Restore</button>`:''}
-      </div>
-    </div>`;
-  }
-
-  function renderListings() {
-    const all      = H.state.listings||[];
-    const pending  = all.filter(l=>l.status==='pending').length;
-    const active   = all.filter(l=>l.status==='active').length;
-    const rejected = all.filter(l=>l.status==='rejected').length;
-    const banned   = all.filter(l=>l.status==='banned').length;
-    return `
-      <input class="fi" placeholder="Search listings..." oninput="H._admin.filterListings(this.value)" style="margin-bottom:10px">
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-        <button class="admin-tab on" data-lstatus="all" onclick="H._admin.filterListingsByStatus('all')">All (${all.length})</button>
-        <button class="admin-tab" data-lstatus="pending" onclick="H._admin.filterListingsByStatus('pending')">Pending (${pending})</button>
-        <button class="admin-tab" data-lstatus="active" onclick="H._admin.filterListingsByStatus('active')">Active (${active})</button>
-        <button class="admin-tab" data-lstatus="rejected" onclick="H._admin.filterListingsByStatus('rejected')">Rejected (${rejected})</button>
-        <button class="admin-tab" data-lstatus="banned" onclick="H._admin.filterListingsByStatus('banned')">Removed (${banned})</button>
-      </div>
-      <div id="adminLList">${all.slice().sort((a,b)=>b.createdAt-a.createdAt).map(listingRow).join('')}</div>`;
-  }
-
-  // ── REPORTS ───────────────────────────────────────────────
-  let _reportFilter = 'all';
-  function renderReports(filter) {
-    if (filter !== undefined) _reportFilter = filter;
-    const all  = [...(H.state.reports||[])].sort((a,b)=>(b.t||b.createdAt||0)-(a.t||a.createdAt||0));
-    const open = all.filter(r=>r.status==='open');
-    const list = _reportFilter==='open' ? open
-               : _reportFilter==='listing' ? all.filter(r=>r.targetType==='listing')
-               : _reportFilter==='user' ? all.filter(r=>r.targetType==='user')
-               : all;
-    if (!all.length) return emptyState('No reports','All clear!',null,null);
-    const filterBar = `<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-      <button class="admin-tab ${_reportFilter==='all'?'on':''}" onclick="H._admin.filterReports('all')">All (${all.length})</button>
-      <button class="admin-tab ${_reportFilter==='open'?'on':''}" onclick="H._admin.filterReports('open')">Open (${open.length})</button>
-      <button class="admin-tab ${_reportFilter==='listing'?'on':''}" onclick="H._admin.filterReports('listing')">Listings</button>
-      <button class="admin-tab ${_reportFilter==='user'?'on':''}" onclick="H._admin.filterReports('user')">Users</button>
-    </div>`;
-    if (!list.length) return filterBar + emptyState('No reports','Nothing here',null,null);
-    return filterBar + list.map(r => {
-      let target = '', actions = '';
-      if (r.targetType==='listing') {
-        const l = (H.state.listings||[]).find(x=>x.id===r.targetId);
-        target = l ? `Listing: ${escHtml(l.title)}` : '(deleted listing)';
-        if (l) actions = `
-          <button class="ml-act-btn" onclick="H.openListing('${l.id}')">${S.eye} View</button>
-          <button class="ml-act-btn red" onclick="H._admin.banListing('${l.id}','${r.id}')">${S.ban} Remove</button>`;
-      } else {
-        const u = (H.state.users||[]).find(x=>x.id===r.targetId);
-        target = u ? `User: ${escHtml(u.name)}` : '(deleted user)';
-        if (u) actions = `
-          <button class="ml-act-btn" onclick="H._admin.banUser('${u.id}','temp','${r.id}')">${S.suspend} Suspend</button>
-          <button class="ml-act-btn red" onclick="H._admin.banUser('${u.id}','perm','${r.id}')">${S.ban} Ban</button>
-          ${u.status!=='active'?`<button class="ml-act-btn" onclick="H._admin.unban('${u.id}','${r.id}')">${S.unban} Unban</button>`:''}`;
-      }
-      return `<div class="admin-row" style="${r.status==='resolved'?'opacity:.55':''}">
-        <div class="admin-row-head">
-          <div class="admin-row-name">${target}</div>
-          <span class="status-pill ${r.status==='open'?'status-pending':'status-active'}">${r.status}</span>
-        </div>
-        <div class="admin-row-meta">${escHtml(r.reason||r.description||'No reason given')} · ${new Date(r.t||r.createdAt||Date.now()).toLocaleDateString()}</div>
-        <div class="admin-actions">
-          ${actions}
-          ${r.status==='open'?`<button class="ml-act-btn" onclick="H._admin.resolveReport('${r.id}')">${S.approve} Resolve</button>`:''}
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  // ── PAYMENTS ──────────────────────────────────────────────
-  // ── SETTINGS ──────────────────────────────────────────────
-  function renderSettings() {
-    const tog = (key, label, sub) => `
-      <div class="notif-toggle-row">
-        <div class="notif-toggle-info">
-          <div class="notif-toggle-title">${label}</div>
-          <div class="notif-toggle-sub">${sub}</div>
-        </div>
-        <button class="toggle-sw ${H.state[key]?'on':''}" onclick="H._admin.toggleSetting('${key}')"></button>
-      </div>`;
-    return `<div class="section-card" style="padding:14px">
-      <div class="menu-group-label" style="padding:0 0 10px">Listing Moderation</div>
-      ${tog('requireListingApproval','Require listing approval','New ads start as pending before going live')}
-      ${tog('autoApproveVerified','Auto-approve verified sellers','Skip moderation for verified users')}
-      ${tog('allowImageUploads','Allow image uploads','Users can upload photos with listings')}
-      <div class="menu-group-label" style="padding:16px 0 10px">Security & Access</div>
-      ${tog('signupPaused','Pause new registrations','Temporarily disable new account signup')}
-      ${tog('requirePhoneVerification','Require phone verification','Users must verify phone to post')}
-      <div class="menu-group-label" style="padding:16px 0 10px">System</div>
-      <button class="btn-pri" style="margin-bottom:8px" onclick="H._admin.exportData()">${S.download} Export All Data</button>
-      <button class="btn-sec" style="margin-bottom:8px" onclick="H._admin.clearOldData()">${S.trash} Clear Old Data (30+ days)</button>
-      <button class="btn-sec" style="background:var(--red-light);color:var(--red);border-color:rgba(192,57,43,.2)" onclick="H._admin.resetApp()">${S.reload} Reset App (Dangerous)</button>
-    </div>`;
-  }
-
-  // ── NOTIFICATIONS ─────────────────────────────────────────
-  function renderNotifications() {
-    return `<div class="section-card" style="padding:14px">
-      <div class="menu-group-label" style="padding:0 0 14px">Send Broadcast</div>
-      <div class="fg">
-        <div class="fl">Target Audience</div>
-        <select class="fi" id="bcastTarget">
-          <option value="all">All Users</option>
-          <option value="verified">Verified Users Only</option>
-          <option value="unverified">Unverified Users Only</option>
-          <option value="sellers">Users with Listings</option>
-          <option value="inactive">Users with No Listings</option>
-        </select>
-      </div>
-      <div class="fg">
-        <div class="fl">Notification Title</div>
-        <input class="fi" id="bcastTitle" placeholder="e.g. New feature available">
-      </div>
-      <div class="fg">
-        <div class="fl">Message</div>
-        <textarea class="fi" rows="4" id="bcastMsg" placeholder="Write your message to all selected users..."></textarea>
-      </div>
-      <button class="btn-pri" id="bcastSendBtn" onclick="H._admin.broadcast()">${S.broadcast} Send Broadcast</button>
-    </div>`;
-  }
-
-  // ── SUPPORT ───────────────────────────────────────────────
-  function renderSupport(filter) {
-    const tickets = (H.state.supportTickets||[]);
-    const f = filter || 'all';
-    const filtered = f==='open' ? tickets.filter(t=>t.status!=='closed')
-                   : f==='closed' ? tickets.filter(t=>t.status==='closed') : tickets;
-    return `
-      <div style="display:flex;gap:6px;margin-bottom:10px">
-        <button class="admin-tab ${f==='all'?'on':''}" onclick="H._admin.filterTickets('all')">All (${tickets.length})</button>
-        <button class="admin-tab ${f==='open'?'on':''}" onclick="H._admin.filterTickets('open')">Open (${tickets.filter(t=>t.status!=='closed').length})</button>
-        <button class="admin-tab ${f==='closed'?'on':''}" onclick="H._admin.filterTickets('closed')">Closed (${tickets.filter(t=>t.status==='closed').length})</button>
-      </div>
-      <div id="ticketsList">
-        ${filtered.length ? filtered.map(t => {
-          const u = (H.state.users||[]).find(x=>x.id===t.userId)||{name:'Unknown'};
-          return `<div class="admin-row" style="${t.status==='closed'?'opacity:.6':''}">
-            <div class="admin-row-head">
-              <div class="admin-row-name">${escHtml(t.subject||'Support ticket')}</div>
-              <span class="status-pill ${t.status==='open'?'status-pending':t.status==='in-progress'?'status-active':'status-active'}">${t.status}</span>
-            </div>
-            <div class="admin-row-meta">${escHtml(u.name)} · ${new Date(t.createdAt||Date.now()).toLocaleDateString()}</div>
-            ${t.message?`<div style="font-size:13px;color:var(--text-sub);padding:8px 0;border-top:1px solid var(--border);margin-top:6px">${escHtml(t.message)}</div>`:''}
-            ${(t.replies||[]).map(r=>`<div style="background:var(--n5);border-radius:8px;padding:8px 10px;margin-top:6px;font-size:12px"><strong>Admin:</strong> ${escHtml(r.text)}</div>`).join('')}
-            <div class="admin-actions" style="margin-top:8px">
-              ${t.status!=='closed'?`
-                <button class="ml-act-btn" onclick="H._admin.respondToTicket('${t.id}')">${S.support} Respond</button>
-                <button class="ml-act-btn" onclick="H._admin.updateTicketStatus('${t.id}','in-progress')">In Progress</button>
-                <button class="ml-act-btn" onclick="H._admin.updateTicketStatus('${t.id}','closed')">${S.approve} Close</button>
-              `:`<button class="ml-act-btn" onclick="H._admin.reopenTicket('${t.id}')">${S.reload} Reopen</button>`}
-            </div>
-          </div>`;
-        }).join('') : '<div style="padding:24px;text-align:center;color:var(--text-hint)">No tickets</div>'}
-      </div>`;
-  }
-
-  // ── LOGS ──────────────────────────────────────────────────
-  function renderLogs() {
-    const logs = (H.state.adminLogs||[]).slice(0,50);
-    return `
-      <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-        <button class="ml-act-btn red" onclick="H._admin.clearLogs()">${S.trash} Clear Logs</button>
-      </div>
-      <div class="section-card">
-        ${logs.length ? logs.map(l=>`
-          <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
-            <div style="font-size:13px;font-weight:500;color:var(--text-mid)">${escHtml(l.action)}</div>
-            <div style="font-size:11px;color:var(--text-hint);margin-top:2px">${escHtml(l.adminName||'Admin')} · ${new Date(l.t).toLocaleString()}</div>
-          </div>`).join('')
-        : '<div style="padding:24px;text-align:center;color:var(--text-hint)">No logs yet</div>'}
-      </div>`;
-  }
-
-  // ── MESSAGES ──────────────────────────────────────────────
-  function renderMessages() {
-    const convos = H.state.conversations || [];
-    const users  = H.state.users || [];
-
-    // Count totals
-    let totalMessages = 0;
-    let unreadCount   = 0;
-    convos.forEach(function (c) {
-      const msgs = c.messages || [];
-      totalMessages += msgs.length;
-      msgs.forEach(function (m) { if (!m.read) unreadCount++; });
-    });
-
-    function getUserName(id) {
-      const u = users.find(function (x) { return x.id === id; });
-      return u ? (u.name || u.email || u.phone || 'Unknown') : 'Unknown';
-    }
-
-    const rows = convos.length ? convos.map(function (c) {
-      const msgs     = c.messages || [];
-      const last     = msgs[msgs.length - 1];
-      const lastText = last ? escHtml((last.text || last.body || '').slice(0, 80)) : '<em>No messages</em>';
-      const lastTime = last ? timeAgo(last.createdAt || last.t || 0) : '';
-      const unread   = msgs.filter(function (m) { return !m.read; }).length;
-
-      // Build participant display
-      const participants = (c.participants || c.participantIds || []);
-      const names = participants.length
-        ? participants.map(function (id) { return escHtml(getUserName(id)); }).join(', ')
-        : (c.buyerId && c.sellerId
-            ? escHtml(getUserName(c.buyerId)) + ' &amp; ' + escHtml(getUserName(c.sellerId))
-            : 'Unknown participants');
-
-      const convId = escHtml(c.id || '');
-
-      // Expandable messages block
-      const msgsHtml = msgs.length ? msgs.map(function (m) {
-        const senderName = escHtml(getUserName(m.senderId || m.from || ''));
-        const msgTime    = new Date(m.createdAt || m.t || Date.now()).toLocaleString();
-        const isAdmin    = (users.find(function (x) { return x.id === (m.senderId || m.from); }) || {}).role === 'admin';
-        return `<div style="padding:6px 10px;border-left:3px solid ${isAdmin?'#1A3A8F':'#e5e7eb'};margin-bottom:6px;background:${isAdmin?'#eff6ff':'var(--n5)'};border-radius:0 6px 6px 0">
-          <div style="font-size:11px;font-weight:700;color:${isAdmin?'#1A3A8F':'var(--text-mid)'};margin-bottom:2px">${senderName}</div>
-          <div style="font-size:13px;color:var(--text-mid)">${escHtml((m.text||m.body||'').slice(0,300))}</div>
-          <div style="font-size:10px;color:var(--text-hint);margin-top:3px">${msgTime}</div>
-        </div>`;
-      }).join('') : '<div style="font-size:12px;color:var(--text-hint);padding:6px">No messages in this conversation</div>';
-
-      return `<div class="admin-row" style="padding:12px 14px">
-        <div class="admin-row-head" style="cursor:pointer" onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('conv-msgs-${convId}'))">
-          <div>
-            <div class="admin-row-name" style="font-size:13px;font-weight:700">${names}</div>
-            <div class="admin-row-meta" style="margin-top:3px">${lastText} &middot; ${lastTime}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            ${unread ? `<span style="background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">${unread} unread</span>` : ''}
-            <span style="font-size:11px;color:var(--sub);white-space:nowrap">${msgs.length} msg${msgs.length!==1?'s':''}</span>
-            <span style="color:var(--sub)">&#9660;</span>
-          </div>
-        </div>
-        <div id="conv-msgs-${convId}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-          ${msgsHtml}
-        </div>
-      </div>`;
-    }).join('') : '<div style="text-align:center;padding:40px 20px;color:var(--sub);font-size:14px">No conversations found.<br>Sync from Cloud to load messages.</div>';
-
-    return `
-      <div class="stats" style="margin:0 0 14px">
-        <div class="stat"><div class="stat-n">${convos.length}</div><div class="stat-l">Conversations</div></div>
-        <div class="stat"><div class="stat-n">${totalMessages}</div><div class="stat-l">Total Messages</div></div>
-        <div class="stat"><div class="stat-n">${unreadCount}</div><div class="stat-l">Unread</div></div>
-      </div>
-      <button class="btn-pri" style="width:100%;margin-bottom:14px" onclick="H._admin.syncAllMessages()">${S.reload} Sync from Cloud</button>
-      <div class="section-card" style="padding:0">${rows}</div>`;
-  }
-
-  // ── ADS MANAGEMENT ───────────────────────────────────────
-  const CATS = ['property','vehicles','electronics','furniture','fashion','services','agriculture','pets','kids','other','rooms','jobs'];
-
-  function renderAds() {
-    var now = Date.now();
-    var ads = H.state.paidAds || [];
-    var live = ads.filter(function(a){ return a.active && a.endsAt > now; });
-    return `
-      <div class="stats" style="margin:0 0 14px">
-        <div class="stat"><div class="stat-n">${live.length}</div><div class="stat-l">Live</div></div>
-        <div class="stat"><div class="stat-n">${ads.filter(function(a){return a.type==='banner';}).length}</div><div class="stat-l">Banners</div></div>
-        <div class="stat"><div class="stat-n">${ads.filter(function(a){return a.type==='spotlight';}).length}</div><div class="stat-l">Spotlights</div></div>
-      </div>
-      <div style="padding:0 4px">
-        <button class="btn-submit" onclick="H._admin.showAdForm()" style="width:100%;margin-bottom:14px">+ Create New Ad</button>
-        ${ads.length ? ads.map(function(a){ return renderAdRow(a, now); }).join('') : '<div style="text-align:center;padding:30px 16px;color:var(--sub)">No paid ads yet.<br>Create one to start showing businesses on the app.</div>'}
-      </div>`;
-  }
-
-  function renderAdRow(a, now) {
-    var isLive = a.active && a.endsAt > now;
-    var endDate = new Date(a.endsAt).toLocaleDateString('en-ZW', {day:'numeric',month:'short',year:'numeric'});
-    var typeLabel = a.type === 'banner' ? '🖼 Banner' : ('⭐ Spotlight · ' + (a.targetCat || ''));
-    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        ${a.imageUrl ? '<img src="'+escHtml(a.imageUrl)+'" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex-shrink:0">' : '<div style="width:44px;height:44px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">'+(a.type==='banner'?'🖼':'⭐')+'</div>'}
-        <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(a.businessName)}</div>
-          <div style="font-size:11px;color:var(--sub);margin-top:2px">${typeLabel} · ends ${endDate}</div>
-        </div>
-        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;flex-shrink:0;${isLive?'background:#F0FDF4;color:#00A651':'background:var(--border);color:var(--sub)'}">${isLive?'LIVE':'OFF'}</span>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="ml-act-btn" onclick="H._admin.toggleAd('${a.id}')">${isLive ? 'Pause' : 'Activate'}</button>
-        <button class="ml-act-btn" onclick="H._admin.showAdForm('${a.id}')">Edit</button>
-        <button class="ml-act-btn red" onclick="H._admin.deleteAd('${a.id}')">Delete</button>
-      </div>
-    </div>`;
-  }
-
-  // ── ADMIN ACTIONS ─────────────────────────────────────────
-  H._admin = {
-    setTab(t) {
-      _adminTab = t;
-      document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab===t));
-      const body = document.getElementById('adminBody');
-      if (body) body.innerHTML = renderBody();
-      if (t === 'verifications') {
-        syncVerificationsFromSupabase().then(function () { if (body) body.innerHTML = renderBody(); });
-      } else if (t === 'reports' && typeof H.syncReports === 'function') {
-        H.syncReports().then(function () { if (body) body.innerHTML = renderBody(); });
-      } else if (t === 'messages' && typeof H.syncConversations === 'function') {
-        H.syncConversations().then(function () { if (body) body.innerHTML = renderBody(); });
-      }
-    },
-
-    filterUsers(q) {
-      const ql = q.toLowerCase();
-      const el = document.getElementById('adminUsersList');
-      if (el) el.innerHTML = (H.state.users||[]).filter(u=>(u.name+u.email+u.phone).toLowerCase().includes(ql)).map(userRow).join('');
-    },
-
-    filterListings(q) {
-      const ql = q.toLowerCase();
-      const el = document.getElementById('adminLList');
-      if (el) el.innerHTML = (H.state.listings||[]).filter(l=>(l.title+l.city).toLowerCase().includes(ql)).sort((a,b)=>b.createdAt-a.createdAt).map(listingRow).join('');
-    },
-
-    filterListingsByStatus(status) {
-      const el = document.getElementById('adminLList');
-      if (!el) return;
-      const list = (H.state.listings||[]).filter(l=>status==='all'?true:l.status===status);
-      el.innerHTML = list.sort((a,b)=>b.createdAt-a.createdAt).map(listingRow).join('');
-      document.querySelectorAll('[data-lstatus]').forEach(b=>b.classList.toggle('on',b.dataset.lstatus===status));
-    },
-
-    filterTickets(f) {
-      const body = document.getElementById('adminBody');
-      if (body) body.innerHTML = renderSupport(f);
-    },
-
-    filterReports(f) {
-      const body = document.getElementById('adminBody');
-      if (body) body.innerHTML = renderReports(f);
-    },
-
-    banUser(uid_, type, reportId) {
-      if (!adminGuard()) return;
-      modal({
-        title: type==='perm' ? 'Permanently Ban User' : 'Suspend User 7 Days',
-        body: '<div class="fl">Reason</div><input class="fi" id="banReason" placeholder="Enter reason for action">',
-        confirmText: type==='perm' ? 'Ban Permanently' : 'Suspend 7 Days',
-        onConfirm: () => {
-          const reason = document.getElementById('banReason')?.value || 'Policy violation';
-          const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
-          u.status = type==='perm' ? 'banned' : 'banned_temp';
-          u.banReason = reason;
-          if (type==='temp') u.banUntil = Date.now() + 7*86400000;
-          const sb = window.supabase;
-          if (sb && typeof sb.from === 'function') {
-            sb.from('profiles').update({ status: u.status, ban_reason: reason }).eq('id', uid_).catch(()=>{});
-          }
-          if (reportId) { const r=(H.state.reports||[]).find(x=>x.id===reportId); if(r) r.status='resolved'; }
-          alog(`${type==='perm'?'Banned':'Suspended'}: ${u.name} — ${reason}`);
-          saveState(); toast(`User ${type==='perm'?'banned':'suspended'}`);
-          this.setTab('users');
-        }
-      });
-    },
-
-    unban(uid_, reportId) {
-      if (!adminGuard()) return;
-      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
-      u.status='active'; u.banReason=null; u.banUntil=null;
-      const sb = window.supabase;
-      if (sb && typeof sb.from === 'function') {
-        sb.from('profiles').update({ status: 'active', ban_reason: null }).eq('id', uid_).catch(()=>{});
-      }
-      if (reportId) { const r=(H.state.reports||[]).find(x=>x.id===reportId); if(r) r.status='resolved'; }
-      alog(`Unbanned: ${u.name}`);
-      saveState(); toast('User unbanned'); this.setTab('users');
-    },
-
-    deleteUser(uid_) {
-      if (!adminGuard()) return;
-      modal({
-        title: 'Delete User',
-        body: 'This permanently deletes this user and all their listings. Cannot be undone.',
-        confirmText: 'Delete User',
-        onConfirm: () => {
-          const u = (H.state.users||[]).find(x=>x.id===uid_);
-          alog(`Deleted user: ${u?u.name:uid_}`);
-          H.state.users = (H.state.users||[]).filter(x=>x.id!==uid_);
-          H.state.listings = (H.state.listings||[]).filter(x=>x.sellerId!==uid_);
-          saveState(); toast('User deleted'); this.setTab('users');
-        }
-      });
-    },
-
-    makeAdmin(uid_) {
-      if (!adminGuard()) return;
-      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
-      modal({
-        title: 'Make Admin',
-        body: `Give admin access to ${escHtml(u.name)}? They will have full control of the platform.`,
-        confirmText: 'Make Admin',
-        onConfirm: () => {
-          u.role='admin';
-          const sb = window.supabase;
-          if (sb && typeof sb.from === 'function') {
-            sb.from('profiles').update({ role: 'admin' }).eq('id', uid_).catch(()=>{});
-          }
-          alog(`Made admin: ${u.name||'User'}`);
-          saveState(); toast(`${u.name||'User'} is now an admin`); this.setTab('users');
-        }
-      });
-    },
-
-    verifyUser(uid_) {
-      if (!adminGuard()) return;
-      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
-      u.verified=true; u.verifiedAt=Date.now();
-      const sb = window.supabase;
-      if (sb && typeof sb.from === 'function') {
-        sb.from('profiles').update({ verified: true }).eq('id', uid_).catch(()=>{});
-      }
-      alog(`Verified: ${u.name||'User'}`);
-      saveState(); toast(`${u.name||'User'} verified`); this.setTab('users');
-    },
-
-    approveVerification(uid_) {
-      if (!adminGuard()) return;
-      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
-      u.verified=true; u.verifiedAt=Date.now(); u.verificationPending=false;
-      alog(`Verification approved: ${u.name||'User'}`);
-      pushNotif(uid_,'Identity Verified ✓','Congratulations! Your identity has been verified on PaMarket.','verify');
-      const sb = window.supabase;
-      if (sb && typeof sb.from === 'function') {
-        sb.from('profiles').update({ verified: true, updated_at: new Date().toISOString() }).eq('id', uid_);
-      }
-      saveState(); toast(`${u.name||'User'} verified ✓`); this.setTab('verifications');
-    },
-
-    rejectVerification(uid_) {
-      if (!adminGuard()) return;
-      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
-      u.verificationPending=false;
-      alog(`Verification rejected: ${u.name||'User'}`);
-      pushNotif(uid_,'Verification Unsuccessful','Your ID verification could not be approved. Contact support for help.','warn');
-      const sb = window.supabase;
-      if (sb && typeof sb.from === 'function') {
-        sb.from('profiles').update({ verification_pending: false }).eq('id', uid_);
-        sb.from('verifications').delete().eq('user_id', uid_);
-      }
-      saveState(); toast(`Verification rejected for ${u.name||'User'}`); this.setTab('verifications');
-    },
-
-    revokeVerification(uid_) {
-      if (!adminGuard()) return;
-      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
-      u.verified=false; u.verifiedAt=null;
-      alog(`Verification revoked: ${u.name||'User'}`);
-      const sb = window.supabase;
-      if (sb && typeof sb.from === 'function') {
-        sb.from('profiles').update({ verified: false }).eq('id', uid_);
-      }
-      saveState(); toast(`Verification revoked for ${u.name||'User'}`); this.setTab('verifications');
-    },
-
-    verifyCompany(uid_) {
-      if (!adminGuard()) return;
-      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
-      u.companyVerified = true; u.companyVerifiedAt = Date.now();
-      alog(`Company verified: ${u.name}`);
-      pushNotif(uid_,'Company Verified ✓','Your company account has been verified on PaMarket.','verify');
-      saveState(); toast(`${u.name||'User'} company verified`); this.setTab('users');
-    },
-
-    revokeCompany(uid_) {
-      if (!adminGuard()) return;
-      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
-      u.companyVerified = false;
-      alog(`Company verification revoked: ${u.name}`);
-      saveState(); toast(`Company verification revoked`); this.setTab('users');
-    },
-
-    approveListing(lid) {
-      if (!adminGuard()) return;
-      const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
-      l.status='active';
-      const sb = window.supabase;
-      if (sb && typeof sb.from === 'function') {
-        sb.from('listings').update({ status: 'active' }).eq('id', lid).catch(()=>{});
-      }
-      pushNotif(l.sellerId,'Listing Approved',`Your listing "${l.title||'your listing'}" is now live!`);
-      alog(`Approved listing: ${l.title}`);
-      saveState(); toast('Listing approved and live'); this.setTab('listings');
-    },
-
-    rejectListing(lid) {
-      if (!adminGuard()) return;
-      const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
-      modal({
-        title: 'Reject Listing',
-        body: '<div class="fl">Reason for rejection</div><input class="fi" id="rejectReason" placeholder="e.g. Misleading content, prohibited item">',
-        confirmText: 'Reject Listing',
-        onConfirm: () => {
-          const reason = document.getElementById('rejectReason')?.value || 'Policy violation';
-          l.status='rejected'; l.rejectReason=reason;
-          const sb = window.supabase;
-          if (sb && typeof sb.from === 'function') {
-            sb.from('listings').update({ status: 'rejected', reject_reason: reason }).eq('id', lid).catch(()=>{});
-          }
-          pushNotif(l.sellerId,'Listing Rejected',`Your listing "${l.title||'your listing'}" was rejected: ${reason}`);
-          alog(`Rejected listing: ${l.title} — ${reason}`);
-          saveState(); toast('Listing rejected'); this.setTab('listings');
-        }
-      });
-    },
-
-    banListing(lid, reportId) {
-      if (!adminGuard()) return;
-      const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
-      modal({
-        title: 'Remove Listing',
-        body: `Remove "${escHtml(l.title)}" from the marketplace? The seller will be notified.`,
-        confirmText: 'Remove Listing',
-        onConfirm: () => {
-          l.status='banned';
-          const sb = window.supabase;
-          if (sb && typeof sb.from === 'function') {
-            sb.from('listings').update({ status: 'banned' }).eq('id', lid).catch(()=>{});
-          }
-          if (reportId) { const r=(H.state.reports||[]).find(x=>x.id===reportId); if(r) r.status='resolved'; }
-          pushNotif(l.sellerId,'Listing Removed',`Your listing "${l.title||'your listing'}" was removed for policy violation.`);
-          alog(`Removed listing: ${l.title}`);
-          saveState(); toast('Listing removed'); this.setTab('listings');
-        }
-      });
-    },
-
-    restoreListing(lid) {
-      if (!adminGuard()) return;
-      const l = (H.state.listings||[]).find(x=>x.id===lid); if (!l) return;
-      l.status='active';
-      const sb = window.supabase;
-      if (sb && typeof sb.from === 'function') {
-        sb.from('listings').update({ status: 'active' }).eq('id', lid).catch(()=>{});
-      }
-      alog(`Restored listing: ${l.title}`);
-      saveState(); toast('Listing restored'); this.setTab('listings');
-    },
-
-    resolveReport(rid) {
-      if (!adminGuard()) return;
-      const r = (H.state.reports||[]).find(x=>x.id===rid); if (!r) return;
-      r.status='resolved';
-      alog(`Resolved report: ${rid}`);
-      saveState(); toast('Report resolved'); this.setTab('reports');
-    },
-
-    toggleSetting(k) {
-      if (!adminGuard()) return;
-      H.state[k] = !H.state[k];
-      alog(`Toggled setting: ${k} = ${H.state[k]}`);
-      saveState(); toast('Setting updated');
-      // Persist to Supabase so settings survive page reloads
-      const sb = window.supabase;
-      if (sb && typeof sb.from === 'function') {
-        const KEYS = ['requireListingApproval','autoApproveVerified','allowImageUploads',
-                      'signupPaused','requirePhoneVerification'];
-        const settingsObj = {};
-        KEYS.forEach(key => { settingsObj[key] = !!H.state[key]; });
-        sb.from('app_settings').upsert({ id: 1, settings: settingsObj, updated_at: new Date().toISOString() })
-          .then(r => { if (r && r.error) console.warn('settings save:', r.error.message); });
-      }
-      this.setTab('settings');
-    },
-
-    async broadcast() {
-      if (!adminGuard()) return;
-      const title  = (document.getElementById('bcastTitle')?.value  || '').trim();
-      const msg    = (document.getElementById('bcastMsg')?.value    || '').trim();
-      const target = document.getElementById('bcastTarget')?.value  || 'all';
-      if (!title || !msg) { toast('Enter title and message'); return; }
-
-      const btn = document.getElementById('bcastSendBtn');
-      if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
-
-      const c = window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null;
-      let userIds = [];
-      try {
-        if (c && target !== 'sellers' && target !== 'inactive') {
-          let q = c.from('profiles').select('id');
-          if (target === 'verified')   q = q.eq('verified', true);
-          if (target === 'unverified') q = q.eq('verified', false);
-          const res = await q.limit(5000);
-          if (res.data) userIds = res.data.map(p => p.id).filter(Boolean);
-        } else if (c) {
-          const [uRes, lRes] = await Promise.all([
-            c.from('profiles').select('id').limit(5000),
-            c.from('listings').select('seller_id').neq('status','banned').limit(10000)
-          ]);
-          const sellerSet = new Set((lRes.data||[]).map(l => l.seller_id).filter(Boolean));
-          const allIds    = (uRes.data||[]).map(p => p.id).filter(Boolean);
-          userIds = allIds.filter(id => target === 'sellers' ? sellerSet.has(id) : !sellerSet.has(id));
-        } else {
-          // Fallback to local state when Supabase unavailable
-          const localUsers = H.state.users || [];
-          const localSellers = new Set((H.state.listings||[]).map(l=>l.sellerId));
-          userIds = localUsers.filter(u => {
-            if (target==='verified')   return u.verified;
-            if (target==='unverified') return !u.verified;
-            if (target==='sellers')    return localSellers.has(u.id);
-            if (target==='inactive')   return !localSellers.has(u.id);
-            return true;
-          }).map(u => u.id);
-        }
-      } catch(e) {
-        console.warn('broadcast fetch error:', e);
-        toast('Failed to fetch users. Please try again.');
-        if (btn) { btn.disabled = false; btn.textContent = 'Send Broadcast'; }
-        return;
-      }
-
-      if (!userIds.length) {
-        toast('No users found for this filter');
-        if (btn) { btn.disabled = false; btn.textContent = 'Send Broadcast'; }
-        return;
-      }
-
-      userIds.forEach(id => H.pushNotif(id, title, msg, 'system'));
-      alog(`Broadcast (${target}) to ${userIds.length} users: ${msg.slice(0,50)}`);
-      saveState();
-      toast(`✓ Broadcast sent to ${userIds.length} user${userIds.length!==1?'s':''}`);
-      document.getElementById('bcastTitle').value = '';
-      document.getElementById('bcastMsg').value = '';
-      if (btn) { btn.disabled = false; btn.textContent = 'Send Broadcast'; }
-    },
-
-    respondToTicket(tid) {
-      const t = (H.state.supportTickets||[]).find(x=>x.id===tid); if (!t) return;
-      const u = (H.state.users||[]).find(x=>x.id===t.userId)||{name:'User'};
-      modal({
-        title: `Reply to ${escHtml(u.name)}`,
-        body: `<div class="fl">Ticket: ${escHtml(t.subject||'')}</div>
-               <div class="fl" style="margin-top:10px">Your Response</div>
-               <textarea class="fi" rows="4" id="ticketReply" placeholder="Type your response to the user..."></textarea>`,
-        confirmText: 'Send Response',
-        onConfirm: () => {
-          const reply = document.getElementById('ticketReply')?.value?.trim();
-          if (!reply) { toast('Enter a response'); return false; }
-          if (!t.replies) t.replies = [];
-          t.replies.push({ text: reply, from: 'admin', t: Date.now() });
-          t.status = 'in-progress';
-          pushNotif(t.userId, 'Support Reply', `Admin replied to: ${t.subject}`);
-          alog(`Replied to ticket: ${t.subject}`);
-          saveState(); toast('Response sent'); this.filterTickets('all');
-        }
-      });
-    },
-
-    updateTicketStatus(tid, status) {
-      const t = (H.state.supportTickets||[]).find(x=>x.id===tid); if (!t) return;
-      t.status = status;
-      alog(`Ticket ${status}: ${t.subject||tid}`);
-      saveState(); toast(`Ticket marked as ${status}`); this.filterTickets('all');
-    },
-
-    reopenTicket(tid) {
-      const t = (H.state.supportTickets||[]).find(x=>x.id===tid); if (!t) return;
-      t.status = 'open';
-      alog(`Reopened ticket: ${t.subject||tid}`);
-      saveState(); toast('Ticket reopened'); this.filterTickets('all');
-    },
-
-    exportData() {
-      if (!adminGuard()) return;
-      const data = JSON.stringify(H.state, null, 2);
-      const blob = new Blob([data], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `pamarket-backup-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      alog('Exported all data');
-      saveState(); toast('Data exported');
-    },
-
-    clearOldData() {
-      if (!adminGuard()) return;
-      modal({
-        title: 'Clear Old Data',
-        body: 'Delete listings, transactions, and logs older than 30 days. Active listings are kept. Cannot be undone.',
-        confirmText: 'Clear Old Data',
-        onConfirm: () => {
-          const cutoff = Date.now() - 30*86400000;
-          const before = (H.state.listings||[]).length;
-          H.state.listings  = (H.state.listings||[]).filter(l=>l.createdAt>cutoff||l.status==='active');
-          H.state.txns      = (H.state.txns||[]).filter(t=>t.t>cutoff);
-          H.state.adminLogs = (H.state.adminLogs||[]).filter(l=>l.t>cutoff);
-          H.state.reports   = (H.state.reports||[]).filter(r=>r.t>cutoff||r.status==='open');
-          alog(`Cleared old data: ${before-(H.state.listings||[]).length} listings removed`);
-          saveState(); toast('Old data cleared'); this.setTab('settings');
-        }
-      });
-    },
-
-    resetApp() {
-      if (!adminGuard()) return;
-      modal({
-        title: 'Reset App',
-        body: '<p style="color:var(--red);font-weight:700;margin-bottom:10px">WARNING: Deletes ALL data including users, listings, and messages. Irreversible.</p><div class="fl">Type RESET to confirm</div><input class="fi" id="resetConfirm" placeholder="Type RESET">',
-        confirmText: 'Reset Everything',
-        onConfirm: () => {
-          if (document.getElementById('resetConfirm')?.value?.trim()!=='RESET') {
-            toast('Type RESET to confirm'); return false;
-          }
-          const admin = currentUser();
-          H.state.users = [admin];
-          H.state.listings = [];
-          H.state.conversations = [];
-          H.state.reports = [];
-          H.state.txns = [];
-          H.state.saves = {};
-          H.state.notifs = {};
-          H.state.supportTickets = [];
-          H.state.adminLogs = [{action:'App reset by admin',adminName:admin.name,t:Date.now()}];
-          saveState(); toast('App reset complete'); this.setTab('overview');
-        }
-      });
-    },
-
-    clearLogs() {
-      if (!adminGuard()) return;
-      modal({
-        title: 'Clear Logs',
-        body: 'This will delete all admin logs. Cannot be undone.',
-        confirmText: 'Clear Logs',
-        onConfirm: () => {
-          H.state.adminLogs = [];
-          saveState(); toast('Logs cleared'); this.setTab('logs');
-        }
-      });
-    },
-
-    showAdForm(id) {
-      if (!adminGuard()) return;
-      const ad = id ? (H.state.paidAds||[]).find(a=>a.id===id) : null;
-      const today = new Date().toISOString().slice(0,10);
-      const inAMonth = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
-      const catOptions = CATS.map(c=>`<option value="${c}" ${ad&&ad.targetCat===c?'selected':''}>${c}</option>`).join('');
-      H.modal({
-        title: ad ? 'Edit Ad' : 'Create Paid Ad',
-        body: `
-          <div class="fg" style="margin-top:8px"><div class="fl">Ad Type</div>
-            <select class="fi" id="_adType" onchange="document.getElementById('_spotlightRow').style.display=this.value==='spotlight'?'':'none'">
-              <option value="banner" ${!ad||ad.type==='banner'?'selected':''}>🖼 Home Banner</option>
-              <option value="spotlight" ${ad&&ad.type==='spotlight'?'selected':''}>⭐ Category Spotlight</option>
-            </select></div>
-          <div class="fg"><div class="fl">Business Name</div><input class="fi" id="_adBiz" value="${escHtml(ad?ad.businessName:'')}" placeholder="e.g. Mega Furniture Harare"></div>
-          <div class="fg"><div class="fl">Headline / Tagline</div><input class="fi" id="_adHead" value="${escHtml(ad?ad.headline||'':'')}" placeholder="e.g. Best prices in Harare!"></div>
-          <div class="fg"><div class="fl">Sub-tagline (optional)</div><input class="fi" id="_adTag" value="${escHtml(ad?ad.tagline||'':'')}" placeholder="e.g. Free delivery on orders over $50"></div>
-          <div class="fg"><div class="fl">Image URL (optional)</div><input class="fi" id="_adImg" value="${escHtml(ad?ad.imageUrl||'':'')}" placeholder="https://... or leave blank for colour card"></div>
-          <div class="fg"><div class="fl">Background Colour</div><div style="display:flex;align-items:center;gap:8px"><input type="color" id="_adColor" value="${ad?ad.bgColor||'#1A3A8F':'#1A3A8F'}" style="width:44px;height:36px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><span id="_adColorHex" style="font-size:13px;color:var(--sub)">${ad?ad.bgColor||'#1A3A8F':'#1A3A8F'}</span></div></div>
-          <div class="fg"><div class="fl">Tap Destination URL (optional)</div><input class="fi" id="_adLink" value="${escHtml(ad?ad.linkUrl||'':'')}" placeholder="https://wa.me/2637... or leave blank"></div>
-          <div class="fg" id="_spotlightRow" style="display:${ad&&ad.type==='spotlight'?'':'none'}"><div class="fl">Target Category</div><select class="fi" id="_adCat">${catOptions}</select></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div class="fg"><div class="fl">Start Date</div><input class="fi" type="date" id="_adStart" value="${ad?new Date(ad.startsAt).toISOString().slice(0,10):today}"></div>
-            <div class="fg"><div class="fl">End Date</div><input class="fi" type="date" id="_adEnd" value="${ad?new Date(ad.endsAt).toISOString().slice(0,10):inAMonth}"></div>
-          </div>`,
-        confirmText: ad ? 'Save Changes' : 'Create Ad',
-        onConfirm: () => H._admin.saveAd(id)
-      });
-      setTimeout(()=>{
-        const colorInput = document.getElementById('_adColor');
-        if (colorInput) colorInput.oninput = function(){ const hex=document.getElementById('_adColorHex'); if(hex) hex.textContent=this.value; };
-      }, 100);
-    },
-
-    saveAd(id) {
-      const type  = (document.getElementById('_adType')||{}).value || 'banner';
-      const biz   = ((document.getElementById('_adBiz')||{}).value||'').trim();
-      const head  = ((document.getElementById('_adHead')||{}).value||'').trim();
-      const tag   = ((document.getElementById('_adTag')||{}).value||'').trim();
-      const img   = ((document.getElementById('_adImg')||{}).value||'').trim();
-      const color = ((document.getElementById('_adColor')||{}).value||'#1A3A8F');
-      const link  = ((document.getElementById('_adLink')||{}).value||'').trim();
-      const cat   = ((document.getElementById('_adCat')||{}).value)||'';
-      const start = new Date(((document.getElementById('_adStart')||{}).value)||new Date().toISOString().slice(0,10)).getTime();
-      const end   = new Date(((document.getElementById('_adEnd')||{}).value)||new Date(Date.now()+30*86400000).toISOString().slice(0,10)).getTime();
-      if (!biz) { toast('Enter business name', 4000, true); return false; }
-      if (end <= start) { toast('End date must be after start date', 4000, true); return false; }
-      H.state.paidAds = H.state.paidAds || [];
-      if (id) {
-        const ad = H.state.paidAds.find(a=>a.id===id);
-        if (ad) Object.assign(ad, {type,businessName:biz,headline:head,tagline:tag,imageUrl:img,bgColor:color,linkUrl:link,targetCat:cat,startsAt:start,endsAt:end});
-        alog(`Updated ad: ${biz}`);
-      } else {
-        H.state.paidAds.unshift({id:uid(),type,businessName:biz,headline:head,tagline:tag,imageUrl:img,bgColor:color,linkUrl:link,targetCat:cat,startsAt:start,endsAt:end,active:true,createdAt:Date.now()});
-        alog(`Created ad: ${biz} (${type})`);
-      }
-      saveState(); toast('Ad saved!'); this.setTab('ads');
-    },
-
-    toggleAd(id) {
-      const ad = (H.state.paidAds||[]).find(a=>a.id===id); if (!ad) return;
-      ad.active = !ad.active;
-      alog(`${ad.active?'Activated':'Paused'} ad: ${ad.businessName}`);
-      saveState(); this.setTab('ads');
-    },
-
-    async syncAllMessages() {
-      const sb = window.supabase;
-      if (!sb || typeof sb.from !== 'function') {
-        toast('Supabase not available'); return;
-      }
-      const body = document.getElementById('adminBody');
-      try {
-        // Fetch messages and conversations in parallel
-        const [msgsRes, convosRes] = await Promise.all([
-          sb.from('messages').select('*').order('created_at', { ascending: false }).limit(500),
-          sb.from('conversations').select('*').limit(200)
-        ]);
-
-        const msgs   = (msgsRes  && msgsRes.data)  || [];
-        const convos = (convosRes && convosRes.data) || [];
-
-        // Build conversations map from DB rows
-        if (!H.state.conversations) H.state.conversations = [];
-        const convoMap = {};
-        H.state.conversations.forEach(function (c) { convoMap[c.id] = c; });
-
-        convos.forEach(function (c) {
-          const cid = c.id;
-          if (!convoMap[cid]) {
-            convoMap[cid] = {
-              id: cid,
-              participants: c.participant_ids || c.participants || [c.buyer_id, c.seller_id].filter(Boolean),
-              buyerId:  c.buyer_id  || null,
-              sellerId: c.seller_id || null,
-              listingId: c.listing_id || null,
-              createdAt: c.created_at ? new Date(c.created_at).getTime() : Date.now(),
-              messages: []
-            };
-          } else {
-            // Merge fields
-            const existing = convoMap[cid];
-            if (!existing.participants || !existing.participants.length) {
-              existing.participants = c.participant_ids || c.participants || [c.buyer_id, c.seller_id].filter(Boolean);
-            }
-          }
-        });
-
-        // Attach messages to conversations
-        msgs.forEach(function (m) {
-          const cid = m.conversation_id;
-          if (!cid) return;
-          if (!convoMap[cid]) {
-            convoMap[cid] = { id: cid, participants: [], messages: [], createdAt: Date.now() };
-          }
-          const c = convoMap[cid];
-          if (!c.messages) c.messages = [];
-          const exists = c.messages.some(function (x) { return x.id === m.id; });
-          if (!exists) {
-            c.messages.push({
-              id:        m.id,
-              senderId:  m.sender_id  || m.senderId  || null,
-              text:      m.content    || m.text       || m.body || '',
-              createdAt: m.created_at ? new Date(m.created_at).getTime() : Date.now(),
-              read:      m.is_read    || m.read       || false
-            });
-          }
-        });
-
-        // Sort messages within each conversation
-        Object.values(convoMap).forEach(function (c) {
-          (c.messages || []).sort(function (a, b) { return a.createdAt - b.createdAt; });
-        });
-
-        H.state.conversations = Object.values(convoMap);
-
-        // Collect all participant IDs and fetch missing profiles
-        const knownIds = new Set((H.state.users || []).map(function (u) { return u.id; }));
-        const missingIds = [];
-        H.state.conversations.forEach(function (c) {
-          (c.participants || []).forEach(function (id) { if (id && !knownIds.has(id)) missingIds.push(id); });
-          if (c.buyerId  && !knownIds.has(c.buyerId))  missingIds.push(c.buyerId);
-          if (c.sellerId && !knownIds.has(c.sellerId)) missingIds.push(c.sellerId);
-        });
-        const uniqueMissing = [...new Set(missingIds)];
-        if (uniqueMissing.length) {
-          const profilesRes = await sb.from('profiles').select('id,name,phone,email').in('id', uniqueMissing);
-          const profiles = (profilesRes && profilesRes.data) || [];
-          if (!H.state.users) H.state.users = [];
-          profiles.forEach(function (p) {
-            if (!H.state.users.find(function (u) { return u.id === p.id; })) {
-              H.state.users.push({
-                id: p.id, name: p.name || 'Unknown',
-                email: p.email || '', phone: p.phone || '',
-                role: 'user', status: 'active', joinedAt: Date.now()
-              });
-            }
-          });
-        }
-
-        H.saveState();
-        alog('Synced messages from cloud');
-        if (body) body.innerHTML = renderBody();
-        toast('Messages synced');
-      } catch (e) {
-        console.error('syncAllMessages error:', e);
-        toast('Failed to sync messages');
-      }
-    },
-
-    deleteAd(id) {
-      const ad = (H.state.paidAds||[]).find(a=>a.id===id); if (!ad) return;
-      modal({
-        title: 'Delete Ad',
-        body: `Remove the ad for <strong>${escHtml(ad.businessName)}</strong>? This cannot be undone.`,
-        confirmText: 'Delete', danger: true,
-        onConfirm: () => {
-          H.state.paidAds = (H.state.paidAds||[]).filter(a=>a.id!==id);
-          alog(`Deleted ad: ${ad.businessName}`);
-          saveState(); toast('Ad deleted'); this.setTab('ads');
-        }
-      });
-    }
-  };
-
-})(window.H = window.H || {});
-
-
-
-;/* === www/js/verify.js === */
-/*!
- * PaMarket — Zimbabwe's Free Marketplace
- * © 2026 PaMarket. All rights reserved.
- * Unauthorised copying, modification, distribution or use of this
- * software without written permission from the owner is strictly prohibited.
- */
-'use strict';
-(function (H) {
-  const pages = H.pages;
-  const state = H.state;
-  const { escHtml, uid, toast, pushNotif } = H;
-  // Methods that use `this` must go through H so binding is correct
-  const currentUser = () => H.currentUser();
-  const innerTopbar = (...a) => H.innerTopbar(...a);
-  const saveState   = () => H.saveState();
-  const goBack      = () => H.goBack();
-  const renderPage  = (...a) => H.renderPage(...a);
-
-  // Fallback SVG icons in case H.ICONS is not ready
-  const icons = {
-    check: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>',
-    cross: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-    lock:  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
-    id:    '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M10 14h4"/><circle cx="10" cy="17" r="1"/></svg>',
-    camera:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
-    phone: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 2.1.74 3.26a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c1.16.38 2.3.61 3.26.74a2 2 0 0 1 1.72 2.03z"/></svg>',
-  };
-
-  // Prefer H.ICONS if available, else fall back
-  const I = window.H && H.ICONS ? { ...icons, ...H.ICONS } : icons;
-
-  let camStream   = null;
-  let livenessTimer = null;
-
-  function stopCam() {
-    if (livenessTimer) { clearInterval(livenessTimer); livenessTimer = null; }
-    if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
-  }
-
-  // ---------------------------------------------------
-  // VERIFY PAGE
-  // ---------------------------------------------------
-  pages.Verify = function () {
-    const u         = currentUser();
-    const hasId     = !!u.idDocs;
-    const hasSelfie = !!u.selfie;
-    const isPending = !!u.verification_pending;
-
-    if (u.verified) {
-      return `<div class="page active">${innerTopbar('Identity Verified')}
-        <div class="inner-content">
-          <div class="verify-badge-preview">
-            <div class="vbp-icon" style="color:#22c55e">${I.check}</div>
-            <div>
-              <div style="font-size:15px;font-weight:700;color:#22c55e">You are verified <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#22c55e" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg></div>
-              <div style="font-size:12px;color:var(--sub);margin-top:2px">Buyers trust verified sellers more.</div>
-            </div>
-          </div>
-          <div class="tip-box"><div class="tip-title">${I.lock} Blue badge active</div>
-            <div class="tip-body">Your blue verified badge is now showing on all your listings and profile.</div>
-          </div>
-        </div>
-      </div>`;
-    }
-
-    if (isPending) {
-      return `<div class="page active">${innerTopbar('Verify Identity')}
-        <div class="inner-content">
-          <div style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.4);border-radius:16px;padding:20px;text-align:center;margin-bottom:18px">
-            <div style="margin-bottom:8px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <div style="font-size:15px;font-weight:700;color:#fbbf24">Verification Pending</div>
-            <div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.5">
-              Your ID and selfie have been submitted.<br>An admin will review your documents and approve your badge — usually within 24 hours.
-            </div>
-          </div>
-          <div class="tip-box">
-            <div class="tip-title">${I.lock} What happens next?</div>
-            <div class="tip-body">Once approved you will get a notification and your blue <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg> badge will appear on all your listings automatically.</div>
-          </div>
-          <button class="ml-act-btn" style="width:100%;padding:12px;margin-top:12px" onclick="H._verify.cancelPending()">Cancel request</button>
-        </div>
-      </div>`;
-    }
-
-    return `<div class="page active">${innerTopbar('Verify Identity')}
-      <div class="inner-content">
-        <div class="verify-badge-preview">
-          <div class="vbp-icon">${I.shield || I.check}</div>
-          <div>
-            <div style="font-size:14px;font-weight:700">Get your Blue Verified Badge</div>
-            <div style="font-size:12px;color:var(--sub);margin-top:1px">Verified sellers get 4× more enquiries</div>
-          </div>
-        </div>
-
-        <div class="verify-step">
-          <div class="verify-num done">${I.check}</div>
-          <div>
-            <div class="verify-step-title">Phone verified</div>
-            <div class="verify-step-sub">${escHtml(u.phone)}</div>
-          </div>
-        </div>
-
-        <div class="verify-step">
-          <div class="verify-num ${hasId ? 'done' : ''}">${hasId ? I.check : `<span style="font-size:15px;font-weight:600">2</span>`}</div>
-          <div style="flex:1">
-            <div class="verify-step-title">Upload ID document</div>
-            <div class="verify-step-sub">National ID, passport or driver's licence. Both sides if applicable.</div>
-            <input type="file" id="idFile" accept="image/*" capture="environment" style="display:none" onchange="H._verify.onIdUpload(event)">
-            <button class="verify-step-btn" onclick="document.getElementById('idFile').click()">
-              ${I.camera} ${hasId ? 'Replace ID' : 'Upload ID'}
-            </button>
-            ${hasId ? `<img src="${u.idDocs}" style="width:100%;max-width:240px;border-radius:12px;margin-top:10px">` : ''}
-          </div>
-        </div>
-
-        <div class="verify-step">
-          <div class="verify-num ${hasSelfie ? 'done' : ''}">${hasSelfie ? I.check : `<span style="font-size:15px;font-weight:600">3</span>`}</div>
-          <div style="flex:1">
-            <div class="verify-step-title">Face Selfie</div>
-            <div class="verify-step-sub">Take a clear photo of your face. An admin will review it alongside your ID.</div>
-            <button class="verify-step-btn" onclick="H.openInner('SelfieCam')">
-              ${I.camera} ${hasSelfie ? 'Re-take Selfie' : 'Take Selfie'}
-            </button>
-            ${hasSelfie ? `<img src="${u.selfie}" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin-top:10px;border:3px solid var(--n4)">` : ''}
-          </div>
-        </div>
-
-        ${hasId && hasSelfie ? `
-          <button class="btn-pri" id="submitVerifyBtn" onclick="H._verify.submitForReview()">Submit for Admin Review</button>
-          <div style="font-size:12px;color:var(--sub);text-align:center;margin-top:8px">Reviewed by our team within 24 hours.</div>
-        ` : ''}
-
-        <div class="tip-box" style="margin-top:14px">
-          <div class="tip-title">${I.lock} Your data is secure</div>
-          <div class="tip-body">Your ID and selfie are sent securely and used solely for identity verification. Never sold or shared.</div>
-        </div>
-      </div>
-    </div>`;
-  };
-
-  // ---------------------------------------------------
-  // SELFIE CAM
-  // ---------------------------------------------------
-  pages.SelfieCam = function () {
-    return `<div class="page active">${innerTopbar('Take Selfie')}
-      <div class="inner-content">
-        <div style="font-size:13px;color:var(--sub);text-align:center;margin-bottom:12px;line-height:1.5">
-          Position your face clearly in the oval.<br>An admin will manually review your photo.
-        </div>
-        <div class="cam-wrap" id="camWrap">
-          <video id="camVideo" playsinline autoplay muted></video>
-          <div class="face-guide"></div>
-          <div class="cam-state" id="camState">Initializing camera…</div>
-          <div class="cam-instr" id="camInstr">Position your face inside the oval</div>
-        </div>
-        <canvas id="camCanvas" style="display:none"></canvas>
-        <button class="btn-pri" id="capBtn" onclick="H._verify.captureSelfie()" disabled>Take Photo</button>
-        <button class="ml-act-btn" style="width:100%;padding:12px;margin-top:8px" onclick="H._verify.cancel()">Cancel</button>
-      </div>
-    </div>`;
-  };
-
-  pages.SelfieCam_after = async function () {
-    try {
-      camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 640 }, audio: false });
-      const v = document.getElementById('camVideo');
-      v.srcObject = camStream;
-      v.onloadedmetadata = () => {
-        v.play();
-        document.getElementById('camState').textContent = 'Ready';
-        document.getElementById('capBtn').disabled = false;
-        detectFace();
-      };
-    } catch (e) {
-      document.getElementById('camState').textContent = 'Camera blocked';
-      document.getElementById('camInstr').textContent = 'Please allow camera access in settings';
-      toast('Camera permission denied');
-    }
-  };
-
-  function detectFace() {
-    const v = document.getElementById('camVideo');
-    const c = document.getElementById('camCanvas');
-    const ctx = c.getContext('2d');
-    c.width = 160; c.height = 160;
-    livenessTimer = setInterval(() => {
-      if (!v.videoWidth) return;
-      const sx = (v.videoWidth - Math.min(v.videoWidth, v.videoHeight)) / 2;
-      const sy = (v.videoHeight - Math.min(v.videoWidth, v.videoHeight)) / 2;
-      const sz = Math.min(v.videoWidth, v.videoHeight);
-      ctx.drawImage(v, sx, sy, sz, sz, 0, 0, 160, 160);
-      // Sample center-face region only (not edges — reduces hand false positives)
-      const d = ctx.getImageData(50, 25, 60, 80).data;
-      let skinPx = 0, total = 0;
-      for (let i = 0; i < d.length; i += 4) {
-        const r = d[i], g = d[i+1], b = d[i+2];
-        // Strict skin tone — requires reddish cast, not just warm
-        if (r > 100 && g > 50 && b > 30 && r > g + 15 && r > b + 20 && Math.abs(r-g) > 15) skinPx++;
-        total++;
-      }
-      const faceDetected = (skinPx / total) > 0.30; // 30% skin coverage required
-      const el = document.getElementById('camState');
-      if (el) el.textContent = faceDetected ? 'Face detected — tap Take Photo' : 'Position your face in the oval';
-    }, 400);
-  }
-
-  // Namespace for onclick calls
-  H._verify = {
-    cancel() { stopCam(); goBack(); },
-
-    onIdUpload(e) {
-      const f = e.target.files[0]; if (!f) return;
-      compressImage(f, 1400, 0.82).then(d => {
-        const u = currentUser(); u.idDocs = d; saveState(); renderPage('Verify'); toast('ID uploaded');
-      });
-    },
-
-    async cancelPending() {
-      const u = currentUser();
-      u.verification_pending = false;
-      saveState();
-      if (window.supabase) {
-        await window.supabase.from('profiles').update({ verification_pending: false }).eq('id', u.id);
-      }
-      toast('Verification request cancelled');
-      renderPage('Verify');
-    },
-
-    async submitForReview() {
-      const u = currentUser();
-      if (!u.idDocs || !u.selfie) { toast('Complete both steps first'); return; }
-      const btn = document.getElementById('submitVerifyBtn');
-      if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
-      try {
-        if (!window.supabase) throw new Error('Not connected');
-        // Save verification record with photos for admin review
-        const { error: vErr } = await window.supabase.from('verifications').upsert({
-          user_id: u.id,
-          id_doc: u.idDocs,
-          selfie: u.selfie,
-          status: 'pending',
-          submitted_at: new Date().toISOString()
-        }, { onConflict: 'user_id' });
-        if (vErr) throw vErr;
-        // Mark profile as pending
-        const { error: pErr } = await window.supabase.from('profiles')
-          .update({ verification_pending: true })
-          .eq('id', u.id);
-        if (pErr) throw pErr;
-        u.verification_pending = true;
-        saveState();
-        toast('Documents submitted! Admin will review within 24 hours.', 5000);
-        renderPage('Verify');
-      } catch (e) {
-        if (btn) { btn.disabled = false; btn.textContent = 'Submit for Admin Review'; }
-        toast('Failed to submit: ' + (e.message || 'Check your connection'), 4000, true);
-      }
-    },
-
-    async captureSelfie() {
-      const btn = document.getElementById('capBtn');
-      btn.disabled = true;
-      btn.textContent = 'Capturing…';
-      const v = document.getElementById('camVideo');
-      const c = document.getElementById('camCanvas');
-      const ctx = c.getContext('2d');
-      // Short countdown then snap
-      document.getElementById('camInstr').textContent = 'Hold still — capturing…';
-      document.getElementById('camState').textContent = '3…';
-      await new Promise(r => setTimeout(r, 800));
-      document.getElementById('camState').textContent = '2…';
-      await new Promise(r => setTimeout(r, 800));
-      document.getElementById('camState').textContent = '1…';
-      await new Promise(r => setTimeout(r, 800));
-
-      const sz = Math.min(v.videoWidth, v.videoHeight);
-      c.width = 480; c.height = 480;
-      ctx.drawImage(v, (v.videoWidth - sz) / 2, (v.videoHeight - sz) / 2, sz, sz, 0, 0, 480, 480);
-      const dataUrl = c.toDataURL('image/jpeg', 0.85);
-
-      document.getElementById('camState').textContent = 'Photo taken';
-      document.getElementById('camInstr').textContent = 'Saving selfie…';
-      await new Promise(r => setTimeout(r, 600));
-
-      const u = currentUser(); u.selfie = dataUrl; saveState();
-      toast('Selfie saved');
-      stopCam();
-      renderPage('Verify');
-    }
-  };
-
-  function compressImage(file, maxDim = 1200, q = 0.8) {
-    return new Promise(res => {
-      const r = new FileReader();
-      r.onload = ev => {
-        const img = new Image();
-        img.onload = () => {
-          let w = img.width, h = img.height;
-          if (w > h && w > maxDim) { h = h * maxDim / w; w = maxDim; }
-          else if (h > maxDim)     { w = w * maxDim / h; h = maxDim; }
-          const c = document.createElement('canvas'); c.width = w; c.height = h;
-          c.getContext('2d').drawImage(img, 0, 0, w, h);
-          res(c.toDataURL('image/jpeg', q));
-        };
-        img.src = ev.target.result;
-      };
-      r.readAsDataURL(file);
-    });
-  }
-
-})(window.H);
 ;/* === www/js/security_pages.js === */
 'use strict';
 (function (H) {
@@ -11996,193 +12191,150 @@ H.pages.LegalHub = function() {
   html += '</div></div>';
   return html;
 };
-;/* === www/js/supabase.js === */
+;/* === www/js/moderation.js === */
 /*!
  * PaMarket — Zimbabwe's Free Marketplace
  * © 2026 PaMarket. All rights reserved.
  * Unauthorised copying, modification, distribution or use of this
  * software without written permission from the owner is strictly prohibited.
  */
-// supabase.js "” safe Supabase client initialisation
-(function () {
-  // Make sure the CDN loaded
-  if (!window.supabase) {
-    console.warn('Supabase CDN not loaded · using mock client.');
-    window.supabase = {
-      createClient: function () {
-        const noop = () => mockClient;
-        const mockClient = {
-          from: () => {
-            console.warn('Supabase mock: operation skipped.');
-            return mockClient;
-          },
-          select: noop,
-          insert: noop,
-          update: noop,
-          delete: noop,
-          eq: noop,
-          order: noop,
-          limit: noop,
-          single: () => Promise.resolve({ data: null, error: new Error('Supabase not loaded') }),
-          then: (fn) => fn({ data: null, error: new Error('Supabase not loaded') })
-        };
-        return mockClient;
-      }
-    };
-  }
+'use strict';
+(function (H) {
 
-  const supabaseUrl = window.SUPABASE_URL;
-  const supabaseAnonKey = window.SUPABASE_ANON_KEY;
+  // -- BANNED WORDS -------------------------------------------
+  const BANNED = [
+    'crypto','bitcoin','investment scheme','send money first',
+    'western union','moneygram','wire transfer','advance fee',
+    'nude','xxx','escort','adult only','whatsapp only no calls',
+    'guaranteed returns','double your money','mlm','pyramid'
+  ];
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Missing Supabase credentials from supabase-config.js');
-  }
-
-  window.supabase = window.supabase.createClient(supabaseUrl || '', supabaseAnonKey || '');
-
-  // Only handle OAuth callbacks — NOT regular page loads with stored sessions.
-  // The app restores login state from H.loadState() (localStorage), not from here.
-  var _isOAuthCallback = window.location.search.includes('code=') || window.location.hash.includes('access_token=');
-  var _isPasswordReset = window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery');
-  var _oauthHandled = false;
-
-  async function handleOAuthSession(session) {
-    if (_oauthHandled) return;
-    _oauthHandled = true;
-    var user   = session.user;
-    var userId = user.id;
-    var meta   = user.user_metadata || {};
-    var name   = meta.full_name || meta.name || user.email || 'User';
-    var avatar = meta.avatar_url || meta.picture || null;
-    var email  = user.email || '';
-    try {
-      var pr = await window.supabase.from('profiles').select('*').eq('id', userId).single();
-      var profile = pr.data;
-      if (!profile) {
-        await window.supabase.from('profiles').upsert({ id: userId, name: name, avatar: avatar });
-        profile = { id: userId, name: name, avatar: avatar, role: 'user', status: 'active', verified: false };
-      }
-      var attempts = 0;
-      var trySetup = function() {
-        if (!window.H || !window.H.state || typeof window.H.navTo !== 'function') {
-          if (++attempts < 40) { setTimeout(trySetup, 200); return; }
-          return;
-        }
-        var users = window.H.state.users = window.H.state.users || [];
-        var existing = users.find(function(u){ return u.id === userId; });
-        if (!existing) {
-          users.push({ id: userId, email: email, name: profile.name || name, phone: profile.phone || '', avatar: profile.avatar || avatar, verified: !!profile.verified, language: 'English', joinedAt: new Date(profile.created_at || Date.now()).getTime(), role: profile.role || 'user', status: profile.status || 'active', banReason: null, banUntil: null, blocked: [] });
-        } else {
-          existing.name = profile.name || existing.name;
-          existing.avatar = profile.avatar || existing.avatar;
-          existing.role = profile.role || existing.role;
-          existing.verified = !!profile.verified;
-        }
-        window.H.state.currentUserId = userId;
-        if (typeof window.H.saveState === 'function') window.H.saveState();
-        if (typeof window.H.closeLoginModal === 'function') window.H.closeLoginModal();
-        var nav = document.getElementById('bottomNav');
-        if (nav) nav.style.display = 'flex';
-        window.H.navTo('Home');
-        window.H.toast('Welcome, ' + (profile.name || name) + '!');
-        if (typeof window.H.startRealtime === 'function') window.H.startRealtime();
-      };
-      trySetup();
-    } catch(e) { console.warn('OAuth login handler:', e); }
-  }
-
-  window.supabase.auth.onAuthStateChange(async function(event, session) {
-    // Password reset link clicked — show the set-new-password form
-    if (event === 'PASSWORD_RECOVERY') {
-      var waitH = function(attempts) {
-        if (!window.H || typeof window.H.authShowSetPassword !== 'function') {
-          if (attempts < 40) setTimeout(function(){ waitH(attempts + 1); }, 200);
-          return;
-        }
-        window.H.authShowSetPassword();
-      };
-      waitH(0);
-      return;
-    }
-    if (event !== 'SIGNED_IN' || !session || !session.user) return;
-    if (!_isOAuthCallback) return;
-    handleOAuthSession(session);
-  });
-
-  // Fallback getSession() only on actual OAuth callback pages
-  if (_isOAuthCallback) {
-    window.supabase.auth.getSession().then(function(result) {
-      var session = result && result.data && result.data.session;
-      if (session && session.user) handleOAuthSession(session);
-    });
-  }
-
-  // Real-time sync — subscribes to live database changes
-  window.H = window.H || {};
-  window.H.startRealtime = function() {
-    var sb = window.supabase;
-    if (!sb || !sb.channel) return;
-    if (window._realtimeStarted) return;
-    window._realtimeStarted = true;
-
-    // Listings channel
-    sb.channel('rt-listings')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'listings' }, function(payload) {
-        var row = payload.new;
-        if (!row || !window.H || !window.H.state) return;
-        var existing = (window.H.state.listings || []).find(function(l){ return l.id === row.id; });
-        if (!existing) {
-          window.H.state.listings = window.H.state.listings || [];
-          window.H.state.listings.unshift({
-            id: row.id, title: row.title || '', desc: row.description || '',
-            price: row.price || 0, currency: row.currency || 'USD',
-            cat: row.category || '', photos: row.photos || [],
-            sellerId: row.seller_id || '', sellerName: row.seller_name || '',
-            province: row.province || '', status: row.status || 'active',
-            createdAt: new Date(row.created_at || Date.now()).getTime(),
-            views: 0, company: row.company || null
-          });
-          if (typeof window.H.saveState === 'function') window.H.saveState();
-        }
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'listings' }, function(payload) {
-        var id = payload.old && payload.old.id;
-        if (!id || !window.H || !window.H.state) return;
-        window.H.state.listings = (window.H.state.listings || []).filter(function(l){ return l.id !== id; });
-        if (typeof window.H.saveState === 'function') window.H.saveState();
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'listings' }, function(payload) {
-        var row = payload.new;
-        if (!row || !window.H || !window.H.state) return;
-        var l = (window.H.state.listings || []).find(function(x){ return x.id === row.id; });
-        if (l) {
-          l.status = row.status || l.status;
-          l.title  = row.title  || l.title;
-          l.price  = row.price  != null ? row.price : l.price;
-          if (typeof window.H.saveState === 'function') window.H.saveState();
-        }
-      })
-      .subscribe();
-
-    // Profile verification approvals
-    sb.channel('rt-profiles')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, function(payload) {
-        var row = payload.new;
-        if (!row || !window.H || !window.H.state) return;
-        var u = (window.H.state.users || []).find(function(x){ return x.id === row.id; });
-        if (u) {
-          var wasUnverified = !u.verified;
-          u.verified = !!row.verified;
-          u.role     = row.role || u.role;
-          if (typeof window.H.saveState === 'function') window.H.saveState();
-          if (wasUnverified && u.verified && u.id === (window.H.state.currentUserId)) {
-            if (typeof window.H.toast === 'function') window.H.toast('Your identity has been verified!');
-          }
-        }
-      })
-      .subscribe();
+  // -- CATEGORY RISK ------------------------------------------
+  const RISK = {
+    jobs: 'high', rentals: 'high', property: 'high',
+    vehicles: 'medium', services: 'medium',
+    electronics: 'low', furniture: 'low',
+    fashion: 'low', agriculture: 'low',
+    pets: 'low', other: 'low'
   };
-})();
+
+  // -- TRUST SCORE --------------------------------------------
+  H.getTrustScore = function (user) {
+    let score = 50;
+    if (user.verified)                    score += 20;
+    if (user.email)                       score += 10;
+    const reports = (H.state.reports || []).filter(r => r.targetId === user.id).length;
+    const rejected = (H.state.listings || []).filter(l => l.sellerId === user.id && l.status === 'rejected').length;
+    score -= reports * 10;
+    score -= rejected * 5;
+    const approved = (H.state.listings || []).filter(l => l.sellerId === user.id && l.status === 'active').length;
+    score += Math.min(approved * 3, 20);
+    return Math.max(0, Math.min(100, score));
+  };
+
+  // -- MODERATION ENGINE --------------------------------------
+  H.moderateListing = function (listing, user) {
+    const text = (listing.title + ' ' + listing.desc).toLowerCase();
+
+    // 1. Banned word check
+    for (const w of BANNED) {
+      if (text.includes(w)) {
+        return { status: 'rejected', reason: 'Content violates community guidelines: banned terms detected.' };
+      }
+    }
+
+    // 2. Duplicate check
+    const duplicate = (H.state.listings || []).find(l =>
+      l.sellerId === user.id &&
+      l.title.toLowerCase() === listing.title.toLowerCase() &&
+      l.status !== 'rejected' && l.id !== listing.id
+    );
+    if (duplicate) {
+      return { status: 'rejected', reason: 'Duplicate listing detected. Please edit your existing ad instead.' };
+    }
+
+    // 3. Spam check — more than 5 posts in last 24h
+    const last24h = Date.now() - 86400000;
+    const recentPosts = (H.state.listings || []).filter(l =>
+      l.sellerId === user.id && l.createdAt > last24h
+    ).length;
+    if (recentPosts >= 5) {
+      return { status: 'rejected', reason: 'Too many listings posted today. Please wait 24 hours.' };
+    }
+
+    // 4. Risk scoring
+    const risk = RISK[listing.cat] || 'low';
+    const trust = H.getTrustScore(user);
+
+    // High trust users skip review
+    if (trust >= 70) {
+      return { status: 'active', reason: null };
+    }
+
+    if (risk === 'high') {
+      return { status: 'pending', reason: 'This category requires admin review before going live.' };
+    }
+    if (risk === 'medium') {
+      listing.flaggedForReview = true;
+      return { status: 'active', reason: null };
+    }
+
+    // low risk — publish immediately
+    return { status: 'active', reason: null };
+  };
+
+  // -- REPORT THRESHOLD ---------------------------------------
+  H.checkReportThreshold = function (listingId) {
+    const count = (H.state.reports || []).filter(
+      r => r.targetId === listingId && r.targetType === 'listing' && r.status === 'open'
+    ).length;
+    if (count >= 3) {
+      const l = (H.state.listings || []).find(x => x.id === listingId);
+      if (l && l.status === 'active') {
+        l.status = 'flagged';
+        H.saveState();
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // -- CHAT SPAM DETECTION ------------------------------------
+  H.isChatSpam = function (convoId, userId) {
+    const c = (H.state.conversations || []).find(x => x.id === convoId);
+    if (!c) return false;
+    const last10s = Date.now() - 10000;
+    const recent = c.messages.filter(m => m.from === userId && m.t > last10s).length;
+    return recent >= 5;
+  };
+
+  H.containsLink = function (text) {
+    return /https?:\/\/|www\.|\.com|\.net|\.org|bit\.ly|wa\.me/i.test(text);
+  };
+
+  // -- DAILY HEALTH CHECK -------------------------------------
+  H.runDailyHealthCheck = function () {
+    const listings = H.state.listings || [];
+
+    // Auto-hide listings with 3+ reports
+    listings.forEach(l => {
+      if (l.status === 'active') H.checkReportThreshold(l.id);
+    });
+
+    // Remove expired boosts
+    listings.forEach(l => {
+      if (l.boost && l.boost.until < Date.now()) l.boost = null;
+    });
+
+    H.saveState();
+  };
+
+  // Run health check once on load
+  window.addEventListener("load", () => setTimeout(() => { if (H.state) H.runDailyHealthCheck(); }, 3000));
+
+})(window.H = window.H || {});
+
+
 
 ;/* === www/js/categories.js === */
 /*!
@@ -12403,80 +12555,6 @@ H.pages.LegalHub = function() {
 
 })(window.H);
 
-;/* === www/js/electronics.js === */
-'use strict';
-(function (H) {
-
-  H.pages.Electronics = function () {
-    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'electronics'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
-
-    var f = H._sel('electronics', 'subcat', 'Category', [['all', 'All'], ['phones', 'Phones & Tablets'], ['computers', 'Computers & Laptops'], ['tvs', 'TVs & Screens'], ['audio', 'Audio & Speakers'], ['cameras', 'Cameras'], ['gaming', 'Gaming'], ['appliances', 'Appliances'], ['accessories', 'Accessories']])
-      + H._txtInput('electronics', 'brand', 'Brand', 'e.g. Samsung, Apple, Dell')
-      + H._sel('electronics', 'condition', 'Condition', [['all', 'All'], ['new', 'Brand New'], ['like-new', 'Like New'], ['good', 'Good'], ['fair', 'Fair']])
-      + H._citysel('electronics') + H._priceRange('electronics') + H._sortsel('electronics');
-
-    return '<div class="page active">'
-      + H._catTopbar('Electronics', '#8E24AA')
-      + H._catHeader('electronics', 'Electronics', '#8E24AA', f)
-      + '<div id="cl_electronics" style="padding-bottom:88px">'
-      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No electronics listed', 'Buy & sell gadgets!', 'Post an Ad', "H.navTo('Post')"))
-      + '</div></div>';
-  };
-
-  H.pages.Electronics_after = function () { H._applyFilters('electronics'); };
-
-})(window.H);
-
-;/* === www/js/fashion.js === */
-'use strict';
-(function (H) {
-
-  H.pages.Fashion = function () {
-    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'fashion'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
-
-    var f = H._sel('fashion', 'gender', 'Category', [['all', 'All'], ['women', 'Women'], ['men', 'Men'], ['kids', 'Kids'], ['unisex', 'Unisex']])
-      + H._sel('fashion', 'subcat', 'Type', [['all', 'All'], ['clothes', 'Clothes'], ['shoes', 'Shoes'], ['bags', 'Bags & Purses'], ['accessories', 'Accessories'], ['watches', 'Watches & Jewellery'], ['sportswear', 'Sportswear'], ['traditional', 'Traditional Wear']])
-      + H._sel('fashion', 'size', 'Size', [['all', 'Any Size'], ['xs', 'XS'], ['s', 'S'], ['m', 'M'], ['l', 'L'], ['xl', 'XL'], ['xxl', '2XL'], ['xxxl', '3XL+']])
-      + H._txtInput('fashion', 'brand', 'Brand', 'e.g. Nike, Zara, H&M')
-      + H._sel('fashion', 'condition', 'Condition', [['all', 'All'], ['new', 'Brand New'], ['like-new', 'Like New'], ['good', 'Good'], ['fair', 'Fair']])
-      + H._citysel('fashion') + H._priceRange('fashion') + H._sortsel('fashion');
-
-    return '<div class="page active">'
-      + H._catTopbar('Fashion', '#F06292')
-      + H._catHeader('fashion', 'Fashion', '#F06292', f)
-      + '<div id="cl_fashion" style="padding-bottom:88px">'
-      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No fashion items listed', 'Style up Zimbabwe!', 'Post an Ad', "H.navTo('Post')"))
-      + '</div></div>';
-  };
-
-  H.pages.Fashion_after = function () { H._applyFilters('fashion'); };
-
-})(window.H);
-
-;/* === www/js/furniture.js === */
-'use strict';
-(function (H) {
-
-  H.pages.Furniture = function () {
-    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'furniture'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
-
-    var f = H._sel('furniture', 'subcat', 'Furniture Type', [['all', 'All'], ['sofas', 'Sofas & Lounge'], ['bedroom', 'Bedroom Sets'], ['dining', 'Dining Room'], ['office', 'Office Furniture'], ['outdoor', 'Outdoor'], ['kitchen', 'Kitchen'], ['wardrobes', 'Wardrobes'], ['decor', 'Home Décor']])
-      + H._sel('furniture', 'condition', 'Condition', [['all', 'All'], ['new', 'Brand New'], ['like-new', 'Like New'], ['good', 'Good'], ['fair', 'Fair']])
-      + H._txtInput('furniture', 'brand', 'Material', 'e.g. Wood, Leather, Fabric')
-      + H._citysel('furniture') + H._priceRange('furniture') + H._sortsel('furniture');
-
-    return '<div class="page active">'
-      + H._catTopbar('Furniture', '#6D4C41')
-      + H._catHeader('furniture', 'Furniture', '#6D4C41', f)
-      + '<div id="cl_furniture" style="padding-bottom:88px">'
-      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No furniture listed', 'Furnish your home!', 'Post an Ad', "H.navTo('Post')"))
-      + '</div></div>';
-  };
-
-  H.pages.Furniture_after = function () { H._applyFilters('furniture'); };
-
-})(window.H);
-
 ;/* === www/js/kids.js === */
 'use strict';
 (function (H) {
@@ -12498,29 +12576,6 @@ H.pages.LegalHub = function() {
   };
 
   H.pages.Kids_after = function () { H._applyFilters('kids'); };
-
-})(window.H);
-
-;/* === www/js/other.js === */
-'use strict';
-(function (H) {
-
-  H.pages.Other = function () {
-    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'other'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
-
-    var f = H._sel('other', 'subcat', 'Category', [['all', 'All'], ['antiques', 'Antiques & Collectibles'], ['sports', 'Sports & Fitness'], ['music', 'Musical Instruments'], ['books', 'Books & Magazines'], ['art', 'Art & Crafts'], ['tools', 'Tools & DIY'], ['health', 'Health & Beauty'], ['office', 'Office Supplies'], ['food', 'Food & Beverages'], ['other', 'Miscellaneous']])
-      + H._sel('other', 'condition', 'Condition', [['all', 'All'], ['new', 'New'], ['like-new', 'Like New'], ['good', 'Good'], ['fair', 'Fair']])
-      + H._citysel('other') + H._priceRange('other') + H._sortsel('other');
-
-    return '<div class="page active">'
-      + H._catTopbar('Other', '#546E7A')
-      + H._catHeader('other', 'Other', '#546E7A', f)
-      + '<div id="cl_other" style="padding-bottom:88px">'
-      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No listings yet', 'Post anything for sale!', 'Post an Ad', "H.navTo('Post')"))
-      + '</div></div>';
-  };
-
-  H.pages.Other_after = function () { H._applyFilters('other'); };
 
 })(window.H);
 
@@ -12547,142 +12602,213 @@ H.pages.LegalHub = function() {
 
 })(window.H);
 
-;/* === www/js/property.js === */
+;/* === www/js/other.js === */
 'use strict';
 (function (H) {
 
-  H.pages.Property = function () {
-    var all = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'property'; });
-    var sale = all.filter(function (l) { return !l.rentalType; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
-    var rent = all.filter(function (l) { return !!l.rentalType; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+  H.pages.Other = function () {
+    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'other'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
 
-    var fSale = H._sel('property_sale', 'propType', 'Property Type', [['all', 'All Types'], ['residential', 'Residential'], ['commercial', 'Commercial'], ['land', 'Land / Stand'], ['units', 'Units / Flats']])
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
-      + H._sel('property_sale', 'beds', 'Bedrooms', [['any', 'Any'], ['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+'], ['5', '5+']])
-      + H._sel('property_sale', 'baths', 'Bathrooms', [['any', 'Any'], ['1', '1+'], ['2', '2+'], ['3', '3+']])
-      + '</div>'
-      + H._sel('property_sale', 'furnishing', 'Furnishing', [['all', 'All'], ['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['semi-furnished', 'Semi-Furnished']])
-      + H._citysel('property_sale') + H._priceRange('property_sale') + H._sortsel('property_sale');
-
-    var fRent = H._sel('property_rent', 'propType', 'Category', [['all', 'All'], ['residential', 'Residential'], ['rooms', 'Rooms'], ['commercial', 'Commercial']])
-      + H._sel('property_rent', 'rentalType', 'Rental Type', [['all', 'All'], ['monthly', 'Monthly'], ['daily', 'Daily'], ['nightly', 'Nightly']])
-      + H._sel('property_rent', 'furnishing', 'Furnishing', [['all', 'All'], ['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['semi-furnished', 'Semi-Furnished']])
-      + H._citysel('property_rent') + H._priceRange('property_rent') + H._sortsel('property_rent');
+    var f = H._sel('other', 'subcat', 'Category', [['all', 'All'], ['antiques', 'Antiques & Collectibles'], ['sports', 'Sports & Fitness'], ['music', 'Musical Instruments'], ['books', 'Books & Magazines'], ['art', 'Art & Crafts'], ['tools', 'Tools & DIY'], ['health', 'Health & Beauty'], ['office', 'Office Supplies'], ['food', 'Food & Beverages'], ['other', 'Miscellaneous']])
+      + H._sel('other', 'condition', 'Condition', [['all', 'All'], ['new', 'New'], ['like-new', 'Like New'], ['good', 'Good'], ['fair', 'Fair']])
+      + H._citysel('other') + H._priceRange('other') + H._sortsel('other');
 
     return '<div class="page active">'
-      + H._catTopbar('Property', '#1A3A8F')
-      + '<div style="background:#1A3A8F;padding:0 14px">'
-      + '<div style="display:flex;border-bottom:2px solid rgba(255,255,255,.15)">'
-      + '<button id="ptab_sale" onclick="H._propTab(\'sale\')" style="flex:1;padding:12px 0;background:none;border:none;border-bottom:3px solid #F5A623;margin-bottom:-2px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">For Sale</button>'
-      + '<button id="ptab_rent" onclick="H._propTab(\'rent\')" style="flex:1;padding:12px 0;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;color:rgba(255,255,255,.6);font-size:14px;font-weight:600;cursor:pointer">For Rent</button>'
-      + '</div></div>'
-      + '<div id="pp_sale">'
-      + H._catHeader('property_sale', 'Property for Sale', '#1A3A8F', fSale)
-      + '<div id="cl_property_sale" style="padding-bottom:88px">'
-      + (sale.length ? '<div class="listing-list">' + sale.map(H.renderListCard).join('') + '</div>' : H.emptyState('No properties for sale', 'Be the first to list one!', 'Post an Ad', "H.navTo('Post')"))
-      + '</div></div>'
-      + '<div id="pp_rent" style="display:none">'
-      + H._catHeader('property_rent', 'Property for Rent', '#1A3A8F', fRent)
-      + '<div id="cl_property_rent" style="padding-bottom:88px">'
-      + (rent.length ? '<div class="listing-list">' + rent.map(H.renderListCard).join('') + '</div>' : H.emptyState('No rental properties', 'Be the first to list one!', 'Post an Ad', "H.navTo('Post')"))
-      + '</div></div>'
-      + '</div>';
-  };
-
-  H.pages.Property_after = function () { H._propTab('sale'); };
-
-  H._propTab = function (tab) {
-    var ps = document.getElementById('pp_sale'), pr = document.getElementById('pp_rent');
-    var ts = document.getElementById('ptab_sale'), tr = document.getElementById('ptab_rent');
-    if (!ps) return;
-    var isSale = tab === 'sale';
-    ps.style.display = isSale ? '' : 'none';
-    pr.style.display = isSale ? 'none' : '';
-    ts.style.color = isSale ? '#fff' : 'rgba(255,255,255,.6)';
-    ts.style.fontWeight = isSale ? '700' : '600';
-    ts.style.borderBottomColor = isSale ? '#F5A623' : 'transparent';
-    tr.style.color = isSale ? 'rgba(255,255,255,.6)' : '#fff';
-    tr.style.fontWeight = isSale ? '600' : '700';
-    tr.style.borderBottomColor = isSale ? 'transparent' : '#F5A623';
-    H._applyFilters(isSale ? 'property_sale' : 'property_rent');
-  };
-
-})(window.H);
-
-;/* === www/js/rooms.js === */
-'use strict';
-(function (H) {
-
-  H.pages.Rooms = function () {
-    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'rooms'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
-
-    var f = H._sel('rooms', 'subcat', 'Room Type', [['all', 'All'], ['single', 'Single Room'], ['double', 'Double Room'], ['self-contained', 'Self-Contained'], ['shared', 'Shared'], ['bachelor', 'Bachelor Flat'], ['cottage', 'Cottage']])
-      + H._sel('rooms', 'furnishing', 'Furnishing', [['all', 'All'], ['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['semi-furnished', 'Semi-Furnished']])
-      + H._sel('rooms', 'rentalType', 'Rental Type', [['all', 'All'], ['monthly', 'Monthly'], ['daily', 'Daily'], ['nightly', 'Nightly']])
-      + H._citysel('rooms') + H._priceRange('rooms') + H._sortsel('rooms');
-
-    return '<div class="page active">'
-      + H._catTopbar('Rooms for Rent', '#00838F')
-      + H._catHeader('rooms', 'Rooms', '#00838F', f)
-      + '<div id="cl_rooms" style="padding-bottom:88px">'
-      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No rooms listed', 'Find the perfect room!', 'Post a Room', "H.navTo('Post')"))
+      + H._catTopbar('Other', '#546E7A')
+      + H._catHeader('other', 'Other', '#546E7A', f)
+      + '<div id="cl_other" style="padding-bottom:88px">'
+      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No listings yet', 'Post anything for sale!', 'Post an Ad', "H.navTo('Post')"))
       + '</div></div>';
   };
 
-  H.pages.Rooms_after = function () { H._applyFilters('rooms'); };
+  H.pages.Other_after = function () { H._applyFilters('other'); };
 
 })(window.H);
 
-;/* === www/js/services.js === */
-'use strict';
-(function (H) {
+;/* === www/js/supabase.js === */
+/*!
+ * PaMarket — Zimbabwe's Free Marketplace
+ * © 2026 PaMarket. All rights reserved.
+ * Unauthorised copying, modification, distribution or use of this
+ * software without written permission from the owner is strictly prohibited.
+ */
+// supabase.js "” safe Supabase client initialisation
+(function () {
+  // Make sure the CDN loaded
+  if (!window.supabase) {
+    console.warn('Supabase CDN not loaded · using mock client.');
+    window.supabase = {
+      createClient: function () {
+        const noop = () => mockClient;
+        const mockClient = {
+          from: () => {
+            console.warn('Supabase mock: operation skipped.');
+            return mockClient;
+          },
+          select: noop,
+          insert: noop,
+          update: noop,
+          delete: noop,
+          eq: noop,
+          order: noop,
+          limit: noop,
+          single: () => Promise.resolve({ data: null, error: new Error('Supabase not loaded') }),
+          then: (fn) => fn({ data: null, error: new Error('Supabase not loaded') })
+        };
+        return mockClient;
+      }
+    };
+  }
 
-  H.pages.Services = function () {
-    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'services'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+  const supabaseUrl = window.SUPABASE_URL;
+  const supabaseAnonKey = window.SUPABASE_ANON_KEY;
 
-    var f = H._sel('services', 'subcat', 'Service Type', [['all', 'All Services'], ['cleaning', 'Cleaning'], ['construction', 'Construction & Building'], ['plumbing', 'Plumbing'], ['electrical', 'Electrical'], ['painting', 'Painting'], ['gardening', 'Gardening & Landscaping'], ['transport', 'Transport & Delivery'], ['photography', 'Photography & Video'], ['catering', 'Catering & Events'], ['it', 'IT & Tech Support'], ['tutoring', 'Tutoring & Education'], ['beauty', 'Beauty & Wellness'], ['security', 'Security'], ['legal', 'Legal & Finance']])
-      + H._citysel('services') + H._priceRange('services') + H._sortsel('services');
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Missing Supabase credentials from supabase-config.js');
+  }
 
-    return '<div class="page active">'
-      + H._catTopbar('Services', '#00897B')
-      + H._catHeader('services', 'Services', '#00897B', f)
-      + '<div id="cl_services" style="padding-bottom:88px">'
-      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No services listed', 'Offer your skills in Zimbabwe!', 'Post a Service', "H.navTo('Post')"))
-      + '</div></div>';
+  window.supabase = window.supabase.createClient(supabaseUrl || '', supabaseAnonKey || '');
+
+  // Only handle OAuth callbacks — NOT regular page loads with stored sessions.
+  // The app restores login state from H.loadState() (localStorage), not from here.
+  var _isOAuthCallback = window.location.search.includes('code=') || window.location.hash.includes('access_token=');
+  var _isPasswordReset = window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery');
+  var _oauthHandled = false;
+
+  async function handleOAuthSession(session) {
+    if (_oauthHandled) return;
+    _oauthHandled = true;
+    var user   = session.user;
+    var userId = user.id;
+    var meta   = user.user_metadata || {};
+    var name   = meta.full_name || meta.name || user.email || 'User';
+    var avatar = meta.avatar_url || meta.picture || null;
+    var email  = user.email || '';
+    try {
+      var pr = await window.supabase.from('profiles').select('*').eq('id', userId).single();
+      var profile = pr.data;
+      if (!profile) {
+        await window.supabase.from('profiles').upsert({ id: userId, name: name, avatar: avatar });
+        profile = { id: userId, name: name, avatar: avatar, role: 'user', status: 'active', verified: false };
+      }
+      var attempts = 0;
+      var trySetup = function() {
+        if (!window.H || !window.H.state || typeof window.H.navTo !== 'function') {
+          if (++attempts < 40) { setTimeout(trySetup, 200); return; }
+          return;
+        }
+        var users = window.H.state.users = window.H.state.users || [];
+        var existing = users.find(function(u){ return u.id === userId; });
+        if (!existing) {
+          users.push({ id: userId, email: email, name: profile.name || name, phone: profile.phone || '', avatar: profile.avatar || avatar, verified: !!profile.verified, language: 'English', joinedAt: new Date(profile.created_at || Date.now()).getTime(), role: profile.role || 'user', status: profile.status || 'active', banReason: null, banUntil: null, blocked: [] });
+        } else {
+          existing.name = profile.name || existing.name;
+          existing.avatar = profile.avatar || existing.avatar;
+          existing.role = profile.role || existing.role;
+          existing.verified = !!profile.verified;
+        }
+        window.H.state.currentUserId = userId;
+        if (typeof window.H.saveState === 'function') window.H.saveState();
+        if (typeof window.H.closeLoginModal === 'function') window.H.closeLoginModal();
+        var nav = document.getElementById('bottomNav');
+        if (nav) nav.style.display = 'flex';
+        window.H.navTo('Home');
+        window.H.toast('Welcome, ' + (profile.name || name) + '!');
+        if (typeof window.H.startRealtime === 'function') window.H.startRealtime();
+      };
+      trySetup();
+    } catch(e) { console.warn('OAuth login handler:', e); }
+  }
+
+  window.supabase.auth.onAuthStateChange(async function(event, session) {
+    // Password reset link clicked — show the set-new-password form
+    if (event === 'PASSWORD_RECOVERY') {
+      var waitH = function(attempts) {
+        if (!window.H || typeof window.H.authShowSetPassword !== 'function') {
+          if (attempts < 40) setTimeout(function(){ waitH(attempts + 1); }, 200);
+          return;
+        }
+        window.H.authShowSetPassword();
+      };
+      waitH(0);
+      return;
+    }
+    if (event !== 'SIGNED_IN' || !session || !session.user) return;
+    if (!_isOAuthCallback) return;
+    handleOAuthSession(session);
+  });
+
+  // Fallback getSession() only on actual OAuth callback pages
+  if (_isOAuthCallback) {
+    window.supabase.auth.getSession().then(function(result) {
+      var session = result && result.data && result.data.session;
+      if (session && session.user) handleOAuthSession(session);
+    });
+  }
+
+  // Real-time sync — subscribes to live database changes
+  window.H = window.H || {};
+  window.H.startRealtime = function() {
+    var sb = window.supabase;
+    if (!sb || !sb.channel) return;
+    if (window._realtimeStarted) return;
+    window._realtimeStarted = true;
+
+    // Listings channel
+    sb.channel('rt-listings')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'listings' }, function(payload) {
+        var row = payload.new;
+        if (!row || !window.H || !window.H.state) return;
+        var existing = (window.H.state.listings || []).find(function(l){ return l.id === row.id; });
+        if (!existing) {
+          window.H.state.listings = window.H.state.listings || [];
+          window.H.state.listings.unshift({
+            id: row.id, title: row.title || '', desc: row.description || '',
+            price: row.price || 0, currency: row.currency || 'USD',
+            cat: row.category || '', photos: row.photos || [],
+            sellerId: row.seller_id || '', sellerName: row.seller_name || '',
+            province: row.province || '', status: row.status || 'active',
+            createdAt: new Date(row.created_at || Date.now()).getTime(),
+            views: 0, company: row.company || null
+          });
+          if (typeof window.H.saveState === 'function') window.H.saveState();
+        }
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'listings' }, function(payload) {
+        var id = payload.old && payload.old.id;
+        if (!id || !window.H || !window.H.state) return;
+        window.H.state.listings = (window.H.state.listings || []).filter(function(l){ return l.id !== id; });
+        if (typeof window.H.saveState === 'function') window.H.saveState();
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'listings' }, function(payload) {
+        var row = payload.new;
+        if (!row || !window.H || !window.H.state) return;
+        var l = (window.H.state.listings || []).find(function(x){ return x.id === row.id; });
+        if (l) {
+          l.status = row.status || l.status;
+          l.title  = row.title  || l.title;
+          l.price  = row.price  != null ? row.price : l.price;
+          if (typeof window.H.saveState === 'function') window.H.saveState();
+        }
+      })
+      .subscribe();
+
+    // Profile verification approvals
+    sb.channel('rt-profiles')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, function(payload) {
+        var row = payload.new;
+        if (!row || !window.H || !window.H.state) return;
+        var u = (window.H.state.users || []).find(function(x){ return x.id === row.id; });
+        if (u) {
+          var wasUnverified = !u.verified;
+          u.verified = !!row.verified;
+          u.role     = row.role || u.role;
+          if (typeof window.H.saveState === 'function') window.H.saveState();
+          if (wasUnverified && u.verified && u.id === (window.H.state.currentUserId)) {
+            if (typeof window.H.toast === 'function') window.H.toast('Your identity has been verified!');
+          }
+        }
+      })
+      .subscribe();
   };
-
-  H.pages.Services_after = function () { H._applyFilters('services'); };
-
-})(window.H);
-
-;/* === www/js/vehicles.js === */
-'use strict';
-(function (H) {
-
-  H.pages.Vehicles = function () {
-    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'vehicles'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
-
-    var f = H._sel('vehicles', 'subcat', 'Vehicle Type', [['all', 'All Types'], ['car', 'Car'], ['suv', 'SUV / 4x4'], ['truck', 'Truck / Pickup'], ['van', 'Van / Minibus'], ['motorcycle', 'Motorcycle'], ['bus', 'Bus'], ['tractor', 'Tractor'], ['boat', 'Boat']])
-      + H._sel('vehicles', 'condition', 'Condition', [['all', 'All'], ['new', 'Brand New'], ['used', 'Used'], ['accident-free', 'Accident Free']])
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
-      + '<div><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Year From</div>'
-      + '<input type="number" min="1960" max="2026" placeholder="e.g. 2015" oninput="H._setFilter(\'vehicles\',\'yearMin\',this.value)" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none;box-sizing:border-box"></div>'
-      + '<div><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Year To</div>'
-      + '<input type="number" min="1960" max="2026" placeholder="e.g. 2024" oninput="H._setFilter(\'vehicles\',\'yearMax\',this.value)" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none;box-sizing:border-box"></div>'
-      + '</div>'
-      + H._sel('vehicles', 'fuelType', 'Fuel Type', [['all', 'All'], ['petrol', 'Petrol'], ['diesel', 'Diesel'], ['electric', 'Electric'], ['hybrid', 'Hybrid'], ['lpg', 'LPG']])
-      + H._txtInput('vehicles', 'brand', 'Make / Brand', 'e.g. Toyota, Honda, BMW')
-      + H._citysel('vehicles') + H._priceRange('vehicles') + H._sortsel('vehicles');
-
-    return '<div class="page active">'
-      + H._catTopbar('Vehicles', '#e53935')
-      + H._catHeader('vehicles', 'Vehicles', '#e53935', f)
-      + '<div id="cl_vehicles" style="padding-bottom:88px">'
-      + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No vehicles listed', 'Be the first to sell!', 'Post an Ad', "H.navTo('Post')"))
-      + '</div></div>';
-  };
-
-  H.pages.Vehicles_after = function () { H._applyFilters('vehicles'); };
-
-})(window.H);
-
+})();
