@@ -621,10 +621,7 @@ select.fi {
 .chat-send:active { transform: scale(.9); opacity: .85; }
 .chat-send svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2.5; }
 .chat-attach-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0 2px; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: background .15s, color .15s; }
-.chat-attach-btn:active { background: var(--border); color: var(--text-primary); }
-.chat-attach-menu { background: var(--card); border: .5px solid var(--border); border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.22); padding: 6px; min-width: 200px; }
-.chat-attach-opt { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; border: none; background: none; color: var(--text-primary); font-size: 14px; font-weight: 500; border-radius: 10px; cursor: pointer; white-space: nowrap; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-.chat-attach-opt:active { background: var(--border); }
+.chat-attach-btn:active, label.chat-attach-btn:active { background: var(--border); color: var(--text-primary); }
 .chat-bubble-img { padding: 4px !important; background: transparent !important; }
 .chat-img { display: block; max-width: 220px; max-height: 280px; width: auto; height: auto; border-radius: 12px; object-fit: cover; cursor: pointer; }
 .chat-img-viewer { position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 9999; display: flex; align-items: center; justify-content: center; }
