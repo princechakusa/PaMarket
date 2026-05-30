@@ -828,7 +828,13 @@ window.H = {
     var startY = 0, curY = 0, pulling = false;
 
     function onStart(e) {
-      if (refreshing || el.scrollTop > 0 || H.currentPageName === 'Chat') return;
+      if (refreshing || el.scrollTop > 0) return;
+      // In Chat, mainArea has overflow:hidden so scrollTop is always 0.
+      // Check the actual chat thread scroll position instead.
+      if (H.currentPageName === 'Chat') {
+        const thread = document.getElementById('chatThread');
+        if (thread && thread.scrollTop > 0) return;
+      }
       startY = e.touches[0].clientY;
       curY   = startY;
       pulling = true;
