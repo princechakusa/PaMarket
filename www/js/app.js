@@ -433,6 +433,36 @@ window.H = {
     H.navTo      = H.navTo.bind(H);
     this.applyTheme();
     this.applyLanguage();
+    // Handle OAuth deep-link callback (com.pamarket.app://login-callback?code=xxx).
+    // Check via App.getLaunchUrl() for cold-start and via appUrlOpen for warm-start.
+    try {
+      const _Cap = window.Capacitor;
+      const _App = _Cap && _Cap.Plugins && _Cap.Plugins.App;
+      const _sb  = window.supabase;
+      const _handleOAuthUrl = async function(url) {
+        if (!url || !url.includes('login-callback')) return false;
+        try {
+          const code = new URL(url).searchParams.get('code');
+          if (code && _sb) {
+            const { error } = await _sb.auth.exchangeCodeForSession(code);
+            if (!error) { window.location.reload(); return true; }
+          }
+        } catch(e) {}
+        return false;
+      };
+      if (_App) {
+        // Cold start: check if app was opened from the deep link
+        const launchData = await _App.getLaunchUrl().catch(function(){return null;});
+        if (launchData && launchData.url) {
+          const handled = await _handleOAuthUrl(launchData.url);
+          if (handled) return;
+        }
+        // Warm start: listen for the deep link while app is running
+        _App.addListener('appUrlOpen', async function(event) {
+          await _handleOAuthUrl(event.url);
+        });
+      }
+    } catch(e) {}
     if(this.state.currentUserId&&this.checkBan()) return;
     const _nav = document.getElementById('bottomNav');
     _nav.style.display='flex';

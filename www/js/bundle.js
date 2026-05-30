@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-30T13:37:54.338Z */
+/* PaMarket bundle — built 2026-05-30T16:59:09.728Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -436,6 +436,36 @@ window.H = {
     H.navTo      = H.navTo.bind(H);
     this.applyTheme();
     this.applyLanguage();
+    // Handle OAuth deep-link callback (com.pamarket.app://login-callback?code=xxx).
+    // Check via App.getLaunchUrl() for cold-start and via appUrlOpen for warm-start.
+    try {
+      const _Cap = window.Capacitor;
+      const _App = _Cap && _Cap.Plugins && _Cap.Plugins.App;
+      const _sb  = window.supabase;
+      const _handleOAuthUrl = async function(url) {
+        if (!url || !url.includes('login-callback')) return false;
+        try {
+          const code = new URL(url).searchParams.get('code');
+          if (code && _sb) {
+            const { error } = await _sb.auth.exchangeCodeForSession(code);
+            if (!error) { window.location.reload(); return true; }
+          }
+        } catch(e) {}
+        return false;
+      };
+      if (_App) {
+        // Cold start: check if app was opened from the deep link
+        const launchData = await _App.getLaunchUrl().catch(function(){return null;});
+        if (launchData && launchData.url) {
+          const handled = await _handleOAuthUrl(launchData.url);
+          if (handled) return;
+        }
+        // Warm start: listen for the deep link while app is running
+        _App.addListener('appUrlOpen', async function(event) {
+          await _handleOAuthUrl(event.url);
+        });
+      }
+    } catch(e) {}
     if(this.state.currentUserId&&this.checkBan()) return;
     const _nav = document.getElementById('bottomNav');
     _nav.style.display='flex';
@@ -4271,7 +4301,7 @@ H.init();
       + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">No messages yet. Say hello!</div>')
       + '</div>'
       + '<div class="chat-input-bar">'
-      + '<input id="chatIn" placeholder="Type a message…" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}">'
+      + '<input id="chatIn" type="text" inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Type a message…" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}" oninput="H._chatInputChange&&H._chatInputChange()">'
       + '<button class="chat-send" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
       + '</div></div>';
   };
