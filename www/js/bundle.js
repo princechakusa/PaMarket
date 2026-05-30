@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-30T19:11:57Z */
+/* PaMarket bundle — built 2026-05-30T19:14:20Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -4314,12 +4314,11 @@ H.init();
       + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">No messages yet. Say hello!</div>')
       + '</div>'
       + '<div class="chat-input-bar">'
-      + '<button class="chat-attach-btn" onclick="H._chat.toggleAttach(event)" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
+      + '<label for="chatImgPicker" class="chat-attach-btn" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></label>'
+      + '<input type="file" id="chatImgPicker" accept="image/*" style="display:none;position:absolute" onchange="H._chat.handleImageFile(this)">'
       + '<input id="chatIn" type="text" inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Type a message…" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}">'
       + '<button class="chat-send" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
       + '</div>'
-      + '<input type="file" id="chatImgGallery" accept="image/*" style="display:none" onchange="H._chat.handleImageFile(this,false)">'
-      + '<input type="file" id="chatImgCamera" accept="image/*" capture="environment" style="display:none" onchange="H._chat.handleImageFile(this,true)">'
       + '</div>';
   };
 
@@ -4540,47 +4539,6 @@ H.init();
 
   H._chat = H._chat || {};
 
-  H._chat._closeAttachMenu = function() {
-    const m = document.getElementById('chatAttachMenu');
-    if (m) m.remove();
-  };
-
-  H._chat.toggleAttach = function(e) {
-    e.stopPropagation();
-    if (document.getElementById('chatAttachMenu')) { H._chat._closeAttachMenu(); return; }
-    const btn = e.currentTarget || e.target.closest('.chat-attach-btn');
-    const rect = btn ? btn.getBoundingClientRect() : null;
-    const left = rect ? Math.max(8, rect.left) : 8;
-    const bottom = rect ? (window.innerHeight - rect.top + 8) : 80;
-    const menu = document.createElement('div');
-    menu.id = 'chatAttachMenu';
-    menu.className = 'chat-attach-menu';
-    menu.style.cssText = 'position:fixed;left:' + left + 'px;bottom:' + bottom + 'px;z-index:9200;';
-    menu.innerHTML =
-      '<button class="chat-attach-opt" onclick="H._chat.takePhoto()">'
-      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
-      + 'Take Photo</button>'
-      + '<button class="chat-attach-opt" onclick="H._chat.choosePhoto()">'
-      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
-      + 'Choose from Gallery</button>';
-    document.body.appendChild(menu);
-    setTimeout(function() {
-      document.addEventListener('click', function _close() {
-        H._chat._closeAttachMenu();
-        document.removeEventListener('click', _close);
-      });
-    }, 0);
-  };
-
-  H._chat.takePhoto = function() {
-    H._chat._closeAttachMenu();
-    setTimeout(function() { var i = document.getElementById('chatImgCamera'); if (i) i.click(); }, 80);
-  };
-
-  H._chat.choosePhoto = function() {
-    H._chat._closeAttachMenu();
-    setTimeout(function() { var i = document.getElementById('chatImgGallery'); if (i) i.click(); }, 80);
-  };
 
   H._chat.handleImageFile = async function(input) {
     const file = input.files && input.files[0];
