@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-30T12:00:38.786Z */
+/* PaMarket bundle — built 2026-05-30T12:11:49.081Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -2347,31 +2347,60 @@ H.init();
     });
   };
 
+  async function _oauthInCap(c, provider) {
+    const Browser = window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+    const App     = window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+
+    // Get the OAuth URL from Supabase without redirecting the WebView
+    const { data, error } = await c.auth.signInWithOAuth({
+      provider: provider,
+      options: { redirectTo: 'com.pamarket.app://login-callback', skipBrowserRedirect: true }
+    });
+    if (error) { H.toast(error.message || 'Sign-in failed'); return; }
+    if (!data || !data.url) { H.toast('Could not start sign-in'); return; }
+
+    if (Browser && App) {
+      // Open a Chrome Custom Tab — looks and feels in-app
+      let urlListener;
+      urlListener = await App.addListener('appUrlOpen', async function(event) {
+        await urlListener.remove();
+        try { if (Browser.close) await Browser.close(); } catch(e) {}
+        if (!event.url || !event.url.includes('login-callback')) return;
+        try {
+          // PKCE flow: exchange the code for a session
+          const code = new URL(event.url).searchParams.get('code');
+          if (code) {
+            const { error: ex } = await c.auth.exchangeCodeForSession(code);
+            if (!ex) { window.location.reload(); return; }
+          }
+          // Implicit flow fallback: session already stored
+          const { data: sd } = await c.auth.getSession();
+          if (sd && sd.session) { window.location.reload(); return; }
+          H.toast('Sign-in failed. Please try again.');
+        } catch(e) { H.toast('Sign-in failed. Please try again.'); }
+      });
+      await Browser.open({ url: data.url });
+    } else {
+      // Plugin not yet synced — fall back to system browser + visibility check
+      window.open(data.url, '_system');
+      var _vis = async function() {
+        if (document.visibilityState !== 'visible') return;
+        document.removeEventListener('visibilitychange', _vis);
+        const { data: sd } = await c.auth.getSession();
+        if (sd && sd.session) window.location.reload();
+      };
+      document.addEventListener('visibilitychange', _vis);
+    }
+  }
+
   H.authGoogle = async function() {
     const c = sb();
     if (!c) { H.toast('Sign-in service unavailable'); return; }
     const inCap = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
-    // In Capacitor, OAuth opens in the system browser. Use a deep-link scheme so
-    // Android can redirect back to the app after sign-in.
-    const redirectTo = inCap
-      ? 'com.pamarket.app://login-callback'
-      : window.location.origin + window.location.pathname;
-    if (inCap) {
-      // After the user returns from the browser, check for a new Supabase session.
-      var _visHandler = async function() {
-        if (document.visibilityState === 'visible') {
-          document.removeEventListener('visibilitychange', _visHandler);
-          try {
-            const { data } = await c.auth.getSession();
-            if (data && data.session) { window.location.reload(); }
-          } catch(e) {}
-        }
-      };
-      document.addEventListener('visibilitychange', _visHandler);
-    }
+    if (inCap) { await _oauthInCap(c, 'google'); return; }
     const { error } = await c.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo }
+      options: { redirectTo: window.location.origin + window.location.pathname }
     });
     if (error) H.toast(error.message || 'Google sign-in failed');
   };
@@ -2380,24 +2409,10 @@ H.init();
     const c = sb();
     if (!c) { H.toast('Sign-in service unavailable'); return; }
     const inCap = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
-    const redirectTo = inCap
-      ? 'com.pamarket.app://login-callback'
-      : window.location.origin + window.location.pathname;
-    if (inCap) {
-      var _visHandler = async function() {
-        if (document.visibilityState === 'visible') {
-          document.removeEventListener('visibilitychange', _visHandler);
-          try {
-            const { data } = await c.auth.getSession();
-            if (data && data.session) { window.location.reload(); }
-          } catch(e) {}
-        }
-      };
-      document.addEventListener('visibilitychange', _visHandler);
-    }
+    if (inCap) { await _oauthInCap(c, 'apple'); return; }
     const { error } = await c.auth.signInWithOAuth({
       provider: 'apple',
-      options: { redirectTo }
+      options: { redirectTo: window.location.origin + window.location.pathname }
     });
     if (error) H.toast(error.message || 'Apple sign-in failed');
   };
