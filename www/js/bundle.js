@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-30T18:57:10Z */
+/* PaMarket bundle — built 2026-05-30T19:01:52Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -864,6 +864,8 @@ window.H = {
 
     function onStart(e) {
       if (refreshing || el.scrollTop > 0) return;
+      // Never start PTR from the bottom input/control area
+      if (e.target && e.target.closest && e.target.closest('.chat-input-bar, .chat-attach-btn, .chat-send, input, button, textarea')) return;
       // In Chat, mainArea has overflow:hidden so scrollTop is always 0.
       // Check the actual chat thread scroll position instead.
       if (H.currentPageName === 'Chat') {
