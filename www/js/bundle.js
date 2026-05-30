@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-30T19:01:52Z */
+/* PaMarket bundle — built 2026-05-30T19:08:32Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -4314,7 +4314,13 @@ H.init();
       + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">No messages yet. Say hello!</div>')
       + '</div>'
       + '<div class="chat-input-bar">'
-      + '<button class="chat-attach-btn" onclick="H._chat.openAttach()" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
+      + '<div class="chat-attach-wrap">'
+      + '<button class="chat-attach-btn" onclick="H._chat.toggleAttach(event)" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
+      + '<div class="chat-attach-menu" id="chatAttachMenu">'
+      + '<button class="chat-attach-opt" onclick="H._chat.takePhoto()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Take Photo</button>'
+      + '<button class="chat-attach-opt" onclick="H._chat.choosePhoto()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Choose from Gallery</button>'
+      + '</div>'
+      + '</div>'
       + '<input id="chatIn" type="text" inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Type a message…" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}">'
       + '<button class="chat-send" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
       + '</div>'
@@ -4540,21 +4546,33 @@ H.init();
 
   H._chat = H._chat || {};
 
-  H._chat.openAttach = function() {
-    const sheet = document.getElementById('actionSheet');
-    const bg    = document.getElementById('sheetBg');
-    if (!sheet || !bg) return;
-    sheet.innerHTML =
-      '<div class="sheet-header">Send a photo</div>'
-      + '<button class="sheet-item" onclick="H.closeSheet();setTimeout(()=>document.getElementById(\'chatImgCamera\').click(),120)">'
-      + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
-      + '<span class="sheet-label">Take Photo</span></button>'
-      + '<button class="sheet-item" onclick="H.closeSheet();setTimeout(()=>document.getElementById(\'chatImgGallery\').click(),120)">'
-      + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
-      + '<span class="sheet-label">Choose from Gallery</span></button>'
-      + '<button class="sheet-close" onclick="H.closeSheet()">Cancel</button>';
-    sheet.classList.add('open');
-    bg.classList.add('open');
+  H._chat.toggleAttach = function(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('chatAttachMenu');
+    if (!menu) return;
+    const opening = !menu.classList.contains('open');
+    menu.classList.toggle('open', opening);
+    if (opening) {
+      setTimeout(function() {
+        document.addEventListener('click', function _close() {
+          const m = document.getElementById('chatAttachMenu');
+          if (m) m.classList.remove('open');
+          document.removeEventListener('click', _close);
+        });
+      }, 0);
+    }
+  };
+
+  H._chat.takePhoto = function() {
+    const m = document.getElementById('chatAttachMenu');
+    if (m) m.classList.remove('open');
+    setTimeout(function() { const i = document.getElementById('chatImgCamera'); if (i) i.click(); }, 80);
+  };
+
+  H._chat.choosePhoto = function() {
+    const m = document.getElementById('chatAttachMenu');
+    if (m) m.classList.remove('open');
+    setTimeout(function() { const i = document.getElementById('chatImgGallery'); if (i) i.click(); }, 80);
   };
 
   H._chat.handleImageFile = async function(input) {
