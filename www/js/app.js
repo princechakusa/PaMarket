@@ -601,8 +601,6 @@ window.H = {
     if (_mb && _mb.classList.contains('open')) _mb.classList.remove('open');
     this.closeSheet();
     // Remove chat keyboard listeners when navigating away from Chat
-    if (window._chatKBShow) { try { window._chatKBShow.remove(); } catch(e){} window._chatKBShow = null; }
-    if (window._chatKBHide) { try { window._chatKBHide.remove(); } catch(e){} window._chatKBHide = null; }
     if (window._chatScrollLock) {
       if (area) area.removeEventListener('scroll', window._chatScrollLock);
       window._chatScrollLock = null;
