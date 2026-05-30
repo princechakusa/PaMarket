@@ -294,37 +294,18 @@
       window.Capacitor.isNativePlatform());
 
     if (inCapacitor) {
-      // Keep chatPageWrap as position:absolute inside mainArea (position:relative).
-      // When the keyboard appears, push chatPageWrap up by setting its bottom offset.
+      // adjustResize in AndroidManifest makes Android shrink the WebView when the
+      // keyboard appears — chatPageWrap fills the resized window automatically.
+      // We must NOT set chatPageWrap.style.bottom here or the input bar double-shifts.
+      // Only action needed: scroll chatThread to bottom so last message stays visible.
       if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
-      const KB = window.Capacitor.Plugins && window.Capacitor.Plugins.Keyboard;
-      if (KB) {
-        KB.addListener('keyboardWillShow', function(info) {
-          const w = document.getElementById('chatPageWrap');
-          if (w) w.style.bottom = (info.keyboardHeight || 0) + 'px';
-          const th = document.getElementById('chatThread');
-          if (th) setTimeout(function() { th.scrollTop = th.scrollHeight; }, 50);
-        }).then(function(h) { window._chatKBShow = h; });
-        KB.addListener('keyboardWillHide', function() {
-          const w = document.getElementById('chatPageWrap');
-          if (w) w.style.bottom = '0px';
-        }).then(function(h) { window._chatKBHide = h; });
-      } else {
-        // Fallback: window resize fires when the soft keyboard appears (adjustResize mode)
-        var _baseH = window.innerHeight;
-        function _onCapKBResize() {
-          const w = document.getElementById('chatPageWrap');
-          if (!w) { window.removeEventListener('resize', _onCapKBResize); return; }
-          var diff = _baseH - window.innerHeight;
-          w.style.bottom = (diff > 50 ? diff : 0) + 'px';
-          if (diff > 50) {
-            const th = document.getElementById('chatThread');
-            if (th) setTimeout(function() { th.scrollTop = th.scrollHeight; }, 50);
-          }
-        }
-        window.addEventListener('resize', _onCapKBResize);
-        window._chatKBResizeHandler = _onCapKBResize;
+      function _onCapKBResize() {
+        const th = document.getElementById('chatThread');
+        if (!th) { window.removeEventListener('resize', _onCapKBResize); return; }
+        setTimeout(function() { th.scrollTop = th.scrollHeight; }, 60);
       }
+      window.addEventListener('resize', _onCapKBResize);
+      window._chatKBResizeHandler = _onCapKBResize;
     } else {
       // Browser: position:fixed + visualViewport keeps the wrap inside the visible area
       if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
