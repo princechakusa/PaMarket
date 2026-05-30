@@ -18,9 +18,9 @@
       H.saveState();
     }
     const deleted = H.state.deletedConvIds || [];
-    return deleted.length
-      ? H.state.conversations.filter(function (c) { return !deleted.includes(c.id); })
-      : H.state.conversations;
+    return H.state.conversations.filter(function(c) {
+      return !deleted.includes(c.id) && !c.otherDeleted;
+    });
   }
 
   function users() {
@@ -74,17 +74,22 @@
         }
         if (nameResolved && conv && !conv.otherName) { conv.otherName = nameResolved; }
         if (nameResolved) {
-          // Mark as permanently resolved so we don't re-fetch
           H._resolvedProfileFetch[otherId] = true;
           H.saveState();
           var page = H.currentPageName;
           if (page === 'Messages' || page === 'Chat') { H.renderPage(page); }
+        } else if (!nameResolved && res && !res.data && res.error && res.error.code === 'PGRST116') {
+          // Profile definitively not found (user deleted their account) — hide this conversation
+          H._resolvedProfileFetch[otherId] = true;
+          if (conv && !conv.otherDeleted) {
+            conv.otherDeleted = true;
+            H.saveState();
+            if (H.currentPageName === 'Messages') H.renderPage('Messages');
+          }
         }
-        // Always clear the in-flight flag so a future render can retry if name is still empty
         delete H._pendingProfileFetch[otherId];
       })
       .catch(function() {
-        // Clear the in-flight flag on error so the next render can retry
         delete H._pendingProfileFetch[otherId];
       });
   };
@@ -276,50 +281,48 @@
       typeof window.Capacitor.isNativePlatform === 'function' &&
       window.Capacitor.isNativePlatform());
 
+    // Use visualViewport to track keyboard for both Capacitor and browser.
+    // When the soft keyboard appears, visualViewport.height shrinks; syncing the
+    // wrap to the visible viewport keeps the input bar above the keyboard on Android.
+    if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
+    if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+    if (inCapacitor && ma) ma.style.position = 'relative';
+
+    function _syncToViewport() {
+      const w = document.getElementById('chatPageWrap');
+      const vp = window.visualViewport;
+      if (!w || !vp) return;
+      w.style.top    = vp.offsetTop + 'px';
+      w.style.height = vp.height + 'px';
+      w.style.left   = vp.offsetLeft + 'px';
+      w.style.width  = vp.width + 'px';
+      w.style.bottom = 'auto';
+      const th = document.getElementById('chatThread');
+      if (th) th.scrollTop = th.scrollHeight;
+    }
+    window._chatVPHandler = _syncToViewport;
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', _syncToViewport);
+      window.visualViewport.addEventListener('scroll', _syncToViewport);
+      _syncToViewport();
+    }
+
+    // Capacitor Keyboard plugin enhances the above with predictive bottom adjustment
     if (inCapacitor) {
-      // #app is position:fixed so resize:body (which only shrinks <body>) has no effect.
-      // Use the Capacitor Keyboard plugin events to shrink the chat wrap from the bottom
-      // by the exact keyboard height — keeps header at top and input visible above keyboard.
-      if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
       const KB = window.Capacitor.Plugins && window.Capacitor.Plugins.Keyboard;
       if (KB) {
         KB.addListener('keyboardWillShow', function(info) {
           const w = document.getElementById('chatPageWrap');
-          if (w) w.style.bottom = (info.keyboardHeight || 0) + 'px';
+          if (w) { w.style.bottom = (info.keyboardHeight || 0) + 'px'; w.style.height = 'auto'; }
           const th = document.getElementById('chatThread');
           if (th) setTimeout(function() { th.scrollTop = th.scrollHeight; }, 50);
         }).then(function(h) { window._chatKBShow = h; });
         KB.addListener('keyboardWillHide', function() {
           const w = document.getElementById('chatPageWrap');
-          if (w) w.style.bottom = '0px';
+          if (w) { w.style.bottom = '0px'; w.style.height = 'auto'; }
         }).then(function(h) { window._chatKBHide = h; });
       }
-    } else {
-      // Browser: iOS/Android browsers pan the visual viewport when keyboard appears.
-      // position:fixed is misaligned on iOS when the viewport pans — the element
-      // stays at its layout-viewport position and scrolls off the visible area.
-      // Fix: switch wrap to position:fixed, then use visualViewport.scroll + resize
-      // to explicitly realign it with the visible area on every keyboard/pan change.
-      if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
-      if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
-
-      function _syncToViewport() {
-        const w = document.getElementById('chatPageWrap');
-        const vp = window.visualViewport;
-        if (!w || !vp) return;
-        w.style.top    = vp.offsetTop + 'px';
-        w.style.height = vp.height + 'px';
-        w.style.bottom = 'auto';
-      }
-      window._chatVPHandler = _syncToViewport;
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', _syncToViewport);
-        window.visualViewport.addEventListener('scroll', _syncToViewport);
-        _syncToViewport();
-      }
     }
-
-    setTimeout(() => document.getElementById('chatIn')?.focus(), 200);
     if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);
   };
 

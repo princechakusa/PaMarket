@@ -473,7 +473,25 @@
   H.authGoogle = async function() {
     const c = sb();
     if (!c) { H.toast('Sign-in service unavailable'); return; }
-    const redirectTo = window.location.origin + window.location.pathname;
+    const inCap = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+    // In Capacitor, OAuth opens in the system browser. Use a deep-link scheme so
+    // Android can redirect back to the app after sign-in.
+    const redirectTo = inCap
+      ? 'com.pamarket.app://login-callback'
+      : window.location.origin + window.location.pathname;
+    if (inCap) {
+      // After the user returns from the browser, check for a new Supabase session.
+      var _visHandler = async function() {
+        if (document.visibilityState === 'visible') {
+          document.removeEventListener('visibilitychange', _visHandler);
+          try {
+            const { data } = await c.auth.getSession();
+            if (data && data.session) { window.location.reload(); }
+          } catch(e) {}
+        }
+      };
+      document.addEventListener('visibilitychange', _visHandler);
+    }
     const { error } = await c.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo }
@@ -484,7 +502,22 @@
   H.authApple = async function() {
     const c = sb();
     if (!c) { H.toast('Sign-in service unavailable'); return; }
-    const redirectTo = window.location.origin + window.location.pathname;
+    const inCap = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+    const redirectTo = inCap
+      ? 'com.pamarket.app://login-callback'
+      : window.location.origin + window.location.pathname;
+    if (inCap) {
+      var _visHandler = async function() {
+        if (document.visibilityState === 'visible') {
+          document.removeEventListener('visibilitychange', _visHandler);
+          try {
+            const { data } = await c.auth.getSession();
+            if (data && data.session) { window.location.reload(); }
+          } catch(e) {}
+        }
+      };
+      document.addEventListener('visibilitychange', _visHandler);
+    }
     const { error } = await c.auth.signInWithOAuth({
       provider: 'apple',
       options: { redirectTo }
