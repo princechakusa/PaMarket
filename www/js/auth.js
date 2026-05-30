@@ -488,15 +488,20 @@
         try { if (Browser.close) await Browser.close(); } catch(e) {}
         if (!event.url || !event.url.includes('login-callback')) return;
         try {
-          const code = new URL(event.url).searchParams.get('code');
+          const urlObj = new URL(event.url);
+          const urlErr = urlObj.searchParams.get('error');
+          if (urlErr) { H.toast(urlObj.searchParams.get('error_description') || urlErr); return; }
+          const code = urlObj.searchParams.get('code');
           if (code) {
             const { error: ex } = await c.auth.exchangeCodeForSession(code);
             if (!ex) { window.location.reload(); return; }
+            H.toast(ex.message || 'Sign-in failed. Please try again.');
+            return;
           }
           const { data: sd } = await c.auth.getSession();
           if (sd && sd.session) { window.location.reload(); return; }
           H.toast('Sign-in failed. Please try again.');
-        } catch(e) { H.toast('Sign-in failed. Please try again.'); }
+        } catch(e) { H.toast(e.message || 'Sign-in failed. Please try again.'); }
       });
       await Browser.open({ url: data.url });
     } else {

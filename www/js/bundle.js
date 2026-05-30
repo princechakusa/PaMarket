@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-30T17:33:50Z */
+/* PaMarket bundle — built 2026-05-30T18:57:10Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -454,16 +454,14 @@ window.H = {
         return false;
       };
       if (_App) {
-        // Cold start: check if app was opened from the deep link
+        // Cold start only: check if app was launched directly from the deep link.
+        // Warm-start (app in background) is handled exclusively by auth.js _oauthInCap
+        // to avoid a double-exchange race condition (PKCE codes are single-use).
         const launchData = await _App.getLaunchUrl().catch(function(){return null;});
         if (launchData && launchData.url) {
           const handled = await _handleOAuthUrl(launchData.url);
           if (handled) return;
         }
-        // Warm start: listen for the deep link while app is running
-        _App.addListener('appUrlOpen', async function(event) {
-          await _handleOAuthUrl(event.url);
-        });
       }
     } catch(e) {}
     if(this.state.currentUserId&&this.checkBan()) return;
@@ -2399,15 +2397,20 @@ H.init();
         try { if (Browser.close) await Browser.close(); } catch(e) {}
         if (!event.url || !event.url.includes('login-callback')) return;
         try {
-          const code = new URL(event.url).searchParams.get('code');
+          const urlObj = new URL(event.url);
+          const urlErr = urlObj.searchParams.get('error');
+          if (urlErr) { H.toast(urlObj.searchParams.get('error_description') || urlErr); return; }
+          const code = urlObj.searchParams.get('code');
           if (code) {
             const { error: ex } = await c.auth.exchangeCodeForSession(code);
             if (!ex) { window.location.reload(); return; }
+            H.toast(ex.message || 'Sign-in failed. Please try again.');
+            return;
           }
           const { data: sd } = await c.auth.getSession();
           if (sd && sd.session) { window.location.reload(); return; }
           H.toast('Sign-in failed. Please try again.');
-        } catch(e) { H.toast('Sign-in failed. Please try again.'); }
+        } catch(e) { H.toast(e.message || 'Sign-in failed. Please try again.'); }
       });
       await Browser.open({ url: data.url });
     } else {
