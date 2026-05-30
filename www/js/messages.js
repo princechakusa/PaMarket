@@ -131,8 +131,13 @@
     avaEl.className = 'chat-row-av';
     avaEl.innerHTML = avatarHtml;
     const bubble = document.createElement('div');
-    bubble.className = 'chat-bubble them';
-    bubble.innerHTML = escHtml(m.text) + '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>';
+    bubble.className = 'chat-bubble them' + (m.image ? ' chat-bubble-img' : '');
+    if (m.image) {
+      bubble.innerHTML = '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">';
+    } else {
+      bubble.innerHTML = escHtml(m.text);
+    }
+    bubble.innerHTML += '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>';
     row.appendChild(avaEl);
     row.appendChild(bubble);
     thread.appendChild(row);
@@ -230,17 +235,20 @@
 
     const msgs = c.messages.map(function(m) {
       const mine = m.from === u.id;
+      const content = m.image
+        ? '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">'
+        : escHtml(m.text);
       if (mine) {
         return '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
-          + '<div class="chat-bubble me">'
-          + escHtml(m.text)
+          + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
+          + content
           + '<div class="chat-bubble-meta" style="text-align:right">' + timeAgo(m.t) + '</div>'
           + '</div></div>';
       }
       return '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
         + '<div class="chat-row-av">' + otherAvatar + '</div>'
-        + '<div class="chat-bubble them">'
-        + escHtml(m.text)
+        + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
+        + content
         + '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>'
         + '</div></div>';
     }).join('');
@@ -265,9 +273,13 @@
       + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">No messages yet. Say hello!</div>')
       + '</div>'
       + '<div class="chat-input-bar">'
-      + '<input id="chatIn" type="text" inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Type a message…" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}" oninput="H._chatInputChange&&H._chatInputChange()">'
+      + '<button class="chat-attach-btn" onclick="H._chat.openAttach()" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
+      + '<input id="chatIn" type="text" inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Type a message…" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}">'
       + '<button class="chat-send" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
-      + '</div></div>';
+      + '</div>'
+      + '<input type="file" id="chatImgGallery" accept="image/*" style="display:none" onchange="H._chat.handleImageFile(this,false)">'
+      + '<input type="file" id="chatImgCamera" accept="image/*" capture="environment" style="display:none" onchange="H._chat.handleImageFile(this,true)">'
+      + '</div>';
   };
 
   pages.Chat_after = function () {
@@ -484,6 +496,121 @@
 
   // syncConversations is defined in app.js (cloud-aware version)
 
+
+  H._chat = H._chat || {};
+
+  H._chat.openAttach = function() {
+    const sheet = document.getElementById('actionSheet');
+    const bg    = document.getElementById('sheetBg');
+    if (!sheet || !bg) return;
+    sheet.innerHTML =
+      '<div class="sheet-header">Send a photo</div>'
+      + '<button class="sheet-item" onclick="H.closeSheet();setTimeout(()=>document.getElementById(\'chatImgCamera\').click(),120)">'
+      + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
+      + '<span class="sheet-label">Take Photo</span></button>'
+      + '<button class="sheet-item" onclick="H.closeSheet();setTimeout(()=>document.getElementById(\'chatImgGallery\').click(),120)">'
+      + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+      + '<span class="sheet-label">Choose from Gallery</span></button>'
+      + '<button class="sheet-close" onclick="H.closeSheet()">Cancel</button>';
+    sheet.classList.add('open');
+    bg.classList.add('open');
+  };
+
+  H._chat.handleImageFile = async function(input) {
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    const c = conversations().find(function(x){ return x.id === H._activeChat; });
+    if (!c) return;
+    const u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in to send photos'); return; }
+    H.toast('Sending photo…');
+    try {
+      // Compress to max 900px, 75% quality
+      const dataUrl = await H.compressImage(file, 900, 0.75);
+      // Try Supabase Storage first; fall back to base64 inline
+      let imageUrl = dataUrl;
+      try {
+        const sb = window.supabase;
+        if (sb && typeof sb.storage === 'object') {
+          const ext  = 'jpg';
+          const path = u.id + '/' + H.uid() + '.' + ext;
+          const blob = await (await fetch(dataUrl)).blob();
+          const { data: upData, error: upErr } = await sb.storage.from('chat-images').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+          if (!upErr && upData) {
+            const { data: urlData } = sb.storage.from('chat-images').getPublicUrl(path);
+            if (urlData && urlData.publicUrl) imageUrl = urlData.publicUrl;
+          }
+        }
+      } catch(e) { /* storage not configured — use base64 */ }
+      await H._chat.sendImageMessage(c, u, imageUrl);
+    } catch(e) {
+      console.warn('Image send error:', e);
+      H.toast('Could not send photo. Please try again.');
+    }
+  };
+
+  H._chat.sendImageMessage = async function(c, u, imageUrl) {
+    var msgId = H.uid();
+    var msgT  = Date.now();
+    var msg   = { id: msgId, from: u.id, senderName: u.name || '', text: '[Photo]', image: imageUrl, t: msgT, read: false };
+    c.messages.push(msg);
+    H.saveState();
+    // Append image bubble immediately
+    const thread = document.getElementById('chatThread');
+    if (thread) {
+      const row = document.createElement('div');
+      row.className = 'chat-msg-row me';
+      row.setAttribute('data-msg-id', msgId);
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble me chat-bubble-img';
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.className = 'chat-img';
+      img.onclick = function() { H._chat.viewImg(imageUrl); };
+      bubble.appendChild(img);
+      const meta = document.createElement('div');
+      meta.className = 'chat-bubble-meta';
+      meta.style.textAlign = 'right';
+      meta.textContent = 'just now';
+      bubble.appendChild(meta);
+      row.appendChild(bubble);
+      thread.appendChild(row);
+      thread.scrollTop = thread.scrollHeight;
+    }
+    // Persist to cloud
+    try {
+      if (window.supabase && typeof window.supabase.from === 'function') {
+        await window.supabase.from('messages').insert({
+          id: msgId, conversation_id: c.id,
+          sender_id: u.id, sender_name: u.name || '',
+          text: '[Photo]', image_url: imageUrl,
+          created_at: new Date(msgT).toISOString(), read: false
+        });
+      }
+      var otherId = c.members.find(function(m){ return m !== u.id; });
+      if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Photo', (u.name || 'Someone') + ' sent you a photo', 'message');
+    } catch(e) { console.warn('Image cloud sync:', e.message); }
+  };
+
+  H._chat.viewImg = function(url) {
+    // Full-screen image viewer
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:16px';
+    var img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:8px';
+    var close = document.createElement('button');
+    close.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    close.style.cssText = 'position:absolute;top:env(safe-area-inset-top,16px);right:16px;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation';
+    var dismiss = function() { document.body.removeChild(overlay); };
+    overlay.onclick = dismiss;
+    close.onclick   = dismiss;
+    close.addEventListener('click', function(e){ e.stopPropagation(); dismiss(); });
+    overlay.appendChild(img);
+    overlay.appendChild(close);
+    document.body.appendChild(overlay);
+  };
 
   H.sendChat = async function () {
     if (H.checkBan && H.checkBan()) return;
