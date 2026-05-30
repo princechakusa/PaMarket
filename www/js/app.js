@@ -828,7 +828,7 @@ window.H = {
     var startY = 0, curY = 0, pulling = false;
 
     function onStart(e) {
-      if (refreshing || el.scrollTop > 0) return;
+      if (refreshing || el.scrollTop > 0 || H.currentPageName === 'Chat') return;
       startY = e.touches[0].clientY;
       curY   = startY;
       pulling = true;
