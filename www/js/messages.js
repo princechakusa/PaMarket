@@ -281,46 +281,55 @@
       typeof window.Capacitor.isNativePlatform === 'function' &&
       window.Capacitor.isNativePlatform());
 
-    // Use visualViewport to track keyboard for both Capacitor and browser.
-    // When the soft keyboard appears, visualViewport.height shrinks; syncing the
-    // wrap to the visible viewport keeps the input bar above the keyboard on Android.
-    if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
-    if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
-    if (inCapacitor && ma) ma.style.position = 'relative';
-
-    function _syncToViewport() {
-      const w = document.getElementById('chatPageWrap');
-      const vp = window.visualViewport;
-      if (!w || !vp) return;
-      w.style.top    = vp.offsetTop + 'px';
-      w.style.height = vp.height + 'px';
-      w.style.left   = vp.offsetLeft + 'px';
-      w.style.width  = vp.width + 'px';
-      w.style.bottom = 'auto';
-      const th = document.getElementById('chatThread');
-      if (th) th.scrollTop = th.scrollHeight;
-    }
-    window._chatVPHandler = _syncToViewport;
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', _syncToViewport);
-      window.visualViewport.addEventListener('scroll', _syncToViewport);
-      _syncToViewport();
-    }
-
-    // Capacitor Keyboard plugin enhances the above with predictive bottom adjustment
     if (inCapacitor) {
+      // Keep chatPageWrap as position:absolute inside mainArea (position:relative).
+      // When the keyboard appears, push chatPageWrap up by setting its bottom offset.
+      if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
       const KB = window.Capacitor.Plugins && window.Capacitor.Plugins.Keyboard;
       if (KB) {
         KB.addListener('keyboardWillShow', function(info) {
           const w = document.getElementById('chatPageWrap');
-          if (w) { w.style.bottom = (info.keyboardHeight || 0) + 'px'; w.style.height = 'auto'; }
+          if (w) w.style.bottom = (info.keyboardHeight || 0) + 'px';
           const th = document.getElementById('chatThread');
           if (th) setTimeout(function() { th.scrollTop = th.scrollHeight; }, 50);
         }).then(function(h) { window._chatKBShow = h; });
         KB.addListener('keyboardWillHide', function() {
           const w = document.getElementById('chatPageWrap');
-          if (w) { w.style.bottom = '0px'; w.style.height = 'auto'; }
+          if (w) w.style.bottom = '0px';
         }).then(function(h) { window._chatKBHide = h; });
+      } else {
+        // Fallback: window resize fires when the soft keyboard appears (adjustResize mode)
+        var _baseH = window.innerHeight;
+        function _onCapKBResize() {
+          const w = document.getElementById('chatPageWrap');
+          if (!w) { window.removeEventListener('resize', _onCapKBResize); return; }
+          var diff = _baseH - window.innerHeight;
+          w.style.bottom = (diff > 50 ? diff : 0) + 'px';
+          if (diff > 50) {
+            const th = document.getElementById('chatThread');
+            if (th) setTimeout(function() { th.scrollTop = th.scrollHeight; }, 50);
+          }
+        }
+        window.addEventListener('resize', _onCapKBResize);
+        window._chatKBResizeHandler = _onCapKBResize;
+      }
+    } else {
+      // Browser: position:fixed + visualViewport keeps the wrap inside the visible area
+      if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
+      if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+      function _syncToViewport() {
+        const w = document.getElementById('chatPageWrap');
+        const vp = window.visualViewport;
+        if (!w || !vp) return;
+        w.style.top    = vp.offsetTop + 'px';
+        w.style.height = vp.height + 'px';
+        w.style.bottom = 'auto';
+      }
+      window._chatVPHandler = _syncToViewport;
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', _syncToViewport);
+        window.visualViewport.addEventListener('scroll', _syncToViewport);
+        _syncToViewport();
       }
     }
     if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);
