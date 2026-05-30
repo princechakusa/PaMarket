@@ -451,16 +451,14 @@ window.H = {
         return false;
       };
       if (_App) {
-        // Cold start: check if app was opened from the deep link
+        // Cold start only: check if app was launched directly from the deep link.
+        // Warm-start (app in background) is handled exclusively by auth.js _oauthInCap
+        // to avoid a double-exchange race condition (PKCE codes are single-use).
         const launchData = await _App.getLaunchUrl().catch(function(){return null;});
         if (launchData && launchData.url) {
           const handled = await _handleOAuthUrl(launchData.url);
           if (handled) return;
         }
-        // Warm start: listen for the deep link while app is running
-        _App.addListener('appUrlOpen', async function(event) {
-          await _handleOAuthUrl(event.url);
-        });
       }
     } catch(e) {}
     if(this.state.currentUserId&&this.checkBan()) return;
