@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-31T13:45:17Z */
+/* PaMarket bundle — built 2026-05-31T16:20:46Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -1744,6 +1744,11 @@ window.H = {
     setTimeout(()=>this._showOnboarding(),800);
 
     document.addEventListener('DOMContentLoaded',()=>{
+      // Hide Capacitor splash once DOM is ready — reveals the onboarding screen underneath
+      window._hideSplash = function() {
+        var SS = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen;
+        if (SS) { setTimeout(function(){ SS.hide({ fadeOutDuration: 200 }); }, 100); }
+      };
       const nav=document.getElementById('bottomNav');
       if(nav){
         nav.addEventListener('click',e=>{
