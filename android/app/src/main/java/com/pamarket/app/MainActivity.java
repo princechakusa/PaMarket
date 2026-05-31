@@ -1,6 +1,7 @@
 package com.pamarket.app;
 
 import android.os.Bundle;
+import android.os.Handler;
 import androidx.core.splashscreen.SplashScreen;
 import com.getcapacitor.BridgeActivity;
 
@@ -12,6 +13,6 @@ public class MainActivity extends BridgeActivity {
         SplashScreen splash = SplashScreen.installSplashScreen(this);
         splash.setKeepOnScreenCondition(() -> !ready);
         super.onCreate(savedInstanceState);
-        getBridge().getWebView().postDelayed(() -> ready = true, 800);
+        new Handler().postDelayed(() -> ready = true, 1000);
     }
 }
