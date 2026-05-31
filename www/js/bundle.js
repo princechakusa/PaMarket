@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-31T16:27:19Z */
+/* PaMarket bundle — built 2026-05-31T17:23:57Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -1741,7 +1741,7 @@ window.H = {
     this._registerCategoryView();
     this._registerJobPage();
     this._registerExtraPages();
-    setTimeout(()=>this._showOnboarding(),800);
+    setTimeout(()=>{},800);
 
     document.addEventListener('DOMContentLoaded',()=>{
       // Hide Capacitor splash once DOM is ready — reveals the onboarding screen underneath

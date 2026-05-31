@@ -1738,7 +1738,7 @@ window.H = {
     this._registerCategoryView();
     this._registerJobPage();
     this._registerExtraPages();
-    setTimeout(()=>this._showOnboarding(),800);
+    setTimeout(()=>{},800);
 
     document.addEventListener('DOMContentLoaded',()=>{
       // Hide Capacitor splash once DOM is ready — reveals the onboarding screen underneath
