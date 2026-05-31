@@ -483,7 +483,7 @@ window.H = {
     } catch(e) {}
     if(this.state.currentUserId&&this.checkBan()) return;
     const _nav = document.getElementById('bottomNav');
-    _nav.style.display='flex';
+    if (_nav) _nav.style.display='flex';
     // Probe safe area bottom: use padding-bottom trick (more reliable than height), then iPhone X+ fallback
     (function() {
       var p = document.createElement('div');
@@ -1783,8 +1783,9 @@ H._handleDeepLink = function(route) {
   } else if (route.startsWith('chat:')) {
     H.openInner('Chat', { id: route.split(':')[1] });
   } else {
-    // Named pages: Home, Jobs, Messages, Account, Ads, etc.
-    H.navTo(route);
+    // Named pages: whitelist to prevent arbitrary navigation via deep links
+    var allowed = ['Home','Browse','Post','Account','Messages','Notifications'];
+    if (allowed.indexOf(route) !== -1) H.navTo(route);
   }
 };
 
