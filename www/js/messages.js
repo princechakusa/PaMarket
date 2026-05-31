@@ -284,26 +284,19 @@
 
   pages.Chat_after = function () {
     if (window._messagesPoll) { clearInterval(window._messagesPoll); window._messagesPoll = null; }
-    var t = document.getElementById('chatThread');
-    if (t) t.scrollTop = t.scrollHeight;
 
     var ma   = document.getElementById('mainArea');
     var wrap = document.getElementById('chatPageWrap');
 
-    var inCapacitor = !!(window.Capacitor &&
-      typeof window.Capacitor.isNativePlatform === 'function' &&
-      window.Capacitor.isNativePlatform());
-
     if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
 
+    // Keep chatPageWrap as position:absolute inside #app.
+    // #app has padding-top:env(safe-area-inset-top), and absolutely-positioned
+    // children are offset from #app's content edge (inside the padding), so the
+    // header naturally sits below the status bar without any manual calculation.
     if (wrap) {
-      // #app has padding-top:env(safe-area-inset-top) which pushes content below
-      // the status bar. Read that computed value so our fixed wrap starts at
-      // the same position — no overlap with the status bar, on any device.
-      var appEl = document.getElementById('app');
-      var statusBarH = appEl ? (parseFloat(getComputedStyle(appEl).paddingTop) || 0) : 0;
-      wrap.style.position = 'fixed';
-      wrap.style.top      = statusBarH + 'px';
+      wrap.style.position = 'absolute';
+      wrap.style.top      = '0';
       wrap.style.left     = '0';
       wrap.style.right    = '0';
       wrap.style.bottom   = '0';
@@ -311,7 +304,21 @@
       wrap.style.zIndex   = '50';
     }
 
-    // Scroll thread to bottom whenever keyboard opens/closes
+    // Pin the input bar to the bottom of the viewport with position:fixed.
+    // When adjustResize shrinks the WebView viewport on keyboard open, any
+    // position:fixed; bottom:0 element automatically rides up above the keyboard.
+    var inputBar = document.querySelector('#chatPageWrap .chat-input-bar');
+    if (inputBar) {
+      inputBar.style.position = 'fixed';
+      inputBar.style.bottom   = '0';
+      inputBar.style.left     = '0';
+      inputBar.style.right    = '0';
+      inputBar.style.zIndex   = '200';
+      var barH = inputBar.getBoundingClientRect().height || 64;
+      var thread = document.getElementById('chatThread');
+      if (thread) { thread.style.paddingBottom = barH + 'px'; }
+    }
+
     function _scrollBottom() {
       var th = document.getElementById('chatThread');
       if (!th) return;
@@ -319,6 +326,9 @@
     }
     window.addEventListener('resize', _scrollBottom);
     window._chatKBResizeHandler = _scrollBottom;
+
+    var t = document.getElementById('chatThread');
+    if (t) setTimeout(function () { t.scrollTop = t.scrollHeight; }, 50);
 
     if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);
   };
