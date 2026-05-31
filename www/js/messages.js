@@ -286,75 +286,52 @@
     if (window._messagesPoll) { clearInterval(window._messagesPoll); window._messagesPoll = null; }
     const t = document.getElementById('chatThread');
     if (t) t.scrollTop = t.scrollHeight;
-    const ma  = document.getElementById('mainArea');
+    const ma   = document.getElementById('mainArea');
     const wrap = document.getElementById('chatPageWrap');
 
     const inCapacitor = !!(window.Capacitor &&
       typeof window.Capacitor.isNativePlatform === 'function' &&
       window.Capacitor.isNativePlatform());
 
-    if (inCapacitor) {
-      // Fix: position:fixed so chatPageWrap is always viewport-relative.
-      // env(safe-area-inset-top) padding on the header keeps content below the status bar.
-      // Keyboard plugin fires keyboardWillShow with exact keyboard height → set bottom.
-      // resize:'none' in capacitor.config means the plugin never double-adjusts the layout.
-      if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
-      if (wrap) {
-        wrap.style.position = 'fixed';
-        wrap.style.top      = '0';
-        wrap.style.left     = '0';
-        wrap.style.right    = '0';
-        wrap.style.bottom   = '0';
+    // Lock mainArea so it doesn't scroll under the fixed chat wrap
+    if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+
+    // chatPageWrap is position:fixed for both Capacitor and browser.
+    // In Capacitor we need extra top padding to clear the native status bar.
+    if (wrap) {
+      wrap.style.position = 'fixed';
+      wrap.style.top      = '0';
+      wrap.style.left     = '0';
+      wrap.style.right    = '0';
+      wrap.style.bottom   = '0';
+      wrap.style.zIndex   = '50';
+      if (inCapacitor) {
         var hdr = wrap.querySelector('.chat-header');
-        if (hdr) hdr.style.paddingTop = 'calc(env(safe-area-inset-top, 0px) + 10px)';
-      }
-      var KB = window.Capacitor.Plugins && window.Capacitor.Plugins.Keyboard;
-      if (KB) {
-        KB.addListener('keyboardWillShow', function(info) {
-          var w = document.getElementById('chatPageWrap');
-          if (w) w.style.bottom = (info.keyboardHeight || 0) + 'px';
-          var th = document.getElementById('chatThread');
-          if (th) setTimeout(function(){ th.scrollTop = th.scrollHeight; }, 50);
-        }).then(function(h){ window._chatKBShow = h; });
-        KB.addListener('keyboardWillHide', function() {
-          var w = document.getElementById('chatPageWrap');
-          if (w) w.style.bottom = '0px';
-        }).then(function(h){ window._chatKBHide = h; });
-      } else {
-        // Fallback when plugin not synced: adjustResize fires window.resize
-        var _baseH = window.innerHeight;
-        function _onCapKBResize() {
-          var w = document.getElementById('chatPageWrap');
-          if (!w) { window.removeEventListener('resize', _onCapKBResize); return; }
-          var diff = _baseH - window.innerHeight;
-          w.style.bottom = (diff > 50 ? diff : 0) + 'px';
-          if (diff > 50) {
-            var th = document.getElementById('chatThread');
-            if (th) setTimeout(function(){ th.scrollTop = th.scrollHeight; }, 50);
-          }
-        }
-        window.addEventListener('resize', _onCapKBResize);
-        window._chatKBResizeHandler = _onCapKBResize;
-      }
-    } else {
-      // Browser: position:fixed + visualViewport keeps the wrap inside the visible area
-      if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
-      if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
-      function _syncToViewport() {
-        const w = document.getElementById('chatPageWrap');
-        const vp = window.visualViewport;
-        if (!w || !vp) return;
-        w.style.top    = vp.offsetTop + 'px';
-        w.style.height = vp.height + 'px';
-        w.style.bottom = 'auto';
-      }
-      window._chatVPHandler = _syncToViewport;
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', _syncToViewport);
-        window.visualViewport.addEventListener('scroll', _syncToViewport);
-        _syncToViewport();
+        if (hdr) hdr.style.paddingTop = 'calc(env(safe-area-inset-top, 24px) + 10px)';
       }
     }
+
+    // visualViewport tracks the exact visible area including keyboard inset.
+    // This is the only approach that works reliably across Capacitor and browser
+    // without depending on adjustResize, Keyboard plugin events, or window.resize.
+    function _syncVP() {
+      var w  = document.getElementById('chatPageWrap');
+      var vp = window.visualViewport;
+      if (!w || !vp) return;
+      w.style.top    = vp.offsetTop + 'px';
+      w.style.height = vp.height + 'px';
+      w.style.bottom = 'auto';
+      var th = document.getElementById('chatThread');
+      if (th) th.scrollTop = th.scrollHeight;
+    }
+
+    window._chatVPHandler = _syncVP;
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', _syncVP);
+      window.visualViewport.addEventListener('scroll', _syncVP);
+      _syncVP();
+    }
+
     if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);
   };
 
