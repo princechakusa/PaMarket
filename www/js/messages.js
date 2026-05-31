@@ -297,15 +297,17 @@
     if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
 
     if (wrap) {
-      // Use mainArea's actual top (which is below the status bar via #app padding-top)
-      // so the fixed chat wrap lines up exactly where mainArea starts.
-      var maTop = ma ? ma.getBoundingClientRect().top : 0;
+      // #app has padding-top:env(safe-area-inset-top) which pushes content below
+      // the status bar. Read that computed value so our fixed wrap starts at
+      // the same position — no overlap with the status bar, on any device.
+      var appEl = document.getElementById('app');
+      var statusBarH = appEl ? (parseFloat(getComputedStyle(appEl).paddingTop) || 0) : 0;
       wrap.style.position = 'fixed';
-      wrap.style.top      = maTop + 'px';
+      wrap.style.top      = statusBarH + 'px';
       wrap.style.left     = '0';
       wrap.style.right    = '0';
       wrap.style.bottom   = '0';
-      wrap.style.height   = '';   // clear any height set by previous renders
+      wrap.style.height   = '';
       wrap.style.zIndex   = '50';
     }
 
