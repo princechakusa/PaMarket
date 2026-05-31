@@ -1742,6 +1742,11 @@ window.H = {
 
     document.addEventListener('DOMContentLoaded',()=>{
       window._hideSplash = function() {
+        var splash = document.getElementById('pamarketSplash');
+        if (splash) {
+          splash.classList.add('hiding');
+          setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 450);
+        }
         var SS = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen;
         if (SS) { SS.hide({ fadeOutDuration: 300 }); }
       };
