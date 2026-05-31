@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-31T18:28:06Z */
+/* PaMarket bundle — built 2026-05-31T18:38:46Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -486,7 +486,7 @@ window.H = {
     } catch(e) {}
     if(this.state.currentUserId&&this.checkBan()) return;
     const _nav = document.getElementById('bottomNav');
-    _nav.style.display='flex';
+    if (_nav) _nav.style.display='flex';
     // Probe safe area bottom: use padding-bottom trick (more reliable than height), then iPhone X+ fallback
     (function() {
       var p = document.createElement('div');
@@ -1786,8 +1786,9 @@ H._handleDeepLink = function(route) {
   } else if (route.startsWith('chat:')) {
     H.openInner('Chat', { id: route.split(':')[1] });
   } else {
-    // Named pages: Home, Jobs, Messages, Account, Ads, etc.
-    H.navTo(route);
+    // Named pages: whitelist to prevent arbitrary navigation via deep links
+    var allowed = ['Home','Browse','Post','Account','Messages','Notifications'];
+    if (allowed.indexOf(route) !== -1) H.navTo(route);
   }
 };
 
@@ -2346,14 +2347,14 @@ H.init();
     var res = await c.from('profiles').select('*').eq('id',userId).single();
     if (res.error||!res.data) {
       var u = (H.state.users||[]).find(function(x){return x.id===userId;});
-      if (!u) { u={id:userId,email:'',name:'User',phone:'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]}; H.state.users.push(u); }
+      if (!u) { u={id:userId,email:'',name:'User',phone:'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]}; (H.state.users = H.state.users || []).push(u); }
       return;
     }
     var profile = res.data;
     var u = (H.state.users||[]).find(function(x){return x.id===userId;});
     if (!u) {
       u = {id:userId,email:'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
-      H.state.users.push(u);
+      (H.state.users = H.state.users || []).push(u);
     } else {
       u.name=profile.name||u.name; u.phone=profile.phone||u.phone; u.avatar=profile.avatar||u.avatar; u.verified=profile.verified||false; u.role=profile.role||u.role||'user';
       // Merge job profile fields from Supabase if they exist (after migrations are run)
