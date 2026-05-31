@@ -1723,15 +1723,7 @@ window.H = {
     document.addEventListener('DOMContentLoaded',()=>{
       window._hideSplash = function() {
         var SS = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen;
-        if (SS) { SS.hide({ fadeOutDuration: 150 }); }
-        setTimeout(function() {
-          var splash = document.getElementById('pamarketSplash');
-          if (splash) {
-            splash.classList.add('hiding');
-            document.documentElement.style.background = '';
-            setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 450);
-          }
-        }, 200);
+        if (SS) { SS.hide({ fadeOutDuration: 300 }); }
       };
       const nav=document.getElementById('bottomNav');
       if(nav){
