@@ -294,18 +294,48 @@
       window.Capacitor.isNativePlatform());
 
     if (inCapacitor) {
-      // adjustResize in AndroidManifest makes Android shrink the WebView when the
-      // keyboard appears — chatPageWrap fills the resized window automatically.
-      // We must NOT set chatPageWrap.style.bottom here or the input bar double-shifts.
-      // Only action needed: scroll chatThread to bottom so last message stays visible.
-      if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
-      function _onCapKBResize() {
-        const th = document.getElementById('chatThread');
-        if (!th) { window.removeEventListener('resize', _onCapKBResize); return; }
-        setTimeout(function() { th.scrollTop = th.scrollHeight; }, 60);
+      // Fix: position:fixed so chatPageWrap is always viewport-relative.
+      // env(safe-area-inset-top) padding on the header keeps content below the status bar.
+      // Keyboard plugin fires keyboardWillShow with exact keyboard height → set bottom.
+      // resize:'none' in capacitor.config means the plugin never double-adjusts the layout.
+      if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+      if (wrap) {
+        wrap.style.position = 'fixed';
+        wrap.style.top      = '0';
+        wrap.style.left     = '0';
+        wrap.style.right    = '0';
+        wrap.style.bottom   = '0';
+        var hdr = wrap.querySelector('.chat-header');
+        if (hdr) hdr.style.paddingTop = 'calc(env(safe-area-inset-top, 0px) + 10px)';
       }
-      window.addEventListener('resize', _onCapKBResize);
-      window._chatKBResizeHandler = _onCapKBResize;
+      var KB = window.Capacitor.Plugins && window.Capacitor.Plugins.Keyboard;
+      if (KB) {
+        KB.addListener('keyboardWillShow', function(info) {
+          var w = document.getElementById('chatPageWrap');
+          if (w) w.style.bottom = (info.keyboardHeight || 0) + 'px';
+          var th = document.getElementById('chatThread');
+          if (th) setTimeout(function(){ th.scrollTop = th.scrollHeight; }, 50);
+        }).then(function(h){ window._chatKBShow = h; });
+        KB.addListener('keyboardWillHide', function() {
+          var w = document.getElementById('chatPageWrap');
+          if (w) w.style.bottom = '0px';
+        }).then(function(h){ window._chatKBHide = h; });
+      } else {
+        // Fallback when plugin not synced: adjustResize fires window.resize
+        var _baseH = window.innerHeight;
+        function _onCapKBResize() {
+          var w = document.getElementById('chatPageWrap');
+          if (!w) { window.removeEventListener('resize', _onCapKBResize); return; }
+          var diff = _baseH - window.innerHeight;
+          w.style.bottom = (diff > 50 ? diff : 0) + 'px';
+          if (diff > 50) {
+            var th = document.getElementById('chatThread');
+            if (th) setTimeout(function(){ th.scrollTop = th.scrollHeight; }, 50);
+          }
+        }
+        window.addEventListener('resize', _onCapKBResize);
+        window._chatKBResizeHandler = _onCapKBResize;
+      }
     } else {
       // Browser: position:fixed + visualViewport keeps the wrap inside the visible area
       if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
