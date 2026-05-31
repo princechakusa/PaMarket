@@ -446,7 +446,18 @@ window.H = {
           if (code && _sb) {
             const { data: sessData, error } = await _sb.auth.exchangeCodeForSession(code);
             if (!error && sessData && sessData.session && sessData.session.user) {
-              const userId = sessData.session.user.id;
+              const user   = sessData.session.user;
+              const userId = user.id;
+              const meta   = user.user_metadata || {};
+              // Upsert Supabase profile row for first-time Google/Apple sign-ins
+              try {
+                const { data: existing } = await _sb.from('profiles').select('id').eq('id', userId).single();
+                if (!existing) {
+                  const name   = meta.full_name || meta.name || user.email || 'User';
+                  const avatar = meta.avatar_url || meta.picture || null;
+                  await _sb.from('profiles').upsert({ id: userId, name: name, avatar: avatar });
+                }
+              } catch(pe) {}
               if (window.H && window.H.state) {
                 if (typeof window.H.loadProfile === 'function') {
                   try { await window.H.loadProfile(userId); } catch(pe) {}
