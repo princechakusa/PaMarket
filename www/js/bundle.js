@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-30T17:33:50Z */
+/* PaMarket bundle — built 2026-05-31T13:13:29Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -447,23 +447,41 @@ window.H = {
         try {
           const code = new URL(url).searchParams.get('code');
           if (code && _sb) {
-            const { error } = await _sb.auth.exchangeCodeForSession(code);
-            if (!error) { window.location.reload(); return true; }
+            const { data: sessData, error } = await _sb.auth.exchangeCodeForSession(code);
+            if (!error && sessData && sessData.session && sessData.session.user) {
+              const user   = sessData.session.user;
+              const userId = user.id;
+              const meta   = user.user_metadata || {};
+              // Upsert Supabase profile row for first-time Google/Apple sign-ins
+              try {
+                const { data: existing } = await _sb.from('profiles').select('id').eq('id', userId).single();
+                if (!existing) {
+                  const name   = meta.full_name || meta.name || user.email || 'User';
+                  const avatar = meta.avatar_url || meta.picture || null;
+                  await _sb.from('profiles').upsert({ id: userId, name: name, avatar: avatar });
+                }
+              } catch(pe) {}
+              if (window.H && window.H.state) {
+                if (typeof window.H.loadProfile === 'function') {
+                  try { await window.H.loadProfile(userId); } catch(pe) {}
+                }
+                window.H.state.currentUserId = userId;
+                if (typeof window.H.saveState === 'function') window.H.saveState();
+              }
+            }
           }
         } catch(e) {}
         return false;
       };
       if (_App) {
-        // Cold start: check if app was opened from the deep link
+        // Cold start only: check if app was launched directly from the deep link.
+        // Warm-start (app in background) is handled exclusively by auth.js _oauthInCap
+        // to avoid a double-exchange race condition (PKCE codes are single-use).
         const launchData = await _App.getLaunchUrl().catch(function(){return null;});
         if (launchData && launchData.url) {
           const handled = await _handleOAuthUrl(launchData.url);
           if (handled) return;
         }
-        // Warm start: listen for the deep link while app is running
-        _App.addListener('appUrlOpen', async function(event) {
-          await _handleOAuthUrl(event.url);
-        });
       }
     } catch(e) {}
     if(this.state.currentUserId&&this.checkBan()) return;
@@ -866,6 +884,8 @@ window.H = {
 
     function onStart(e) {
       if (refreshing || el.scrollTop > 0) return;
+      // Never start PTR from the bottom input/control area
+      if (e.target && e.target.closest && e.target.closest('.chat-input-bar, .chat-attach-btn, .chat-send, input, button, textarea')) return;
       // In Chat, mainArea has overflow:hidden so scrollTop is always 0.
       // Check the actual chat thread scroll position instead.
       if (H.currentPageName === 'Chat') {
@@ -2382,11 +2402,36 @@ H.init();
   };
 
   async function _oauthInCap(c, provider) {
+    // Native Google account picker via @capgo/capacitor-social-login (Capacitor 8)
+    if (provider === 'google') {
+      const SocialLogin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SocialLogin;
+      if (SocialLogin) {
+        try {
+          await SocialLogin.initialize({
+            google: { webClientId: '422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com' }
+          });
+          const res = await SocialLogin.login({ provider: 'google', options: {} });
+          const idToken = res && res.result && res.result.idToken;
+          if (!idToken) { H.toast('Sign-in failed — no token received'); return; }
+          const { data, error } = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
+          if (error) { H.toast(error.message || 'Sign-in failed'); return; }
+          if (data && data.session) { await _finishOAuthLogin(c, data.session); }
+          return;
+        } catch(e) {
+          var errMsg = (e && e.message) ? e.message : '';
+          var lower  = errMsg.toLowerCase();
+          if (lower.includes('cancel') || lower.includes('closed') || lower.includes('dismiss')) return;
+          H.toast('Google sign-in failed: ' + (errMsg || 'Please try again'));
+          return;
+        }
+      }
+    }
+
+    // Fallback: Chrome Custom Tab OAuth — used for Apple or if SocialLogin plugin unavailable
     const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
     const App     = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
 
     if (Browser && App) {
-      // @capacitor/browser is synced — use Chrome Custom Tab (stays inside the app)
       const { data, error } = await c.auth.signInWithOAuth({
         provider: provider,
         options: { redirectTo: 'com.pamarket.app://login-callback', skipBrowserRedirect: true }
@@ -12667,7 +12712,9 @@ H.pages.LegalHub = function() {
     console.error('Missing Supabase credentials from supabase-config.js');
   }
 
-  window.supabase = window.supabase.createClient(supabaseUrl || '', supabaseAnonKey || '');
+  window.supabase = window.supabase.createClient(supabaseUrl || '', supabaseAnonKey || '', {
+    auth: { flowType: 'pkce' }
+  });
 
   // Only handle OAuth callbacks — NOT regular page loads with stored sessions.
   // The app restores login state from H.loadState() (localStorage), not from here.
