@@ -479,7 +479,7 @@
           await SocialLogin.initialize({
             google: { webClientId: '422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com' }
           });
-          const res = await SocialLogin.login({ provider: 'google', options: { scopes: ['email', 'profile'] } });
+          const res = await SocialLogin.login({ provider: 'google', options: {} });
           const idToken = res && res.result && res.result.idToken;
           if (!idToken) { H.toast('Sign-in failed — no token received'); return; }
           const { data, error } = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
