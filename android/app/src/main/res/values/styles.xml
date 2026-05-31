@@ -14,9 +14,8 @@
         <item name="android:windowBackground">@drawable/splash</item>
     </style>
 
-    <!-- Launch theme: solid blue so there is no white flash before the splash screen loads -->
     <style name="AppTheme.NoActionBarLaunch" parent="AppTheme.NoActionBar">
-        <item name="android:background">@drawable/launch_background</item>
+        <item name="android:windowBackground">@drawable/splash</item>
     </style>
 
 </resources>
