@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-31T17:49:55Z */
+/* PaMarket bundle — built 2026-05-31T18:28:06Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -1745,6 +1745,11 @@ window.H = {
 
     document.addEventListener('DOMContentLoaded',()=>{
       window._hideSplash = function() {
+        var splash = document.getElementById('pamarketSplash');
+        if (splash) {
+          splash.classList.add('hiding');
+          setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 450);
+        }
         var SS = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen;
         if (SS) { SS.hide({ fadeOutDuration: 300 }); }
       };
