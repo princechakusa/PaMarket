@@ -11,7 +11,7 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">#1A3A8F</item>
-        <item name="android:windowBackground">#1A3A8F</item>
+        <item name="android:windowBackground">@drawable/splash</item>
     </style>
 
     <!-- Launch theme: solid blue so there is no white flash before the splash screen loads -->
