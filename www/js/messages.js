@@ -273,62 +273,77 @@
       + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">No messages yet. Say hello!</div>')
       + '</div>'
       + '<div class="chat-input-bar">'
-      + '<button class="chat-attach-btn" onclick="H.openChatAttach()" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
-      + '<input type="file" id="chatImgCamera" accept="image/*" capture="environment" style="display:none;position:absolute" onchange="H._chat.handleImageFile(this)">'
-      + '<input type="file" id="chatImgGallery" accept="image/*" style="display:none;position:absolute" onchange="H._chat.handleImageFile(this)">'
+      + '<button class="chat-attach-btn" onclick="H._chat.openAttach()" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
       + '<input id="chatIn" type="text" inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Type a message…" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}">'
       + '<button class="chat-send" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
       + '</div>'
+      + '<input type="file" id="chatImgGallery" accept="image/*" style="display:none" onchange="H._chat.handleImageFile(this,false)">'
+      + '<input type="file" id="chatImgCamera" accept="image/*" capture="environment" style="display:none" onchange="H._chat.handleImageFile(this,true)">'
       + '</div>';
   };
 
   pages.Chat_after = function () {
     if (window._messagesPoll) { clearInterval(window._messagesPoll); window._messagesPoll = null; }
+    const t = document.getElementById('chatThread');
+    if (t) t.scrollTop = t.scrollHeight;
+    const ma  = document.getElementById('mainArea');
+    const wrap = document.getElementById('chatPageWrap');
 
-    var ma   = document.getElementById('mainArea');
-    var wrap = document.getElementById('chatPageWrap');
+    const inCapacitor = !!(window.Capacitor &&
+      typeof window.Capacitor.isNativePlatform === 'function' &&
+      window.Capacitor.isNativePlatform());
 
-    // position:relative makes mainArea the containing block for chatPageWrap.
-    // mainArea starts below #app's padding-top:env(safe-area-inset-top), so
-    // chatPageWrap { top:0 } lands below the status bar — no manual math needed.
-    if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; ma.style.position = 'relative'; }
-
-    if (wrap) {
-      wrap.style.position = 'absolute';
-      wrap.style.top      = '0';
-      wrap.style.left     = '0';
-      wrap.style.right    = '0';
-      wrap.style.bottom   = '0';
-      wrap.style.height   = '';
-      wrap.style.zIndex   = '50';
+    if (inCapacitor) {
+      // Keep chatPageWrap as position:absolute inside mainArea (position:relative).
+      // When the keyboard appears, push chatPageWrap up by setting its bottom offset.
+      if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+      const KB = window.Capacitor.Plugins && window.Capacitor.Plugins.Keyboard;
+      if (KB) {
+        KB.addListener('keyboardWillShow', function(info) {
+          const w = document.getElementById('chatPageWrap');
+          if (w) w.style.bottom = (info.keyboardHeight || 0) + 'px';
+          const th = document.getElementById('chatThread');
+          if (th) setTimeout(function() { th.scrollTop = th.scrollHeight; }, 50);
+        }).then(function(h) { window._chatKBShow = h; });
+        KB.addListener('keyboardWillHide', function() {
+          const w = document.getElementById('chatPageWrap');
+          if (w) w.style.bottom = '0px';
+        }).then(function(h) { window._chatKBHide = h; });
+      } else {
+        // Fallback: window resize fires when the soft keyboard appears (adjustResize mode)
+        var _baseH = window.innerHeight;
+        function _onCapKBResize() {
+          const w = document.getElementById('chatPageWrap');
+          if (!w) { window.removeEventListener('resize', _onCapKBResize); return; }
+          var diff = _baseH - window.innerHeight;
+          w.style.bottom = (diff > 50 ? diff : 0) + 'px';
+          if (diff > 50) {
+            const th = document.getElementById('chatThread');
+            if (th) setTimeout(function() { th.scrollTop = th.scrollHeight; }, 50);
+          }
+        }
+        window.addEventListener('resize', _onCapKBResize);
+        window._chatKBResizeHandler = _onCapKBResize;
+      }
+    } else {
+      // Browser: position:fixed + visualViewport keeps the wrap inside the visible area
+      if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
+      if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+      function _syncToViewport() {
+        const w = document.getElementById('chatPageWrap');
+        const vp = window.visualViewport;
+        if (!w || !vp) return;
+        w.style.top    = vp.offsetTop + 'px';
+        w.style.height = vp.height + 'px';
+        w.style.bottom = 'auto';
+      }
+      window._chatVPHandler = _syncToViewport;
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', _syncToViewport);
+        window.visualViewport.addEventListener('scroll', _syncToViewport);
+        _syncToViewport();
+      }
     }
-
-    // Pin the input bar to the bottom of the viewport with position:fixed.
-    // When adjustResize shrinks the WebView viewport on keyboard open, any
-    // position:fixed; bottom:0 element automatically rides up above the keyboard.
-    var inputBar = document.querySelector('#chatPageWrap .chat-input-bar');
-    if (inputBar) {
-      inputBar.style.position = 'fixed';
-      inputBar.style.bottom   = '0';
-      inputBar.style.left     = '0';
-      inputBar.style.right    = '0';
-      inputBar.style.zIndex   = '200';
-      var barH = inputBar.getBoundingClientRect().height || 64;
-      var thread = document.getElementById('chatThread');
-      if (thread) { thread.style.paddingBottom = barH + 'px'; }
-    }
-
-    function _scrollBottom() {
-      var th = document.getElementById('chatThread');
-      if (!th) return;
-      setTimeout(function () { th.scrollTop = th.scrollHeight; }, 80);
-    }
-    window.addEventListener('resize', _scrollBottom);
-    window._chatKBResizeHandler = _scrollBottom;
-
-    var t = document.getElementById('chatThread');
-    if (t) setTimeout(function () { t.scrollTop = t.scrollHeight; }, 50);
-
     if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);
   };
 
@@ -482,59 +497,24 @@
   // syncConversations is defined in app.js (cloud-aware version)
 
 
-  H.openChatAttach = function() {
-    // Remove any existing sheet
-    var old = document.getElementById('chatAttachSheet');
-    if (old) { old.remove(); return; }
-
-    var bg = document.createElement('div');
-    bg.id = 'chatAttachSheet';
-    bg.style.cssText = 'position:fixed;inset:0;z-index:9500;display:flex;flex-direction:column;justify-content:flex-end;';
-
-    var backdrop = document.createElement('div');
-    backdrop.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.45);';
-    backdrop.onclick = function() { bg.remove(); };
-
-    var sheet = document.createElement('div');
-    sheet.style.cssText = 'position:relative;background:var(--card,#fff);border-radius:18px 18px 0 0;padding:8px 0 calc(16px + env(safe-area-inset-bottom));z-index:1;';
-
-    function row(icon, label, color, action) {
-      var btn = document.createElement('button');
-      btn.style.cssText = 'display:flex;align-items:center;gap:16px;width:100%;padding:14px 24px;border:none;background:none;color:var(--text-primary,#111);font-size:15px;font-weight:500;cursor:pointer;-webkit-tap-highlight-color:transparent;';
-      var ic = document.createElement('div');
-      ic.style.cssText = 'width:42px;height:42px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;';
-      ic.innerHTML = icon;
-      var lbl = document.createElement('span');
-      lbl.textContent = label;
-      btn.appendChild(ic);
-      btn.appendChild(lbl);
-      btn.onclick = function(e) { e.stopPropagation(); bg.remove(); action(); };
-      return btn;
-    }
-
-    sheet.appendChild(row(
-      '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
-      'Camera', '#E53935',
-      function() { setTimeout(function() { var i = document.getElementById('chatImgCamera'); if (i) i.click(); }, 50); }
-    ));
-    sheet.appendChild(row(
-      '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
-      'Photos & Videos', '#8E24AA',
-      function() { setTimeout(function() { var i = document.getElementById('chatImgGallery'); if (i) i.click(); }, 50); }
-    ));
-
-    var cancel = document.createElement('button');
-    cancel.textContent = 'Cancel';
-    cancel.style.cssText = 'display:block;width:calc(100% - 48px);margin:8px 24px 0;padding:13px;border:none;border-radius:12px;background:var(--border,#eee);color:var(--text-primary,#111);font-size:15px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;';
-    cancel.onclick = function() { bg.remove(); };
-    sheet.appendChild(cancel);
-
-    bg.appendChild(backdrop);
-    bg.appendChild(sheet);
-    document.body.appendChild(bg);
-  };
-
   H._chat = H._chat || {};
+
+  H._chat.openAttach = function() {
+    const sheet = document.getElementById('actionSheet');
+    const bg    = document.getElementById('sheetBg');
+    if (!sheet || !bg) return;
+    sheet.innerHTML =
+      '<div class="sheet-header">Send a photo</div>'
+      + '<button class="sheet-item" onclick="H.closeSheet();setTimeout(()=>document.getElementById(\'chatImgCamera\').click(),120)">'
+      + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
+      + '<span class="sheet-label">Take Photo</span></button>'
+      + '<button class="sheet-item" onclick="H.closeSheet();setTimeout(()=>document.getElementById(\'chatImgGallery\').click(),120)">'
+      + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+      + '<span class="sheet-label">Choose from Gallery</span></button>'
+      + '<button class="sheet-close" onclick="H.closeSheet()">Cancel</button>';
+    sheet.classList.add('open');
+    bg.classList.add('open');
+  };
 
   H._chat.handleImageFile = async function(input) {
     const file = input.files && input.files[0];

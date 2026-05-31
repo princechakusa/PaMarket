@@ -470,53 +470,33 @@
     });
   };
 
-  async function _finishOAuthLogin(c, session) {
-    const user   = session.user;
-    const userId = user.id;
-    const meta   = user.user_metadata || {};
-    const name   = meta.full_name || meta.name || user.email || 'User';
-    const avatar = meta.avatar_url || meta.picture || null;
-    // Create profile row in Supabase for first-time Google/Apple sign-ins
-    try {
-      const { data: existing } = await c.from('profiles').select('id').eq('id', userId).single();
-      if (!existing) {
-        await c.from('profiles').upsert({ id: userId, name: name, avatar: avatar });
-      }
-    } catch(pe) {}
-    try { await H.loadProfile(userId); } catch(pe) {}
-    H.state.currentUserId = userId;
-    H.saveState();
-    if (H.closeLoginModal) H.closeLoginModal();
-    H.boot();
-  }
-
   async function _oauthInCap(c, provider) {
-    // Native Google Sign-In — on-device account picker, no browser needed
+    // Native Google account picker via @capgo/capacitor-social-login (Capacitor 8)
     if (provider === 'google') {
-      const GoogleAuth = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.GoogleAuth;
-      if (GoogleAuth) {
+      const SocialLogin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SocialLogin;
+      if (SocialLogin) {
         try {
-          const googleUser = await GoogleAuth.signIn();
-          const idToken = googleUser && googleUser.authentication && googleUser.authentication.idToken;
+          await SocialLogin.initialize({
+            google: { webClientId: '422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com' }
+          });
+          const res = await SocialLogin.login({ provider: 'google', options: { scopes: ['email', 'profile'] } });
+          const idToken = res && res.result && res.result.idToken;
           if (!idToken) { H.toast('Sign-in failed — no token received'); return; }
           const { data, error } = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
           if (error) { H.toast(error.message || 'Sign-in failed'); return; }
           if (data && data.session) { await _finishOAuthLogin(c, data.session); }
           return;
         } catch(e) {
-          var errCode = e && (e.errorCode || e.code || '');
-          var errMsg  = (e && e.message) ? e.message : '';
-          var lower   = errMsg.toLowerCase();
-          // 12501 / 'cancel' = user dismissed the picker silently
-          if (String(errCode) === '12501' || lower.includes('cancel') || lower.includes('sign_in_cancelled')) return;
-          // Show the real error so we can diagnose
-          H.toast('Google error ' + (errCode ? '[' + errCode + '] ' : '') + (errMsg || 'Sign-in failed'));
+          var errMsg = (e && e.message) ? e.message : '';
+          var lower  = errMsg.toLowerCase();
+          if (lower.includes('cancel') || lower.includes('closed') || lower.includes('dismiss')) return;
+          H.toast('Google sign-in failed: ' + (errMsg || 'Please try again'));
           return;
         }
       }
     }
 
-    // Fallback: Chrome Custom Tab OAuth — used for Apple or if native plugin unavailable
+    // Fallback: Chrome Custom Tab OAuth — used for Apple or if SocialLogin plugin unavailable
     const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
     const App     = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
 
@@ -533,23 +513,19 @@
         try { if (Browser.close) await Browser.close(); } catch(e) {}
         if (!event.url || !event.url.includes('login-callback')) return;
         try {
-          const urlObj = new URL(event.url);
-          const urlErr = urlObj.searchParams.get('error');
-          if (urlErr) { H.toast(urlObj.searchParams.get('error_description') || urlErr); return; }
-          const code = urlObj.searchParams.get('code');
+          const code = new URL(event.url).searchParams.get('code');
           if (code) {
-            const { data: sessData, error: ex } = await c.auth.exchangeCodeForSession(code);
-            if (!ex && sessData && sessData.session) { await _finishOAuthLogin(c, sessData.session); return; }
-            H.toast(ex ? (ex.message || 'Sign-in failed. Please try again.') : 'Sign-in failed. Please try again.');
-            return;
+            const { error: ex } = await c.auth.exchangeCodeForSession(code);
+            if (!ex) { window.location.reload(); return; }
           }
           const { data: sd } = await c.auth.getSession();
-          if (sd && sd.session) { await _finishOAuthLogin(c, sd.session); return; }
+          if (sd && sd.session) { window.location.reload(); return; }
           H.toast('Sign-in failed. Please try again.');
-        } catch(e) { H.toast(e.message || 'Sign-in failed. Please try again.'); }
+        } catch(e) { H.toast('Sign-in failed. Please try again.'); }
       });
       await Browser.open({ url: data.url });
     } else {
+      // Plugins not yet synced — standard OAuth (opens Chrome, user signs in there)
       const { error } = await c.auth.signInWithOAuth({
         provider: provider,
         options: { redirectTo: window.location.origin + window.location.pathname }

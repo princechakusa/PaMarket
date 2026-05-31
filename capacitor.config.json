@@ -26,17 +26,17 @@
       "backgroundColor": "#1A3A8F"
     },
     "Keyboard": {
-      "resize": "none",
+      "resize": "body",
       "style": "DARK",
       "resizeOnFullScreen": true
     },
     "PushNotifications": {
       "presentationOptions": ["badge", "sound", "alert"]
     },
-    "GoogleAuth": {
-      "scopes": ["profile", "email"],
-      "serverClientId": "422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com",
-      "forceCodeForRefreshToken": true
+    "SocialLogin": {
+      "google": {
+        "webClientId": "422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com"
+      }
     }
   }
 }
