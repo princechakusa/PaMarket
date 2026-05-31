@@ -39,7 +39,9 @@
     console.error('Missing Supabase credentials from supabase-config.js');
   }
 
-  window.supabase = window.supabase.createClient(supabaseUrl || '', supabaseAnonKey || '');
+  window.supabase = window.supabase.createClient(supabaseUrl || '', supabaseAnonKey || '', {
+    auth: { flowType: 'pkce' }
+  });
 
   // Only handle OAuth callbacks — NOT regular page loads with stored sessions.
   // The app restores login state from H.loadState() (localStorage), not from here.
