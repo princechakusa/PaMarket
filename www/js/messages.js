@@ -284,53 +284,45 @@
 
   pages.Chat_after = function () {
     if (window._messagesPoll) { clearInterval(window._messagesPoll); window._messagesPoll = null; }
-    const t = document.getElementById('chatThread');
+    var t = document.getElementById('chatThread');
     if (t) t.scrollTop = t.scrollHeight;
-    const ma   = document.getElementById('mainArea');
-    const wrap = document.getElementById('chatPageWrap');
 
-    const inCapacitor = !!(window.Capacitor &&
+    var ma   = document.getElementById('mainArea');
+    var wrap = document.getElementById('chatPageWrap');
+
+    var inCapacitor = !!(window.Capacitor &&
       typeof window.Capacitor.isNativePlatform === 'function' &&
       window.Capacitor.isNativePlatform());
 
-    // Lock mainArea so it doesn't scroll under the fixed chat wrap
     if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
 
-    // chatPageWrap is position:fixed for both Capacitor and browser.
-    // In Capacitor we need extra top padding to clear the native status bar.
     if (wrap) {
+      // position:fixed so the wrap is viewport-relative, not flex-layout-relative.
+      // top:0 + bottom:0 — NO explicit height. adjustResize shrinks the viewport
+      // when the keyboard opens; bottom:0 then tracks the new viewport bottom
+      // (= top of keyboard) automatically. Setting height here breaks that.
       wrap.style.position = 'fixed';
       wrap.style.top      = '0';
       wrap.style.left     = '0';
       wrap.style.right    = '0';
       wrap.style.bottom   = '0';
+      wrap.style.height   = '';   // clear any height set by previous renders
       wrap.style.zIndex   = '50';
+      // Status bar clearance for Capacitor native shell
       if (inCapacitor) {
         var hdr = wrap.querySelector('.chat-header');
         if (hdr) hdr.style.paddingTop = 'calc(env(safe-area-inset-top, 24px) + 10px)';
       }
     }
 
-    // visualViewport tracks the exact visible area including keyboard inset.
-    // This is the only approach that works reliably across Capacitor and browser
-    // without depending on adjustResize, Keyboard plugin events, or window.resize.
-    function _syncVP() {
-      var w  = document.getElementById('chatPageWrap');
-      var vp = window.visualViewport;
-      if (!w || !vp) return;
-      w.style.top    = vp.offsetTop + 'px';
-      w.style.height = vp.height + 'px';
-      w.style.bottom = 'auto';
+    // Scroll thread to bottom whenever keyboard opens/closes
+    function _scrollBottom() {
       var th = document.getElementById('chatThread');
-      if (th) th.scrollTop = th.scrollHeight;
+      if (!th) return;
+      setTimeout(function () { th.scrollTop = th.scrollHeight; }, 80);
     }
-
-    window._chatVPHandler = _syncVP;
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', _syncVP);
-      window.visualViewport.addEventListener('scroll', _syncVP);
-      _syncVP();
-    }
+    window.addEventListener('resize', _scrollBottom);
+    window._chatKBResizeHandler = _scrollBottom;
 
     if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);
   };
