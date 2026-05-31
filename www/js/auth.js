@@ -470,6 +470,23 @@
     });
   };
 
+  async function _finishOAuthLogin(c, session) {
+    const user   = session.user;
+    const userId = user.id;
+    const meta   = user.user_metadata || {};
+    const name   = meta.full_name || meta.name || user.email || 'User';
+    const avatar = meta.avatar_url || meta.picture || null;
+    try {
+      const { data: existing } = await c.from('profiles').select('id').eq('id', userId).single();
+      if (!existing) { await c.from('profiles').upsert({ id: userId, name: name, avatar: avatar }); }
+    } catch(pe) {}
+    try { await H.loadProfile(userId); } catch(pe) {}
+    H.state.currentUserId = userId;
+    H.saveState();
+    if (H.closeLoginModal) H.closeLoginModal();
+    H.boot();
+  }
+
   async function _oauthInCap(c, provider) {
     // Native Google account picker via @capgo/capacitor-social-login (Capacitor 8)
     if (provider === 'google') {
