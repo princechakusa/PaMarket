@@ -70,8 +70,8 @@
 /* ── RESET ───────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; overflow: hidden; overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
-html { background: var(--card); }
-body { background: var(--bg); font-family: var(--font); font-size: 14px; color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+html { background: #1A3A8F; }
+body { background: #1A3A8F; font-family: var(--font); font-size: 14px; color: var(--text-primary); -webkit-font-smoothing: antialiased; }
 input, textarea, select, button { font-family: inherit; }
 button { cursor: pointer; border: none; background: none; touch-action: manipulation; }
 .cp-toggle-btn { padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--sub);font-family:inherit;transition:background .15s,color .15s,border-color .15s; }
