@@ -288,12 +288,11 @@
     var ma   = document.getElementById('mainArea');
     var wrap = document.getElementById('chatPageWrap');
 
-    if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+    // position:relative makes mainArea the containing block for chatPageWrap.
+    // mainArea starts below #app's padding-top:env(safe-area-inset-top), so
+    // chatPageWrap { top:0 } lands below the status bar — no manual math needed.
+    if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; ma.style.position = 'relative'; }
 
-    // Keep chatPageWrap as position:absolute inside #app.
-    // #app has padding-top:env(safe-area-inset-top), and absolutely-positioned
-    // children are offset from #app's content edge (inside the padding), so the
-    // header naturally sits below the status bar without any manual calculation.
     if (wrap) {
       wrap.style.position = 'absolute';
       wrap.style.top      = '0';
