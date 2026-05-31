@@ -491,11 +491,33 @@
   }
 
   async function _oauthInCap(c, provider) {
+    // Native Google Sign-In — shows the on-device account picker (no browser opens)
+    if (provider === 'google') {
+      const GoogleAuth = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.GoogleAuth;
+      if (GoogleAuth) {
+        try {
+          const googleUser = await GoogleAuth.signIn();
+          const idToken = googleUser && googleUser.authentication && googleUser.authentication.idToken;
+          if (!idToken) { H.toast('Sign-in failed — no token received'); return; }
+          const { data, error } = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
+          if (error) { H.toast(error.message || 'Sign-in failed'); return; }
+          if (data && data.session) { await _finishOAuthLogin(c, data.session); }
+          return;
+        } catch(e) {
+          var msg = (e && e.message) ? e.message.toLowerCase() : '';
+          // 12501 = user cancelled the picker — no toast needed
+          if (msg.includes('cancel') || msg.includes('12501') || msg.includes('sign_in_cancelled')) return;
+          H.toast((e && e.message) || 'Google Sign-In failed');
+          return;
+        }
+      }
+    }
+
+    // Fallback: web OAuth via Chrome Custom Tab (used for Apple, or if native plugin unavailable)
     const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
     const App     = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
 
     if (Browser && App) {
-      // @capacitor/browser is synced — use Chrome Custom Tab (stays inside the app)
       const { data, error } = await c.auth.signInWithOAuth({
         provider: provider,
         options: { redirectTo: 'com.pamarket.app://login-callback', skipBrowserRedirect: true }
@@ -514,10 +536,7 @@
           const code = urlObj.searchParams.get('code');
           if (code) {
             const { data: sessData, error: ex } = await c.auth.exchangeCodeForSession(code);
-            if (!ex && sessData && sessData.session) {
-              await _finishOAuthLogin(c, sessData.session);
-              return;
-            }
+            if (!ex && sessData && sessData.session) { await _finishOAuthLogin(c, sessData.session); return; }
             H.toast(ex ? (ex.message || 'Sign-in failed. Please try again.') : 'Sign-in failed. Please try again.');
             return;
           }
@@ -528,7 +547,6 @@
       });
       await Browser.open({ url: data.url });
     } else {
-      // Plugins not yet synced — standard OAuth (opens Chrome, user signs in there)
       const { error } = await c.auth.signInWithOAuth({
         provider: provider,
         options: { redirectTo: window.location.origin + window.location.pathname }
