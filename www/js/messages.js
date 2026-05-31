@@ -297,22 +297,16 @@
     if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
 
     if (wrap) {
-      // position:fixed so the wrap is viewport-relative, not flex-layout-relative.
-      // top:0 + bottom:0 — NO explicit height. adjustResize shrinks the viewport
-      // when the keyboard opens; bottom:0 then tracks the new viewport bottom
-      // (= top of keyboard) automatically. Setting height here breaks that.
+      // Use mainArea's actual top (which is below the status bar via #app padding-top)
+      // so the fixed chat wrap lines up exactly where mainArea starts.
+      var maTop = ma ? ma.getBoundingClientRect().top : 0;
       wrap.style.position = 'fixed';
-      wrap.style.top      = '0';
+      wrap.style.top      = maTop + 'px';
       wrap.style.left     = '0';
       wrap.style.right    = '0';
       wrap.style.bottom   = '0';
       wrap.style.height   = '';   // clear any height set by previous renders
       wrap.style.zIndex   = '50';
-      // Status bar clearance for Capacitor native shell
-      if (inCapacitor) {
-        var hdr = wrap.querySelector('.chat-header');
-        if (hdr) hdr.style.paddingTop = 'calc(env(safe-area-inset-top, 24px) + 10px)';
-      }
     }
 
     // Scroll thread to bottom whenever keyboard opens/closes
