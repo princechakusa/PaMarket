@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-30T17:33:50Z */
+/* PaMarket bundle — built 2026-05-31T17:31:06Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -1721,9 +1721,21 @@ window.H = {
     this._registerCategoryView();
     this._registerJobPage();
     this._registerExtraPages();
-    setTimeout(()=>this._showOnboarding(),800);
+    setTimeout(()=>{},800);
 
     document.addEventListener('DOMContentLoaded',()=>{
+      window._hideSplash = function() {
+        var SS = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen;
+        if (SS) { SS.hide({ fadeOutDuration: 150 }); }
+        setTimeout(function() {
+          var splash = document.getElementById('pamarketSplash');
+          if (splash) {
+            splash.classList.add('hiding');
+            document.documentElement.style.background = '';
+            setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 450);
+          }
+        }, 200);
+      };
       const nav=document.getElementById('bottomNav');
       if(nav){
         nav.addEventListener('click',e=>{
@@ -2382,11 +2394,36 @@ H.init();
   };
 
   async function _oauthInCap(c, provider) {
+    // Native Google account picker via @capgo/capacitor-social-login (Capacitor 8)
+    if (provider === 'google') {
+      const SocialLogin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SocialLogin;
+      if (SocialLogin) {
+        try {
+          await SocialLogin.initialize({
+            google: { webClientId: '422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com' }
+          });
+          const res = await SocialLogin.login({ provider: 'google', options: { scopes: ['email', 'profile'] } });
+          const idToken = res && res.result && res.result.idToken;
+          if (!idToken) { H.toast('Sign-in failed — no token received'); return; }
+          const { data, error } = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
+          if (error) { H.toast(error.message || 'Sign-in failed'); return; }
+          if (data && data.session) { await _finishOAuthLogin(c, data.session); }
+          return;
+        } catch(e) {
+          var errMsg = (e && e.message) ? e.message : '';
+          var lower  = errMsg.toLowerCase();
+          if (lower.includes('cancel') || lower.includes('closed') || lower.includes('dismiss')) return;
+          H.toast('Google sign-in failed: ' + (errMsg || 'Please try again'));
+          return;
+        }
+      }
+    }
+
+    // Fallback: Chrome Custom Tab OAuth — used for Apple or if SocialLogin plugin unavailable
     const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
     const App     = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
 
     if (Browser && App) {
-      // @capacitor/browser is synced — use Chrome Custom Tab (stays inside the app)
       const { data, error } = await c.auth.signInWithOAuth({
         provider: provider,
         options: { redirectTo: 'com.pamarket.app://login-callback', skipBrowserRedirect: true }
