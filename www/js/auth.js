@@ -470,6 +470,26 @@
     });
   };
 
+  async function _finishOAuthLogin(c, session) {
+    const user   = session.user;
+    const userId = user.id;
+    const meta   = user.user_metadata || {};
+    const name   = meta.full_name || meta.name || user.email || 'User';
+    const avatar = meta.avatar_url || meta.picture || null;
+    // Create profile row in Supabase for first-time Google/Apple sign-ins
+    try {
+      const { data: existing } = await c.from('profiles').select('id').eq('id', userId).single();
+      if (!existing) {
+        await c.from('profiles').upsert({ id: userId, name: name, avatar: avatar });
+      }
+    } catch(pe) {}
+    try { await H.loadProfile(userId); } catch(pe) {}
+    H.state.currentUserId = userId;
+    H.saveState();
+    if (H.closeLoginModal) H.closeLoginModal();
+    H.boot();
+  }
+
   async function _oauthInCap(c, provider) {
     const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
     const App     = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
@@ -495,27 +515,14 @@
           if (code) {
             const { data: sessData, error: ex } = await c.auth.exchangeCodeForSession(code);
             if (!ex && sessData && sessData.session) {
-              const userId = sessData.session.user.id;
-              try { await H.loadProfile(userId); } catch(pe) {}
-              H.state.currentUserId = userId;
-              H.saveState();
-              if (H.closeLoginModal) H.closeLoginModal();
-              H.boot();
+              await _finishOAuthLogin(c, sessData.session);
               return;
             }
             H.toast(ex ? (ex.message || 'Sign-in failed. Please try again.') : 'Sign-in failed. Please try again.');
             return;
           }
           const { data: sd } = await c.auth.getSession();
-          if (sd && sd.session) {
-            const userId = sd.session.user.id;
-            try { await H.loadProfile(userId); } catch(pe) {}
-            H.state.currentUserId = userId;
-            H.saveState();
-            if (H.closeLoginModal) H.closeLoginModal();
-            H.boot();
-            return;
-          }
+          if (sd && sd.session) { await _finishOAuthLogin(c, sd.session); return; }
           H.toast('Sign-in failed. Please try again.');
         } catch(e) { H.toast(e.message || 'Sign-in failed. Please try again.'); }
       });
