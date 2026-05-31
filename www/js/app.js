@@ -444,8 +444,17 @@ window.H = {
         try {
           const code = new URL(url).searchParams.get('code');
           if (code && _sb) {
-            const { error } = await _sb.auth.exchangeCodeForSession(code);
-            if (!error) { window.location.reload(); return true; }
+            const { data: sessData, error } = await _sb.auth.exchangeCodeForSession(code);
+            if (!error && sessData && sessData.session && sessData.session.user) {
+              const userId = sessData.session.user.id;
+              if (window.H && window.H.state) {
+                if (typeof window.H.loadProfile === 'function') {
+                  try { await window.H.loadProfile(userId); } catch(pe) {}
+                }
+                window.H.state.currentUserId = userId;
+                if (typeof window.H.saveState === 'function') window.H.saveState();
+              }
+            }
           }
         } catch(e) {}
         return false;

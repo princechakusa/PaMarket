@@ -493,13 +493,29 @@
           if (urlErr) { H.toast(urlObj.searchParams.get('error_description') || urlErr); return; }
           const code = urlObj.searchParams.get('code');
           if (code) {
-            const { error: ex } = await c.auth.exchangeCodeForSession(code);
-            if (!ex) { window.location.reload(); return; }
-            H.toast(ex.message || 'Sign-in failed. Please try again.');
+            const { data: sessData, error: ex } = await c.auth.exchangeCodeForSession(code);
+            if (!ex && sessData && sessData.session) {
+              const userId = sessData.session.user.id;
+              try { await H.loadProfile(userId); } catch(pe) {}
+              H.state.currentUserId = userId;
+              H.saveState();
+              if (H.closeLoginModal) H.closeLoginModal();
+              H.boot();
+              return;
+            }
+            H.toast(ex ? (ex.message || 'Sign-in failed. Please try again.') : 'Sign-in failed. Please try again.');
             return;
           }
           const { data: sd } = await c.auth.getSession();
-          if (sd && sd.session) { window.location.reload(); return; }
+          if (sd && sd.session) {
+            const userId = sd.session.user.id;
+            try { await H.loadProfile(userId); } catch(pe) {}
+            H.state.currentUserId = userId;
+            H.saveState();
+            if (H.closeLoginModal) H.closeLoginModal();
+            H.boot();
+            return;
+          }
           H.toast('Sign-in failed. Please try again.');
         } catch(e) { H.toast(e.message || 'Sign-in failed. Please try again.'); }
       });
