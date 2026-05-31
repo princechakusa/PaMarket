@@ -491,29 +491,7 @@
   }
 
   async function _oauthInCap(c, provider) {
-    // Native Google Sign-In — shows the on-device account picker (no browser opens)
-    if (provider === 'google') {
-      const GoogleAuth = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.GoogleAuth;
-      if (GoogleAuth) {
-        try {
-          const googleUser = await GoogleAuth.signIn();
-          const idToken = googleUser && googleUser.authentication && googleUser.authentication.idToken;
-          if (!idToken) { H.toast('Sign-in failed — no token received'); return; }
-          const { data, error } = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
-          if (error) { H.toast(error.message || 'Sign-in failed'); return; }
-          if (data && data.session) { await _finishOAuthLogin(c, data.session); }
-          return;
-        } catch(e) {
-          var msg = (e && e.message) ? e.message.toLowerCase() : '';
-          // 12501 = user cancelled the picker — no toast needed
-          if (msg.includes('cancel') || msg.includes('12501') || msg.includes('sign_in_cancelled')) return;
-          H.toast((e && e.message) || 'Google Sign-In failed');
-          return;
-        }
-      }
-    }
-
-    // Fallback: web OAuth via Chrome Custom Tab (used for Apple, or if native plugin unavailable)
+    // Chrome Custom Tab OAuth — stays inside the app, works for Google and Apple
     const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
     const App     = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
 
