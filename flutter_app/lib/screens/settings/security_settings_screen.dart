@@ -81,13 +81,14 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                     : () async {
                         if (!formKey.currentState!.validate()) return;
                         setDlgState(() => saving = true);
+                        final messenger = ScaffoldMessenger.of(ctx);
                         try {
                           await _supabase.auth.updateUser(
                             UserAttributes(password: controller.text),
                           );
                           if (ctx.mounted) {
                             Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            messenger.showSnackBar(
                               const SnackBar(
                                 content: Text('Password updated successfully'),
                                 backgroundColor: AppColors.success,
@@ -97,7 +98,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                         } catch (e) {
                           if (ctx.mounted) {
                             setDlgState(() => saving = false);
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            messenger.showSnackBar(
                               SnackBar(
                                 content:
                                     Text('Failed to update password: $e'),
@@ -157,22 +158,22 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
+              final messenger = ScaffoldMessenger.of(context);
+              final router = GoRouter.of(context);
               try {
                 await _supabase
                     .from('profiles')
                     .delete()
                     .eq('id', AuthService.currentUserId!);
                 await AuthService.signOut();
-                if (context.mounted) context.go('/login');
+                router.go('/login');
               } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to delete account: $e'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to delete account: $e'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
               }
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
@@ -190,7 +191,6 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Account Security section
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: const Text(
@@ -238,8 +238,6 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // Danger Zone
           const Padding(
             padding: EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
