@@ -238,6 +238,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
             ),
           ),
           const SizedBox(height: 24),
+
           const Padding(
             padding: EdgeInsets.only(left: 4, bottom: 8),
             child: Text(

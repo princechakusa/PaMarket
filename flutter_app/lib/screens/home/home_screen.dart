@@ -38,18 +38,78 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   static const _categories = [
-    _Category(id: 'vehicles', label: 'Vehicles', emoji: '🚗'),
-    _Category(id: 'property', label: 'Property', emoji: '🏠'),
-    _Category(id: 'electronics', label: 'Electronics', emoji: '📱'),
-    _Category(id: 'fashion', label: 'Fashion', emoji: '👗'),
-    _Category(id: 'furniture', label: 'Furniture', emoji: '🪑'),
-    _Category(id: 'services', label: 'Services', emoji: '🔧'),
-    _Category(id: 'jobs', label: 'Jobs', emoji: '💼'),
-    _Category(id: 'agriculture', label: 'Agriculture', emoji: '🌾'),
-    _Category(id: 'pets', label: 'Pets', emoji: '🐾'),
-    _Category(id: 'kids', label: 'Kids', emoji: '👶'),
-    _Category(id: 'rooms', label: 'Rooms', emoji: '🏘️'),
-    _Category(id: 'other', label: 'Other', emoji: '📦'),
+    _Category(
+      id: 'vehicles',
+      label: 'Vehicles',
+      icon: Icons.directions_car,
+      color: Color(0xFF2196F3),
+    ),
+    _Category(
+      id: 'property',
+      label: 'Property',
+      icon: Icons.home,
+      color: Color(0xFF4CAF50),
+    ),
+    _Category(
+      id: 'electronics',
+      label: 'Electronics',
+      icon: Icons.phone_android,
+      color: Color(0xFF9C27B0),
+    ),
+    _Category(
+      id: 'fashion',
+      label: 'Fashion',
+      icon: Icons.shopping_bag,
+      color: Color(0xFFE91E63),
+    ),
+    _Category(
+      id: 'furniture',
+      label: 'Furniture',
+      icon: Icons.weekend,
+      color: Color(0xFFFF9800),
+    ),
+    _Category(
+      id: 'services',
+      label: 'Services',
+      icon: Icons.build,
+      color: Color(0xFF00BCD4),
+    ),
+    _Category(
+      id: 'jobs',
+      label: 'Jobs',
+      icon: Icons.work,
+      color: Color(0xFF3F51B5),
+    ),
+    _Category(
+      id: 'agriculture',
+      label: 'Agriculture',
+      icon: Icons.grass,
+      color: Color(0xFF689F38),
+    ),
+    _Category(
+      id: 'pets',
+      label: 'Pets',
+      icon: Icons.pets,
+      color: Color(0xFF795548),
+    ),
+    _Category(
+      id: 'kids',
+      label: 'Kids',
+      icon: Icons.child_care,
+      color: Color(0xFFFF5722),
+    ),
+    _Category(
+      id: 'rooms',
+      label: 'Rooms',
+      icon: Icons.meeting_room,
+      color: Color(0xFF607D8B),
+    ),
+    _Category(
+      id: 'other',
+      label: 'Other',
+      icon: Icons.category,
+      color: Color(0xFF9E9E9E),
+    ),
   ];
 
   @override
@@ -153,7 +213,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Group listings by category, return map preserving insertion order
   Map<String, List<Listing>> _groupByCategory() {
     final map = <String, List<Listing>>{};
     for (final listing in _listings) {
@@ -241,10 +300,11 @@ class _HomeScreenState extends State<HomeScreen> {
               )
             else if (_listings.isEmpty)
               const SliverToBoxAdapter(child: _EmptyState())
-            else ...[
-              // Category sections
+            else ...
+            [
               for (final cat in _categories)
-                if (grouped.containsKey(cat.id)) ...[
+                if (grouped.containsKey(cat.id)) ...
+                [
                   SliverToBoxAdapter(
                     child: _CategorySectionHeader(
                       category: cat,
@@ -261,7 +321,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
 
-              // Loading more indicator
               if (_loadingMore)
                 const SliverToBoxAdapter(
                   child: Padding(
@@ -358,7 +417,6 @@ class _AppHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Logo
               RichText(
                 text: const TextSpan(children: [
                   TextSpan(
@@ -384,7 +442,6 @@ class _AppHeader extends StatelessWidget {
                 ]),
               ),
               const Spacer(),
-              // City selector
               GestureDetector(
                 onTap: onCityTap,
                 child: Container(
@@ -417,7 +474,6 @@ class _AppHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
-              // Notification icon
               IconButton(
                 onPressed: onNotif,
                 padding: EdgeInsets.zero,
@@ -427,7 +483,6 @@ class _AppHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          // Search bar
           GestureDetector(
             onTap: onSearch,
             child: Container(
@@ -501,7 +556,8 @@ class _PromoBanner extends StatelessWidget {
                     color: Colors.white70,
                   ),
                 ),
-                if (listingCount > 0) ...[
+                if (listingCount > 0) ...
+                [
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -560,7 +616,7 @@ class _CategorySection extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 90,
+          height: 96,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -573,7 +629,7 @@ class _CategorySection extends StatelessWidget {
                   '/category/${cat.id}?name=${Uri.encodeComponent(cat.label)}',
                 ),
                 child: Container(
-                  width: 70,
+                  width: 72,
                   decoration: BoxDecoration(
                     color: AppColors.card,
                     borderRadius: BorderRadius.circular(14),
@@ -582,9 +638,17 @@ class _CategorySection extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(cat.emoji,
-                          style: const TextStyle(fontSize: 26)),
-                      const SizedBox(height: 4),
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: cat.color,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(cat.icon,
+                            size: 22, color: Colors.white),
+                      ),
+                      const SizedBox(height: 6),
                       Text(
                         cat.label,
                         style: const TextStyle(
@@ -626,11 +690,16 @@ class _CategorySectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
       child: Row(
         children: [
-          Text(
-            category.emoji,
-            style: const TextStyle(fontSize: 18),
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: category.color,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(category.icon, color: Colors.white, size: 16),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               category.label,
@@ -781,11 +850,13 @@ class _CityPickerSheet extends StatelessWidget {
 class _Category {
   final String id;
   final String label;
-  final String emoji;
+  final IconData icon;
+  final Color color;
 
   const _Category({
     required this.id,
     required this.label,
-    required this.emoji,
+    required this.icon,
+    required this.color,
   });
 }
