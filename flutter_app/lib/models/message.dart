@@ -4,11 +4,12 @@ class Conversation {
   final String buyerId;
   final String sellerId;
   final String? lastMessage;
+  final String? lastSenderId;
   final DateTime? lastMessageAt;
   final int unreadCount;
   final DateTime createdAt;
 
-  // Joined
+  // Joined fields
   final String? otherUserName;
   final String? otherUserAvatar;
   final bool? otherUserVerified;
@@ -21,6 +22,7 @@ class Conversation {
     required this.buyerId,
     required this.sellerId,
     this.lastMessage,
+    this.lastSenderId,
     this.lastMessageAt,
     required this.unreadCount,
     required this.createdAt,
@@ -31,33 +33,70 @@ class Conversation {
     this.listingPhoto,
   });
 
+  /// The ID of the other user in this conversation.
+  String? get otherId => null; // resolved in fromMap as a cached field below
+
   factory Conversation.fromMap(Map<String, dynamic> map, String currentUserId) {
     final isBuyer = map['buyer_id'] == currentUserId;
     final otherProfile =
         isBuyer ? map['seller_profile'] : map['buyer_profile'];
+    final otherId = isBuyer
+        ? map['seller_id'] as String?
+        : map['buyer_id'] as String?;
 
-    return Conversation(
+    return _ConversationWithOtherId(
       id: map['id'] as String,
-      listingId: map['listing_id'] as String,
-      buyerId: map['buyer_id'] as String,
-      sellerId: map['seller_id'] as String,
+      listingId: map['listing_id'] as String? ?? '',
+      buyerId: map['buyer_id'] as String? ?? '',
+      sellerId: map['seller_id'] as String? ?? '',
       lastMessage: map['last_message'] as String?,
+      lastSenderId: map['last_sender_id'] as String?,
       lastMessageAt: map['last_message_at'] != null
-          ? DateTime.parse(map['last_message_at'] as String)
+          ? DateTime.tryParse(map['last_message_at'] as String)
           : null,
       unreadCount: map['unread_count'] as int? ?? 0,
-      createdAt: DateTime.parse(map['created_at'] as String),
+      createdAt: map['created_at'] != null
+          ? DateTime.tryParse(map['created_at'] as String) ?? DateTime.now()
+          : DateTime.now(),
       otherUserName: otherProfile?['name'] as String?,
       otherUserAvatar: otherProfile?['avatar'] as String?,
       otherUserVerified: otherProfile?['verified'] as bool?,
       listingTitle: map['listing']?['title'] as String?,
       listingPhoto: map['listing']?['photos'] != null
           ? (map['listing']['photos'] as List).isNotEmpty
-              ? (map['listing']['photos'] as List).first as String
+              ? (map['listing']['photos'] as List).first as String?
               : null
           : null,
+      resolvedOtherId: otherId,
     );
   }
+}
+
+/// Internal subclass that carries the resolved otherId without breaking the
+/// public const constructor contract.
+class _ConversationWithOtherId extends Conversation {
+  final String? resolvedOtherId;
+
+  _ConversationWithOtherId({
+    required super.id,
+    required super.listingId,
+    required super.buyerId,
+    required super.sellerId,
+    super.lastMessage,
+    super.lastSenderId,
+    super.lastMessageAt,
+    required super.unreadCount,
+    required super.createdAt,
+    super.otherUserName,
+    super.otherUserAvatar,
+    super.otherUserVerified,
+    super.listingTitle,
+    super.listingPhoto,
+    this.resolvedOtherId,
+  });
+
+  @override
+  String? get otherId => resolvedOtherId;
 }
 
 class Message {
@@ -94,7 +133,9 @@ class Message {
         text: map['text'] as String?,
         imageUrl: map['image_url'] as String?,
         read: map['read'] as bool? ?? false,
-        createdAt: DateTime.parse(map['created_at'] as String),
+        createdAt: map['created_at'] != null
+            ? DateTime.tryParse(map['created_at'] as String) ?? DateTime.now()
+            : DateTime.now(),
         senderName: map['profiles']?['name'] as String?,
         senderAvatar: map['profiles']?['avatar'] as String?,
       );
