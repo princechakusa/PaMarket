@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-05-31T18:38:46Z */
+/* PaMarket bundle — built 2026-06-01T04:10:56Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -11898,7 +11898,7 @@ pages.HelpPrivacy = function () {
       <div class="doc-content">
         <div class="doc-section">
           <h2>Privacy Policy</h2>
-          <p style="color:var(--ash);font-size:12px">Last updated: May 2026</p>
+          <p style="color:var(--ash);font-size:12px">Last updated: June 2026</p>
 
           <h2>1. Who We Are</h2>
           <p>PaMarket is a Zimbabwean marketplace application. We are committed to protecting your privacy and handling your data responsibly. This policy explains what data we collect, why we collect it, and how we protect it.</p>
@@ -11911,6 +11911,7 @@ pages.HelpPrivacy = function () {
             <li><strong>Messages:</strong> In-app conversations between buyers and sellers</li>
             <li><strong>Device data:</strong> Device type, operating system version, app version</li>
             <li><strong>Usage data:</strong> Pages viewed, search queries, and listing interactions</li>
+            <li><strong>Business verification data:</strong> When you request business verification, we collect your business name, registration number, physical address, and photographs taken by a PaMarket representative during an in-person visit. These may include photographs of your business premises, signage, registration certificates, and any other documents presented for verification purposes.</li>
           </ul>
 
           <h2>3. How We Use Your Data</h2>
@@ -11942,34 +11943,47 @@ pages.HelpPrivacy = function () {
           <h2>6. Data Security</h2>
           <p>We implement industry-standard security: HTTPS encryption for all data in transit, encrypted password storage (never stored in plain text), row-level security on our database, and access controls. While we take all reasonable precautions, no internet system is 100% secure and we cannot guarantee absolute security of your data.</p>
 
-          <h2>7. Camera and Photo Permissions</h2>
+          <h2>7. Business Verification &amp; Photography</h2>
+          <p>PaMarket offers an optional Business Verification programme to help job seekers and buyers identify legitimate businesses on our platform. When you apply for verification, you agree to the following:</p>
+          <ul>
+            <li>A PaMarket representative will conduct a physical visit to your business premises at an agreed time.</li>
+            <li>During the visit, our representative will take photographs of your business premises, exterior signage, interior workspace, and any business registration documents or certificates you present.</li>
+            <li>These photographs are used solely to confirm the legitimacy of your business and to display a Verified Business badge on your PaMarket profile and listings.</li>
+            <li>Verification photographs are stored securely and are accessible only to authorised PaMarket staff.</li>
+            <li>We do not share verification photographs with other users or third parties, except where required by Zimbabwean law.</li>
+            <li>Verification photographs are retained for as long as your Verified status is active. If you withdraw from the programme or your account is deleted, photographs are permanently deleted within 30 days.</li>
+            <li>By submitting a verification request you consent to this photography and data collection. You may withdraw consent at any time by contacting us, which will result in removal of your Verified badge.</li>
+          </ul>
+
+          <h2>8. Camera and Photo Permissions</h2>
           <p>We request camera and photo library access only when you choose to upload a photo for a listing or your profile. The App never accesses your camera or photos passively. You may deny this permission and still use the App without photo uploads.</p>
 
-          <h2>8. Notifications Permission</h2>
+          <h2>9. Notifications Permission</h2>
           <p>We request permission to send push notifications to alert you about new messages, listing activity, and account updates. You may disable notifications at any time in your device settings. Turning off notifications will not affect your ability to use the App.</p>
 
-          <h2>9. Data Retention</h2>
+          <h2>10. Data Retention</h2>
           <p>We retain your data for as long as your account is active. When you delete your account, all personal data, listings, messages, and transaction records are permanently deleted within 30 days. Backup copies are purged within 90 days of account deletion.</p>
 
-          <h2>10. Your Rights</h2>
+          <h2>11. Your Rights</h2>
           <ul>
             <li>Access and review your personal data at any time via your Profile page</li>
             <li>Correct inaccurate information through your Profile Settings</li>
             <li>Delete your account and all associated data via Settings → Delete Account</li>
             <li>Opt out of promotional notifications via Settings → Notification Preferences</li>
+            <li>Withdraw consent for business verification photography at any time by contacting us</li>
             <li>Request a copy of all data we hold about you by emailing chakusaprince@gmail.com</li>
           </ul>
 
-          <h2>11. Children's Privacy</h2>
+          <h2>12. Children's Privacy</h2>
           <p>PaMarket is strictly for users aged 18 and over. We do not knowingly collect personal data from anyone under 18. If we discover that a minor has created an account, we will immediately delete their account and all associated data. If you believe a minor is using the App, please contact us.</p>
 
-          <h2>12. Third-Party Links</h2>
+          <h2>13. Third-Party Links</h2>
           <p>Listings may include links to WhatsApp or external websites. We are not responsible for the privacy practices or content of any third-party services. We encourage you to review their privacy policies before sharing personal information.</p>
 
-          <h2>13. Changes to This Policy</h2>
+          <h2>14. Changes to This Policy</h2>
           <p>We will notify you of material changes to this Privacy Policy through the App at least 7 days before they take effect. Continued use of the App after changes constitute your acceptance of the updated policy.</p>
 
-          <h2>14. Contact Us</h2>
+          <h2>15. Contact Us</h2>
           <p>For privacy concerns, data requests, or complaints, contact us at:</p>
           <ul>
             <li>Email: chakusaprince@gmail.com</li>
