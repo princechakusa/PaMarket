@@ -505,10 +505,10 @@
     if (!sheet || !bg) return;
     sheet.innerHTML =
       '<div class="sheet-header">Send a photo</div>'
-      + '<button class="sheet-item" onclick="H.closeSheet();setTimeout(()=>document.getElementById(\'chatImgCamera\').click(),120)">'
+      + '<button class="sheet-item" onclick="H.closeSheet();setTimeout(()=>H._chat.pickImage(\'camera\'),120)">'
       + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
       + '<span class="sheet-label">Take Photo</span></button>'
-      + '<button class="sheet-item" onclick="H.closeSheet();setTimeout(()=>document.getElementById(\'chatImgGallery\').click(),120)">'
+      + '<button class="sheet-item" onclick="H.closeSheet();setTimeout(()=>H._chat.pickImage(\'gallery\'),120)">'
       + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
       + '<span class="sheet-label">Choose from Gallery</span></button>'
       + '<button class="sheet-close" onclick="H.closeSheet()">Cancel</button>';
@@ -516,19 +516,44 @@
     bg.classList.add('open');
   };
 
-  H._chat.handleImageFile = async function(input) {
-    const file = input.files && input.files[0];
-    input.value = '';
-    if (!file) return;
+  H._chat.pickImage = async function(source) {
+    const Camera = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+    if (Camera) {
+      try {
+        const CameraSource = source === 'camera' ? 'CAMERA' : 'PHOTOS';
+        const photo = await Camera.getPhoto({
+          quality: 80,
+          allowEditing: false,
+          resultType: 'dataUrl',
+          source: CameraSource,
+          width: 900
+        });
+        if (photo && photo.dataUrl) {
+          await H._chat._sendPickedImage(photo.dataUrl);
+        }
+      } catch(e) {
+        if (e && e.message && (e.message.toLowerCase().includes('cancel') || e.message.toLowerCase().includes('denied'))) return;
+        // Fall back to file input on error
+        H._chat._fallbackFilePick(source);
+      }
+    } else {
+      H._chat._fallbackFilePick(source);
+    }
+  };
+
+  H._chat._fallbackFilePick = function(source) {
+    const inputId = source === 'camera' ? 'chatImgCamera' : 'chatImgGallery';
+    const el = document.getElementById(inputId);
+    if (el) el.click();
+  };
+
+  H._chat._sendPickedImage = async function(dataUrl) {
     const c = conversations().find(function(x){ return x.id === H._activeChat; });
     if (!c) return;
     const u = H.currentUser();
     if (!u) { H.requireAuth('Sign in to send photos'); return; }
     H.toast('Sending photo…');
     try {
-      // Compress to max 900px, 75% quality
-      const dataUrl = await H.compressImage(file, 900, 0.75);
-      // Try Supabase Storage first; fall back to base64 inline
       let imageUrl = dataUrl;
       try {
         const sb = window.supabase;
@@ -544,6 +569,21 @@
         }
       } catch(e) { /* storage not configured — use base64 */ }
       await H._chat.sendImageMessage(c, u, imageUrl);
+    } catch(e) {
+      console.warn('Image send error:', e);
+      H.toast('Could not send photo. Please try again.');
+    }
+  };
+
+  H._chat.handleImageFile = async function(input) {
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    const u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in to send photos'); return; }
+    try {
+      const dataUrl = await H.compressImage(file, 900, 0.75);
+      await H._chat._sendPickedImage(dataUrl);
     } catch(e) {
       console.warn('Image send error:', e);
       H.toast('Could not send photo. Please try again.');
