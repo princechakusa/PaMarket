@@ -34,10 +34,8 @@ class _AccountScreenState extends State<AccountScreen> {
       ]);
       if (mounted) {
         setState(() {
-          final profileData = results[0] as Map<String, dynamic>?;
-          if (profileData != null) {
-            _profile = Profile.fromMap(profileData);
-          }
+          final d = results[0] as Map<String, dynamic>?;
+          if (d != null) _profile = Profile.fromMap(d);
           _listings = results[1] as List<Listing>;
           _loading = false;
         });
@@ -47,62 +45,13 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-  int get _activeAdsCount =>
-      _listings.where((l) => l.status == 'active').length;
+  int get _activeAds => _listings.where((l) => l.status == 'active').length;
 
   @override
   Widget build(BuildContext context) {
     if (!AuthService.isSignedIn) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.person_outline,
-                      size: 80, color: AppColors.border),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Sign in to view your account',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Create listings, save ads, and manage your profile.',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 28),
-                  ElevatedButton(
-                    onPressed: () => context.push('/login'),
-                    child: const Text('Sign In'),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed: () => context.push('/signup'),
-                    child: const Text('Create Account'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
+      return const _LoggedOutView();
     }
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: _loading
@@ -112,116 +61,88 @@ class _AccountScreenState extends State<AccountScreen> {
               color: AppColors.primaryBlue,
               child: CustomScrollView(
                 slivers: [
-                  // Profile header
                   SliverToBoxAdapter(
                     child: _ProfileHeader(
                       profile: _profile,
+                      activeAds: _activeAds,
                       onEdit: () => context.push('/edit-profile'),
                     ),
                   ),
-
-                  // Stats row
                   SliverToBoxAdapter(
-                    child: _StatsRow(
-                      activeAds: _activeAdsCount,
-                    ),
-                  ),
-
-                  // My Account section
-                  SliverToBoxAdapter(
-                    child: _Section(
-                      title: 'My Account',
-                      tiles: [
-                        _AccountTile(
-                          icon: Icons.storefront_outlined,
-                          title: 'My Listings',
-                          trailing: _activeAdsCount > 0
-                              ? _Badge('$_activeAdsCount')
-                              : null,
-                          onTap: () => context.push('/my-listings'),
-                        ),
-                        _AccountTile(
+                    child: _SectionCard(
+                      children: [
+                        _Tile(
                           icon: Icons.favorite_outline,
-                          title: 'Saved Ads',
+                          iconColor: const Color(0xFFE91E63),
+                          title: 'Saved & Favorites',
                           onTap: () => context.push('/saved'),
                         ),
-                        _AccountTile(
-                          icon: _profile?.verified == true
-                              ? Icons.verified
-                              : Icons.verified_outlined,
-                          iconColor: _profile?.verified == true
-                              ? AppColors.success
-                              : null,
-                          title: _profile?.verified == true
-                              ? 'Verified ✓'
-                              : 'Get Verified',
-                          subtitle: _profile?.verified == true
-                              ? 'Your account is verified'
-                              : 'Build trust with a verified badge',
-                          onTap: () => context.push('/verify'),
+                        _Tile(
+                          icon: Icons.work_outline,
+                          iconColor: const Color(0xFF3F51B5),
+                          title: 'My Job Applications',
+                          onTap: () => _soon(context, 'My Job Applications'),
+                        ),
+                        _Tile(
+                          icon: Icons.description_outlined,
+                          iconColor: const Color(0xFF009688),
+                          title: 'My Job Profile / CV',
+                          trailing: _OrangeBadge(),
+                          onTap: () => _soon(context, 'My Job Profile / CV'),
+                        ),
+                        _Tile(
+                          icon: Icons.campaign_outlined,
+                          iconColor: const Color(0xFFFF9800),
+                          title: 'Advertisements',
+                          onTap: () => _soon(context, 'Advertisements'),
+                        ),
+                        _Tile(
+                          icon: Icons.storefront_outlined,
+                          iconColor: const Color(0xFF9C27B0),
+                          title: 'My Advertisements',
+                          onTap: () => context.push('/my-listings'),
                         ),
                       ],
                     ),
                   ),
-
-                  // Preferences section
                   SliverToBoxAdapter(
-                    child: _Section(
-                      title: 'Preferences',
-                      tiles: [
-                        _AccountTile(
-                          icon: Icons.notifications_outlined,
-                          title: 'Notifications',
-                          onTap: () =>
-                              context.push('/settings/notifications'),
-                        ),
-                        _AccountTile(
-                          icon: Icons.privacy_tip_outlined,
-                          title: 'Privacy',
-                          onTap: () => context.push('/settings/privacy'),
-                        ),
-                        _AccountTile(
+                    child: _SectionCard(
+                      children: [
+                        _Tile(
                           icon: Icons.settings_outlined,
                           title: 'Settings',
                           onTap: () => context.push('/settings'),
                         ),
-                        _AccountTile(
+                        _Tile(
+                          icon: Icons.security_outlined,
+                          title: 'Security & Password',
+                          onTap: () => context.push('/settings/security'),
+                        ),
+                        _Tile(
                           icon: Icons.help_outline,
-                          title: 'Help & Legal',
-                          onTap: () => context.push('/help'),
-                        ),
-                        _AccountTile(
-                          icon: Icons.info_outline,
-                          title: 'About PaMarket',
-                          onTap: () => _showAboutDialog(context),
+                          title: 'Help & Support',
+                          onTap: () => context.push('/help/faq'),
                         ),
                       ],
                     ),
                   ),
-
-                  // Danger Zone
                   SliverToBoxAdapter(
-                    child: _Section(
-                      title: 'Danger Zone',
-                      tiles: [
-                        _AccountTile(
-                          icon: Icons.logout,
-                          iconColor: AppColors.error,
-                          title: 'Sign Out',
-                          titleColor: AppColors.error,
-                          onTap: () => _confirmSignOut(context),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: OutlinedButton(
+                        onPressed: () => _confirmSignOut(context),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                          side: BorderSide(color: AppColors.error.withValues(alpha: 0.4)),
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          textStyle: const TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600),
                         ),
-                        _AccountTile(
-                          icon: Icons.delete_forever_outlined,
-                          iconColor: AppColors.error,
-                          title: 'Delete Account',
-                          titleColor: AppColors.error,
-                          onTap: () => _confirmDeleteAccount(context),
-                        ),
-                      ],
+                        child: const Text('Sign Out'),
+                      ),
                     ),
                   ),
-
+                  const SliverToBoxAdapter(child: _Footer()),
                   const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
               ),
@@ -229,122 +150,27 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: RichText(
-          text: const TextSpan(children: [
-            TextSpan(
-              text: 'Pa',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.primaryBlue,
-              ),
-            ),
-            TextSpan(
-              text: 'Market',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.orange,
-              ),
-            ),
-          ]),
-        ),
-        content: const Text(
-          "Zimbabwe's free marketplace for buying and selling.\n\nVersion 1.0.0\n\n© 2025 PaMarket. All rights reserved.\n\nBuilt with ❤ in Zimbabwe.",
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14,
-            color: AppColors.textSecondary,
-            height: 1.6,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
+  void _soon(BuildContext context, String f) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$f coming soon')));
   }
 
   void _confirmSignOut(BuildContext context) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Sign Out',
-          style: TextStyle(
-              fontFamily: 'Inter', fontWeight: FontWeight.w700, fontSize: 18),
-        ),
-        content: const Text(
-          'Are you sure you want to sign out?',
-          style: TextStyle(fontFamily: 'Inter', color: AppColors.textSecondary),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Sign Out', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w700, fontSize: 18)),
+        content: const Text('Are you sure you want to sign out?', style: TextStyle(fontFamily: 'Inter', color: AppColors.textSecondary)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
               await AuthService.signOut();
               if (context.mounted) context.go('/login');
             },
-            style:
-                TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Sign Out'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmDeleteAccount(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Delete Account',
-          style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-              color: AppColors.error),
-        ),
-        content: const Text(
-          'This will permanently delete your account and all your listings. This action cannot be undone.',
-          style: TextStyle(
-              fontFamily: 'Inter', color: AppColors.textSecondary, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              // Delete account - handled via Supabase edge function or RPC
-              await AuthService.signOut();
-              if (context.mounted) context.go('/login');
-            },
-            style:
-                TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Delete Account'),
           ),
         ],
       ),
@@ -352,11 +178,174 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 }
 
+// ── Logged-Out View ──────────────────────────────────────────────────────────
+
+class _LoggedOutView extends StatelessWidget {
+  const _LoggedOutView();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const SizedBox(height: 20),
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: RichText(
+                  text: const TextSpan(children: [
+                    TextSpan(text: 'Pa', style: TextStyle(fontFamily: 'Inter', fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white)),
+                    TextSpan(text: 'Market', style: TextStyle(fontFamily: 'Inter', fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.orange)),
+                  ]),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Login card
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                children: [
+                  const Text('Login to continue', style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textSecondary)),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () => context.push('/login'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 48),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      textStyle: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1),
+                    ),
+                    child: const Text('SIGN IN / SIGN UP'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            // My Activity
+            GestureDetector(
+              onTap: () => context.push('/search'),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.card,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40, height: 40,
+                      decoration: BoxDecoration(color: AppColors.lightBlue, borderRadius: BorderRadius.circular(10)),
+                      child: const Icon(Icons.search, color: AppColors.primaryBlue, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('My Activity', style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                          SizedBox(height: 2),
+                          Text('View your recent searches and activities', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textMuted),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text('More on PaMarket', style: TextStyle(fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                children: [
+                  _MoreTile(icon: Icons.campaign_outlined, title: 'Advertisements', onTap: () => _soon(context, 'Advertisements')),
+                  const _HDivider(),
+                  _MoreTile(icon: Icons.favorite_outline, title: 'Favourites', onTap: () => context.push('/login')),
+                  const _HDivider(),
+                  _MoreTile(icon: Icons.search, title: 'Saved Searches', onTap: () => _soon(context, 'Saved Searches')),
+                  const _HDivider(),
+                  _MoreTile(icon: Icons.work_outline, title: 'Find Jobs', onTap: () => context.push('/category/jobs?name=Jobs')),
+                  const _HDivider(),
+                  _MoreTile(icon: Icons.notifications_outlined, title: 'Notification Center', onTap: () => context.push('/login')),
+                  const _HDivider(),
+                  _MoreTile(
+                    icon: Icons.language,
+                    title: 'Language',
+                    trailing: const Text('English', style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textSecondary)),
+                    onTap: () => _soon(context, 'Language'),
+                  ),
+                  const _HDivider(),
+                  _MoreTile(icon: Icons.help_outline, title: 'Help & Support', onTap: () => context.push('/help/faq')),
+                  const _HDivider(),
+                  _MoreTile(icon: Icons.info_outline, title: 'About Us', onTap: () => _showAbout(context)),
+                  const _HDivider(),
+                  _MoreTile(icon: Icons.privacy_tip_outlined, title: 'Privacy Policy', onTap: () => _soon(context, 'Privacy Policy')),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            const _Footer(),
+            const SizedBox(height: 80),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _soon(BuildContext context, String f) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$f coming soon')));
+  }
+
+  void _showAbout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: RichText(
+          text: const TextSpan(children: [
+            TextSpan(text: 'Pa', style: TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primaryBlue)),
+            TextSpan(text: 'Market', style: TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.orange)),
+          ]),
+        ),
+        content: const Text(
+          "Zimbabwe's free marketplace for buying and selling.\n\nVersion 1.0.0\n\n© 2026 PaMarket. All rights reserved.\n\nMade with ♥ in Zimbabwe.",
+          style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textSecondary, height: 1.6),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
+      ),
+    );
+  }
+}
+
+// ── Profile Header (logged-in) ──────────────────────────────────────────────
+
 class _ProfileHeader extends StatelessWidget {
   final Profile? profile;
+  final int activeAds;
   final VoidCallback onEdit;
 
-  const _ProfileHeader({required this.profile, required this.onEdit});
+  const _ProfileHeader({required this.profile, required this.activeAds, required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
@@ -368,54 +357,29 @@ class _ProfileHeader extends StatelessWidget {
           colors: [AppColors.darkBlue, AppColors.primaryBlue],
         ),
       ),
-      padding: EdgeInsets.fromLTRB(
-          20, MediaQuery.of(context).padding.top + 16, 20, 24),
+      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 16, 20, 24),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Account',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-              IconButton(
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined,
-                    color: Colors.white, size: 22),
-              ),
+              const Text('Account', style: TextStyle(fontFamily: 'Inter', fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
+              IconButton(onPressed: onEdit, icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 22)),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2.5),
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
                 child: CircleAvatar(
                   radius: 36,
                   backgroundColor: AppColors.lightBlue,
-                  backgroundImage: profile?.avatar != null
-                      ? CachedNetworkImageProvider(profile!.avatar!)
-                      : null,
+                  backgroundImage: profile?.avatar != null ? CachedNetworkImageProvider(profile!.avatar!) : null,
                   child: profile?.avatar == null
                       ? Text(
-                          profile?.name.isNotEmpty == true
-                              ? profile!.name[0].toUpperCase()
-                              : 'U',
-                          style: const TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryBlue,
-                          ),
+                          profile?.name.isNotEmpty == true ? profile!.name[0].toUpperCase() : 'U',
+                          style: const TextStyle(fontFamily: 'Inter', fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.primaryBlue),
                         )
                       : null,
                 ),
@@ -428,160 +392,49 @@ class _ProfileHeader extends StatelessWidget {
                     Row(
                       children: [
                         Flexible(
-                          child: Text(
-                            profile?.name ?? 'User',
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          child: Text(profile?.name ?? 'User',
+                              style: const TextStyle(fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                              overflow: TextOverflow.ellipsis),
                         ),
-                        if (profile?.verified == true) ...[
+                        if (profile?.verified == true) ...
+                        [
                           const SizedBox(width: 6),
-                          const Icon(Icons.verified,
-                              color: AppColors.orange, size: 18),
+                          const Icon(Icons.verified, color: AppColors.orange, size: 18),
                         ],
                       ],
                     ),
-                    if (profile?.city != null) ...[
+                    if (profile?.city != null) ...
+                    [
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.location_on_outlined,
-                              size: 13, color: Colors.white60),
+                          const Icon(Icons.location_on_outlined, size: 13, color: Colors.white60),
                           const SizedBox(width: 3),
-                          Text(
-                            profile!.city!,
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 13,
-                              color: Colors.white70,
-                            ),
-                          ),
+                          Text(profile!.city!, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, color: Colors.white70)),
                         ],
                       ),
                     ],
-                    if (profile?.email != null) ...[
+                    if (profile?.email != null) ...
+                    [
                       const SizedBox(height: 2),
-                      Text(
-                        profile!.email!,
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 12,
-                          color: Colors.white54,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      Text(profile!.email!, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white54), overflow: TextOverflow.ellipsis),
                     ],
                   ],
                 ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatsRow extends StatelessWidget {
-  final int activeAds;
-
-  const _StatsRow({required this.activeAds});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.card,
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Row(
-        children: [
-          _StatItem(value: '$activeAds', label: 'Active Ads'),
-          Container(width: 1, height: 40, color: AppColors.border),
-          _StatItem(value: '—', label: 'Saved'),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  final String value;
-  final String label;
-
-  const _StatItem({required this.value, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.primaryBlue,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  final String title;
-  final List<Widget> tiles;
-
-  const _Section({required this.title, required this.tiles});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title.toUpperCase(),
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textMuted,
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Column(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                for (int i = 0; i < tiles.length; i++) ...[
-                  tiles[i],
-                  if (i < tiles.length - 1)
-                    const Divider(
-                        height: 1, indent: 56, endIndent: 0,
-                        color: AppColors.border),
-                ],
+                _StatItem(value: '$activeAds', label: 'Active Ads'),
               ],
             ),
           ),
@@ -591,86 +444,172 @@ class _Section extends StatelessWidget {
   }
 }
 
-class _AccountTile extends StatelessWidget {
+class _StatItem extends StatelessWidget {
+  final String value;
+  final String label;
+  const _StatItem({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(value, style: const TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white60)),
+      ],
+    );
+  }
+}
+
+// ── Section Card ──────────────────────────────────────────────────────────────
+
+class _SectionCard extends StatelessWidget {
+  final List<Widget> children;
+  const _SectionCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            for (int i = 0; i < children.length; i++) ...
+            [
+              children[i],
+              if (i < children.length - 1) const _HDivider(),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Tile ─────────────────────────────────────────────────────────────────────
+
+class _Tile extends StatelessWidget {
   final IconData icon;
   final Color? iconColor;
   final String title;
   final Color? titleColor;
-  final String? subtitle;
   final Widget? trailing;
   final VoidCallback onTap;
 
-  const _AccountTile({
+  const _Tile({
     required this.icon,
     this.iconColor,
     required this.title,
     this.titleColor,
-    this.subtitle,
     this.trailing,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = iconColor ?? AppColors.primaryBlue;
     return ListTile(
       leading: Container(
-        width: 36,
-        height: 36,
+        width: 36, height: 36,
         decoration: BoxDecoration(
-          color: (iconColor ?? AppColors.primaryBlue).withValues(alpha: 0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon,
-            size: 20, color: iconColor ?? AppColors.primaryBlue),
+        child: Icon(icon, size: 20, color: color),
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          color: titleColor ?? AppColors.textPrimary,
-        ),
-      ),
-      subtitle: subtitle != null
-          ? Text(
-              subtitle!,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
-            )
-          : null,
-      trailing: trailing ??
-          const Icon(Icons.arrow_forward_ios,
-              size: 14, color: AppColors.textMuted),
+      title: Text(title, style: TextStyle(
+        fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600,
+        color: titleColor ?? AppColors.textPrimary,
+      )),
+      trailing: trailing ?? const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textMuted),
       onTap: onTap,
     );
   }
 }
 
-class _Badge extends StatelessWidget {
-  final String label;
+// ── More Tile (logged-out list) ──────────────────────────────────────────────
 
-  const _Badge(this.label);
+class _MoreTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final Widget? trailing;
+  final VoidCallback onTap;
+
+  const _MoreTile({required this.icon, required this.title, this.trailing, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon, size: 22, color: AppColors.textSecondary),
+      title: Text(title, style: const TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
+      trailing: trailing != null
+          ? Row(mainAxisSize: MainAxisSize.min, children: [trailing!, const SizedBox(width: 6), const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textMuted)])
+          : const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textMuted),
+      onTap: onTap,
+    );
+  }
+}
+
+// ── Orange Badge ──────────────────────────────────────────────────────────────
+
+class _OrangeBadge extends StatelessWidget {
+  const _OrangeBadge();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppColors.primaryBlue,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
+      width: 26, height: 26,
+      decoration: const BoxDecoration(color: AppColors.orange, shape: BoxShape.circle),
+      child: const Icon(Icons.check, color: Colors.white, size: 16),
+    );
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+class _HDivider extends StatelessWidget {
+  const _HDivider();
+
+  @override
+  Widget build(BuildContext context) =>
+      const Divider(height: 1, indent: 56, endIndent: 0, color: AppColors.border);
+}
+
+class _Footer extends StatelessWidget {
+  const _Footer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      child: Column(
+        children: [
+          const Text('© 2026 PaMarket · Made in Zimbabwe 🇿🇼',
+              style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textMuted), textAlign: TextAlign.center),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Terms coming soon'))),
+                child: const Text('Terms', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary, decoration: TextDecoration.underline)),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Text('·', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              ),
+              GestureDetector(
+                onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Privacy Policy coming soon'))),
+                child: const Text('Privacy', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary, decoration: TextDecoration.underline)),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
