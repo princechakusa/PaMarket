@@ -1,4 +1,4 @@
-package com.pamarket.pamarket;
+package com.pamarket.app;
 
 import io.flutter.embedding.android.FlutterActivity;
 
