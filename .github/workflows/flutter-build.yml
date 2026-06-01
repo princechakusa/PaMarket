@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - claude/pamarket-flutter-rewrite-UgRZd
-    paths:
-      - 'flutter_app/**'
   workflow_dispatch:
 
 jobs:
