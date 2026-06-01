@@ -25,7 +25,6 @@ import 'screens/profile/edit_profile_screen.dart';
 import 'screens/search/search_screen.dart';
 import 'screens/verify/verify_screen.dart';
 import 'screens/admin/admin_screen.dart';
-import 'screens/help/help_screen.dart';
 import 'screens/help/faq_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/settings/notification_settings_screen.dart';
@@ -67,96 +66,55 @@ final _router = GoRouter(
     GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
-    GoRoute(
-        path: '/forgot-password',
-        builder: (_, __) => const ForgotPasswordScreen()),
+    GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
 
     // Shell with bottom nav
     ShellRoute(
       builder: (context, state, child) => _MainShell(child: child),
       routes: [
         GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
-        GoRoute(
-            path: '/messages',
-            builder: (_, __) => const ConversationsScreen()),
-        // /profile in the shell now shows AccountScreen (own account hub)
+        GoRoute(path: '/messages', builder: (_, __) => const ConversationsScreen()),
         GoRoute(path: '/profile', builder: (_, __) => const AccountScreen()),
-        GoRoute(path: '/help', builder: (_, __) => const HelpScreen()),
       ],
     ),
 
     // Standalone routes
-    GoRoute(
-      path: '/listing/:id',
-      builder: (_, state) =>
-          ListingDetailScreen(listingId: state.pathParameters['id']!),
-    ),
-    GoRoute(
-        path: '/post-listing', builder: (_, __) => const PostListingScreen()),
-    GoRoute(
-      path: '/chat/:id',
-      builder: (_, state) => ChatScreen(
-        conversationId: state.pathParameters['id']!,
-        otherUserName: state.uri.queryParameters['name'],
-      ),
-    ),
-    // View another user's public profile
-    GoRoute(
-      path: '/profile/:id',
-      builder: (_, state) =>
-          ProfileScreen(userId: state.pathParameters['id']),
-    ),
+    GoRoute(path: '/listing/:id', builder: (_, state) => ListingDetailScreen(listingId: state.pathParameters['id']!)),
+    GoRoute(path: '/post-listing', builder: (_, __) => const PostListingScreen()),
+    GoRoute(path: '/chat/:id', builder: (_, state) => ChatScreen(
+      conversationId: state.pathParameters['id']!,
+      otherUserName: state.uri.queryParameters['name'],
+    )),
+    GoRoute(path: '/profile/:id', builder: (_, state) => ProfileScreen(userId: state.pathParameters['id'])),
     GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
     GoRoute(path: '/verify', builder: (_, __) => const VerifyScreen()),
     GoRoute(path: '/admin', builder: (_, __) => const AdminScreen()),
 
-    // Profile / account screens
+    // Profile / account
     GoRoute(path: '/saved', builder: (_, __) => const SavedScreen()),
     GoRoute(path: '/my-listings', builder: (_, __) => const MyListingsScreen()),
-    GoRoute(
-        path: '/edit-profile', builder: (_, __) => const EditProfileScreen()),
+    GoRoute(path: '/edit-profile', builder: (_, __) => const EditProfileScreen()),
 
     // Settings
     GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
-    GoRoute(
-        path: '/settings/notifications',
-        builder: (_, __) => const NotificationSettingsScreen()),
-    GoRoute(
-        path: '/settings/privacy',
-        builder: (_, __) => const PrivacySettingsScreen()),
-    GoRoute(
-        path: '/settings/theme',
-        builder: (_, __) => const ThemeSettingsScreen()),
-    GoRoute(
-        path: '/settings/security',
-        builder: (_, __) => const SecuritySettingsScreen()),
-    GoRoute(
-        path: '/settings/blocked-users',
-        builder: (_, __) => const BlockedUsersScreen()),
+    GoRoute(path: '/settings/notifications', builder: (_, __) => const NotificationSettingsScreen()),
+    GoRoute(path: '/settings/privacy', builder: (_, __) => const PrivacySettingsScreen()),
+    GoRoute(path: '/settings/theme', builder: (_, __) => const ThemeSettingsScreen()),
+    GoRoute(path: '/settings/security', builder: (_, __) => const SecuritySettingsScreen()),
+    GoRoute(path: '/settings/blocked-users', builder: (_, __) => const BlockedUsersScreen()),
 
     // Help / Legal
     GoRoute(path: '/help/faq', builder: (_, __) => const FaqScreen()),
-    GoRoute(path: '/terms', builder: (_, __) => const TermsScreen()),
-    GoRoute(path: '/privacy', builder: (_, __) => const PrivacyScreen()),
-    GoRoute(
-        path: '/community-guidelines',
-        builder: (_, __) => const CommunityGuidelinesScreen()),
-    GoRoute(
-        path: '/help/get-verified',
-        builder: (_, __) => const GetVerifiedScreen()),
 
     // Notifications
-    GoRoute(
-        path: '/notifications',
-        builder: (_, __) => const NotificationsScreen()),
+    GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
 
     // Category browse
     GoRoute(
       path: '/category/:id',
       builder: (_, state) => CategoryScreen(
         categoryId: state.pathParameters['id']!,
-        categoryName: state.uri.queryParameters['name'] ??
-            state.pathParameters['id']!,
+        categoryName: state.uri.queryParameters['name'] ?? state.pathParameters['id']!,
       ),
     ),
   ],
@@ -176,20 +134,18 @@ class PaMarketApp extends StatelessWidget {
   }
 }
 
-// ── Bottom navigation shell ─────────────────────────────────────
+// ── Bottom navigation shell ─────────────────────────────────────────────────
 
 class _MainShell extends StatelessWidget {
   final Widget child;
-
   const _MainShell({required this.child});
 
-  // Matches existing app: Home, Browse, [Post FAB], Messages, Account
-  static const _tabs = ['/home', '/search', '/messages', '/profile'];
+  static const _tabs = ['/home', '/messages', '/profile'];
 
   int _indexFromLocation(String loc) {
-    for (int i = 0; i < _tabs.length; i++) {
-      if (loc.startsWith(_tabs[i])) return i;
-    }
+    if (loc.startsWith('/home')) return 0;
+    if (loc.startsWith('/messages')) return 1;
+    if (loc.startsWith('/profile')) return 2;
     return 0;
   }
 
@@ -206,17 +162,17 @@ class _MainShell extends StatelessWidget {
           switch (i) {
             case 0:
               context.go('/home');
-            case 1:
-              context.go('/search');
+            case 1: // Search
+              context.push('/search');
             case 2: // Post — gated
               if (!AuthService.isSignedIn) {
-                _showLoginRequired(context, 'Log in to post an ad');
+                showAuthModal(context, 'Log in to post an ad');
               } else {
                 context.push('/post-listing');
               }
             case 3: // Messages — gated
               if (!AuthService.isSignedIn) {
-                _showLoginRequired(context, 'Sign in to view messages');
+                showAuthModal(context, 'Sign in to view messages');
               } else {
                 context.go('/messages');
               }
@@ -227,46 +183,167 @@ class _MainShell extends StatelessWidget {
       ),
     );
   }
+}
 
-  void _showLoginRequired(BuildContext context, String message) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(28),
+void showAuthModal(BuildContext context, String message) {
+  showDialog(
+    context: context,
+    barrierColor: Colors.black54,
+    builder: (ctx) => _AuthDialog(parentContext: context),
+  );
+}
+
+class _AuthDialog extends StatefulWidget {
+  final BuildContext parentContext;
+  const _AuthDialog({required this.parentContext});
+
+  @override
+  State<_AuthDialog> createState() => _AuthDialogState();
+}
+
+class _AuthDialogState extends State<_AuthDialog> {
+  bool _loading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.lock_outline,
-                size: 48, color: AppColors.primaryBlue),
-            const SizedBox(height: 14),
-            Text(
-              message,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-              ),
-              textAlign: TextAlign.center,
+            // Close button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: const Icon(Icons.close, color: AppColors.textMuted, size: 22),
+                ),
+              ],
+            ),
+            // PaMarket logo
+            RichText(
+              text: const TextSpan(children: [
+                TextSpan(text: 'Pa', style: TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primaryBlue)),
+                TextSpan(text: 'Market', style: TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.orange)),
+              ]),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                context.push('/login');
-              },
-              child: const Text('Sign In'),
+            // Lock icon with + badge
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 72, height: 72,
+                  decoration: BoxDecoration(
+                    color: AppColors.lightBlue,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(Icons.lock_rounded, size: 40, color: AppColors.primaryBlue),
+                ),
+                Positioned(
+                  right: -6, top: -6,
+                  child: Container(
+                    width: 28, height: 28,
+                    decoration: const BoxDecoration(color: AppColors.orange, shape: BoxShape.circle),
+                    child: const Icon(Icons.add, color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 24),
+            // Continue with Google
+            _loading
+                ? const CircularProgressIndicator()
+                : OutlinedButton(
+                    onPressed: () async {
+                      setState(() => _loading = true);
+                      try {
+                        final res = await AuthService.signInWithGoogle();
+                        if (res != null && mounted) Navigator.pop(context);
+                      } catch (_) {
+                        if (mounted) {
+                          Navigator.pop(context);
+                          widget.parentContext.push('/login');
+                        }
+                      } finally {
+                        if (mounted) setState(() => _loading = false);
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                      side: const BorderSide(color: AppColors.border),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _GoogleG(),
+                        const SizedBox(width: 10),
+                        const Text('Continue with Google', style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                      ],
+                    ),
+                  ),
+            const SizedBox(height: 14),
+            // or divider
+            const Row(children: [
+              Expanded(child: Divider(color: AppColors.border)),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('or', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textMuted))),
+              Expanded(child: Divider(color: AppColors.border)),
+            ]),
+            const SizedBox(height: 14),
+            // Login with email
             OutlinedButton(
               onPressed: () {
                 Navigator.pop(context);
-                context.push('/signup');
+                widget.parentContext.push('/login');
               },
-              child: const Text('Create Account'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+                side: const BorderSide(color: AppColors.border),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.email_outlined, color: AppColors.primaryBlue, size: 22),
+                  SizedBox(width: 10),
+                  Text('Login with email', style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+                widget.parentContext.push('/signup');
+              },
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: const TextSpan(
+                  style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary),
+                  children: [
+                    TextSpan(text: "Don't have an account? "),
+                    TextSpan(text: 'Create one', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryBlue)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            RichText(
+              textAlign: TextAlign.center,
+              text: const TextSpan(
+                style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textMuted),
+                children: [
+                  TextSpan(text: 'By continuing you agree to our '),
+                  TextSpan(text: 'Terms & Conditions', style: TextStyle(color: AppColors.primaryBlue)),
+                  TextSpan(text: ' and '),
+                  TextSpan(text: 'Privacy Policy', style: TextStyle(color: AppColors.primaryBlue)),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -274,14 +351,39 @@ class _MainShell extends StatelessWidget {
   }
 }
 
+class _GoogleG extends StatelessWidget {
+  const _GoogleG();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 22, height: 22,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Center(
+        child: Text(
+          'G',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF4285F4),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Bottom Nav ───────────────────────────────────────────────────────────────
+
 class _BottomNavWithFab extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTap;
 
-  const _BottomNavWithFab({
-    required this.selectedIndex,
-    required this.onTap,
-  });
+  const _BottomNavWithFab({required this.selectedIndex, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -296,20 +398,8 @@ class _BottomNavWithFab extends StatelessWidget {
           height: 60,
           child: Row(
             children: [
-              _NavItem(
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home,
-                  label: 'Home',
-                  index: 0,
-                  selected: selectedIndex == 0,
-                  onTap: onTap),
-              _NavItem(
-                  icon: Icons.search,
-                  activeIcon: Icons.search,
-                  label: 'Browse',
-                  index: 1,
-                  selected: selectedIndex == 1,
-                  onTap: onTap),
+              _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'HOME', index: 0, selected: selectedIndex == 0, onTap: onTap),
+              _NavItem(icon: Icons.search, activeIcon: Icons.search, label: 'SEARCH', index: 1, selected: false, onTap: onTap),
 
               // Centre POST FAB
               Expanded(
@@ -319,51 +409,23 @@ class _BottomNavWithFab extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        width: 48,
-                        height: 48,
+                        width: 48, height: 48,
                         decoration: const BoxDecoration(
                           color: AppColors.orange,
                           shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0x33F5A623),
-                              blurRadius: 8,
-                              offset: Offset(0, 3),
-                            ),
-                          ],
+                          boxShadow: [BoxShadow(color: Color(0x33F5A623), blurRadius: 8, offset: Offset(0, 3))],
                         ),
-                        child: const Icon(Icons.add,
-                            color: Colors.white, size: 26),
+                        child: const Icon(Icons.add, color: Colors.white, size: 26),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
-                        'Post',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.orange,
-                        ),
-                      ),
+                      const Text('POST', style: TextStyle(fontFamily: 'Inter', fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.orange)),
                     ],
                   ),
                 ),
               ),
 
-              _NavItem(
-                  icon: Icons.chat_outlined,
-                  activeIcon: Icons.chat,
-                  label: 'Messages',
-                  index: 3,
-                  selected: selectedIndex == 2,
-                  onTap: onTap),
-              _NavItem(
-                  icon: Icons.person_outline,
-                  activeIcon: Icons.person,
-                  label: 'Account',
-                  index: 4,
-                  selected: selectedIndex == 3,
-                  onTap: onTap),
+              _NavItem(icon: Icons.chat_bubble_outline, activeIcon: Icons.chat_bubble, label: 'MESSAGES', index: 3, selected: selectedIndex == 1, onTap: onTap),
+              _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'ACCOUNT', index: 4, selected: selectedIndex == 2, onTap: onTap),
             ],
           ),
         ),
@@ -380,14 +442,7 @@ class _NavItem extends StatelessWidget {
   final bool selected;
   final ValueChanged<int> onTap;
 
-  const _NavItem({
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-    required this.index,
-    required this.selected,
-    required this.onTap,
-  });
+  const _NavItem({required this.icon, required this.activeIcon, required this.label, required this.index, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -398,23 +453,9 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              selected ? activeIcon : icon,
-              size: 22,
-              color: selected ? AppColors.primaryBlue : AppColors.textMuted,
-            ),
+            Icon(selected ? activeIcon : icon, size: 22, color: selected ? AppColors.primaryBlue : AppColors.textMuted),
             const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 10,
-                fontWeight:
-                    selected ? FontWeight.w700 : FontWeight.w500,
-                color:
-                    selected ? AppColors.primaryBlue : AppColors.textMuted,
-              ),
-            ),
+            Text(label, style: TextStyle(fontFamily: 'Inter', fontSize: 10, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? AppColors.primaryBlue : AppColors.textMuted)),
           ],
         ),
       ),
