@@ -2,6 +2,11 @@
 .claude/
 android/
 ios/
+# Allow the Flutter app's android + ios folders
+!flutter_app/android/
+!flutter_app/android/**
+!flutter_app/ios/
+!flutter_app/ios/**
 .env
 *.txt
 package-lock - Copy.json

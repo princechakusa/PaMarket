@@ -51,7 +51,7 @@ class AuthService {
 
   static Future<AuthResponse?> signInWithGoogle() async {
     const webClientId =
-        ''; // Set your Google OAuth client ID in supabase_config
+        '422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com';
 
     final googleSignIn = GoogleSignIn(serverClientId: webClientId);
     final account = await googleSignIn.signIn();
