@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-06-01T04:10:56Z */
+/* PaMarket bundle — built 2026-06-01T04:13:46Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -11267,6 +11267,15 @@ H.init();
         </div>
 
         <div class="help-section">
+          <div class="section-title">For Businesses</div>
+          <button class="help-item" onclick="H.openInner('HelpVerification')">
+            <span class="help-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+            <span class="help-label">How to Get Verified</span>
+            <span class="help-arrow">${S.chevron}</span>
+          </button>
+        </div>
+
+        <div class="help-section">
           <div class="section-title">Documentation</div>
           <button class="help-item" onclick="H.openInner('HelpTerms')">
             <span class="help-icon">${S.doc}</span>
@@ -11943,16 +11952,15 @@ pages.HelpPrivacy = function () {
           <h2>6. Data Security</h2>
           <p>We implement industry-standard security: HTTPS encryption for all data in transit, encrypted password storage (never stored in plain text), row-level security on our database, and access controls. While we take all reasonable precautions, no internet system is 100% secure and we cannot guarantee absolute security of your data.</p>
 
-          <h2>7. Business Verification &amp; Photography</h2>
-          <p>PaMarket offers an optional Business Verification programme to help job seekers and buyers identify legitimate businesses on our platform. When you apply for verification, you agree to the following:</p>
+          <h2>7. Business Verification &amp; Document Collection</h2>
+          <p>PaMarket offers an optional Business Verification programme to help job seekers and buyers identify legitimate businesses on our platform. Verification is done remotely — you submit photos of your documents to us and our team reviews them. When you apply for verification, you agree to the following:</p>
           <ul>
-            <li>A PaMarket representative will conduct a physical visit to your business premises at an agreed time.</li>
-            <li>During the visit, our representative will take photographs of your business premises, exterior signage, interior workspace, and any business registration documents or certificates you present.</li>
-            <li>These photographs are used solely to confirm the legitimacy of your business and to display a Verified Business badge on your PaMarket profile and listings.</li>
-            <li>Verification photographs are stored securely and are accessible only to authorised PaMarket staff.</li>
-            <li>We do not share verification photographs with other users or third parties, except where required by Zimbabwean law.</li>
-            <li>Verification photographs are retained for as long as your Verified status is active. If you withdraw from the programme or your account is deleted, photographs are permanently deleted within 30 days.</li>
-            <li>By submitting a verification request you consent to this photography and data collection. You may withdraw consent at any time by contacting us, which will result in removal of your Verified badge.</li>
+            <li><strong>What you must submit:</strong> Clear photos of (1) your Certificate of Incorporation or Business Registration issued by CIPCC, (2) the National ID or passport of the business owner or director, (3) a valid Tax Clearance Certificate from ZIMRA, and (4) a photo of your business premises exterior showing any signage.</li>
+            <li>All documents must be current, legible, and unaltered. Submitting false or edited documents will result in permanent account suspension and may be reported to relevant authorities.</li>
+            <li>These documents are used solely to confirm the legitimacy of your business and to display a Verified Business badge on your PaMarket profile and job listings.</li>
+            <li>Verification documents are stored securely and are accessible only to authorised PaMarket staff. They are never shared with other users or third parties, except where required by Zimbabwean law.</li>
+            <li>Documents are retained for as long as your Verified status is active. If you withdraw from the programme or your account is deleted, all documents are permanently deleted within 30 days.</li>
+            <li>By submitting documents for verification you consent to this data collection and storage. You may withdraw consent at any time by contacting us, which will result in removal of your Verified badge.</li>
           </ul>
 
           <h2>8. Camera and Photo Permissions</h2>
@@ -11993,6 +12001,90 @@ pages.HelpPrivacy = function () {
       </div>
     </div>`;
   };
+pages.HelpVerification = function () {
+    return `<div class="page active">
+      ${H.innerTopbar('How to Get Verified')}
+      <div class="doc-content">
+        <div class="doc-section">
+
+          <div style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:16px;padding:20px;text-align:center;margin-bottom:24px">
+            <div style="font-size:36px;margin-bottom:8px">✅</div>
+            <div style="color:#fff;font-size:18px;font-weight:800;margin-bottom:4px">Verified Business Badge</div>
+            <div style="color:rgba(255,255,255,.75);font-size:13px">Build trust with job seekers across Zimbabwe</div>
+          </div>
+
+          <h2>What is Verification?</h2>
+          <p>The PaMarket Verified Business badge confirms that your company is a real, legally registered business in Zimbabwe. Verified businesses appear with a blue ✓ badge on all their job listings and profile, making job seekers more confident applying to your roles.</p>
+
+          <h2>Documents Required</h2>
+          <p>Send clear, readable photos of <strong>all four</strong> of the following:</p>
+
+          <div style="border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin:16px 0">
+            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border)">
+              <div style="width:32px;height:32px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#1A3A8F;font-size:14px">1</div>
+              <div>
+                <div style="font-weight:700;color:var(--text);font-size:14px">Certificate of Incorporation or Business Registration</div>
+                <div style="font-size:12px;color:var(--sub);margin-top:2px">Issued by CIPCC (Companies and Intellectual Property Commission of Zimbabwe). This proves your business is legally registered.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border)">
+              <div style="width:32px;height:32px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#1A3A8F;font-size:14px">2</div>
+              <div>
+                <div style="font-weight:700;color:var(--text);font-size:14px">National ID or Passport of Owner / Director</div>
+                <div style="font-size:12px;color:var(--sub);margin-top:2px">The ID of the person who owns or runs the business. Must match the name on the registration documents.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border)">
+              <div style="width:32px;height:32px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#1A3A8F;font-size:14px">3</div>
+              <div>
+                <div style="font-weight:700;color:var(--text);font-size:14px">Tax Clearance Certificate</div>
+                <div style="font-size:12px;color:var(--sub);margin-top:2px">Issued by ZIMRA (Zimbabwe Revenue Authority). Must be current and valid. This confirms your business is tax compliant.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px">
+              <div style="width:32px;height:32px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#1A3A8F;font-size:14px">4</div>
+              <div>
+                <div style="font-weight:700;color:var(--text);font-size:14px">Photo of Business Premises</div>
+                <div style="font-size:12px;color:var(--sub);margin-top:2px">A clear photo of the outside of your business showing the building and any signage. If you operate from home, a photo of your workspace is acceptable.</div>
+              </div>
+            </div>
+          </div>
+
+          <h2>Tips for Good Photos</h2>
+          <ul>
+            <li>Take photos in good lighting — all text must be clearly readable</li>
+            <li>Lay documents flat on a surface and photograph from directly above</li>
+            <li>Do not crop, edit, or filter any document photos</li>
+            <li>Make sure the full document is visible — no cut-off edges</li>
+          </ul>
+
+          <h2>How to Apply</h2>
+          <ol>
+            <li>Send all four photos to us on WhatsApp: <strong>+971 589 772 645</strong></li>
+            <li>Include your PaMarket account email in the message</li>
+            <li>Our team will review your documents within <strong>2 business days</strong></li>
+            <li>You will receive a message confirming approval or requesting corrections</li>
+            <li>Once approved, your Verified badge appears automatically on your profile and listings</li>
+          </ol>
+
+          <h2>Important Rules</h2>
+          <ul>
+            <li>All documents must be genuine and unaltered. Submitting fake or edited documents is a serious offence and will result in a permanent ban and may be reported to authorities.</li>
+            <li>Verification is tied to your PaMarket account — it cannot be transferred.</li>
+            <li>PaMarket reserves the right to remove verification if your business status changes or if you violate our Terms of Service.</li>
+          </ul>
+
+          <div style="background:var(--bg2,#F5F6FA);border-radius:12px;padding:16px;margin-top:8px;text-align:center">
+            <div style="font-size:13px;color:var(--sub);margin-bottom:8px">Ready to get verified?</div>
+            <div style="font-size:15px;font-weight:700;color:var(--text)">WhatsApp us: +971 589 772 645</div>
+            <div style="font-size:12px;color:var(--sub);margin-top:4px">or email: chakusaprince@gmail.com</div>
+          </div>
+
+        </div>
+      </div>
+    </div>`;
+  };
+
 pages.HelpCommunity = function () {
     return `<div class="page active">
       ${H.innerTopbar('Community Guidelines')}
