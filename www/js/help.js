@@ -615,7 +615,15 @@
           <h2>4. What PaMarket Is</h2>
           <p>PaMarket is an online classifieds marketplace that connects buyers and sellers in Zimbabwe. We provide the platform — we are not a party to any transaction between users. We do not hold payments, guarantee delivery, or verify the condition of items unless stated. All transactions are conducted directly between users at their own risk.</p>
 
-          <h2>5. Listing Rules</h2>
+          <h2>5. Verification</h2>
+
+          <p><strong>Individual Identity Verification</strong></p>
+          <p>Users may optionally verify their personal identity to receive a blue Verified badge. Verification requires uploading a photo of a government-issued ID (National ID, passport, or driver's licence — both sides where applicable) and taking a facial selfie through the App. Your ID and selfie are reviewed by PaMarket staff solely to confirm your identity. Verified users build more trust with buyers and receive more enquiries. Providing false or altered documents during verification will result in immediate account termination.</p>
+
+          <p><strong>Company Verification (required for job postings)</strong></p>
+          <p>To protect job seekers from fraudulent job listings, all companies must be verified by PaMarket before they can post jobs. Verification requires submitting photos of: (1) your Certificate of Incorporation or Business Registration from CIPCC, (2) the National ID or passport of the business owner or director, (3) a valid Tax Clearance Certificate from ZIMRA, and (4) a photo of your business premises. Documents are submitted via WhatsApp and reviewed within 2 business days. Unverified accounts will see a verification prompt and cannot proceed with job posting until approved. Submitting false, expired, or edited documents is a serious offence and will result in a permanent ban and may be reported to Zimbabwean authorities.</p>
+
+          <h2>6. Listing Rules</h2>
           <p>All listings must be honest, legal, and comply with Zimbabwean law. You must own or have explicit authority to sell any item listed. The following content is strictly prohibited and will result in immediate removal and account termination:</p>
           <ul>
             <li>Stolen, counterfeit, or fraudulent goods of any kind</li>
@@ -629,7 +637,7 @@
             <li>Human trafficking, exploitation, or domestic workers without consent</li>
           </ul>
 
-          <h2>6. User Conduct</h2>
+          <h2>7. User Conduct</h2>
           <p>You agree not to:</p>
           <ul>
             <li>Harass, threaten, abuse, or discriminate against other users</li>
@@ -641,28 +649,28 @@
             <li>Use automated tools to scrape or access the platform</li>
           </ul>
 
-          <h2>7. User Content License</h2>
+          <h2>8. User Content License</h2>
           <p>By posting photos, text, or any content on PaMarket, you grant us a non-exclusive, worldwide, royalty-free license to display, reproduce, and distribute that content within the App and for promotional purposes. You confirm that you own or have the rights to all content you post and that it does not infringe any third-party rights.</p>
 
-          <h2>8. Intellectual Property</h2>
+          <h2>9. Intellectual Property</h2>
           <p>All design, branding, logos, code, and content created by PaMarket are protected by copyright and intellectual property law. You may not copy, reproduce, reverse-engineer, or redistribute any part of the App without our written consent.</p>
 
-          <h2>9. Moderation and Enforcement</h2>
+          <h2>10. Moderation and Enforcement</h2>
           <p>We reserve the right to remove any listing, suspend, or permanently ban any account that violates these Terms at any time, with or without notice. Serious violations including fraud, scams, or illegal activity may be reported to relevant Zimbabwean authorities. Banned users may appeal by contacting chakusaprince@gmail.com within 14 days of the ban.</p>
 
-          <h2>10. Disclaimer of Warranties</h2>
+          <h2>11. Disclaimer of Warranties</h2>
           <p>PaMarket is provided "as is" and "as available" without any warranties, express or implied. We do not guarantee that the App will be uninterrupted, error-free, or that listings are accurate. We are not responsible for the quality, safety, legality, or availability of listed items.</p>
 
-          <h2>11. Limitation of Liability</h2>
+          <h2>12. Limitation of Liability</h2>
           <p>To the maximum extent permitted by law, PaMarket and its operators shall not be liable for any indirect, incidental, punitive, or consequential damages arising from your use of the App, including loss of money, data, or business opportunity resulting from transactions between users.</p>
 
-          <h2>12. Governing Law</h2>
+          <h2>13. Governing Law</h2>
           <p>These Terms are governed exclusively by the laws of the Republic of Zimbabwe. Any legal disputes shall be subject to the jurisdiction of the courts of Zimbabwe.</p>
 
-          <h2>13. Changes to These Terms</h2>
+          <h2>14. Changes to These Terms</h2>
           <p>We may update these Terms from time to time. We will notify users of significant changes through the App. Continued use of the App after any update constitutes your acceptance of the revised Terms. You may stop using the App at any time if you disagree with the updated Terms.</p>
 
-          <h2>14. Contact Us</h2>
+          <h2>15. Contact Us</h2>
           <p>For questions about these Terms, contact us at:</p>
           <ul>
             <li>Email: chakusaprince@gmail.com</li>
@@ -691,7 +699,8 @@ pages.HelpPrivacy = function () {
             <li><strong>Messages:</strong> In-app conversations between buyers and sellers</li>
             <li><strong>Device data:</strong> Device type, operating system version, app version</li>
             <li><strong>Usage data:</strong> Pages viewed, search queries, and listing interactions</li>
-            <li><strong>Business verification data:</strong> When you request business verification, we collect your business name, registration number, physical address, and photographs taken by a PaMarket representative during an in-person visit. These may include photographs of your business premises, signage, registration certificates, and any other documents presented for verification purposes.</li>
+            <li><strong>Identity verification data:</strong> If you choose to verify your personal identity, we collect photos of your government-issued ID document (National ID, passport, or driver's licence — both sides where applicable) and a facial selfie photograph taken through the App. These are used solely to confirm that you are a real person and match your ID.</li>
+            <li><strong>Business verification data:</strong> If you request business verification to post jobs, we collect photos of your business registration certificate, the owner or director's National ID or passport, a Tax Clearance Certificate, and a photo of your business premises. These are submitted by you through WhatsApp and reviewed by our team.</li>
           </ul>
 
           <h2>3. How We Use Your Data</h2>
@@ -723,15 +732,27 @@ pages.HelpPrivacy = function () {
           <h2>6. Data Security</h2>
           <p>We implement industry-standard security: HTTPS encryption for all data in transit, encrypted password storage (never stored in plain text), row-level security on our database, and access controls. While we take all reasonable precautions, no internet system is 100% secure and we cannot guarantee absolute security of your data.</p>
 
-          <h2>7. Business Verification &amp; Document Collection</h2>
-          <p>PaMarket offers an optional Business Verification programme to help job seekers and buyers identify legitimate businesses on our platform. Verification is done remotely — you submit photos of your documents to us and our team reviews them. When you apply for verification, you agree to the following:</p>
+          <h2>7. Identity &amp; Business Verification</h2>
+
+          <p><strong>Individual Identity Verification (optional)</strong></p>
+          <p>Any user may choose to verify their personal identity to receive a blue Verified badge on their profile and listings. When you go through identity verification, you agree to the following:</p>
           <ul>
-            <li><strong>What you must submit:</strong> Clear photos of (1) your Certificate of Incorporation or Business Registration issued by CIPCC, (2) the National ID or passport of the business owner or director, (3) a valid Tax Clearance Certificate from ZIMRA, and (4) a photo of your business premises exterior showing any signage.</li>
-            <li>All documents must be current, legible, and unaltered. Submitting false or edited documents will result in permanent account suspension and may be reported to relevant authorities.</li>
-            <li>These documents are used solely to confirm the legitimacy of your business and to display a Verified Business badge on your PaMarket profile and job listings.</li>
-            <li>Verification documents are stored securely and are accessible only to authorised PaMarket staff. They are never shared with other users or third parties, except where required by Zimbabwean law.</li>
-            <li>Documents are retained for as long as your Verified status is active. If you withdraw from the programme or your account is deleted, all documents are permanently deleted within 30 days.</li>
-            <li>By submitting documents for verification you consent to this data collection and storage. You may withdraw consent at any time by contacting us, which will result in removal of your Verified badge.</li>
+            <li>You will be asked to upload a clear photo of a government-issued ID document — National ID card, passport, or driver's licence. If the document has two sides (e.g. National ID), both sides must be submitted.</li>
+            <li>You will be asked to take a selfie photograph of your face through the App. This is compared against your ID photo to confirm you are the same person.</li>
+            <li>Your ID document and selfie are transmitted securely and are only accessible to authorised PaMarket staff for verification purposes.</li>
+            <li>These images are never shown to other users, never sold, and never shared with third parties except where required by Zimbabwean law.</li>
+            <li>Once verified, your images are retained securely for as long as your account remains active. You may request deletion at any time by contacting us, which will remove your Verified badge.</li>
+          </ul>
+
+          <p><strong>Business Verification (required to post jobs)</strong></p>
+          <p>To post job listings on PaMarket, your company must be verified. This protects job seekers from fraudulent listings. Verification is done remotely — you submit document photos to our team via WhatsApp for review. When you apply, you agree to the following:</p>
+          <ul>
+            <li><strong>Required documents:</strong> (1) Certificate of Incorporation or Business Registration from CIPCC, (2) National ID or passport of the business owner or director, (3) a valid Tax Clearance Certificate from ZIMRA, and (4) a photo of your business premises exterior showing any signage.</li>
+            <li>All documents must be genuine, current, and unaltered. Submitting false or edited documents will result in a permanent ban and may be reported to relevant Zimbabwean authorities.</li>
+            <li>Documents are used solely to confirm your business is legitimate and to display a Verified Business badge on your profile and job listings.</li>
+            <li>Documents are stored securely, accessible only to authorised PaMarket staff, and are never shared with other users or third parties except where required by law.</li>
+            <li>Documents are retained for as long as your Verified status is active and deleted within 30 days of account deletion or withdrawal from the programme.</li>
+            <li>By submitting documents you consent to this collection and storage. You may withdraw consent at any time by contacting us, which will remove your Verified badge and disable job posting.</li>
           </ul>
 
           <h2>8. Camera and Photo Permissions</h2>
