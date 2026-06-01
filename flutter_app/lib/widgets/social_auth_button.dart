@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_theme.dart';
 
 class SocialAuthButton extends StatelessWidget {
@@ -23,9 +24,11 @@ class SocialAuthButton extends StatelessWidget {
         label: 'Continue with Google',
         onTap: onTap,
         loading: loading,
-        icon: Image.asset('assets/images/google_logo.png',
-            width: 20, height: 20,
-            errorBuilder: (_, __, ___) =>
+        icon: SvgPicture.asset(
+            'assets/images/google_logo.svg',
+            width: 20,
+            height: 20,
+            placeholderBuilder: (_) =>
                 const Icon(Icons.g_mobiledata, size: 22, color: Colors.red)),
       );
 
