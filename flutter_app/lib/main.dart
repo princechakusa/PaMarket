@@ -14,13 +14,26 @@ import 'screens/auth/forgot_password_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/listing/listing_detail_screen.dart';
 import 'screens/listing/post_listing_screen.dart';
+import 'screens/listing/category_screen.dart';
 import 'screens/chat/conversations_screen.dart';
 import 'screens/chat/chat_screen.dart';
+import 'screens/profile/account_screen.dart';
 import 'screens/profile/profile_screen.dart';
+import 'screens/profile/saved_screen.dart';
+import 'screens/profile/my_listings_screen.dart';
+import 'screens/profile/edit_profile_screen.dart';
 import 'screens/search/search_screen.dart';
 import 'screens/verify/verify_screen.dart';
 import 'screens/admin/admin_screen.dart';
 import 'screens/help/help_screen.dart';
+import 'screens/help/faq_screen.dart';
+import 'screens/settings/settings_screen.dart';
+import 'screens/settings/notification_settings_screen.dart';
+import 'screens/settings/privacy_settings_screen.dart';
+import 'screens/settings/theme_settings_screen.dart';
+import 'screens/settings/security_settings_screen.dart';
+import 'screens/settings/blocked_users_screen.dart';
+import 'screens/notifications/notifications_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,7 +79,8 @@ final _router = GoRouter(
         GoRoute(
             path: '/messages',
             builder: (_, __) => const ConversationsScreen()),
-        GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+        // /profile in the shell now shows AccountScreen (own account hub)
+        GoRoute(path: '/profile', builder: (_, __) => const AccountScreen()),
         GoRoute(path: '/help', builder: (_, __) => const HelpScreen()),
       ],
     ),
@@ -86,6 +100,7 @@ final _router = GoRouter(
         otherUserName: state.uri.queryParameters['name'],
       ),
     ),
+    // View another user's public profile
     GoRoute(
       path: '/profile/:id',
       builder: (_, state) =>
@@ -95,7 +110,32 @@ final _router = GoRouter(
     GoRoute(path: '/verify', builder: (_, __) => const VerifyScreen()),
     GoRoute(path: '/admin', builder: (_, __) => const AdminScreen()),
 
+    // Profile / account screens
+    GoRoute(path: '/saved', builder: (_, __) => const SavedScreen()),
+    GoRoute(path: '/my-listings', builder: (_, __) => const MyListingsScreen()),
+    GoRoute(
+        path: '/edit-profile', builder: (_, __) => const EditProfileScreen()),
+
+    // Settings
+    GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+    GoRoute(
+        path: '/settings/notifications',
+        builder: (_, __) => const NotificationSettingsScreen()),
+    GoRoute(
+        path: '/settings/privacy',
+        builder: (_, __) => const PrivacySettingsScreen()),
+    GoRoute(
+        path: '/settings/theme',
+        builder: (_, __) => const ThemeSettingsScreen()),
+    GoRoute(
+        path: '/settings/security',
+        builder: (_, __) => const SecuritySettingsScreen()),
+    GoRoute(
+        path: '/settings/blocked-users',
+        builder: (_, __) => const BlockedUsersScreen()),
+
     // Help / Legal
+    GoRoute(path: '/help/faq', builder: (_, __) => const FaqScreen()),
     GoRoute(path: '/terms', builder: (_, __) => const TermsScreen()),
     GoRoute(path: '/privacy', builder: (_, __) => const PrivacyScreen()),
     GoRoute(
@@ -104,9 +144,21 @@ final _router = GoRouter(
     GoRoute(
         path: '/help/get-verified',
         builder: (_, __) => const GetVerifiedScreen()),
+
+    // Notifications
     GoRoute(
         path: '/notifications',
-        builder: (_, __) => const _NotificationsScreen()),
+        builder: (_, __) => const NotificationsScreen()),
+
+    // Category browse
+    GoRoute(
+      path: '/category/:id',
+      builder: (_, state) => CategoryScreen(
+        categoryId: state.pathParameters['id']!,
+        categoryName: state.uri.queryParameters['name'] ??
+            state.pathParameters['id']!,
+      ),
+    ),
   ],
 );
 
@@ -168,12 +220,8 @@ class _MainShell extends StatelessWidget {
               } else {
                 context.go('/messages');
               }
-            case 4: // Account — gated
-              if (!AuthService.isSignedIn) {
-                _showLoginRequired(context, 'Sign in to view your account');
-              } else {
-                context.go('/profile');
-              }
+            case 4: // Account
+              context.go('/profile');
           }
         },
       ),
@@ -367,32 +415,6 @@ class _NavItem extends StatelessWidget {
                     selected ? AppColors.primaryBlue : AppColors.textMuted,
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-
-class _NotificationsScreen extends StatelessWidget {
-  const _NotificationsScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.notifications_none, size: 72, color: AppColors.border),
-            SizedBox(height: 16),
-            Text('No notifications yet',
-                style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700)),
           ],
         ),
       ),
