@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/supabase_config.dart';
 import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
+import 'widgets/auth_modal.dart';
 
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -68,7 +69,6 @@ final _router = GoRouter(
     GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
     GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
 
-    // Shell with bottom nav
     ShellRoute(
       builder: (context, state, child) => _MainShell(child: child),
       routes: [
@@ -78,24 +78,24 @@ final _router = GoRouter(
       ],
     ),
 
-    // Standalone routes
     GoRoute(path: '/listing/:id', builder: (_, state) => ListingDetailScreen(listingId: state.pathParameters['id']!)),
     GoRoute(path: '/post-listing', builder: (_, __) => const PostListingScreen()),
-    GoRoute(path: '/chat/:id', builder: (_, state) => ChatScreen(
-      conversationId: state.pathParameters['id']!,
-      otherUserName: state.uri.queryParameters['name'],
-    )),
+    GoRoute(
+      path: '/chat/:id',
+      builder: (_, state) => ChatScreen(
+        conversationId: state.pathParameters['id']!,
+        otherUserName: state.uri.queryParameters['name'],
+      ),
+    ),
     GoRoute(path: '/profile/:id', builder: (_, state) => ProfileScreen(userId: state.pathParameters['id'])),
     GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
     GoRoute(path: '/verify', builder: (_, __) => const VerifyScreen()),
     GoRoute(path: '/admin', builder: (_, __) => const AdminScreen()),
 
-    // Profile / account
     GoRoute(path: '/saved', builder: (_, __) => const SavedScreen()),
     GoRoute(path: '/my-listings', builder: (_, __) => const MyListingsScreen()),
     GoRoute(path: '/edit-profile', builder: (_, __) => const EditProfileScreen()),
 
-    // Settings
     GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
     GoRoute(path: '/settings/notifications', builder: (_, __) => const NotificationSettingsScreen()),
     GoRoute(path: '/settings/privacy', builder: (_, __) => const PrivacySettingsScreen()),
@@ -103,13 +103,9 @@ final _router = GoRouter(
     GoRoute(path: '/settings/security', builder: (_, __) => const SecuritySettingsScreen()),
     GoRoute(path: '/settings/blocked-users', builder: (_, __) => const BlockedUsersScreen()),
 
-    // Help / Legal
     GoRoute(path: '/help/faq', builder: (_, __) => const FaqScreen()),
-
-    // Notifications
     GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
 
-    // Category browse
     GoRoute(
       path: '/category/:id',
       builder: (_, state) => CategoryScreen(
@@ -140,8 +136,6 @@ class _MainShell extends StatelessWidget {
   final Widget child;
   const _MainShell({required this.child});
 
-  static const _tabs = ['/home', '/messages', '/profile'];
-
   int _indexFromLocation(String loc) {
     if (loc.startsWith('/home')) return 0;
     if (loc.startsWith('/messages')) return 1;
@@ -162,216 +156,24 @@ class _MainShell extends StatelessWidget {
           switch (i) {
             case 0:
               context.go('/home');
-            case 1: // Search
+            case 1:
               context.push('/search');
-            case 2: // Post — gated
+            case 2:
               if (!AuthService.isSignedIn) {
                 showAuthModal(context, 'Log in to post an ad');
               } else {
                 context.push('/post-listing');
               }
-            case 3: // Messages — gated
+            case 3:
               if (!AuthService.isSignedIn) {
                 showAuthModal(context, 'Sign in to view messages');
               } else {
                 context.go('/messages');
               }
-            case 4: // Account
+            case 4:
               context.go('/profile');
           }
         },
-      ),
-    );
-  }
-}
-
-void showAuthModal(BuildContext context, String message) {
-  showDialog(
-    context: context,
-    barrierColor: Colors.black54,
-    builder: (ctx) => _AuthDialog(parentContext: context),
-  );
-}
-
-class _AuthDialog extends StatefulWidget {
-  final BuildContext parentContext;
-  const _AuthDialog({required this.parentContext});
-
-  @override
-  State<_AuthDialog> createState() => _AuthDialogState();
-}
-
-class _AuthDialogState extends State<_AuthDialog> {
-  bool _loading = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Close button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: const Icon(Icons.close, color: AppColors.textMuted, size: 22),
-                ),
-              ],
-            ),
-            // PaMarket logo
-            RichText(
-              text: const TextSpan(children: [
-                TextSpan(text: 'Pa', style: TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primaryBlue)),
-                TextSpan(text: 'Market', style: TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.orange)),
-              ]),
-            ),
-            const SizedBox(height: 20),
-            // Lock icon with + badge
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: 72, height: 72,
-                  decoration: BoxDecoration(
-                    color: AppColors.lightBlue,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(Icons.lock_rounded, size: 40, color: AppColors.primaryBlue),
-                ),
-                Positioned(
-                  right: -6, top: -6,
-                  child: Container(
-                    width: 28, height: 28,
-                    decoration: const BoxDecoration(color: AppColors.orange, shape: BoxShape.circle),
-                    child: const Icon(Icons.add, color: Colors.white, size: 18),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            // Continue with Google
-            _loading
-                ? const CircularProgressIndicator()
-                : OutlinedButton(
-                    onPressed: () async {
-                      setState(() => _loading = true);
-                      try {
-                        final res = await AuthService.signInWithGoogle();
-                        if (res != null && mounted) Navigator.pop(context);
-                      } catch (_) {
-                        if (mounted) {
-                          Navigator.pop(context);
-                          widget.parentContext.push('/login');
-                        }
-                      } finally {
-                        if (mounted) setState(() => _loading = false);
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                      side: const BorderSide(color: AppColors.border),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _GoogleG(),
-                        const SizedBox(width: 10),
-                        const Text('Continue with Google', style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                      ],
-                    ),
-                  ),
-            const SizedBox(height: 14),
-            // or divider
-            const Row(children: [
-              Expanded(child: Divider(color: AppColors.border)),
-              Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('or', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textMuted))),
-              Expanded(child: Divider(color: AppColors.border)),
-            ]),
-            const SizedBox(height: 14),
-            // Login with email
-            OutlinedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                widget.parentContext.push('/login');
-              },
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                side: const BorderSide(color: AppColors.border),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.email_outlined, color: AppColors.primaryBlue, size: 22),
-                  SizedBox(width: 10),
-                  Text('Login with email', style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-                widget.parentContext.push('/signup');
-              },
-              child: RichText(
-                textAlign: TextAlign.center,
-                text: const TextSpan(
-                  style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary),
-                  children: [
-                    TextSpan(text: "Don't have an account? "),
-                    TextSpan(text: 'Create one', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryBlue)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            RichText(
-              textAlign: TextAlign.center,
-              text: const TextSpan(
-                style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textMuted),
-                children: [
-                  TextSpan(text: 'By continuing you agree to our '),
-                  TextSpan(text: 'Terms & Conditions', style: TextStyle(color: AppColors.primaryBlue)),
-                  TextSpan(text: ' and '),
-                  TextSpan(text: 'Privacy Policy', style: TextStyle(color: AppColors.primaryBlue)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GoogleG extends StatelessWidget {
-  const _GoogleG();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 22, height: 22,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: const Center(
-        child: Text(
-          'G',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF4285F4),
-          ),
-        ),
       ),
     );
   }
@@ -400,8 +202,6 @@ class _BottomNavWithFab extends StatelessWidget {
             children: [
               _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'HOME', index: 0, selected: selectedIndex == 0, onTap: onTap),
               _NavItem(icon: Icons.search, activeIcon: Icons.search, label: 'SEARCH', index: 1, selected: false, onTap: onTap),
-
-              // Centre POST FAB
               Expanded(
                 child: GestureDetector(
                   onTap: () => onTap(2),
@@ -409,7 +209,8 @@ class _BottomNavWithFab extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        width: 48, height: 48,
+                        width: 48,
+                        height: 48,
                         decoration: const BoxDecoration(
                           color: AppColors.orange,
                           shape: BoxShape.circle,
@@ -423,7 +224,6 @@ class _BottomNavWithFab extends StatelessWidget {
                   ),
                 ),
               ),
-
               _NavItem(icon: Icons.chat_bubble_outline, activeIcon: Icons.chat_bubble, label: 'MESSAGES', index: 3, selected: selectedIndex == 1, onTap: onTap),
               _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'ACCOUNT', index: 4, selected: selectedIndex == 2, onTap: onTap),
             ],
@@ -442,7 +242,14 @@ class _NavItem extends StatelessWidget {
   final bool selected;
   final ValueChanged<int> onTap;
 
-  const _NavItem({required this.icon, required this.activeIcon, required this.label, required this.index, required this.selected, required this.onTap});
+  const _NavItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.index,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -455,7 +262,15 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(selected ? activeIcon : icon, size: 22, color: selected ? AppColors.primaryBlue : AppColors.textMuted),
             const SizedBox(height: 2),
-            Text(label, style: TextStyle(fontFamily: 'Inter', fontSize: 10, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? AppColors.primaryBlue : AppColors.textMuted)),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 10,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? AppColors.primaryBlue : AppColors.textMuted,
+              ),
+            ),
           ],
         ),
       ),

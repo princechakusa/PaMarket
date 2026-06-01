@@ -6,6 +6,7 @@ import '../../services/auth_service.dart';
 import '../../services/listing_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/listing_card.dart';
+import '../../widgets/auth_modal.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -172,24 +173,21 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Category grid
             SliverToBoxAdapter(
               child: _CategoryGrid(categories: _categories),
             ),
 
-            // Promo banner
             SliverToBoxAdapter(
               child: _PromoBanner(listingCount: _listings.length),
             ),
 
-            // Post a Free Ad
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: ElevatedButton.icon(
                   onPressed: () {
                     if (!AuthService.isSignedIn) {
-                      _showLoginRequired(context, 'Log in to post an ad');
+                      showAuthModal(context, 'Log in to post an ad');
                     } else {
                       context.push('/post-listing');
                     }
@@ -213,11 +211,9 @@ class _HomeScreenState extends State<HomeScreen> {
               )
             else if (_listings.isEmpty)
               const SliverToBoxAdapter(child: _EmptyState())
-            else ...
-            [
+            else ...[
               for (final cat in _categories)
-                if (grouped.containsKey(cat.id)) ...
-                [
+                if (grouped.containsKey(cat.id)) ...[
                   SliverToBoxAdapter(
                     child: _CategorySectionHeader(
                       category: cat,
@@ -242,36 +238,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
 
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showLoginRequired(BuildContext context, String message) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.lock_outline, size: 48, color: AppColors.primaryBlue),
-            const SizedBox(height: 14),
-            Text(message, style: const TextStyle(fontFamily: 'Inter', fontSize: 17, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () { Navigator.pop(context); context.push('/login'); },
-              child: const Text('Sign In'),
-            ),
-            const SizedBox(height: 10),
-            OutlinedButton(
-              onPressed: () { Navigator.pop(context); context.push('/signup'); },
-              child: const Text('Create Account'),
-            ),
-            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -479,8 +445,7 @@ class _PromoBanner extends StatelessWidget {
                 const SizedBox(height: 2),
                 const Text('Real people. Real deals.',
                     style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: Colors.white70)),
-                if (listingCount > 0) ...
-                [
+                if (listingCount > 0) ...[
                   const SizedBox(height: 10),
                   Row(
                     children: [
@@ -612,11 +577,15 @@ class _CityPickerSheet extends StatelessWidget {
         const SizedBox(height: 8),
         const Divider(color: AppColors.border),
         ...cities.map((city) => ListTile(
-              title: Text(city, style: TextStyle(
-                fontFamily: 'Inter', fontSize: 15,
-                fontWeight: city == selectedCity ? FontWeight.w700 : FontWeight.w400,
-                color: city == selectedCity ? AppColors.primaryBlue : AppColors.textPrimary,
-              )),
+              title: Text(
+                city,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 15,
+                  fontWeight: city == selectedCity ? FontWeight.w700 : FontWeight.w400,
+                  color: city == selectedCity ? AppColors.primaryBlue : AppColors.textPrimary,
+                ),
+              ),
               trailing: city == selectedCity ? const Icon(Icons.check, color: AppColors.primaryBlue) : null,
               onTap: () => onSelected(city),
             )),

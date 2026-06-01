@@ -6,7 +6,7 @@ import '../../models/profile.dart';
 import '../../services/auth_service.dart';
 import '../../services/listing_service.dart';
 import '../../theme/app_theme.dart';
-import '../../main.dart' show showAuthModal;
+import '../../widgets/auth_modal.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -62,10 +62,8 @@ class _AccountScreenState extends State<AccountScreen> {
               color: AppColors.primaryBlue,
               child: CustomScrollView(
                 slivers: [
-                  // Profile header
                   SliverToBoxAdapter(child: _ProfileHeader(profile: _profile, onEdit: () => context.push('/edit-profile'))),
 
-                  // Quick stats (3 columns)
                   SliverToBoxAdapter(
                     child: Container(
                       color: AppColors.card,
@@ -81,7 +79,6 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                   ),
 
-                  // Menu section 1
                   SliverToBoxAdapter(
                     child: _Card(margin: const EdgeInsets.fromLTRB(0, 12, 0, 0), children: [
                       _Row(icon: Icons.person_outline, label: 'My Profile', onTap: () {
@@ -114,7 +111,6 @@ class _AccountScreenState extends State<AccountScreen> {
                     ]),
                   ),
 
-                  // Menu section 2
                   SliverToBoxAdapter(
                     child: _Card(margin: const EdgeInsets.fromLTRB(0, 12, 0, 0), children: [
                       _Row(icon: Icons.settings_outlined, label: 'Settings', onTap: () => context.push('/settings')),
@@ -123,7 +119,6 @@ class _AccountScreenState extends State<AccountScreen> {
                     ]),
                   ),
 
-                  // Sign Out
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -133,8 +128,10 @@ class _AccountScreenState extends State<AccountScreen> {
                           backgroundColor: const Color(0xFFFFF1F0),
                           foregroundColor: AppColors.error,
                           minimumSize: const Size(double.infinity, 52),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14),
-                              side: const BorderSide(color: Color(0xFFFECACA), width: 1.5)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            side: const BorderSide(color: Color(0xFFFECACA), width: 1.5),
+                          ),
                           textStyle: const TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w700),
                         ),
                         child: const Text('Sign Out'),
@@ -142,7 +139,6 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                   ),
 
-                  // Footer
                   const SliverToBoxAdapter(child: _Footer()),
                   const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
@@ -177,7 +173,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 }
 
-// ── Guest (logged-out) view ─────────────────────────────────────────────────────
+// ── Guest (logged-out) view ─────────────────────────────────────────────────
 
 class _GuestView extends StatelessWidget {
   const _GuestView();
@@ -191,7 +187,6 @@ class _GuestView extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           children: [
             const SizedBox(height: 20),
-            // PaMarket logo badge
             Center(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
@@ -205,13 +200,17 @@ class _GuestView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            // Login card
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
               child: Column(
                 children: [
-                  const Text('Login to continue', style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textSecondary)),
+                  const Text('Login to continue',
+                      style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textSecondary)),
                   const SizedBox(height: 12),
                   ElevatedButton(
                     onPressed: () => showAuthModal(context, 'Login to continue'),
@@ -227,41 +226,62 @@ class _GuestView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            // My Activity (requires auth)
             GestureDetector(
               onTap: () => showAuthModal(context, 'Login to continue'),
               child: Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+                decoration: BoxDecoration(
+                  color: AppColors.card,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
+                ),
                 child: Row(
                   children: [
-                    Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.lightBlue, borderRadius: BorderRadius.circular(10)),
-                        child: const Icon(Icons.search, color: AppColors.primaryBlue, size: 22)),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(color: AppColors.lightBlue, borderRadius: BorderRadius.circular(10)),
+                      child: const Icon(Icons.search, color: AppColors.primaryBlue, size: 22),
+                    ),
                     const SizedBox(width: 12),
-                    const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('My Activity', style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w700)),
-                      SizedBox(height: 2),
-                      Text('View your recent searches and activities', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
-                    ])),
+                    const Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('My Activity', style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w700)),
+                        SizedBox(height: 2),
+                        Text('View your recent searches and activities',
+                            style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
+                      ]),
+                    ),
                     const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textMuted),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 24),
-            const Text('More on PaMarket', style: TextStyle(fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+            const Text('More on PaMarket',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
             const SizedBox(height: 12),
-            // More list
             _Card(children: [
               _MoreRow(icon: Icons.campaign_outlined, label: 'Advertisements', onTap: () => showAuthModal(context, 'Login to continue')),
               _MoreRow(icon: Icons.favorite_outline, label: 'Favourites', onTap: () => showAuthModal(context, 'Login to continue')),
               _MoreRow(icon: Icons.search, label: 'Saved Searches', onTap: () => showAuthModal(context, 'Login to continue')),
               _MoreRow(icon: Icons.work_outline, label: 'Find Jobs', onTap: () => context.push('/category/jobs?name=Jobs')),
               _MoreRow(icon: Icons.notifications_outlined, label: 'Notification Center', onTap: () => context.push('/notifications')),
-              _MoreRow(icon: Icons.language, label: 'Language', valueText: 'English', onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Language coming soon')))),
+              _MoreRow(
+                icon: Icons.language,
+                label: 'Language',
+                valueText: 'English',
+                onTap: () => ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text('Language coming soon'))),
+              ),
               _MoreRow(icon: Icons.help_outline, label: 'Help & Support', onTap: () => context.push('/help/faq')),
               _MoreRow(icon: Icons.info_outline, label: 'About Us', onTap: () => _showAbout(context)),
-              _MoreRow(icon: Icons.privacy_tip_outlined, label: 'Privacy Policy', onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Privacy Policy coming soon')))),
+              _MoreRow(
+                icon: Icons.privacy_tip_outlined,
+                label: 'Privacy Policy',
+                onTap: () => ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text('Privacy Policy coming soon'))),
+              ),
             ]),
             const SizedBox(height: 24),
             const _Footer(),
@@ -277,12 +297,16 @@ class _GuestView extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: RichText(text: const TextSpan(children: [
-          TextSpan(text: 'Pa', style: TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primaryBlue)),
-          TextSpan(text: 'Market', style: TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.orange)),
-        ])),
-        content: const Text("Zimbabwe's free marketplace.\n\nVersion 1.0.0\n\n© 2026 PaMarket. All rights reserved.\n\nMade with ♥ in Zimbabwe.",
-            style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textSecondary, height: 1.6)),
+        title: RichText(
+          text: const TextSpan(children: [
+            TextSpan(text: 'Pa', style: TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primaryBlue)),
+            TextSpan(text: 'Market', style: TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.orange)),
+          ]),
+        ),
+        content: const Text(
+          "Zimbabwe's free marketplace.\n\nVersion 1.0.0\n\n© 2026 PaMarket. All rights reserved.\n\nMade with ♥ in Zimbabwe.",
+          style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textSecondary, height: 1.6),
+        ),
         actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
       ),
     );
@@ -300,21 +324,29 @@ class _ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-            colors: [Color(0xFF1A3A8F), Color(0xFF2952CC)]),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A3A8F), Color(0xFF2952CC)],
+        ),
       ),
       padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 16, 20, 24),
       child: Row(
         children: [
           Container(
-            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2.5)),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2.5),
+            ),
             child: CircleAvatar(
               radius: 32,
               backgroundColor: Colors.white.withValues(alpha: 0.2),
               backgroundImage: profile?.avatar != null ? CachedNetworkImageProvider(profile!.avatar!) : null,
               child: profile?.avatar == null
-                  ? Text(profile?.name.isNotEmpty == true ? profile!.name[0].toUpperCase() : 'U',
-                      style: const TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white))
+                  ? Text(
+                      profile?.name.isNotEmpty == true ? profile!.name[0].toUpperCase() : 'U',
+                      style: const TextStyle(fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white),
+                    )
                   : null,
             ),
           ),
@@ -324,20 +356,30 @@ class _ProfileHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  Flexible(child: Text(profile?.name ?? 'User',
+                  Flexible(
+                    child: Text(
+                      profile?.name ?? 'User',
                       style: const TextStyle(fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
-                      overflow: TextOverflow.ellipsis)),
-                  if (profile?.verified == true) ...
-                  [const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (profile?.verified == true) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(color: const Color(0xFF22C55E), borderRadius: BorderRadius.circular(20)),
-                      child: const Text('Verified', style: TextStyle(fontFamily: 'Inter', fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)))],
+                      child: const Text('Verified', style: TextStyle(fontFamily: 'Inter', fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
+                    ),
+                  ],
                 ]),
-                if (profile?.email != null) ...
-                [const SizedBox(height: 3),
-                  Text(profile!.email!, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, color: Colors.white70), overflow: TextOverflow.ellipsis)],
-                if (profile?.city != null) ...
-                [const SizedBox(height: 2),
-                  Text(profile!.city!, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white54))],
+                if (profile?.email != null) ...[
+                  const SizedBox(height: 3),
+                  Text(profile!.email!, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, color: Colors.white70), overflow: TextOverflow.ellipsis),
+                ],
+                if (profile?.city != null) ...[
+                  const SizedBox(height: 2),
+                  Text(profile!.city!, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white54)),
+                ],
               ],
             ),
           ),
@@ -388,11 +430,19 @@ class _Card extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: margin,
-      decoration: BoxDecoration(color: AppColors.card, border: const Border(top: BorderSide(color: AppColors.border), bottom: BorderSide(color: AppColors.border))),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        border: const Border(
+          top: BorderSide(color: AppColors.border),
+          bottom: BorderSide(color: AppColors.border),
+        ),
+      ),
       child: Column(
         children: [
-          for (int i = 0; i < children.length; i++) ...
-          [children[i], if (i < children.length - 1) const Divider(height: 1, indent: 56, color: AppColors.border)],
+          for (int i = 0; i < children.length; i++) ...[
+            children[i],
+            if (i < children.length - 1) const Divider(height: 1, indent: 56, color: AppColors.border),
+          ],
         ],
       ),
     );
@@ -418,14 +468,24 @@ class _Row extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 38, height: 38,
-              decoration: BoxDecoration(color: const Color(0xFF1A3A8F14), borderRadius: BorderRadius.circular(12)),
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: AppColors.lightBlue,
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Icon(icon, size: 20, color: AppColors.primaryBlue),
             ),
             const SizedBox(width: 14),
-            Expanded(child: Text(label, style: const TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary))),
-            if (badge != null) Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: AppColors.orange, borderRadius: BorderRadius.circular(10)),
-                child: Text(badge!, style: const TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primaryBlue))),
+            Expanded(
+              child: Text(label, style: const TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+            ),
+            if (badge != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(color: AppColors.orange, borderRadius: BorderRadius.circular(10)),
+                child: Text(badge!, style: const TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primaryBlue)),
+              ),
             if (badgeWidget != null) badgeWidget!,
             const SizedBox(width: 8),
             const Icon(Icons.chevron_right, size: 18, color: AppColors.textMuted),
@@ -436,7 +496,7 @@ class _Row extends StatelessWidget {
   }
 }
 
-// ── More Row (guest list) ──────────────────────────────────────────────────────
+// ── More Row (guest list) ─────────────────────────────────────────────────────
 
 class _MoreRow extends StatelessWidget {
   final IconData icon;
@@ -455,8 +515,11 @@ class _MoreRow extends StatelessWidget {
           children: [
             Icon(icon, size: 22, color: AppColors.textSecondary),
             const SizedBox(width: 14),
-            Expanded(child: Text(label, style: const TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary))),
-            if (valueText != null) Text(valueText!, style: const TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textSecondary)),
+            Expanded(
+              child: Text(label, style: const TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
+            ),
+            if (valueText != null)
+              Text(valueText!, style: const TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textSecondary)),
             const SizedBox(width: 8),
             const Icon(Icons.chevron_right, size: 18, color: AppColors.textMuted),
           ],
@@ -472,7 +535,8 @@ class _CheckBadge extends StatelessWidget {
   const _CheckBadge();
   @override
   Widget build(BuildContext context) => Container(
-        width: 24, height: 24,
+        width: 24,
+        height: 24,
         decoration: const BoxDecoration(color: AppColors.orange, shape: BoxShape.circle),
         child: const Icon(Icons.check, color: Colors.white, size: 14),
       );
@@ -492,9 +556,18 @@ class _Footer extends StatelessWidget {
           const Text('All rights reserved', style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppColors.textMuted)),
           const SizedBox(height: 4),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            GestureDetector(onTap: () {}, child: const Text('Terms', style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppColors.textSecondary, decoration: TextDecoration.underline))),
-            const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('·', style: TextStyle(color: AppColors.textMuted, fontSize: 10))),
-            GestureDetector(onTap: () {}, child: const Text('Privacy', style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppColors.textSecondary, decoration: TextDecoration.underline))),
+            GestureDetector(
+              onTap: () {},
+              child: const Text('Terms', style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppColors.textSecondary, decoration: TextDecoration.underline)),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 6),
+              child: Text('·', style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
+            ),
+            GestureDetector(
+              onTap: () {},
+              child: const Text('Privacy', style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppColors.textSecondary, decoration: TextDecoration.underline)),
+            ),
           ]),
         ],
       ),
