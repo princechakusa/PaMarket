@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -80,16 +79,10 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 300));
     _dotsController.forward();
 
-    // Hold then navigate
+    // Always go to home — login is only required for gated actions
     await Future.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
-
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session != null) {
-      context.go('/home');
-    } else {
-      context.go('/login');
-    }
+    context.go('/home');
   }
 
   @override

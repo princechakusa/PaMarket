@@ -131,7 +131,8 @@ class _MainShell extends StatelessWidget {
 
   const _MainShell({required this.child});
 
-  static const _tabs = ['/home', '/messages', '/profile', '/help'];
+  // Matches existing app: Home, Browse, [Post FAB], Messages, Account
+  static const _tabs = ['/home', '/search', '/messages', '/profile'];
 
   int _indexFromLocation(String loc) {
     for (int i = 0; i < _tabs.length; i++) {
@@ -147,51 +148,232 @@ class _MainShell extends StatelessWidget {
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: _BottomNavWithFab(
         selectedIndex: idx,
-        backgroundColor: AppColors.card,
-        indicatorColor: AppColors.lightBlue,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        onDestinationSelected: (i) {
+        onTap: (i) {
           switch (i) {
             case 0:
               context.go('/home');
             case 1:
-              context.go('/messages');
-            case 2:
-              AuthService.isSignedIn
-                  ? context.go('/profile')
-                  : context.push('/login');
-            case 3:
-              context.go('/help');
+              context.go('/search');
+            case 2: // Post — gated
+              if (!AuthService.isSignedIn) {
+                _showLoginRequired(context, 'Log in to post an ad');
+              } else {
+                context.push('/post-listing');
+              }
+            case 3: // Messages — gated
+              if (!AuthService.isSignedIn) {
+                _showLoginRequired(context, 'Sign in to view messages');
+              } else {
+                context.go('/messages');
+              }
+            case 4: // Account — gated
+              if (!AuthService.isSignedIn) {
+                _showLoginRequired(context, 'Sign in to view your account');
+              } else {
+                context.go('/profile');
+              }
           }
         },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home, color: AppColors.primaryBlue),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.chat_outlined),
-            selectedIcon: Icon(Icons.chat, color: AppColors.primaryBlue),
-            label: 'Messages',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: AppColors.primaryBlue),
-            label: 'Profile',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.help_outline),
-            selectedIcon: Icon(Icons.help, color: AppColors.primaryBlue),
-            label: 'Help',
-          ),
-        ],
+      ),
+    );
+  }
+
+  void _showLoginRequired(BuildContext context, String message) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lock_outline,
+                size: 48, color: AppColors.primaryBlue),
+            const SizedBox(height: 14),
+            Text(
+              message,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context.push('/login');
+              },
+              child: const Text('Sign In'),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context.push('/signup');
+              },
+              child: const Text('Create Account'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
 }
+
+class _BottomNavWithFab extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onTap;
+
+  const _BottomNavWithFab({
+    required this.selectedIndex,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.card,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            children: [
+              _NavItem(
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home,
+                  label: 'Home',
+                  index: 0,
+                  selected: selectedIndex == 0,
+                  onTap: onTap),
+              _NavItem(
+                  icon: Icons.search,
+                  activeIcon: Icons.search,
+                  label: 'Browse',
+                  index: 1,
+                  selected: selectedIndex == 1,
+                  onTap: onTap),
+
+              // Centre POST FAB
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onTap(2),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          color: AppColors.orange,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0x33F5A623),
+                              blurRadius: 8,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.add,
+                            color: Colors.white, size: 26),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Post',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.orange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              _NavItem(
+                  icon: Icons.chat_outlined,
+                  activeIcon: Icons.chat,
+                  label: 'Messages',
+                  index: 3,
+                  selected: selectedIndex == 2,
+                  onTap: onTap),
+              _NavItem(
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person,
+                  label: 'Account',
+                  index: 4,
+                  selected: selectedIndex == 3,
+                  onTap: onTap),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final int index;
+  final bool selected;
+  final ValueChanged<int> onTap;
+
+  const _NavItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.index,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onTap(index),
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              selected ? activeIcon : icon,
+              size: 22,
+              color: selected ? AppColors.primaryBlue : AppColors.textMuted,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 10,
+                fontWeight:
+                    selected ? FontWeight.w700 : FontWeight.w500,
+                color:
+                    selected ? AppColors.primaryBlue : AppColors.textMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
 class _NotificationsScreen extends StatelessWidget {
   const _NotificationsScreen();

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/listing.dart';
 import '../../services/listing_service.dart';
-import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/listing_card.dart';
 import '../../widgets/category_bar.dart';
@@ -164,22 +163,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                   ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          if (!AuthService.isSignedIn) {
-            context.push('/login');
-            return;
-          }
-          context.push('/post-listing');
-        },
-        backgroundColor: AppColors.orange,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text(
-          'Post Ad',
-          style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w700),
-        ),
       ),
     );
   }
