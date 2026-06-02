@@ -260,7 +260,7 @@ class _GuestView extends StatelessWidget {
                 style: TextStyle(fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
             const SizedBox(height: 12),
             _Card(children: [
-              _MoreRow(icon: Icons.campaign_outlined, label: 'Advertisements', onTap: () => context.push('/advertise')),
+              _MoreRow(icon: Icons.campaign_outlined, label: 'Advertisements', onTap: () => showAuthModal(context, 'Login to manage advertisements')),
               _MoreRow(icon: Icons.favorite_outline, label: 'Favourites', onTap: () => showAuthModal(context, 'Login to continue')),
               _MoreRow(icon: Icons.search, label: 'Saved Searches', onTap: () => showAuthModal(context, 'Login to continue')),
               _MoreRow(icon: Icons.work_outline, label: 'Find Jobs', onTap: () => context.push('/jobs')),
@@ -277,8 +277,12 @@ class _GuestView extends StatelessWidget {
               _MoreRow(
                 icon: Icons.privacy_tip_outlined,
                 label: 'Privacy Policy',
-                onTap: () => ScaffoldMessenger.of(context)
-                    .showSnackBar(const SnackBar(content: Text('Privacy Policy coming soon'))),
+                onTap: () => _showLegalPage(context, 'Privacy Policy'),
+              ),
+              _MoreRow(
+                icon: Icons.gavel_outlined,
+                label: 'Terms of Service',
+                onTap: () => _showLegalPage(context, 'Terms of Service'),
               ),
             ]),
             const SizedBox(height: 24),
@@ -302,8 +306,27 @@ class _GuestView extends StatelessWidget {
           ]),
         ),
         content: const Text(
-          "Zimbabwe's free marketplace.\n\nVersion 1.0.0\n\n© 2026 PaMarket. All rights reserved.\n\nMade with ♥ in Zimbabwe.",
+          "Zimbabwe's free marketplace.\n\nVersion 1.0.0\n\n© 2026 PaMarket. All rights reserved.\n\nMade with love in Zimbabwe.",
           style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textSecondary, height: 1.6),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
+      ),
+    );
+  }
+
+  void _showLegalPage(BuildContext context, String title) {
+    final isTerms = title.contains('Terms');
+    final content = isTerms
+        ? 'By using PaMarket you agree to post only lawful content, not misrepresent items, and comply with Zimbabwe\'s Electronic Transactions Act. PaMarket reserves the right to remove listings or suspend accounts that violate these terms.\n\nAll transactions are between buyers and sellers. PaMarket does not guarantee product quality or delivery.\n\n© 2026 PaMarket. All rights reserved.'
+        : 'PaMarket collects your email, phone number, and listing data to operate the marketplace. We do not sell your personal data.\n\nYour contact details are shared with other users only when you initiate a chat or post a listing.\n\nWe use Supabase to store data securely. You may request deletion of your account at any time by contacting support.\n\n© 2026 PaMarket. All rights reserved.';
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(title, style: const TextStyle(fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.w700)),
+        content: SingleChildScrollView(
+          child: Text(content, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary, height: 1.7)),
         ),
         actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
       ),
@@ -548,14 +571,14 @@ class _Footer extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       child: Column(
         children: [
-          const Text('© 2026 PaMarket · Made in Zimbabwe 🇿🇼',
+          const Text('© 2026 PaMarket · Made in Zimbabwe',
               style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textMuted), textAlign: TextAlign.center),
           const SizedBox(height: 4),
           const Text('All rights reserved', style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppColors.textMuted)),
           const SizedBox(height: 4),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             GestureDetector(
-              onTap: () {},
+              onTap: () => _showLegal(context, 'Terms of Service'),
               child: const Text('Terms', style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppColors.textSecondary, decoration: TextDecoration.underline)),
             ),
             const Padding(
@@ -563,11 +586,29 @@ class _Footer extends StatelessWidget {
               child: Text('·', style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
             ),
             GestureDetector(
-              onTap: () {},
+              onTap: () => _showLegal(context, 'Privacy Policy'),
               child: const Text('Privacy', style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppColors.textSecondary, decoration: TextDecoration.underline)),
             ),
           ]),
         ],
+      ),
+    );
+  }
+
+  void _showLegal(BuildContext context, String title) {
+    final isTerms = title.contains('Terms');
+    final content = isTerms
+        ? 'By using PaMarket you agree to post only lawful content, not misrepresent items, and comply with Zimbabwe\'s Electronic Transactions Act. PaMarket reserves the right to remove listings or suspend accounts that violate these terms.\n\nAll transactions are between buyers and sellers. PaMarket does not guarantee product quality or delivery.\n\n© 2026 PaMarket. All rights reserved.'
+        : 'PaMarket collects your email, phone number, and listing data to operate the marketplace. We do not sell your personal data.\n\nYour contact details are shared with other users only when you initiate a chat or post a listing.\n\nWe use Supabase to store data securely. You may request deletion of your account at any time by contacting support.\n\n© 2026 PaMarket. All rights reserved.';
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(title, style: const TextStyle(fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.w700)),
+        content: SingleChildScrollView(
+          child: Text(content, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary, height: 1.7)),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
       ),
     );
   }
