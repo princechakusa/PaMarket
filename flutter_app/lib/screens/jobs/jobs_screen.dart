@@ -303,11 +303,7 @@ class _JobsScreenState extends State<JobsScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: GestureDetector(
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Hire Talent coming soon')),
-                );
-              },
+              onTap: () => context.push('/hire-talent'),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
                 decoration: BoxDecoration(

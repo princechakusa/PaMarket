@@ -269,8 +269,7 @@ class _GuestView extends StatelessWidget {
                 icon: Icons.language,
                 label: 'Language',
                 valueText: 'English',
-                onTap: () => ScaffoldMessenger.of(context)
-                    .showSnackBar(const SnackBar(content: Text('Language coming soon'))),
+                onTap: () => context.push('/settings/language'),
               ),
               _MoreRow(icon: Icons.help_outline, label: 'Help & Support', onTap: () => context.push('/help/faq')),
               _MoreRow(icon: Icons.info_outline, label: 'About Us', onTap: () => _showAbout(context)),

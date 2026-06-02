@@ -417,12 +417,12 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios,
                       size: 14, color: AppColors.textMuted),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Two-Factor Authentication coming soon')),
-                    );
-                  },
+                  onTap: () => _showInfoDialog(
+                    context,
+                    title: 'Two-Factor Authentication',
+                    icon: Icons.security_outlined,
+                    body: 'Two-factor authentication adds an extra layer of security to your account.\n\nWhen enabled, you\'ll need to enter a one-time code from your phone in addition to your password when signing in.\n\nThis feature will be available in a future update.',
+                  ),
                 ),
                 const Divider(height: 1, indent: 56, color: AppColors.border),
                 ListTile(
@@ -453,12 +453,12 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios,
                       size: 14, color: AppColors.textMuted),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Active Sessions coming soon')),
-                    );
-                  },
+                  onTap: () => _showInfoDialog(
+                    context,
+                    title: 'Active Sessions',
+                    icon: Icons.smartphone_outlined,
+                    body: 'Active Sessions lets you see all devices where your PaMarket account is currently signed in, and sign out from any device remotely.\n\nThis feature will be available in a future update.',
+                  ),
                 ),
               ],
             ),
@@ -604,6 +604,26 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
           ),
           const SizedBox(height: 40),
         ],
+      ),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context, {required String title, required IconData icon, required String body}) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(children: [
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(color: AppColors.lightBlue, borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, size: 20, color: AppColors.primaryBlue),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(title, style: const TextStyle(fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w700))),
+        ]),
+        content: Text(body, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary, height: 1.6)),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Got it'))],
       ),
     );
   }

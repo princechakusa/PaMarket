@@ -41,6 +41,8 @@ import 'screens/jobs/find_jobs_screen.dart';
 import 'screens/jobs/job_detail_screen.dart';
 import 'screens/jobs/job_seeker_profile_screen.dart';
 import 'screens/jobs/applied_jobs_screen.dart';
+import 'screens/jobs/hire_talent_screen.dart';
+import 'screens/settings/language_settings_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -117,6 +119,7 @@ final _router = GoRouter(
     GoRoute(path: '/job/:id', builder: (_, state) => JobDetailScreen(jobId: state.pathParameters['id']!)),
     GoRoute(path: '/job-profile', builder: (_, __) => const JobSeekerProfileScreen()),
     GoRoute(path: '/applied-jobs', builder: (_, __) => const AppliedJobsScreen()),
+    GoRoute(path: '/hire-talent', builder: (_, __) => const HireTalentScreen()),
 
     GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
     GoRoute(path: '/settings/notifications', builder: (_, __) => const NotificationSettingsScreen()),
@@ -124,6 +127,7 @@ final _router = GoRouter(
     GoRoute(path: '/settings/theme', builder: (_, __) => const ThemeSettingsScreen()),
     GoRoute(path: '/settings/security', builder: (_, __) => const SecuritySettingsScreen()),
     GoRoute(path: '/settings/blocked-users', builder: (_, __) => const BlockedUsersScreen()),
+    GoRoute(path: '/settings/language', builder: (_, __) => const LanguageSettingsScreen()),
 
     GoRoute(path: '/help/faq', builder: (_, __) => const FaqScreen()),
     GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
