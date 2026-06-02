@@ -36,6 +36,70 @@
   <link rel="stylesheet" href="css/pages-patch.css?v=2">
 
   <style>
+    /* ── Splash Screen ─────────────────────────────────── */
+    #pamarketSplash {
+      position: fixed; inset: 0;
+      background: linear-gradient(160deg, #1A3A8F 0%, #0f2460 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 99999;
+      transition: opacity .4s ease, transform .4s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    #pamarketSplash.hiding {
+      opacity: 0;
+      transform: scale(1.04);
+      pointer-events: none;
+    }
+    .splash-wordmark {
+      font-size: 52px; font-weight: 900;
+      color: #fff; letter-spacing: -2px; line-height: 1;
+      animation: splashBounce .65s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .splash-wordmark em { font-style: normal; color: #F5A623; }
+    .splash-divider {
+      width: 36px; height: 2px; border-radius: 2px;
+      background: rgba(255,255,255,.22);
+      margin: 14px 0 14px;
+      animation: splashFade .5s .3s both;
+    }
+    .splash-slogan-row {
+      display: flex; align-items: flex-start; gap: 14px;
+      animation: splashFade .5s .35s both;
+    }
+    .splash-word-col { display: flex; flex-direction: column; align-items: center; }
+    .splash-slogan-word {
+      font-size: 19px; font-weight: 700;
+      color: #fff; letter-spacing: .3px; line-height: 1.2; white-space: nowrap;
+    }
+    .splash-shadow-word {
+      font-size: 19px; font-weight: 700;
+      color: #8faae8; letter-spacing: .3px; line-height: 1;
+      white-space: nowrap; margin-top: 4px;
+      filter: blur(2px); opacity: .58; pointer-events: none;
+    }
+    .splash-dots {
+      display: flex; gap: 6px; margin-top: 44px;
+      animation: splashFade .5s .55s both;
+    }
+    .splash-dots span {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,.3);
+      animation: dotPulse 1.2s infinite;
+    }
+    .splash-dots span:nth-child(2) { animation-delay: .2s; }
+    .splash-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes splashBounce {
+      from { transform: translateY(16px) scale(.94); } to { transform: none; }
+    }
+    @keyframes splashFade {
+      from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; }
+    }
+    @keyframes dotPulse {
+      0%,80%,100% { background: rgba(255,255,255,.25); transform: scale(.8); }
+      40%          { background: #F5A623; transform: scale(1); }
+    }
+
     /* ── Action Sheet ──────────────────────────────────── */
     .action-sheet {
       position: fixed; left: 0; right: 0; bottom: 0;
@@ -132,6 +196,27 @@
   </style>
 </head>
 <body>
+
+  <!-- Splash -->
+  <div id="pamarketSplash">
+    <div class="splash-wordmark">Pa<em>Market</em></div>
+    <div class="splash-divider"></div>
+    <div class="splash-slogan-row">
+      <div class="splash-word-col">
+        <span class="splash-slogan-word">Konke</span>
+        <span class="splash-shadow-word">tenga</span>
+      </div>
+      <div class="splash-word-col">
+        <span class="splash-slogan-word">Endaweni</span>
+        <span class="splash-shadow-word">tengesa</span>
+      </div>
+      <div class="splash-word-col">
+        <span class="splash-slogan-word">Eyodwa</span>
+        <span class="splash-shadow-word">Qhatsha</span>
+      </div>
+    </div>
+    <div class="splash-dots"><span></span><span></span><span></span></div>
+  </div>
 
   <!-- Offline banner -->
   <div id="netBanner">📡 No internet connection — some features may be limited</div>
