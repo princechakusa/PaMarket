@@ -9,9 +9,9 @@ class ChatService {
 
   static final _conversationSelect = '''
     *,
-    buyer_profile:profiles!conversations_buyer_id_fkey(name, avatar, verified),
-    seller_profile:profiles!conversations_seller_id_fkey(name, avatar, verified),
-    listing:listings(title, photos)
+    buyer_profile:buyer_id(name, avatar, verified),
+    seller_profile:seller_id(name, avatar, verified),
+    listing:listing_id(title, photos)
   ''';
 
   // ── Conversations ──────────────────────────────────────────────────────

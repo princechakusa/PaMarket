@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/theme_service.dart';
 import '../../theme/app_theme.dart';
 
 class ThemeSettingsScreen extends StatefulWidget {
@@ -33,6 +34,7 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen> {
   Future<void> _setTheme(String theme) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('theme', theme);
+    themeNotifier.value = themeFromString(theme);
     if (mounted) {
       setState(() => _selectedTheme = theme);
     }
@@ -82,35 +84,6 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen> {
                         value: 'system',
                         groupValue: _selectedTheme,
                         onChanged: _setTheme,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.orangeLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: AppColors.orange.withValues(alpha: 0.3)),
-                  ),
-                  child: const Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.info_outline,
-                          color: AppColors.orange, size: 18),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Dark mode is under development. Selecting Dark or System Default will be saved but the app will remain in light mode until the update is released.',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 13,
-                            color: AppColors.textPrimary,
-                            height: 1.5,
-                          ),
-                        ),
                       ),
                     ],
                   ),

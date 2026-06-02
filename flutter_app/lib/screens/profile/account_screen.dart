@@ -116,6 +116,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       _Row(icon: Icons.settings_outlined, label: 'Settings', onTap: () => context.push('/settings')),
                       _Row(icon: Icons.security_outlined, label: 'Security & Password', onTap: () => context.push('/settings/security')),
                       _Row(icon: Icons.help_outline, label: 'Help & Support', onTap: () => context.push('/help/faq')),
+                      _Row(icon: Icons.support_agent_outlined, label: 'Contact Support', onTap: () => context.push('/help/faq')),
                     ]),
                   ),
 

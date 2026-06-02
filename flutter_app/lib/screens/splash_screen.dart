@@ -185,31 +185,64 @@ class _LogoWordmark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RichText(
-      text: const TextSpan(
-        children: [
-          TextSpan(
-            text: 'Pa',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 52,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              letterSpacing: -1.5,
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: Image.asset(
+            'assets/images/icon.png',
+            width: 100,
+            height: 100,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: const Center(
+                child: Text(
+                  'P',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 52,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.orange,
+                  ),
+                ),
+              ),
             ),
           ),
-          TextSpan(
-            text: 'Market',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 52,
-              fontWeight: FontWeight.w800,
-              color: AppColors.orange,
-              letterSpacing: -1.5,
-            ),
+        ),
+        const SizedBox(height: 20),
+        RichText(
+          text: const TextSpan(
+            children: [
+              TextSpan(
+                text: 'Pa',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 48,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -1.5,
+                ),
+              ),
+              TextSpan(
+                text: 'Market',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 48,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.orange,
+                  letterSpacing: -1.5,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

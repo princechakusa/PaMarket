@@ -98,16 +98,46 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+                padding: const EdgeInsets.fromLTRB(24, 36, 24, 0),
                 child: Column(
                   children: [
+                    // App icon
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(22),
+                      child: Image.asset(
+                        'assets/images/icon.png',
+                        width: 86,
+                        height: 86,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 86,
+                          height: 86,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'P',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 40,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.orange,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     RichText(
                       text: const TextSpan(children: [
                         TextSpan(
                           text: 'Pa',
                           style: TextStyle(
                             fontFamily: 'Inter',
-                            fontSize: 36,
+                            fontSize: 32,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                             letterSpacing: -1,
@@ -117,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           text: 'Market',
                           style: TextStyle(
                             fontFamily: 'Inter',
-                            fontSize: 36,
+                            fontSize: 32,
                             fontWeight: FontWeight.w800,
                             color: AppColors.orange,
                             letterSpacing: -1,
@@ -125,13 +155,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ]),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     const Text(
-                      'Welcome back',
+                      "Zimbabwe's Free Marketplace",
                       style: TextStyle(
                         fontFamily: 'Inter',
-                        fontSize: 15,
+                        fontSize: 13,
                         color: Colors.white70,
+                        letterSpacing: 0.2,
                       ),
                     ),
                   ],

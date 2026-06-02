@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/supabase_config.dart';
 import 'services/auth_service.dart';
+import 'services/theme_service.dart';
 import 'theme/app_theme.dart';
 import 'widgets/auth_modal.dart';
 
@@ -60,6 +61,7 @@ Future<void> main() async {
     ),
   );
 
+  await initTheme();
   runApp(const PaMarketApp());
 }
 
@@ -147,11 +149,16 @@ class PaMarketApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'PaMarket',
-      theme: AppTheme.light,
-      routerConfig: _router,
-      debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (_, mode, __) => MaterialApp.router(
+        title: 'PaMarket',
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: mode,
+        routerConfig: _router,
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }
