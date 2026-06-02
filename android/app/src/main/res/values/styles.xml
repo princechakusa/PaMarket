@@ -5,6 +5,7 @@
         <item name="colorPrimary">#1A3A8F</item>
         <item name="colorPrimaryDark">#1A3A8F</item>
         <item name="colorAccent">#F5A623</item>
+        <item name="android:windowBackground">@drawable/splash</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
