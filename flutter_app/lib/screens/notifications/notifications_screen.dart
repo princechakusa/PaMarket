@@ -6,7 +6,7 @@ import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/auth_modal.dart';
 
-// ── Data model ──────────────────────────────────────────────────────────────
+// ── Data model ────────────────────────────────────────────────────────────────────────
 
 class _AppNotification {
   final String id;
@@ -72,7 +72,7 @@ class _AppNotification {
   }
 }
 
-// ── Type → visual helpers ────────────────────────────────────────────────────
+// ── Type → visual helpers ────────────────────────────────────────────────────────────────────
 
 Color _notifColor(String type) {
   switch (type) {
@@ -145,7 +145,7 @@ String _navHint(String type, String? deepLink) {
   return 'Open ›';
 }
 
-// ── Screen ───────────────────────────────────────────────────────────────────
+// ── Screen ─────────────────────────────────────────────────────────────────────────────
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -170,7 +170,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  // ── Data loading ──────────────────────────────────────────────────────────
+  // ── Data loading ────────────────────────────────────────────────────────────────────
 
   Future<void> _load() async {
     setState(() {
@@ -218,7 +218,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  // ── Actions ────────────────────────────────────────────────────────────────
+  // ── Actions ───────────────────────────────────────────────────────────────────────────
 
   Future<void> _markAsRead(_AppNotification notif) async {
     if (notif.read) return;
@@ -303,13 +303,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case 'message':
         context.go('/messages');
       case 'sale':
-        context.go('/account');
+        context.go('/profile');
       case 'boost':
       case 'verify':
       case 'review':
       case 'ban':
       case 'report':
-        context.go('/account');
+        context.go('/profile');
       default:
         context.go('/');
     }
@@ -329,7 +329,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   int get _unreadCount => _notifications.where((n) => !n.read).length;
 
-  // ── Build ─────────────────────────────────────────────────────────────────
+  // ── Build ───────────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -621,7 +621,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
+// ── Empty state ─────────────────────────────────────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
@@ -665,7 +665,7 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-// ── Notification tile ─────────────────────────────────────────────────────────
+// ── Notification tile ─────────────────────────────────────────────────────────────────────────────
 
 class _NotificationTile extends StatelessWidget {
   final _AppNotification notification;

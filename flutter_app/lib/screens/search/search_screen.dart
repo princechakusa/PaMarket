@@ -24,19 +24,19 @@ const _kZwCities = [
   'Zvishavane',
 ];
 
-const _kCategories = [
-  {'id': 'vehicles', 'name': 'Vehicles', 'icon': '🚗'},
-  {'id': 'property', 'name': 'Property', 'icon': '🏠'},
-  {'id': 'electronics', 'name': 'Electronics', 'icon': '📱'},
-  {'id': 'fashion', 'name': 'Fashion', 'icon': '👗'},
-  {'id': 'furniture', 'name': 'Furniture', 'icon': '🛋️'},
-  {'id': 'services', 'name': 'Services', 'icon': '🔧'},
-  {'id': 'jobs', 'name': 'Jobs', 'icon': '💼'},
-  {'id': 'agriculture', 'name': 'Agriculture', 'icon': '🌱'},
-  {'id': 'pets', 'name': 'Pets', 'icon': '🐾'},
-  {'id': 'kids', 'name': 'Kids', 'icon': '🧸'},
-  {'id': 'rooms', 'name': 'Rooms', 'icon': '🛏️'},
-  {'id': 'other', 'name': 'Other', 'icon': '📦'},
+const _kCategories = <Map<String, Object>>[
+  {'id': 'vehicles', 'name': 'Vehicles', 'icon': Icons.local_shipping},
+  {'id': 'property', 'name': 'Property', 'icon': Icons.home_outlined},
+  {'id': 'electronics', 'name': 'Electronics', 'icon': Icons.devices},
+  {'id': 'fashion', 'name': 'Fashion', 'icon': Icons.checkroom},
+  {'id': 'furniture', 'name': 'Furniture', 'icon': Icons.chair},
+  {'id': 'services', 'name': 'Services', 'icon': Icons.build},
+  {'id': 'jobs', 'name': 'Jobs', 'icon': Icons.work},
+  {'id': 'agriculture', 'name': 'Agriculture', 'icon': Icons.agriculture},
+  {'id': 'pets', 'name': 'Pets', 'icon': Icons.pets},
+  {'id': 'kids', 'name': 'Kids', 'icon': Icons.child_care},
+  {'id': 'rooms', 'name': 'Rooms', 'icon': Icons.bed},
+  {'id': 'other', 'name': 'Other', 'icon': Icons.category},
 ];
 
 const _kConditions = ['all', 'new', 'like-new', 'used', 'refurbished'];
@@ -47,7 +47,7 @@ const _kSortLabels = ['Latest', 'Price: Low → High', 'Price: High → Low', 'T
 
 const _kPageSize = 30;
 
-// ── Popular search hints (shown before first search) ─────────────────────────
+// ── Popular search hints (shown before first search) ────────────────────────────────────────────
 const _kHints = [
   'iPhone',
   'Toyota',
@@ -259,7 +259,7 @@ class _SearchScreenState extends State<SearchScreen> {
     return n;
   }
 
-  // ── Build ────────────────────────────────────────────────────────────────
+  // ── Build ──────────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -277,7 +277,7 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  // ── Header — matches browse.js app-header ─────────────────────────────────
+  // ── Header — matches browse.js app-header ─────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(
       color: AppColors.primaryBlue,
@@ -404,7 +404,7 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  // ── Filter panel — matches browse-filters-wrap in browse.js ───────────────
+  // ── Filter panel — matches browse-filters-wrap in browse.js ───────────────────────
   Widget _buildFilterPanel() {
     return Container(
       color: AppColors.card,
@@ -422,12 +422,12 @@ class _SearchScreenState extends State<SearchScreen> {
               children: _kCategories.map((c) {
                 final isSelected = _selectedCategory == c['id'];
                 return _ChoiceChipItem(
-                  label: '${c['icon']} ${c['name']}',
+                  label: c['name'] as String,
+                  icon: c['icon'] as IconData,
                   selected: isSelected,
                   onTap: () {
                     setState(() {
-                      _selectedCategory =
-                          isSelected ? null : c['id'] as String;
+                      _selectedCategory = isSelected ? null : c['id'] as String;
                     });
                   },
                 );
@@ -547,7 +547,7 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  // ── Results count bar — matches "X listings" count in categories.js ────────
+  // ── Results count bar — matches "X listings" count in categories.js ─────────────────
   Widget _buildResultsBar() {
     return Container(
       color: AppColors.card,
@@ -584,7 +584,7 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  // ── Body ──────────────────────────────────────────────────────────────────
+  // ── Body ────────────────────────────────────────────────────────────────────────────
   Widget _buildBody() {
     if (!_searched) return _buildHints();
     if (_loading) {
@@ -679,10 +679,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             color: AppColors.primaryBlue.withValues(alpha: 0.15)),
                       ),
                       child: Center(
-                        child: Text(
-                          c['icon'] as String,
-                          style: const TextStyle(fontSize: 24),
-                        ),
+                        child: Icon(c['icon'] as IconData, size: 26, color: AppColors.primaryBlue),
                       ),
                     ),
                     const SizedBox(height: 5),
@@ -803,7 +800,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
-// ── Reusable sub-widgets ─────────────────────────────────────────────────────
+// ── Reusable sub-widgets ───────────────────────────────────────────────────────────────────
 
 class _FilterToggleButton extends StatelessWidget {
   final bool isOpen;
@@ -839,7 +836,7 @@ class _FilterToggleButton extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-            if (badgeCount > 0) ...[  
+            if (badgeCount > 0) ...[
               const SizedBox(width: 5),
               Container(
                 width: 18,
@@ -990,11 +987,13 @@ class _ChoiceChipItem extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final IconData? icon;
 
   const _ChoiceChipItem({
     required this.label,
     required this.selected,
     required this.onTap,
+    this.icon,
   });
 
   @override
@@ -1010,15 +1009,23 @@ class _ChoiceChipItem extends StatelessWidget {
             color: selected ? AppColors.primaryBlue : AppColors.border,
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color:
-                selected ? Colors.white : AppColors.textPrimary,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 13, color: selected ? Colors.white : AppColors.textSecondary),
+              const SizedBox(width: 5),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: selected ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+          ],
         ),
       ),
     );
