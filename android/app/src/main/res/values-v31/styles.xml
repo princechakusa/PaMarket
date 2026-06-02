@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Android 12+ splash: solid blue background, no icon -->
+    <!-- Android 12+ forced system splash: make it solid blue with the icon on blue
+         so it blends into the HTML splash instead of flashing white + icon. -->
     <style name="AppTheme.NoActionBarLaunch" parent="AppTheme.NoActionBar">
-        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:windowSplashScreenBackground">#1A3A8F</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#1A3A8F</item>
         <item name="android:windowDisablePreview">true</item>
     </style>
 

@@ -16,7 +16,8 @@
     </style>
 
     <style name="AppTheme.NoActionBarLaunch" parent="AppTheme.NoActionBar">
-        <item name="android:windowBackground">@android:color/transparent</item>
+        <!-- Solid blue behind the (transparent) WebView until the HTML splash paints — no black gap -->
+        <item name="android:windowBackground">@drawable/launch_background</item>
         <item name="android:windowDisablePreview">true</item>
     </style>
 
