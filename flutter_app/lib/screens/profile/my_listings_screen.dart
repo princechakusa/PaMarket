@@ -4,8 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../models/listing.dart';
 import '../../services/auth_service.dart';
-import '../../services/listing_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/auth_modal.dart';
 
 class MyListingsScreen extends StatefulWidget {
   const MyListingsScreen({super.key});
@@ -14,16 +14,29 @@ class MyListingsScreen extends StatefulWidget {
   State<MyListingsScreen> createState() => _MyListingsScreenState();
 }
 
-class _MyListingsScreenState extends State<MyListingsScreen> {
+class _MyListingsScreenState extends State<MyListingsScreen>
+    with SingleTickerProviderStateMixin {
   final _supabase = Supabase.instance.client;
-  List<Listing> _listings = [];
+
+  List<Listing> _allListings = [];
   bool _loading = true;
   String? _error;
+
+  late final TabController _tabController;
+
+  static const _tabs = ['Active', 'Pending', 'Sold'];
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: _tabs.length, vsync: this);
     if (AuthService.isSignedIn) _load();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -32,11 +45,19 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       _error = null;
     });
     try {
-      final items =
-          await ListingService.fetchUserListings(AuthService.currentUserId!);
+      final uid = AuthService.currentUserId!;
+      final data = await _supabase
+          .from('listings')
+          .select()
+          .eq('user_id', uid)
+          .order('created_at', ascending: false);
+
       if (mounted) {
         setState(() {
-          _listings = items;
+          _allListings = (data as List)
+              .map((m) => Listing.fromMap(m as Map<String, dynamic>))
+              .where((l) => l.status != 'deleted')
+              .toList();
           _loading = false;
         });
       }
@@ -50,6 +71,80 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
     }
   }
 
+  List<Listing> _filtered(String tab) {
+    switch (tab) {
+      case 'Active':
+        return _allListings.where((l) => l.status == 'active').toList();
+      case 'Pending':
+        return _allListings.where((l) => l.status == 'pending').toList();
+      case 'Sold':
+        return _allListings.where((l) => l.status == 'sold').toList();
+      default:
+        return _allListings;
+    }
+  }
+
+  bool _isExpiringSoon(Listing l) {
+    final age = DateTime.now().difference(l.createdAt).inDays;
+    return age >= 25 && age < 30;
+  }
+
+  bool _isExpired(Listing l) {
+    return DateTime.now().difference(l.createdAt).inDays >= 30;
+  }
+
+  Future<void> _markAsSold(Listing listing) async {
+    try {
+      await _supabase
+          .from('listings')
+          .update({'status': 'sold'}).eq('id', listing.id);
+      if (mounted) {
+        setState(() {
+          final idx = _allListings.indexWhere((l) => l.id == listing.id);
+          if (idx != -1) {
+            _allListings[idx] = Listing(
+              id: listing.id,
+              sellerId: listing.sellerId,
+              sellerName: listing.sellerName,
+              sellerPhone: listing.sellerPhone,
+              title: listing.title,
+              description: listing.description,
+              price: listing.price,
+              currency: listing.currency,
+              category: listing.category,
+              province: listing.province,
+              city: listing.city,
+              suburb: listing.suburb,
+              photos: listing.photos,
+              status: 'sold',
+              condition: listing.condition,
+              views: listing.views,
+              createdAt: listing.createdAt,
+              updatedAt: DateTime.now(),
+              sellerVerified: listing.sellerVerified,
+              sellerAvatar: listing.sellerAvatar,
+            );
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Listing marked as sold'),
+            backgroundColor: AppColors.textPrimary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update listing'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _deleteListing(Listing listing) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -58,12 +153,16 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
         title: const Text(
           'Delete Listing',
           style: TextStyle(
-              fontFamily: 'Inter', fontWeight: FontWeight.w700, fontSize: 18),
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w700,
+              fontSize: 18),
         ),
         content: Text(
           'Are you sure you want to delete "${listing.title}"? This cannot be undone.',
           style: const TextStyle(
-              fontFamily: 'Inter', color: AppColors.textSecondary, height: 1.5),
+              fontFamily: 'Inter',
+              color: AppColors.textSecondary,
+              height: 1.5),
         ),
         actions: [
           TextButton(
@@ -78,15 +177,14 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
         ],
       ),
     );
-
     if (confirmed != true) return;
-
     try {
       await _supabase
           .from('listings')
           .update({'status': 'deleted'}).eq('id', listing.id);
       if (mounted) {
-        setState(() => _listings.removeWhere((l) => l.id == listing.id));
+        setState(
+            () => _allListings.removeWhere((l) => l.id == listing.id));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Listing deleted'),
@@ -106,18 +204,103 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
     }
   }
 
-  bool _isExpired(Listing listing) {
-    return DateTime.now().difference(listing.createdAt).inDays >= 30;
+  void _showMenu(BuildContext context, Listing listing) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+              child: Text(
+                listing.title,
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Divider(color: AppColors.border, height: 1),
+            _MenuItem(
+              icon: Icons.visibility_outlined,
+              label: 'View Listing',
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/listing/${listing.id}');
+              },
+            ),
+            _MenuItem(
+              icon: Icons.edit_outlined,
+              label: 'Edit',
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/edit-listing/${listing.id}');
+              },
+            ),
+            if (listing.status == 'active')
+              _MenuItem(
+                icon: Icons.check_circle_outline,
+                label: 'Mark as Sold',
+                color: AppColors.success,
+                onTap: () {
+                  Navigator.pop(context);
+                  _markAsSold(listing);
+                },
+              ),
+            _MenuItem(
+              icon: Icons.rocket_launch_outlined,
+              label: 'Boost Listing',
+              color: AppColors.orange,
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/boost/${listing.id}');
+              },
+            ),
+            _MenuItem(
+              icon: Icons.delete_outline,
+              label: 'Delete',
+              color: AppColors.error,
+              onTap: () {
+                Navigator.pop(context);
+                _deleteListing(listing);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     if (!AuthService.isSignedIn) {
       return Scaffold(
-        appBar: AppBar(title: const Text('My Listings')),
+        appBar: AppBar(
+          title: const Text('My Listings'),
+          backgroundColor: AppColors.primaryBlue,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(40),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -125,18 +308,44 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                     size: 72, color: AppColors.border),
                 const SizedBox(height: 16),
                 const Text(
-                  'Sign in to view your listings',
+                  'Sign in to manage your listings',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 8),
+                const Text(
+                  'Post ads and manage them all in one place.',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: () => context.push('/login'),
-                  child: const Text('Sign In'),
+                  onPressed: () => showAuthModal(
+                      context, 'Login to manage your listings'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text(
+                    'Sign In',
+                    style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700),
+                  ),
                 ),
               ],
             ),
@@ -145,10 +354,45 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       );
     }
 
+    final activeCount =
+        _allListings.where((l) => l.status == 'active').length;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('My Listings')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(
+          'My Listings${activeCount > 0 ? ' ($activeCount active)' : ''}',
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: AppColors.primaryBlue,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white60,
+          indicatorColor: AppColors.orange,
+          indicatorWeight: 3,
+          labelStyle: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 13,
+              fontWeight: FontWeight.w700),
+          unselectedLabelStyle: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 13,
+              fontWeight: FontWeight.w500),
+          tabs: _tabs.map((t) => Tab(text: t)).toList(),
+        ),
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(
+                  color: AppColors.primaryBlue))
           : _error != null
               ? Center(
                   child: Column(
@@ -163,35 +407,42 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                               color: AppColors.textSecondary)),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                          onPressed: _load, child: const Text('Retry')),
+                          onPressed: _load,
+                          child: const Text('Retry')),
                     ],
                   ),
                 )
-              : _listings.isEmpty
-                  ? _EmptyState()
-                  : RefreshIndicator(
+              : TabBarView(
+                  controller: _tabController,
+                  children: _tabs.map((tab) {
+                    final items = _filtered(tab);
+                    if (items.isEmpty) {
+                      return _buildEmptyState(context);
+                    }
+                    return RefreshIndicator(
                       onRefresh: _load,
                       color: AppColors.primaryBlue,
                       child: ListView.builder(
                         padding:
                             const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                        itemCount: _listings.length,
+                        itemCount: items.length,
                         itemBuilder: (_, i) => _ListingRow(
-                          listing: _listings[i],
-                          isExpired: _isExpired(_listings[i]),
-                          onView: () =>
-                              context.push('/listing/${_listings[i].id}'),
-                          onDelete: () => _deleteListing(_listings[i]),
+                          listing: items[i],
+                          isExpired: _isExpired(items[i]),
+                          isExpiringSoon: _isExpiringSoon(items[i]),
+                          onMenu: () =>
+                              _showMenu(context, items[i]),
+                          onView: () => context
+                              .push('/listing/${items[i].id}'),
                         ),
                       ),
-                    ),
+                    );
+                  }).toList(),
+                ),
     );
   }
-}
 
-class _EmptyState extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
@@ -212,7 +463,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Post your first ad and start selling!',
+              'Post your first ad!',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 14,
@@ -222,9 +473,23 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => context.push('/post-listing'),
+              onPressed: () => context.push('/post'),
               icon: const Icon(Icons.add),
-              label: const Text('Post an Ad'),
+              label: const Text(
+                'Post an Ad',
+                style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 28, vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
             ),
           ],
         ),
@@ -236,23 +501,34 @@ class _EmptyState extends StatelessWidget {
 class _ListingRow extends StatelessWidget {
   final Listing listing;
   final bool isExpired;
+  final bool isExpiringSoon;
+  final VoidCallback onMenu;
   final VoidCallback onView;
-  final VoidCallback onDelete;
 
   const _ListingRow({
     required this.listing,
     required this.isExpired,
+    required this.isExpiringSoon,
+    required this.onMenu,
     required this.onView,
-    required this.onDelete,
   });
 
   Color get _statusColor {
-    if (listing.status == 'active') return AppColors.success;
-    if (listing.status == 'pending') return AppColors.warning;
-    return AppColors.error;
+    if (isExpired) return AppColors.error;
+    switch (listing.status) {
+      case 'active':
+        return AppColors.success;
+      case 'pending':
+        return AppColors.orange;
+      case 'sold':
+        return AppColors.textMuted;
+      default:
+        return AppColors.textMuted;
+    }
   }
 
   String get _statusLabel {
+    if (isExpired) return 'Expired';
     switch (listing.status) {
       case 'active':
         return 'Active';
@@ -260,8 +536,6 @@ class _ListingRow extends StatelessWidget {
         return 'Pending';
       case 'sold':
         return 'Sold';
-      case 'expired':
-        return 'Expired';
       case 'banned':
         return 'Banned';
       default:
@@ -278,198 +552,203 @@ class _ListingRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Thumbnail
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: SizedBox(
-                width: 76,
-                height: 76,
-                child: listing.photos.isNotEmpty
-                    ? Image.network(
-                        listing.photos.first,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
+      child: InkWell(
+        onTap: onView,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Thumbnail
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  width: 76,
+                  height: 76,
+                  child: listing.photos.isNotEmpty
+                      ? Image.network(
+                          listing.photos.first,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: AppColors.lightBlue,
+                            child: const Icon(Icons.image_outlined,
+                                color: AppColors.textMuted),
+                          ),
+                        )
+                      : Container(
                           color: AppColors.lightBlue,
-                          child: const Icon(Icons.image_outlined,
-                              color: AppColors.textMuted),
+                          child: const Icon(Icons.storefront_outlined,
+                              color: AppColors.textMuted, size: 32),
                         ),
-                      )
-                    : Container(
-                        color: AppColors.lightBlue,
-                        child: const Icon(Icons.storefront_outlined,
-                            color: AppColors.textMuted, size: 32),
-                      ),
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
+              const SizedBox(width: 12),
 
-            // Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          listing.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      if (isExpired)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Text(
-                            'Expired',
-                            style: TextStyle(
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title row
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            listing.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
                               fontFamily: 'Inter',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.error,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    listing.formattedPrice,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primaryBlue,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      // Status pill
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: _statusColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          _statusLabel,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: _statusColor,
+                        // 3-dot menu
+                        GestureDetector(
+                          onTap: onMenu,
+                          child: const Padding(
+                            padding: EdgeInsets.only(left: 8),
+                            child: Icon(Icons.more_vert,
+                                size: 20,
+                                color: AppColors.textSecondary),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.remove_red_eye_outlined,
-                          size: 12, color: AppColors.textMuted),
-                      const SizedBox(width: 3),
-                      Text(
-                        '${listing.views}',
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 11,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.access_time,
-                          size: 12, color: AppColors.textMuted),
-                      const SizedBox(width: 3),
-                      Text(
-                        timeago.format(listing.createdAt),
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 11,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Action buttons
-                  Row(
-                    children: [
-                      _ActionButton(
-                        label: 'View',
-                        icon: Icons.visibility_outlined,
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+
+                    // Price
+                    Text(
+                      listing.formattedPrice,
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.primaryBlue,
-                        onTap: onView,
                       ),
-                      const SizedBox(width: 8),
-                      _ActionButton(
-                        label: 'Delete',
-                        icon: Icons.delete_outline,
-                        color: AppColors.error,
-                        onTap: onDelete,
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Status + expiry warning row
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: _statusColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            _statusLabel,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: _statusColor,
+                            ),
+                          ),
+                        ),
+                        if (isExpiringSoon && !isExpired) ...[  
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'Expiring soon',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFB45309),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Meta row: views + date
+                    Row(
+                      children: [
+                        const Icon(Icons.remove_red_eye_outlined,
+                            size: 12, color: AppColors.textMuted),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${listing.views} views',
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 11,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Icon(Icons.access_time,
+                            size: 12, color: AppColors.textMuted),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            timeago.format(listing.createdAt),
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 11,
+                              color: AppColors.textMuted,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  final String label;
+class _MenuItem extends StatelessWidget {
   final IconData icon;
-  final Color color;
+  final String label;
   final VoidCallback onTap;
+  final Color color;
 
-  const _ActionButton({
-    required this.label,
+  const _MenuItem({
     required this.icon,
-    required this.color,
+    required this.label,
     required this.onTap,
+    this.color = AppColors.textPrimary,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
+      child: Padding(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 13, color: color),
-            const SizedBox(width: 4),
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 16),
             Text(
               label,
               style: TextStyle(
                 fontFamily: 'Inter',
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
                 color: color,
               ),
             ),

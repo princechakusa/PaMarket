@@ -5,6 +5,7 @@ import '../../models/listing.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/listing_card.dart';
+import '../../widgets/auth_modal.dart';
 
 class SavedScreen extends StatefulWidget {
   const SavedScreen({super.key});
@@ -32,31 +33,23 @@ class _SavedScreenState extends State<SavedScreen> {
     });
     try {
       final uid = AuthService.currentUserId!;
-      // Fetch saved listing IDs
-      final saves = await _supabase
-          .from('saves')
-          .select('listing_id')
+      final data = await _supabase
+          .from('saved_listings')
+          .select('*, listings(*)')
           .eq('user_id', uid);
 
-      final ids = (saves as List)
-          .map((s) => s['listing_id'] as String)
-          .toList();
-
-      if (ids.isEmpty) {
-        if (mounted) setState(() => _loading = false);
-        return;
-      }
-
-      // Fetch listing details for each saved ID
-      final data = await _supabase
-          .from('listings')
-          .select('*, profiles(verified, avatar)')
-          .inFilter('id', ids)
-          .neq('status', 'deleted');
-
       if (mounted) {
+        final listings = <Listing>[];
+        for (final row in (data as List)) {
+          final listingMap = row['listings'];
+          if (listingMap != null) {
+            try {
+              listings.add(Listing.fromMap(listingMap as Map<String, dynamic>));
+            } catch (_) {}
+          }
+        }
         setState(() {
-          _listings = (data as List).map((m) => Listing.fromMap(m)).toList();
+          _listings = listings;
           _loading = false;
         });
       }
@@ -70,63 +63,253 @@ class _SavedScreenState extends State<SavedScreen> {
     }
   }
 
+  Future<void> _unsave(Listing listing) async {
+    final uid = AuthService.currentUserId!;
+    try {
+      await _supabase
+          .from('saved_listings')
+          .delete()
+          .eq('user_id', uid)
+          .eq('listing_id', listing.id);
+      if (mounted) {
+        setState(() => _listings.removeWhere((l) => l.id == listing.id));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Removed from saved'),
+            backgroundColor: AppColors.textPrimary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to remove from saved'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmUnsave(Listing listing) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Remove from Saved',
+          style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w700,
+              fontSize: 18),
+        ),
+        content: Text(
+          'Remove "${listing.title}" from your saved listings?',
+          style: const TextStyle(
+              fontFamily: 'Inter',
+              color: AppColors.textSecondary,
+              height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) _unsave(listing);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!AuthService.isSignedIn) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Saved Ads')),
-        body: _SignInPrompt(
-          message: 'Sign in to see your saved ads',
-          onSignIn: () => context.push('/login'),
+        appBar: AppBar(
+          title: const Text('Saved Ads'),
+          backgroundColor: AppColors.primaryBlue,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.bookmark_border,
+                    size: 72, color: AppColors.border),
+                const SizedBox(height: 16),
+                const Text(
+                  'Sign in to see your saved ads',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Tap the heart on any listing to save it for later.',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () =>
+                      showAuthModal(context, 'Login to see saved items'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text(
+                    'Sign In',
+                    style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Saved Ads')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(
+          'Saved (${_listings.length})',
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: AppColors.primaryBlue,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(
+                  color: AppColors.primaryBlue))
           : _error != null
-              ? _ErrorState(error: _error!, onRetry: _load)
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline,
+                          size: 56, color: AppColors.error),
+                      const SizedBox(height: 12),
+                      Text(
+                        _error!,
+                        style: const TextStyle(
+                            fontFamily: 'Inter',
+                            color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                          onPressed: _load,
+                          child: const Text('Retry')),
+                    ],
+                  ),
+                )
               : _listings.isEmpty
-                  ? const _EmptyState()
+                  ? _buildEmptyState(context)
                   : RefreshIndicator(
                       onRefresh: _load,
                       color: AppColors.primaryBlue,
                       child: GridView.builder(
                         padding:
-                            const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                            const EdgeInsets.fromLTRB(12, 12, 12, 100),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
                           childAspectRatio: 0.72,
                         ),
                         itemCount: _listings.length,
-                        itemBuilder: (_, i) =>
-                            ListingCard(listing: _listings[i]),
+                        itemBuilder: (ctx, i) {
+                          final listing = _listings[i];
+                          return GestureDetector(
+                            onLongPress: () => _confirmUnsave(listing),
+                            child: Dismissible(
+                              key: ValueKey(listing.id),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                padding:
+                                    const EdgeInsets.only(right: 16),
+                                decoration: BoxDecoration(
+                                  color: AppColors.error,
+                                  borderRadius:
+                                      BorderRadius.circular(12),
+                                ),
+                                child: const Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.bookmark_remove,
+                                        color: Colors.white, size: 28),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Unsave',
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              confirmDismiss: (_) async {
+                                await _unsave(listing);
+                                return false;
+                              },
+                              child: ListingCard(listing: listing),
+                            ),
+                          );
+                        },
                       ),
                     ),
     );
   }
-}
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.favorite_outline, size: 72, color: AppColors.border),
+            const Icon(Icons.bookmark_border,
+                size: 72, color: AppColors.border),
             const SizedBox(height: 16),
             const Text(
-              'Nothing saved yet',
+              'No saved listings yet',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 18,
@@ -136,7 +319,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Tap ♡ on any listing to save it',
+              'Tap the heart on any listing to save it.',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 14,
@@ -148,75 +331,24 @@ class _EmptyState extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () => context.go('/home'),
               icon: const Icon(Icons.search),
-              label: const Text('Browse Listings'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SignInPrompt extends StatelessWidget {
-  final String message;
-  final VoidCallback onSignIn;
-
-  const _SignInPrompt({required this.message, required this.onSignIn});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.lock_outline, size: 64, color: AppColors.border),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+              label: const Text(
+                'Browse Listings',
+                style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: onSignIn,
-              child: const Text('Sign In'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 28, vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  final String error;
-  final VoidCallback onRetry;
-
-  const _ErrorState({required this.error, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 56, color: AppColors.error),
-          const SizedBox(height: 12),
-          Text(error,
-              style: const TextStyle(
-                  fontFamily: 'Inter', color: AppColors.textSecondary)),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: onRetry,
-            child: const Text('Retry'),
-          ),
-        ],
       ),
     );
   }
