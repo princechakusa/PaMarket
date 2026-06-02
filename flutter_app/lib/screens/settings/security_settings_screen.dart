@@ -15,126 +15,148 @@ class SecuritySettingsScreen extends StatefulWidget {
 class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
   final _supabase = Supabase.instance.client;
 
-  void _showChangePasswordDialog() {
-    final controller = TextEditingController();
-    final confirmCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    bool saving = false;
+  // Change password
+  final _newPassCtrl = TextEditingController();
+  final _confPassCtrl = TextEditingController();
+  bool _newPassObscure = true;
+  bool _confPassObscure = true;
+  String _passStrength = '';
+  Color _passStrengthColor = Colors.transparent;
+  String? _passError;
+  bool _savingPass = false;
 
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setDlgState) => AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Text(
-              'Change Password',
-              style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18),
-            ),
-            content: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: controller,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'New Password',
-                      prefixIcon: Icon(Icons.lock_outline),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.length < 8) {
-                        return 'Password must be at least 8 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: confirmCtrl,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Confirm Password',
-                      prefixIcon: Icon(Icons.lock_outline),
-                    ),
-                    validator: (v) {
-                      if (v != controller.text) return 'Passwords do not match';
-                      return null;
-                    },
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: saving
-                    ? null
-                    : () async {
-                        if (!formKey.currentState!.validate()) return;
-                        setDlgState(() => saving = true);
-                        final messenger = ScaffoldMessenger.of(ctx);
-                        try {
-                          await _supabase.auth.updateUser(
-                            UserAttributes(password: controller.text),
-                          );
-                          if (ctx.mounted) {
-                            Navigator.pop(ctx);
-                            messenger.showSnackBar(
-                              const SnackBar(
-                                content: Text('Password updated successfully'),
-                                backgroundColor: AppColors.success,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (ctx.mounted) {
-                            setDlgState(() => saving = false);
-                            messenger.showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text('Failed to update password: $e'),
-                                backgroundColor: AppColors.error,
-                              ),
-                            );
-                          }
-                        }
-                      },
-                child: saving
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Update'),
-              ),
-            ],
+  // Delete account
+  final _deleteConfirmCtrl = TextEditingController();
+  bool _deletingAccount = false;
+
+  @override
+  void dispose() {
+    _newPassCtrl.dispose();
+    _confPassCtrl.dispose();
+    _deleteConfirmCtrl.dispose();
+    super.dispose();
+  }
+
+  String _computeStrength(String val) {
+    if (val.isEmpty) return '';
+    int score = 0;
+    if (val.length >= 8) score++;
+    if (RegExp(r'[A-Z]').hasMatch(val)) score++;
+    if (RegExp(r'[a-z]').hasMatch(val)) score++;
+    if (RegExp(r'[0-9]').hasMatch(val)) score++;
+    if (RegExp(r'[^A-Za-z0-9]').hasMatch(val)) score++;
+    switch (score) {
+      case 1:
+        return 'Very weak';
+      case 2:
+        return 'Weak';
+      case 3:
+        return 'Fair';
+      case 4:
+        return 'Strong';
+      case 5:
+        return 'Very strong';
+      default:
+        return '';
+    }
+  }
+
+  Color _strengthColor(String label) {
+    switch (label) {
+      case 'Very weak':
+        return const Color(0xFFEF4444);
+      case 'Weak':
+        return const Color(0xFFF59E0B);
+      case 'Fair':
+        return const Color(0xFFEAB308);
+      case 'Strong':
+        return const Color(0xFF22C55E);
+      case 'Very strong':
+        return const Color(0xFF16A34A);
+      default:
+        return Colors.transparent;
+    }
+  }
+
+  Future<void> _updatePassword() async {
+    final nw = _newPassCtrl.text.trim();
+    final conf = _confPassCtrl.text.trim();
+
+    setState(() => _passError = null);
+
+    if (nw.isEmpty || conf.isEmpty) {
+      setState(() => _passError = 'Please fill in both password fields');
+      return;
+    }
+    if (nw.length < 8) {
+      setState(() => _passError = 'Password must be at least 8 characters');
+      return;
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(nw)) {
+      setState(
+          () => _passError = 'Password must include at least one uppercase letter');
+      return;
+    }
+    if (!RegExp(r'[a-z]').hasMatch(nw)) {
+      setState(
+          () => _passError = 'Password must include at least one lowercase letter');
+      return;
+    }
+    if (!RegExp(r'[0-9]').hasMatch(nw)) {
+      setState(
+          () => _passError = 'Password must include at least one number');
+      return;
+    }
+    if (!RegExp(r'[^A-Za-z0-9]').hasMatch(nw)) {
+      setState(
+          () => _passError = 'Password must include at least one symbol (e.g. !@#\$)');
+      return;
+    }
+    if (nw != conf) {
+      setState(() => _passError = 'Passwords do not match');
+      return;
+    }
+
+    setState(() => _savingPass = true);
+    try {
+      await _supabase.auth.updateUser(UserAttributes(password: nw));
+      if (mounted) {
+        _newPassCtrl.clear();
+        _confPassCtrl.clear();
+        setState(() {
+          _passStrength = '';
+          _savingPass = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password updated successfully!'),
+            backgroundColor: AppColors.success,
           ),
         );
-      },
-    );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _passError = e.toString();
+          _savingPass = false;
+        });
+      }
+    }
   }
 
-  void _showComingSoon(String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature coming soon')),
-    );
-  }
+  Future<void> _deleteAccount() async {
+    final val = _deleteConfirmCtrl.text.trim();
+    if (val != 'DELETE') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Type DELETE to confirm')),
+      );
+      return;
+    }
 
-  void _showDeleteAccountDialog() {
-    showDialog(
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Delete Account',
           style: TextStyle(
@@ -144,7 +166,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
               color: AppColors.error),
         ),
         content: const Text(
-          'This will permanently delete your account and all your listings. This action cannot be undone.',
+          'This permanently deletes your account, listings and messages. Cannot be undone.',
           style: TextStyle(
               fontFamily: 'Inter',
               color: AppColors.textSecondary,
@@ -152,36 +174,38 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              final messenger = ScaffoldMessenger.of(context);
-              final router = GoRouter.of(context);
-              try {
-                await _supabase
-                    .from('profiles')
-                    .delete()
-                    .eq('id', AuthService.currentUserId!);
-                await AuthService.signOut();
-                router.go('/login');
-              } catch (e) {
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to delete account: $e'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-              }
-            },
+            onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Delete Account'),
+            child: const Text('Permanently Delete'),
           ),
         ],
       ),
     );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deletingAccount = true);
+    try {
+      final uid = AuthService.currentUserId!;
+      // Delete profile row (cascades to listings, messages in DB)
+      await _supabase.from('profiles').delete().eq('id', uid);
+      await AuthService.signOut();
+      if (mounted) context.go('/profile');
+    } catch (e) {
+      if (mounted) {
+        setState(() => _deletingAccount = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete account: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -191,19 +215,172 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 8),
+          // ── Info banner ──────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              border: Border.all(color: const Color(0xFFBFDBFE)),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: const Text(
-              'ACCOUNT SECURITY',
+              'Password must be at least 8 characters and include uppercase, lowercase, a number, and a symbol.',
               style: TextStyle(
                 fontFamily: 'Inter',
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textMuted,
-                letterSpacing: 1,
+                fontSize: 13,
+                color: Color(0xFF1E40AF),
+                height: 1.5,
               ),
             ),
           ),
+          const SizedBox(height: 20),
+
+          // ── Change Password ──────────────────────────────────────────
+          _sectionLabel('Change Password'),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // New password
+                const Text(
+                  'New Password',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _newPassCtrl,
+                  obscureText: _newPassObscure,
+                  onChanged: (v) {
+                    final s = _computeStrength(v);
+                    setState(() {
+                      _passStrength = s;
+                      _passStrengthColor = _strengthColor(s);
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Enter new password',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _newPassObscure
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        size: 20,
+                      ),
+                      onPressed: () =>
+                          setState(() => _newPassObscure = !_newPassObscure),
+                    ),
+                  ),
+                ),
+                if (_passStrength.isNotEmpty) ...
+                  [
+                    const SizedBox(height: 6),
+                    Text(
+                      _passStrength,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _passStrengthColor,
+                      ),
+                    ),
+                  ],
+                const SizedBox(height: 14),
+
+                // Confirm password
+                const Text(
+                  'Confirm New Password',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _confPassCtrl,
+                  obscureText: _confPassObscure,
+                  onSubmitted: (_) => _updatePassword(),
+                  decoration: InputDecoration(
+                    hintText: 'Re-enter new password',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _confPassObscure
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        size: 20,
+                      ),
+                      onPressed: () =>
+                          setState(() => _confPassObscure = !_confPassObscure),
+                    ),
+                  ),
+                ),
+
+                if (_passError != null) ...
+                  [
+                    const SizedBox(height: 8),
+                    Text(
+                      _passError!,
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ],
+                const SizedBox(height: 16),
+
+                ElevatedButton(
+                  onPressed: _savingPass ? null : _updatePassword,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: _savingPass
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Text(
+                          'Update Password',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // ── Account Security ─────────────────────────────────────────
+          _sectionLabel('Account Security'),
           Container(
             decoration: BoxDecoration(
               color: AppColors.card,
@@ -212,60 +389,217 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
             ),
             child: Column(
               children: [
-                _SecurityTile(
-                  icon: Icons.lock_outline,
-                  title: 'Change Password',
-                  subtitle: 'Update your account password',
-                  onTap: _showChangePasswordDialog,
+                ListTile(
+                  leading: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.lightBlue,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.security_outlined,
+                        size: 20, color: AppColors.primaryBlue),
+                  ),
+                  title: const Text(
+                    'Two-Factor Authentication',
+                    style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary),
+                  ),
+                  subtitle: const Text(
+                    'Add an extra layer of security',
+                    style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        color: AppColors.textSecondary),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios,
+                      size: 14, color: AppColors.textMuted),
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Two-Factor Authentication coming soon')),
+                    );
+                  },
                 ),
-                const Divider(
-                    height: 1, indent: 56, color: AppColors.border),
-                _SecurityTile(
-                  icon: Icons.security_outlined,
-                  title: 'Two-Factor Authentication',
-                  subtitle: 'Add an extra layer of security',
-                  onTap: () => _showComingSoon('Two-Factor Authentication'),
-                ),
-                const Divider(
-                    height: 1, indent: 56, color: AppColors.border),
-                _SecurityTile(
-                  icon: Icons.devices_outlined,
-                  title: 'Active Sessions',
-                  subtitle: 'See where you are signed in',
-                  onTap: () => _showComingSoon('Active Sessions'),
+                const Divider(height: 1, indent: 56, color: AppColors.border),
+                ListTile(
+                  leading: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.lightBlue,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.smartphone_outlined,
+                        size: 20, color: AppColors.primaryBlue),
+                  ),
+                  title: const Text(
+                    'Active Sessions',
+                    style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary),
+                  ),
+                  subtitle: const Text(
+                    'See where you are signed in',
+                    style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        color: AppColors.textSecondary),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios,
+                      size: 14, color: AppColors.textMuted),
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Active Sessions coming soon')),
+                    );
+                  },
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
 
-          const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 8),
-            child: Text(
-              'DANGER ZONE',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textMuted,
-                letterSpacing: 1,
-              ),
-            ),
-          ),
+          // ── Delete Account ───────────────────────────────────────────
+          _sectionLabel('Danger Zone'),
           Container(
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppColors.card,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                  color: AppColors.error.withValues(alpha: 0.3)),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
             ),
-            child: _SecurityTile(
-              icon: Icons.delete_forever_outlined,
-              iconColor: AppColors.error,
-              title: 'Delete Account',
-              titleColor: AppColors.error,
-              subtitle: 'Permanently remove your account and data',
-              onTap: _showDeleteAccountDialog,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Warning header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.2)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Delete Account',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.error,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'This permanently deletes your account, listings and messages. Cannot be undone.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // What will be deleted
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      _DeleteRow(label: 'Profile', value: 'Permanently removed'),
+                      const Divider(height: 16, color: AppColors.border),
+                      _DeleteRow(label: 'Listings', value: 'All deleted'),
+                      const Divider(height: 16, color: AppColors.border),
+                      _DeleteRow(label: 'Messages', value: 'All deleted'),
+                      const Divider(height: 16, color: AppColors.border),
+                      _DeleteRow(label: 'Wallet', value: 'Balance forfeited'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Confirm input
+                const Text(
+                  'Type DELETE to confirm',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _deleteConfirmCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'Type DELETE',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                ElevatedButton(
+                  onPressed: _deletingAccount ? null : _deleteAccount,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: _deletingAccount
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Text(
+                          'Permanently Delete Account',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton(
+                  onPressed: () => context.pop(),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: const BorderSide(color: AppColors.border),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text(
+                    'Cancel - Keep Account',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 40),
@@ -275,56 +609,48 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
   }
 }
 
-class _SecurityTile extends StatelessWidget {
-  final IconData icon;
-  final Color? iconColor;
-  final String title;
-  final Color? titleColor;
-  final String subtitle;
-  final VoidCallback onTap;
+Widget _sectionLabel(String text) {
+  return Padding(
+    padding: const EdgeInsets.only(left: 4, bottom: 8),
+    child: Text(
+      text.toUpperCase(),
+      style: const TextStyle(
+        fontFamily: 'Inter',
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textMuted,
+        letterSpacing: 1,
+      ),
+    ),
+  );
+}
 
-  const _SecurityTile({
-    required this.icon,
-    this.iconColor,
-    required this.title,
-    this.titleColor,
-    required this.subtitle,
-    required this.onTap,
-  });
+class _DeleteRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _DeleteRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
-    final color = iconColor ?? AppColors.primaryBlue;
-    return ListTile(
-      leading: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 13,
+              color: AppColors.textSecondary),
         ),
-        child: Icon(icon, size: 20, color: color),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          color: titleColor ?? AppColors.textPrimary,
+        Text(
+          value,
+          style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.error),
         ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 12,
-          color: AppColors.textSecondary,
-        ),
-      ),
-      trailing: const Icon(Icons.arrow_forward_ios,
-          size: 14, color: AppColors.textMuted),
-      onTap: onTap,
+      ],
     );
   }
 }

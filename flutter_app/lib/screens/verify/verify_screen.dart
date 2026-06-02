@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
@@ -13,82 +12,73 @@ class VerifyScreen extends StatefulWidget {
   State<VerifyScreen> createState() => _VerifyScreenState();
 }
 
-class _VerifyScreenState extends State<VerifyScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabs;
+class _VerifyScreenState extends State<VerifyScreen> {
+  final _supabase = Supabase.instance.client;
 
-  @override
-  void initState() {
-    super.initState();
-    _tabs = TabController(length: 2, vsync: this);
-  }
+  // Verification state loaded from Supabase
+  bool _loading = true;
+  bool _verified = false;
+  bool _pending = false;
 
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Get Verified'),
-        bottom: TabBar(
-          controller: _tabs,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white60,
-          indicatorColor: AppColors.orange,
-          tabs: const [
-            Tab(text: 'Individual'),
-            Tab(text: 'Business'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabs,
-        children: const [
-          _IndividualVerify(),
-          _BusinessVerify(),
-        ],
-      ),
-    );
-  }
-}
-
-class _IndividualVerify extends StatefulWidget {
-  const _IndividualVerify();
-
-  @override
-  State<_IndividualVerify> createState() => _IndividualVerifyState();
-}
-
-class _IndividualVerifyState extends State<_IndividualVerify> {
+  // Uploaded files (local)
   File? _idPhoto;
   File? _selfie;
   bool _submitting = false;
 
-  Future<void> _pick(bool isSelfie) async {
-    final picker = ImagePicker();
-    final xf = await picker.pickImage(
-      source: isSelfie ? ImageSource.camera : ImageSource.gallery,
-      imageQuality: 80,
-    );
-    if (xf != null) {
-      setState(() {
-        if (isSelfie) {
-          _selfie = File(xf.path);
-        } else {
-          _idPhoto = File(xf.path);
-        }
-      });
+  @override
+  void initState() {
+    super.initState();
+    _loadVerificationStatus();
+  }
+
+  Future<void> _loadVerificationStatus() async {
+    if (!AuthService.isSignedIn) {
+      setState(() => _loading = false);
+      return;
+    }
+    try {
+      final data = await _supabase
+          .from('profiles')
+          .select('verified, verification_pending')
+          .eq('id', AuthService.currentUserId!)
+          .maybeSingle();
+
+      if (mounted) {
+        setState(() {
+          _verified = data?['verified'] as bool? ?? false;
+          _pending = data?['verification_pending'] as bool? ?? false;
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _submit() async {
+  Future<void> _pickId() async {
+    final picker = ImagePicker();
+    final xf = await picker.pickImage(
+        source: ImageSource.gallery, imageQuality: 82);
+    if (xf != null && mounted) {
+      setState(() => _idPhoto = File(xf.path));
+    }
+  }
+
+  Future<void> _takeSelfie() async {
+    final picker = ImagePicker();
+    final xf = await picker.pickImage(
+        source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.front,
+        imageQuality: 85);
+    if (xf != null && mounted) {
+      setState(() => _selfie = File(xf.path));
+    }
+  }
+
+  Future<void> _submitForReview() async {
     if (_idPhoto == null || _selfie == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload both your ID and selfie.')),
+        const SnackBar(content: Text('Complete both steps first')),
       );
       return;
     }
@@ -96,53 +86,113 @@ class _IndividualVerifyState extends State<_IndividualVerify> {
     setState(() => _submitting = true);
     try {
       final uid = AuthService.currentUserId!;
-      final client = Supabase.instance.client;
 
-      // Upload ID
+      // Upload ID document to Supabase Storage
       final idName = 'individual/$uid/id.jpg';
-      await client.storage
-          .from('verification')
-          .upload(idName, _idPhoto!, fileOptions: const FileOptions(upsert: true));
+      await _supabase.storage.from('verification').upload(
+            idName,
+            _idPhoto!,
+            fileOptions: const FileOptions(upsert: true),
+          );
 
-      // Upload selfie
+      // Upload selfie to Supabase Storage
       final selfieName = 'individual/$uid/selfie.jpg';
-      await client.storage.from('verification').upload(selfieName, _selfie!,
-          fileOptions: const FileOptions(upsert: true));
+      await _supabase.storage.from('verification').upload(
+            selfieName,
+            _selfie!,
+            fileOptions: const FileOptions(upsert: true),
+          );
 
-      // Mark pending
-      await AuthService.updateProfile({'verification_pending': true});
+      // Save verification record for admin review
+      await _supabase.from('verifications').upsert({
+        'user_id': uid,
+        'status': 'pending',
+        'submitted_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id');
+
+      // Mark profile as pending
+      await _supabase
+          .from('profiles')
+          .update({'verification_pending': true})
+          .eq('id', uid);
 
       if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => AlertDialog(
-            title: const Text('Submitted!'),
-            content: const Text(
-                'Your verification documents have been submitted. We\'ll review them within 1–3 business days and notify you.'),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  context.pop();
-                },
-                child: const Text('OK'),
-              ),
-            ],
+        setState(() {
+          _pending = true;
+          _submitting = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Documents submitted! Admin will review within 24 hours.'),
+            backgroundColor: AppColors.success,
+            duration: Duration(seconds: 5),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _submitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('Failed to submit: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
-    } finally {
-      if (mounted) setState(() => _submitting = false);
     }
   }
 
+  Future<void> _cancelPending() async {
+    try {
+      await _supabase
+          .from('profiles')
+          .update({'verification_pending': false})
+          .eq('id', AuthService.currentUserId!);
+      if (mounted) {
+        setState(() => _pending = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Verification request cancelled')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Failed to cancel: $e'),
+              backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_verified ? 'Identity Verified' : 'Verify Identity'),
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _verified
+              ? _VerifiedView()
+              : _pending
+                  ? _PendingView(onCancel: _cancelPending)
+                  : _UploadView(
+                      idPhoto: _idPhoto,
+                      selfie: _selfie,
+                      submitting: _submitting,
+                      onPickId: _pickId,
+                      onTakeSelfie: _takeSelfie,
+                      onSubmit: _submitForReview,
+                    ),
+    );
+  }
+}
+
+// ── Verified State ────────────────────────────────────────────────────────────
+
+class _VerifiedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -150,62 +200,100 @@ class _IndividualVerifyState extends State<_IndividualVerify> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Badge preview
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.lightBlue,
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.info_outline, color: AppColors.primaryBlue, size: 20),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Verification takes 1–3 business days. Your documents are stored securely.',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 13,
-                      color: AppColors.primaryBlue,
-                    ),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.verified,
+                      size: 28, color: AppColors.success),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'You are verified',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.success,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Buyers trust verified sellers more.',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: 24),
-
-          _DocUploader(
-            title: 'National ID / Passport',
-            subtitle: 'Upload a clear photo of your ID document',
-            file: _idPhoto,
-            icon: Icons.badge_outlined,
-            onTap: () => _pick(false),
-          ),
-
           const SizedBox(height: 16),
 
-          _DocUploader(
-            title: 'Selfie with ID',
-            subtitle: 'Take a selfie while holding your ID',
-            file: _selfie,
-            icon: Icons.face_outlined,
-            onTap: () => _pick(true),
-            useCamera: true,
-          ),
-
-          const SizedBox(height: 32),
-
-          ElevatedButton(
-            onPressed: _submitting ? null : _submit,
-            child: _submitting
-                ? const SizedBox(
-                    height: 22,
-                    width: 22,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2.5, color: Colors.white))
-                : const Text('Submit for Verification'),
+          // Info box
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.lightBlue,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.shield_outlined,
+                    size: 18, color: AppColors.primaryBlue),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Blue badge active',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Your blue verified badge is now showing on all your listings and profile.',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 13,
+                          color: AppColors.primaryBlue,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -213,114 +301,11 @@ class _IndividualVerifyState extends State<_IndividualVerify> {
   }
 }
 
-class _BusinessVerify extends StatefulWidget {
-  const _BusinessVerify();
+// ── Pending State ─────────────────────────────────────────────────────────────
 
-  @override
-  State<_BusinessVerify> createState() => _BusinessVerifyState();
-}
-
-class _BusinessVerifyState extends State<_BusinessVerify> {
-  final _nameCtrl = TextEditingController();
-  File? _regDoc;
-  File? _taxDoc;
-  File? _premisesPhoto;
-  File? _repPhoto;
-  bool _submitting = false;
-
-  @override
-  void dispose() {
-    _nameCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pick(String field) async {
-    final picker = ImagePicker();
-    final xf = await picker.pickImage(
-        source: ImageSource.gallery, imageQuality: 80);
-    if (xf != null) {
-      setState(() {
-        final f = File(xf.path);
-        switch (field) {
-          case 'reg':
-            _regDoc = f;
-          case 'tax':
-            _taxDoc = f;
-          case 'premises':
-            _premisesPhoto = f;
-          case 'rep':
-            _repPhoto = f;
-        }
-      });
-    }
-  }
-
-  Future<void> _submit() async {
-    if (_nameCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Enter your business name.')));
-      return;
-    }
-    if (_regDoc == null || _taxDoc == null ||
-        _premisesPhoto == null || _repPhoto == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please upload all required documents.')));
-      return;
-    }
-
-    setState(() => _submitting = true);
-    try {
-      final uid = AuthService.currentUserId!;
-      final client = Supabase.instance.client;
-      final prefix = 'business/$uid';
-
-      for (final entry in {
-        '$prefix/registration.jpg': _regDoc!,
-        '$prefix/tax.jpg': _taxDoc!,
-        '$prefix/premises.jpg': _premisesPhoto!,
-        '$prefix/representative.jpg': _repPhoto!,
-      }.entries) {
-        await client.storage.from('verification').upload(
-            entry.key, entry.value,
-            fileOptions: const FileOptions(upsert: true));
-      }
-
-      await AuthService.updateProfile({
-        'verification_pending': true,
-        'sector': 'business',
-        'job_title': _nameCtrl.text.trim(),
-      });
-
-      if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => AlertDialog(
-            title: const Text('Submitted!'),
-            content: const Text(
-                'Your business verification documents have been submitted. We\'ll review within 3–5 business days.'),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  context.pop();
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
+class _PendingView extends StatelessWidget {
+  final VoidCallback onCancel;
+  const _PendingView({required this.onCancel});
 
   @override
   Widget build(BuildContext context) {
@@ -329,55 +314,115 @@ class _BusinessVerifyState extends State<_BusinessVerify> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextFormField(
-            controller: _nameCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Business / Company Name',
-              prefixIcon: Icon(Icons.business_outlined),
+          // Pending card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0x1FFBBF24),
+              border: Border.all(color: const Color(0x66FBBF24)),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: const Color(0x1FFBBF24),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.access_time_rounded,
+                      size: 32, color: Color(0xFFFBBF24)),
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'Verification Pending',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFFBBF24),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Your ID and selfie have been submitted.\nAn admin will review your documents and approve your badge — usually within 24 hours.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
-          _DocUploader(
-            title: 'Certificate of Incorporation',
-            subtitle: 'Company registration or business registration',
-            file: _regDoc,
-            icon: Icons.description_outlined,
-            onTap: () => _pick('reg'),
+
+          // What happens next
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.lightBlue,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.shield_outlined,
+                    size: 18, color: AppColors.primaryBlue),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'What happens next?',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Once approved you will get a notification and your blue badge will appear on all your listings automatically.',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 13,
+                          color: AppColors.primaryBlue,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          _DocUploader(
-            title: 'Tax Clearance Certificate',
-            subtitle: 'Current ZIMRA tax clearance',
-            file: _taxDoc,
-            icon: Icons.receipt_long_outlined,
-            onTap: () => _pick('tax'),
-          ),
-          const SizedBox(height: 12),
-          _DocUploader(
-            title: 'Business Premises Photo',
-            subtitle: 'Photo of the exterior/interior of your business',
-            file: _premisesPhoto,
-            icon: Icons.storefront_outlined,
-            onTap: () => _pick('premises'),
-          ),
-          const SizedBox(height: 12),
-          _DocUploader(
-            title: 'Authorised Representative with ID',
-            subtitle: 'Photo of rep holding their national ID',
-            file: _repPhoto,
-            icon: Icons.person_outlined,
-            onTap: () => _pick('rep'),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: _submitting ? null : _submit,
-            child: _submitting
-                ? const SizedBox(
-                    height: 22,
-                    width: 22,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2.5, color: Colors.white))
-                : const Text('Submit for Business Verification'),
+          const SizedBox(height: 16),
+
+          OutlinedButton(
+            onPressed: onCancel,
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              side: const BorderSide(color: AppColors.border),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text(
+              'Cancel request',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
           ),
         ],
       ),
@@ -385,88 +430,352 @@ class _BusinessVerifyState extends State<_BusinessVerify> {
   }
 }
 
-class _DocUploader extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final File? file;
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool useCamera;
+// ── Upload / Unverified State ─────────────────────────────────────────────────
 
-  const _DocUploader({
-    required this.title,
-    required this.subtitle,
-    required this.file,
-    required this.icon,
-    required this.onTap,
-    this.useCamera = false,
+class _UploadView extends StatelessWidget {
+  final File? idPhoto;
+  final File? selfie;
+  final bool submitting;
+  final VoidCallback onPickId;
+  final VoidCallback onTakeSelfie;
+  final VoidCallback onSubmit;
+
+  const _UploadView({
+    required this.idPhoto,
+    required this.selfie,
+    required this.submitting,
+    required this.onPickId,
+    required this.onTakeSelfie,
+    required this.onSubmit,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: file != null ? AppColors.lightBlue : AppColors.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: file != null ? AppColors.primaryBlue : AppColors.border,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Badge preview prompt
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.lightBlue,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.verified_outlined,
+                      size: 28, color: AppColors.primaryBlue),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Get your Blue Verified Badge',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Verified sellers get 4x more enquiries',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: file != null
-                    ? AppColors.primaryBlue.withValues(alpha: 0.1)
-                    : AppColors.background,
-                borderRadius: BorderRadius.circular(10),
+          const SizedBox(height: 20),
+
+          // Step 1 — Phone verified (always done)
+          _VerifyStep(
+            number: 1,
+            done: true,
+            title: 'Phone verified',
+            subtitle: 'Your phone number has been confirmed',
+          ),
+          const SizedBox(height: 12),
+
+          // Step 2 — Upload ID
+          _VerifyStep(
+            number: 2,
+            done: idPhoto != null,
+            title: 'Upload ID document',
+            subtitle:
+                "National ID, passport or driver's licence. Both sides if applicable.",
+            actionLabel: idPhoto != null ? 'Replace ID' : 'Upload ID',
+            actionIcon: Icons.upload_outlined,
+            onAction: onPickId,
+            preview: idPhoto != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.file(
+                      idPhoto!,
+                      width: double.infinity,
+                      height: 140,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(height: 12),
+
+          // Step 3 — Selfie
+          _VerifyStep(
+            number: 3,
+            done: selfie != null,
+            title: 'Face Selfie',
+            subtitle:
+                'Take a clear photo of your face. An admin will review it alongside your ID.',
+            actionLabel: selfie != null ? 'Re-take Selfie' : 'Take Selfie',
+            actionIcon: Icons.camera_alt_outlined,
+            onAction: onTakeSelfie,
+            preview: selfie != null
+                ? Center(
+                    child: ClipOval(
+                      child: Image.file(
+                        selfie!,
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(height: 20),
+
+          // Submit button — only when both uploads done
+          if (idPhoto != null && selfie != null) ...
+            [
+              ElevatedButton(
+                onPressed: submitting ? null : onSubmit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: submitting
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : const Text(
+                        'Submit for Admin Review',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
-              child: file != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.file(file!, fit: BoxFit.cover),
-                    )
-                  : Icon(icon, color: AppColors.textSecondary, size: 24),
+              const SizedBox(height: 8),
+              const Text(
+                'Reviewed by our team within 24 hours.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+          // Security note
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.lightBlue,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.2)),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.lock_outline,
+                    size: 18, color: AppColors.primaryBlue),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your data is secure',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Your ID and selfie are sent securely and used solely for identity verification. Never sold or shared.',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 13,
+                          color: AppColors.primaryBlue,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Verify Step Widget ────────────────────────────────────────────────────────
+
+class _VerifyStep extends StatelessWidget {
+  final int number;
+  final bool done;
+  final String title;
+  final String subtitle;
+  final String? actionLabel;
+  final IconData? actionIcon;
+  final VoidCallback? onAction;
+  final Widget? preview;
+
+  const _VerifyStep({
+    required this.number,
+    required this.done,
+    required this.title,
+    required this.subtitle,
+    this.actionLabel,
+    this.actionIcon,
+    this.onAction,
+    this.preview,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: done ? AppColors.success.withValues(alpha: 0.4) : AppColors.border,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Step number / check
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: done
+                  ? AppColors.success
+                  : AppColors.lightBlue,
+              shape: BoxShape.circle,
+            ),
+            child: done
+                ? const Icon(Icons.check, size: 18, color: Colors.white)
+                : Center(
+                    child: Text(
+                      '$number',
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryBlue,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    file != null ? 'Uploaded ✓' : subtitle,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 12,
-                      color: file != null
-                          ? AppColors.success
-                          : AppColors.textSecondary,
-                    ),
+          ),
+          const SizedBox(width: 14),
+
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+                if (onAction != null) ...
+                  [
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: onAction,
+                      icon: Icon(actionIcon ?? Icons.upload_outlined, size: 16),
+                      label: Text(
+                        actionLabel ?? '',
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primaryBlue,
+                        side: const BorderSide(color: AppColors.primaryBlue),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
+                      ),
+                    ),
+                  ],
+                if (preview != null) ...
+                  [
+                    const SizedBox(height: 10),
+                    preview!,
+                  ],
+              ],
             ),
-            Icon(
-              file != null ? Icons.check_circle : Icons.upload_outlined,
-              color: file != null ? AppColors.success : AppColors.textMuted,
-              size: 20,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
