@@ -8,6 +8,6 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getBridge().getWebView().setBackgroundColor(Color.parseColor("#1A3A8F"));
+        getBridge().getWebView().setBackgroundColor(Color.TRANSPARENT);
     }
 }
