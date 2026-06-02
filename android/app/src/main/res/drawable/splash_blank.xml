@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Blue-on-blue icon used for the Android 12+ system splash so no logo is
+     visible — the splash reads as a blank blue frame that blends into the HTML splash. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#1A3A8F" />
+</shape>
