@@ -4,7 +4,7 @@
     <!-- Android 12+ splash: solid blue background, no icon -->
     <style name="AppTheme.NoActionBarLaunch" parent="AppTheme.NoActionBar">
         <item name="android:windowSplashScreenBackground">#1A3A8F</item>
-        <item name="android:windowBackground">@drawable/splash</item>
+        <item name="android:windowBackground">@drawable/launch_background</item>
     </style>
 
 </resources>
