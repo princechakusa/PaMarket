@@ -98,7 +98,7 @@ final _router = GoRouter(
         otherUserName: state.uri.queryParameters['name'],
       ),
     ),
-    GoRoute(path: '/profile/:id', builder: (_, state) => ProfileScreen(userId: state.pathParameters['id'])),
+    GoRoute(path: '/profile/:id', builder: (_, state) => ProfileScreen(userId: state.pathParameters['id']!)),
     GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
     GoRoute(path: '/verify', builder: (_, __) => const VerifyScreen()),
     GoRoute(path: '/admin', builder: (_, __) => const AdminScreen()),
