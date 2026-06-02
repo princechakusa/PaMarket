@@ -80,10 +80,22 @@ class _AuthDialogState extends State<_AuthDialog> {
                       try {
                         final res = await AuthService.signInWithGoogle();
                         if (res != null && mounted) Navigator.pop(context);
-                      } catch (_) {
+                      } catch (e) {
                         if (mounted) {
                           Navigator.pop(context);
-                          widget.parentContext.push('/login');
+                          ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+                            SnackBar(
+                              content: const Text('Google sign-in failed. Please use email/password instead.'),
+                              backgroundColor: AppColors.error,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              action: SnackBarAction(
+                                label: 'Login',
+                                textColor: Colors.white,
+                                onPressed: () => widget.parentContext.push('/login'),
+                              ),
+                            ),
+                          );
                         }
                       } finally {
                         if (mounted) setState(() => _loading = false);

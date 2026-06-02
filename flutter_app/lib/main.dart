@@ -219,7 +219,7 @@ class _BottomNavWithFab extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 60,
+          height: 68,
           child: Row(
             children: [
               _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'HOME', index: 0, selected: selectedIndex == 0, onTap: onTap),

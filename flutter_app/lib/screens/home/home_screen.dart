@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _offset = 0;
   int _unreadMsgs = 0;
   int _unreadNotifs = 0;
-  static const int _pageSize = 60;
+  static const int _pageSize = 20;
 
   final ScrollController _scroll = ScrollController();
 
@@ -221,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
               floating: true,
               snap: true,
               backgroundColor: AppColors.primaryBlue,
-              expandedHeight: 124,
+              expandedHeight: MediaQuery.of(context).padding.top + 116,
               flexibleSpace: FlexibleSpaceBar(
                 background: _AppHeader(
                   selectedCity: _selectedCity,
