@@ -49,7 +49,7 @@ class _MyListingsScreenState extends State<MyListingsScreen>
       final data = await _supabase
           .from('listings')
           .select()
-          .eq('user_id', uid)
+          .eq('seller_id', uid)
           .order('created_at', ascending: false);
 
       if (mounted) {

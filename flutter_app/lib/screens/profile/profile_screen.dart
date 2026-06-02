@@ -42,11 +42,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .from('profiles')
           .select()
           .eq('id', widget.userId)
-          .single();
+          .maybeSingle();
+      if (profileData == null) throw Exception('User not found');
       final listingsData = await client
           .from('listings')
           .select()
-          .eq('user_id', widget.userId)
+          .eq('seller_id', widget.userId)
           .eq('status', 'active');
       if (mounted) {
         setState(() {
