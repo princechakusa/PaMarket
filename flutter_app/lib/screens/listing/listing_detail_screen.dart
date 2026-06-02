@@ -230,8 +230,10 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                     borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(color: AppColors.border),
                   ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                 ),
                 items: reasons
                     .map((r) => DropdownMenuItem(value: r, child: Text(r)))
@@ -260,12 +262,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   onPressed: () async {
                     Navigator.pop(ctx);
                     try {
-                      await Supabase.instance.client
-                          .from('reports')
-                          .insert({
+                      await Supabase.instance.client.from('reports').insert({
                         'target_type': 'listing',
                         'target_id': widget.listingId,
-                        'reason': selected +
+                        'reason':
+                            selected +
                             (noteCtrl.text.trim().isNotEmpty
                                 ? ' - ${noteCtrl.text.trim()}'
                                 : ''),
@@ -327,7 +328,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     }
     final phone = raw.replaceAll(RegExp(r'[^\d+]'), '').replaceFirst('+', '');
     final title = Uri.encodeComponent(
-        'Hi! I saw your "${l['title'] ?? ''}" listing on PaMarket Zimbabwe. Is it still available?');
+      'Hi! I saw your "${l['title'] ?? ''}" listing on PaMarket Zimbabwe. Is it still available?',
+    );
     final uri = Uri.parse('https://wa.me/$phone?text=$title');
     if (await canLaunchUrl(uri)) {
       launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -356,7 +358,9 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       final existing = await db
           .from('conversations')
           .select('id')
-          .or('and(user1_id.eq.$uid,user2_id.eq.$sellerId),and(user1_id.eq.$sellerId,user2_id.eq.$uid)')
+          .or(
+            'and(user1_id.eq.$uid,user2_id.eq.$sellerId),and(user1_id.eq.$sellerId,user2_id.eq.$uid)',
+          )
           .eq('listing_id', widget.listingId)
           .maybeSingle();
 
@@ -388,9 +392,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     final l = _listing;
     if (l == null) return '';
     final profile = l['profiles'] as Map?;
-    final phone = (profile?['phone'] as String?) ??
-        (l['seller_phone'] as String?) ??
-        '';
+    final phone =
+        (profile?['phone'] as String?) ?? (l['seller_phone'] as String?) ?? '';
     return phone.trim();
   }
 
@@ -398,10 +401,12 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     final price = l['price'];
     final currency = (l['currency'] as String?) ?? 'USD';
     if (price == null) return 'Price on request';
-    final num = (price is num) ? price : double.tryParse(price.toString());
-    if (num == null) return 'Price on request';
+    final num? priceValue = (price is num)
+        ? price
+        : double.tryParse(price.toString());
+    if (priceValue == null) return 'Price on request';
     final symbol = currency == 'ZWG' ? 'ZWG' : '\$';
-    return '$symbol${num % 1 == 0 ? num.toInt() : num.toStringAsFixed(2)}';
+    return '$symbol${priceValue % 1 == 0 ? priceValue.toInt() : priceValue.toStringAsFixed(2)}';
   }
 
   String _initials(String name) {
@@ -441,8 +446,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       body: _loading
           ? _buildLoading()
           : _error
-              ? _buildError()
-              : _buildContent(),
+          ? _buildError()
+          : _buildContent(),
     );
   }
 
@@ -462,8 +467,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.error_outline,
-                      size: 48, color: AppColors.textMuted),
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: AppColors.textMuted,
+                  ),
                   SizedBox(height: 12),
                   Text(
                     'Could not load listing',
@@ -513,11 +521,13 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     final status = (l['status'] as String?) ?? 'active';
     final isSold = status == 'sold';
     final profile = l['profiles'] as Map?;
-    final sellerName = (profile?['full_name'] as String?) ??
+    final sellerName =
+        (profile?['full_name'] as String?) ??
         (profile?['name'] as String?) ??
         (l['seller_name'] as String?) ??
         'Seller';
-    final sellerAvatar = (profile?['avatar_url'] as String?) ??
+    final sellerAvatar =
+        (profile?['avatar_url'] as String?) ??
         (profile?['photo_url'] as String?);
     final sellerVerified = (profile?['verified'] as bool?) ?? false;
     final joinedAt = profile?['created_at'] as String?;
@@ -649,8 +659,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                size: 20, color: AppColors.textPrimary),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 20,
+              color: AppColors.textPrimary,
+            ),
             onPressed: () => context.pop(),
           ),
           Expanded(
@@ -666,25 +679,28 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               ),
             ),
           ),
-          if (_listing != null) ...
-            [
-              IconButton(
-                icon: const Icon(Icons.share_outlined,
-                    size: 20, color: AppColors.textPrimary),
-                onPressed: _share,
-                tooltip: 'Share',
+          if (_listing != null) ...[
+            IconButton(
+              icon: const Icon(
+                Icons.share_outlined,
+                size: 20,
+                color: AppColors.textPrimary,
               ),
-              IconButton(
-                icon: Icon(
-                  _isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                  size: 22,
-                  color: _isSaved ? AppColors.primaryBlue : AppColors.textMuted,
-                ),
-                onPressed: _toggleSave,
-                tooltip: _isSaved ? 'Unsave' : 'Save',
+              onPressed: _share,
+              tooltip: 'Share',
+            ),
+            IconButton(
+              icon: Icon(
+                _isSaved
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                size: 22,
+                color: _isSaved ? AppColors.primaryBlue : AppColors.textMuted,
               ),
-            ]
-          else
+              onPressed: _toggleSave,
+              tooltip: _isSaved ? 'Unsave' : 'Save',
+            ),
+          ] else
             const SizedBox(width: 48),
         ],
       ),
@@ -697,8 +713,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         height: 280,
         color: AppColors.lightBlue,
         child: const Center(
-          child:
-              Icon(Icons.image_outlined, size: 72, color: AppColors.border),
+          child: Icon(Icons.image_outlined, size: 72, color: AppColors.border),
         ),
       );
     }
@@ -721,8 +736,10 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 errorWidget: (_, __, ___) => Container(
                   color: AppColors.lightBlue,
                   child: const Center(
-                    child: Icon(Icons.broken_image_outlined,
-                        color: AppColors.textMuted),
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      color: AppColors.textMuted,
+                    ),
                   ),
                 ),
               ),
@@ -757,8 +774,10 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               top: 12,
               right: 12,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black54,
                   borderRadius: BorderRadius.circular(20),
@@ -827,8 +846,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         const SizedBox(width: 8),
         // Currency badge
         Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
           decoration: BoxDecoration(
             color: currency == 'ZWG'
                 ? AppColors.orange.withValues(alpha: 0.15)
@@ -847,56 +865,51 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             ),
           ),
         ),
-        if (negotiable) ...
-          [
-            const SizedBox(width: 6),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Text(
-                'Negotiable',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.success,
-                ),
+        if (negotiable) ...[
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Text(
+              'Negotiable',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.success,
               ),
             ),
-          ],
-        if (boosted) ...
-          [
-            const SizedBox(width: 6),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.orange.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.bolt_rounded,
-                      size: 12, color: AppColors.orange),
-                  SizedBox(width: 2),
-                  Text(
-                    'Promoted',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.orange,
-                    ),
+          ),
+        ],
+        if (boosted) ...[
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.orange.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.bolt_rounded, size: 12, color: AppColors.orange),
+                SizedBox(width: 2),
+                Text(
+                  'Promoted',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.orange,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
+        ],
       ],
     );
   }
@@ -923,25 +936,28 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   Widget _buildMeta(String city, int views, DateTime createdAt) {
     return Row(
       children: [
-        if (city.isNotEmpty) ...
-          [
-            const Icon(Icons.location_on_outlined,
-                size: 14, color: AppColors.textMuted),
-            const SizedBox(width: 3),
-            Text(
-              city,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13,
-                color: AppColors.textMuted,
-              ),
+        if (city.isNotEmpty) ...[
+          const Icon(
+            Icons.location_on_outlined,
+            size: 14,
+            color: AppColors.textMuted,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            city,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 13,
+              color: AppColors.textMuted,
             ),
-            const SizedBox(width: 8),
-            const Text('·',
-                style: TextStyle(
-                    fontSize: 13, color: AppColors.textMuted)),
-            const SizedBox(width: 8),
-          ],
+          ),
+          const SizedBox(width: 8),
+          const Text(
+            '·',
+            style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+          ),
+          const SizedBox(width: 8),
+        ],
         Text(
           timeago.format(createdAt),
           style: const TextStyle(
@@ -951,11 +967,16 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           ),
         ),
         const SizedBox(width: 8),
-        const Text('·',
-            style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+        const Text(
+          '·',
+          style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+        ),
         const SizedBox(width: 8),
-        const Icon(Icons.remove_red_eye_outlined,
-            size: 14, color: AppColors.textMuted),
+        const Icon(
+          Icons.remove_red_eye_outlined,
+          size: 14,
+          color: AppColors.textMuted,
+        ),
         const SizedBox(width: 3),
         Text(
           '$views views',
@@ -976,8 +997,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         GestureDetector(
           onTap: _toggleSave,
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
             decoration: BoxDecoration(
               color: _isSaved
                   ? AppColors.primaryBlue.withValues(alpha: 0.1)
@@ -1021,8 +1041,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         GestureDetector(
           onTap: _share,
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
             decoration: BoxDecoration(
               color: AppColors.background,
               borderRadius: BorderRadius.circular(10),
@@ -1030,8 +1049,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             ),
             child: const Row(
               children: [
-                Icon(Icons.share_outlined,
-                    size: 16, color: AppColors.textSecondary),
+                Icon(
+                  Icons.share_outlined,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 SizedBox(width: 5),
                 Text(
                   'Share',
@@ -1051,15 +1073,17 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         GestureDetector(
           onTap: _reportListing,
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
             decoration: BoxDecoration(
               color: AppColors.background,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: AppColors.border),
             ),
-            child: const Icon(Icons.flag_outlined,
-                size: 16, color: AppColors.textMuted),
+            child: const Icon(
+              Icons.flag_outlined,
+              size: 16,
+              color: AppColors.textMuted,
+            ),
           ),
         ),
       ],
@@ -1074,9 +1098,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     required String? joinedAt,
     required String phone,
   }) {
-    final joined = joinedAt != null
-        ? DateTime.tryParse(joinedAt)
-        : null;
+    final joined = joinedAt != null ? DateTime.tryParse(joinedAt) : null;
     final memberSince = joined != null
         ? '${_monthName(joined.month)} ${joined.year}'
         : '';
@@ -1127,15 +1149,14 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      if (sellerVerified) ...
-                        [
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.verified_rounded,
-                            size: 16,
-                            color: AppColors.primaryBlue,
-                          ),
-                        ],
+                      if (sellerVerified) ...[
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.verified_rounded,
+                          size: 16,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ],
                     ],
                   ),
                   if (phone.isNotEmpty)
@@ -1171,8 +1192,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             // View all ads chevron
             Column(
               children: [
-                const Icon(Icons.chevron_right_rounded,
-                    size: 22, color: AppColors.textMuted),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 22,
+                  color: AppColors.textMuted,
+                ),
                 const SizedBox(height: 2),
                 Text(
                   'View all ads',
@@ -1275,18 +1299,17 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           fgColor: Colors.white,
           onTap: _openWhatsApp,
         ),
-        if (phone.isNotEmpty) ...
-          [
-            const SizedBox(height: 10),
-            _ContactButton(
-              icon: Icons.phone_outlined,
-              label: 'Call $phone',
-              bgColor: AppColors.card,
-              fgColor: AppColors.textPrimary,
-              borderColor: AppColors.border,
-              onTap: _callSeller,
-            ),
-          ],
+        if (phone.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          _ContactButton(
+            icon: Icons.phone_outlined,
+            label: 'Call $phone',
+            bgColor: AppColors.card,
+            fgColor: AppColors.textPrimary,
+            borderColor: AppColors.border,
+            onTap: _callSeller,
+          ),
+        ],
         const SizedBox(height: 10),
         _ContactButton(
           icon: Icons.flag_outlined,
@@ -1307,9 +1330,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         backgroundColor: const Color(0xFFFFE2E2),
         foregroundColor: AppColors.error,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(vertical: 14),
         minimumSize: const Size(double.infinity, 0),
       ),
@@ -1328,14 +1349,10 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Delete this listing?',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w700),
         ),
         content: const Text(
           'This cannot be undone.',
@@ -1344,8 +1361,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(fontFamily: 'Inter')),
+            child: const Text('Cancel', style: TextStyle(fontFamily: 'Inter')),
           ),
           TextButton(
             onPressed: () async {
@@ -1418,16 +1434,20 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       decoration: BoxDecoration(
         color: AppColors.lightBlue,
         borderRadius: BorderRadius.circular(12),
-        border:
-            Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.18)),
+        border: Border.all(
+          color: AppColors.primaryBlue.withValues(alpha: 0.18),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Icon(Icons.shield_outlined,
-                  size: 18, color: AppColors.primaryBlue),
+              Icon(
+                Icons.shield_outlined,
+                size: 18,
+                color: AppColors.primaryBlue,
+              ),
               SizedBox(width: 7),
               Text(
                 'Safety Tips',
@@ -1447,10 +1467,13 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('• ',
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary)),
+                  const Text(
+                    '• ',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                   Expanded(
                     child: Text(
                       tip,
@@ -1482,8 +1505,19 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
 
   String _monthName(int m) {
     const names = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return m >= 1 && m <= 12 ? names[m] : '';
   }
@@ -1597,12 +1631,13 @@ class _PhotoViewerState extends State<_PhotoViewer> {
                     imageUrl: widget.photos[i],
                     fit: BoxFit.contain,
                     placeholder: (_, __) => const Center(
-                      child: CircularProgressIndicator(
-                          color: Colors.white54),
+                      child: CircularProgressIndicator(color: Colors.white54),
                     ),
                     errorWidget: (_, __, ___) => const Center(
-                      child: Icon(Icons.broken_image_outlined,
-                          color: Colors.white54),
+                      child: Icon(
+                        Icons.broken_image_outlined,
+                        color: Colors.white54,
+                      ),
                     ),
                   ),
                 ),
@@ -1614,8 +1649,10 @@ class _PhotoViewerState extends State<_PhotoViewer> {
               left: 0,
               right: 0,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
@@ -1666,14 +1703,11 @@ class _PhotoViewerState extends State<_PhotoViewer> {
                     final active = i == _idx;
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      margin:
-                          const EdgeInsets.symmetric(horizontal: 3),
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
                       width: active ? 18 : 7,
                       height: 7,
                       decoration: BoxDecoration(
-                        color: active
-                            ? Colors.white
-                            : Colors.white38,
+                        color: active ? Colors.white : Colors.white38,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
