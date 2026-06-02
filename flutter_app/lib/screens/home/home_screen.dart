@@ -285,9 +285,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _CategorySectionHeader(
                       category: cat,
                       count: grouped[cat.id]!.length,
-                      onSeeAll: () => context.push(
-                        '/category/${cat.id}?name=${Uri.encodeComponent(cat.label)}',
-                      ),
+                      onSeeAll: () => cat.id == 'jobs'
+                          ? context.push('/jobs')
+                          : context.push(
+                              '/category/${cat.id}?name=${Uri.encodeComponent(cat.label)}',
+                            ),
                     ),
                   ),
                   SliverToBoxAdapter(
@@ -523,7 +525,9 @@ class _CategoryGrid extends StatelessWidget {
             itemBuilder: (ctx, i) {
               final cat = categories[i];
               return GestureDetector(
-                onTap: () => ctx.push('/category/${cat.id}?name=${Uri.encodeComponent(cat.label)}'),
+                onTap: () => cat.id == 'jobs'
+                    ? ctx.push('/jobs')
+                    : ctx.push('/category/${cat.id}?name=${Uri.encodeComponent(cat.label)}'),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [

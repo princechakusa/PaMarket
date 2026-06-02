@@ -85,7 +85,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         final id = AuthService.currentUserId;
                         if (id != null) context.push('/profile/$id');
                       }),
-                      _Row(icon: Icons.search, label: 'My Activity', onTap: () => context.push('/search')),
+                      _Row(icon: Icons.history, label: 'My Activity', onTap: () => context.push('/my-activity')),
                       _Row(icon: Icons.edit_outlined, label: 'Edit Profile', onTap: () => context.push('/edit-profile')),
                       _Row(
                         icon: Icons.storefront_outlined,
@@ -99,14 +99,14 @@ class _AccountScreenState extends State<AccountScreen> {
                         badge: _savedCount > 0 ? '$_savedCount' : null,
                         onTap: () => context.push('/saved'),
                       ),
-                      _Row(icon: Icons.work_outline, label: 'My Job Applications', onTap: () => _soon('My Job Applications')),
+                      _Row(icon: Icons.work_outline, label: 'My Job Applications', onTap: () => context.push('/applied-jobs')),
                       _Row(
                         icon: Icons.description_outlined,
                         label: 'My Job Profile / CV',
                         badgeWidget: _profile?.verified == true ? const _CheckBadge() : null,
-                        onTap: () => _soon('My Job Profile / CV'),
+                        onTap: () => context.push('/job-profile'),
                       ),
-                      _Row(icon: Icons.campaign_outlined, label: 'Advertisements', onTap: () => _soon('Advertisements')),
+                      _Row(icon: Icons.campaign_outlined, label: 'Advertisements', onTap: () => context.push('/advertise')),
                       _Row(icon: Icons.computer_outlined, label: 'My Advertisements', onTap: () => context.push('/my-listings')),
                     ]),
                   ),
@@ -146,8 +146,6 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
     );
   }
-
-  void _soon(String f) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$f coming soon')));
 
   void _confirmSignOut(BuildContext context) {
     showDialog(
@@ -241,7 +239,7 @@ class _GuestView extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(color: AppColors.lightBlue, borderRadius: BorderRadius.circular(10)),
-                      child: const Icon(Icons.search, color: AppColors.primaryBlue, size: 22),
+                      child: const Icon(Icons.history, color: AppColors.primaryBlue, size: 22),
                     ),
                     const SizedBox(width: 12),
                     const Expanded(
@@ -262,10 +260,10 @@ class _GuestView extends StatelessWidget {
                 style: TextStyle(fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
             const SizedBox(height: 12),
             _Card(children: [
-              _MoreRow(icon: Icons.campaign_outlined, label: 'Advertisements', onTap: () => showAuthModal(context, 'Login to continue')),
+              _MoreRow(icon: Icons.campaign_outlined, label: 'Advertisements', onTap: () => context.push('/advertise')),
               _MoreRow(icon: Icons.favorite_outline, label: 'Favourites', onTap: () => showAuthModal(context, 'Login to continue')),
               _MoreRow(icon: Icons.search, label: 'Saved Searches', onTap: () => showAuthModal(context, 'Login to continue')),
-              _MoreRow(icon: Icons.work_outline, label: 'Find Jobs', onTap: () => context.push('/category/jobs?name=Jobs')),
+              _MoreRow(icon: Icons.work_outline, label: 'Find Jobs', onTap: () => context.push('/jobs')),
               _MoreRow(icon: Icons.notifications_outlined, label: 'Notification Center', onTap: () => context.push('/notifications')),
               _MoreRow(
                 icon: Icons.language,

@@ -23,6 +23,8 @@ import 'screens/profile/profile_screen.dart';
 import 'screens/profile/saved_screen.dart';
 import 'screens/profile/my_listings_screen.dart';
 import 'screens/profile/edit_profile_screen.dart';
+import 'screens/profile/advertise_screen.dart';
+import 'screens/profile/my_activity_screen.dart';
 import 'screens/search/search_screen.dart';
 import 'screens/verify/verify_screen.dart';
 import 'screens/admin/admin_screen.dart';
@@ -34,6 +36,11 @@ import 'screens/settings/theme_settings_screen.dart';
 import 'screens/settings/security_settings_screen.dart';
 import 'screens/settings/blocked_users_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
+import 'screens/jobs/jobs_screen.dart';
+import 'screens/jobs/find_jobs_screen.dart';
+import 'screens/jobs/job_detail_screen.dart';
+import 'screens/jobs/job_seeker_profile_screen.dart';
+import 'screens/jobs/applied_jobs_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -95,6 +102,21 @@ final _router = GoRouter(
     GoRoute(path: '/saved', builder: (_, __) => const SavedScreen()),
     GoRoute(path: '/my-listings', builder: (_, __) => const MyListingsScreen()),
     GoRoute(path: '/edit-profile', builder: (_, __) => const EditProfileScreen()),
+    GoRoute(path: '/advertise', builder: (_, __) => const AdvertiseScreen()),
+    GoRoute(path: '/my-activity', builder: (_, __) => const MyActivityScreen()),
+
+    // ── Jobs section ──────────────────────────────────────────────────────
+    GoRoute(path: '/jobs', builder: (_, __) => const JobsScreen()),
+    GoRoute(
+      path: '/find-jobs',
+      builder: (_, state) => FindJobsScreen(
+        initialQuery: state.uri.queryParameters['q'],
+        initialCategory: state.uri.queryParameters['cat'],
+      ),
+    ),
+    GoRoute(path: '/job/:id', builder: (_, state) => JobDetailScreen(jobId: state.pathParameters['id']!)),
+    GoRoute(path: '/job-profile', builder: (_, __) => const JobSeekerProfileScreen()),
+    GoRoute(path: '/applied-jobs', builder: (_, __) => const AppliedJobsScreen()),
 
     GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
     GoRoute(path: '/settings/notifications', builder: (_, __) => const NotificationSettingsScreen()),
