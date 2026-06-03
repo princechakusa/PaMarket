@@ -118,7 +118,7 @@
           <div style="flex:1">
             <div class="verify-step-title">Face Selfie</div>
             <div class="verify-step-sub">Take a clear photo of your face. An admin will review it alongside your ID.</div>
-            <button class="verify-step-btn" onclick="H.openInner('SelfieCam')">
+            <button class="verify-step-btn" onclick="H._verify.takeSelfie()">
               ${I.camera} ${hasSelfie ? 'Re-take Selfie' : 'Take Selfie'}
             </button>
             ${hasSelfie ? `<img src="${u.selfie}" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin-top:10px;border:3px solid var(--n4)">` : ''}
@@ -207,6 +207,39 @@
   // Namespace for onclick calls
   H._verify = {
     cancel() { stopCam(); goBack(); },
+
+    // Selfie capture — use the reliable native front camera on device; fall back to
+    // the in-app getUserMedia camera only on the web or if the plugin is unavailable.
+    async takeSelfie() {
+      const Camera   = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+      const isNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+      if (isNative && Camera) {
+        try {
+          const photo = await Camera.getPhoto({
+            quality: 85,
+            allowEditing: false,
+            resultType: 'dataUrl',
+            source: 'CAMERA',
+            direction: 'FRONT',
+            width: 600,
+            height: 600,
+            correctOrientation: true,
+            promptLabelHeader: 'Take a Selfie'
+          });
+          const dataUrl = photo && (photo.dataUrl || (photo.base64String ? 'data:image/jpeg;base64,' + photo.base64String : null));
+          if (dataUrl) {
+            const u = currentUser(); u.selfie = dataUrl; saveState();
+            toast('Selfie saved'); renderPage('Verify');
+          }
+        } catch (e) {
+          const m = ((e && e.message) || '').toLowerCase();
+          if (m.includes('cancel') || m.includes('denied')) return;
+          openInner('SelfieCam'); // fall back to the in-app camera
+        }
+        return;
+      }
+      openInner('SelfieCam');
+    },
 
     onIdUpload(e) {
       const f = e.target.files[0]; if (!f) return;
