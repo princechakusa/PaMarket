@@ -526,13 +526,18 @@
           const errDesc = url.searchParams.get('error_description') || url.searchParams.get('error');
           if (errDesc) { H.toast('Google: ' + errDesc, 7000, true); return; }
           const code = url.searchParams.get('code');
+          const finish = async (session) => {
+            try { await _finishOAuthLogin(c, session); }
+            catch (fe) { H.toast('Signed in, but loading profile failed: ' + ((fe && fe.message) || ''), 6000, true); try { window.location.reload(); } catch (e2) {} }
+          };
           if (code) {
-            const { error: ex } = await c.auth.exchangeCodeForSession(code);
+            const { data: exData, error: ex } = await c.auth.exchangeCodeForSession(code);
             if (ex) { H.toast('Google: ' + ex.message, 7000, true); return; }
-            window.location.reload(); return;
+            if (exData && exData.session) { await finish(exData.session); return; }
           }
+          // No code (or implicit flow): fall back to whatever session is now stored.
           const { data: sd } = await c.auth.getSession();
-          if (sd && sd.session) { window.location.reload(); return; }
+          if (sd && sd.session) { await finish(sd.session); return; }
           H.toast('Sign-in did not complete. Please try again.', 5000, true);
         } catch (e) { H.toast('Sign-in error: ' + (e.message || ''), 6000, true); }
       };
