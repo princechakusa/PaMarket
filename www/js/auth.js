@@ -498,22 +498,26 @@
           });
           const res = await SocialLogin.login({ provider: 'google', options: {} });
           const idToken = res && res.result && res.result.idToken;
-          if (!idToken) { H.toast('Sign-in failed — no token received'); return; }
-          const { data, error } = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
-          if (error) { H.toast(error.message || 'Sign-in failed'); return; }
-          if (data && data.session) { await _finishOAuthLogin(c, data.session); }
-          return;
+          if (idToken) {
+            const { data, error } = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
+            if (error) { H.toast(error.message || 'Sign-in failed'); return; }
+            if (data && data.session) { await _finishOAuthLogin(c, data.session); }
+            return;
+          }
+          // No token — fall through to the in-app Custom Tab flow below.
         } catch(e) {
           var errMsg = (e && e.message) ? e.message : '';
           var lower  = errMsg.toLowerCase();
+          // User explicitly dismissed the picker — stop, don't bounce to a browser.
           if (lower.includes('cancel') || lower.includes('closed') || lower.includes('dismiss')) return;
-          H.toast('Google sign-in failed: ' + (errMsg || 'Please try again'));
-          return;
+          // Any other failure (e.g. SHA-1 not yet registered): fall through to the
+          // Custom Tab flow, which still returns to the app via the deep link.
         }
       }
     }
 
-    // Fallback: Chrome Custom Tab OAuth — used for Apple or if SocialLogin plugin unavailable
+    // Fallback: Chrome Custom Tab OAuth that returns to the app via the
+    // com.pamarket.app://login-callback deep link — it does NOT strand the user in web.
     const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
     const App     = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
 

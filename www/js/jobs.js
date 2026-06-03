@@ -1306,6 +1306,24 @@
     }).join('');
   }
 
+  function _cpRenderExpList(arr) {
+    if (!arr || !arr.length) {
+      return '<div style="color:var(--sub);font-size:13px;padding:2px 0 10px">No experience added yet — add your roles like LinkedIn.</div>';
+    }
+    return arr.map(function (e, i) {
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px">'
+        + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(e.title || '') + '</div>'
+        + '<div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">' + H.escHtml(e.company || '') + '</div>'
+        + ((e.duration || e.current) ? '<div style="font-size:12px;color:var(--sub);margin-top:2px">' + H.escHtml(e.duration || '') + (e.current ? ' · Current' : '') + '</div>' : '')
+        + (e.desc ? '<div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.5;white-space:pre-wrap">' + H.escHtml(e.desc) + '</div>' : '')
+        + '<div style="display:flex;gap:8px;margin-top:10px">'
+        + '<button type="button" onclick="H._cpExp.edit(' + i + ')" style="font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer;font-family:inherit">Edit</button>'
+        + '<button type="button" onclick="H._cpExp.del(' + i + ')" style="font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer;font-family:inherit">Remove</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
   function _cpRenderResumeZone(fileName, uploading) {
     if (uploading) {
       return '<div style="display:flex;align-items:center;gap:8px;background:#1A3A8F14;border-radius:10px;padding:10px 12px;border:1.5px solid #1A3A8F30">'
@@ -1429,6 +1447,12 @@
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Expected Salary / Rate <span style="font-weight:400;text-transform:none">(optional)</span></label>'
       + '<input id="cpSalary" placeholder="e.g. $500/mo, $20/hr or Negotiable" value="' + H.escHtml(u.expectedSalary || '') + '" style="' + inStyle + '"></div>'
 
+      // ── Work Experience (LinkedIn-style) ──
+      + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>', 'Work Experience')
+      + '<div style="font-size:12px;color:var(--sub);margin-bottom:10px;line-height:1.5">Add your roles, companies, dates and what you did — just like LinkedIn.</div>'
+      + '<div id="cpExpList">' + _cpRenderExpList((u.cv && u.cv.experience) || []) + '</div>'
+      + '<button type="button" onclick="H._cpExp.add()" style="width:100%;padding:12px;border-radius:12px;background:#EFF6FF;color:#1A3A8F;border:1.5px dashed #1A3A8F;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px">+ Add Experience</button>'
+
       // ── Job Preferences ──
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>', 'Job Preferences')
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Job Type / Availability</label>'
@@ -1493,6 +1517,73 @@
   };
 
   H.pages.CandidateProfile_after = function () {
+    // ── Work Experience (LinkedIn-style) ──
+    var _cpu = H.currentUser() || {};
+    H._cpExpArr = (_cpu.cv && Array.isArray(_cpu.cv.experience))
+      ? _cpu.cv.experience.map(function (e) { return { title: e.title, company: e.company, duration: e.duration, current: e.current, desc: e.desc }; })
+      : [];
+
+    function _cpRefreshExp() {
+      var el = document.getElementById('cpExpList');
+      if (el) el.innerHTML = _cpRenderExpList(H._cpExpArr);
+    }
+
+    function _expFormBody(e) {
+      e = e || {};
+      return '<div style="display:flex;flex-direction:column;gap:8px">'
+        + '<input id="expTitle" class="fi" value="' + H.escHtml(e.title || '') + '" placeholder="Job Title *">'
+        + '<input id="expCompany" class="fi" value="' + H.escHtml(e.company || '') + '" placeholder="Company Name *">'
+        + '<input id="expDuration" class="fi" value="' + H.escHtml(e.duration || '') + '" placeholder="Duration e.g. Jan 2020 – Dec 2022">'
+        + '<label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer"><input type="checkbox" id="expCurrent"' + (e.current ? ' checked' : '') + '>Still working here</label>'
+        + '<textarea id="expDesc" class="fi" rows="3" placeholder="What you did / responsibilities…">' + H.escHtml(e.desc || '') + '</textarea>'
+        + '</div>';
+    }
+
+    function _readExpForm() {
+      var title   = ((document.getElementById('expTitle')   || {}).value || '').trim();
+      var company = ((document.getElementById('expCompany') || {}).value || '').trim();
+      if (!title || !company) { H.toast('Title and company are required'); return null; }
+      return {
+        title: title, company: company,
+        duration: ((document.getElementById('expDuration') || {}).value || '').trim(),
+        current:  !!(document.getElementById('expCurrent') && document.getElementById('expCurrent').checked),
+        desc:     ((document.getElementById('expDesc') || {}).value || '').trim()
+      };
+    }
+
+    H._cpExp = {
+      add: function () {
+        H.modal({
+          title: 'Add Work Experience',
+          body: _expFormBody(),
+          confirmText: 'Add',
+          onConfirm: function () {
+            var entry = _readExpForm();
+            if (!entry) return false;
+            H._cpExpArr.push(entry);
+            _cpRefreshExp();
+          }
+        });
+      },
+      edit: function (i) {
+        H.modal({
+          title: 'Edit Work Experience',
+          body: _expFormBody(H._cpExpArr[i] || {}),
+          confirmText: 'Save',
+          onConfirm: function () {
+            var entry = _readExpForm();
+            if (!entry) return false;
+            H._cpExpArr[i] = entry;
+            _cpRefreshExp();
+          }
+        });
+      },
+      del: function (i) {
+        H._cpExpArr.splice(i, 1);
+        _cpRefreshExp();
+      }
+    };
+
     // Bio counter
     var bioEl = document.getElementById('cpBio');
     if (bioEl) {
@@ -1626,7 +1717,7 @@
       skills:         (u.skills || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean),
       expectedSalary: u.expectedSalary || prevCv.expectedSalary || '',
       visible:        !!u.openToWork,
-      experience:     prevCv.experience     || [],
+      experience:     (H._cpExpArr || prevCv.experience || []),
       education:      prevCv.education      || [],
       certifications: prevCv.certifications || [],
       cvFileUrl:      prevCv.cvFileUrl      || u.cvFileUrl      || ''
