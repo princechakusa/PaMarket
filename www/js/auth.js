@@ -526,10 +526,21 @@
             if (ex1.error && payload.nonce) {
               ex1 = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
             }
-            if (!ex1.error && ex1.data && ex1.data.session) { await _finishOAuthLogin(c, ex1.data.session); return; }
+            if (!ex1.error && ex1.data && ex1.data.session) {
+              try {
+                await _finishOAuthLogin(c, ex1.data.session);
+              } catch (fe) {
+                // Token was accepted but finishing login failed — surface it instead of hanging.
+                H.toast('Signed in, but loading profile failed: ' + ((fe && fe.message) || 'unknown'), 6000, true);
+                try { window.location.reload(); } catch (e2) {}
+              }
+              return;
+            }
             // Token exchange rejected (e.g. client ID not in Supabase Authorized Client IDs,
-            // or nonce mismatch). Don't dead-end — fall through to the Custom Tab flow.
-            console.warn('signInWithIdToken failed, falling back to web OAuth:', ex1.error && ex1.error.message);
+            // or nonce mismatch). Show the real reason, then fall back to the Custom Tab flow.
+            var exMsg = (ex1.error && ex1.error.message) || 'token rejected';
+            console.warn('signInWithIdToken failed:', exMsg);
+            H.toast('Google sign-in: ' + exMsg, 6000, true);
           }
           // No token / exchange failed — fall through to the in-app Custom Tab flow below.
         } catch(e) {

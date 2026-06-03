@@ -368,197 +368,203 @@
     };
   };
 
+  // Verification capture held in memory only (uploaded to private Storage on submit)
+  var _pvSelfie = null, _pvIdFront = null, _pvIdNum = '', _pvIdType = 'National ID';
+
   pages.ProfileVerify = function () {
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
-    if (u.verified) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="margin-bottom:12px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Identity Verified</div><div style="font-size:14px;color:var(--sub)">You have a verified badge on all your listings.</div><div style="font-size:12px;color:var(--sub);margin-top:8px">Verified on ${new Date(u.verifiedAt || Date.now()).toLocaleDateString()}</div></div></div>`;
-    if (u.verificationPending) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="margin-bottom:12px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Verification Pending</div><div style="font-size:14px;color:var(--sub)">Your request is under review. We will notify you within 24 hours.</div><button onclick="H._profileVerify.cancelPending()" style="margin-top:18px;padding:10px 28px;background:var(--bg);color:var(--sub);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel request</button></div></div>`;
-    return `<div class="page active">
-      ${H.innerTopbar('Verify Identity')}
-      <div class="section-box" style="text-align:center;padding:20px 20px 14px">
-        <div style="margin-bottom:10px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">Identity Verification</div>
-        <div style="font-size:13px;color:var(--sub)">Submit your ID and a selfie. Review takes up to 24 hours.</div>
-      </div>
-      <div class="form-wrap">
-        <div class="fg"><div class="fl">ID Type</div><select class="fi" id="idType"><option>National ID</option><option>Passport</option><option>Driver&#39;s License</option></select></div>
-        <div class="fg"><div class="fl">ID Number</div><input class="fi" id="idNum" placeholder="Enter your ID number"></div>
-        <div class="fg">
-          <div class="fl">Selfie Photo <span style="font-weight:400;color:var(--sub);font-size:11px">(center your face in the oval)</span></div>
-          <div style="position:relative;width:220px;height:280px;margin:0 auto 10px;border-radius:14px;overflow:hidden;background:#111">
-            <div id="selfiePH" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a2e;gap:8px">
-              <div style="display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-              <div style="font-size:12px;color:rgba(255,255,255,.65);text-align:center;padding:0 16px">Tap Camera or Upload to add your selfie</div>
-            </div>
-            <video id="selfieVid" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)"></video>
-            <canvas id="selfieCanvas" style="display:none"></canvas>
-            <div id="selfiePrev" style="display:none;position:absolute;inset:0"><img id="selfieImg" style="width:100%;height:100%;object-fit:cover"></div>
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
-              <div style="width:130px;height:170px;border-radius:50%;border:3px solid rgba(255,255,255,.88);box-shadow:0 0 0 9999px rgba(0,0,0,.48)"></div>
-            </div>
+
+    if (u.verified) return `<div class="page active">${H.innerTopbar('Identity Verified')}
+      <div class="inner-content">
+        <div style="background:linear-gradient(135deg,#16a34a,#15803d);border-radius:20px;padding:28px 20px;text-align:center;color:#fff;box-shadow:0 8px 24px rgba(21,128,61,.25)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div style="font-size:19px;font-weight:800">You're Verified</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:4px">Your blue badge shows on all your listings. Verified on ${new Date(u.verifiedAt || Date.now()).toLocaleDateString()}.</div>
+        </div>
+      </div></div>`;
+
+    if (u.verificationPending) return `<div class="page active">${H.innerTopbar('Identity Verification')}
+      <div class="inner-content">
+        <div style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:20px;padding:28px 20px;text-align:center;color:#fff;box-shadow:0 8px 24px rgba(26,58,143,.25)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(245,166,35,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#F5A623" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div style="font-size:19px;font-weight:800">Under Review</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:6px;line-height:1.55">Your ID and selfie were submitted. Our team reviews within 24 hours and you'll be notified once approved.</div>
+        </div>
+        <button onclick="H._profileVerify.cancelPending()" style="width:100%;margin-top:16px;padding:12px;background:var(--bg);color:var(--sub);border:1px solid var(--border);border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Cancel request</button>
+      </div></div>`;
+
+    const esc = H.escHtml;
+    const hasSelfie = !!_pvSelfie, hasId = !!_pvIdFront;
+    const done = (_pvIdNum.trim() ? 1 : 0) + (hasSelfie ? 1 : 0) + (hasId ? 1 : 0);
+    const pct = Math.round((done / 3) * 100);
+    const ready = !!(_pvIdNum.trim() && hasSelfie && hasId);
+    const cam = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+    const chip = '<span style="font-size:10.5px;font-weight:800;color:#16a34a;background:#dcfce7;border-radius:20px;padding:2px 9px;margin-left:8px">ADDED</span>';
+    const card = (title, addedFlag, body) => `
+      <div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(16,24,40,.04)">
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:10px">${title}${addedFlag ? chip : ''}</div>
+        ${body}
+      </div>`;
+    const btn = (label, onclick, primary) => `<button onclick="${onclick}" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:11px;border:${primary ? 'none' : '1px solid var(--border)'};cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;background:${primary ? 'linear-gradient(135deg,#1A3A8F,#2952cc)' : 'var(--bg)'};color:${primary ? '#fff' : 'var(--text)'}">${primary ? cam : ''}${label}</button>`;
+
+    return `<div class="page active">${H.innerTopbar('Verify Identity')}
+      <div class="inner-content" style="padding-bottom:40px">
+
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:22px;padding:22px 20px;margin-bottom:18px;color:#fff;box-shadow:0 10px 28px rgba(26,58,143,.28)">
+          <div style="display:flex;align-items:center;gap:13px;margin-bottom:16px">
+            <div style="width:50px;height:50px;border-radius:15px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#F5A623" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+            <div style="flex:1"><div style="font-size:18px;font-weight:800;letter-spacing:-.3px">Identity Verification</div><div style="font-size:12.5px;color:rgba(255,255,255,.82);margin-top:1px">Submit your ID and a selfie — review takes up to 24 hours</div></div>
           </div>
-          <div style="display:flex;gap:8px;max-width:220px;margin:0 auto">
-            <button id="selfieStartBtn" onclick="H._profileVerify.startCamera()" style="flex:1;padding:10px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Camera</button>
-            <button id="selfieCapBtn" onclick="H._profileVerify.captureSelfie()" style="display:none;flex:1;padding:10px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Capture</button>
-            <button id="selfieRetakeBtn" onclick="H._profileVerify.retakeSelfie()" style="display:none;flex:1;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg> Retake</button>
-            <label for="selfieFile" style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">Upload</label>
-            <input type="file" id="selfieFile" accept="image/*" capture="user" style="display:none" onchange="H._profileVerify.handleSelfieFile(this)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex:1;height:8px;background:rgba(255,255,255,.18);border-radius:5px;overflow:hidden"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#F5A623,#ffc55c);border-radius:5px;transition:width .35s"></div></div>
+            <div style="font-size:12px;font-weight:800;color:#F5A623;white-space:nowrap">${done} of 3</div>
           </div>
         </div>
-        <div class="fg"><div class="fl">ID Photo (Front)</div>
-          <label class="img-upload-zone" for="idPhotoFront"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-upload-title" id="idPhotoLabel">Upload front of ID</div><div class="img-upload-sub">National ID, Passport or Driver&#39;s License</div></label>
-          <input type="file" id="idPhotoFront" accept="image/*" capture="environment" style="display:none" onchange="H._profileVerify.previewIdPhoto(this)">
+
+        ${card('1. ID Details',  (_pvIdNum.trim() ? true : false),
+          `<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">ID Type</div>
+             <select class="fi" id="idType" onchange="H._profileVerify.setType(this.value)">
+               ${['National ID', 'Passport', "Driver's License"].map(t => `<option ${(_pvIdType === t) ? 'selected' : ''}>${t}</option>`).join('')}
+             </select></div>
+           <div><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">ID Number</div>
+             <input class="fi" id="idNum" value="${esc(_pvIdNum)}" placeholder="Enter your ID number" oninput="H._profileVerify.setNum(this.value)"></div>`)}
+
+        ${card('2. Selfie Photo', hasSelfie,
+          `<div style="display:flex;flex-direction:column;align-items:center">
+             ${hasSelfie
+              ? `<img src="${_pvSelfie}" style="width:130px;height:130px;border-radius:50%;object-fit:cover;border:3px solid #16a34a;margin-bottom:12px">`
+              : `<div style="width:130px;height:160px;border-radius:50% / 46%;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;margin-bottom:12px;color:var(--sub)"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div style="font-size:11px;text-align:center;padding:0 12px">Center your face</div></div>`}
+             <div style="display:flex;gap:8px;width:100%;max-width:260px">
+               ${btn(hasSelfie ? 'Re-take' : 'Take Selfie', 'H._profileVerify.takeSelfie()', true)}
+               <label for="selfieFile" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:11px;border-radius:11px;border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:700;background:var(--bg);color:var(--text)">Upload</label>
+               <input type="file" id="selfieFile" accept="image/*" capture="user" style="display:none" onchange="H._profileVerify.handleSelfieFile(this)">
+             </div>
+           </div>`)}
+
+        ${card('3. ID Document (front)', hasId,
+          `${hasId
+            ? `<div style="border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-bottom:12px"><img src="${_pvIdFront}" style="width:100%;display:block"></div>`
+            : `<div style="border:2px dashed var(--border);border-radius:14px;padding:26px 12px;text-align:center;color:var(--sub);margin-bottom:12px"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M6 14h6"/></svg><div style="font-size:12px;margin-top:6px">National ID, Passport or Driver's License</div></div>`}
+           <div style="display:flex;gap:8px">
+             ${btn(hasId ? 'Re-take' : 'Take Photo', 'H._profileVerify.takeId()', true)}
+             <label for="idFrontFile" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:11px;border-radius:11px;border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:700;background:var(--bg);color:var(--text)">Upload</label>
+             <input type="file" id="idFrontFile" accept="image/*" capture="environment" style="display:none" onchange="H._profileVerify.handleIdFile(this)">
+           </div>`)}
+
+        <button class="btn-pri" id="pvSubmitBtn" ${ready ? '' : 'disabled'} onclick="H._profileVerify.submit()" style="width:100%;margin-top:6px;${ready ? '' : 'opacity:.5;cursor:not-allowed'}">${ready ? 'Submit for Review' : 'Complete all 3 steps'}</button>
+
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#EEF2FB;border-radius:14px;padding:14px;margin-top:16px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Your data is secure.</b> Your ID and selfie are stored privately and used only to confirm your identity — never sold or shared.</div>
         </div>
-        <button class="btn-pri" onclick="H._profileVerify.submit()">Submit for Verification</button>
       </div>
     </div>`;
   };
 
   pages.ProfileVerify_after = function () {
-    H._profileVerify = {
-      _stream: null,
-      _selfieData: null,
+    function compress(file, maxDim, q) {
+      return new Promise(res => {
+        const r = new FileReader();
+        r.onload = ev => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > h && w > maxDim) { h = h * maxDim / w; w = maxDim; }
+            else if (h > maxDim) { w = w * maxDim / h; h = maxDim; }
+            const c = document.createElement('canvas'); c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            res(c.toDataURL('image/jpeg', q || 0.82));
+          };
+          img.onerror = () => res(ev.target.result);
+          img.src = ev.target.result;
+        };
+        r.readAsDataURL(file);
+      });
+    }
+    const reRender = () => { try { H.renderPage('ProfileVerify'); } catch (e) {} };
+    const Camera = () => window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+    const isNative = () => !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
 
-      startCamera() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          H.toast('Camera not available — please upload a selfie photo.');
+    H._profileVerify = {
+      setType(v) { _pvIdType = v; },
+      setNum(v)  { _pvIdNum = v; },
+
+      async takeSelfie() {
+        const C = Camera();
+        if (isNative() && C) {
+          try {
+            const p = await C.getPhoto({ quality: 85, allowEditing: false, resultType: 'dataUrl', source: 'CAMERA', direction: 'FRONT', width: 600, height: 600, correctOrientation: true });
+            const d = p && (p.dataUrl || (p.base64String ? 'data:image/jpeg;base64,' + p.base64String : null));
+            if (d) { _pvSelfie = d; reRender(); }
+          } catch (e) {
+            const m = ((e && e.message) || '').toLowerCase();
+            if (m.includes('cancel') || m.includes('denied')) return;
+            var fi = document.getElementById('selfieFile'); if (fi) fi.click();
+          }
           return;
         }
-        const btn = document.getElementById('selfieStartBtn');
-        if (btn) btn.style.display = 'none';
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 640 } } })
-          .then(stream => {
-            this._stream = stream;
-            const vid = document.getElementById('selfieVid');
-            const ph  = document.getElementById('selfiePH');
-            const cap = document.getElementById('selfieCapBtn');
-            if (vid) { vid.srcObject = stream; vid.style.display = 'block'; }
-            if (ph)  ph.style.display = 'none';
-            if (cap) cap.style.display = 'flex';
-          })
-          .catch(() => {
-            H.toast('Camera permission denied — use Upload instead.');
-            const btn2 = document.getElementById('selfieStartBtn');
-            if (btn2) btn2.style.display = 'flex';
-          });
+        var fi2 = document.getElementById('selfieFile'); if (fi2) fi2.click();
       },
-
-      captureSelfie() {
-        const vid    = document.getElementById('selfieVid');
-        const canvas = document.getElementById('selfieCanvas');
-        if (!vid || !canvas) return;
-        canvas.width  = vid.videoWidth  || 480;
-        canvas.height = vid.videoHeight || 640;
-        const ctx = canvas.getContext('2d');
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(vid, 0, 0);
-        this._selfieData = canvas.toDataURL('image/jpeg', 0.85);
-        if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
-        vid.style.display = 'none';
-        const prev    = document.getElementById('selfiePrev');
-        const img     = document.getElementById('selfieImg');
-        const capBtn  = document.getElementById('selfieCapBtn');
-        const retake  = document.getElementById('selfieRetakeBtn');
-        if (prev)   prev.style.display = 'block';
-        if (img)    img.src = this._selfieData;
-        if (capBtn) capBtn.style.display = 'none';
-        if (retake) retake.style.display = 'flex';
-        H.toast('Selfie captured');
-      },
-
-      retakeSelfie() {
-        this._selfieData = null;
-        const prev   = document.getElementById('selfiePrev');
-        const retake = document.getElementById('selfieRetakeBtn');
-        if (prev)   prev.style.display = 'none';
-        if (retake) retake.style.display = 'none';
-        this.startCamera();
-      },
-
       handleSelfieFile(input) {
-        const file = input.files && input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-          this._selfieData = e.target.result;
-          const ph      = document.getElementById('selfiePH');
-          const vid     = document.getElementById('selfieVid');
-          const prev    = document.getElementById('selfiePrev');
-          const img     = document.getElementById('selfieImg');
-          const startBtn = document.getElementById('selfieStartBtn');
-          const capBtn  = document.getElementById('selfieCapBtn');
-          const retake  = document.getElementById('selfieRetakeBtn');
-          if (ph)       ph.style.display = 'none';
-          if (vid)      vid.style.display = 'none';
-          if (prev)     prev.style.display = 'block';
-          if (img)      img.src = this._selfieData;
-          if (startBtn) startBtn.style.display = 'none';
-          if (capBtn)   capBtn.style.display = 'none';
-          if (retake)   retake.style.display = 'flex';
-        };
-        reader.readAsDataURL(file);
+        const f = input.files && input.files[0]; if (!f) return;
+        compress(f, 800, 0.85).then(d => { _pvSelfie = d; reRender(); });
       },
 
-      previewIdPhoto(input) {
-        const label = document.getElementById('idPhotoLabel');
-        if (input.files && input.files[0] && label) label.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> ID photo selected';
+      async takeId() {
+        const C = Camera();
+        if (isNative() && C) {
+          try {
+            const p = await C.getPhoto({ quality: 82, allowEditing: false, resultType: 'dataUrl', source: 'PROMPT', width: 1400, correctOrientation: true });
+            const d = p && (p.dataUrl || (p.base64String ? 'data:image/jpeg;base64,' + p.base64String : null));
+            if (d) { _pvIdFront = d; reRender(); }
+          } catch (e) {
+            const m = ((e && e.message) || '').toLowerCase();
+            if (m.includes('cancel') || m.includes('denied')) return;
+            var fi = document.getElementById('idFrontFile'); if (fi) fi.click();
+          }
+          return;
+        }
+        var fi2 = document.getElementById('idFrontFile'); if (fi2) fi2.click();
+      },
+      handleIdFile(input) {
+        const f = input.files && input.files[0]; if (!f) return;
+        compress(f, 1400, 0.82).then(d => { _pvIdFront = d; reRender(); });
       },
 
       async submit() {
-        const idType = document.getElementById('idType')?.value || 'National ID';
-        const idNum  = (document.getElementById('idNum')?.value || '').trim();
-        if (!idNum) { H.toast('Please enter your ID number'); return; }
-        if (!this._selfieData) { H.toast('Please take or upload a selfie photo'); return; }
-        if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
-        const btn = document.querySelector('.btn-pri[onclick="H._profileVerify.submit()"]');
+        if (!_pvIdNum.trim()) { H.toast('Please enter your ID number'); return; }
+        if (!_pvSelfie) { H.toast('Please add a selfie photo'); return; }
+        if (!_pvIdFront) { H.toast('Please add a photo of your ID'); return; }
+        const u = H.currentUser(); const sb = window.supabase;
+        const btn = document.getElementById('pvSubmitBtn');
         if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
-        const u = H.currentUser();
-        const sb = window.supabase;
-
-        const doSubmit = async (idDocData) => {
-          try {
-            if (!sb) throw new Error('Not connected to server');
-            const { error: vErr } = await sb.from('verifications').upsert({
-              user_id: u.id,
-              id_doc: idDocData || null,
-              selfie: this._selfieData,
-              status: 'pending',
-              submitted_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
-            if (vErr) throw vErr;
-            const { error: pErr } = await sb.from('profiles').update({
-              verification_pending: true,
-              updated_at: new Date().toISOString()
-            }).eq('id', u.id);
-            if (pErr) throw pErr;
-            u.verificationPending    = true;
-            u.verification_pending   = true;
-            u.verificationIdType     = idType;
-            u.verificationIdNum      = idNum;
-            H.saveState();
-            H.toast('Verification submitted! Admin will review within 24 hours.');
-            H.goBack();
-          } catch (e) {
-            if (btn) { btn.disabled = false; btn.textContent = 'Submit for Verification'; }
-            H.toast('Failed to submit: ' + (e.message || 'Check your connection'));
-          }
-        };
-
-        const idFile = document.getElementById('idPhotoFront');
-        if (idFile && idFile.files && idFile.files[0]) {
-          const reader = new FileReader();
-          reader.onload = e => doSubmit(e.target.result);
-          reader.readAsDataURL(idFile.files[0]);
-        } else {
-          doSubmit(null);
+        try {
+          if (!sb) throw new Error('Not connected to server');
+          const idPath     = H.uploadVerificationDoc ? await H.uploadVerificationDoc(u.id, _pvIdFront, 'id') : null;
+          const selfiePath = H.uploadVerificationDoc ? await H.uploadVerificationDoc(u.id, _pvSelfie, 'selfie') : null;
+          const rec = { user_id: u.id, status: 'pending', submitted_at: new Date().toISOString() };
+          if (idPath && selfiePath) { rec.id_doc_path = idPath; rec.selfie_path = selfiePath; rec.id_doc = null; rec.selfie = null; }
+          else { rec.id_doc = _pvIdFront; rec.selfie = _pvSelfie; }
+          const { error: vErr } = await sb.from('verifications').upsert(rec, { onConflict: 'user_id' });
+          if (vErr) throw vErr;
+          const { error: pErr } = await sb.from('profiles').update({ verification_pending: true, updated_at: new Date().toISOString() }).eq('id', u.id);
+          if (pErr) throw pErr;
+          u.verificationPending = true; u.verification_pending = true;
+          u.verificationIdType = _pvIdType; u.verificationIdNum = _pvIdNum;
+          _pvSelfie = null; _pvIdFront = null; // clear PII from device
+          H.saveState();
+          H.toast('Verification submitted! Admin reviews within 24 hours.');
+          H.renderPage('ProfileVerify');
+        } catch (e) {
+          if (btn) { btn.disabled = false; btn.textContent = 'Submit for Review'; }
+          H.toast('Failed to submit: ' + (e.message || 'Check your connection'));
         }
       },
 
       async cancelPending() {
         const u = H.currentUser();
-        u.verificationPending  = false;
-        u.verification_pending = false;
+        u.verificationPending = false; u.verification_pending = false;
         H.saveState();
         const sb = window.supabase;
         if (sb) {
