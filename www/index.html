@@ -54,18 +54,18 @@
     .splash-wordmark {
       font-size: 52px; font-weight: 900;
       color: #fff; letter-spacing: -2px; line-height: 1;
-      animation: splashBounce .65s cubic-bezier(0.34,1.56,0.64,1) both;
+      animation: splashIn .45s ease both;
     }
     .splash-wordmark em { font-style: normal; color: #F5A623; }
     .splash-divider {
       width: 36px; height: 2px; border-radius: 2px;
       background: rgba(255,255,255,.22);
       margin: 14px 0 14px;
-      animation: splashFade .5s .3s both;
+      animation: splashIn .45s .08s both;
     }
     .splash-slogan-row {
       display: flex; align-items: flex-start; gap: 14px;
-      animation: splashFade .5s .35s both;
+      animation: splashIn .45s .12s both;
     }
     .splash-word-col { display: flex; flex-direction: column; align-items: center; }
     .splash-slogan-word {
@@ -80,7 +80,7 @@
     }
     .splash-dots {
       display: flex; gap: 6px; margin-top: 44px;
-      animation: splashFade .5s .55s both;
+      animation: splashIn .45s .16s both;
     }
     .splash-dots span {
       width: 6px; height: 6px; border-radius: 50%;
@@ -89,11 +89,9 @@
     }
     .splash-dots span:nth-child(2) { animation-delay: .2s; }
     .splash-dots span:nth-child(3) { animation-delay: .4s; }
-    @keyframes splashBounce {
-      from { transform: translateY(16px) scale(.94); } to { transform: none; }
-    }
-    @keyframes splashFade {
-      from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; }
+    /* Pure opacity fade — no transform — so nothing shifts/bumps as it appears */
+    @keyframes splashIn {
+      from { opacity: 0; } to { opacity: 1; }
     }
     @keyframes dotPulse {
       0%,80%,100% { background: rgba(255,255,255,.25); transform: scale(.8); }
@@ -351,6 +349,29 @@
 
   <!-- ── App Bootstrap ────────────────────────────────── -->
   <script>
+
+    // ── Native splash handoff ────────────────────────────
+    // The native (Capacitor) splash is a pixel match of the HTML #pamarketSplash.
+    // It is held (launchAutoHide:false) over the WebView load so there is no black
+    // gap, then dismissed the moment the identical HTML splash has painted — the
+    // handoff is invisible. A fallback timer guarantees it always hides.
+    (function () {
+      var _nativeSplashHidden = false;
+      function hideNativeSplash() {
+        if (_nativeSplashHidden) return;
+        _nativeSplashHidden = true;
+        try {
+          var SS = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen;
+          if (SS && SS.hide) SS.hide({ fadeOutDuration: 200 });
+        } catch (e) {}
+      }
+      // Hide once the HTML splash has actually painted (two frames after DOM ready).
+      document.addEventListener('DOMContentLoaded', function () {
+        requestAnimationFrame(function () { requestAnimationFrame(hideNativeSplash); });
+      });
+      // Safety net: never let the native splash hang.
+      setTimeout(hideNativeSplash, 2500);
+    })();
 
     // ── Service Worker ───────────────────────────────────
     if ('serviceWorker' in navigator) {
