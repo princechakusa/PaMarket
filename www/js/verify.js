@@ -32,18 +32,58 @@
   let camStream   = null;
   let livenessTimer = null;
 
+  // Captured images are held in memory only (never written to localStorage) and
+  // uploaded to private Storage on submit — so sensitive PII isn't persisted on device.
+  let _pendingId     = null;
+  let _pendingSelfie = null;
+
   function stopCam() {
     if (livenessTimer) { clearInterval(livenessTimer); livenessTimer = null; }
     if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
   }
+
+  // ── Verification document storage helpers (shared with admin & company flow) ──
+  function _dataUrlToBlob(dataUrl) {
+    var parts = dataUrl.split(',');
+    var mime = (parts[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
+    var bin = atob(parts[1]); var n = bin.length; var arr = new Uint8Array(n);
+    while (n--) arr[n] = bin.charCodeAt(n);
+    return new Blob([arr], { type: mime });
+  }
+
+  // Upload a captured image (data URL) to the private verification-docs bucket.
+  // Returns the storage path, or null if unavailable (caller falls back to base64).
+  H.uploadVerificationDoc = async function (userId, dataUrl, label) {
+    var sb = window.supabase;
+    if (!sb || !sb.storage || !dataUrl || dataUrl.indexOf('data:') !== 0) return null;
+    try {
+      var blob = _dataUrlToBlob(dataUrl);
+      var path = userId + '/' + label + '_' + Date.now() + '.jpg';
+      var up = await sb.storage.from('verification-docs').upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+      if (up.error) { console.warn('verification upload failed:', up.error.message); return null; }
+      return path;
+    } catch (e) { console.warn('verification upload error:', e); return null; }
+  };
+
+  // Admin: turn a stored path into a short-lived signed URL for review.
+  H.signedVerificationUrl = async function (path, secs) {
+    var sb = window.supabase;
+    if (!sb || !sb.storage || !path) return null;
+    try {
+      var r = await sb.storage.from('verification-docs').createSignedUrl(path, secs || 3600);
+      return (r && r.data && r.data.signedUrl) || null;
+    } catch (e) { return null; }
+  };
 
   // ---------------------------------------------------
   // VERIFY PAGE
   // ---------------------------------------------------
   pages.Verify = function () {
     const u         = currentUser();
-    const hasId     = !!u.idDocs;
-    const hasSelfie = !!u.selfie;
+    const idImg     = _pendingId || u.idDocs || null;
+    const selfieImg = _pendingSelfie || u.selfie || null;
+    const hasId     = !!idImg;
+    const hasSelfie = !!selfieImg;
     const isPending = !!u.verification_pending;
 
     if (u.verified) {
@@ -109,7 +149,7 @@
             <button class="verify-step-btn" onclick="document.getElementById('idFile').click()">
               ${I.camera} ${hasId ? 'Replace ID' : 'Upload ID'}
             </button>
-            ${hasId ? `<img src="${u.idDocs}" style="width:100%;max-width:240px;border-radius:12px;margin-top:10px">` : ''}
+            ${hasId ? `<img src="${idImg}" style="width:100%;max-width:240px;border-radius:12px;margin-top:10px">` : ''}
           </div>
         </div>
 
@@ -121,7 +161,7 @@
             <button class="verify-step-btn" onclick="H._verify.takeSelfie()">
               ${I.camera} ${hasSelfie ? 'Re-take Selfie' : 'Take Selfie'}
             </button>
-            ${hasSelfie ? `<img src="${u.selfie}" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin-top:10px;border:3px solid var(--n4)">` : ''}
+            ${hasSelfie ? `<img src="${selfieImg}" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin-top:10px;border:3px solid var(--n4)">` : ''}
           </div>
         </div>
 
@@ -228,7 +268,7 @@
           });
           const dataUrl = photo && (photo.dataUrl || (photo.base64String ? 'data:image/jpeg;base64,' + photo.base64String : null));
           if (dataUrl) {
-            const u = currentUser(); u.selfie = dataUrl; saveState();
+            _pendingSelfie = dataUrl;   // held in memory only, uploaded on submit
             toast('Selfie saved'); renderPage('Verify');
           }
         } catch (e) {
@@ -244,7 +284,8 @@
     onIdUpload(e) {
       const f = e.target.files[0]; if (!f) return;
       compressImage(f, 1400, 0.82).then(d => {
-        const u = currentUser(); u.idDocs = d; saveState(); renderPage('Verify'); toast('ID uploaded');
+        _pendingId = d;            // held in memory only, uploaded on submit
+        renderPage('Verify'); toast('ID added');
       });
     },
 
@@ -261,25 +302,34 @@
 
     async submitForReview() {
       const u = currentUser();
-      if (!u.idDocs || !u.selfie) { toast('Complete both steps first'); return; }
+      const idData     = _pendingId     || u.idDocs || null;
+      const selfieData = _pendingSelfie || u.selfie || null;
+      if (!idData || !selfieData) { toast('Complete both steps first'); return; }
       const btn = document.getElementById('submitVerifyBtn');
       if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
       try {
         if (!window.supabase) throw new Error('Not connected');
-        // Save verification record with photos for admin review
-        const { error: vErr } = await window.supabase.from('verifications').upsert({
-          user_id: u.id,
-          id_doc: u.idDocs,
-          selfie: u.selfie,
-          status: 'pending',
-          submitted_at: new Date().toISOString()
-        }, { onConflict: 'user_id' });
+        // Upload images to the private bucket; keep base64 only as a fallback if
+        // Storage isn't set up yet (migration not run) so nothing breaks.
+        const idPath     = await H.uploadVerificationDoc(u.id, idData, 'id');
+        const selfiePath = await H.uploadVerificationDoc(u.id, selfieData, 'selfie');
+        const rec = { user_id: u.id, status: 'pending', submitted_at: new Date().toISOString() };
+        if (idPath && selfiePath) {
+          rec.id_doc_path = idPath; rec.selfie_path = selfiePath;
+          rec.id_doc = null; rec.selfie = null;
+        } else {
+          rec.id_doc = idData; rec.selfie = selfieData; // legacy fallback
+        }
+        const { error: vErr } = await window.supabase.from('verifications').upsert(rec, { onConflict: 'user_id' });
         if (vErr) throw vErr;
         // Mark profile as pending
         const { error: pErr } = await window.supabase.from('profiles')
           .update({ verification_pending: true })
           .eq('id', u.id);
         if (pErr) throw pErr;
+        // Clear sensitive images from device once submitted.
+        _pendingId = null; _pendingSelfie = null;
+        u.idDocs = null; u.selfie = null;
         u.verification_pending = true;
         saveState();
         toast('Documents submitted! Admin will review within 24 hours.', 5000);
@@ -315,7 +365,7 @@
       document.getElementById('camInstr').textContent = 'Saving selfie…';
       await new Promise(r => setTimeout(r, 600));
 
-      const u = currentUser(); u.selfie = dataUrl; saveState();
+      _pendingSelfie = dataUrl;   // held in memory only, uploaded on submit
       toast('Selfie saved');
       stopCam();
       renderPage('Verify');
@@ -340,5 +390,133 @@
       r.readAsDataURL(file);
     });
   }
+
+  // ---------------------------------------------------
+  // COMPANY VERIFICATION (in-app, native camera + private storage)
+  // ---------------------------------------------------
+  var _pendingCompany = {};   // { reg, ownerId, tax, premises } -> dataURL (memory only)
+  var _companyName    = '';
+  var COMPANY_DOCS = [
+    ['reg',      'Certificate of Incorporation', 'CIPC business registration certificate'],
+    ['ownerId',  'Owner / Director ID',          'National ID or passport of the owner/director'],
+    ['tax',      'Tax Clearance Certificate',    'Valid certificate from ZIMRA'],
+    ['premises', 'Business Premises Photo',       'Outside of your premises showing any signage']
+  ];
+
+  pages.CompanyVerify = function () {
+    const u = currentUser();
+    if (!u) return `<div class="page active">${innerTopbar('Company Verification')}${H.emptyState('Sign in required', 'Sign in to verify your company')}</div>`;
+
+    if (u.companyVerified) {
+      return `<div class="page active">${innerTopbar('Company Verification')}
+        <div class="inner-content" style="text-align:center;padding:40px 24px">
+          <div style="width:72px;height:72px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">Company Verified</div>
+          <div style="font-size:13px;color:var(--sub)">Your blue Verified Business badge is active on your job listings.</div>
+        </div></div>`;
+    }
+    if (u.company_verification_pending) {
+      return `<div class="page active">${innerTopbar('Company Verification')}
+        <div class="inner-content" style="text-align:center;padding:40px 24px">
+          <div style="font-size:42px;margin-bottom:10px">🕓</div>
+          <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">Under Review</div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6">Your company documents were submitted. Our team reviews within 2 business days.</div>
+          <button class="ml-act-btn" style="width:100%;padding:12px;margin-top:20px" onclick="H._companyVerify.cancelPending()">Cancel Request</button>
+        </div></div>`;
+    }
+
+    const allDone = COMPANY_DOCS.every(d => _pendingCompany[d[0]]);
+    const nameVal = escHtml(_companyName || u.company || u.name || '');
+    return `<div class="page active">${innerTopbar('Company Verification')}
+      <div class="inner-content">
+        <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:16px">Submit the four documents below to earn your blue <b>Verified Business</b> badge and post jobs. Reviewed within 2 business days.</div>
+        <div class="fg" style="margin-bottom:18px">
+          <div class="fl">Company / Business Name</div>
+          <input class="fi" id="cvCompanyName" placeholder="Registered business name" value="${nameVal}" oninput="H._companyVerify.syncName(this.value)">
+        </div>
+        ${COMPANY_DOCS.map((d, i) => {
+          const done = !!_pendingCompany[d[0]];
+          return `<div class="verify-step">
+            <div class="verify-num ${done ? 'done' : ''}">${done ? I.check : `<span style="font-size:15px;font-weight:600">${i + 1}</span>`}</div>
+            <div style="flex:1">
+              <div class="verify-step-title">${d[1]}</div>
+              <div class="verify-step-sub">${d[2]}</div>
+              <button class="verify-step-btn" onclick="H._companyVerify.capture('${d[0]}')">${I.camera} ${done ? 'Replace Photo' : 'Add Photo'}</button>
+              ${done ? `<img src="${_pendingCompany[d[0]]}" style="width:100%;max-width:240px;border-radius:12px;margin-top:10px">` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+        <button class="btn-pri" id="cvSubmitBtn" ${allDone ? '' : 'disabled'} onclick="H._companyVerify.submit()" style="margin-top:8px">Submit for Review</button>
+        <input type="file" id="cvDocFile" accept="image/*" capture="environment" style="display:none" onchange="H._companyVerify.onFile(event)">
+        <div class="tip-box" style="margin-top:14px"><div class="tip-title">${I.lock} Secure</div><div class="tip-body">Your documents are stored privately and used only to verify your business. Never sold or shared.</div></div>
+      </div></div>`;
+  };
+
+  H._companyVerify = {
+    _activeKey: null,
+    syncName(v) { _companyName = v; var b = document.getElementById('cvSubmitBtn'); if (b) {/* keep state */} },
+    async capture(key) {
+      this._activeKey = key;
+      const Camera   = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+      const isNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+      var nm = document.getElementById('cvCompanyName'); if (nm) _companyName = nm.value;
+      if (isNative && Camera) {
+        try {
+          const photo = await Camera.getPhoto({ quality: 80, allowEditing: false, resultType: 'dataUrl', source: 'PROMPT', width: 1400, correctOrientation: true });
+          const d = photo && photo.dataUrl;
+          if (d) { _pendingCompany[key] = d; renderPage('CompanyVerify'); }
+        } catch (e) {
+          const m = ((e && e.message) || '').toLowerCase();
+          if (m.includes('cancel') || m.includes('denied')) return;
+          var fi = document.getElementById('cvDocFile'); if (fi) fi.click();
+        }
+        return;
+      }
+      var fi2 = document.getElementById('cvDocFile'); if (fi2) fi2.click();
+    },
+    onFile(e) {
+      const f = e.target.files[0]; if (!f || !this._activeKey) return;
+      var nm = document.getElementById('cvCompanyName'); if (nm) _companyName = nm.value;
+      const key = this._activeKey;
+      compressImage(f, 1400, 0.82).then(d => { _pendingCompany[key] = d; renderPage('CompanyVerify'); });
+    },
+    async submit() {
+      const u = currentUser();
+      var nmEl = document.getElementById('cvCompanyName');
+      const name = ((nmEl && nmEl.value) || _companyName || u.company || '').trim();
+      if (!name) { toast('Enter your company name'); return; }
+      if (!COMPANY_DOCS.every(d => _pendingCompany[d[0]])) { toast('Add all four documents'); return; }
+      const btn = document.getElementById('cvSubmitBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+      try {
+        if (!window.supabase) throw new Error('Not connected');
+        const paths = {};
+        for (const d of COMPANY_DOCS) {
+          paths[d[0]] = await H.uploadVerificationDoc(u.id, _pendingCompany[d[0]], 'co_' + d[0]);
+        }
+        if (Object.keys(paths).some(k => !paths[k])) throw new Error('Document storage is not set up yet');
+        const rec = {
+          user_id: u.id, company_name: name, status: 'pending', submitted_at: new Date().toISOString(),
+          reg_cert_path: paths.reg, owner_id_path: paths.ownerId, tax_cert_path: paths.tax, premises_path: paths.premises
+        };
+        const { error } = await window.supabase.from('company_verifications').upsert(rec, { onConflict: 'user_id' });
+        if (error) throw error;
+        await window.supabase.from('profiles').update({ company_verification_pending: true, company: name }).eq('id', u.id);
+        _pendingCompany = {}; _companyName = '';
+        u.company = name; u.company_verification_pending = true; saveState();
+        toast('Company documents submitted! Reviewed within 2 business days.', 5000);
+        renderPage('CompanyVerify');
+      } catch (e) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit for Review'; }
+        toast('Failed to submit: ' + (e.message || 'Check your connection'), 4000, true);
+      }
+    },
+    async cancelPending() {
+      const u = currentUser();
+      u.company_verification_pending = false; saveState();
+      if (window.supabase) await window.supabase.from('profiles').update({ company_verification_pending: false }).eq('id', u.id);
+      toast('Request cancelled'); renderPage('CompanyVerify');
+    }
+  };
 
 })(window.H);
