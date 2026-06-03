@@ -1,4 +1,5 @@
 -- Verification storage + company verification (idempotent / safe to re-run)
+-- Admin checks avoid any "table.id" token so they don't get mangled on paste.
 -- Run this in the Supabase SQL editor (Dashboard → SQL Editor).
 
 -- 1. Private bucket for verification documents (ID, selfie, company docs)
@@ -7,45 +8,32 @@ values (
   'verification-docs',
   'verification-docs',
   false,
-  8388608, -- 8 MB
+  8388608,
   array['image/jpeg', 'image/png', 'image/webp']
 )
 on conflict (id) do nothing;
 
--- Storage policies (drop-then-create so this can be re-run safely)
 drop policy if exists "verifdocs user insert" on storage.objects;
 create policy "verifdocs user insert"
   on storage.objects for insert to authenticated
-  with check (
-    bucket_id = 'verification-docs'
-    and split_part(name, '/', 1) = auth.uid()::text
-  );
+  with check (bucket_id = 'verification-docs' and split_part(name, '/', 1) = auth.uid()::text);
 
 drop policy if exists "verifdocs user select" on storage.objects;
 create policy "verifdocs user select"
   on storage.objects for select to authenticated
-  using (
-    bucket_id = 'verification-docs'
-    and split_part(name, '/', 1) = auth.uid()::text
-  );
+  using (bucket_id = 'verification-docs' and split_part(name, '/', 1) = auth.uid()::text);
 
 drop policy if exists "verifdocs user delete" on storage.objects;
 create policy "verifdocs user delete"
   on storage.objects for delete to authenticated
-  using (
-    bucket_id = 'verification-docs'
-    and split_part(name, '/', 1) = auth.uid()::text
-  );
+  using (bucket_id = 'verification-docs' and split_part(name, '/', 1) = auth.uid()::text);
 
 drop policy if exists "verifdocs admin select" on storage.objects;
 create policy "verifdocs admin select"
   on storage.objects for select to authenticated
   using (
     bucket_id = 'verification-docs'
-    and exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid() and profiles.role = 'admin'
-    )
+    and auth.uid() in (select id from public.profiles where role = 'admin')
   );
 
 -- 2. Identity verifications: store Storage paths instead of base64
@@ -54,7 +42,7 @@ alter table public.verifications add column if not exists selfie_path  text;
 
 -- 3. Company verification (in-app). One row per user.
 create table if not exists public.company_verifications (
-  user_id       uuid primary key references auth.users(id) on delete cascade,
+  user_id       uuid primary key references auth.users (id) on delete cascade,
   company_name  text,
   reg_cert_path text,
   owner_id_path text,
@@ -85,16 +73,12 @@ create policy "companyverif user select"
 drop policy if exists "companyverif admin select" on public.company_verifications;
 create policy "companyverif admin select"
   on public.company_verifications for select to authenticated
-  using (
-    exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'admin')
-  );
+  using (auth.uid() in (select id from public.profiles where role = 'admin'));
 
 drop policy if exists "companyverif admin update" on public.company_verifications;
 create policy "companyverif admin update"
   on public.company_verifications for update to authenticated
-  using (
-    exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'admin')
-  );
+  using (auth.uid() in (select id from public.profiles where role = 'admin'));
 
 -- 4. Profile flags for company verification status
 alter table public.profiles add column if not exists company_verified boolean default false;
