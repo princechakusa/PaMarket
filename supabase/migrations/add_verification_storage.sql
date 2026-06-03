@@ -33,7 +33,7 @@ create policy "verifdocs admin select"
   on storage.objects for select to authenticated
   using (
     bucket_id = 'verification-docs'
-    and auth.uid() in (select id from public.profiles where role = 'admin')
+    and auth.uid()::text in (select id::text from public.profiles where role = 'admin')
   );
 
 -- 2. Identity verifications: store Storage paths instead of base64
@@ -73,12 +73,12 @@ create policy "companyverif user select"
 drop policy if exists "companyverif admin select" on public.company_verifications;
 create policy "companyverif admin select"
   on public.company_verifications for select to authenticated
-  using (auth.uid() in (select id from public.profiles where role = 'admin'));
+  using (auth.uid()::text in (select id::text from public.profiles where role = 'admin'));
 
 drop policy if exists "companyverif admin update" on public.company_verifications;
 create policy "companyverif admin update"
   on public.company_verifications for update to authenticated
-  using (auth.uid() in (select id from public.profiles where role = 'admin'));
+  using (auth.uid()::text in (select id::text from public.profiles where role = 'admin'));
 
 -- 4. Profile flags for company verification status
 alter table public.profiles add column if not exists company_verified boolean default false;
