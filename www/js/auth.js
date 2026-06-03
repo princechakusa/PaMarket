@@ -487,6 +487,19 @@
     H.boot();
   }
 
+  // Canonical nonce helpers for native Google sign-in with Supabase:
+  // a random raw nonce is hashed (SHA-256) and given to Google; Supabase is given
+  // the raw nonce and re-hashes it to match the token's nonce claim.
+  function _randNonce() {
+    var a = new Uint8Array(16);
+    (window.crypto || {}).getRandomValues && window.crypto.getRandomValues(a);
+    return Array.prototype.map.call(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+  }
+  async function _sha256Hex(str) {
+    var buf = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+  }
+
   async function _oauthInCap(c, provider) {
     // Native Google account picker via @capgo/capacitor-social-login (Capacitor 8)
     if (provider === 'google') {
@@ -496,18 +509,27 @@
           await SocialLogin.initialize({
             google: { webClientId: '422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com' }
           });
-          const res = await SocialLogin.login({ provider: 'google', options: {} });
+          // Nonce: give Google the hashed value, give Supabase the raw value.
+          var rawNonce = '', hashedNonce = '';
+          try { rawNonce = _randNonce(); hashedNonce = await _sha256Hex(rawNonce); } catch (e) {}
+          const loginOpts = hashedNonce ? { nonce: hashedNonce } : {};
+          const res = await SocialLogin.login({ provider: 'google', options: loginOpts });
           const r = (res && res.result) || {};
           const idToken = r.idToken || null;
           if (idToken) {
             var payload = { provider: 'google', token: idToken };
-            // If the plugin generated a nonce, Supabase needs the raw value to verify.
-            if (r.nonce) payload.nonce = r.nonce;
-            const { data, error } = await c.auth.signInWithIdToken(payload);
-            if (!error && data && data.session) { await _finishOAuthLogin(c, data.session); return; }
-            // Token exchange rejected (e.g. client ID not authorized in Supabase, or
-            // nonce mismatch). Don't dead-end — fall through to the Custom Tab flow.
-            console.warn('signInWithIdToken failed, falling back to web OAuth:', error && error.message);
+            // Use the raw nonce we generated (preferred), else any the plugin returned.
+            if (rawNonce) payload.nonce = rawNonce;
+            else if (r.nonce) payload.nonce = r.nonce;
+            var ex1 = await c.auth.signInWithIdToken(payload);
+            // Retry without nonce in case the plugin didn't embed ours.
+            if (ex1.error && payload.nonce) {
+              ex1 = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
+            }
+            if (!ex1.error && ex1.data && ex1.data.session) { await _finishOAuthLogin(c, ex1.data.session); return; }
+            // Token exchange rejected (e.g. client ID not in Supabase Authorized Client IDs,
+            // or nonce mismatch). Don't dead-end — fall through to the Custom Tab flow.
+            console.warn('signInWithIdToken failed, falling back to web OAuth:', ex1.error && ex1.error.message);
           }
           // No token / exchange failed — fall through to the in-app Custom Tab flow below.
         } catch(e) {
