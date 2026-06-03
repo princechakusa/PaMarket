@@ -1174,8 +1174,23 @@ window.H = {
       if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
       let changed = false;
 
+      // Load server-persisted conversation deletions so they stay hidden across logins.
+      try {
+        const { data: dels } = await sb.from('conversation_deletions').select('conversation_id').eq('user_id', u.id);
+        if (dels && dels.length) {
+          if (!Array.isArray(H.state.deletedConvIds)) H.state.deletedConvIds = [];
+          for (const d of dels) {
+            if (!H.state.deletedConvIds.includes(d.conversation_id)) { H.state.deletedConvIds.push(d.conversation_id); changed = true; }
+          }
+        }
+      } catch (e) { /* conversation_deletions table may not exist yet */ }
+
       // Phase 1: discover from conversations table (may not exist — silent fail)
       const deletedIds = new Set(Array.isArray(H.state.deletedConvIds) ? H.state.deletedConvIds : []);
+      // Drop any already-loaded conversations the user has deleted.
+      const _before = H.state.conversations.length;
+      H.state.conversations = H.state.conversations.filter(c => !deletedIds.has(c.id));
+      if (H.state.conversations.length !== _before) changed = true;
       const knownIds = new Set(H.state.conversations.map(c => c.id));
       try {
         const { data: convs, error } = await sb.from('conversations')

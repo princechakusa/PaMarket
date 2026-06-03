@@ -367,6 +367,10 @@
     // If this conv was previously deleted, un-delete it so new messages from this person show
     if (Array.isArray(H.state.deletedConvIds) && H.state.deletedConvIds.includes(convId)) {
       H.state.deletedConvIds = H.state.deletedConvIds.filter(function(id){ return id !== convId; });
+      var _sbU = window.supabase, _u = H.currentUser();
+      if (_sbU && _u && typeof _sbU.from === 'function') {
+        _sbU.from('conversation_deletions').delete().eq('user_id', _u.id).eq('conversation_id', convId).then(function(){});
+      }
     }
     // Resolve the other user's name for display before they reply
     const otherUser = (H.state.users||[]).find(function(x){ return x.id === otherId; });
@@ -761,6 +765,13 @@
     if (!H.state.deletedConvIds.includes(convId)) H.state.deletedConvIds.push(convId);
     H.state.conversations = (H.state.conversations || []).filter(function (c) { return c.id !== convId; });
     H.saveState();
+    // Persist the deletion server-side so it stays hidden after logout/login.
+    var sb = window.supabase, u = H.currentUser();
+    if (sb && u && typeof sb.from === 'function') {
+      sb.from('conversation_deletions')
+        .upsert({ user_id: u.id, conversation_id: convId }, { onConflict: 'user_id,conversation_id' })
+        .then(function (r) { if (r && r.error) console.warn('conversation deletion persist failed:', r.error.message); });
+    }
     if (H.currentPageName === 'Messages') H.renderPage('Messages');
   };
 
