@@ -89,15 +89,13 @@
     if (u.verified) {
       return `<div class="page active">${innerTopbar('Identity Verified')}
         <div class="inner-content">
-          <div class="verify-badge-preview">
-            <div class="vbp-icon" style="color:#22c55e">${I.check}</div>
-            <div>
-              <div style="font-size:15px;font-weight:700;color:#22c55e">You are verified <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#22c55e" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg></div>
-              <div style="font-size:12px;color:var(--sub);margin-top:2px">Buyers trust verified sellers more.</div>
-            </div>
+          <div style="background:linear-gradient(135deg,#16a34a,#15803d);border-radius:20px;padding:26px 20px;text-align:center;color:#fff;margin-bottom:16px;box-shadow:0 8px 24px rgba(21,128,61,.25)">
+            <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div style="font-size:19px;font-weight:800">You're Verified</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:4px">Your blue badge is live across your listings and profile.</div>
           </div>
           <div class="tip-box"><div class="tip-title">${I.lock} Blue badge active</div>
-            <div class="tip-body">Your blue verified badge is now showing on all your listings and profile.</div>
+            <div class="tip-body">Verified sellers earn more buyer trust and more enquiries.</div>
           </div>
         </div>
       </div>`;
@@ -106,73 +104,85 @@
     if (isPending) {
       return `<div class="page active">${innerTopbar('Verify Identity')}
         <div class="inner-content">
-          <div style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.4);border-radius:16px;padding:20px;text-align:center;margin-bottom:18px">
-            <div style="margin-bottom:8px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <div style="font-size:15px;font-weight:700;color:#fbbf24">Verification Pending</div>
-            <div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.5">
-              Your ID and selfie have been submitted.<br>An admin will review your documents and approve your badge — usually within 24 hours.
-            </div>
+          <div style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:20px;padding:26px 20px;text-align:center;color:#fff;margin-bottom:16px;box-shadow:0 8px 24px rgba(26,58,143,.25)">
+            <div style="width:64px;height:64px;border-radius:50%;background:rgba(245,166,35,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#F5A623" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div style="font-size:19px;font-weight:800">Under Review</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:6px;line-height:1.55">Your ID and selfie were submitted. Our team reviews within 24 hours and you'll be notified once approved.</div>
           </div>
           <div class="tip-box">
             <div class="tip-title">${I.lock} What happens next?</div>
-            <div class="tip-body">Once approved you will get a notification and your blue <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg> badge will appear on all your listings automatically.</div>
+            <div class="tip-body">Once approved, your blue <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg> badge appears automatically on all your listings.</div>
           </div>
           <button class="ml-act-btn" style="width:100%;padding:12px;margin-top:12px" onclick="H._verify.cancelPending()">Cancel request</button>
         </div>
       </div>`;
     }
 
+    // ── Premium step card helper ──
+    const doneCount = 1 + (hasId ? 1 : 0) + (hasSelfie ? 1 : 0);
+    const pct = Math.round((doneCount / 3) * 100);
+    const ready = hasId && hasSelfie;
+    const checkSvg = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+
+    const badge = (state, n) => {
+      if (state === 'done') return `<div style="width:38px;height:38px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(22,163,74,.35)">${checkSvg}</div>`;
+      const bg = state === 'active' ? '#1A3A8F' : '#EEF2FB';
+      const col = state === 'active' ? '#fff' : '#94a3b8';
+      return `<div style="width:38px;height:38px;border-radius:50%;background:${bg};color:${col};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:800">${n}</div>`;
+    };
+
+    const card = (state, n, title, sub, inner) => `
+      <div style="background:var(--card,#fff);border:1px solid ${state === 'active' ? '#C7D6F5' : 'var(--border,#E8ECF4)'};border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(16,24,40,.04)">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          ${badge(state, n)}
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <div style="font-size:15px;font-weight:800;color:var(--text)">${title}</div>
+              ${state === 'done' ? '<span style="font-size:10.5px;font-weight:800;color:#16a34a;background:#dcfce7;border-radius:20px;padding:2px 9px;letter-spacing:.3px">ADDED</span>' : ''}
+            </div>
+            <div style="font-size:12.5px;color:var(--sub);margin-top:3px;line-height:1.55">${sub}</div>
+            ${inner || ''}
+          </div>
+        </div>
+      </div>`;
+
+    const actBtn = (label, onclick, accent) => `<button onclick="${onclick}" style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:12px;border:none;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:700;background:${accent ? '#EEF2FB' : 'linear-gradient(135deg,#1A3A8F,#2952cc)'};color:${accent ? '#1A3A8F' : '#fff'}">${I.camera} ${label}</button>`;
+
     return `<div class="page active">${innerTopbar('Verify Identity')}
-      <div class="inner-content">
-        <div class="verify-badge-preview">
-          <div class="vbp-icon">${I.shield || I.check}</div>
-          <div>
-            <div style="font-size:14px;font-weight:700">Get your Blue Verified Badge</div>
-            <div style="font-size:12px;color:var(--sub);margin-top:1px">Verified sellers get 4× more enquiries</div>
+      <div class="inner-content" style="padding-bottom:40px">
+
+        <!-- Hero + progress -->
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:22px;padding:22px 20px;margin-bottom:18px;color:#fff;box-shadow:0 10px 28px rgba(26,58,143,.28)">
+          <div style="display:flex;align-items:center;gap:13px;margin-bottom:16px">
+            <div style="width:50px;height:50px;border-radius:15px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#F5A623" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+            <div style="flex:1">
+              <div style="font-size:18px;font-weight:800;letter-spacing:-.3px">Get Verified</div>
+              <div style="font-size:12.5px;color:rgba(255,255,255,.82);margin-top:1px">Verified sellers get up to 4× more enquiries</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex:1;height:8px;background:rgba(255,255,255,.18);border-radius:5px;overflow:hidden"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#F5A623,#ffc55c);border-radius:5px;transition:width .35s"></div></div>
+            <div style="font-size:12px;font-weight:800;color:#F5A623;white-space:nowrap">${doneCount} of 3</div>
           </div>
         </div>
 
-        <div class="verify-step">
-          <div class="verify-num done">${I.check}</div>
-          <div>
-            <div class="verify-step-title">Phone verified</div>
-            <div class="verify-step-sub">${escHtml(u.phone)}</div>
-          </div>
-        </div>
+        ${card('done', 1, 'Phone Verified', escHtml(u.phone || 'Your phone number is confirmed'), '')}
 
-        <div class="verify-step">
-          <div class="verify-num ${hasId ? 'done' : ''}">${hasId ? I.check : `<span style="font-size:15px;font-weight:600">2</span>`}</div>
-          <div style="flex:1">
-            <div class="verify-step-title">Upload ID document</div>
-            <div class="verify-step-sub">National ID, passport or driver's licence. Both sides if applicable.</div>
-            <input type="file" id="idFile" accept="image/*" capture="environment" style="display:none" onchange="H._verify.onIdUpload(event)">
-            <button class="verify-step-btn" onclick="document.getElementById('idFile').click()">
-              ${I.camera} ${hasId ? 'Replace ID' : 'Upload ID'}
-            </button>
-            ${hasId ? `<img src="${idImg}" style="width:100%;max-width:240px;border-radius:12px;margin-top:10px">` : ''}
-          </div>
-        </div>
+        ${card(hasId ? 'done' : 'active', 2, 'Upload ID Document', "National ID, passport or driver's licence. Capture both sides if applicable.",
+          `<input type="file" id="idFile" accept="image/*" capture="environment" style="display:none" onchange="H._verify.onIdUpload(event)">
+           ${actBtn(hasId ? 'Replace ID' : 'Upload ID', "document.getElementById('idFile').click()", hasId)}
+           ${hasId ? `<div style="margin-top:12px;border-radius:14px;overflow:hidden;border:1px solid var(--border,#E8ECF4);max-width:240px"><img src="${idImg}" style="width:100%;display:block"></div>` : ''}`)}
 
-        <div class="verify-step">
-          <div class="verify-num ${hasSelfie ? 'done' : ''}">${hasSelfie ? I.check : `<span style="font-size:15px;font-weight:600">3</span>`}</div>
-          <div style="flex:1">
-            <div class="verify-step-title">Face Selfie</div>
-            <div class="verify-step-sub">Take a clear photo of your face. An admin will review it alongside your ID.</div>
-            <button class="verify-step-btn" onclick="H._verify.takeSelfie()">
-              ${I.camera} ${hasSelfie ? 'Re-take Selfie' : 'Take Selfie'}
-            </button>
-            ${hasSelfie ? `<img src="${selfieImg}" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin-top:10px;border:3px solid var(--n4)">` : ''}
-          </div>
-        </div>
+        ${card(hasSelfie ? 'done' : (hasId ? 'active' : 'todo'), 3, 'Face Selfie', 'Take a clear photo of your face. Reviewed alongside your ID.',
+          `${actBtn(hasSelfie ? 'Re-take Selfie' : 'Take Selfie', 'H._verify.takeSelfie()', hasSelfie)}
+           ${hasSelfie ? `<div style="margin-top:12px"><img src="${selfieImg}" style="width:104px;height:104px;border-radius:50%;object-fit:cover;border:3px solid #16a34a"></div>` : ''}`)}
 
-        ${hasId && hasSelfie ? `
-          <button class="btn-pri" id="submitVerifyBtn" onclick="H._verify.submitForReview()">Submit for Admin Review</button>
-          <div style="font-size:12px;color:var(--sub);text-align:center;margin-top:8px">Reviewed by our team within 24 hours.</div>
-        ` : ''}
+        <button class="btn-pri" id="submitVerifyBtn" ${ready ? '' : 'disabled'} onclick="H._verify.submitForReview()" style="width:100%;margin-top:6px;${ready ? '' : 'opacity:.5;cursor:not-allowed'}">${ready ? 'Submit for Review' : 'Add ID & selfie to continue'}</button>
+        <div style="font-size:12px;color:var(--sub);text-align:center;margin-top:8px">Reviewed by our team within 24 hours.</div>
 
-        <div class="tip-box" style="margin-top:14px">
-          <div class="tip-title">${I.lock} Your data is secure</div>
-          <div class="tip-body">Your ID and selfie are sent securely and used solely for identity verification. Never sold or shared.</div>
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#EEF2FB;border-radius:14px;padding:14px;margin-top:16px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Your data is secure.</b> Your ID and selfie are stored privately and used only to confirm your identity — never sold or shared.</div>
         </div>
       </div>
     </div>`;
