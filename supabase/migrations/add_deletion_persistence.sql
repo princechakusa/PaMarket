@@ -1,5 +1,6 @@
 -- Persist per-user conversation deletions + ensure notification deletes persist.
--- Comparisons cast both sides to text so they work whether user_id is uuid or text.
+-- Comparisons cast both sides to text; the notifications policy is guarded so this
+-- runs cleanly even if a notifications table is absent.
 -- Run this in the Supabase SQL editor (Dashboard → SQL Editor).
 
 create table if not exists public.conversation_deletions (
@@ -23,7 +24,11 @@ drop policy if exists "convdel own delete" on public.conversation_deletions;
 create policy "convdel own delete" on public.conversation_deletions
   for delete to authenticated using (user_id::text = auth.uid()::text);
 
--- Make sure users can delete their own notifications (so a delete persists).
-drop policy if exists "own notifications: delete" on public.notifications;
-create policy "own notifications: delete" on public.notifications
-  for delete to authenticated using (user_id::text = auth.uid()::text);
+-- Ensure users can delete their own notifications — only if the table exists.
+do $$
+begin
+  if to_regclass('public.notifications') is not null then
+    execute 'drop policy if exists "own notifications: delete" on public.notifications';
+    execute 'create policy "own notifications: delete" on public.notifications for delete to authenticated using (user_id::text = auth.uid()::text)';
+  end if;
+end $$;
