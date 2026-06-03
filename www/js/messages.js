@@ -765,7 +765,10 @@
   };
 
   // ── Chat menu: block, view profile, report ───────────────
-  H._chat = {
+  // Merge onto the existing H._chat — the attach/image methods (openAttach,
+  // pickImage, …) are defined above; reassigning with `H._chat = {…}` would wipe
+  // them out and break the "+" attach button.
+  Object.assign(H._chat, {
     openMenu(userId) {
       const u = H.currentUser();
       const other = (H.state.users || []).find(x => x.id === userId);
@@ -873,7 +876,7 @@
           created_at: new Date(rep.t).toISOString(), status: 'open' }).catch(() => {});
       }
     },
-  };
+  });
 
   H._markAllRead = function() {
     const u = H.currentUser();

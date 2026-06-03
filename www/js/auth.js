@@ -497,14 +497,19 @@
             google: { webClientId: '422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com' }
           });
           const res = await SocialLogin.login({ provider: 'google', options: {} });
-          const idToken = res && res.result && res.result.idToken;
+          const r = (res && res.result) || {};
+          const idToken = r.idToken || null;
           if (idToken) {
-            const { data, error } = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
-            if (error) { H.toast(error.message || 'Sign-in failed'); return; }
-            if (data && data.session) { await _finishOAuthLogin(c, data.session); }
-            return;
+            var payload = { provider: 'google', token: idToken };
+            // If the plugin generated a nonce, Supabase needs the raw value to verify.
+            if (r.nonce) payload.nonce = r.nonce;
+            const { data, error } = await c.auth.signInWithIdToken(payload);
+            if (!error && data && data.session) { await _finishOAuthLogin(c, data.session); return; }
+            // Token exchange rejected (e.g. client ID not authorized in Supabase, or
+            // nonce mismatch). Don't dead-end — fall through to the Custom Tab flow.
+            console.warn('signInWithIdToken failed, falling back to web OAuth:', error && error.message);
           }
-          // No token — fall through to the in-app Custom Tab flow below.
+          // No token / exchange failed — fall through to the in-app Custom Tab flow below.
         } catch(e) {
           var errMsg = (e && e.message) ? e.message : '';
           var lower  = errMsg.toLowerCase();
@@ -512,6 +517,7 @@
           if (lower.includes('cancel') || lower.includes('closed') || lower.includes('dismiss')) return;
           // Any other failure (e.g. SHA-1 not yet registered): fall through to the
           // Custom Tab flow, which still returns to the app via the deep link.
+          console.warn('Native Google sign-in failed, falling back to web OAuth:', errMsg);
         }
       }
     }
