@@ -501,62 +501,10 @@
   }
 
   async function _oauthInCap(c, provider) {
-    // Native Google account picker via @capgo/capacitor-social-login (Capacitor 8)
-    if (provider === 'google') {
-      const SocialLogin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SocialLogin;
-      if (SocialLogin) {
-        try {
-          await SocialLogin.initialize({
-            google: { webClientId: '422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com' }
-          });
-          // Nonce: give Google the hashed value, give Supabase the raw value.
-          var rawNonce = '', hashedNonce = '';
-          try { rawNonce = _randNonce(); hashedNonce = await _sha256Hex(rawNonce); } catch (e) {}
-          const loginOpts = hashedNonce ? { nonce: hashedNonce } : {};
-          const res = await SocialLogin.login({ provider: 'google', options: loginOpts });
-          const r = (res && res.result) || {};
-          const idToken = r.idToken || null;
-          if (idToken) {
-            var payload = { provider: 'google', token: idToken };
-            // Use the raw nonce we generated (preferred), else any the plugin returned.
-            if (rawNonce) payload.nonce = rawNonce;
-            else if (r.nonce) payload.nonce = r.nonce;
-            var ex1 = await c.auth.signInWithIdToken(payload);
-            // Retry without nonce in case the plugin didn't embed ours.
-            if (ex1.error && payload.nonce) {
-              ex1 = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
-            }
-            if (!ex1.error && ex1.data && ex1.data.session) {
-              try {
-                await _finishOAuthLogin(c, ex1.data.session);
-              } catch (fe) {
-                // Token was accepted but finishing login failed — surface it instead of hanging.
-                H.toast('Signed in, but loading profile failed: ' + ((fe && fe.message) || 'unknown'), 6000, true);
-                try { window.location.reload(); } catch (e2) {}
-              }
-              return;
-            }
-            // Token exchange rejected (e.g. client ID not in Supabase Authorized Client IDs,
-            // or nonce mismatch). Show the real reason, then fall back to the Custom Tab flow.
-            var exMsg = (ex1.error && ex1.error.message) || 'token rejected';
-            console.warn('signInWithIdToken failed:', exMsg);
-            H.toast('Google sign-in: ' + exMsg, 6000, true);
-          }
-          // No token / exchange failed — fall through to the in-app Custom Tab flow below.
-        } catch(e) {
-          var errMsg = (e && e.message) ? e.message : '';
-          var lower  = errMsg.toLowerCase();
-          // User explicitly dismissed the picker — stop, don't bounce to a browser.
-          if (lower.includes('cancel') || lower.includes('closed') || lower.includes('dismiss')) return;
-          // Any other failure (e.g. SHA-1 not yet registered): fall through to the
-          // Custom Tab flow, which still returns to the app via the deep link.
-          console.warn('Native Google sign-in failed, falling back to web OAuth:', errMsg);
-        }
-      }
-    }
-
-    // Fallback: Chrome Custom Tab OAuth that returns to the app via the
-    // com.pamarket.app://login-callback deep link — it does NOT strand the user in web.
+    // Reliable mobile OAuth: open the provider's sign-in in an in-app browser tab,
+    // then return to the app via the com.pamarket.app://login-callback deep link.
+    // Uses the provider configured in the Supabase dashboard — no native SDK or
+    // SHA-1 dependency, so it can't hang the way the native token flow did.
     const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
     const App     = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
 
@@ -565,33 +513,40 @@
         provider: provider,
         options: { redirectTo: 'com.pamarket.app://login-callback', skipBrowserRedirect: true }
       });
-      if (error) { H.toast(error.message || 'Sign-in failed'); return; }
-      if (!data || !data.url) { H.toast('Could not start sign-in'); return; }
+      if (error) { H.toast(error.message || 'Sign-in failed', 6000, true); return; }
+      if (!data || !data.url) { H.toast('Could not start sign-in', 5000, true); return; }
+
       let urlListener;
-      urlListener = await App.addListener('appUrlOpen', async function(event) {
-        try { await urlListener.remove(); } catch(e) {}
-        try { if (Browser.close) await Browser.close(); } catch(e) {}
-        if (!event.url || !event.url.includes('login-callback')) return;
+      const onUrl = async function (event) {
+        if (!event || !event.url || event.url.indexOf('login-callback') === -1) return;
+        try { await urlListener.remove(); } catch (e) {}
+        try { if (Browser.close) await Browser.close(); } catch (e) {}
         try {
-          const code = new URL(event.url).searchParams.get('code');
+          const url = new URL(event.url);
+          const errDesc = url.searchParams.get('error_description') || url.searchParams.get('error');
+          if (errDesc) { H.toast('Google: ' + errDesc, 7000, true); return; }
+          const code = url.searchParams.get('code');
           if (code) {
             const { error: ex } = await c.auth.exchangeCodeForSession(code);
-            if (!ex) { window.location.reload(); return; }
+            if (ex) { H.toast('Google: ' + ex.message, 7000, true); return; }
+            window.location.reload(); return;
           }
           const { data: sd } = await c.auth.getSession();
           if (sd && sd.session) { window.location.reload(); return; }
-          H.toast('Sign-in failed. Please try again.');
-        } catch(e) { H.toast('Sign-in failed. Please try again.'); }
-      });
+          H.toast('Sign-in did not complete. Please try again.', 5000, true);
+        } catch (e) { H.toast('Sign-in error: ' + (e.message || ''), 6000, true); }
+      };
+      urlListener = await App.addListener('appUrlOpen', onUrl);
       await Browser.open({ url: data.url });
-    } else {
-      // Plugins not yet synced — standard OAuth (opens Chrome, user signs in there)
-      const { error } = await c.auth.signInWithOAuth({
-        provider: provider,
-        options: { redirectTo: window.location.origin + window.location.pathname }
-      });
-      if (error) H.toast(error.message || 'Sign-in failed');
+      return;
     }
+
+    // Last resort if the Browser/App plugins are unavailable: standard web OAuth.
+    const { error } = await c.auth.signInWithOAuth({
+      provider: provider,
+      options: { redirectTo: window.location.origin + window.location.pathname }
+    });
+    if (error) H.toast(error.message || 'Sign-in failed', 6000, true);
   }
 
   H.authGoogle = async function() {
