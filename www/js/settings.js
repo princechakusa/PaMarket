@@ -43,7 +43,7 @@
 
       <div class="settings-section">
         <div class="section-title">Notifications</div>
-        <button class="settings-item" onclick="H.openInner('NotificationSettings')">
+        <button class="settings-item" onclick="H.openInner('NotifSettings')">
           <span class="item-icon">${I.bell}</span>
           <span class="item-label">Notification Preferences</span>
           <span class="item-arrow">›</span>
