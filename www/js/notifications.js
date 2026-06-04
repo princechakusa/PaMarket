@@ -459,20 +459,25 @@
     };
 
     return `<div class="page active">${H.innerTopbar('Notification Preferences')}
-      <div style="padding:12px 12px 100px">
-        <div style="font-size:13px;color:var(--sub);padding:4px 2px 12px;line-height:1.5">
-          Choose which notifications you receive. Push notifications require app permissions.
+      <div style="padding:0 14px 100px">
+
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:20px;padding:20px;margin:14px 0 16px;color:#fff;box-shadow:0 8px 24px rgba(26,58,143,.25);display:flex;align-items:center;gap:13px">
+          <div style="width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#F5A623" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+          <div><div style="font-size:17px;font-weight:800">Notifications</div><div style="font-size:12.5px;color:rgba(255,255,255,.82);margin-top:1px">Choose what you hear about. Push needs app permission.</div></div>
         </div>
-        <div class="section-card">
-          ${rows.map(([k, t, s, iconName]) => {
+
+        <div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:18px;overflow:hidden;box-shadow:0 2px 10px rgba(16,24,40,.04)">
+          ${rows.map(([k, t, s, iconName], idx) => {
             const on = u.settings[k] !== false;
-            const trackBg = on ? '#34C759' : 'rgba(120,120,128,0.3)';
+            const trackBg = on ? '#16a34a' : 'rgba(120,120,128,0.3)';
             const knobLeft = on ? '22px' : '3px';
+            const border = idx < rows.length - 1 ? 'border-bottom:1px solid var(--border,#EEF1F6);' : '';
             return `
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)">
-              <div style="flex:1;min-width:0;padding-right:12px">
-                <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px">${settingsIcon(iconName)} ${t}</div>
-                <div style="font-size:12px;color:var(--sub);line-height:1.4">${s}</div>
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;${border}">
+              <div style="width:38px;height:38px;border-radius:11px;background:rgba(26,58,143,.08);color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0">${settingsIcon(iconName)}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:14.5px;font-weight:700;color:var(--text)">${t}</div>
+                <div style="font-size:12px;color:var(--sub);line-height:1.45;margin-top:1px">${s}</div>
               </div>
               <button
                 onclick="H.toggleSetting('${k}',this)"
@@ -486,15 +491,9 @@
           }).join('')}
         </div>
 
-        <div style="background:var(--n4);border-radius:14px;padding:14px;margin-top:14px;border:1px solid var(--n5)">
-          <div style="font-size:13px;font-weight:700;color:var(--n2);margin-bottom:4px">
-            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:middle;margin-right:6px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            Privacy Note
-          </div>
-          <div style="font-size:12px;color:var(--sub);line-height:1.6">
-            PaMarket never sells your notification preferences or contact details to third parties.
-            You can turn off all notifications at any time from your device settings.
-          </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#EEF2FB;border-radius:14px;padding:14px;margin-top:16px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Privacy:</b> PaMarket never sells your notification preferences or contact details. You can also turn off all notifications from your device settings.</div>
         </div>
       </div>
     </div>`;

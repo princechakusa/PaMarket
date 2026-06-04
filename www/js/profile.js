@@ -438,7 +438,7 @@
              <div style="display:flex;gap:8px;width:100%;max-width:260px">
                ${btn(hasSelfie ? 'Re-take' : 'Take Selfie', 'H._profileVerify.takeSelfie()', true)}
                <label for="selfieFile" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:11px;border-radius:11px;border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:700;background:var(--bg);color:var(--text)">Upload</label>
-               <input type="file" id="selfieFile" accept="image/*" capture="user" style="display:none" onchange="H._profileVerify.handleSelfieFile(this)">
+               <input type="file" id="selfieFile" accept="image/*" style="display:none" onchange="H._profileVerify.handleSelfieFile(this)">
              </div>
            </div>`)}
 
@@ -449,7 +449,7 @@
            <div style="display:flex;gap:8px">
              ${btn(hasId ? 'Re-take' : 'Take Photo', 'H._profileVerify.takeId()', true)}
              <label for="idFrontFile" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:11px;border-radius:11px;border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:700;background:var(--bg);color:var(--text)">Upload</label>
-             <input type="file" id="idFrontFile" accept="image/*" capture="environment" style="display:none" onchange="H._profileVerify.handleIdFile(this)">
+             <input type="file" id="idFrontFile" accept="image/*" style="display:none" onchange="H._profileVerify.handleIdFile(this)">
            </div>`)}
 
         <button class="btn-pri" id="pvSubmitBtn" ${ready ? '' : 'disabled'} onclick="H._profileVerify.submit()" style="width:100%;margin-top:6px;${ready ? '' : 'opacity:.5;cursor:not-allowed'}">${ready ? 'Submit for Review' : 'Complete all 3 steps'}</button>

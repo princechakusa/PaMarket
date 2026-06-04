@@ -248,7 +248,7 @@
 
   pages.ActiveSessions = function () {
     const u = H.currentUser();
-    const sessions = u.sessions || [{ id: 'current', device: 'This device', location: 'Zimbabwe', time: Date.now(), current: true }];
+    const sessions = u.sessions || [{ id: 'current', device: 'This device', location: '', time: Date.now(), current: true }];
     return `<div class="page active">
       ${H.innerTopbar('Active Sessions')}
       <div class="form-wrap">
@@ -258,7 +258,7 @@
             <div class="info-row">
               <div>
                 <div style="font-size:13px;font-weight:600;color:var(--charcoal)">${H.escHtml(s.device)}</div>
-                <div style="font-size:11px;color:var(--ash);margin-top:2px">${H.escHtml(s.location)} · ${new Date(s.time).toLocaleDateString()}</div>
+                <div style="font-size:11px;color:var(--ash);margin-top:2px">${s.current ? `<span id="curSessLoc">${s.location ? H.escHtml(s.location) : 'Locating…'}</span>` : H.escHtml(s.location || 'Unknown')} · ${new Date(s.time).toLocaleDateString()}</div>
               </div>
               ${s.current ? '<span style="font-size:11px;font-weight:700;color:#16a34a;background:#dcfce7;padding:3px 10px;border-radius:20px">Current</span>'
                 : `<button class="btn-unblock" onclick="H._sessions.revoke('${s.id}')">Revoke</button>`}
@@ -271,6 +271,29 @@
   };
 
   pages.ActiveSessions_after = function () {
+    // Look up the approximate location of this device from its IP (no GPS permission).
+    (async function () {
+      const el = document.getElementById('curSessLoc');
+      if (!el) return;
+      try {
+        const r = await fetch('https://ipwho.is/');
+        const d = await r.json();
+        const loc = (d && d.success !== false)
+          ? [d.city, d.country].filter(Boolean).join(', ')
+          : '';
+        el.textContent = loc || 'Location unavailable';
+        if (loc) {
+          const u = H.currentUser();
+          if (u) {
+            u.sessions = (u.sessions && u.sessions.length) ? u.sessions
+              : [{ id: 'current', device: 'This device', location: '', time: Date.now(), current: true }];
+            const cur = u.sessions.find(s => s.current);
+            if (cur) { cur.location = loc; H.saveState(); }
+          }
+        }
+      } catch (e) { el.textContent = 'Location unavailable'; }
+    })();
+
     H._sessions = {
       revoke: (id) => {
         const u = H.currentUser();
