@@ -273,10 +273,11 @@ window.H = {
   },
 
   emptyState(title, sub, btn, onclick) {
+    var H = window.H;
     return `<div class="empty-state">
-      <div class="empty-icon">${this.ICONS.search}</div>
-      <div class="empty-title">${this.escHtml(title)}</div>
-      <div class="empty-sub">${this.escHtml(sub)}</div>
+      <div class="empty-icon">${H.ICONS.search}</div>
+      <div class="empty-title">${H.escHtml(title)}</div>
+      <div class="empty-sub">${H.escHtml(sub)}</div>
       ${btn?`<button class="btn-pri" style="max-width:240px" onclick="${onclick}">${btn}</button>`:''}
     </div>`;
   },
