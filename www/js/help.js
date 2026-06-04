@@ -136,8 +136,8 @@
         a: 'Tap their profile > Block User. They won\'t be able to see your listings or contact you. Manage blocked users in Settings.'
       },
       {
-        q: 'What payment methods do you accept?',
-        a: 'We accept mobile money (EcoCash, OneMoney), bank transfers, and card payments. All payments are secure and verified.'
+        q: 'How do payments work?',
+        a: 'PaMarket does not process or hold any payments. Buyers and sellers arrange payment directly between themselves — cash on delivery, EcoCash, OneMoney or bank transfer. Always inspect items in person before paying, and never send money for an item you have not seen.'
       },
       {
         q: 'How do I delete my account?',
@@ -217,7 +217,7 @@
   pages.ReportProblem = function () {
     return `<div class="page active" style="display:flex;flex-direction:column;overflow:hidden;height:100%">
       ${H.innerTopbar('Support Chat')}
-      <div id="botChat" style="flex:1;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:12px;min-height:0"></div>
+      <div id="botChat" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:14px 14px 6px;display:flex;flex-direction:column;gap:12px;min-height:0"></div>
       <div id="botChips" style="padding:8px 14px 4px;min-height:46px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--bg);border-top:1px solid var(--border)"></div>
       <div style="padding:8px 14px 20px;background:var(--bg);display:flex;gap:8px;align-items:center">
         <input id="botInput" class="fi" style="flex:1;margin:0;font-size:14px" placeholder="Type your question..." onkeydown="if(event.key==='Enter')H._bot.send()">
@@ -794,85 +794,63 @@ pages.HelpPrivacy = function () {
     </div>`;
   };
 pages.HelpVerification = function () {
+    const card = (inner) => `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(16,24,40,.04)">${inner}</div>`;
+    const step = (n, t) => `<div style="display:flex;gap:10px;align-items:flex-start;margin-top:10px"><div style="width:24px;height:24px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div><div style="font-size:13px;color:var(--text);line-height:1.5">${t}</div></div>`;
+    const doc = (n, t, d) => `<div style="display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border,#EEF1F6)"><div style="width:28px;height:28px;border-radius:8px;background:#EFF6FF;color:#1A3A8F;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div><div><div style="font-weight:700;color:var(--text);font-size:13.5px">${t}</div><div style="font-size:12px;color:var(--sub);margin-top:2px;line-height:1.45">${d}</div></div></div>`;
+
     return `<div class="page active">
       ${H.innerTopbar('How to Get Verified')}
-      <div class="doc-content">
-        <div class="doc-section">
+      <div style="padding:0 14px 60px">
 
-          <div style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:16px;padding:20px;text-align:center;margin-bottom:24px">
-            <div style="font-size:36px;margin-bottom:8px">✅</div>
-            <div style="color:#fff;font-size:18px;font-weight:800;margin-bottom:4px">Verified Business Badge</div>
-            <div style="color:rgba(255,255,255,.75);font-size:13px">Build trust with job seekers across Zimbabwe</div>
-          </div>
-
-          <h2>What is Verification?</h2>
-          <p>The PaMarket Verified Business badge confirms that your company is a real, legally registered business in Zimbabwe. Verified businesses appear with a blue ✓ badge on all their job listings and profile, making job seekers more confident applying to your roles.</p>
-
-          <h2>Documents Required</h2>
-          <p>Send clear, readable photos of <strong>all four</strong> of the following:</p>
-
-          <div style="border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin:16px 0">
-            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border)">
-              <div style="width:32px;height:32px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#1A3A8F;font-size:14px">1</div>
-              <div>
-                <div style="font-weight:700;color:var(--text);font-size:14px">Certificate of Incorporation or Business Registration</div>
-                <div style="font-size:12px;color:var(--sub);margin-top:2px">Issued by CIPCC (Companies and Intellectual Property Commission of Zimbabwe). This proves your business is legally registered.</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border)">
-              <div style="width:32px;height:32px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#1A3A8F;font-size:14px">2</div>
-              <div>
-                <div style="font-weight:700;color:var(--text);font-size:14px">National ID or Passport of Owner / Director</div>
-                <div style="font-size:12px;color:var(--sub);margin-top:2px">The ID of the person who owns or runs the business. Must match the name on the registration documents.</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border)">
-              <div style="width:32px;height:32px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#1A3A8F;font-size:14px">3</div>
-              <div>
-                <div style="font-weight:700;color:var(--text);font-size:14px">Tax Clearance Certificate</div>
-                <div style="font-size:12px;color:var(--sub);margin-top:2px">Issued by ZIMRA (Zimbabwe Revenue Authority). Must be current and valid. This confirms your business is tax compliant.</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px">
-              <div style="width:32px;height:32px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#1A3A8F;font-size:14px">4</div>
-              <div>
-                <div style="font-weight:700;color:var(--text);font-size:14px">Photo of Business Premises</div>
-                <div style="font-size:12px;color:var(--sub);margin-top:2px">A clear photo of the outside of your business showing the building and any signage. If you operate from home, a photo of your workspace is acceptable.</div>
-              </div>
-            </div>
-          </div>
-
-          <h2>Tips for Good Photos</h2>
-          <ul>
-            <li>Take photos in good lighting — all text must be clearly readable</li>
-            <li>Lay documents flat on a surface and photograph from directly above</li>
-            <li>Do not crop, edit, or filter any document photos</li>
-            <li>Make sure the full document is visible — no cut-off edges</li>
-          </ul>
-
-          <h2>How to Apply</h2>
-          <ol>
-            <li>Send all four photos to us on WhatsApp: <strong>+971 589 772 645</strong></li>
-            <li>Include your PaMarket account email in the message</li>
-            <li>Our team will review your documents within <strong>2 business days</strong></li>
-            <li>You will receive a message confirming approval or requesting corrections</li>
-            <li>Once approved, your Verified badge appears automatically on your profile and listings</li>
-          </ol>
-
-          <h2>Important Rules</h2>
-          <ul>
-            <li>All documents must be genuine and unaltered. Submitting fake or edited documents is a serious offence and will result in a permanent ban and may be reported to authorities.</li>
-            <li>Verification is tied to your PaMarket account — it cannot be transferred.</li>
-            <li>PaMarket reserves the right to remove verification if your business status changes or if you violate our Terms of Service.</li>
-          </ul>
-
-          <div style="background:var(--bg2,#F5F6FA);border-radius:12px;padding:16px;margin-top:8px;text-align:center">
-            <div style="font-size:13px;color:var(--sub);margin-bottom:8px">Ready to get verified?</div>
-            <div style="font-size:15px;font-weight:700;color:var(--text)">WhatsApp us: +971 589 772 645</div>
-            <div style="font-size:12px;color:var(--sub);margin-top:4px">or email: chakusaprince@gmail.com</div>
-          </div>
-
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:22px;padding:24px 20px;margin:14px 0 16px;text-align:center;color:#fff;box-shadow:0 10px 28px rgba(26,58,143,.28)">
+          <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#F5A623" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+          <div style="font-size:19px;font-weight:800">Get Verified</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.82);margin-top:4px;line-height:1.5">Earn a blue badge that builds trust — done entirely in the app, reviewed by our team.</div>
         </div>
+
+        ${card(`
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <div style="width:38px;height:38px;border-radius:11px;background:rgba(26,58,143,.08);color:#1A3A8F;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div style="font-size:16px;font-weight:800;color:var(--text)">Personal Verification</div>
+          </div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6">Confirms you're a real person and gives sellers a blue ✓ badge — buyers trust verified sellers more.</div>
+          ${step(1, 'Open <b>Account → Verify Identity</b>')}
+          ${step(2, 'Enter your ID number, then <b>Take Selfie</b> and add a photo of your ID (or tap Upload)')}
+          ${step(3, 'Submit — our team reviews within <b>24 hours</b> and your badge appears automatically')}
+        `)}
+
+        ${card(`
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <div style="width:38px;height:38px;border-radius:11px;background:rgba(26,58,143,.08);color:#1A3A8F;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div style="font-size:16px;font-weight:800;color:var(--text)">Business Verification</div>
+          </div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6">Required to post jobs. Verified companies show a blue ✓ on their listings. Open <b>Post a Job → Verify My Company</b> and submit these four documents:</div>
+          <div style="margin-top:10px">
+            ${doc(1, 'Certificate of Incorporation / Business Registration', 'Issued by CIPC — proves your business is legally registered.')}
+            ${doc(2, "Owner / Director's National ID or Passport", 'Must match the name on the registration documents.')}
+            ${doc(3, 'Tax Clearance Certificate', 'Current & valid, issued by ZIMRA.')}
+            ${doc(4, 'Photo of Business Premises', 'Exterior showing signage (a home workspace is acceptable).')}
+          </div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-top:10px">Reviewed within <b>2 business days</b>.</div>
+        `)}
+
+        ${card(`
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px">Tips for clear photos</div>
+          <ul style="margin:0;padding-left:18px;font-size:13px;color:var(--sub);line-height:1.7">
+            <li>Use good lighting — all text must be readable</li>
+            <li>Lay documents flat and shoot straight from above</li>
+            <li>Don't crop, edit or filter document photos</li>
+            <li>Keep the whole document in frame — no cut-off edges</li>
+          </ul>
+        `)}
+
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:14px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#dc2626" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div style="font-size:12.5px;color:#991b1b;line-height:1.55"><b>Use genuine documents only.</b> Submitting fake or edited documents is a serious offence — it leads to a permanent ban and may be reported to the authorities. Verification is tied to your account and can't be transferred.</div>
+        </div>
+
+        <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--sub);line-height:1.6">Need help? WhatsApp <b>+971 589 772 645</b> or email chakusaprince@gmail.com</div>
+
       </div>
     </div>`;
   };
