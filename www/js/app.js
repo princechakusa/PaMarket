@@ -1746,14 +1746,25 @@ window.H = {
     this.state.listings=(this.state.listings||[]).filter(l=>!String(l.id).startsWith('demo'));
     this.state.users=(this.state.users||[]).filter(u=>!String(u.id).startsWith('demo'));
     if (hadDemo) this.saveState();
-    window.onerror = function(msg, src, line, col, err) {
+    // Reusable error logger — console + error_logs table. Use H.logError(context, err)
+    // in catch blocks instead of swallowing failures silently.
+    window.H.logError = function(context, err) {
       try {
+        console.warn('[PaMarket]', context, err || '');
+        var stack = (err && err.stack) ? String(err.stack).slice(0,600) : (err ? String(err).slice(0,600) : '');
         var sb = window.supabase;
         if (sb && typeof sb.from === 'function') {
-          sb.from('error_logs').insert({ message: String(msg), source: src+':'+line, stack: err ? String(err.stack||'').slice(0,500) : null, created_at: new Date().toISOString() }).then(function(){});
+          sb.from('error_logs').insert({ message: String(context).slice(0,300), source: 'app', stack: stack, created_at: new Date().toISOString() }).then(function(){}, function(){});
         }
       } catch(e) {}
     };
+    window.onerror = function(msg, src, line, col, err) {
+      if (window.H && window.H.logError) window.H.logError('onerror ' + (src ? src + ':' + line : '') + ' — ' + msg, err);
+    };
+    // Catch unhandled promise rejections (most async failures land here).
+    window.addEventListener('unhandledrejection', function(ev) {
+      if (window.H && window.H.logError) window.H.logError('unhandledrejection', ev && ev.reason);
+    });
     this._registerCategoryView();
     this._registerJobPage();
     this._registerExtraPages();

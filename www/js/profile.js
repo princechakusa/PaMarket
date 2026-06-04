@@ -120,8 +120,14 @@
           <div style="font-size:11px;color:var(--sub);margin-top:4px">International format, e.g. +263 77 123 4567</div>
         </div>
         <div class="fg"><div class="fl">Email</div>
-          <input class="fi" value="${H.escHtml(u.email || '')}" disabled style="opacity:.6;cursor:not-allowed">
-          <div style="font-size:11px;color:var(--sub);margin-top:4px">Email cannot be changed here</div>
+          <div style="position:relative">
+            <input class="fi" value="${H.escHtml(u.email || '')}" disabled style="background:var(--bg);color:var(--sub);cursor:not-allowed;padding-right:40px">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div style="font-size:11px;color:var(--sub);margin-top:5px;display:flex;align-items:center;gap:5px">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Your login email is locked for security. Contact support to change it.
+          </div>
         </div>
         <div class="fg"><div class="fl">Bio</div>
           <textarea class="fi" rows="3" id="editBio" placeholder="Tell buyers about yourself..." maxlength="200">${H.escHtml(u.bio || '')}</textarea>

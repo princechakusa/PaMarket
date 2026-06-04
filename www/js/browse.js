@@ -224,6 +224,27 @@
         H.saveState();
         H.renderPage('Browse');
       },
+      runSavedSearch: (id) => {
+        const u = H.currentUser(); if (!u) return;
+        const s = ((state.savedSearches || {})[u.id] || []).find(x => x.id === id);
+        if (!s) return;
+        H.navTo('Browse');
+        setTimeout(() => {
+          try {
+            browseState.selectedCategory = s.cat || '';
+            const inp = document.getElementById('searchIn');
+            if (inp) inp.value = s.query || '';
+            if (typeof H._browse.onSearch === 'function') H._browse.onSearch();
+          } catch (e) {}
+        }, 260);
+      },
+      deleteSavedSearch: (id) => {
+        const u = H.currentUser(); if (!u) return;
+        state.savedSearches = state.savedSearches || {};
+        state.savedSearches[u.id] = (state.savedSearches[u.id] || []).filter(s => s.id !== id);
+        H.saveState();
+        H.renderPage('SavedSearches');
+      },
       onFilterChange: () => {},
       onSortChange: () => {
         const sortVal = document.getElementById('sortBy')?.value;
@@ -253,6 +274,27 @@
       const inp = document.getElementById('searchIn');
       if (inp) { inp.value = browseState.lastSearch; H._browse.onSearch(); }
     }
+  };
+
+  pages.SavedSearches = function () {
+    const u = H.currentUser();
+    if (!u) return '<div class="page active">' + H.innerTopbar('Saved Searches') + H.emptyState('Sign in required', 'Sign in to view your saved searches') + '</div>';
+    const list = (state.savedSearches && state.savedSearches[u.id]) || [];
+    const when = (t) => { try { return H.timeAgo ? H.timeAgo(t) : new Date(t).toLocaleDateString(); } catch (e) { return ''; } };
+    return `<div class="page active">${H.innerTopbar('Saved Searches')}
+      <div style="padding:14px 14px 90px">
+        ${list.length ? list.map(s => `
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px">
+            <div style="width:40px;height:40px;border-radius:11px;background:rgba(26,58,143,.08);color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+            <div style="flex:1;min-width:0;cursor:pointer" onclick="H._browse.runSavedSearch('${s.id}')">
+              <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${H.escHtml(s.query || s.cat || 'All listings')}</div>
+              <div style="font-size:12px;color:var(--sub);margin-top:1px">${s.cat ? H.escHtml(s.cat) + ' · ' : ''}Saved ${when(s.savedAt)}</div>
+            </div>
+            <button onclick="H._browse.runSavedSearch('${s.id}')" style="background:#1A3A8F;color:#fff;border:none;border-radius:9px;padding:8px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">Search</button>
+            <button onclick="H._browse.deleteSavedSearch('${s.id}')" aria-label="Delete saved search" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:6px;flex-shrink:0"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+          </div>`).join('')
+          : H.emptyState('No saved searches yet', 'On the Browse screen, search for something and tap the bookmark to save it here for quick access.', 'Browse Listings', "H.navTo('Browse')")}
+      </div></div>`;
   };
 
 })(window.H);
