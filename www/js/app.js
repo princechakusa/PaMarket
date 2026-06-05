@@ -1792,6 +1792,26 @@ window.H = {
     window.addEventListener('unhandledrejection', function(ev) {
       if (window.H && window.H.logError) window.H.logError('unhandledrejection', ev && ev.reason);
     });
+
+    // Hide the bottom tab bar while a text field is focused, so the on-screen
+    // keyboard doesn't shove the nav up into the middle of the screen.
+    (function() {
+      var TEXTY = { text:1, search:1, email:1, tel:1, url:1, number:1, password:1, '':1 };
+      function isTextField(el) {
+        if (!el) return false;
+        if (el.tagName === 'TEXTAREA') return true;
+        if (el.tagName === 'INPUT') return !!TEXTY[(el.getAttribute('type') || 'text').toLowerCase()];
+        return false;
+      }
+      document.addEventListener('focusin', function(e) {
+        if (isTextField(e.target)) document.body.classList.add('kb-open');
+      });
+      document.addEventListener('focusout', function() {
+        setTimeout(function() {
+          if (!isTextField(document.activeElement)) document.body.classList.remove('kb-open');
+        }, 120);
+      });
+    })();
     this._registerCategoryView();
     this._registerJobPage();
     this._registerExtraPages();
