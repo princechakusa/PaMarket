@@ -178,26 +178,53 @@ window.H = {
   },
 
   filterListings(list, q) {
-    const _s   = window.H ? window.H.state : {};
+    const _H   = window.H;
+    const _s   = _H ? _H.state : {};
     const qry  = (q!==undefined ? q : (document.getElementById('searchIn')?.value||'')).toLowerCase().trim();
     const pMin = parseFloat(_s._priceMin)||0;
     const pMax = parseFloat(_s._priceMax)||Infinity;
     const sort = _s._sortMode||'newest';
-    return list.filter(l => {
+    const cats = (_H && _H.CATEGORIES) || [];
+    const catName = (id) => { const c = cats.find(c => c.id === id); return c ? (c.name||'') : ''; };
+    // Split the query into words so "hilux toyota" matches "Toyota Hilux" (each word
+    // must appear somewhere), and search across title, description, location AND category.
+    const tokens = qry ? qry.split(/\s+/).filter(Boolean) : [];
+    const esc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const scored = [];
+    for (const l of list) {
       if (_s.cityFilter && _s.cityFilter!=='All Zimbabwe') {
-        if (!(l.city+' '+l.prov).toLowerCase().includes(_s.cityFilter.toLowerCase())) return false;
+        if (!((l.city||'')+' '+(l.prov||'')).toLowerCase().includes(_s.cityFilter.toLowerCase())) continue;
       }
-      if (qry && !(l.title+' '+(l.desc||'')+' '+l.city+' '+(l.suburb||'')).toLowerCase().includes(qry)) return false;
-      if ((l.price||0)<pMin || (l.price||0)>pMax) return false;
-      return true;
-    }).sort((a,b) => {
-      if (sort==='newest')     return b.createdAt-a.createdAt;
-      if (sort==='oldest')     return a.createdAt-b.createdAt;
-      if (sort==='price_asc')  return (a.price||0)-(b.price||0);
-      if (sort==='price_desc') return (b.price||0)-(a.price||0);
-      if (sort==='views')      return (b.views||0)-(a.views||0);
-      return b.createdAt-a.createdAt;
+      if ((l.price||0)<pMin || (l.price||0)>pMax) continue;
+
+      let score = 0;
+      if (tokens.length) {
+        const title = (l.title||'').toLowerCase();
+        const hay = (title + ' ' + (l.desc||'') + ' ' + (l.city||'') + ' ' + (l.suburb||'') + ' '
+                     + (l.prov||'') + ' ' + catName(l.cat) + ' ' + (l.condition||'')).toLowerCase();
+        let ok = true;
+        for (const t of tokens) {
+          if (hay.indexOf(t) === -1) { ok = false; break; }       // every word must appear (AND)
+          score += (title.indexOf(t) !== -1) ? 10 : 3;            // title hit > body hit
+          if (new RegExp('\\b' + esc(t) + '\\b').test(title)) score += 5; // whole-word bonus
+        }
+        if (!ok) continue;
+        if (title.indexOf(qry) !== -1) score += 25;               // exact phrase in title ranks top
+      }
+      scored.push({ l, score });
+    }
+
+    scored.sort((a, b) => {
+      if (tokens.length && b.score !== a.score) return b.score - a.score; // relevance first when searching
+      const x = a.l, y = b.l;
+      if (sort==='oldest')     return x.createdAt-y.createdAt;
+      if (sort==='price_asc')  return (x.price||0)-(y.price||0);
+      if (sort==='price_desc') return (y.price||0)-(x.price||0);
+      if (sort==='views')      return (y.views||0)-(x.views||0);
+      return y.createdAt-x.createdAt;
     });
+    return scored.map(s => s.l);
   },
 
   toast(msg, duration=4000, isError=false) {
