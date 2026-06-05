@@ -1285,7 +1285,7 @@ window.H = {
       for (const local of H.state.conversations) {
         if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
         const { data: msgs, error: msgErr } = await sb.from('messages')
-          .select('id, sender_id, sender_name, text, read, created_at')
+          .select('id, sender_id, sender_name, text, image, read, created_at')
           .eq('conversation_id', local.id)
           .order('created_at', { ascending: true })
           .limit(200);
@@ -1296,11 +1296,12 @@ window.H = {
           const found = existing.get(m.id);
           const read = found && found.read ? true : !!m.read;
           if (!found) {
-            local.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, t, read });
+            local.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, image: m.image||null, t, read });
             changed = true;
-          } else if (found.read !== read || found.from !== m.sender_id || found.senderName !== (m.sender_name||'')) {
+          } else if (found.read !== read || found.from !== m.sender_id || found.senderName !== (m.sender_name||'') || (m.image && !found.image)) {
             found.from = m.sender_id;
             found.senderName = m.sender_name || found.senderName || '';
+            if (m.image && !found.image) found.image = m.image;
             found.read = read;
             changed = true;
           }

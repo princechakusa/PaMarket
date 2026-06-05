@@ -638,7 +638,7 @@
         await window.supabase.from('messages').insert({
           id: msgId, conversation_id: c.id,
           sender_id: u.id, sender_name: u.name || '',
-          text: '[Photo]', image_url: imageUrl,
+          text: '[Photo]', image: imageUrl,
           created_at: new Date(msgT).toISOString(), read: false
         });
       }
