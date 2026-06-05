@@ -351,10 +351,16 @@
   H.openChat = function (id) { H.openInner('Chat', { id }); };
 
   H.startChatWith = function (otherId, listingId) {
+   try {
     const u = currentUser();
     if (!u) { H.requireAuth('Sign in to message sellers'); return; }
-    if (!otherId) { H.toast('Seller profile is not available yet'); return; }
-    if (otherId === u.id) { H.toast('You cannot message yourself'); return; }
+    // Normalise inputs — guard against undefined/null so we never throw silently on .slice
+    const myId = u.id != null ? String(u.id) : '';
+    otherId = otherId != null ? String(otherId) : '';
+    listingId = listingId != null ? String(listingId) : '';
+    if (!myId) { H.toast('Please sign out and sign back in, then try again.'); return; }
+    if (!otherId || otherId === 'undefined' || otherId === 'null') { H.toast('Seller profile is not available yet'); return; }
+    if (otherId === myId) { H.toast('You cannot message yourself'); return; }
     // Check if the target user has turned off direct messages
     const targetUser = (H.state.users || []).find(function(x) { return x.id === otherId; });
     if (targetUser && targetUser.privacySettings && targetUser.privacySettings.allowMessages === false) {
@@ -362,8 +368,8 @@
       return;
     }
     // Use deterministic ID so both users get same conversation
-    const ids = [u.id, otherId].sort();
-    const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId||'').slice(-6);
+    const ids = [myId, otherId].sort();
+    const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + listingId.slice(-6);
     // If this conv was previously deleted, un-delete it so new messages from this person show
     if (Array.isArray(H.state.deletedConvIds) && H.state.deletedConvIds.includes(convId)) {
       H.state.deletedConvIds = H.state.deletedConvIds.filter(function(id){ return id !== convId; });
@@ -395,6 +401,10 @@
       if (dirty) H.saveState();
     }
     H.openInner('Chat', { id: convId });
+   } catch (e) {
+    console.error('startChatWith failed:', e);
+    H.toast('Could not open chat: ' + ((e && e.message) ? e.message : 'unknown error'));
+   }
   };
 
   pages.Messages_after = function () {

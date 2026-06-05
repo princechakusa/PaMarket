@@ -425,6 +425,26 @@ select.fi {
 .pbadge-admin { background: var(--gold); color: var(--blue); }
 .pbadge-banned { background: var(--red); }
 
+/* Seller / buyer profile action buttons */
+.prof-actions { margin: 18px auto 2px; max-width: 360px; display: flex; flex-direction: column; gap: 10px; position: relative; z-index: 1; }
+.prof-actions-row { display: flex; gap: 10px; }
+.pa-btn {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 13px 14px; border-radius: 14px; font-size: 14px; font-weight: 700;
+  font-family: Inter, sans-serif; cursor: pointer; letter-spacing: -.2px;
+  border: 1.5px solid transparent; transition: transform .08s ease, background .15s ease, box-shadow .15s ease;
+  -webkit-tap-highlight-color: transparent; white-space: nowrap;
+}
+.pa-btn svg { flex-shrink: 0; }
+.pa-btn:active { transform: scale(.97); }
+.pa-primary { background: #fff; color: var(--blue); box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+.pa-primary:active { background: #f1f4ff; }
+.pa-glass { background: rgba(255,255,255,.15); color: #fff; border-color: rgba(255,255,255,.28); }
+.pa-glass:active { background: rgba(255,255,255,.26); }
+.pa-gold { background: rgba(245,166,35,.22); color: #FFC74D; border-color: rgba(245,166,35,.45); }
+.pa-gold:active { background: rgba(245,166,35,.34); }
+.pa-disabled { background: rgba(255,255,255,.08); color: rgba(255,255,255,.45); border-color: rgba(255,255,255,.15); cursor: not-allowed; }
+
 /* Stats row */
 .stats { display: flex; gap: 8px; padding: 12px 14px; margin-top: -22px; position: relative; z-index: 2; }
 .stat { flex: 1; background: var(--card); border-radius: var(--r-md); padding: 12px 6px; text-align: center; box-shadow: var(--shadow-sm); border: .5px solid var(--border); }
