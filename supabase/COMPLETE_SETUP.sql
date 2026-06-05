@@ -79,17 +79,17 @@ create policy "profiles: public read"
 drop policy if exists "profiles: own insert" on public.profiles;
 create policy "profiles: own insert"
   on public.profiles for insert
-  with check (auth.uid() = id);
+  with check (auth.uid()::text = id::text);
 
 -- Users can update only their own profile, and cannot elevate their own role
 drop policy if exists "profiles: own update" on public.profiles;
 create policy "profiles: own update"
   on public.profiles for update
-  using (auth.uid() = id)
+  using (auth.uid()::text = id::text)
   with check (
-    auth.uid() = id
+    auth.uid()::text = id::text
     -- role can only be changed by an admin (via service-role key)
-    and role = (select role from public.profiles where id = auth.uid())
+    and role = (select role from public.profiles where id::text = auth.uid()::text)
   );
 
 -- ╔══ schema/listings.sql ═════════════════════════════════════════
@@ -136,25 +136,25 @@ alter table public.listings enable row level security;
 drop policy if exists "listings: public read active" on public.listings;
 create policy "listings: public read active"
   on public.listings for select
-  using (status = 'active' or seller_id = auth.uid());
+  using (status = 'active' or seller_id::text = auth.uid()::text);
 
 -- Authenticated sellers can insert their own listings
 drop policy if exists "listings: own insert" on public.listings;
 create policy "listings: own insert"
   on public.listings for insert
-  with check (auth.uid() = seller_id);
+  with check (auth.uid()::text = seller_id::text);
 
 -- Sellers can update/delete only their own listings
 drop policy if exists "listings: own update" on public.listings;
 create policy "listings: own update"
   on public.listings for update
-  using (auth.uid() = seller_id)
-  with check (auth.uid() = seller_id);
+  using (auth.uid()::text = seller_id::text)
+  with check (auth.uid()::text = seller_id::text);
 
 drop policy if exists "listings: own delete" on public.listings;
 create policy "listings: own delete"
   on public.listings for delete
-  using (auth.uid() = seller_id);
+  using (auth.uid()::text = seller_id::text);
 
 -- ╔══ schema/conversations.sql ═════════════════════════════════════════
 
@@ -184,18 +184,18 @@ alter table public.conversations enable row level security;
 drop policy if exists "conversations: member read" on public.conversations;
 create policy "conversations: member read"
   on public.conversations for select
-  using (auth.uid() = any(members));
+  using (auth.uid()::text = any(members::text[]));
 
 -- A participant can create a conversation they are part of
 drop policy if exists "conversations: member insert" on public.conversations;
 create policy "conversations: member insert"
   on public.conversations for insert
-  with check (auth.uid() = any(members));
+  with check (auth.uid()::text = any(members::text[]));
 
 drop policy if exists "conversations: member update" on public.conversations;
 create policy "conversations: member update"
   on public.conversations for update
-  using (auth.uid() = any(members));
+  using (auth.uid()::text = any(members::text[]));
 
 -- ─────────────────────────────────────────────────────────────
 
@@ -222,7 +222,7 @@ create policy "messages: member read"
     exists (
       select 1 from public.conversations c
       where c.id = conversation_id
-        and auth.uid() = any(c.members)
+        and auth.uid()::text = any::text(c.members)
     )
   );
 
@@ -231,11 +231,11 @@ drop policy if exists "messages: member insert" on public.messages;
 create policy "messages: member insert"
   on public.messages for insert
   with check (
-    auth.uid() = sender_id
+    auth.uid()::text = sender_id::text
     and exists (
       select 1 from public.conversations c
       where c.id = conversation_id
-        and auth.uid() = any(c.members)
+        and auth.uid()::text = any::text(c.members)
     )
   );
 
@@ -247,7 +247,7 @@ create policy "messages: member update"
     exists (
       select 1 from public.conversations c
       where c.id = conversation_id
-        and auth.uid() = any(c.members)
+        and auth.uid()::text = any::text(c.members)
     )
   );
 
@@ -288,22 +288,22 @@ drop policy if exists "applications: read" on public.applications;
 create policy "applications: read"
   on public.applications for select
   using (
-    auth.uid() = applicant_id
-    or auth.uid() = employer_id
+    auth.uid()::text = applicant_id::text
+    or auth.uid()::text = employer_id::text
   );
 
 -- Only the applicant can submit (and must be themselves)
 drop policy if exists "applications: insert" on public.applications;
 create policy "applications: insert"
   on public.applications for insert
-  with check (auth.uid() = applicant_id);
+  with check (auth.uid()::text = applicant_id::text);
 
 -- Only the employer can update status
 drop policy if exists "applications: employer update" on public.applications;
 create policy "applications: employer update"
   on public.applications for update
-  using (auth.uid() = employer_id)
-  with check (auth.uid() = employer_id);
+  using (auth.uid()::text = employer_id::text)
+  with check (auth.uid()::text = employer_id::text);
 
 -- ╔══ schema/reviews.sql ═════════════════════════════════════════
 
@@ -342,15 +342,15 @@ drop policy if exists "reviews: own insert" on public.reviews;
 create policy "reviews: own insert"
   on public.reviews for insert
   with check (
-    auth.uid() = reviewer_id
-    and auth.uid() <> seller_id
+    auth.uid()::text = reviewer_id::text
+    and auth.uid()::text <> seller_id::text
   );
 
 -- Reviewers can delete their own reviews
 drop policy if exists "reviews: own delete" on public.reviews;
 create policy "reviews: own delete"
   on public.reviews for delete
-  using (auth.uid() = reviewer_id);
+  using (auth.uid()::text = reviewer_id::text);
 
 -- ╔══ schema/notifications.sql ═════════════════════════════════════════
 
@@ -383,27 +383,27 @@ alter table public.notifications enable row level security;
 drop policy if exists "own notifications: select" on public.notifications;
 create policy "own notifications: select"
   on public.notifications for select
-  using (auth.uid() = user_id);
+  using (auth.uid()::text = user_id::text);
 
 -- A user can mark their own notifications as read / update meta
 drop policy if exists "own notifications: update" on public.notifications;
 create policy "own notifications: update"
   on public.notifications for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (auth.uid()::text = user_id::text)
+  with check (auth.uid()::text = user_id::text);
 
 -- The app inserts notifications via the user's session; allow that.
 -- (System notifications should be inserted server-side with the service-role key.)
 drop policy if exists "own notifications: insert" on public.notifications;
 create policy "own notifications: insert"
   on public.notifications for insert
-  with check (auth.uid() = user_id);
+  with check (auth.uid()::text = user_id::text);
 
 -- A user can delete their own notifications
 drop policy if exists "own notifications: delete" on public.notifications;
 create policy "own notifications: delete"
   on public.notifications for delete
-  using (auth.uid() = user_id);
+  using (auth.uid()::text = user_id::text);
 
 -- Enable Postgres Changes (Realtime) on this table:
 -- Supabase Dashboard → Database → Replication → enable for `notifications`.
@@ -429,7 +429,7 @@ alter table reports enable row level security;
 -- Anyone can submit a report or support message
 create policy "Authenticated users can report"
   on reports for insert
-  with check (reporter_id = auth.uid() or reporter_id is null);
+  with check (reporter_id::text = auth.uid()::text or reporter_id is null);
 
 -- Users can read their own reports
 create policy "Users read own reports"
@@ -460,8 +460,8 @@ alter table saved_searches enable row level security;
 
 create policy "Users manage their own saved searches"
   on saved_searches for all
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+  using (user_id::text = auth.uid()::text)
+  with check (user_id::text = auth.uid()::text);
 
 -- ╔══ schema/user_saves.sql ═════════════════════════════════════════
 
@@ -477,8 +477,8 @@ alter table user_saves enable row level security;
 
 create policy "Users manage own saves"
   on user_saves for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (auth.uid()::text = user_id::text)
+  with check (auth.uid()::text = user_id::text);
 
 -- ╔══ schema/error_logs.sql ═════════════════════════════════════════
 
@@ -576,7 +576,7 @@ begin
   update listings
   set expires_at = now() + interval '30 days'
   where id = listing_id
-    and seller_id = auth.uid();
+    and seller_id::text = auth.uid()::text;
 end;
 $$;
 
@@ -609,8 +609,8 @@ alter table topup_requests enable row level security;
 create policy "Users manage their own topup requests"
   on topup_requests for all
   to authenticated
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+  using (user_id::text = auth.uid()::text)
+  with check (user_id::text = auth.uid()::text);
 
 -- ╔══ schema/storage.sql ═════════════════════════════════════════
 

@@ -40,14 +40,14 @@ create policy "profiles: public read"
 drop policy if exists "profiles: own insert" on public.profiles;
 create policy "profiles: own insert"
   on public.profiles for insert
-  with check (auth.uid() = id);
+  with check (auth.uid()::text = id::text);
 drop policy if exists "profiles: own update" on public.profiles;
 create policy "profiles: own update"
   on public.profiles for update
-  using (auth.uid() = id)
+  using (auth.uid()::text = id::text)
   with check (
-    auth.uid() = id
-    and role = (select role from public.profiles where id = auth.uid())
+    auth.uid()::text = id::text
+    and role = (select role from public.profiles where id::text = auth.uid()::text)
   );
 create table if not exists public.listings (
   id          uuid primary key default gen_random_uuid(),
@@ -82,20 +82,20 @@ alter table public.listings enable row level security;
 drop policy if exists "listings: public read active" on public.listings;
 create policy "listings: public read active"
   on public.listings for select
-  using (status = 'active' or seller_id = auth.uid());
+  using (status = 'active' or seller_id::text = auth.uid()::text);
 drop policy if exists "listings: own insert" on public.listings;
 create policy "listings: own insert"
   on public.listings for insert
-  with check (auth.uid() = seller_id);
+  with check (auth.uid()::text = seller_id::text);
 drop policy if exists "listings: own update" on public.listings;
 create policy "listings: own update"
   on public.listings for update
-  using (auth.uid() = seller_id)
-  with check (auth.uid() = seller_id);
+  using (auth.uid()::text = seller_id::text)
+  with check (auth.uid()::text = seller_id::text);
 drop policy if exists "listings: own delete" on public.listings;
 create policy "listings: own delete"
   on public.listings for delete
-  using (auth.uid() = seller_id);
+  using (auth.uid()::text = seller_id::text);
 create table if not exists public.conversations (
   id          text primary key,
   members     uuid[] not null default '{}',
@@ -113,15 +113,15 @@ alter table public.conversations enable row level security;
 drop policy if exists "conversations: member read" on public.conversations;
 create policy "conversations: member read"
   on public.conversations for select
-  using (auth.uid() = any(members));
+  using (auth.uid()::text = any(members::text[]));
 drop policy if exists "conversations: member insert" on public.conversations;
 create policy "conversations: member insert"
   on public.conversations for insert
-  with check (auth.uid() = any(members));
+  with check (auth.uid()::text = any(members::text[]));
 drop policy if exists "conversations: member update" on public.conversations;
 create policy "conversations: member update"
   on public.conversations for update
-  using (auth.uid() = any(members));
+  using (auth.uid()::text = any(members::text[]));
 create table if not exists public.messages (
   id              uuid primary key default gen_random_uuid(),
   conversation_id text not null references public.conversations(id) on delete cascade,
@@ -138,20 +138,20 @@ drop policy if exists "messages: member read" on public.messages;
 create policy "messages: member read"
   on public.messages for select
   using (
-    conversation_id in (select id from public.conversations where auth.uid() = any(members))
+    conversation_id in (select id from public.conversations where auth.uid()::text = any(members::text[]))
   );
 drop policy if exists "messages: member insert" on public.messages;
 create policy "messages: member insert"
   on public.messages for insert
   with check (
-    auth.uid() = sender_id
-    and conversation_id in (select id from public.conversations where auth.uid() = any(members))
+    auth.uid()::text = sender_id::text
+    and conversation_id in (select id from public.conversations where auth.uid()::text = any(members::text[]))
   );
 drop policy if exists "messages: member update" on public.messages;
 create policy "messages: member update"
   on public.messages for update
   using (
-    conversation_id in (select id from public.conversations where auth.uid() = any(members))
+    conversation_id in (select id from public.conversations where auth.uid()::text = any(members::text[]))
   );
 create table if not exists public.applications (
   id              uuid primary key default gen_random_uuid(),
@@ -177,18 +177,18 @@ drop policy if exists "applications: read" on public.applications;
 create policy "applications: read"
   on public.applications for select
   using (
-    auth.uid() = applicant_id
-    or auth.uid() = employer_id
+    auth.uid()::text = applicant_id::text
+    or auth.uid()::text = employer_id::text
   );
 drop policy if exists "applications: insert" on public.applications;
 create policy "applications: insert"
   on public.applications for insert
-  with check (auth.uid() = applicant_id);
+  with check (auth.uid()::text = applicant_id::text);
 drop policy if exists "applications: employer update" on public.applications;
 create policy "applications: employer update"
   on public.applications for update
-  using (auth.uid() = employer_id)
-  with check (auth.uid() = employer_id);
+  using (auth.uid()::text = employer_id::text)
+  with check (auth.uid()::text = employer_id::text);
 create table if not exists public.reviews (
   id            uuid primary key default gen_random_uuid(),
   seller_id     uuid not null references auth.users(id) on delete cascade,
@@ -211,13 +211,13 @@ drop policy if exists "reviews: own insert" on public.reviews;
 create policy "reviews: own insert"
   on public.reviews for insert
   with check (
-    auth.uid() = reviewer_id
-    and auth.uid() <> seller_id
+    auth.uid()::text = reviewer_id::text
+    and auth.uid()::text <> seller_id::text
   );
 drop policy if exists "reviews: own delete" on public.reviews;
 create policy "reviews: own delete"
   on public.reviews for delete
-  using (auth.uid() = reviewer_id);
+  using (auth.uid()::text = reviewer_id::text);
 create table if not exists public.notifications (
   id          text primary key,
   user_id     uuid not null references auth.users(id) on delete cascade,
@@ -236,20 +236,20 @@ alter table public.notifications enable row level security;
 drop policy if exists "own notifications: select" on public.notifications;
 create policy "own notifications: select"
   on public.notifications for select
-  using (auth.uid() = user_id);
+  using (auth.uid()::text = user_id::text);
 drop policy if exists "own notifications: update" on public.notifications;
 create policy "own notifications: update"
   on public.notifications for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (auth.uid()::text = user_id::text)
+  with check (auth.uid()::text = user_id::text);
 drop policy if exists "own notifications: insert" on public.notifications;
 create policy "own notifications: insert"
   on public.notifications for insert
-  with check (auth.uid() = user_id);
+  with check (auth.uid()::text = user_id::text);
 drop policy if exists "own notifications: delete" on public.notifications;
 create policy "own notifications: delete"
   on public.notifications for delete
-  using (auth.uid() = user_id);
+  using (auth.uid()::text = user_id::text);
 create table if not exists reports (
   id          uuid primary key default gen_random_uuid(),
   target_type text not null check (target_type in ('listing','user','support','bug','appeal')),
@@ -261,9 +261,11 @@ create table if not exists reports (
   created_at  timestamptz not null default now()
 );
 alter table reports enable row level security;
+drop policy if exists "Authenticated users can report" on reports;
 create policy "Authenticated users can report"
   on reports for insert
-  with check (reporter_id = auth.uid() or reporter_id is null);
+  with check (reporter_id::text = auth.uid()::text or reporter_id is null);
+drop policy if exists "Users read own reports" on reports;
 create policy "Users read own reports"
   on reports for select
   using (true);
@@ -280,10 +282,11 @@ create table if not exists saved_searches (
   constraint  uq_saved_search unique (user_id, query, category)
 );
 alter table saved_searches enable row level security;
+drop policy if exists "Users manage their own saved searches" on saved_searches;
 create policy "Users manage their own saved searches"
   on saved_searches for all
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+  using (user_id::text = auth.uid()::text)
+  with check (user_id::text = auth.uid()::text);
 create table if not exists user_saves (
   id           uuid primary key default gen_random_uuid(),
   user_id      uuid not null references auth.users(id) on delete cascade,
@@ -292,10 +295,11 @@ create table if not exists user_saves (
   unique(user_id, listing_id)
 );
 alter table user_saves enable row level security;
+drop policy if exists "Users manage own saves" on user_saves;
 create policy "Users manage own saves"
   on user_saves for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (auth.uid()::text = user_id::text)
+  with check (auth.uid()::text = user_id::text);
 create table if not exists error_logs (
   id          uuid primary key default gen_random_uuid(),
   type        text not null,
@@ -307,9 +311,11 @@ create table if not exists error_logs (
   created_at  timestamptz default now()
 );
 alter table error_logs enable row level security;
+drop policy if exists "Service role only read" on error_logs;
 create policy "Service role only read"
   on error_logs for select
   using (false);
+drop policy if exists "Anyone can log errors" on error_logs;
 create policy "Anyone can log errors"
   on error_logs for insert
   with check (true);
@@ -360,7 +366,7 @@ begin
   update listings
   set expires_at = now() + interval '30 days'
   where id = listing_id
-    and seller_id = auth.uid();
+    and seller_id::text = auth.uid()::text;
 end;
 $$;
 create table if not exists topup_requests (
@@ -376,11 +382,12 @@ create table if not exists topup_requests (
   constraint  uq_topup_ref unique (reference)
 );
 alter table topup_requests enable row level security;
+drop policy if exists "Users manage their own topup requests" on topup_requests;
 create policy "Users manage their own topup requests"
   on topup_requests for all
   to authenticated
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+  using (user_id::text = auth.uid()::text)
+  with check (user_id::text = auth.uid()::text);
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'listings-photos',
@@ -390,9 +397,11 @@ values (
   array['image/jpeg', 'image/png', 'image/webp']
 )
 on conflict (id) do nothing;
+drop policy if exists "Public read for listing photos" on storage.objects;
 create policy "Public read for listing photos"
   on storage.objects for select
   using (bucket_id = 'listings-photos');
+drop policy if exists "Authenticated users can upload listing photos" on storage.objects;
 create policy "Authenticated users can upload listing photos"
   on storage.objects for insert
   to authenticated
@@ -401,6 +410,7 @@ create policy "Authenticated users can upload listing photos"
     and split_part(name, '/', 1) = 'listings'
     and split_part(name, '/', 2) = auth.uid()::text
   );
+drop policy if exists "Users can delete their own listing photos" on storage.objects;
 create policy "Users can delete their own listing photos"
   on storage.objects for delete
   to authenticated
@@ -415,12 +425,16 @@ ALTER TABLE public.profiles
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('cv-files', 'cv-files', true)
 ON CONFLICT (id) DO NOTHING;
+DROP POLICY IF EXISTS "cv_files_insert" ON storage.objects;
 CREATE POLICY "cv_files_insert" ON storage.objects FOR INSERT TO authenticated
   WITH CHECK (bucket_id = 'cv-files' AND (storage.foldername(name))[1] = auth.uid()::text);
+DROP POLICY IF EXISTS "cv_files_update" ON storage.objects;
 CREATE POLICY "cv_files_update" ON storage.objects FOR UPDATE TO authenticated
   USING (bucket_id = 'cv-files' AND (storage.foldername(name))[1] = auth.uid()::text);
+DROP POLICY IF EXISTS "cv_files_delete" ON storage.objects;
 CREATE POLICY "cv_files_delete" ON storage.objects FOR DELETE TO authenticated
   USING (bucket_id = 'cv-files' AND (storage.foldername(name))[1] = auth.uid()::text);
+DROP POLICY IF EXISTS "cv_files_select" ON storage.objects;
 CREATE POLICY "cv_files_select" ON storage.objects FOR SELECT TO public
   USING (bucket_id = 'cv-files');
 ALTER TABLE public.listings
@@ -450,6 +464,7 @@ CREATE INDEX IF NOT EXISTS sched_notif_status_time_idx
   ON public.scheduled_notifications (status, scheduled_for)
   WHERE status = 'pending';
 ALTER TABLE public.scheduled_notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "sched_notif_admin_only" ON public.scheduled_notifications;
 CREATE POLICY "sched_notif_admin_only"
   ON public.scheduled_notifications
   FOR ALL
