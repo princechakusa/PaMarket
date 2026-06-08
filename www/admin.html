@@ -17,7 +17,9 @@
   --green:#10B981;--amber:#F59E0B;--red:#EF4444;--blue:#3B82F6;
   --sidebar-w:220px;
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;overflow-x:hidden;}
+.content{min-width:0;}
+.tbl-wrap{max-width:100%;}
 
 /* ── LOGIN ── */
 #loginWrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:radial-gradient(ellipse at 50% 0%,#1e1b4b 0%,var(--bg) 60%);}
@@ -59,7 +61,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
 .btn-signout:hover{background:rgba(239,68,68,.2);}
 
 /* ── MAIN ── */
-.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh;}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:50;flex-shrink:0;}
 .topbar-title{font-size:16px;font-weight:800;color:var(--text);}
 .topbar-actions{display:flex;gap:8px;align-items:center;}
@@ -674,7 +676,7 @@ function renderOverview() {
 
   if(alerts) html += '<div style="margin-bottom:18px">'+alerts+'</div>';
 
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;flex-wrap:wrap">';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px">';
 
   // Pending listings
   html += '<div><div class="sec-head"><div class="sec-title"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pending Listings</div><button class="filter-btn" onclick="showTab(\'listings\')">View all →</button></div>';
