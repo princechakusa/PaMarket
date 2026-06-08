@@ -71,7 +71,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
 
 /* ── STAT CARDS ── */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:22px;}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;transition:border-color .15s,transform .15s;}
+.stat-card[onclick]:hover{border-color:var(--accent);transform:translateY(-2px);}
 .stat-label{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
 .stat-val{font-size:26px;font-weight:900;color:var(--text);line-height:1;}
 .stat-sub{font-size:11px;color:var(--sub);margin-top:4px;}
@@ -370,6 +371,7 @@ var DATA = {
 };
 var currentTab = 'overview';
 var _listingFilter = 'pending';
+var _listingSearch = '';
 var _userSearch = '';
 var _reportFilter = 'open';
 var _adminEmail = '';
@@ -382,6 +384,31 @@ function fmtDateTime(s){ if(!s) return '—'; try{ return new Date(s).toLocaleSt
 function initials(name){ return (name||'U').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
 // notifications.id is a text primary key with no default, so every insert must supply one
 function notifId(){ return 'n_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+// ── CSV export ────────────────────────────────────────────
+function csvCell(v){ v = v==null?'':String(v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+function downloadCSV(filename, rows){
+  var csv = rows.map(function(r){ return r.map(csvCell).join(','); }).join('\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function exportUsers(){
+  if(!DATA.users.length){ toast('No users to export','info'); return; }
+  var rows = [['Name','Phone','Email','Role','Status','Verified','Joined']];
+  DATA.users.forEach(function(u){ rows.push([u.name||'',u.phone||'',u.email||'',u.role||'user',u.status||'active',u.verified?'yes':'no',fmtDate(u.created_at)]); });
+  downloadCSV('pamarket-users-'+new Date().toISOString().slice(0,10)+'.csv', rows);
+  toast('Exported '+(rows.length-1)+' users');
+}
+function exportListings(){
+  if(!DATA.listings.length){ toast('No listings to export','info'); return; }
+  var rows = [['Title','Seller','Category','Price','Currency','Location','Status','Views','Date']];
+  DATA.listings.forEach(function(l){ rows.push([l.title||'',l.sellerName||'',l.cat||'',l.price||0,l.currency||'',(l.city||'')+(l.prov?', '+l.prov:''),l.status||'',l.views||0,fmtDate(l.createdAt||l.created_at)]); });
+  downloadCSV('pamarket-listings-'+new Date().toISOString().slice(0,10)+'.csv', rows);
+  toast('Exported '+(rows.length-1)+' listings');
+}
 
 function toast(msg, type) {
   var w = document.getElementById('toastWrap');
@@ -666,12 +693,12 @@ function renderOverview() {
 
   var html = '';
   html += '<div class="stats-grid">';
-  html += statCard('Users','blue',total,'registered accounts');
-  html += statCard('Active Listings','green',active,'live marketplace ads');
-  html += statCard('Pending Listings','amber',pendingL,'awaiting approval');
-  html += statCard('Pending Verifications','accent',pendingV,'ID reviews needed');
-  html += statCard('Open Reports','red',openR,'need attention');
-  html += statCard('Verified Users','green',verified,'trusted sellers');
+  html += statCard('Users','blue',total,'registered accounts','users');
+  html += statCard('Active Listings','green',active,'live marketplace ads','listings');
+  html += statCard('Pending Listings','amber',pendingL,'awaiting approval','listings');
+  html += statCard('Pending Verifications','accent',pendingV,'ID reviews needed','verifications');
+  html += statCard('Open Reports','red',openR,'need attention','reports');
+  html += statCard('Verified Users','green',verified,'trusted sellers','users');
   html += '</div>';
 
   if(alerts) html += '<div style="margin-bottom:18px">'+alerts+'</div>';
@@ -701,8 +728,9 @@ function renderOverview() {
   document.getElementById('mainContent').innerHTML = html;
 }
 
-function statCard(label, cls, val, sub) {
-  return '<div class="stat-card '+cls+'"><div class="stat-label">'+esc(label)+'</div><div class="stat-val">'+val+'</div><div class="stat-sub">'+esc(sub)+'</div></div>';
+function statCard(label, cls, val, sub, tab) {
+  var attrs = tab ? ' onclick="showTab(\''+tab+'\')" style="cursor:pointer"' : '';
+  return '<div class="stat-card '+cls+'"'+attrs+'><div class="stat-label">'+esc(label)+'</div><div class="stat-val">'+val+'</div><div class="stat-sub">'+esc(sub)+'</div></div>';
 }
 function alertBox(color, msg, tab) {
   var colors = {amber:'rgba(245,158,11,.15)',red:'rgba(239,68,68,.15)',blue:'rgba(59,130,246,.15)'};
@@ -715,6 +743,7 @@ function alertBox(color, msg, tab) {
 function renderListings() {
   var filtered = DATA.listings.filter(function(l){
     if(_listingFilter!=='all' && l.status!==_listingFilter) return false;
+    if(_listingSearch){ var q=_listingSearch.toLowerCase(); if(!((l.title||'').toLowerCase().includes(q)||(l.sellerName||'').toLowerCase().includes(q))) return false; }
     return true;
   });
 
@@ -729,6 +758,8 @@ function renderListings() {
   ['all','pending','active','rejected'].forEach(function(f){
     html += '<button class="filter-btn'+((_listingFilter===f)?' on':'')+'" onclick="_listingFilter=\''+f+'\';renderListings()">'+f.charAt(0).toUpperCase()+f.slice(1)+' ('+counts[f]+')</button>';
   });
+  html += '<input class="search-input" placeholder="Search title or seller…" value="'+esc(_listingSearch)+'" oninput="_listingSearch=this.value;renderListings()" id="listingSearch">';
+  html += '<button class="filter-btn" onclick="exportListings()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>';
   html += '</div></div>';
 
   html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Photo</th><th>Title</th><th>Seller</th><th>Category</th><th>Location</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
@@ -757,6 +788,7 @@ function renderListings() {
   });
   html += '</tbody></table></div>';
   document.getElementById('mainContent').innerHTML = html;
+  var ls = document.getElementById('listingSearch'); if(ls && _listingSearch){ ls.focus(); ls.setSelectionRange(ls.value.length, ls.value.length); }
 }
 
 function viewListing(id) {
@@ -825,6 +857,7 @@ function renderUsers() {
 
   var html = '<div class="sec-head"><div class="sec-title">Users</div><div class="sec-actions">';
   html += '<input class="search-input" placeholder="Search name, phone, email…" value="'+esc(_userSearch)+'" oninput="_userSearch=this.value;renderUsers()" id="userSearch">';
+  html += '<button class="filter-btn" onclick="exportUsers()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>';
   html += '</div></div>';
 
   html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
@@ -1392,6 +1425,17 @@ function renderAds() {
 
   if(!DATA.ads.length) { html+='<div class="empty-msg">No paid ads yet.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
 
+  var totalImp = DATA.ads.reduce(function(s,a){return s+(a.impressions||0);},0);
+  var totalClk = DATA.ads.reduce(function(s,a){return s+(a.clicks||0);},0);
+  var totalRev = DATA.ads.reduce(function(s,a){return s+(parseFloat(a.price_paid)||0);},0);
+  var activeAds = DATA.ads.filter(function(a){return a.active;}).length;
+  html+='<div class="stats-grid" style="margin-bottom:18px">'
+    + statCard('Active Ads','accent',activeAds,'live now')
+    + statCard('Impressions','blue',totalImp.toLocaleString(),'total views')
+    + statCard('Clicks','green',totalClk.toLocaleString(),'total taps')
+    + statCard('Ad Revenue','amber','$'+totalRev.toFixed(2),'collected')
+    + '</div>';
+
   // Cards view for ads (shows image thumbnail)
   DATA.ads.forEach(function(a){
     var advertiser = DATA.users.find(function(x){ return x.id===a.advertiser_id; })||{};
@@ -1409,6 +1453,9 @@ function renderAds() {
     html+='<span class="badge badge-'+(a.active?'active':'rejected')+'">'+(a.active?'Active':'Paused')+'</span>';
     if(a.type) html+='<span class="badge badge-pending">'+esc(a.type)+'</span>';
     html+='</div></div></div>';
+    var ctr = a.impressions ? ((a.clicks||0)/a.impressions*100).toFixed(1) : '0.0';
+    var mbox = function(label,val){ return '<div style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px 6px;text-align:center"><div style="font-size:15px;font-weight:800;color:var(--text)">'+val+'</div><div style="font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-top:2px">'+label+'</div></div>'; };
+    html+='<div style="display:flex;gap:8px;margin-bottom:12px">'+mbox('Impressions',(a.impressions||0).toLocaleString())+mbox('Clicks',(a.clicks||0).toLocaleString())+mbox('CTR',ctr+'%')+'</div>';
     html+='<div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:10px">';
     html+='<span><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Advertiser: <strong style="color:var(--text)">'+esc(advertiser.name||a.business_name||'—')+'</strong></span>';
     html+='<span>'+fmtDate(a.starts_at)+' – '+fmtDate(a.ends_at)+'</span>';
