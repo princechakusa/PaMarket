@@ -549,14 +549,18 @@
         if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
         try {
           if (!sb) throw new Error('Not connected to server');
-          const idPath     = H.uploadVerificationDoc ? await H.uploadVerificationDoc(u.id, _pvIdFront, 'id') : null;
-          const selfiePath = H.uploadVerificationDoc ? await H.uploadVerificationDoc(u.id, _pvSelfie, 'selfie') : null;
-          const rec = { user_id: u.id, status: 'pending', submitted_at: new Date().toISOString() };
+          // Use the live authenticated user id so it matches the database security rule.
+          let authId = u.id;
+          try { const ar = await sb.auth.getUser(); if (ar && ar.data && ar.data.user && ar.data.user.id) authId = ar.data.user.id; } catch (e) {}
+          if (!authId) throw new Error('Your session expired. Please sign out and sign in again, then retry.');
+          const idPath     = H.uploadVerificationDoc ? await H.uploadVerificationDoc(authId, _pvIdFront, 'id') : null;
+          const selfiePath = H.uploadVerificationDoc ? await H.uploadVerificationDoc(authId, _pvSelfie, 'selfie') : null;
+          const rec = { user_id: authId, status: 'pending', submitted_at: new Date().toISOString() };
           if (idPath && selfiePath) { rec.id_doc_path = idPath; rec.selfie_path = selfiePath; rec.id_doc = null; rec.selfie = null; }
           else { rec.id_doc = _pvIdFront; rec.selfie = _pvSelfie; }
           const { error: vErr } = await sb.from('verifications').upsert(rec, { onConflict: 'user_id' });
           if (vErr) throw vErr;
-          const { error: pErr } = await sb.from('profiles').update({ verification_pending: true, updated_at: new Date().toISOString() }).eq('id', u.id);
+          const { error: pErr } = await sb.from('profiles').update({ verification_pending: true, updated_at: new Date().toISOString() }).eq('id', authId);
           if (pErr) throw pErr;
           u.verificationPending = true; u.verification_pending = true;
           u.verificationIdType = _pvIdType; u.verificationIdNum = _pvIdNum;

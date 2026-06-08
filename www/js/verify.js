@@ -319,11 +319,15 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
       try {
         if (!window.supabase) throw new Error('Not connected');
+        // Use the live authenticated user id so it matches the database security rule.
+        let authId = u.id;
+        try { const ar = await window.supabase.auth.getUser(); if (ar && ar.data && ar.data.user && ar.data.user.id) authId = ar.data.user.id; } catch (e) {}
+        if (!authId) throw new Error('Your session expired. Please sign out and sign in again, then retry.');
         // Upload images to the private bucket; keep base64 only as a fallback if
         // Storage isn't set up yet (migration not run) so nothing breaks.
-        const idPath     = await H.uploadVerificationDoc(u.id, idData, 'id');
-        const selfiePath = await H.uploadVerificationDoc(u.id, selfieData, 'selfie');
-        const rec = { user_id: u.id, status: 'pending', submitted_at: new Date().toISOString() };
+        const idPath     = await H.uploadVerificationDoc(authId, idData, 'id');
+        const selfiePath = await H.uploadVerificationDoc(authId, selfieData, 'selfie');
+        const rec = { user_id: authId, status: 'pending', submitted_at: new Date().toISOString() };
         if (idPath && selfiePath) {
           rec.id_doc_path = idPath; rec.selfie_path = selfiePath;
           rec.id_doc = null; rec.selfie = null;
@@ -335,7 +339,7 @@
         // Mark profile as pending
         const { error: pErr } = await window.supabase.from('profiles')
           .update({ verification_pending: true })
-          .eq('id', u.id);
+          .eq('id', authId);
         if (pErr) throw pErr;
         // Clear sensitive images from device once submitted.
         _pendingId = null; _pendingSelfie = null;
