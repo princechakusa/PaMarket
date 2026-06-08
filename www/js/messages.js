@@ -255,7 +255,7 @@
 
     const otherIdSafe = escHtml(otherId || '');
     const hdrSub = (other && other.verified)
-      ? '<div class="chat-hdr-sub"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="color:#4ade80">Verified</span></div>'
+      ? '<div class="chat-hdr-sub">' + H.verifiedBadge(12) + '<span style="color:#00A0E9">Verified</span></div>'
       : ((other && other.privacySettings && other.privacySettings.showActivity)
          ? '<div class="chat-hdr-sub"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4ade80;flex-shrink:0"></span><span style="color:#4ade80">Online</span></div>'
          : '<div class="chat-hdr-sub">Tap to view profile</div>');
@@ -844,7 +844,7 @@
                 ? `<img src="${escHtml(other.avatar)}" style="width:80px;height:80px;border-radius:50%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;font-family:'Inter',-apple-system,sans-serif">${ini}</div>`
                 : `<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;font-family:'Inter',-apple-system,sans-serif">${ini}</div>`}
             </div>
-            <div style="font-size:18px;font-weight:800;color:var(--text);font-family:'Inter',-apple-system,sans-serif">${escHtml(other.name || 'User')}${other.verified ? '&nbsp;<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#22c55e" stroke-width="2.5" style="vertical-align:middle;margin-bottom:2px"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
+            <div style="font-size:18px;font-weight:800;color:var(--text);font-family:'Inter',-apple-system,sans-serif">${escHtml(other.name || 'User')}${other.verified ? '&nbsp;' + H.verifiedBadge(15) + '' : ''}</div>
             ${other.joinedAt ? `<div style="font-size:12px;color:var(--sub);margin-top:5px;font-family:'Inter',-apple-system,sans-serif">Member since ${new Date(other.joinedAt).toLocaleDateString()}</div>` : ''}
             ${other.phone ? `<div style="font-size:12px;color:var(--sub);margin-top:3px;font-family:'Inter',-apple-system,sans-serif">${phone}</div>` : ''}
           </div>

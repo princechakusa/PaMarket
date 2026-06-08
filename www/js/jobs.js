@@ -16,7 +16,7 @@
     var industry = parseLine(lines, 'INDUSTRY') || '';
     var seller   = (H.state.users || []).find(function(u){ return u.id === l.sellerId; });
     var coVerified = seller && (seller.companyVerified || seller.verified);
-    var verBadge = coVerified ? '<span style="background:#059669;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>' : '';
+    var verBadge = coVerified ? '<span style="margin-left:4px;display:inline-flex;vertical-align:middle">' + H.verifiedBadge(14) + '</span>' : '';
     var logoHtml = (l.photos && l.photos[0])
       ? '<img src="' + l.photos[0] + '" style="width:46px;height:46px;border-radius:12px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)">'
       : '<div style="width:46px;height:46px;border-radius:12px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;font-weight:800;color:#1A3A8F">' + (company.slice(0,2).toUpperCase()) + '</div>';
@@ -267,7 +267,7 @@
     var ini = H.initials(u.name || 'U');
     var cv  = u.cv || {};
     var verBadge = u.verified
-      ? '<span style="background:#059669;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;margin-left:6px;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>'
+      ? '<span style="margin-left:6px;display:inline-flex;vertical-align:middle">' + H.verifiedBadge(14) + '</span>'
       : '';
     var headline = cv.headline || u.jobTitle || 'Open to Work';
     var location = cv.location || u.city || '';
@@ -330,7 +330,7 @@
     var isMine = !!(me && me.id === uid);
     var cv  = u.cv || {};
     var ini = H.initials(u.name || 'U');
-    var verBadge = u.verified ? '<span style="background:#059669;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>' : '';
+    var verBadge = u.verified ? '<span style="display:inline-flex;vertical-align:middle">' + H.verifiedBadge(14) + '</span>' : '';
     var expLvl = { entry: 'Entry Level (0–2 yrs)', mid: '3–5 Years', senior: '5–10 Years', expert: '10+ Years' }[u.exp || ''] || '';
     var skills = cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean).map(function (s) { return s.trim(); }).filter(Boolean);
     var exp   = cv.experience     || [];

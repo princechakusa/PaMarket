@@ -98,7 +98,7 @@
           <div class="seller-info">
             <div class="seller-name-row">
               <div class="seller-name">${H.escHtml(sellerName)}</div>
-              ${seller.verified ? `<div class="blue-check" style="width:16px;height:16px"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>` : ''}
+              ${seller.verified ? `<div class="blue-check" style="width:16px;height:16px">${H.verifiedBadge(16)}</div>` : ''}
             </div>
             <div class="seller-phone" style="color:var(--sub);font-size:13px">${H.escHtml(sellerPhone)||'No phone listed'}</div>
             <div class="seller-meta">Member since ${new Date(seller.joinedAt||Date.now()).toLocaleDateString()}${seller.verified?' · ID Verified':''}</div>
@@ -623,7 +623,7 @@
         <div class="prof-name">${H.escHtml(u.name)}</div>
         ${showDot ? `<div style="font-size:11px;color:#86efac;font-weight:600;display:flex;align-items:center;gap:4px;justify-content:center;margin-top:4px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e"></span>Online</div>` : ''}
         ${u.phone ? `<div style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:4px">${H.escHtml(u.phone)}</div>` : ''}
-        ${u.verified ? `<div class="prof-badges"><span class="pbadge pbadge-verified">ID Verified</span></div>` : ''}
+        ${u.verified ? `<div class="prof-badges"><span class="pbadge pbadge-verified">${H.verifiedBadge(13)} ID Verified</span></div>` : ''}
         <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:8px">Member since ${new Date(u.joinedAt||Date.now()).toLocaleDateString()}</div>
         ${!isMe && me ? `<div class="prof-actions">
           ${(uPrivacy.allowMessages === false)

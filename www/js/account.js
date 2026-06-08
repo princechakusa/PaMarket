@@ -55,7 +55,7 @@
           <div style="font-size:13px;color:rgba(255,255,255,.8);margin-bottom:3px">${H.escHtml(u.email || '')}</div>
           <div style="font-size:12px;color:rgba(255,255,255,.65)">${H.escHtml(u.phone || 'No phone number')}</div>
         </div>
-        ${u.verified ? '<span style="background:#22C55E;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>' : ''}
+        ${u.verified ? '<span style="background:rgba(255,255,255,.15);color:#fff;font-size:10px;font-weight:700;padding:3px 9px 3px 5px;border-radius:20px;flex-shrink:0;display:flex;align-items:center;gap:4px">' + H.verifiedBadge(14) + 'Verified</span>' : ''}
       </div>
 
       <!-- Quick Stats -->

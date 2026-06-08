@@ -163,6 +163,11 @@ window.H = {
     const cat = this.CATEGORIES.find(c=>c.id===cid);
     return cat ? cat.icon : `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`;
   },
+  // Scalloped azure verified seal with a bold white check (Instagram/Meta style)
+  verifiedBadge(size) {
+    const s = size || 14;
+    return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" style="vertical-align:middle;flex-shrink:0" aria-label="Verified"><path fill="#00A0E9" d="M23 12l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2L12 2.96 8.6 1.5 6.71 4.69 3.1 5.5l.34 3.7L1 12l2.44 2.78-.34 3.7 3.61.82L8.6 22.5l3.4-1.47 3.4 1.46 1.89-3.19 3.61-.82-.34-3.69L23 12z"/><path d="M9.6 12.3l1.9 1.9 4.1-5.1" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  },
   timeAgo(t) {
     const s = Math.floor((Date.now()-t)/1000);
     if (s<60)     return 'just now';
@@ -348,7 +353,7 @@ window.H = {
             <span class="tag">${H.ICONS.location} ${H.escHtml(l.city||l.prov||'')}</span>
             <span class="tag">&middot; ${H.timeAgo(l.createdAt)}</span>
             <span class="tag">&middot; ${H.ICONS.eye} ${l.views||0}</span>
-            ${seller&&seller.verified?`<span class="blue-check" title="ID Verified"><svg viewBox="0 0 24 24" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg></span>`:''}
+            ${seller&&seller.verified?`<span class="blue-check" title="ID Verified">${H.verifiedBadge(15)}</span>`:''}
           </div>
         </div>
       </div>
