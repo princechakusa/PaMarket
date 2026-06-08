@@ -34,6 +34,43 @@
     return filteredList.map(renderListCard).join('');
   }
 
+  // Apply every Browse control — price range, condition, currency, verified-only and the
+  // sort dropdown — on top of the shared text-relevance engine. The global filterListings
+  // only reads H.state, which the Browse page never sets, so we drive the filters here.
+  function applyBrowseFilters(list, q) {
+    const pMinEl = document.getElementById('priceMin');
+    const pMaxEl = document.getElementById('priceMax');
+    const pMin = (pMinEl && pMinEl.value !== '') ? (parseFloat(pMinEl.value) || 0) : 0;
+    const pMax = (pMaxEl && pMaxEl.value !== '') ? (parseFloat(pMaxEl.value) || Infinity) : Infinity;
+    const condEl = document.querySelector('input[name="condition"]:checked');
+    const cond = condEl ? condEl.value : 'all';
+    const verifiedOnly = !!((document.getElementById('verifiedOnly') || {}).checked);
+    const cur = browseState.currency || 'all';
+
+    const pool = (list || []).filter(function (l) {
+      const price = l.price || 0;
+      if (price < pMin || price > pMax) return false;
+      if (cond !== 'all' && (l.condition || '') !== cond) return false;
+      if (cur !== 'all' && (l.currency || 'USD') !== cur) return false;
+      if (verifiedOnly) {
+        const seller = (state.users || []).find(function (x) { return x.id === l.sellerId; });
+        if (!(seller && seller.verified)) return false;
+      }
+      return true;
+    });
+
+    // Multi-word AND matching + relevance ranking
+    const matched = filterListings(pool, q);
+
+    // Honour the sort dropdown. 'recent' keeps relevance/newest order from filterListings.
+    const sortBy = browseState.sortBy || 'recent';
+    if (sortBy === 'price_asc')       matched.sort(function (a, b) { return (a.price || 0) - (b.price || 0); });
+    else if (sortBy === 'price_desc') matched.sort(function (a, b) { return (b.price || 0) - (a.price || 0); });
+    else if (sortBy === 'oldest')     matched.sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
+    else if (sortBy === 'views')      matched.sort(function (a, b) { return (b.views || 0) - (a.views || 0); });
+    return matched;
+  }
+
   pages.Browse = function () {
     const activeListings = (state.listings || []).filter(l => l.status === 'active');
     const u = H.currentUser();
@@ -132,7 +169,7 @@
       <div class="sec-head"><div class="sec-title">Results</div></div>
       <div class="listing-list" id="listingList">
         ${activeListings.length
-          ? renderListingsWithSponsored(filterListings(activeListings, ''))
+          ? renderListingsWithSponsored(applyBrowseFilters(activeListings, ''))
           : H.skeletonCards(6)}
       </div>
     </div>`;
@@ -146,7 +183,7 @@
         const q = document.getElementById('searchIn')?.value || '';
         const active = (state.listings || []).filter(l => l.status === 'active');
         el.innerHTML = active.length
-          ? renderListingsWithSponsored(filterListings(active, q))
+          ? renderListingsWithSponsored(applyBrowseFilters(active, q))
           : H.emptyState('No listings yet', 'Listings will appear here once people start posting', null, null);
       }).catch(() => {
         const el = document.getElementById('listingList');
@@ -167,7 +204,7 @@
           const q = document.getElementById('searchIn')?.value || '';
           browseState.lastSearch = q;
           const activeListings = (state.listings || []).filter(l => l.status === 'active');
-          const filtered = filterListings(activeListings, q);
+          const filtered = applyBrowseFilters(activeListings, q);
           const el = document.getElementById('listingList');
           if (el) el.innerHTML = filtered.length
             ? renderListingsWithSponsored(filtered)
@@ -245,7 +282,7 @@
         H.saveState();
         H.renderPage('SavedSearches');
       },
-      onFilterChange: () => {},
+      onFilterChange: () => { H._browse.onSearch(); },
       onSortChange: () => {
         const sortVal = document.getElementById('sortBy')?.value;
         browseState.sortBy = sortVal;

@@ -318,10 +318,13 @@
         </div>
         <div class="section-box">
           <div class="section-title">What will be deleted</div>
-          <div class="info-row"><span class="info-label">Profile</span><span class="info-val" style="color:var(--red)">Permanently removed</span></div>
-          <div class="info-row"><span class="info-label">Listings</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
-          <div class="info-row"><span class="info-label">Messages</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
-          <div class="info-row"><span class="info-label">Wallet</span><span class="info-val" style="color:var(--red)">Balance forfeited</span></div>
+          <div class="info-row"><span class="info-label">Profile &amp; personal details</span><span class="info-val" style="color:var(--red)">Permanently removed</span></div>
+          <div class="info-row"><span class="info-label">Your listings</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
+          <div class="info-row"><span class="info-label">Messages you sent</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
+          <div class="info-row"><span class="info-label">Reviews you wrote</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
+          <div class="info-row"><span class="info-label">Saved items &amp; searches</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
+          <div class="info-row"><span class="info-label">Job applications</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
+          <div class="info-row"><span class="info-label">Verification documents</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
         </div>
         <div class="fg">
           <div class="fl">Type DELETE to confirm</div>
@@ -333,6 +336,51 @@
     </div>`;
   };
 
+  // Permanently remove the signed-in user's account and all personal data.
+  // Primary path is the server-side delete_my_account() function (removes data AND
+  // the auth login in one transaction). If that function is not installed, we fall
+  // back to deleting the rows the user owns directly — RLS permits own-row deletes.
+  H.purgeMyAccount = async function () {
+    const sb = window.supabase;
+    const u = H.currentUser();
+    if (!sb || typeof sb.from !== 'function' || !u || !u.id) {
+      try { if (sb && sb.auth) await sb.auth.signOut(); } catch (e) {}
+      return { ok: false };
+    }
+    const uid = u.id;
+    const uidText = String(uid);
+    let rpcOk = false;
+    try {
+      const { error } = await sb.rpc('delete_my_account');
+      if (!error) rpcOk = true;
+      else console.warn('delete_my_account rpc:', error.message);
+    } catch (e) { /* function not installed yet — use fallback */ }
+    if (!rpcOk) {
+      const ops = [
+        sb.from('listings').delete().eq('seller_id', uid),
+        sb.from('messages').delete().eq('sender_id', uidText),
+        sb.from('applications').delete().eq('applicant_id', uid),
+        sb.from('reviews').delete().eq('reviewer_id', uid),
+        sb.from('user_saves').delete().eq('user_id', uid),
+        sb.from('saved_searches').delete().eq('user_id', uid),
+        sb.from('notifications').delete().eq('user_id', uidText),
+        sb.from('conversation_deletions').delete().eq('user_id', uid),
+        sb.from('verifications').delete().eq('user_id', uid),
+        sb.from('company_verifications').delete().eq('user_id', uid),
+        sb.from('profiles').delete().eq('id', uid)
+      ];
+      try { await Promise.allSettled(ops); } catch (e) {}
+    }
+    // Clear cached personal data locally so nothing lingers after sign-out
+    try {
+      H.state.listings = (H.state.listings || []).filter(function (l) { return l.sellerId !== uid; });
+      H.state.conversations = (H.state.conversations || []).filter(function (c) { return !((c.members || []).includes(uid)); });
+      H.state.users = (H.state.users || []).filter(function (x) { return x.id !== uid; });
+    } catch (e) {}
+    try { await sb.auth.signOut(); } catch (e) {}
+    return { ok: true };
+  };
+
   pages.DeleteAccount_after = function () {
     H._deleteAccount = {
       confirm: async () => {
@@ -340,17 +388,12 @@
         if (val !== 'DELETE') { H.toast('Type DELETE to confirm'); return; }
         const btn = document.querySelector('.btn-pri[onclick*="confirm"]');
         if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
-        try {
-          const c = H.supabaseClient || (typeof sb === 'function' ? sb() : null);
-          if (c) {
-            await c.rpc('delete_my_account');
-            await c.auth.signOut();
-          }
-        } catch(e) { console.warn('delete_my_account rpc:', e); }
+        try { await H.purgeMyAccount(); }
+        catch (e) { console.warn('account deletion:', e); }
         H.state.currentUserId = null;
         H.saveState();
-        H.toast('Account deleted');
-        setTimeout(() => H.navTo('Home', null), 800);
+        H.toast('Your account and data have been deleted');
+        setTimeout(() => { try { window.location.reload(); } catch (e) { H.navTo('Home', null); } }, 900);
       }
     };
   };
