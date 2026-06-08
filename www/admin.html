@@ -1089,8 +1089,9 @@ async function approveVerification(userId, verifId) {
   var ok = await confirm2('Approve Verification','Grant verified badge to this user?','Approve','green');
   if(!ok) return;
   try {
-    var r = await sb.from('profiles').update({verified:true,verification_pending:false,updated_at:new Date().toISOString()}).eq('id',userId);
+    var r = await sb.from('profiles').update({verified:true,verification_pending:false,updated_at:new Date().toISOString()}).eq('id',userId).select('id');
     if(r.error) throw r.error;
+    if(!r.data || !r.data.length) throw new Error('Could not update the user — run FIX_ADMIN_PROFILE_UPDATE.sql so admins can verify other users.');
     if(verifId) await sb.from('verifications').update({status:'approved',admin_note:'Approved by admin'}).eq('id',verifId);
     var u = DATA.users.find(function(x){ return x.id===userId; }); if(u){ u.verified=true; u.verification_pending=false; }
     var v = DATA.verifications.find(function(x){ return x.id===verifId; }); if(v) v.status='approved';
