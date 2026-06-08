@@ -10,6 +10,21 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; background: #F4F1EA; color: #1a1a2e; }
     a { color: #1A3A8F; }
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,.96); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #e6e2d8; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .nav-logo { font-size: 22px; font-weight: 900; color: #1A3A8F; letter-spacing: -.5px; text-decoration: none; }
+    .nav-logo span { color: #F5A623; }
+    .nav-links { display: flex; align-items: center; gap: 20px; }
+    .nav-links a:not(.nav-cta) { font-size: 14px; font-weight: 600; color: #333; text-decoration: none; }
+    .nav-links a:not(.nav-cta):hover { color: #1A3A8F; }
+    .nav-cta { background: #1A3A8F; color: #fff; padding: 9px 20px; border-radius: 30px; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 6px; color: #1A3A8F; }
+    @media(max-width: 760px) {
+      .nav-toggle { display: flex; }
+      .nav-links { position: absolute; top: 60px; left: 0; right: 0; background: #fff; flex-direction: column; align-items: stretch; gap: 0; padding: 6px 0; box-shadow: 0 10px 26px rgba(0,0,0,.1); border-bottom: 1px solid #eee; display: none; }
+      .nav-links.open { display: flex; }
+      .nav-links a:not(.nav-cta) { padding: 14px 24px; border-bottom: 1px solid #f4f4f4; }
+      .nav-links .nav-cta { margin: 12px 24px 8px; text-align: center; }
+    }
 
     header {
       background: linear-gradient(135deg, #1A3A8F 0%, #2952cc 100%);
@@ -31,10 +46,35 @@
     strong { color: #222; }
 
     .back-link { display: inline-block; margin-top: 40px; font-size: 13px; color: #1A3A8F; }
-    footer { text-align: center; padding: 24px; font-size: 12px; color: #888; }
+    footer { background: #111; color: rgba(255,255,255,.6); padding: 48px 24px 32px; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; }
+    .footer-top { display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; margin-bottom: 36px; }
+    .footer-brand .logo { font-size: 22px; font-weight: 900; color: #fff; }
+    .footer-brand .logo span { color: #F5A623; }
+    .footer-brand p { font-size: 13px; margin-top: 8px; max-width: 240px; line-height: 1.6; color: rgba(255,255,255,.6); }
+    .footer-links h4 { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; }
+    .footer-links a { display: block; font-size: 13px; color: rgba(255,255,255,.6); margin-bottom: 8px; text-decoration: none; }
+    .footer-links a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 12px; }
+    .footer-zw { color: rgba(255,255,255,.4); }
   </style>
 </head>
 <body>
+
+<nav>
+  <a class="nav-logo" href="index.html">Pa<span>Market</span></a>
+  <button class="nav-toggle" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu">
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="nav-links" id="navMenu">
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="categories.html">Categories</a>
+    <a href="advertise.html">Advertise</a>
+    <a href="contact.html">Contact</a>
+    <a class="nav-cta" href="mailto:chakusaprince@gmail.com">Get the App</a>
+  </div>
+</nav>
 
 <header>
   <a href="index.html">← Back to PaMarket</a>
@@ -113,6 +153,45 @@
   <a class="back-link" href="index.html">← Back to PaMarket</a>
 </div>
 
-<footer>© 2026 PaMarket · Made in Zimbabwe 🇿🇼</footer>
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="logo">Pa<span>Market</span></div>
+        <p>Zimbabwe's free marketplace. Buy, sell, rent, and find jobs from your phone.</p>
+        <div style="margin-top:16px;font-size:13px">
+          📧 <a href="mailto:chakusaprince@gmail.com" style="color:#F5A623">chakusaprince@gmail.com</a><br>
+          <span style="margin-top:6px;display:block">💬 <a href="https://wa.me/971589772645" target="_blank" rel="noopener" style="color:#25D366">WhatsApp: +971 589 772 645</a></span>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Explore</h4>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="categories.html">Categories</a>
+        <a href="advertise.html">Advertise</a>
+        <a href="help.html">Help &amp; FAQ</a>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <a href="legal.html">Legal Centre</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="community.html">Community Guidelines</a>
+        <a href="cookies.html">Cookie Policy</a>
+      </div>
+      <div class="footer-links">
+        <h4>Company</h4>
+        <a href="contact.html">Contact Us</a>
+        <a href="help.html">Support</a>
+        <a href="contact.html#report">Report Abuse</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 PaMarket. All rights reserved.</p>
+      <div class="footer-zw">Made with ❤️ in Zimbabwe 🇿🇼</div>
+    </div>
+  </div>
+</footer>
 </body>
 </html>
