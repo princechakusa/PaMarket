@@ -27,7 +27,23 @@
     }
     .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 900; color: #1A3A8F; letter-spacing: -0.5px; }
     .nav-logo span { color: #F5A623; }
+    .nav-links { display: flex; align-items: center; gap: 26px; }
+    .nav-links a:not(.nav-cta) { font-size: 14px; font-weight: 600; color: #333; }
+    .nav-links a:not(.nav-cta):hover, .nav-links a.active { color: #1A3A8F; }
     .nav-cta { background: #1A3A8F; color: #fff; padding: 9px 20px; border-radius: 30px; font-size: 13px; font-weight: 700; }
+    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 6px; color: #1A3A8F; }
+    @media(max-width: 760px) {
+      .nav-toggle { display: flex; }
+      .nav-links {
+        position: absolute; top: 60px; left: 0; right: 0;
+        background: #fff; flex-direction: column; align-items: stretch; gap: 0;
+        padding: 6px 0; box-shadow: 0 10px 26px rgba(0,0,0,.1);
+        border-bottom: 1px solid #eee; display: none;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links a:not(.nav-cta) { padding: 14px 24px; border-bottom: 1px solid #f4f4f4; }
+      .nav-links .nav-cta { margin: 12px 24px 8px; text-align: center; }
+    }
 
     /* ── HERO ── */
     .hero {
@@ -244,8 +260,17 @@
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">Pa<span>Market</span></div>
-  <a class="nav-cta" href="mailto:chakusaprince@gmail.com">Get the App</a>
+  <a class="nav-logo" href="index.html">Pa<span>Market</span></a>
+  <button class="nav-toggle" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu">
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="nav-links" id="navMenu">
+    <a href="index.html" class="active">Home</a>
+    <a href="about.html">About</a>
+    <a href="categories.html">Categories</a>
+    <a href="contact.html">Contact</a>
+    <a class="nav-cta" href="mailto:chakusaprince@gmail.com">Get the App</a>
+  </div>
 </nav>
 
 <!-- HERO -->
@@ -520,12 +545,11 @@
         </div>
       </div>
       <div class="footer-links">
-        <h4>Categories</h4>
-        <a href="../index.html?cat=electronics">Electronics</a>
-        <a href="../index.html?cat=vehicles">Vehicles</a>
-        <a href="../index.html?cat=property">Property</a>
-        <a href="../index.html?cat=jobs">Jobs</a>
-        <a href="../index.html?cat=agriculture">Agriculture</a>
+        <h4>Explore</h4>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="categories.html">Categories</a>
+        <a href="help.html">Help &amp; FAQ</a>
       </div>
       <div class="footer-links">
         <h4>Legal</h4>
@@ -535,9 +559,9 @@
       </div>
       <div class="footer-links">
         <h4>Company</h4>
-        <a href="mailto:chakusaprince@gmail.com">Contact Us</a>
-        <a href="mailto:chakusaprince@gmail.com">Support</a>
-        <a href="mailto:chakusaprince@gmail.com">Report Abuse</a>
+        <a href="contact.html">Contact Us</a>
+        <a href="help.html">Support</a>
+        <a href="contact.html#report">Report Abuse</a>
       </div>
     </div>
     <div class="footer-bottom">
