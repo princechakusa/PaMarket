@@ -1441,7 +1441,7 @@ function renderAds() {
     var advertiser = DATA.users.find(function(x){ return x.id===a.advertiser_id; })||{};
     var imgHtml = (a.image_url||a.image) ? '<img src="'+esc(a.image_url||a.image)+'" style="width:64px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display=\'none\'">'
       : '<div style="width:64px;height:48px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg></div>';
-    var sectionLabel = {home:'Home',jobs:'Jobs',property:'Property',vehicles:'Vehicles',electronics:'Electronics',all:'All Pages'}[a.target_section]||esc(a.target_section||'All');
+    var sectionLabel = (a.type==='spotlight' && a.target_cat) ? ('Category: '+esc(a.target_cat.charAt(0).toUpperCase()+a.target_cat.slice(1))) : 'Home banner';
     html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px">';
     html+='<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">';
     html+=imgHtml;
@@ -1503,25 +1503,27 @@ function openCreateAd() {
     // Business name (auto-fills but editable)
     +'<div class="form-row"><label class="form-label">Business Name <span style="color:var(--red)">*</span></label><input class="form-input" id="adBiz" placeholder="e.g. ABC Holdings Zimbabwe" oninput="_adBizManual=true"></div>'
 
-    // Ad type + target section
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    +'<div class="form-row"><label class="form-label">Ad Type</label>'
-    +'<select class="form-input" id="adType">'
-    +'<option value="banner">Banner Ad</option>'
-    +'<option value="spotlight">Category Spotlight</option>'
-    +'<option value="jobs">Jobs Promotion</option>'
-    +'<option value="property">Property Feature</option>'
-    +'</select></div>'
-    +'<div class="form-row"><label class="form-label">Show In Section</label>'
-    +'<select class="form-input" id="adSection">'
-    +'<option value="all">All Pages</option>'
-    +'<option value="home">Home</option>'
-    +'<option value="jobs">Jobs</option>'
-    +'<option value="property">Property</option>'
-    +'<option value="vehicles">Vehicles</option>'
+    // Placement — controls exactly where the ad appears in the app
+    +'<div class="form-row"><label class="form-label">Where should this ad show? <span style="color:var(--red)">*</span></label>'
+    +'<select class="form-input" id="adPlacement" onchange="_onAdPlacementChange()">'
+    +'<option value="home">Home — "Hot on PaMarket" (under the buy/sell banner)</option>'
+    +'<option value="category">Category page — top of one category</option>'
+    +'</select>'
+    +'<div style="font-size:11px;color:var(--sub);margin-top:4px">Home ads appear in the sponsored row on the home screen. Category ads appear at the top of that category\'s listings.</div></div>'
+    +'<div class="form-row" id="adCatRow" style="display:none"><label class="form-label">Which category?</label>'
+    +'<select class="form-input" id="adCat">'
     +'<option value="electronics">Electronics</option>'
+    +'<option value="vehicles">Vehicles</option>'
+    +'<option value="property">Property</option>'
+    +'<option value="furniture">Furniture</option>'
+    +'<option value="fashion">Fashion</option>'
+    +'<option value="jobs">Jobs</option>'
+    +'<option value="agriculture">Agriculture</option>'
+    +'<option value="services">Services</option>'
+    +'<option value="rooms">Rooms</option>'
+    +'<option value="pets">Pets</option>'
+    +'<option value="kids">Baby &amp; Kids</option>'
     +'</select></div>'
-    +'</div>'
 
     // Ad image
     +'<div class="form-row"><label class="form-label">Ad Image <span style="font-weight:400;color:var(--sub)">(company logo or banner)</span></label>'
@@ -1557,6 +1559,12 @@ function openCreateAd() {
   });
 }
 
+function _onAdPlacementChange(){
+  var p = (document.getElementById('adPlacement')||{}).value;
+  var row = document.getElementById('adCatRow');
+  if(row) row.style.display = (p==='category') ? '' : 'none';
+}
+
 window._adLoadImage = function(e) {
   var f = e.target.files[0]; if(!f) return;
   var r = new FileReader();
@@ -1582,8 +1590,8 @@ async function saveNewAd() {
       headline: head,
       tagline: (document.getElementById('adTag')||{}).value.trim(),
       image_url: (document.getElementById('adImg')||{}).value||null,
-      type: (document.getElementById('adType')||{}).value||'banner',
-      target_section: (document.getElementById('adSection')||{}).value||'all',
+      type: ((document.getElementById('adPlacement')||{}).value==='category') ? 'spotlight' : 'banner',
+      target_cat: ((document.getElementById('adPlacement')||{}).value==='category') ? ((document.getElementById('adCat')||{}).value||'other') : null,
       starts_at: (document.getElementById('adStart')||{}).value||null,
       ends_at: (document.getElementById('adEnd')||{}).value||null,
       price_paid: parseFloat((document.getElementById('adPrice')||{}).value)||0,

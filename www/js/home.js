@@ -143,7 +143,7 @@
         <!-- HOT ON PAMARKET (paid ads horizontal scroll) -->
         ${(function(){
           var now = Date.now();
-          var ads = (H.state.paidAds||[]).filter(function(a){ return a.active && a.endsAt > now; });
+          var ads = (H.state.paidAds||[]).filter(function(a){ return a.active && a.endsAt > now && a.type !== 'spotlight'; });
           if (!ads.length) return '';
           ads.forEach(function(a){ if(H.trackAdImpression) H.trackAdImpression(a.id); });
           return '<div style="padding:20px 0 0">'
