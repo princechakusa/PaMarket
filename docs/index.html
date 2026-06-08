@@ -115,9 +115,44 @@
       background: #fff; border-radius: 16px; padding: 22px 12px;
       text-align: center; border: 1.5px solid #eee;
       transition: border-color .15s, transform .15s, box-shadow .15s;
-      cursor: default;
+      cursor: pointer; display: block;
     }
     .cat-card:hover { border-color: #1A3A8F; transform: translateY(-3px); box-shadow: 0 8px 24px rgba(26,58,143,.12); }
+
+    /* ── APP PREVIEW (phone mockup) ── */
+    .preview-section { background: linear-gradient(135deg, #0f2878, #1A3A8F); padding: 72px 24px; overflow: hidden; }
+    .preview-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    @media(max-width:760px){ .preview-inner { grid-template-columns: 1fr; text-align: center; } .preview-copy .section-sub { margin-left: auto; margin-right: auto; } .phone-wrap { order: -1; } }
+    .preview-copy .section-eyebrow { color: #F5A623; }
+    .preview-copy .section-title { color: #fff; }
+    .preview-copy .section-sub { color: rgba(255,255,255,.72); }
+    .preview-list { list-style: none; margin: 22px 0 0; }
+    .preview-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: rgba(255,255,255,.85); margin-bottom: 12px; }
+    .preview-list svg { flex-shrink: 0; }
+    .phone-wrap { display: flex; justify-content: center; }
+    .phone {
+      width: 270px; background: #0a0a0a; border-radius: 38px; padding: 12px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.45); position: relative;
+    }
+    .phone-notch { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 110px; height: 22px; background: #0a0a0a; border-radius: 0 0 14px 14px; z-index: 3; }
+    .phone-screen { background: #F4F1EA; border-radius: 28px; overflow: hidden; height: 540px; display: flex; flex-direction: column; }
+    .ps-head { background: #1A3A8F; color: #fff; padding: 26px 16px 12px; }
+    .ps-head-top { display: flex; align-items: center; justify-content: space-between; }
+    .ps-logo { font-size: 17px; font-weight: 900; }
+    .ps-logo span { color: #F5A623; }
+    .ps-loc { font-size: 10px; color: rgba(255,255,255,.7); }
+    .ps-search { margin-top: 12px; background: rgba(255,255,255,.16); border-radius: 10px; padding: 9px 12px; font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 7px; }
+    .ps-chips { display: flex; gap: 7px; padding: 12px 14px 4px; overflow: hidden; }
+    .ps-chip { font-size: 10px; font-weight: 700; padding: 6px 11px; border-radius: 20px; white-space: nowrap; background: #fff; color: #444; border: 1px solid #e6e2d8; }
+    .ps-chip.on { background: #1A3A8F; color: #fff; border-color: #1A3A8F; }
+    .ps-feed { padding: 8px 14px; overflow: hidden; flex: 1; }
+    .ps-card { background: #fff; border-radius: 14px; border: 1px solid #ececec; overflow: hidden; margin-bottom: 12px; }
+    .ps-card-img { height: 96px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+    .ps-card-body { padding: 9px 11px 11px; }
+    .ps-card-title { font-size: 12px; font-weight: 700; color: #1a1a2e; }
+    .ps-card-price { font-size: 14px; font-weight: 900; color: #1A3A8F; margin-top: 2px; }
+    .ps-card-meta { display: flex; align-items: center; gap: 5px; margin-top: 5px; font-size: 10px; color: #888; }
+    .ps-badge { display: inline-flex; align-items: center; gap: 3px; background: #EFF6FF; color: #1A3A8F; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
     .cat-icon { font-size: 32px; margin-bottom: 10px; }
     .cat-name { font-size: 13px; font-weight: 700; color: #333; }
 
@@ -250,6 +285,63 @@
   </div>
 </div>
 
+<!-- APP PREVIEW -->
+<div class="preview-section">
+  <div class="preview-inner">
+    <div class="preview-copy">
+      <div class="section-eyebrow">A look inside</div>
+      <div class="section-title">The Whole Market<br>in Your Pocket</div>
+      <div class="section-sub">Browse listings by category, message a seller, and post your own ad in under a minute. This is what PaMarket looks like on your phone.</div>
+      <ul class="preview-list">
+        <li><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F5A623" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Clean feed with photos, prices, and location</li>
+        <li><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F5A623" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Blue badge on verified sellers</li>
+        <li><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F5A623" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Filter by category, city, and price</li>
+      </ul>
+    </div>
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="ps-head">
+            <div class="ps-head-top">
+              <div class="ps-logo">Pa<span>Market</span></div>
+              <div class="ps-loc">📍 Harare</div>
+            </div>
+            <div class="ps-search">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Search PaMarket
+            </div>
+          </div>
+          <div class="ps-chips">
+            <div class="ps-chip on">All</div>
+            <div class="ps-chip">Electronics</div>
+            <div class="ps-chip">Vehicles</div>
+            <div class="ps-chip">Property</div>
+          </div>
+          <div class="ps-feed">
+            <div class="ps-card">
+              <div class="ps-card-img" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe)">📱</div>
+              <div class="ps-card-body">
+                <div class="ps-card-title">iPhone 12, 128GB, clean</div>
+                <div class="ps-card-price">$320</div>
+                <div class="ps-card-meta"><span class="ps-badge">✓ Verified</span> Avondale, Harare</div>
+              </div>
+            </div>
+            <div class="ps-card">
+              <div class="ps-card-img" style="background:linear-gradient(135deg,#fde68a,#fcd34d)">🚗</div>
+              <div class="ps-card-body">
+                <div class="ps-card-title">Toyota Hilux 2014, single cab</div>
+                <div class="ps-card-price">$11,500</div>
+                <div class="ps-card-meta">Bulawayo</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- CATEGORIES -->
 <div class="cats-section">
   <div class="cats-inner">
@@ -257,18 +349,18 @@
     <div class="section-title">Browse Every Category</div>
     <div class="section-sub">Electronics, second-hand cars, farming equipment, furniture, rooms to rent, jobs. If it sells in Zimbabwe, you will find it here.</div>
     <div class="cats-grid">
-      <div class="cat-card"><div class="cat-icon">📱</div><div class="cat-name">Electronics</div></div>
-      <div class="cat-card"><div class="cat-icon">🚗</div><div class="cat-name">Vehicles</div></div>
-      <div class="cat-card"><div class="cat-icon">🏠</div><div class="cat-name">Property</div></div>
-      <div class="cat-card"><div class="cat-icon">🛋️</div><div class="cat-name">Furniture</div></div>
-      <div class="cat-card"><div class="cat-icon">👗</div><div class="cat-name">Fashion</div></div>
-      <div class="cat-card"><div class="cat-icon">💼</div><div class="cat-name">Jobs</div></div>
-      <div class="cat-card"><div class="cat-icon">🌾</div><div class="cat-name">Agriculture</div></div>
-      <div class="cat-card"><div class="cat-icon">🔧</div><div class="cat-name">Services</div></div>
-      <div class="cat-card"><div class="cat-icon">🏘️</div><div class="cat-name">Rooms</div></div>
-      <div class="cat-card"><div class="cat-icon">🐕</div><div class="cat-name">Pets</div></div>
-      <div class="cat-card"><div class="cat-icon">🧸</div><div class="cat-name">Kids</div></div>
-      <div class="cat-card"><div class="cat-icon">📦</div><div class="cat-name">Other</div></div>
+      <a class="cat-card" href="../index.html?cat=electronics"><div class="cat-icon">📱</div><div class="cat-name">Electronics</div></a>
+      <a class="cat-card" href="../index.html?cat=vehicles"><div class="cat-icon">🚗</div><div class="cat-name">Vehicles</div></a>
+      <a class="cat-card" href="../index.html?cat=property"><div class="cat-icon">🏠</div><div class="cat-name">Property</div></a>
+      <a class="cat-card" href="../index.html?cat=furniture"><div class="cat-icon">🛋️</div><div class="cat-name">Furniture</div></a>
+      <a class="cat-card" href="../index.html?cat=fashion"><div class="cat-icon">👗</div><div class="cat-name">Fashion</div></a>
+      <a class="cat-card" href="../index.html?cat=jobs"><div class="cat-icon">💼</div><div class="cat-name">Jobs</div></a>
+      <a class="cat-card" href="../index.html?cat=agriculture"><div class="cat-icon">🌾</div><div class="cat-name">Agriculture</div></a>
+      <a class="cat-card" href="../index.html?cat=services"><div class="cat-icon">🔧</div><div class="cat-name">Services</div></a>
+      <a class="cat-card" href="../index.html?cat=rooms"><div class="cat-icon">🏘️</div><div class="cat-name">Rooms</div></a>
+      <a class="cat-card" href="../index.html?cat=pets"><div class="cat-icon">🐕</div><div class="cat-name">Pets</div></a>
+      <a class="cat-card" href="../index.html?cat=kids"><div class="cat-icon">🧸</div><div class="cat-name">Baby &amp; Kids</div></a>
+      <a class="cat-card" href="../index.html?cat=other"><div class="cat-icon">📦</div><div class="cat-name">Other</div></a>
     </div>
   </div>
 </div>
@@ -429,11 +521,11 @@
       </div>
       <div class="footer-links">
         <h4>Categories</h4>
-        <a href="#">Electronics</a>
-        <a href="#">Vehicles</a>
-        <a href="#">Property</a>
-        <a href="#">Jobs</a>
-        <a href="#">Agriculture</a>
+        <a href="../index.html?cat=electronics">Electronics</a>
+        <a href="../index.html?cat=vehicles">Vehicles</a>
+        <a href="../index.html?cat=property">Property</a>
+        <a href="../index.html?cat=jobs">Jobs</a>
+        <a href="../index.html?cat=agriculture">Agriculture</a>
       </div>
       <div class="footer-links">
         <h4>Legal</h4>

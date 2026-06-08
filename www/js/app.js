@@ -530,9 +530,10 @@ window.H = {
     await this.navTo('Home');
     // Handle deep links: ?listing=ID  or  ?action=post|browse  or  ?deeplink=route
     const _qs = new URLSearchParams(window.location.search);
-    const _lid = _qs.get('listing'), _act = _qs.get('action'), _dl = _qs.get('deeplink');
+    const _lid = _qs.get('listing'), _act = _qs.get('action'), _dl = _qs.get('deeplink'), _cat = _qs.get('cat');
     if (_dl) { setTimeout(()=>H._handleDeepLink(decodeURIComponent(_dl)), 300); }
     else if (_lid) { setTimeout(()=>this.openListing(_lid), 200); }
+    else if (_cat) { setTimeout(()=>{ try { this.filterByCat(_cat); } catch(e){} }, 250); }
     else if (_act === 'post')   { if(this.currentUser()) setTimeout(()=>this.navTo('Post',null), 200); }
     else if (_act === 'browse') { setTimeout(()=>this.navTo('Browse',null), 200); }
     try {
