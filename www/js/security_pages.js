@@ -378,6 +378,13 @@
       H.state.users = (H.state.users || []).filter(function (x) { return x.id !== uid; });
     } catch (e) {}
     try { await sb.auth.signOut(); } catch (e) {}
+    // Wipe ALL local PaMarket data (cached state, onboarding flag, caches) so the
+    // next sign-in starts completely fresh — a true first-time experience.
+    try {
+      Object.keys(localStorage).forEach(function (k) {
+        if (/^pamarket/i.test(k)) { try { localStorage.removeItem(k); } catch (e) {} }
+      });
+    } catch (e) {}
     return { ok: true };
   };
 
@@ -390,8 +397,7 @@
         if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
         try { await H.purgeMyAccount(); }
         catch (e) { console.warn('account deletion:', e); }
-        H.state.currentUserId = null;
-        H.saveState();
+        // purgeMyAccount has cleared local storage; do NOT saveState (it would rewrite it)
         H.toast('Your account and data have been deleted');
         setTimeout(() => { try { window.location.reload(); } catch (e) { H.navTo('Home', null); } }, 900);
       }

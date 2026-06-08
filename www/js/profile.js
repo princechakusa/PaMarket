@@ -227,16 +227,16 @@
             const u = H.currentUser();
             if (!u) return;
             H.toast('Deleting your account…');
-            // Remove all cloud data + the login, then clear local and reload
+            // Remove all cloud data + the login, wipe local storage, then reload.
+            // purgeMyAccount clears local storage itself, so we must NOT saveState after.
             try {
-              if (typeof H.purgeMyAccount === 'function') { await H.purgeMyAccount(); }
-              else if (window.supabase && window.supabase.auth) { await window.supabase.auth.signOut().catch(() => {}); }
+              if (typeof H.purgeMyAccount === 'function') {
+                await H.purgeMyAccount();
+              } else if (window.supabase && window.supabase.auth) {
+                await window.supabase.auth.signOut().catch(() => {});
+                Object.keys(localStorage).forEach(function (k) { if (/^pamarket/i.test(k)) { try { localStorage.removeItem(k); } catch (e) {} } });
+              }
             } catch (e) { console.warn('account deletion:', e); }
-            H.state.listings = (H.state.listings || []).filter(l => l.sellerId !== u.id);
-            H.state.conversations = (H.state.conversations || []).filter(c => !(c.members || []).includes(u.id));
-            H.state.users = (H.state.users || []).filter(x => x.id !== u.id);
-            H.state.currentUserId = null;
-            H.saveState();
             window.location.reload();
           },
         });
