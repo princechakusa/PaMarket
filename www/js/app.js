@@ -514,6 +514,20 @@ window.H = {
         }
       }
     } catch(e) {}
+    // Reconcile the cached user id with the live Supabase session so every read and
+    // write targets the SAME profile. A stale id (e.g. after re-login) otherwise makes
+    // verification approvals, badges and other updates appear to "not stick".
+    try {
+      const _sb = window.supabase;
+      if (_sb && _sb.auth && typeof _sb.auth.getUser === 'function') {
+        const _ar = await _sb.auth.getUser();
+        const _sid = _ar && _ar.data && _ar.data.user && _ar.data.user.id;
+        if (_sid) {
+          if (this.state.currentUserId !== _sid) { this.state.currentUserId = _sid; this.saveState(); }
+          if (typeof H.loadProfile === 'function') { try { await H.loadProfile(_sid); } catch(_e){} }
+        }
+      }
+    } catch(e) {}
     if(this.state.currentUserId&&this.checkBan()) return;
     const _nav = document.getElementById('bottomNav');
     if (_nav) _nav.style.display='flex';
