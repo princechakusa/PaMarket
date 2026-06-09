@@ -94,12 +94,20 @@
         <div class="fl">Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--sub2)">(up to 8 · first is the cover)</span></div>
         ${H.state.allowImageUploads === false
           ? `<div style="padding:18px;background:var(--bg2);border-radius:12px;text-align:center;color:var(--sub);font-size:13px;border:1px dashed var(--border)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Photo uploads are currently disabled by the admin.</div>`
-          : `<label class="img-upload-zone" for="photoFile">
-              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <div class="img-upload-title">Tap to add photos</div>
-              <div class="img-upload-sub">JPG, PNG · Max 8 photos · auto-compressed</div>
-            </label>
-            <input type="file" id="photoFile" accept="image/*" multiple style="display:none" onchange="H._post.onPhotos(event)">
+          : `<div style="display:flex;gap:10px;margin-bottom:10px" id="photoActions">
+              <button type="button" onclick="H._post.pick('upload')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;padding:18px 10px;background:var(--card);border:1.5px dashed var(--border-mid);border-radius:14px;color:var(--blue);cursor:pointer;font-size:13px;font-weight:700">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload
+              </button>
+              <button type="button" onclick="H._post.pick('camera')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;padding:18px 10px;background:var(--card);border:1.5px dashed var(--border-mid);border-radius:14px;color:var(--blue);cursor:pointer;font-size:13px;font-weight:700">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Camera
+              </button>
+            </div>
+            <div style="text-align:center;font-size:12px;color:var(--sub);margin-bottom:10px">JPG or PNG · up to 8 photos · auto-compressed</div>
+            <input type="file" id="photoFileUpload" accept="image/*" multiple style="display:none" onchange="H._post.onPhotos(event)">
+            <input type="file" id="photoFileCamera" accept="image/*" capture="environment" style="display:none" onchange="H._post.onPhotos(event)">
+            <div id="photoProgress" style="display:none;text-align:center;font-size:13px;color:var(--blue);font-weight:600;padding:10px 0"></div>
             <div class="photo-grid" id="photoGrid">${renderPhotoGrid()}</div>`
         }
       </div>
@@ -151,39 +159,58 @@
     setCur(c)    { postState.currency = c; refreshBody(); },
     onProv(p)    { postState.prov = p; postState.city = CITIES_BY_PROV[p][0]; refreshBody(); },
     removePhoto(i) { postState.photos.splice(i, 1); document.getElementById('photoGrid').innerHTML = renderPhotoGrid(); },
-    onPhotos(e)  {
+    pick(mode) {
+      if (H._post._compressing) { H.toast('Still processing the last photos…', 2500); return; }
+      const el = document.getElementById(mode === 'camera' ? 'photoFileCamera' : 'photoFileUpload');
+      if (el) el.click();
+    },
+    async onPhotos(e)  {
       if (H._post._compressing) return;
-      const ALLOWED = ['image/jpeg','image/png','image/gif','image/webp'];
-      const MAX_BYTES = 5 * 1024 * 1024;
+      const ALLOWED = ['image/jpeg','image/png','image/gif','image/webp','image/heic','image/heif',''];
+      const MAX_BYTES = 25 * 1024 * 1024; // originals can be large; we compress them right down
       const files = Array.from(e.target.files || []);
       const remaining = 8 - postState.photos.length;
       let rejected = 0;
       const valid = [];
       files.slice(0, remaining).forEach(f => {
-        if (!ALLOWED.includes(f.type)) { rejected++; return; }
+        if (f.type && ALLOWED.indexOf(f.type) === -1) { rejected++; return; }
         if (f.size > MAX_BYTES) { rejected++; return; }
         valid.push(f);
       });
-      if (rejected) H.toast(rejected + ' photo(s) skipped — use JPG/PNG under 5 MB', 4000, true);
+      if (files.length > remaining) H.toast('You can add up to 8 photos', 3000, true);
+      if (rejected) H.toast(rejected + ' photo(s) skipped — use a JPG or PNG image', 4000, true);
       e.target.value = '';
       if (!valid.length) return;
 
-      // Show loading state
+      // Compress one at a time. Decoding several full-size phone photos at once
+      // thrashes memory on the device and is what made it hang on "Processing".
       H._post._compressing = true;
-      const zone = document.querySelector('.img-upload-zone');
-      const zoneTitle = zone && zone.querySelector('.img-upload-title');
-      const origTitle = zoneTitle ? zoneTitle.textContent : null;
-      if (zone) zone.style.pointerEvents = 'none';
-      if (zoneTitle) zoneTitle.textContent = 'Processing…';
+      const actions = document.getElementById('photoActions');
+      const prog    = document.getElementById('photoProgress');
+      if (actions) { actions.style.opacity = '.5'; actions.style.pointerEvents = 'none'; }
 
-      Promise.all(valid.map(f => H.compressImage(f, 1200, 0.78))).then(results => {
-        results.forEach(d => postState.photos.push(d));
-        document.getElementById('photoGrid').innerHTML = renderPhotoGrid();
-      }).finally(() => {
-        H._post._compressing = false;
-        if (zone) zone.style.pointerEvents = '';
-        if (zoneTitle && origTitle !== null) zoneTitle.textContent = origTitle;
-      });
+      let done = 0;
+      for (const f of valid) {
+        if (prog) {
+          prog.style.display = 'block';
+          prog.textContent = valid.length > 1
+            ? 'Processing photo ' + (done + 1) + ' of ' + valid.length + '…'
+            : 'Processing photo…';
+        }
+        try {
+          const d = await H.compressImage(f, 1200, 0.78);
+          if (d) {
+            postState.photos.push(d);
+            const g = document.getElementById('photoGrid');
+            if (g) g.innerHTML = renderPhotoGrid(); // show each photo as it finishes
+          }
+        } catch (err) { /* skip a photo that fails to decode */ }
+        done++;
+      }
+
+      if (prog) prog.style.display = 'none';
+      if (actions) { actions.style.opacity = ''; actions.style.pointerEvents = ''; }
+      H._post._compressing = false;
     },
     next() {
       const s = postState;
@@ -246,21 +273,44 @@
 
   H.compressImage = function compressImage(file, maxDim = 1200, q = 0.8) {
     return new Promise(res => {
-      const r = new FileReader();
-      r.onload = ev => {
-        const img = new Image();
-        img.onload = () => {
-          let w = img.width, h = img.height;
-          if (w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
-          else if (h > maxDim)     { w = Math.round(w * maxDim / h); h = maxDim; }
-          const c = document.createElement('canvas');
-          c.width = w; c.height = h;
-          c.getContext('2d').drawImage(img, 0, 0, w, h);
-          res(c.toDataURL('image/jpeg', q));
+      // Draw a decoded source (ImageBitmap or <img>) to a scaled canvas and return a JPEG data URL.
+      function finish(src, sw, sh) {
+        let w = sw, h = sh;
+        if (w > maxDim || h > maxDim) {
+          if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else        { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(src, 0, 0, w, h);
+        try { if (src.close) src.close(); } catch (e) {} // free the ImageBitmap right away
+        let out = '';
+        try { out = c.toDataURL('image/jpeg', q); } catch (e) {}
+        c.width = c.height = 0; // release canvas memory
+        res(out);
+      }
+
+      // Fallback path for engines without createImageBitmap (older iOS).
+      function viaReader() {
+        const r = new FileReader();
+        r.onload = ev => {
+          const img = new Image();
+          img.onload  = () => finish(img, img.width, img.height);
+          img.onerror = () => res('');
+          img.src = ev.target.result;
         };
-        img.src = ev.target.result;
-      };
-      r.readAsDataURL(file);
+        r.onerror = () => res('');
+        r.readAsDataURL(file);
+      }
+
+      if (window.createImageBitmap) {
+        createImageBitmap(file)
+          .then(bmp => finish(bmp, bmp.width, bmp.height))
+          .catch(viaReader); // HEIC or odd formats fall back to the <img> decoder
+      } else {
+        viaReader();
+      }
     });
   }
 
