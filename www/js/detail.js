@@ -364,10 +364,10 @@
       }
       dots += '</div>';
     }
-    return '<div style="position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px)+14px) 16px 14px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(rgba(0,0,0,.65),transparent);z-index:2">'
+    return '<div id="pvHeader" style="position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 30px) 16px 18px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(rgba(0,0,0,.7),transparent);z-index:10">'
       + '<span id="pvCounter" style="color:#fff;font-size:14px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.6)">'+(idx+1)+' / '+photos.length+'</span>'
-      + '<button ontouchstart="event.stopPropagation()" ontouchend="event.stopPropagation();H.closePhotoViewer()" onclick="H.closePhotoViewer()" style="background:rgba(0,0,0,.45);border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      + '<button id="pvClose" onclick="H.closePhotoViewer()" ontouchend="event.preventDefault();H.closePhotoViewer()" style="background:rgba(0,0,0,.55);border:none;border-radius:50%;width:46px;height:46px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" width="22" height="22"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
       + '</button></div>'
       + '<img id="pvImg" src="'+photos[idx]+'" style="position:absolute;top:50%;left:50%;max-width:100%;max-height:100%;object-fit:contain;will-change:transform;pointer-events:none;-webkit-user-drag:none;user-select:none" draggable="false">'
       + dots;
@@ -395,8 +395,12 @@
   }
 
   function pvTS(e) {
-    e.preventDefault();
     var pv = H._pv; if (!pv) return;
+    // Touches on the top bar (close button / counter) must not be hijacked by
+    // the pan/zoom handler — let the native button tap fire normally.
+    if (e.target && e.target.closest && e.target.closest('#pvHeader')) { pv.skipGesture = true; return; }
+    pv.skipGesture = false;
+    e.preventDefault();
     var ts = e.touches;
     pv.moved = false;
     if (ts.length === 1) {
@@ -417,8 +421,8 @@
   }
 
   function pvTM(e) {
+    var pv = H._pv; if (!pv || pv.skipGesture) return;
     e.preventDefault();
-    var pv = H._pv; if (!pv) return;
     var ts = e.touches;
     if (ts.length === 1 && !pv.pinch) {
       var dx = ts[0].clientX - pv.x0;
@@ -443,6 +447,7 @@
 
   function pvTE(e) {
     var pv = H._pv; if (!pv) return;
+    if (pv.skipGesture) { if (e.touches.length === 0) pv.skipGesture = false; return; }
     if (e.touches.length === 0) {
       if (!pv.pinch && pv.scale <= 1 && pv.moved) {
         var dx = e.changedTouches[0].clientX - pv.x0;
