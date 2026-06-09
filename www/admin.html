@@ -358,7 +358,10 @@ var sb;
 try {
   sb = supabase.createClient(
     'https://gxgytumhknmnwspxjzxw.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs'
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs',
+    // Separate auth storage so the admin login never collides with the marketplace
+    // app's login on the same site (they would otherwise share one session).
+    { auth: { storageKey: 'pamarket-admin-auth', persistSession: true, autoRefreshToken: true } }
   );
 } catch(e) {
   showErr('Failed to initialise: ' + e.message);
