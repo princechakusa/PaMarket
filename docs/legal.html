@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="../icon-192.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legal Centre | PaMarket</title>
+  <meta name="description" content="PaMarket's policies in one place: privacy, terms of service, community guidelines, cookies, and account deletion.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #111; line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #eee; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .nav-logo { font-size: 22px; font-weight: 900; color: #1A3A8F; letter-spacing: -.5px; }
+    .nav-logo span { color: #F5A623; }
+    .nav-links { display: flex; align-items: center; gap: 20px; }
+    .nav-links a:not(.nav-cta) { font-size: 14px; font-weight: 600; color: #333; }
+    .nav-links a:not(.nav-cta):hover, .nav-links a.active { color: #1A3A8F; }
+    .nav-cta { background: #1A3A8F; color: #fff; padding: 9px 20px; border-radius: 30px; font-size: 13px; font-weight: 700; }
+    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 6px; color: #1A3A8F; }
+    @media(max-width: 760px) {
+      .nav-toggle { display: flex; }
+      .nav-links { position: absolute; top: 60px; left: 0; right: 0; background: #fff; flex-direction: column; align-items: stretch; gap: 0; padding: 6px 0; box-shadow: 0 10px 26px rgba(0,0,0,.1); border-bottom: 1px solid #eee; display: none; }
+      .nav-links.open { display: flex; }
+      .nav-links a:not(.nav-cta) { padding: 14px 24px; border-bottom: 1px solid #f4f4f4; }
+      .nav-links .nav-cta { margin: 12px 24px 8px; text-align: center; }
+    }
+    .page-hero { background: linear-gradient(135deg, #0f2878 0%, #1A3A8F 45%, #2952cc 100%); color: #fff; padding: 60px 24px; text-align: center; }
+    .page-hero h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 900; letter-spacing: -1px; }
+    .page-hero p { font-size: 16px; color: rgba(255,255,255,.82); max-width: 580px; margin: 14px auto 0; line-height: 1.6; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 48px 24px 72px; }
+    .legal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+    .legal-card { display: block; background: #f8f7f4; border: 1.5px solid #eee; border-radius: 18px; padding: 24px 22px; transition: border-color .15s, transform .15s, box-shadow .15s; }
+    .legal-card:hover { border-color: #1A3A8F; transform: translateY(-3px); box-shadow: 0 8px 24px rgba(26,58,143,.1); }
+    .legal-card .ic { width: 44px; height: 44px; border-radius: 12px; background: rgba(26,58,143,.08); color: #1A3A8F; display: flex; align-items: center; justify-content: center; }
+    .legal-card h3 { font-size: 16.5px; font-weight: 800; color: #111; margin: 14px 0 6px; }
+    .legal-card p { font-size: 13.5px; color: #666; line-height: 1.65; }
+    .legal-card .go { font-size: 13px; font-weight: 700; color: #1A3A8F; margin-top: 12px; display: inline-block; }
+    .legal-note { background: #EFF6FF; border-left: 4px solid #1A3A8F; border-radius: 0 10px 10px 0; padding: 18px 20px; margin-top: 32px; font-size: 14px; color: #334; line-height: 1.7; }
+    footer { background: #111; color: rgba(255,255,255,.6); padding: 48px 24px 32px; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; }
+    .footer-top { display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; margin-bottom: 36px; }
+    .footer-brand .logo { font-size: 22px; font-weight: 900; color: #fff; }
+    .footer-brand .logo span { color: #F5A623; }
+    .footer-brand p { font-size: 13px; margin-top: 8px; max-width: 240px; line-height: 1.6; }
+    .footer-links h4 { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; }
+    .footer-links a { display: block; font-size: 13px; color: rgba(255,255,255,.6); margin-bottom: 8px; }
+    .footer-links a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 12px; }
+    .footer-zw { color: rgba(255,255,255,.4); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">Pa<span>Market</span></a>
+  <button class="nav-toggle" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu">
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="nav-links" id="navMenu">
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="categories.html">Categories</a>
+    <a href="advertise.html">Advertise</a>
+    <a href="contact.html">Contact</a>
+    <a class="nav-cta" href="mailto:chakusaprince@gmail.com">Get the App</a>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <h1>Legal Centre</h1>
+  <p>Everything that governs how PaMarket works, in plain language and one place.</p>
+</div>
+
+<div class="wrap">
+  <div class="legal-grid">
+    <a class="legal-card" href="privacy.html">
+      <div class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <h3>Privacy Policy</h3>
+      <p>What data we collect, why we collect it, how it is protected, and the rights you have over it.</p>
+      <span class="go">Read policy →</span>
+    </a>
+    <a class="legal-card" href="terms.html">
+      <div class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></div>
+      <h3>Terms of Service</h3>
+      <p>The rules for using PaMarket, what you agree to, and the limits of our responsibility.</p>
+      <span class="go">Read terms →</span>
+    </a>
+    <a class="legal-card" href="community.html">
+      <div class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <h3>Community Guidelines</h3>
+      <p>How to buy, sell, and behave on PaMarket so the marketplace stays safe and fair for everyone.</p>
+      <span class="go">Read guidelines →</span>
+    </a>
+    <a class="legal-card" href="cookies.html">
+      <div class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="14" r="1"/><circle cx="9.5" cy="15" r="1"/></svg></div>
+      <h3>Cookie Policy</h3>
+      <p>The small amount of storage we use to keep the app and website working, and what we do not use.</p>
+      <span class="go">Read policy →</span>
+    </a>
+    <a class="legal-card" href="../delete-account.html">
+      <div class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+      <h3>Account &amp; Data Deletion</h3>
+      <p>How to permanently delete your account and everything we hold about you, at any time.</p>
+      <span class="go">See how →</span>
+    </a>
+  </div>
+
+  <div class="legal-note">
+    Have a legal or data question? Email <a href="mailto:chakusaprince@gmail.com" style="color:#1A3A8F;font-weight:700">chakusaprince@gmail.com</a> and we will respond as quickly as we can. PaMarket operates under the laws of Zimbabwe.
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="logo">Pa<span>Market</span></div>
+        <p>Zimbabwe's free marketplace. Buy, sell, rent, and find jobs from your phone.</p>
+        <div style="margin-top:16px;font-size:13px">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg> <a href="mailto:chakusaprince@gmail.com" style="color:#F5A623">chakusaprince@gmail.com</a><br>
+          <span style="margin-top:6px;display:block"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <a href="https://wa.me/971589772645" target="_blank" rel="noopener" style="color:#25D366">WhatsApp: +971 589 772 645</a></span>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Explore</h4>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="categories.html">Categories</a>
+        <a href="advertise.html">Advertise</a>
+        <a href="help.html">Help &amp; FAQ</a>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <a href="legal.html">Legal Centre</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="community.html">Community Guidelines</a>
+        <a href="cookies.html">Cookie Policy</a>
+      </div>
+      <div class="footer-links">
+        <h4>Company</h4>
+        <a href="contact.html">Contact Us</a>
+        <a href="help.html">Support</a>
+        <a href="contact.html#report">Report Abuse</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 PaMarket. All rights reserved.</p>
+      <div class="footer-zw">Made in Zimbabwe</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

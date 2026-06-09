@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="../icon-192.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cookie Policy | PaMarket</title>
+  <meta name="description" content="How PaMarket uses cookies and local storage on the app and website, and what we do not use.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #111; line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #eee; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .nav-logo { font-size: 22px; font-weight: 900; color: #1A3A8F; letter-spacing: -.5px; }
+    .nav-logo span { color: #F5A623; }
+    .nav-links { display: flex; align-items: center; gap: 20px; }
+    .nav-links a:not(.nav-cta) { font-size: 14px; font-weight: 600; color: #333; }
+    .nav-links a:not(.nav-cta):hover, .nav-links a.active { color: #1A3A8F; }
+    .nav-cta { background: #1A3A8F; color: #fff; padding: 9px 20px; border-radius: 30px; font-size: 13px; font-weight: 700; }
+    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 6px; color: #1A3A8F; }
+    @media(max-width: 760px) {
+      .nav-toggle { display: flex; }
+      .nav-links { position: absolute; top: 60px; left: 0; right: 0; background: #fff; flex-direction: column; align-items: stretch; gap: 0; padding: 6px 0; box-shadow: 0 10px 26px rgba(0,0,0,.1); border-bottom: 1px solid #eee; display: none; }
+      .nav-links.open { display: flex; }
+      .nav-links a:not(.nav-cta) { padding: 14px 24px; border-bottom: 1px solid #f4f4f4; }
+      .nav-links .nav-cta { margin: 12px 24px 8px; text-align: center; }
+    }
+    .page-hero { background: linear-gradient(135deg, #0f2878 0%, #1A3A8F 45%, #2952cc 100%); color: #fff; padding: 56px 24px; text-align: center; }
+    .page-hero h1 { font-size: clamp(26px, 5vw, 40px); font-weight: 900; letter-spacing: -1px; }
+    .page-hero .sub { font-size: 13px; color: rgba(255,255,255,.7); margin-top: 8px; }
+    .doc { max-width: 760px; margin: 0 auto; padding: 48px 24px 72px; }
+    .doc h2 { font-size: 18px; font-weight: 800; color: #1A3A8F; margin: 28px 0 8px; letter-spacing: -.2px; }
+    .doc h2:first-child { margin-top: 0; }
+    .doc p { font-size: 14.5px; color: #444; line-height: 1.8; margin-bottom: 10px; }
+    .doc ul { padding-left: 20px; margin-bottom: 12px; }
+    .doc li { font-size: 14.5px; color: #444; line-height: 1.8; margin-bottom: 5px; }
+    .doc strong { color: #222; }
+    footer { background: #111; color: rgba(255,255,255,.6); padding: 48px 24px 32px; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; }
+    .footer-top { display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; margin-bottom: 36px; }
+    .footer-brand .logo { font-size: 22px; font-weight: 900; color: #fff; }
+    .footer-brand .logo span { color: #F5A623; }
+    .footer-brand p { font-size: 13px; margin-top: 8px; max-width: 240px; line-height: 1.6; }
+    .footer-links h4 { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; }
+    .footer-links a { display: block; font-size: 13px; color: rgba(255,255,255,.6); margin-bottom: 8px; }
+    .footer-links a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 12px; }
+    .footer-zw { color: rgba(255,255,255,.4); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">Pa<span>Market</span></a>
+  <button class="nav-toggle" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu">
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="nav-links" id="navMenu">
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="categories.html">Categories</a>
+    <a href="advertise.html">Advertise</a>
+    <a href="contact.html">Contact</a>
+    <a class="nav-cta" href="mailto:chakusaprince@gmail.com">Get the App</a>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <h1>Cookie Policy</h1>
+  <div class="sub">Last updated: June 2026</div>
+</div>
+
+<div class="doc">
+  <h2>1. What this covers</h2>
+  <p>This policy explains the cookies and similar storage technologies used by the PaMarket website and app, what they do, and the choices you have. It sits alongside our <a href="privacy.html" style="color:#1A3A8F">Privacy Policy</a>.</p>
+
+  <h2>2. What are cookies and local storage</h2>
+  <p>Cookies are small text files a website can place on your device. Local storage is a similar technology used by apps and modern websites to remember information on your device. Both let a service work properly and remember your preferences between visits.</p>
+
+  <h2>3. What we use</h2>
+  <ul>
+    <li><strong>Essential storage:</strong> The app keeps your sign-in session, your saved items, and your draft listings on your device so the app works and you stay signed in. Without this the app cannot function.</li>
+    <li><strong>Preferences:</strong> Small settings such as your chosen language and whether you use dark mode are stored so the app remembers them next time.</li>
+    <li><strong>Security:</strong> Our authentication provider sets a secure token so we can keep your session safe and signed in.</li>
+  </ul>
+
+  <h2>4. What we do not use</h2>
+  <ul>
+    <li>We do not use third-party advertising cookies that track you across other websites.</li>
+    <li>We do not sell or share this information with advertisers.</li>
+    <li>We do not build a profile of you for targeted ads from other companies.</li>
+  </ul>
+
+  <h2>5. Your choices</h2>
+  <p>You can clear this storage at any time from your browser or phone settings, or by deleting the app. Doing so will sign you out and remove saved preferences on that device. If you delete your account, all of your data is removed as described in our <a href="../delete-account.html" style="color:#1A3A8F">account deletion</a> page.</p>
+
+  <h2>6. Changes</h2>
+  <p>If we change how we use cookies or local storage, we will update this page and adjust the date above.</p>
+
+  <h2>7. Contact</h2>
+  <p>Questions about this policy? Email <a href="mailto:chakusaprince@gmail.com" style="color:#1A3A8F">chakusaprince@gmail.com</a>.</p>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="logo">Pa<span>Market</span></div>
+        <p>Zimbabwe's free marketplace. Buy, sell, rent, and find jobs from your phone.</p>
+        <div style="margin-top:16px;font-size:13px">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg> <a href="mailto:chakusaprince@gmail.com" style="color:#F5A623">chakusaprince@gmail.com</a><br>
+          <span style="margin-top:6px;display:block"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <a href="https://wa.me/971589772645" target="_blank" rel="noopener" style="color:#25D366">WhatsApp: +971 589 772 645</a></span>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Explore</h4>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="categories.html">Categories</a>
+        <a href="advertise.html">Advertise</a>
+        <a href="help.html">Help &amp; FAQ</a>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <a href="legal.html">Legal Centre</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="community.html">Community Guidelines</a>
+        <a href="cookies.html">Cookie Policy</a>
+      </div>
+      <div class="footer-links">
+        <h4>Company</h4>
+        <a href="contact.html">Contact Us</a>
+        <a href="help.html">Support</a>
+        <a href="contact.html#report">Report Abuse</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 PaMarket. All rights reserved.</p>
+      <div class="footer-zw">Made in Zimbabwe</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
