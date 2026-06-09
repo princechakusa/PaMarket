@@ -471,6 +471,20 @@
   };
 
   pages.ProfileVerify_after = function () {
+    // Pull the latest verification status from the server so an admin
+    // approval or rejection shows up without needing a full app reload.
+    (function () {
+      var u = H.currentUser();
+      if (!u || typeof H.loadProfile !== 'function') return;
+      var wasVerified = !!u.verified, wasPending = !!u.verificationPending;
+      H.loadProfile(u.id).then(function () {
+        var u2 = H.currentUser(); if (!u2) return;
+        if ((!!u2.verified !== wasVerified || !!u2.verificationPending !== wasPending) && H.currentPageName === 'ProfileVerify') {
+          H.saveState();
+          H.renderPage('ProfileVerify');
+        }
+      }).catch(function () {});
+    })();
     function compress(file, maxDim, q) {
       return new Promise(res => {
         const r = new FileReader();

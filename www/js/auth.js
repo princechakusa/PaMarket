@@ -412,10 +412,14 @@
     var profile = res.data;
     var u = (H.state.users||[]).find(function(x){return x.id===userId;});
     if (!u) {
-      u = {id:userId,email:'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
+      u = {id:userId,email:'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,verificationPending:!!profile.verification_pending,verification_pending:!!profile.verification_pending,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
       (H.state.users = H.state.users || []).push(u);
     } else {
       u.name=profile.name||u.name; u.phone=profile.phone||u.phone; u.avatar=profile.avatar||u.avatar; u.verified=profile.verified||false; u.role=profile.role||u.role||'user';
+      // Keep verification status in sync so an admin approval/rejection reflects in the app
+      u.verificationPending = !!profile.verification_pending; u.verification_pending = !!profile.verification_pending;
+      if (profile.company_verified != null) { u.companyVerified = profile.company_verified; u.company_verified = profile.company_verified; }
+      if (profile.company_verification_pending != null) { u.companyVerificationPending = profile.company_verification_pending; u.company_verification_pending = profile.company_verification_pending; }
       // Merge job profile fields from Supabase if they exist (after migrations are run)
       if (profile.job_title    != null) u.jobTitle       = profile.job_title;
       if (profile.job_types    != null) u.jobTypes        = profile.job_types;
