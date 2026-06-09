@@ -99,7 +99,7 @@
               <div class="img-upload-title">Tap to add photos</div>
               <div class="img-upload-sub">JPG, PNG · Max 8 photos · auto-compressed</div>
             </label>
-            <input type="file" id="photoFile" accept="image/*" multiple capture="environment" style="display:none" onchange="H._post.onPhotos(event)">
+            <input type="file" id="photoFile" accept="image/*" multiple style="display:none" onchange="H._post.onPhotos(event)">
             <div class="photo-grid" id="photoGrid">${renderPhotoGrid()}</div>`
         }
       </div>

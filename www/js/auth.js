@@ -513,9 +513,14 @@
     const App     = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
 
     if (Browser && App) {
+      // Force Google to show its account picker every time, so a user who signed
+      // out can choose a different account instead of being put straight back into
+      // the one they last used.
+      const _capOpts = { redirectTo: 'com.pamarket.app://login-callback', skipBrowserRedirect: true };
+      if (provider === 'google') _capOpts.queryParams = { prompt: 'select_account', access_type: 'offline' };
       const { data, error } = await c.auth.signInWithOAuth({
         provider: provider,
-        options: { redirectTo: 'com.pamarket.app://login-callback', skipBrowserRedirect: true }
+        options: _capOpts
       });
       if (error) { H.toast(error.message || 'Sign-in failed', 6000, true); return; }
       if (!data || !data.url) { H.toast('Could not start sign-in', 5000, true); return; }
@@ -551,9 +556,11 @@
     }
 
     // Last resort if the Browser/App plugins are unavailable: standard web OAuth.
+    const _webOpts = { redirectTo: window.location.origin + window.location.pathname };
+    if (provider === 'google') _webOpts.queryParams = { prompt: 'select_account' };
     const { error } = await c.auth.signInWithOAuth({
       provider: provider,
-      options: { redirectTo: window.location.origin + window.location.pathname }
+      options: _webOpts
     });
     if (error) H.toast(error.message || 'Sign-in failed', 6000, true);
   }
@@ -565,7 +572,10 @@
     if (inCap) { await _oauthInCap(c, 'google'); return; }
     const { error } = await c.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + window.location.pathname }
+      options: {
+        redirectTo: window.location.origin + window.location.pathname,
+        queryParams: { prompt: 'select_account' }
+      }
     });
     if (error) H.toast(error.message || 'Google sign-in failed');
   };
