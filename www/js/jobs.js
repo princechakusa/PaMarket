@@ -1308,7 +1308,7 @@
 
   function _cpRenderExpList(arr) {
     if (!arr || !arr.length) {
-      return '<div style="color:var(--sub);font-size:13px;padding:2px 0 10px">No experience added yet — add your roles like LinkedIn.</div>';
+      return '<div style="color:var(--sub);font-size:13px;padding:2px 0 10px">No experience added yet. Add your roles, companies and dates below.</div>';
     }
     return arr.map(function (e, i) {
       return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px">'
@@ -1447,9 +1447,9 @@
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Expected Salary / Rate <span style="font-weight:400;text-transform:none">(optional)</span></label>'
       + '<input id="cpSalary" placeholder="e.g. $500/mo, $20/hr or Negotiable" value="' + H.escHtml(u.expectedSalary || '') + '" style="' + inStyle + '"></div>'
 
-      // ── Work Experience (LinkedIn-style) ──
+      // ── Work Experience ──
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>', 'Work Experience')
-      + '<div style="font-size:12px;color:var(--sub);margin-bottom:10px;line-height:1.5">Add your roles, companies, dates and what you did — just like LinkedIn.</div>'
+      + '<div style="font-size:12px;color:var(--sub);margin-bottom:10px;line-height:1.5">Add your roles, companies, dates and what you did in each one.</div>'
       + '<div id="cpExpList">' + _cpRenderExpList((u.cv && u.cv.experience) || []) + '</div>'
       + '<button type="button" onclick="H._cpExp.add()" style="width:100%;padding:12px;border-radius:12px;background:#EFF6FF;color:#1A3A8F;border:1.5px dashed #1A3A8F;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px">+ Add Experience</button>'
 
