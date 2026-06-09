@@ -25,9 +25,6 @@ create policy "profiles admin update" on public.profiles
   with check (public.is_admin());
 
 -- Retroactively grant the verified badge to anyone already approved
-update public.profiles p
+update public.profiles
 set verified = true, verification_pending = false
-where exists (
-  select 1 from public.verifications v
-  where v.user_id = p.id and v.status = 'approved'
-);
+where id in (select user_id from public.verifications where status = 'approved');
