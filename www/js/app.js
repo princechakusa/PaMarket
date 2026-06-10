@@ -1875,13 +1875,21 @@ window.H = {
 
     document.addEventListener('DOMContentLoaded',()=>{
       window._hideSplash = function() {
-        var splash = document.getElementById('pamarketSplash');
-        if (splash) {
-          splash.classList.add('hiding');
-          setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 450);
-        }
-        var SS = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen;
-        if (SS) { SS.hide({ fadeOutDuration: 300 }); }
+        // Hold the PaMarket brand on screen for a brief, deliberate moment, then
+        // fade out — even though the app is ready almost instantly. Gives the
+        // polished "show brand, then glide in" feel instead of a jarring flash.
+        var MIN_SPLASH_MS = 1000;
+        var elapsed = Date.now() - (window._splashStart || Date.now());
+        var wait = Math.max(0, MIN_SPLASH_MS - elapsed);
+        setTimeout(function() {
+          var splash = document.getElementById('pamarketSplash');
+          if (splash && !splash.classList.contains('hiding')) {
+            splash.classList.add('hiding');
+            setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 450);
+          }
+          var SS = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen;
+          if (SS) { try { SS.hide({ fadeOutDuration: 300 }); } catch(e){} }
+        }, wait);
       };
       const nav=document.getElementById('bottomNav');
       if(nav){
