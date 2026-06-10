@@ -55,6 +55,7 @@ window.H = {
   ],
 
   state:            {},
+  APP_VERSION:      '1.0.6',
   pageStack:        [],
   currentPageName:  'Home',
   currentPageParams:{},
@@ -1704,6 +1705,7 @@ window.H = {
         <span class="sheet-icon">${I.logout}</span>
         <span class="sheet-label">Sign Out</span>
       </button>
+      <div style="text-align:center;font-size:11px;color:var(--sub);padding:6px 0 2px">PaMarket v${H.APP_VERSION}</div>
       <button class="sheet-close" onclick="H.closeSheet()">${I.close} Close</button>`;
     sheet.classList.add('open'); bg.classList.add('open');
   },
