@@ -198,7 +198,9 @@
             : 'Processing photo…';
         }
         try {
-          const d = await H.compressImage(f, 1200, 0.78);
+          // 1024px / q0.72 keeps marketplace photos sharp at roughly half the bytes
+          // of the old 1200px setting — listings load faster and cost less data.
+          const d = await H.compressImage(f, 1024, 0.72);
           if (d) {
             postState.photos.push(d);
             const g = document.getElementById('photoGrid');

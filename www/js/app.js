@@ -515,16 +515,25 @@ window.H = {
       }
     } catch(e) {}
     // Reconcile the cached user id with the live Supabase session so every read and
-    // write targets the SAME profile. A stale id (e.g. after re-login) otherwise makes
-    // verification approvals, badges and other updates appear to "not stick".
+    // write targets the SAME profile. getSession() reads the locally stored session
+    // (no network round trip), so this stays fast on slow connections; the profile
+    // refresh itself runs in the background after first paint instead of blocking
+    // startup behind one or two network calls.
     try {
       const _sb = window.supabase;
-      if (_sb && _sb.auth && typeof _sb.auth.getUser === 'function') {
-        const _ar = await _sb.auth.getUser();
-        const _sid = _ar && _ar.data && _ar.data.user && _ar.data.user.id;
+      if (_sb && _sb.auth && typeof _sb.auth.getSession === 'function') {
+        const _sr = await _sb.auth.getSession();
+        const _sid = _sr && _sr.data && _sr.data.session && _sr.data.session.user && _sr.data.session.user.id;
         if (_sid) {
           if (this.state.currentUserId !== _sid) { this.state.currentUserId = _sid; this.saveState(); }
-          if (typeof H.loadProfile === 'function') { try { await H.loadProfile(_sid); } catch(_e){} }
+          if (typeof H.loadProfile === 'function') {
+            H.loadProfile(_sid).then(() => {
+              if (this.state.currentUserId && this.checkBan()) return;
+              if (['Home','Account'].includes(this.currentPageName)) {
+                try { this.renderPage(this.currentPageName, this.currentPageParams); } catch(e) {}
+              }
+            }).catch(()=>{});
+          }
         }
       }
     } catch(e) {}
@@ -547,6 +556,10 @@ window.H = {
       }
     })();
     await this.navTo('Home');
+    // First paint is done — drop the splash now. Home renders instantly from the
+    // cached state, and the cloud fetches below re-render when they land, so a slow
+    // connection never holds the whole app hostage on the splash screen.
+    if (typeof window._hideSplash === 'function') window._hideSplash();
     // Handle deep links: ?listing=ID  or  ?action=post|browse  or  ?deeplink=route
     const _qs = new URLSearchParams(window.location.search);
     const _lid = _qs.get('listing'), _act = _qs.get('action'), _dl = _qs.get('deeplink'), _cat = _qs.get('cat');
