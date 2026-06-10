@@ -367,9 +367,22 @@
       H.toast('This seller has turned off direct messages');
       return;
     }
-    // Use deterministic ID so both users get same conversation
+    // Deterministic per-person ID so both users — and every entry point (the
+    // profile "Message" button and the listing "Message in App" button) — share
+    // ONE conversation. The listing is kept as context but is NOT part of the id;
+    // otherwise messaging the same seller from a listing vs their profile forks
+    // into two separate threads (the reported bug).
     const ids = [myId, otherId].sort();
-    const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + listingId.slice(-6);
+    let convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    // Adopt any existing 1-to-1 thread with this same person — including older
+    // threads that were keyed by listing id — so we never create a duplicate.
+    const _existingPair = conversations().find(function (x) {
+      return x && Array.isArray(x.members) && x.members.length === 2 &&
+             x.members.map(String).indexOf(myId) !== -1 &&
+             x.members.map(String).indexOf(otherId) !== -1 &&
+             String(x.id).indexOf('job_') !== 0;
+    });
+    if (_existingPair) convId = _existingPair.id;
     // If this conv was previously deleted, un-delete it so new messages from this person show
     if (Array.isArray(H.state.deletedConvIds) && H.state.deletedConvIds.includes(convId)) {
       H.state.deletedConvIds = H.state.deletedConvIds.filter(function(id){ return id !== convId; });

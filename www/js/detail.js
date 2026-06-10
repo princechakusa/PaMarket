@@ -300,7 +300,17 @@
     if (!sellerId || sellerId === u.id) { H.toast('You cannot message yourself'); return; }
     if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
     const ids = [u.id, sellerId].sort();
-    const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId || '').slice(-6);
+    // One conversation per person (listing kept as context, not in the id) and
+    // reuse any existing thread with this seller so profile and listing entry
+    // points never fork into separate threads.
+    let convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    const _pair = H.state.conversations.find(function (c) {
+      return c && Array.isArray(c.members) && c.members.length === 2 &&
+             c.members.map(String).indexOf(String(u.id)) !== -1 &&
+             c.members.map(String).indexOf(String(sellerId)) !== -1 &&
+             String(c.id).indexOf('job_') !== 0;
+    });
+    if (_pair) convId = _pair.id;
     let conv = H.state.conversations.find(c => c.id === convId);
     if (!conv) {
       conv = { id: convId, members: [u.id, sellerId], listingId: listingId || null, messages: [] };
