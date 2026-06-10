@@ -466,6 +466,26 @@ window.H = {
     H.navTo      = H.navTo.bind(H);
     this.applyTheme();
     this.applyLanguage();
+    // Android hardware back button / gesture: close whatever overlay is open
+    // (photo viewer, modal, sheet), then walk back through the page stack, so a
+    // user is never trapped — e.g. inside the fullscreen listing photo viewer.
+    try {
+      const _AppPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+      if (_AppPlugin && _AppPlugin.addListener && !H._backBtnBound) {
+        H._backBtnBound = true;
+        _AppPlugin.addListener('backButton', function () {
+          if (document.getElementById('pvOverlay')) { try { H.closePhotoViewer(); } catch (e) {} return; }
+          var _mb = document.getElementById('modalBg');
+          if (_mb && _mb.classList.contains('open')) { H.closeModal(); return; }
+          var _sb = document.getElementById('sheetBg');
+          if (_sb && _sb.classList.contains('open')) { H.closeSheet(); return; }
+          if (H.pageStack && H.pageStack.length) { H.goBack(); return; }
+          if (H.currentPageName && H.currentPageName !== 'Home') { H.navTo('Home'); return; }
+          if (_AppPlugin.minimizeApp) _AppPlugin.minimizeApp();
+          else if (_AppPlugin.exitApp) _AppPlugin.exitApp();
+        });
+      }
+    } catch (e) {}
     // Handle OAuth deep-link callback (com.pamarket.app://login-callback?code=xxx).
     // Check via App.getLaunchUrl() for cold-start and via appUrlOpen for warm-start.
     try {

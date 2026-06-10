@@ -364,7 +364,7 @@
       }
       dots += '</div>';
     }
-    return '<div id="pvHeader" style="position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 30px) 16px 18px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(rgba(0,0,0,.7),transparent);z-index:10">'
+    return '<div id="pvHeader" style="position:absolute;top:0;left:0;right:0;padding:calc(max(env(safe-area-inset-top,0px), 24px) + 20px) 14px 18px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(rgba(0,0,0,.7),transparent);z-index:10">'
       + '<span id="pvCounter" style="color:#fff;font-size:14px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.6)">'+(idx+1)+' / '+photos.length+'</span>'
       + '<button id="pvClose" onclick="H.closePhotoViewer()" ontouchend="event.preventDefault();H.closePhotoViewer()" style="background:rgba(0,0,0,.55);border:none;border-radius:50%;width:46px;height:46px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" width="22" height="22"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
