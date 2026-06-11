@@ -1143,10 +1143,23 @@ window.H = {
                 H._refreshMessagesPage({ skipSync:true });
               H.pushNotif&&H.pushNotif(H.state.currentUserId,'New message',msg.text||'');
             }
-          } else if (typeof H.syncConversations === 'function') {
-            H.syncConversations().then(function(){
-              if (H.currentPageName === 'Messages' && typeof H._refreshMessagesPage === 'function') H._refreshMessagesPage({ skipSync:true });
-            });
+          } else {
+            // Message for a conversation we don't hold — possibly one the user
+            // deleted. An incoming reply revives it so messages are never lost
+            // behind a "conversation/profile not found" dead end.
+            if (msg.sender_id !== H.state.currentUserId &&
+                Array.isArray(H.state.deletedConvIds) && H.state.deletedConvIds.includes(msg.conversation_id)) {
+              H.state.deletedConvIds = H.state.deletedConvIds.filter(id => id !== msg.conversation_id);
+              if (H.state.deletedConvMeta) delete H.state.deletedConvMeta[msg.conversation_id];
+              H.saveState();
+              const _du = H.currentUser();
+              if (_du) window.supabase.from('conversation_deletions').delete().eq('user_id', _du.id).eq('conversation_id', msg.conversation_id).then(()=>{});
+            }
+            if (typeof H.syncConversations === 'function') {
+              H.syncConversations().then(function(){
+                if (H.currentPageName === 'Messages' && typeof H._refreshMessagesPage === 'function') H._refreshMessagesPage({ skipSync:true });
+              });
+            }
           }
         }).subscribe();
     } catch(e){ console.warn('Realtime setup failed:',e.message); }
@@ -1270,6 +1283,14 @@ window.H = {
         }
       } catch (e) { /* conversation_deletions table may not exist yet */ }
 
+      // Deletion timestamps let a LATER reply revive the thread. Deletions made
+      // before this app version lack one — start their clock now so only messages
+      // arriving from here on bring those threads back.
+      if (!H.state.deletedConvMeta || typeof H.state.deletedConvMeta !== 'object') H.state.deletedConvMeta = {};
+      for (const _did of (H.state.deletedConvIds || [])) {
+        if (!H.state.deletedConvMeta[_did]) { H.state.deletedConvMeta[_did] = Date.now(); changed = true; }
+      }
+
       // Phase 1: discover from conversations table (may not exist — silent fail)
       const deletedIds = new Set(Array.isArray(H.state.deletedConvIds) ? H.state.deletedConvIds : []);
       // Drop any already-loaded conversations the user has deleted.
@@ -1284,9 +1305,10 @@ window.H = {
           .limit(100);
         if (!error && convs) {
           for (const c of convs) {
-            knownIds.add(c.id);
-            // Skip conversations the user has locally deleted — don't re-add them during sync
+            // Deleted convs stay OUT of knownIds so Phase 2 can still revive them
+            // when it finds a reply newer than the deletion.
             if (deletedIds.has(c.id)) continue;
+            knownIds.add(c.id);
             let local = H.state.conversations.find(x => x.id === c.id);
             if (!local) {
               local = { id: c.id, members: c.members || [], listingId: c.listing_id || null, messages: [] };
@@ -1307,8 +1329,8 @@ window.H = {
       try {
         const uidSuffix = u.id.slice(-6);
         const [sentRes, recvRes] = await Promise.all([
-          sb.from('messages').select('conversation_id,sender_id,sender_name').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(300),
-          sb.from('messages').select('conversation_id,sender_id,sender_name').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(300)
+          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(300),
+          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(300)
         ]);
         // Build a map: convId -> first other-user sender_id found across both result sets
         const convOtherMap = {};
@@ -1321,8 +1343,18 @@ window.H = {
         const allRows = [...(sentRes.data||[]), ...(recvRes.data||[])];
         for (const row of allRows) {
           if (!row.conversation_id || knownIds.has(row.conversation_id)) continue;
-          // Skip conversations the user has locally deleted — don't re-add them during sync
-          if (deletedIds.has(row.conversation_id)) continue;
+          if (deletedIds.has(row.conversation_id)) {
+            // Deleting a chat hides it, but it isn't a black hole: a reply from
+            // the OTHER person sent AFTER the deletion revives the thread.
+            const _rowT = row.created_at ? new Date(row.created_at).getTime() : 0;
+            const _delT = (H.state.deletedConvMeta || {})[row.conversation_id] || Infinity;
+            if (row.sender_id === u.id || _rowT <= _delT) continue;
+            deletedIds.delete(row.conversation_id);
+            H.state.deletedConvIds = (H.state.deletedConvIds || []).filter(id => id !== row.conversation_id);
+            delete H.state.deletedConvMeta[row.conversation_id];
+            changed = true;
+            sb.from('conversation_deletions').delete().eq('user_id', u.id).eq('conversation_id', row.conversation_id).then(()=>{});
+          }
           knownIds.add(row.conversation_id);
           const otherId = convOtherMap[row.conversation_id] || null;
           const members = otherId ? [u.id, otherId] : [u.id];

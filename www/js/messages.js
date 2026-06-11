@@ -373,7 +373,8 @@
     // otherwise messaging the same seller from a listing vs their profile forks
     // into two separate threads (the reported bug).
     const ids = [myId, otherId].sort();
-    let convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    const pairKey = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    let convId = pairKey;
     // Adopt any existing 1-to-1 thread with this same person — including older
     // threads that were keyed by listing id — so we never create a duplicate.
     const _existingPair = conversations().find(function (x) {
@@ -383,12 +384,30 @@
              String(x.id).indexOf('job_') !== 0;
     });
     if (_existingPair) convId = _existingPair.id;
-    // If this conv was previously deleted, un-delete it so new messages from this person show
-    if (Array.isArray(H.state.deletedConvIds) && H.state.deletedConvIds.includes(convId)) {
-      H.state.deletedConvIds = H.state.deletedConvIds.filter(function(id){ return id !== convId; });
-      var _sbU = window.supabase, _u = H.currentUser();
-      if (_sbU && _u && typeof _sbU.from === 'function') {
-        _sbU.from('conversation_deletions').delete().eq('user_id', _u.id).eq('conversation_id', convId).then(function(){});
+    // If a thread with this person was deleted, REVIVE it (old listing-keyed ids
+    // included): clear the deletion locally and server-side and reuse the old id,
+    // so the history comes back and the person never shows as "Deleted User".
+    if (Array.isArray(H.state.deletedConvIds)) {
+      const revived = H.state.deletedConvIds.filter(function (id) {
+        return id === pairKey || String(id).indexOf(pairKey + '_') === 0;
+      });
+      if (revived.length) {
+        if (!_existingPair) convId = revived[0];
+        H.state.deletedConvIds = H.state.deletedConvIds.filter(function (id) { return revived.indexOf(id) === -1; });
+        if (H.state.deletedConvMeta) revived.forEach(function (id) { delete H.state.deletedConvMeta[id]; });
+        H.saveState();
+        var _sbU = window.supabase;
+        if (_sbU && typeof _sbU.from === 'function') {
+          revived.forEach(function (id) {
+            _sbU.from('conversation_deletions').delete().eq('user_id', myId).eq('conversation_id', id).then(function () {});
+          });
+        }
+        // Pull the old thread + history back from the cloud, then refresh the open chat.
+        if (typeof H.syncConversations === 'function') {
+          H.syncConversations().then(function () {
+            if (H.currentPageName === 'Chat' && H.currentPageParams && H.currentPageParams.id === convId) H.renderPage('Chat', { id: convId });
+          });
+        }
       }
     }
     // Resolve the other user's name for display before they reply
@@ -413,6 +432,12 @@
       if (!c.otherName && otherName) { c.otherName = otherName; dirty = true; }
       if (dirty) H.saveState();
     }
+    // We're actively messaging this person, so any stale "profile not found"
+    // marks from a failed fetch are wrong — clear them and re-resolve the name.
+    var _known = (H.state.users || []).find(function (x) { return x.id === otherId; });
+    if (c.otherDeleted) { delete c.otherDeleted; H.saveState(); }
+    if ((!_known || !_known.name) && H._resolvedProfileFetch) { try { delete H._resolvedProfileFetch[otherId]; } catch (e) {} }
+    if (!c.otherName && typeof H._resolveOtherName === 'function') H._resolveOtherName(otherId, c);
     H.openInner('Chat', { id: convId });
    } catch (e) {
     console.error('startChatWith failed:', e);
@@ -786,6 +811,9 @@
     // Mark as deleted locally — do NOT delete from Supabase so the other party keeps their messages
     if (!Array.isArray(H.state.deletedConvIds)) H.state.deletedConvIds = [];
     if (!H.state.deletedConvIds.includes(convId)) H.state.deletedConvIds.push(convId);
+    // Record WHEN it was deleted so a reply that arrives later can revive the thread.
+    if (!H.state.deletedConvMeta || typeof H.state.deletedConvMeta !== 'object') H.state.deletedConvMeta = {};
+    H.state.deletedConvMeta[convId] = Date.now();
     H.state.conversations = (H.state.conversations || []).filter(function (c) { return c.id !== convId; });
     H.saveState();
     // Persist the deletion server-side so it stays hidden after logout/login.
