@@ -55,7 +55,7 @@ window.H = {
   ],
 
   state:            {},
-  APP_VERSION:      '1.0.7',
+  APP_VERSION:      '1.0.8',
   pageStack:        [],
   currentPageName:  'Home',
   currentPageParams:{},
