@@ -76,8 +76,13 @@
         if (nameResolved) {
           H._resolvedProfileFetch[otherId] = true;
           H.saveState();
+          // Re-render WITH the current params (renderPage(page) alone dropped the
+          // chat id and dumped the user on "Conversation not found"), and never
+          // while they're typing a message.
           var page = H.currentPageName;
-          if (page === 'Messages' || page === 'Chat') { H.renderPage(page); }
+          if ((page === 'Messages' || page === 'Chat') && !(H._userIsTyping && H._userIsTyping())) {
+            H.renderPage(page, H.currentPageParams);
+          }
         } else if (!nameResolved && res && !res.data && res.error && res.error.code === 'PGRST116') {
           // Profile definitively not found (user deleted their account) — hide this conversation
           H._resolvedProfileFetch[otherId] = true;

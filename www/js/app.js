@@ -550,7 +550,9 @@ window.H = {
           if (typeof H.loadProfile === 'function') {
             H.loadProfile(_sid).then(() => {
               if (this.state.currentUserId && this.checkBan()) return;
-              if (['Home','Account'].includes(this.currentPageName)) {
+              // Refresh only when it can't disturb the user: still on a top-level
+              // page, nothing opened on top, and not typing.
+              if (['Home','Account'].includes(this.currentPageName) && !this.pageStack.length && !H._userIsTyping()) {
                 try { this.renderPage(this.currentPageName, this.currentPageParams); } catch(e) {}
               }
             }).catch(()=>{});
@@ -593,7 +595,12 @@ window.H = {
       await this.fetchListingsFromSupabase();
       H._checkEngagementAlerts();
       await Promise.all([this.fetchAdsFromSupabase(), this.fetchAppSettings()]);
-      await this.renderPage(this.currentPageName, this.currentPageParams);
+      // Refresh the screen ONLY if the user is still sitting on Home. If they've
+      // already opened a listing, a chat, or anything else while the data loaded,
+      // re-rendering would flicker and yank them away from where they are.
+      if (this.currentPageName === 'Home' && !this.pageStack.length && !H._userIsTyping()) {
+        await this.renderPage('Home', this.currentPageParams);
+      }
     } catch(e) { console.warn('Boot fetch failed:', e); }
     if(typeof H._setupRealtimeMessages==='function') H._setupRealtimeMessages();
     if(typeof H.syncReports==='function') H.syncReports();
@@ -605,6 +612,13 @@ window.H = {
     if(typeof H.setupPush==='function') H.setupPush();
     this._initPullToRefresh();
     if(typeof window._hideSplash==='function') window._hideSplash();
+  },
+
+  // True while the user has a text field focused — background refreshes must
+  // never re-render the page out from under someone who is typing.
+  _userIsTyping() {
+    var ae = document.activeElement;
+    return !!(ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable));
   },
 
   authPage() {
@@ -947,15 +961,21 @@ window.H = {
       showRefreshing();
       try {
         var pageName = H.currentPageName;
-        if (typeof H.fetchListingsFromSupabase === 'function') await H.fetchListingsFromSupabase();
-        if (H.currentUser()) {
+        // Refresh only what THIS page shows, render immediately, and let the rest
+        // sync in the background — the spinner lasts one fetch, not five.
+        if ((pageName === 'Messages' || pageName === 'Chat') && H.currentUser()) {
           if (typeof H.syncConversations === 'function') await H.syncConversations();
-          if (typeof H.syncNotifications === 'function') await H.syncNotifications();
-          if (typeof H.syncApplications  === 'function') H.syncApplications();
+        } else if (typeof H.fetchListingsFromSupabase === 'function') {
+          await H.fetchListingsFromSupabase();
         }
         await H.renderPage(pageName, H.currentPageParams);
+        if (H.currentUser()) {
+          if (pageName !== 'Messages' && pageName !== 'Chat' && typeof H.syncConversations === 'function') H.syncConversations();
+          if (typeof H.syncNotifications === 'function') H.syncNotifications();
+          if (typeof H.syncApplications  === 'function') H.syncApplications();
+        }
       } catch(e) { console.warn('PTR:', e); }
-      setTimeout(function() { hideIndicator(); refreshing = false; }, 500);
+      setTimeout(function() { hideIndicator(); refreshing = false; }, 300);
     }
 
     // ── Touch handlers ─────────────────────────────────────────────
@@ -1367,15 +1387,16 @@ window.H = {
       // are loaded first — this ensures we have all sender_id values needed to populate
       // members arrays and collect the full set of other-user IDs for the profile fetch.
 
-      // Phase 4: sync messages for EVERY known conversation
-      for (const local of H.state.conversations) {
+      // Phase 4: sync messages for EVERY known conversation — in parallel, so
+      // refresh time stays flat instead of growing with each conversation.
+      await Promise.all(H.state.conversations.map(async (local) => {
         if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
         const { data: msgs, error: msgErr } = await sb.from('messages')
           .select('id, sender_id, sender_name, text, image, read, created_at')
           .eq('conversation_id', local.id)
           .order('created_at', { ascending: true })
           .limit(200);
-        if (msgErr || !msgs) continue;
+        if (msgErr || !msgs) return;
         const existing = new Map(local.messages.map(m => [m.id, m]));
         msgs.forEach(m => {
           const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
@@ -1402,7 +1423,7 @@ window.H = {
             changed = true;
           }
         });
-      }
+      }));
 
       // Phase 4.5: backfill profile names from message sender_name where name is still empty
       // This covers cases where the profiles table is unavailable or the entry has no name
