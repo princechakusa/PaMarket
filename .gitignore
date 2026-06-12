@@ -39,3 +39,6 @@ supabase/.temp/
 *.keystore
 *.jks
 keystore.properties
+
+# Throwaway design mockups / preview screenshots
+preview/
