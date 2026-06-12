@@ -34,3 +34,8 @@ supabase/.temp/
 # Build artifacts (release bundles/apks copied to repo root)
 *.aab
 *.apk
+
+# Signing keystores — keep private, never commit
+*.keystore
+*.jks
+keystore.properties
