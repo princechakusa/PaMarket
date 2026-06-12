@@ -665,6 +665,41 @@ select.fi {
 .chat-attach-btn:active { background: rgba(26,58,143,.22); transform: scale(.9); }
 [data-theme="dark"] .chat-attach-btn { background: rgba(120,150,235,.18); color: #9db4f0; }
 
+/* ---- Chat redesign: presence, context card, date sep, receipts, typing, grouping ---- */
+.chat-presence-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #7CF6B0; flex-shrink: 0; box-shadow: 0 0 0 0 rgba(124,246,176,.7); animation: chatPulse 2s infinite; }
+@keyframes chatPulse { 0% { box-shadow: 0 0 0 0 rgba(124,246,176,.6);} 70% { box-shadow: 0 0 0 5px rgba(124,246,176,0);} 100% { box-shadow: 0 0 0 0 rgba(124,246,176,0);} }
+.chat-send-grad { background: linear-gradient(135deg, #1A3A8F, #2c54c4) !important; box-shadow: 0 4px 12px rgba(26,58,143,.4); }
+
+.chat-ctx-card { flex-shrink: 0; display: flex; align-items: center; gap: 10px; margin: 8px 12px; padding: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 13px; box-shadow: 0 2px 8px rgba(0,0,0,.06); cursor: pointer; }
+.chat-ctx-card .cc-thumb { width: 42px; height: 42px; border-radius: 9px; object-fit: cover; flex-shrink: 0; }
+.chat-ctx-card .cc-ph { display: flex; align-items: center; justify-content: center; }
+.chat-ctx-card .cc-ph svg { width: 22px; height: 22px; }
+.chat-ctx-card .cc-info { flex: 1; min-width: 0; }
+.chat-ctx-card .cc-title { font-size: 12.5px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-ctx-card .cc-price { font-size: 13px; font-weight: 900; color: var(--blue); margin-top: 2px; }
+.chat-ctx-card .cc-chev { width: 17px; height: 17px; color: var(--text-sub); flex-shrink: 0; }
+
+.chat-datesep { text-align: center; margin: 8px 0 12px; }
+.chat-datesep span { background: rgba(0,0,0,.07); color: var(--text-sub); font-size: 11px; font-weight: 700; padding: 3px 12px; border-radius: 20px; }
+[data-theme="dark"] .chat-datesep span { background: rgba(255,255,255,.1); }
+
+.chat-rr { font-weight: 800; opacity: .85; margin-left: 2px; }
+.chat-bubble.me .chat-rr { color: #cdd9ff; }
+.chat-bubble.me .chat-rr.read { color: #6ec6ff; opacity: 1; }
+
+/* Message grouping: hide the avatar except on the last bubble of a 'them' run, and tighten the gap within a run. */
+.chat-msg-row.them:has(+ .chat-msg-row.them) .chat-row-av,
+.chat-msg-row.them:has(+ .chat-typing) .chat-row-av { visibility: hidden; }
+.chat-msg-row.them + .chat-msg-row.them { margin-top: -2px; }
+.chat-msg-row.me + .chat-msg-row.me { margin-top: -2px; }
+
+.chat-typing { display: flex; align-items: flex-end; gap: 7px; margin-bottom: 6px; }
+.chat-typing-bubble { display: inline-flex; align-items: center; gap: 4px; padding: 12px 14px !important; }
+.chat-typing-bubble span { width: 7px; height: 7px; border-radius: 50%; background: var(--text-sub); opacity: .5; animation: chatTyping 1.3s infinite; }
+.chat-typing-bubble span:nth-child(2) { animation-delay: .18s; }
+.chat-typing-bubble span:nth-child(3) { animation-delay: .36s; }
+@keyframes chatTyping { 0%, 60%, 100% { transform: translateY(0); opacity: .4; } 30% { transform: translateY(-4px); opacity: .9; } }
+
 /* ── Selfie / verification camera (in-app fallback preview) ── */
 .cam-wrap { position: relative; width: 100%; max-width: 320px; aspect-ratio: 1 / 1; margin: 0 auto 14px; border-radius: 18px; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; }
 .cam-wrap #camVideo { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }

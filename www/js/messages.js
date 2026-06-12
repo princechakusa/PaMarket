@@ -145,7 +145,8 @@
     bubble.innerHTML += '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>';
     row.appendChild(avaEl);
     row.appendChild(bubble);
-    thread.appendChild(row);
+    const typing = thread.querySelector('#chatTyping');
+    if (typing) thread.insertBefore(row, typing); else thread.appendChild(row);
   }
 
   // ---------------------------------------------------
@@ -289,20 +290,27 @@
       ? '<img src="' + escHtml(otherAvatarUrl) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
         + '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>'
       : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>';
+    H._chatOtherAvatar = otherAvatar;
+    H._activeOtherId = otherId || '';
 
+    // Date separators between calendar days + ✓/✓✓ receipts on the user's own messages.
+    let lastDay = '';
     const msgs = c.messages.map(function(m) {
+      let sep = '';
+      const dl = chatDayLabel(m.t);
+      if (dl !== lastDay) { lastDay = dl; sep = '<div class="chat-datesep"><span>' + escHtml(dl) + '</span></div>'; }
       const mine = m.from === u.id;
       const content = m.image
         ? '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">'
         : escHtml(m.text);
       if (mine) {
-        return '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
+        return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
           + content
-          + '<div class="chat-bubble-meta" style="text-align:right">' + timeAgo(m.t) + '</div>'
+          + '<div class="chat-bubble-meta" style="text-align:right">' + timeAgo(m.t) + ' ' + chatTick(!!m.read) + '</div>'
           + '</div></div>';
       }
-      return '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
+      return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
         + '<div class="chat-row-av">' + otherAvatar + '</div>'
         + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
         + content
@@ -311,32 +319,97 @@
     }).join('');
 
     const otherIdSafe = escHtml(otherId || '');
-    const hdrSub = (other && other.verified)
-      ? '<div class="chat-hdr-sub">' + H.verifiedBadge(12) + '<span style="color:#00A0E9">Verified</span></div>'
-      : ((other && other.privacySettings && other.privacySettings.showActivity)
-         ? '<div class="chat-hdr-sub"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4ade80;flex-shrink:0"></span><span style="color:#4ade80">Online</span></div>'
-         : '<div class="chat-hdr-sub">Tap to view profile</div>');
+    const onlineNow = typeof H.isUserOnline === 'function' && H.isUserOnline(otherId);
     return '<div id="chatPageWrap" class="page active" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;overflow:hidden;">'
       + '<div class="chat-header">'
       + '<button class="chat-hdr-back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
       + '<div class="chat-hdr-av" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">' + otherAvatar + '</div>'
       + '<div class="chat-hdr-info" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">'
       + '<div class="chat-hdr-name">' + escHtml(otherDisplayName) + '</div>'
-      + hdrSub + '</div>'
+      + '<div class="chat-hdr-sub" id="chatHdrSub">' + chatHdrSubHtml(other, onlineNow) + '</div></div>'
       + '<button class="chat-hdr-menu" onclick="H._chat.openMenu(\'' + otherIdSafe + '\')"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
       + '</div>'
-      + (listing ? '<div class="chat-context-strip"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>' + escHtml(listing.title) + '</div>' : '')
+      + (listing ? chatContextCard(listing) : '')
       + '<div class="chat-thread" id="chatThread"><div class="chat-thread-spacer"></div>'
       + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">No messages yet. Say hello!</div>')
+      + '<div class="chat-typing" id="chatTyping" style="display:none"><div class="chat-row-av">' + otherAvatar + '</div><div class="chat-bubble them chat-typing-bubble"><span></span><span></span><span></span></div></div>'
       + '</div>'
       + '<div class="chat-input-bar">'
       + '<button class="chat-attach-btn" onclick="H._chat.openAttach()" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
-      + '<input id="chatIn" type="text" inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Type a message…" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}">'
-      + '<button class="chat-send" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
+      + '<input id="chatIn" type="text" inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Message…" oninput="H.notifyTyping&&H.notifyTyping()" onblur="H.stopTyping&&H.stopTyping()" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}">'
+      + '<button class="chat-send chat-send-grad" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
       + '</div>'
       + '<input type="file" id="chatImgGallery" accept="image/*" style="display:none" onchange="H._chat.handleImageFile(this,false)">'
       + '<input type="file" id="chatImgCamera" accept="image/*" capture="environment" style="display:none" onchange="H._chat.handleImageFile(this,true)">'
       + '</div>';
+  };
+
+  // ----- Chat render helpers -----
+  function chatDayLabel(t) {
+    const d = new Date(t), now = new Date();
+    const same = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    if (same(d, now)) return 'Today';
+    const y = new Date(now); y.setDate(now.getDate() - 1);
+    if (same(d, y)) return 'Yesterday';
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: d.getFullYear() === now.getFullYear() ? undefined : 'numeric' });
+  }
+  function chatTick(read) { return '<span class="chat-rr' + (read ? ' read' : '') + '">' + (read ? '✓✓' : '✓') + '</span>'; }
+  H._chatTick = chatTick;
+  function chatHdrSubHtml(other, online) {
+    if (online) return '<span class="chat-presence-dot"></span><span style="color:#7CF6B0">Online now</span>';
+    if (other && other.verified) return H.verifiedBadge(12) + '<span style="color:#9fd4ff">Verified</span>';
+    return 'Tap to view profile';
+  }
+  H._chatHdrSubHtml = chatHdrSubHtml;
+  function chatContextCard(l) {
+    const photo = (l.photos && l.photos[0]) || '';
+    const price = l.price ? ('$' + Number(l.price).toLocaleString()) : 'Free';
+    const open = "H.openInner('Detail',{id:'" + escHtml(l.id) + "'})";
+    const thumb = photo
+      ? '<img class="cc-thumb" src="' + escHtml(photo) + '" onerror="this.style.display=\'none\'">'
+      : '<div class="cc-thumb cc-ph" style="background:' + H.avatarColorFor(l.cat || l.id) + ';color:#fff">' + (H.categoryIcon ? H.categoryIcon(l.cat) : '') + '</div>';
+    return '<div class="chat-ctx-card" onclick="' + open + '">' + thumb
+      + '<div class="cc-info"><div class="cc-title">' + escHtml(l.title || '') + '</div><div class="cc-price">' + price + '</div></div>'
+      + '<svg class="cc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg></div>';
+  }
+
+  // Show/hide the typing bubble (kept as the last child of the thread).
+  H._renderTyping = function (show) {
+    const t = document.getElementById('chatTyping');
+    const thread = document.getElementById('chatThread');
+    if (!t || !thread) return;
+    if (show) {
+      if (H._chatOtherAvatar) { const av = t.querySelector('.chat-row-av'); if (av) av.innerHTML = H._chatOtherAvatar; }
+      thread.appendChild(t);            // keep it at the bottom
+      t.style.display = '';
+      const near = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 120;
+      if (near) thread.scrollTop = thread.scrollHeight;
+    } else {
+      t.style.display = 'none';
+    }
+  };
+  // Update the header presence line for the open chat.
+  H._refreshChatPresence = function () {
+    if (H.currentPageName !== 'Chat') return;
+    const el = document.getElementById('chatHdrSub');
+    if (!el) return;
+    const oid = H._activeOtherId;
+    const other = (H.state.users || []).find(x => x.id === oid) || null;
+    const online = typeof H.isUserOnline === 'function' && H.isUserOnline(oid);
+    el.innerHTML = chatHdrSubHtml(other, online);
+  };
+  // Refresh ✓/✓✓ receipts on the user's own messages in the open chat.
+  H._refreshReceipts = function (convId) {
+    if (H.currentPageName !== 'Chat' || H._activeChat !== convId) return;
+    const u = currentUser(); if (!u) return;
+    const c = conversations().find(x => x.id === convId); if (!c) return;
+    (c.messages || []).forEach(function (m) {
+      if (m.from !== u.id) return;
+      const row = document.querySelector('.chat-msg-row.me[data-msg-id="' + (window.CSS && CSS.escape ? CSS.escape(m.id) : m.id) + '"]');
+      if (!row) return;
+      const rr = row.querySelector('.chat-rr');
+      if (rr) { rr.textContent = m.read ? '✓✓' : '✓'; rr.className = 'chat-rr' + (m.read ? ' read' : ''); }
+    });
   };
 
   pages.Chat_after = function () {
@@ -401,7 +474,16 @@
         _syncToViewport();
       }
     }
-    if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);
+    if (H.currentPageParams && H.currentPageParams.id) {
+      const cid = H.currentPageParams.id;
+      H.startChatPolling(cid);
+      // Real-time: presence, typing channel, and push read-receipts to the cloud.
+      if (typeof H.initPresence === 'function') H.initPresence();
+      if (typeof H.joinChatChannel === 'function') H.joinChatChannel(cid);
+      if (typeof H.markConversationReadInCloud === 'function' && H._activeOtherId) {
+        H.markConversationReadInCloud(cid, H._activeOtherId);
+      }
+    }
   };
 
 
@@ -584,12 +666,22 @@
       if (!u) return;
       const ava2 = otherAvatarFor(convAfter, u);
       const newMsgs = (convAfter.messages || []).filter(m => !idsBefore.has(m.id));
+      let gotIncoming = false;
       newMsgs.forEach(function(m) {
         if (m.from === u.id) return;
         m.read = true;
+        gotIncoming = true;
         appendThemMessage(thread, ava2, m);
       });
-      thread.scrollTop = thread.scrollHeight;
+      if (gotIncoming) {
+        thread.scrollTop = thread.scrollHeight;
+        // We just saw their new messages — clear typing and mark them read in the cloud.
+        if (typeof H._renderTyping === 'function') H._renderTyping(false);
+        const oid = (convAfter.members || []).find(x => x !== u.id);
+        if (oid && typeof H.markConversationReadInCloud === 'function') H.markConversationReadInCloud(convId, oid);
+      }
+      // Refresh our own ✓/✓✓ ticks in case the cloud now reflects them as read.
+      if (typeof H._refreshReceipts === 'function') H._refreshReceipts(convId);
       H.saveState();
       if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
     }, 4000);
@@ -735,10 +827,11 @@
       const meta = document.createElement('div');
       meta.className = 'chat-bubble-meta';
       meta.style.textAlign = 'right';
-      meta.textContent = 'just now';
+      meta.innerHTML = 'just now ' + chatTick(false);
       bubble.appendChild(meta);
       row.appendChild(bubble);
-      thread.appendChild(row);
+      const typingEl = thread.querySelector('#chatTyping');
+      if (typingEl) thread.insertBefore(row, typingEl); else thread.appendChild(row);
       thread.scrollTop = thread.scrollHeight;
     }
     // Persist to cloud
@@ -789,6 +882,7 @@
     c.messages.push({ id: msgId, from: u.id, senderName: u.name||'', text: text, t: msgT, read: false });
     H.saveState();
     inp.value = '';
+    if (typeof H.stopTyping === 'function') H.stopTyping();
     // Append to DOM directly — no full page re-render to avoid flicker
     const thread = document.getElementById('chatThread');
     if (thread) {
@@ -797,9 +891,10 @@
       row.setAttribute('data-msg-id', msgId);
       const bubble = document.createElement('div');
       bubble.className = 'chat-bubble me';
-      bubble.innerHTML = escHtml(text) + '<div class="chat-bubble-meta" style="text-align:right">just now</div>';
+      bubble.innerHTML = escHtml(text) + '<div class="chat-bubble-meta" style="text-align:right">just now ' + chatTick(false) + '</div>';
       row.appendChild(bubble);
-      thread.appendChild(row);
+      const typing = thread.querySelector('#chatTyping');
+      if (typing) thread.insertBefore(row, typing); else thread.appendChild(row);
       thread.scrollTop = thread.scrollHeight;
     }
     try {

@@ -732,6 +732,8 @@ window.H = {
       window.visualViewport.removeEventListener('scroll', window._chatVPHandler);
       window._chatVPHandler = null;
     }
+    // Leave the per-conversation typing/broadcast channel when exiting Chat
+    if (typeof this.leaveChatChannel === 'function') this.leaveChatChannel();
     // Restore mainArea styles that Chat overrides
     if(area) { area.style.overflowY='auto'; area.style.position=''; }
     const scrollTo=(opts&&opts.scrollTo)||0;
