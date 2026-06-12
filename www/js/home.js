@@ -117,7 +117,7 @@
             ${CATEGORIES.map(c => {
               const color = CAT_COLORS[c.id] || '#546E7A';
               return `<div onclick="H.filterByCat('${c.id}')" style="display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer">
-                <div style="width:56px;height:56px;border-radius:16px;background:${color}18;display:flex;align-items:center;justify-content:center;font-size:26px;border:1.5px solid ${color}22;transition:transform 0.15s"
+                <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,${color}22,${color}0f);color:${color};display:flex;align-items:center;justify-content:center;border:1.5px solid ${color}22;box-shadow:0 4px 10px -4px ${color}55;transition:transform 0.15s"
                   onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">${c.icon}</div>
                 <span style="font-size:11px;font-weight:600;color:var(--text);text-align:center;line-height:1.2">${c.name}</span>
               </div>`;
