@@ -382,12 +382,26 @@
     let convId = pairKey;
     // Adopt any existing 1-to-1 thread with this same person — including older
     // threads that were keyed by listing id — so we never create a duplicate.
-    const _existingPair = conversations().find(function (x) {
-      return x && Array.isArray(x.members) && x.members.length === 2 &&
-             x.members.map(String).indexOf(myId) !== -1 &&
-             x.members.map(String).indexOf(otherId) !== -1 &&
-             String(x.id).indexOf('job_') !== 0;
+    // Match on EITHER the members array OR the conversation id prefix: cloud sync
+    // often stores a thread with an incomplete members list (just [myId]) when the
+    // other party's messages weren't paired during the scan — e.g. a thread whose
+    // last message is "You: …". Those still carry the per-person id prefix
+    // (conv_AAAAAA_BBBBBB[_listing]), so prefix matching adopts them even when the
+    // members array can't. Without this, opening from a profile/listing forked a
+    // fresh empty chat while the real history stayed under the old id.
+    const _pairCandidates = conversations().filter(function (x) {
+      if (!x || String(x.id).indexOf('job_') === 0) return false;
+      const mem = Array.isArray(x.members) ? x.members.map(String) : [];
+      const byMembers = mem.indexOf(myId) !== -1 && mem.indexOf(otherId) !== -1;
+      const byId = String(x.id) === pairKey || String(x.id).indexOf(pairKey + '_') === 0;
+      return byMembers || byId;
+    }).sort(function (a, b) {
+      // Prefer the thread with the most recent message so we land on real history.
+      const am = (a.messages || [])[(a.messages || []).length - 1] || {};
+      const bm = (b.messages || [])[(b.messages || []).length - 1] || {};
+      return (bm.t || 0) - (am.t || 0);
     });
+    const _existingPair = _pairCandidates[0];
     if (_existingPair) convId = _existingPair.id;
     // If a thread with this person was deleted, REVIVE it (old listing-keyed ids
     // included): clear the deletion locally and server-side and reuse the old id,
