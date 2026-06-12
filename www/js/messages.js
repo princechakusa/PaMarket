@@ -149,6 +149,31 @@
   }
 
   // ---------------------------------------------------
+  // SHARED AVATAR / RECEIPT HELPERS  (used by list + chat)
+  // ---------------------------------------------------
+  const AV_PALETTE = ['#1E88E5','#00897B','#8E24AA','#F4511E','#3949AB','#00838F','#C2185B','#43A047','#6D4C41','#5E35B1','#0277BD','#AD1457'];
+  H.avatarColorFor = function (seed) {
+    let h = 0; const s = String(seed || 'x');
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return AV_PALETTE[h % AV_PALETTE.length];
+  };
+  // Coloured circular avatar (image if present, else gradient initials).
+  function listAvatarHtml(other, name, color, cls) {
+    const ini = initials(name || '?');
+    const grad = 'background:linear-gradient(135deg,' + color + ',' + color + 'bb)';
+    if (other && other.avatar) {
+      return '<img src="' + escHtml(other.avatar) + '" class="' + cls + '" style="object-fit:cover" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        + '<span class="' + cls + '" style="display:none;' + grad + '">' + ini + '</span>';
+    }
+    return '<span class="' + cls + '" style="' + grad + '">' + ini + '</span>';
+  }
+  // ✓ sent / ✓✓ read tick for the current user's own last message.
+  function previewTick(read) {
+    return '<span class="msg-rr' + (read ? ' read' : '') + '">' + (read ? '✓✓' : '✓') + '</span>';
+  }
+  H._previewTick = previewTick;
+
+  // ---------------------------------------------------
   // MESSAGES LIST
   // ---------------------------------------------------
   pages.Messages = function () {
@@ -158,6 +183,7 @@
         <div style="padding:20px">${H.emptyState('Sign in required', 'Sign in to view and send messages.', 'Sign In', "H.requireAuth('Sign in to view messages')")}</div>
       </div>`;
     }
+    if (typeof H.initPresence === 'function') H.initPresence();
     const convos = conversations()
       .filter(c => Array.isArray(c.members) && c.members.includes(u.id) && Array.isArray(c.messages) && c.messages.length)
       .sort((a, b) => {
@@ -167,9 +193,16 @@
       });
 
     const totalUnread = convos.reduce((sum, c) => sum + (c.messages || []).filter(m => m.from !== u.id && !m.read).length, 0);
+    const summary = convos.length
+      ? `${convos.length} chat${convos.length === 1 ? '' : 's'}${totalUnread > 0 ? ` · ${totalUnread} unread` : ''}`
+      : '';
     return `<div class="page active">${H.innerTopbar('Messages')}
-      <div style="padding:10px 14px;font-size:12px;color:var(--sub);display:flex;align-items:center;justify-content:space-between">${convos.length} conversation${convos.length === 1 ? '' : 's'}${totalUnread > 0 ? '<button onclick="H._markAllRead()" style="background:none;border:none;font-size:12px;font-weight:600;color:#1A3A8F;cursor:pointer;padding:4px 8px;font-family:Inter,sans-serif">Mark all read</button>' : ''}</div>
-      <div>
+      ${convos.length ? `<div class="msg-search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input id="msgSearch" type="text" placeholder="Search conversations" autocomplete="off" oninput="H._filterMsgList(this.value)">
+      </div>` : ''}
+      ${convos.length ? `<div class="msg-summary"><b>${summary}</b>${totalUnread > 0 ? '<button onclick="H._markAllRead()" class="msg-markall">Mark all read</button>' : ''}</div>` : ''}
+      <div id="msgList">
         ${convos.length ? convos.map(c => {
           const otherId = c.members.find(m => m !== u.id);
           // Backfill c.otherName from any message senderName we have
@@ -185,21 +218,40 @@
           const msgs   = c.messages || [];
           const last   = msgs[msgs.length - 1];
           if (!last) return '';
-          const unread  = msgs.some(m => m.from !== u.id && !m.read);
-          return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item" data-cid="${escHtml(c.id)}" onclick="H.openChat('${c.id}')">
-            <div class="msg-av">${initials(otherDisplayName)}</div>
+          const unreadCount = msgs.filter(m => m.from !== u.id && !m.read).length;
+          const unread = unreadCount > 0;
+          const mine   = last.from === u.id;
+          const color  = H.avatarColorFor(otherId || otherDisplayName);
+          const online = typeof H.isUserOnline === 'function' && H.isUserOnline(otherId);
+          const verified = other && other.verified;
+          const previewBody = last.image ? '📷 Photo' : escHtml(last.text || '');
+          const preview = (mine ? previewTick(!!last.read) + ' ' : '') + previewBody;
+          return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item${unread ? ' unread' : ''}" data-cid="${escHtml(c.id)}" data-oid="${escHtml(otherId || '')}" onclick="H.openChat('${c.id}')">
+            <div class="p-av-wrap">${listAvatarHtml(other, otherDisplayName, color, 'p-av')}${online ? '<span class="p-on"></span>' : ''}</div>
             <div class="msg-body">
               <div class="msg-name-row">
-                <div class="msg-name">${escHtml(otherDisplayName)}</div>
-                <div class="msg-time">${timeAgo(last.t)}</div>
+                <div class="msg-name">${escHtml(otherDisplayName)}${verified ? ' ' + H.verifiedBadge(13) : ''}</div>
+                <div class="msg-time${unread ? ' u' : ''}">${timeAgo(last.t)}</div>
               </div>
-              <div class="msg-preview">${last.from === u.id ? 'You: ' : ''}${escHtml(last.text || '')}</div>
+              <div class="msg-preview${unread ? ' unread' : ''}">${preview}</div>
             </div>
-            ${unread ? '<div class="msg-unread-dot"></div>' : ''}
+            ${unread ? `<div class="msg-badge">${unreadCount > 99 ? '99+' : unreadCount}</div>` : ''}
           </div></div>`;
         }).join('') : H.emptyState('No messages yet', 'When buyers message you about a listing, it will show up here.', null, null)}
       </div>
     </div>`;
+  };
+
+  // Client-side filter for the conversation search box.
+  H._filterMsgList = function (q) {
+    q = (q || '').trim().toLowerCase();
+    const rows = document.querySelectorAll('#msgList .swipe-del-row');
+    rows.forEach(function (row) {
+      const item = row.querySelector('.msg-item');
+      const name = (item && item.querySelector('.msg-name') ? item.querySelector('.msg-name').textContent : '').toLowerCase();
+      const prev = (item && item.querySelector('.msg-preview') ? item.querySelector('.msg-preview').textContent : '').toLowerCase();
+      row.style.display = (!q || name.indexOf(q) !== -1 || prev.indexOf(q) !== -1) ? '' : 'none';
+    });
   };
 
   
