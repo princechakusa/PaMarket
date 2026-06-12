@@ -30,3 +30,7 @@ ENHANCEMENT_SUMMARY.md
 IMPLEMENTATION_NOTES.md
 QUICK_REFERENCE.md
 supabase/.temp/
+
+# Build artifacts (release bundles/apks copied to repo root)
+*.aab
+*.apk
