@@ -456,22 +456,46 @@
         window._chatKBResizeHandler = _onCapKBResize;
       }
     } else {
-      // Browser: position:fixed + visualViewport keeps the wrap inside the visible area
-      if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
+      // Browser / iOS standalone PWA: pin the chat to the visual viewport so the
+      // input bar always rides above the on-screen keyboard. We size to
+      // visualViewport.height and translate by offsetTop (more reliable on iOS
+      // than juggling top/bottom), and only auto-scroll to the latest message
+      // when the keyboard actually opens — never while the user reads history.
+      if (wrap) { wrap.style.position = 'fixed'; wrap.style.left = '0'; wrap.style.right = '0'; wrap.style.top = '0'; wrap.style.bottom = 'auto'; wrap.style.zIndex = '50'; }
       if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+      let _prevVPH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
       function _syncToViewport() {
         const w = document.getElementById('chatPageWrap');
         const vp = window.visualViewport;
         if (!w || !vp) return;
-        w.style.top    = vp.offsetTop + 'px';
         w.style.height = vp.height + 'px';
-        w.style.bottom = 'auto';
+        w.style.transform = 'translateY(' + vp.offsetTop + 'px)';
+        if (vp.height < _prevVPH - 60) {               // keyboard just opened
+          const th = document.getElementById('chatThread');
+          if (th) th.scrollTop = th.scrollHeight;
+        }
+        _prevVPH = vp.height;
       }
       window._chatVPHandler = _syncToViewport;
       if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', _syncToViewport);
         window.visualViewport.addEventListener('scroll', _syncToViewport);
         _syncToViewport();
+      }
+      // iOS often fires the viewport resize late (or not at all on first focus),
+      // so re-sync a few times after the field gains focus and scroll to bottom.
+      const _inp = document.getElementById('chatIn');
+      if (_inp) {
+        _inp.addEventListener('focus', function () {
+          [60, 200, 350, 550, 800].forEach(function (d) {
+            setTimeout(function () {
+              _syncToViewport();
+              const th = document.getElementById('chatThread');
+              if (th) th.scrollTop = th.scrollHeight;
+            }, d);
+          });
+        });
+        _inp.addEventListener('blur', function () { setTimeout(_syncToViewport, 100); });
       }
     }
     if (H.currentPageParams && H.currentPageParams.id) {
