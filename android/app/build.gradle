@@ -1,13 +1,28 @@
 apply plugin: 'com.android.application'
 
-// Release signing — credentials live in android/keystore.properties (gitignored).
-// If that file is absent (e.g. CI without secrets), release stays unsigned and the
-// build still works.
+// Release signing. Credentials are NEVER committed; they are resolved in this order:
+//   1. Environment variables  (CI / GitHub Actions secrets)
+//   2. android/keystore.properties  (local dev only, gitignored)
+//   3. None present  ->  release builds UNSIGNED (build still succeeds)
+// See docs/SIGNING.md for setup.
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
+
+// Env var wins, then the gitignored properties file, then null.
+def signingValue = { String envName, String propName ->
+    def v = System.getenv(envName)
+    return (v != null && !v.isEmpty()) ? v : keystoreProperties[propName]
+}
+
+def releaseStoreFile     = signingValue('PAMARKET_KEYSTORE_FILE', 'storeFile')
+def releaseStorePassword = signingValue('PAMARKET_KEYSTORE_PASSWORD', 'storePassword')
+def releaseKeyAlias      = signingValue('PAMARKET_KEY_ALIAS', 'keyAlias')
+def releaseKeyPassword   = signingValue('PAMARKET_KEY_PASSWORD', 'keyPassword')
+def hasReleaseSigning = releaseStoreFile && new File(releaseStoreFile).exists() &&
+        releaseStorePassword && releaseKeyAlias && releaseKeyPassword
 
 android {
     namespace = "com.pamarket.app"
@@ -27,17 +42,17 @@ android {
     }
     signingConfigs {
         release {
-            if (keystorePropertiesFile.exists()) {
-                storeFile file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
+            if (hasReleaseSigning) {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
             }
         }
     }
     buildTypes {
         release {
-            if (keystorePropertiesFile.exists()) {
+            if (hasReleaseSigning) {
                 signingConfig signingConfigs.release
             }
             minifyEnabled false
