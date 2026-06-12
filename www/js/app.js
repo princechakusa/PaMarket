@@ -1496,6 +1496,10 @@ window.H = {
         } catch(e) {}
       }
 
+      // Collapse any duplicate per-person threads the sync just pulled (legacy
+      // listing-keyed + new per-person ids for the same pair) into one.
+      if (typeof H._mergeDuplicateConversations === 'function' && H._mergeDuplicateConversations()) changed = true;
+
       if (changed) H.saveState();
       return changed;
     } catch(e) { console.warn('syncConversations:', e.message); }

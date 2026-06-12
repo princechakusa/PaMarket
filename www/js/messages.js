@@ -28,6 +28,61 @@
     return H.state.users;
   }
 
+  // Collapse duplicate 1-to-1 conversations that share the same two members
+  // (e.g. a legacy listing-keyed thread + the new per-person thread both pulled
+  // from the cloud). Messages are merged (de-duped) into one canonical thread so
+  // each person appears once. Returns true if anything changed.
+  H._mergeDuplicateConversations = function () {
+    const u = currentUser();
+    if (!u) return false;
+    const convs = H.state.conversations;
+    if (!Array.isArray(convs) || convs.length < 2) return false;
+    const groups = {};
+    convs.forEach(function (c) {
+      if (!c || !Array.isArray(c.members) || c.members.length < 2) return;
+      if (String(c.id).indexOf('job_') === 0) return;                 // keep job chats separate
+      if (c.members.map(String).indexOf(String(u.id)) === -1) return;
+      const key = c.members.map(String).sort().join('|');
+      (groups[key] = groups[key] || []).push(c);
+    });
+    let changed = false;
+    const removeIds = [];
+    Object.keys(groups).forEach(function (key) {
+      const group = groups[key];
+      if (group.length < 2) return;
+      const sorted = key.split('|').sort();
+      const pairKey = 'conv_' + sorted[0].slice(-6) + '_' + sorted[1].slice(-6);
+      // Canonical: the open chat (don't pull the rug out) > deterministic pairKey > most messages.
+      let canonical = group.find(function (c) { return c.id === H._activeChat; })
+        || group.find(function (c) { return c.id === pairKey; })
+        || group.slice().sort(function (a, b) { return (b.messages || []).length - (a.messages || []).length; })[0];
+      // Merge every thread's messages into the canonical one, de-duped.
+      const seen = {};
+      const merged = [];
+      group.forEach(function (c) {
+        (c.messages || []).forEach(function (m) {
+          const k = m.id || (m.from + '|' + m.t + '|' + (m.text || m.image || ''));
+          if (seen[k]) { if (m.read) seen[k].read = true; return; }
+          seen[k] = m; merged.push(m);
+        });
+      });
+      merged.sort(function (a, b) { return (a.t || 0) - (b.t || 0); });
+      canonical.messages = merged;
+      group.forEach(function (c) {
+        if (c === canonical) return;
+        if (!canonical.listingId && c.listingId) canonical.listingId = c.listingId;
+        if (!canonical.otherName && c.otherName) canonical.otherName = c.otherName;
+        removeIds.push(c.id);
+      });
+      changed = true;
+    });
+    if (changed) {
+      H.state.conversations = convs.filter(function (c) { return removeIds.indexOf(c.id) === -1; });
+      H.saveState();
+    }
+    return changed;
+  };
+
   // Fetch a single user profile from Supabase and cache it, then re-render the current page.
   // Prevents repeated network calls using a per-session pending map.
   H._pendingProfileFetch = H._pendingProfileFetch || {};
@@ -185,6 +240,7 @@
       </div>`;
     }
     if (typeof H.initPresence === 'function') H.initPresence();
+    H._mergeDuplicateConversations();
     const convos = conversations()
       .filter(c => Array.isArray(c.members) && c.members.includes(u.id) && Array.isArray(c.messages) && c.messages.length)
       .sort((a, b) => {
