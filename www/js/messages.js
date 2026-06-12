@@ -461,15 +461,24 @@
       // visualViewport.height and translate by offsetTop (more reliable on iOS
       // than juggling top/bottom), and only auto-scroll to the latest message
       // when the keyboard actually opens — never while the user reads history.
-      if (wrap) { wrap.style.position = 'fixed'; wrap.style.left = '0'; wrap.style.right = '0'; wrap.style.top = '0'; wrap.style.bottom = 'auto'; wrap.style.zIndex = '50'; }
+      if (wrap) { wrap.style.position = 'fixed'; wrap.style.left = '0'; wrap.style.right = '0'; wrap.style.top = '0'; wrap.style.bottom = 'auto'; wrap.style.transform = ''; wrap.style.zIndex = '50'; }
       if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
       let _prevVPH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
       function _syncToViewport() {
         const w = document.getElementById('chatPageWrap');
         const vp = window.visualViewport;
         if (!w || !vp) return;
+        // Size the chat to the area above the keyboard.
         w.style.height = vp.height + 'px';
-        w.style.transform = 'translateY(' + vp.offsetTop + 'px)';
+        // iOS scrolls the layout viewport up to reveal the focused input, which
+        // slides our fixed header (and the whole chat) off the top. Force the
+        // page back to the top so the header stays pinned under the status bar.
+        // The guard avoids a scroll<->handler feedback loop.
+        const se = document.scrollingElement || document.documentElement;
+        if (window.pageYOffset !== 0 || (se && se.scrollTop !== 0)) {
+          window.scrollTo(0, 0);
+          if (se) se.scrollTop = 0;
+        }
         if (vp.height < _prevVPH - 60) {               // keyboard just opened
           const th = document.getElementById('chatThread');
           if (th) th.scrollTop = th.scrollHeight;
