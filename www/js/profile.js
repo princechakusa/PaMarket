@@ -88,13 +88,19 @@
         ${u.bio ? `<div class="info-row"><span class="info-label">Bio</span><span class="info-val">${H.escHtml(u.bio)}</span></div>` : ''}
       </div>
 
-      <div class="section-box">
-        <div class="section-title">Active Listings</div>
+      ${(() => {
+        const sellerListings = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active');
+        return `<div class="section-box">
+        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>${isOwn ? 'My Listings' : 'Listings'} (${sellerListings.length})</span>
+          ${sellerListings.length > 6 ? `<span style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer" onclick="H.openInner('UserProfile',{id:'${u.id}'})">See all</span>` : ''}
+        </div>
         <div class="listing-list">
-          ${(H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active').slice(0,6).map(H.renderListCard).join('')
+          ${sellerListings.slice(0,6).map(H.renderListCard).join('')
             || '<div style="color:var(--sub);padding:16px;font-size:13px">No active listings</div>'}
         </div>
-      </div>
+      </div>`;
+      })()}
       <div style="height:24px"></div>
     </div>`;
   };
