@@ -264,8 +264,14 @@
       let photos = s.photos;
       try {
         if (btn && s.photos.length) btn.textContent = 'Uploading photos…';
-        photos = await H.uploadListingPhotos(s.photos, u.id);
-      } catch (e) { /* fall back to whatever we have */ }
+        // Cap the upload so a stalled network surfaces a code instead of hanging.
+        photos = H.withTimeout
+          ? await H.withTimeout(H.uploadListingPhotos(s.photos, u.id), 45000, 'photo upload')
+          : await H.uploadListingPhotos(s.photos, u.id);
+      } catch (e) {
+        if (e && e._timeout && H.showError) H.showError('Photos took too long to upload — posting without waiting.', e, 'post.upload.timeout');
+        /* fall back to whatever we have */
+      }
 
       const l = {
         id: H.uid(), sellerId: u.id, sellerName: u.name || '', sellerPhone: u.phone || '', title: s.title, desc: s.desc,
@@ -277,7 +283,13 @@
       };
       H.state.listings.unshift(l);
       H.saveState();
-      if (typeof H.saveListingToCloud === "function") { try { await H.saveListingToCloud(l); } catch (e) {} }
+      if (typeof H.saveListingToCloud === "function") {
+        try {
+          await (H.withTimeout ? H.withTimeout(H.saveListingToCloud(l), 20000, 'save listing') : H.saveListingToCloud(l));
+        } catch (e) {
+          if (e && e._timeout && H.showError) H.showError('Saved on your device but the cloud didn’t respond — it will sync later.', e, 'post.cloud.timeout');
+        }
+      }
 
       H._post._posting = false;
       if (needsApproval) {

@@ -265,6 +265,7 @@ window.H = {
   toast(msg, duration=4000, isError=false) {
     const el = document.getElementById('toastEl'); if(!el) return;
     el.setAttribute('aria-live', isError ? 'assertive' : 'polite');
+    el.classList.toggle('toast-err', !!isError);
     el.textContent=msg; el.classList.add('show');
     clearTimeout(window._toastTimer);
     window._toastTimer = setTimeout(()=>el.classList.remove('show'), duration);
@@ -1921,22 +1922,91 @@ window.H = {
     if (hadDemo) this.saveState();
     // Reusable error logger — console + error_logs table. Use H.logError(context, err)
     // in catch blocks instead of swallowing failures silently.
-    window.H.logError = function(context, err) {
+    window.H.logError = function(context, err, code) {
       try {
-        console.warn('[PaMarket]', context, err || '');
+        console.warn('[PaMarket]', code ? '['+code+']' : '', context, err || '');
         var stack = (err && err.stack) ? String(err.stack).slice(0,600) : (err ? String(err).slice(0,600) : '');
         var sb = window.supabase;
         if (sb && typeof sb.from === 'function') {
-          sb.from('error_logs').insert({ message: String(context).slice(0,300), source: 'app', stack: stack, created_at: new Date().toISOString() }).then(function(){}, function(){});
+          sb.from('error_logs').insert({ message: (code ? code+' — ' : '') + String(context).slice(0,300), source: 'app', stack: stack, created_at: new Date().toISOString() }).then(function(){}, function(){});
         }
       } catch(e) {}
     };
+
+    // Generate a short, shareable error code (e.g. PM-K3F9). The same code is
+    // shown to the user AND written to error_logs, so a reported code can be
+    // traced back to the exact failure.
+    window.H.errCode = function() {
+      var c = '';
+      var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      for (var i=0;i<4;i++) c += chars[Math.floor(Math.random()*chars.length)];
+      return 'PM-' + c;
+    };
+
+    // Surface a failure to the user with a traceable code, and log it.
+    // Throttled so a burst of errors shows just one banner. Pass userMsg=null
+    // for the default "Something didn't respond" wording.
+    window.H.showError = function(userMsg, err, context) {
+      var code = window.H.errCode();
+      window.H.logError(context || userMsg || 'showError', err, code);
+      var now = Date.now();
+      if (window.H._lastErrAt && (now - window.H._lastErrAt) < 4000) return code; // throttle visible banners
+      window.H._lastErrAt = now;
+      var msg = (userMsg || 'Something didn’t respond. Please try again.') + ' (Code: ' + code + ')';
+      try { window.H.toast(msg, 6000, true); } catch(e) {}
+      return code;
+    };
+
+    // Wrap a promise with a timeout so a request that never responds surfaces a
+    // visible error code instead of spinning forever.
+    window.H.withTimeout = function(promise, ms, label) {
+      return new Promise(function(resolve, reject) {
+        var done = false;
+        var t = setTimeout(function() {
+          if (done) return; done = true;
+          var e = new Error('Timed out: ' + (label || 'request'));
+          e._timeout = true;
+          reject(e);
+        }, ms || 20000);
+        Promise.resolve(promise).then(function(v){ if(done) return; done=true; clearTimeout(t); resolve(v); },
+          function(err){ if(done) return; done=true; clearTimeout(t); reject(err); });
+      });
+    };
+
+    // Benign rejections we never want to nag the user about.
+    function isBenignError(err) {
+      if (!err) return true;
+      var name = err.name || '';
+      var msg  = String(err.message || err);
+      if (name === 'AbortError') return true;
+      if (/Load failed|NetworkError|Failed to fetch/i.test(msg) && !navigator.onLine) return true; // offline already handled elsewhere
+      return false;
+    }
+
     window.onerror = function(msg, src, line, col, err) {
-      if (window.H && window.H.logError) window.H.logError('onerror ' + (src ? src + ':' + line : '') + ' — ' + msg, err);
+      var code = window.H && window.H.errCode ? window.H.errCode() : '';
+      if (window.H && window.H.logError) window.H.logError('onerror ' + (src ? src + ':' + line : '') + ' — ' + msg, err, code);
+      if (window.H && window.H.showError && err && !isBenignError(err)) {
+        var now = Date.now();
+        if (!(window.H._lastErrAt && (now - window.H._lastErrAt) < 4000)) {
+          window.H._lastErrAt = now;
+          try { window.H.toast('Something went wrong. Please try again. (Code: ' + code + ')', 6000, true); } catch(e) {}
+        }
+      }
     };
     // Catch unhandled promise rejections (most async failures land here).
     window.addEventListener('unhandledrejection', function(ev) {
-      if (window.H && window.H.logError) window.H.logError('unhandledrejection', ev && ev.reason);
+      var err = ev && ev.reason;
+      var code = window.H && window.H.errCode ? window.H.errCode() : '';
+      if (window.H && window.H.logError) window.H.logError('unhandledrejection', err, code);
+      if (window.H && window.H.showError && !isBenignError(err)) {
+        var now = Date.now();
+        if (!(window.H._lastErrAt && (now - window.H._lastErrAt) < 4000)) {
+          window.H._lastErrAt = now;
+          var note = (err && err._timeout) ? 'Something didn’t respond. Please try again.' : 'Something went wrong. Please try again.';
+          try { window.H.toast(note + ' (Code: ' + code + ')', 6000, true); } catch(e) {}
+        }
+      }
     });
 
     // Hide the bottom tab bar while a text field is focused, so the on-screen
