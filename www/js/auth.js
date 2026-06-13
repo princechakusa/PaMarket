@@ -8,10 +8,9 @@
 (function(H) {
   let authBusy = false;
 
-  // Rate limiting — max 5 failed attempts then 30s lockout
-  var _failCount  = 0;
-  var _lockUntil  = 0;
-
+  // Rate limiting — escalating lockout, persisted across reloads so it can't be
+  // bypassed by refreshing the page. (Server-side Supabase rate limits are the
+  // real backstop; this is defense-in-depth + instant user feedback.)
   function sb() { return (window.supabase && window.supabase.auth) ? window.supabase : null; }
 
   function setAuthBusy(v) {
@@ -20,27 +19,41 @@
     if (r) r.querySelectorAll('button').forEach(function(b){ b.disabled = v; });
   }
 
+  var _LOCK_KEY = 'pamarket_auth_lock';
+  function _loadLock() {
+    try { return JSON.parse(localStorage.getItem(_LOCK_KEY)) || { fails:0, until:0 }; }
+    catch(e) { return { fails:0, until:0 }; }
+  }
+  function _saveLock(v) { try { localStorage.setItem(_LOCK_KEY, JSON.stringify(v)); } catch(e) {} }
+
   function isLocked() {
-    if (Date.now() < _lockUntil) {
-      var secs = Math.ceil((_lockUntil - Date.now()) / 1000);
-      H.toast('Too many attempts. Try again in ' + secs + 's');
+    var L = _loadLock();
+    if (Date.now() < L.until) {
+      var secs = Math.ceil((L.until - Date.now()) / 1000);
+      H.toast('Too many attempts. Try again in ' + secs + 's', 4000, true);
       return true;
     }
     return false;
   }
 
   function recordFailure() {
-    _failCount++;
-    if (_failCount >= 5) {
-      _lockUntil  = Date.now() + 30000;
-      _failCount  = 0;
-      H.toast('Too many failed attempts. Locked for 30 seconds.');
+    var L = _loadLock();
+    L.fails = (L.fails || 0) + 1;
+    // Escalate: 5→30s, 10→2m, 15→10m, 20+→30m
+    if (L.fails >= 20)      L.until = Date.now() + 30 * 60000;
+    else if (L.fails >= 15) L.until = Date.now() + 10 * 60000;
+    else if (L.fails >= 10) L.until = Date.now() + 2  * 60000;
+    else if (L.fails >= 5)  L.until = Date.now() + 30000;
+    if (L.fails >= 5) {
+      var mins = Math.round((L.until - Date.now()) / 60000);
+      var secs = Math.round((L.until - Date.now()) / 1000);
+      H.toast('Too many failed attempts. Locked for ' + (secs < 90 ? secs + ' seconds' : mins + ' minutes') + '.', 5000, true);
     }
+    _saveLock(L);
   }
 
   function recordSuccess() {
-    _failCount = 0;
-    _lockUntil = 0;
+    _saveLock({ fails:0, until:0 });
   }
 
   function validateEmail(e) {
@@ -231,6 +244,19 @@
   H.authSendReset = async function() {
     var email = ((document.getElementById('resetEmail')||{}).value||'').trim();
     if (!validateEmail(email)) { H.toast('Enter a valid email address'); return; }
+    // Throttle reset requests: max 3 per 10 minutes, and 60s between sends, to
+    // stop someone spamming a victim's inbox with reset emails.
+    var now = Date.now();
+    H._resetTimes = (H._resetTimes || []).filter(function(t){ return now - t < 10 * 60 * 1000; });
+    if (H._resetTimes.length && now - H._resetTimes[H._resetTimes.length - 1] < 60000) {
+      var waitS = Math.ceil((60000 - (now - H._resetTimes[H._resetTimes.length - 1])) / 1000);
+      H.toast('Please wait ' + waitS + 's before requesting another reset', 4000, true); return;
+    }
+    if (H._resetTimes.length >= 3) {
+      var waitM = Math.ceil((10 * 60 * 1000 - (now - H._resetTimes[0])) / 60000);
+      H.toast('Too many reset requests — try again in ' + waitM + ' min', 4000, true); return;
+    }
+    H._resetTimes.push(now);
     var c = sb();
     if (!c) { H.toast('Connection error — try again'); return; }
     setAuthBusy(true);
@@ -333,6 +359,13 @@
           msg = 'Email already registered. Sign in instead.';
         }
         H.toast(msg); setAuthBusy(false); return;
+      }
+      // When "Confirm email" is enabled, Supabase does NOT error on a duplicate
+      // email (to avoid leaking who's registered) — instead it returns a user
+      // with an empty identities array. Treat that as already-registered so a
+      // second signup can't silently shadow an existing account.
+      if (res.data && res.data.user && Array.isArray(res.data.user.identities) && res.data.user.identities.length === 0) {
+        H.toast('Email already registered. Sign in instead.'); setAuthBusy(false); return;
       }
       var userId = res.data.user.id;
       await c.from('profiles').upsert({id:userId, name:name, phone:phone||null, verified:false});

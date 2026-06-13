@@ -587,6 +587,15 @@ window.H = {
               }
             }).catch(()=>{});
           }
+        } else if (this.state.currentUserId) {
+          // Supabase is configured but there is NO valid session, yet we still
+          // hold a logged-in user id locally. That means the session expired or
+          // was revoked — don't keep the user "logged in" forever. Clear it so
+          // they must sign in again. (Set a session timebox in the Supabase
+          // dashboard to control how long refresh tokens stay valid.)
+          this.state.currentUserId = null;
+          this.state.adminSession = null;
+          this.saveState();
         }
       }
     } catch(e) {}
