@@ -51,6 +51,45 @@
       </div>
 
       <div class="settings-section">
+        <div class="section-title">Display & Data</div>
+        <div class="toggle-item">
+          <div class="toggle-label">
+            <span class="toggle-icon">${I.eye || ''}</span>
+            <div class="toggle-text">
+              <span class="toggle-name">Data-light mode</span>
+              <span class="toggle-desc">Load fewer photos to save mobile data</span>
+            </div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" ${(u.privacySettings && u.privacySettings.dataLight) ? 'checked' : ''} onchange="H.togglePref('dataLight', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle-label">
+            <span class="toggle-icon">$</span>
+            <div class="toggle-text">
+              <span class="toggle-name">Show approx. ZiG value</span>
+              <span class="toggle-desc">Estimated ZiG amount next to USD prices</span>
+            </div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" ${(u.privacySettings && u.privacySettings.showZig) ? 'checked' : ''} onchange="H.togglePref('showZig', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle-label">
+            <div class="toggle-text">
+              <span class="toggle-name">USD → ZiG rate</span>
+              <span class="toggle-desc">Approximate only · edit when the rate changes</span>
+            </div>
+          </div>
+          <input type="number" min="1" value="${Number((H.state && H.state.fxRate) || 36)}" onchange="H.setFxRate(this.value)" style="width:90px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:700;text-align:right;font-family:inherit;color:var(--text-primary);background:var(--bg)">
+        </div>
+      </div>
+
+      <div class="settings-section">
         <div class="section-title">Account & Privacy</div>
         <button class="settings-item" onclick="H.openInner('PrivacySettings')">
           <span class="item-icon">${I.lock}</span>
@@ -80,6 +119,29 @@
 
       <div style="height:20px"></div>
     </div>`;
+  };
+
+  // Global preference handlers (used by the main Settings page) so Data-light and
+  // approximate-ZiG are reachable without digging into Privacy Settings.
+  H.togglePref = function (key, val) {
+    const u = H.currentUser(); if (!u) return;
+    if (!u.privacySettings) u.privacySettings = {};
+    u.privacySettings[key] = !!val;
+    H.saveState();
+    const MSG = {
+      dataLight: { on: 'Data-light mode on — photos load as icons', off: 'Data-light mode off' },
+      showZig:   { on: 'Showing approximate ZiG values',           off: 'ZiG values hidden' }
+    };
+    if (MSG[key]) H.toast(val ? MSG[key].on : MSG[key].off);
+    if (window.supabase && typeof window.supabase.from === 'function') {
+      window.supabase.from('profiles').update({ privacy: u.privacySettings }).eq('id', u.id).then(function () {}, function () {});
+    }
+  };
+  H.setFxRate = function (val) {
+    const r = parseFloat(val);
+    if (!r || r <= 0) { H.toast('Enter a valid rate'); return; }
+    H.state.fxRate = r; H.saveState();
+    H.toast('ZiG rate updated — used for approximate values');
   };
 
   // --- Theme Settings ---------------------------------------
@@ -308,48 +370,6 @@
               <input type="checkbox" ${privacy.showActivity ? 'checked' : ''} onchange="H._privacySettings.toggle('showActivity', this.checked)">
               <span class="toggle-slider"></span>
             </label>
-          </div>
-        </div>
-
-        <div class="privacy-section">
-          <div class="section-title">App Preferences</div>
-
-          <div class="toggle-item">
-            <div class="toggle-label">
-              <span class="toggle-icon">${I.eye}</span>
-              <div class="toggle-text">
-                <span class="toggle-name">Data-light mode</span>
-                <span class="toggle-desc">Load fewer photos to save mobile data</span>
-              </div>
-            </div>
-            <label class="toggle-switch">
-              <input type="checkbox" ${privacy.dataLight ? 'checked' : ''} onchange="H._privacySettings.toggle('dataLight', this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-
-          <div class="toggle-item">
-            <div class="toggle-label">
-              <span class="toggle-icon">${I.phone}</span>
-              <div class="toggle-text">
-                <span class="toggle-name">Show approx. ZiG value</span>
-                <span class="toggle-desc">Show an estimated ZiG amount next to USD prices</span>
-              </div>
-            </div>
-            <label class="toggle-switch">
-              <input type="checkbox" ${privacy.showZig ? 'checked' : ''} onchange="H._privacySettings.toggle('showZig', this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-
-          <div class="toggle-item">
-            <div class="toggle-label">
-              <div class="toggle-text">
-                <span class="toggle-name">USD → ZiG rate</span>
-                <span class="toggle-desc">Approximate only · edit when the rate changes</span>
-              </div>
-            </div>
-            <input type="number" min="1" value="${Number((H.state && H.state.fxRate) || 36)}" onchange="H._privacySettings.setRate(this.value)" style="width:90px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:700;text-align:right;font-family:inherit;color:var(--text-primary);background:var(--bg)">
           </div>
         </div>
       </div>
