@@ -1928,7 +1928,7 @@ window.H = {
         var stack = (err && err.stack) ? String(err.stack).slice(0,600) : (err ? String(err).slice(0,600) : '');
         var sb = window.supabase;
         if (sb && typeof sb.from === 'function') {
-          sb.from('error_logs').insert({ message: (code ? code+' — ' : '') + String(context).slice(0,300), source: 'app', stack: stack, created_at: new Date().toISOString() }).then(function(){}, function(){});
+          sb.from('error_logs').insert({ type: 'app', message: (code ? code+' — ' : '') + String(context).slice(0,300), source: 'app', stack: stack, user_agent: (navigator && navigator.userAgent) ? String(navigator.userAgent).slice(0,300) : '', created_at: new Date().toISOString() }).then(function(){}, function(){});
         }
       } catch(e) {}
     };
