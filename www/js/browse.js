@@ -26,6 +26,7 @@
     condition: 'all',
     sortBy: 'recent',
     currency: 'all',
+    location: 'all',
     lastSearch: ''
   };
 
@@ -46,12 +47,15 @@
     const cond = condEl ? condEl.value : 'all';
     const verifiedOnly = !!((document.getElementById('verifiedOnly') || {}).checked);
     const cur = browseState.currency || 'all';
+    const locEl = document.getElementById('locationFilter');
+    const loc = locEl ? locEl.value : (browseState.location || 'all');
 
     const pool = (list || []).filter(function (l) {
       const price = l.price || 0;
       if (price < pMin || price > pMax) return false;
       if (cond !== 'all' && (l.condition || '') !== cond) return false;
       if (cur !== 'all' && (l.currency || 'USD') !== cur) return false;
+      if (loc && loc !== 'all' && (l.city || l.prov || '') !== loc) return false;
       if (verifiedOnly) {
         const seller = (state.users || []).find(function (x) { return x.id === l.sellerId; });
         if (!(seller && seller.verified)) return false;
@@ -87,6 +91,7 @@
         <div class="search-box">
           <span aria-hidden="true">${S.search}</span>
           <input id="searchIn" placeholder="Search all listings…" oninput="H._browse.onSearch()">
+          <button class="voice-btn" onclick="H._browse.saveSearch()" title="Save this search"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
           <button class="voice-btn" onclick="H._browse.voiceSearch()" title="Voice search">${S.microphone}</button>
         </div>
       </div>
@@ -142,6 +147,14 @@
             <button onclick="H._browse.setCurrency('USD', event)" class="cur-opt ${browseState.currency === 'USD' ? 'active' : ''}">USD</button>
             <button onclick="H._browse.setCurrency('ZiG', event)" class="cur-opt ${browseState.currency === 'ZiG' ? 'active' : ''}">ZiG</button>
           </div>
+        </div>
+
+        <div class="filter-section">
+          <div class="filter-title">Location</div>
+          <select id="locationFilter" class="sort-sel" style="width:100%" onchange="H._browse.onFilterChange()">
+            <option value="all">All locations</option>
+            ${[...new Set((state.listings || []).filter(l => l.status === 'active').map(l => l.city || l.prov).filter(Boolean))].sort().map(loc => `<option value="${escHtml(loc)}" ${browseState.location === loc ? 'selected' : ''}>${escHtml(loc)}</option>`).join('')}
+          </select>
         </div>
 
         <div class="filter-section">
@@ -297,9 +310,10 @@
       },
       applyFilters: () => { H._browse.toggleFilters(); H._browse.onSearch(); },
       resetFilters: () => {
-        browseState = { showFilters:false, priceMin:0, priceMax:1000000, selectedCategory:null, condition:'all', sortBy:'recent', currency:'all', lastSearch:'' };
+        browseState = { showFilters:false, priceMin:0, priceMax:1000000, selectedCategory:null, condition:'all', sortBy:'recent', currency:'all', location:'all', lastSearch:'' };
         document.querySelectorAll('.filter-checkbox input, .filter-radio input').forEach(input => { input.checked = false; });
         document.querySelectorAll('input[name="condition"]').forEach(input => { if (input.value === 'all') input.checked = true; });
+        const _loc = document.getElementById('locationFilter'); if (_loc) _loc.value = 'all';
         document.querySelectorAll('.cur-opt').forEach(b => b.classList.remove('active'));
         const defaultCurBtn = document.querySelector('.cur-opt.all') || document.querySelector('[onclick*="\'all\'"]');
         if (defaultCurBtn) defaultCurBtn.classList.add('active');
@@ -311,6 +325,38 @@
       const inp = document.getElementById('searchIn');
       if (inp) { inp.value = browseState.lastSearch; H._browse.onSearch(); }
     }
+  };
+
+  // Notify the user when newly-synced listings match any of their saved searches.
+  // Called after each listings fetch. First run just sets a baseline (no spam).
+  H._checkSavedSearchAlerts = function () {
+    const u = H.currentUser();
+    if (!u) return;
+    const searches = (state.savedSearches && state.savedSearches[u.id]) || [];
+    if (!searches.length) return;
+    const last = state.savedSearchSeen || 0;
+    const now = Date.now();
+    if (!last) { state.savedSearchSeen = now; H.saveState(); return; }
+    const fresh = (state.listings || []).filter(function (l) {
+      return l && l.status === 'active' && (l.createdAt || 0) > last && l.sellerId !== u.id;
+    });
+    if (fresh.length) {
+      searches.forEach(function (s) {
+        const words = (s.query || '').toLowerCase().split(/\s+/).filter(Boolean);
+        const matches = fresh.filter(function (l) {
+          if (s.cat && l.cat !== s.cat) return false;
+          if (!words.length) return !!s.cat;
+          const hay = ((l.title || '') + ' ' + (l.desc || l.description || '') + ' ' + (l.city || '')).toLowerCase();
+          return words.every(function (w) { return hay.indexOf(w) !== -1; });
+        });
+        if (matches.length && typeof H.pushNotif === 'function') {
+          const term = s.query || s.cat || 'your search';
+          H.pushNotif(u.id, 'New matches', matches.length + ' new listing' + (matches.length === 1 ? '' : 's') + ' for "' + term + '"');
+        }
+      });
+    }
+    state.savedSearchSeen = now;
+    H.saveState();
   };
 
   pages.SavedSearches = function () {

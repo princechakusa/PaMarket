@@ -1154,6 +1154,8 @@ window.H = {
       const nonActive=(H.state.listings||[]).filter(l=>l.status!=='active');
       H.state.listings=[...cloud,...nonActive];
       H.saveState();
+      // Notify on new listings matching the user's saved searches.
+      if (typeof H._checkSavedSearchAlerts === 'function') { try { H._checkSavedSearchAlerts(); } catch(e){} }
     } catch(e){ console.warn('fetchListingsFromSupabase:',e.message); }
   },
 
