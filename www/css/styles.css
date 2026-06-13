@@ -670,6 +670,30 @@ select.fi {
 @keyframes chatPulse { 0% { box-shadow: 0 0 0 0 rgba(124,246,176,.6);} 70% { box-shadow: 0 0 0 5px rgba(124,246,176,0);} 100% { box-shadow: 0 0 0 0 rgba(124,246,176,0);} }
 .chat-send-grad { background: linear-gradient(135deg, #1A3A8F, #2c54c4) !important; box-shadow: 0 4px 12px rgba(26,58,143,.4); }
 
+/* Make-an-offer button + cards */
+.chat-offer-btn { background: rgba(245,166,35,.15); border: none; color: #C77800; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; transition: background .15s, transform .15s; -webkit-tap-highlight-color: transparent; }
+.chat-offer-btn:active { background: rgba(245,166,35,.3); transform: scale(.9); }
+.offer-card { background: #fff; border: 1.5px solid var(--blue); border-radius: 16px; overflow: hidden; max-width: 78%; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.chat-msg-row.me .offer-card { margin-left: auto; }
+.offer-card-top { background: var(--accent); color: #1A3A8F; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; padding: 6px 14px; }
+.offer-card.mine .offer-card-top { background: var(--blue); color: #fff; }
+.offer-card-price { font-size: 24px; font-weight: 900; color: var(--text-primary); text-align: center; padding: 14px 14px 10px; }
+.offer-card-foot { font-size: 11px; color: var(--text-sub); text-align: center; padding: 0 14px 11px; }
+.offer-card-actions { display: flex; gap: 7px; padding: 0 12px 12px; }
+.offer-btn { flex: 1; padding: 9px 4px; border-radius: 10px; font-size: 12px; font-weight: 800; border: none; cursor: pointer; font-family: inherit; }
+.offer-btn.accept { background: var(--blue); color: #fff; }
+.offer-btn.counter { background: var(--bg); color: var(--blue); border: 1.5px solid var(--blue); }
+.offer-btn.decline { background: #fff; color: #B42318; border: 1.5px solid #FECACA; }
+.offer-status { font-size: 12.5px; font-weight: 700; padding: 10px 14px; border-radius: 14px; max-width: 82%; }
+.chat-msg-row.me .offer-status { margin-left: auto; }
+.offer-status.accept { background: #e7f7ec; color: #1a7a3e; }
+.offer-status.decline { background: #fbeaea; color: #9b2c2c; }
+[data-theme="dark"] .offer-card { background: var(--card); }
+[data-theme="dark"] .offer-card-price { color: var(--n1); }
+.chat-safety { display: flex; gap: 8px; align-items: flex-start; background: #FFF7E6; border: 1px solid #F5D88A; border-radius: 12px; padding: 10px 12px; margin: 0 2px 14px; font-size: 11.5px; line-height: 1.45; color: #7a5b13; }
+.chat-safety b { font-weight: 800; }
+[data-theme="dark"] .chat-safety { background: rgba(245,166,35,.12); border-color: rgba(245,166,35,.3); color: #e8c98a; }
+
 .chat-ctx-card { flex-shrink: 0; display: flex; align-items: center; gap: 10px; margin: 8px 12px; padding: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 13px; box-shadow: 0 2px 8px rgba(0,0,0,.06); cursor: pointer; }
 .chat-ctx-card .cc-thumb { width: 42px; height: 42px; border-radius: 9px; object-fit: cover; flex-shrink: 0; }
 .chat-ctx-card .cc-ph { display: flex; align-items: center; justify-content: center; }
