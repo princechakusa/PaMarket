@@ -310,6 +310,48 @@
             </label>
           </div>
         </div>
+
+        <div class="privacy-section">
+          <div class="section-title">App Preferences</div>
+
+          <div class="toggle-item">
+            <div class="toggle-label">
+              <span class="toggle-icon">${I.eye}</span>
+              <div class="toggle-text">
+                <span class="toggle-name">Data-light mode</span>
+                <span class="toggle-desc">Load fewer photos to save mobile data</span>
+              </div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" ${privacy.dataLight ? 'checked' : ''} onchange="H._privacySettings.toggle('dataLight', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-item">
+            <div class="toggle-label">
+              <span class="toggle-icon">${I.phone}</span>
+              <div class="toggle-text">
+                <span class="toggle-name">Show approx. ZiG value</span>
+                <span class="toggle-desc">Show an estimated ZiG amount next to USD prices</span>
+              </div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" ${privacy.showZig ? 'checked' : ''} onchange="H._privacySettings.toggle('showZig', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-item">
+            <div class="toggle-label">
+              <div class="toggle-text">
+                <span class="toggle-name">USD → ZiG rate</span>
+                <span class="toggle-desc">Approximate only · edit when the rate changes</span>
+              </div>
+            </div>
+            <input type="number" min="1" value="${Number((H.state && H.state.fxRate) || 36)}" onchange="H._privacySettings.setRate(this.value)" style="width:90px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:700;text-align:right;font-family:inherit;color:var(--text-primary);background:var(--bg)">
+          </div>
+        </div>
       </div>
     </div>`;
   };
@@ -357,6 +399,13 @@
             .then(function() {})
             .catch(function() {});
         }
+      },
+      setRate: function(val) {
+        const r = parseFloat(val);
+        if (!r || r <= 0) { H.toast('Enter a valid rate'); return; }
+        H.state.fxRate = r;
+        H.saveState();
+        H.toast('Rate updated — used for approximate ZiG values');
       }
     };
   };

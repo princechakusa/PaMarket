@@ -180,7 +180,21 @@ window.H = {
   fmtPrice(p,c) {
     if (!p && p!==0) return c==='USD'?'$0':'0 ZiG';
     const n = Number(p).toLocaleString();
-    return c==='USD' ? '$'+n : n+' ZiG';
+    const base = c==='USD' ? '$'+n : n+' ZiG';
+    // Optional approximate ZiG value alongside USD prices (user preference).
+    try {
+      const u = this.currentUser && this.currentUser();
+      const ps = u && u.privacySettings;
+      if (ps && ps.showZig && c === 'USD' && Number(p) > 0) {
+        const rate = Number((this.state && this.state.fxRate) || 36);
+        return base + ' ≈ ' + Math.round(Number(p)*rate).toLocaleString() + ' ZiG';
+      }
+    } catch(e){}
+    return base;
+  },
+  // Data-light mode: load category-icon placeholders instead of photos to save data.
+  dataLight() {
+    try { const u = this.currentUser && this.currentUser(); return !!(u && u.privacySettings && u.privacySettings.dataLight); } catch(e){ return false; }
   },
 
   filterListings(list, q) {
@@ -340,7 +354,7 @@ window.H = {
   renderListCard(l) {
     const H      = window.H;
     const seller = (H.state.users||[]).find(u=>u.id===l.sellerId);
-    const photo  = (l.photos&&l.photos[0])
+    const photo  = (l.photos&&l.photos[0] && !H.dataLight())
       ? `<img src="${l.photos[0]}" alt="${H.escHtml(l.title)}" loading="lazy">`
       : `<div class="ph">${H.categoryIcon(l.cat)}</div>`;
     return `<div class="list-card-wrap" onclick="H.openListing('${l.id}')">
@@ -363,7 +377,7 @@ window.H = {
 
   renderFeatCard(l) {
     const H     = window.H;
-    const photo = (l.photos&&l.photos[0])
+    const photo = (l.photos&&l.photos[0] && !H.dataLight())
       ? `<img src="${l.photos[0]}" alt="${H.escHtml(l.title)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`
       : `<div style="color:var(--blue);display:flex;align-items:center;justify-content:center;height:100%">${H.categoryIcon(l.cat)}</div>`;
     return `<div class="feat-card" onclick="H.openListing('${l.id}')">
