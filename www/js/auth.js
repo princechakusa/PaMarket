@@ -13,6 +13,45 @@
   // real backstop; this is defense-in-depth + instant user feedback.)
   function sb() { return (window.supabase && window.supabase.auth) ? window.supabase : null; }
 
+  // ── Cloudflare Turnstile CAPTCHA ───────────────────────────
+  // Paste your Turnstile SITE key here (the public one). Leave '' to disable
+  // CAPTCHA entirely (logins work as before). When set, you MUST also enable
+  // CAPTCHA in Supabase → Authentication → Attack Protection and paste the
+  // matching SECRET key there.
+  H.TURNSTILE_SITE_KEY = '';
+
+  // Resolve a fresh CAPTCHA token, or null if CAPTCHA is disabled/unavailable.
+  // Uses an invisible widget rendered on demand; never hangs the login — a
+  // missing widget or timeout resolves null and Supabase decides what to do.
+  H._captcha = function() {
+    return new Promise(function(resolve) {
+      var key = H.TURNSTILE_SITE_KEY;
+      if (!key || !window.turnstile) { resolve(null); return; }
+      var holder = document.getElementById('cfTurnstileHolder');
+      if (!holder) {
+        holder = document.createElement('div');
+        holder.id = 'cfTurnstileHolder';
+        holder.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden';
+        document.body.appendChild(holder);
+      }
+      var settled = false;
+      var done = function(v){ if (settled) return; settled = true; resolve(v); };
+      // Safety net: never block the user more than 12s on the CAPTCHA.
+      var timer = setTimeout(function(){ done(null); }, 12000);
+      try {
+        holder.innerHTML = '';
+        var wid = window.turnstile.render(holder, {
+          sitekey: key,
+          size: 'invisible',
+          callback: function(token){ clearTimeout(timer); done(token); },
+          'error-callback':   function(){ clearTimeout(timer); done(null); },
+          'timeout-callback': function(){ clearTimeout(timer); done(null); }
+        });
+        if (window.turnstile.execute) window.turnstile.execute(wid);
+      } catch(e) { clearTimeout(timer); done(null); }
+    });
+  };
+
   function setAuthBusy(v) {
     authBusy = v;
     const r = document.getElementById('authCard');
@@ -226,7 +265,8 @@
     H._otpResendTimes.push(now);
     var c = sb();
     if (!c) { H.toast('Connection error', 4000, true); return; }
-    var res = await c.auth.resend({ type: 'signup', email: H._otpEmail });
+    var capTok = await H._captcha();
+    var res = await c.auth.resend({ type: 'signup', email: H._otpEmail, options: capTok ? {captchaToken: capTok} : {} });
     H.toast(res.error ? res.error.message : 'Code resent — check your inbox');
   };
 
@@ -260,7 +300,8 @@
     var c = sb();
     if (!c) { H.toast('Connection error — try again'); return; }
     setAuthBusy(true);
-    var res = await c.auth.resetPasswordForEmail(email);
+    var capTok = await H._captcha();
+    var res = await c.auth.resetPasswordForEmail(email, capTok ? {captchaToken: capTok} : {});
     setAuthBusy(false);
     if (res.error) { H.toast(res.error.message); return; }
     var card = document.getElementById('authCard');
@@ -284,7 +325,8 @@
     setAuthBusy(true);
     var c = sb();
     if (c) {
-      var res = await c.auth.signInWithPassword({email:email, password:password});
+      var capTok = await H._captcha();
+      var res = await c.auth.signInWithPassword({email:email, password:password, options: capTok ? {captchaToken: capTok} : {}});
       if (res.error) {
         var msg = res.error.message;
         if (msg==='Invalid login credentials') msg = 'Wrong email or password';
@@ -352,7 +394,8 @@
     setAuthBusy(true);
     var c = sb();
     if (c) {
-      var res = await c.auth.signUp({email:email, password:password, options:{data:{full_name:name}}});
+      var capTok = await H._captcha();
+      var res = await c.auth.signUp({email:email, password:password, options: Object.assign({data:{full_name:name}}, capTok ? {captchaToken: capTok} : {})});
       if (res.error) {
         var msg = res.error.message;
         if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('unique constraint')) {
@@ -414,7 +457,8 @@
     var c = sb();
     if (!c) { H.toast('Connection error - refresh page'); return; }
     H.toast('Signing in...');
-    var res = await c.auth.signInWithPassword({email:email, password:pass});
+    var capTok = await H._captcha();
+    var res = await c.auth.signInWithPassword({email:email, password:pass, options: capTok ? {captchaToken: capTok} : {}});
     if (res.error) { recordFailure(); H.toast('Invalid credentials'); return; }
     H.state.currentUserId = res.data.user.id;
     await H.loadProfile(res.data.user.id);
