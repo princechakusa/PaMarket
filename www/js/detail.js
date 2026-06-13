@@ -172,9 +172,21 @@
     const placeholder = document.getElementById('similarListingsPlaceholder');
     if (!l) { if (placeholder) placeholder.remove(); return; }
     const similar = (H.state.listings||[]).filter(x => x.id!==l.id && x.cat===l.cat && x.status==='active').slice(0,4);
-    if (!similar.length) { if (placeholder) placeholder.remove(); return; }
+    // Recently viewed (tracked in localStorage by openListing) — skip the current
+    // listing and anything already shown under "Similar".
+    let rv = [];
+    try { rv = JSON.parse(localStorage.getItem('pamarket_rv') || '[]'); } catch (e) {}
+    const simIds = similar.map(function(s){ return s.id; });
+    const recent = rv.filter(function(id){ return id !== l.id && simIds.indexOf(id) === -1; })
+      .map(function(id){ return (H.state.listings||[]).find(function(x){ return x.id === id; }); })
+      .filter(function(x){ return x && x.status === 'active'; })
+      .slice(0, 4);
+    let html = '';
+    if (similar.length) html += '<div class="sec-head" style="margin-top:24px"><div class="sec-title">Similar Listings</div></div><div class="listing-list">' + similar.map(H.renderListCard).join('') + '</div>';
+    if (recent.length) html += '<div class="sec-head" style="margin-top:24px"><div class="sec-title">Recently Viewed</div></div><div class="listing-list">' + recent.map(H.renderListCard).join('') + '</div>';
+    if (!html) { if (placeholder) placeholder.remove(); return; }
     const sec = document.createElement('div');
-    sec.innerHTML = '<div class="sec-head" style="margin-top:24px"><div class="sec-title">Similar Listings</div></div><div class="listing-list">'+similar.map(H.renderListCard).join('')+'</div>';
+    sec.innerHTML = html;
     if (placeholder) {
       placeholder.replaceWith(sec);
     } else {

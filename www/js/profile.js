@@ -62,7 +62,7 @@
 
       <div class="profile-stats">
         <div class="stat-box"><div class="stat-val">${activeCount(u.id)}</div><div class="stat-label">Active Ads</div></div>
-        <div class="stat-box"><div class="stat-val">${avgRating}</div><div class="stat-label">Rating (${ratingCount})</div></div>
+        <div class="stat-box" style="cursor:pointer" onclick="H.openInner('Reviews'${viewId ? ",{id:'" + u.id + "'}" : ''})"><div class="stat-val">★ ${avgRating}</div><div class="stat-label">Rating (${ratingCount})</div></div>
         <div class="stat-box"><div class="stat-val">${soldCount(u.id)}</div><div class="stat-label">Sold</div></div>
       </div>
 
@@ -76,6 +76,7 @@
         ${uPrivacy.allowMessages === false
           ? `<button class="btn-pri" disabled style="opacity:0.5;cursor:not-allowed">Messaging turned off</button>`
           : `<button class="btn-pri" onclick="H.startChatWith('${u.id}', null)">Message ${H.escHtml(u.name || 'User')}</button>`}
+        <button class="btn-sec" onclick="H.openInner('Reviews',{id:'${u.id}'})">${IC.star} Reviews &amp; Ratings (${ratingCount})</button>
         <button class="btn-sec" onclick="H.reportUser('${u.id}')">Report User</button>
       </div>`}
 
