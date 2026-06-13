@@ -239,7 +239,8 @@
     prev() {
       if (postState.step > 1) { postState.step--; refreshSteps(); refreshBody(); }
     },
-    submit() {
+    async submit() {
+      if (H._post._posting) return;            // guard against double-tap → duplicate listings
       if (H.checkBan && H.checkBan()) return;
       const s = postState;
 
@@ -252,17 +253,33 @@
 
       const u = H.currentUser();
       const needsApproval = !!(H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified));
+
+      H._post._posting = true;
+      const btn = document.querySelector('.btn-submit');
+      if (btn) { btn.disabled = true; btn.textContent = 'Posting…'; }
+
+      // Upload photos to cloud storage and keep only URLs. Storing base64 in
+      // localStorage overflows the 5MB quota (the old crash) and bloats both
+      // the cloud row and every listing fetch (the old slowness).
+      let photos = s.photos;
+      try {
+        if (btn && s.photos.length) btn.textContent = 'Uploading photos…';
+        photos = await H.uploadListingPhotos(s.photos, u.id);
+      } catch (e) { /* fall back to whatever we have */ }
+
       const l = {
         id: H.uid(), sellerId: u.id, sellerName: u.name || '', sellerPhone: u.phone || '', title: s.title, desc: s.desc,
         price: s.price, currency: s.currency, cat: s.cat,
         prov: s.prov, city: s.city, suburb: s.suburb,
-        photos: s.photos, createdAt: Date.now(),
+        photos: photos, createdAt: Date.now(),
         status: needsApproval ? 'pending' : 'active',
         views: 0
       };
       H.state.listings.unshift(l);
       H.saveState();
-      if (typeof H.saveListingToCloud === "function") H.saveListingToCloud(l);
+      if (typeof H.saveListingToCloud === "function") { try { await H.saveListingToCloud(l); } catch (e) {} }
+
+      H._post._posting = false;
       if (needsApproval) {
         H.toast('Ad submitted! It will go live after admin review.', 5000);
         H.openInner('MyListings');
@@ -271,6 +288,34 @@
         H.navTo('Home', document.querySelector('[data-nav="Home"]'));
       }
     }
+  };
+
+  // Upload base64 photos to Supabase Storage; return an array of public URLs.
+  // Anything already an http(s) URL is passed through untouched. If storage is
+  // unavailable or an upload fails, that photo keeps its original value so the
+  // listing still posts (best-effort, never blocks the user).
+  H.uploadListingPhotos = async function uploadListingPhotos(photos, userId) {
+    const list = Array.isArray(photos) ? photos : [];
+    const sb = window.supabase;
+    if (!sb || typeof sb.storage !== 'object') return list;
+    const out = [];
+    for (const p of list) {
+      if (typeof p !== 'string' || p.indexOf('data:') !== 0) { out.push(p); continue; }
+      try {
+        // Path must match the storage RLS policy: listings/{user_id}/file.jpg
+        const path = 'listings/' + userId + '/' + H.uid() + '.jpg';
+        const blob = await (await fetch(p)).blob();
+        const { data: up, error } = await sb.storage.from('listings-photos')
+          .upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+        if (!error && up) {
+          const { data: urlData } = sb.storage.from('listings-photos').getPublicUrl(path);
+          out.push(urlData && urlData.publicUrl ? urlData.publicUrl : p);
+        } else {
+          out.push(p);
+        }
+      } catch (e) { out.push(p); }
+    }
+    return out;
   };
 
   H.compressImage = function compressImage(file, maxDim = 1200, q = 0.8) {

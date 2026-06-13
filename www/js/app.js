@@ -126,7 +126,22 @@ window.H = {
       // Retry once after freeing space.
       try {
         localStorage.setItem(this.KEY, payload);
-      } catch(e2) {
+        return;
+      } catch(e2) { /* still too big — fall through to last resort */ }
+      // Last resort: drop heavy base64 photo blobs from the cached state. The
+      // listings remain (with their cloud-hosted URL photos); only un-uploaded
+      // base64 originals are dropped. This guarantees a post can never crash the
+      // app on a full storage quota.
+      try {
+        if (Array.isArray(safe.listings)) {
+          safe.listings.forEach(l => {
+            if (Array.isArray(l.photos)) {
+              l.photos = l.photos.filter(p => typeof p === 'string' && p.indexOf('data:') !== 0);
+            }
+          });
+        }
+        localStorage.setItem(this.KEY, JSON.stringify(safe));
+      } catch(e3) {
         this.toast('Could not save — please clear some browser storage');
       }
     }
