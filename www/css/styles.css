@@ -1220,6 +1220,21 @@ select.fi {
 .post-cat-ic svg { width: 22px; height: 22px; }
 .post-cat-change { background: none; border: none; color: var(--blue, #1A3A8F); font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; padding: 4px 6px; }
 
+/* ── Filter panel: professional range / pills / amenities ── */
+.flt-section { margin-bottom: 18px; }
+.flt-label { font-size: 14px; font-weight: 800; color: var(--text, #101828); margin-bottom: 10px; letter-spacing: -.2px; }
+.flt-range { display: flex; align-items: center; gap: 10px; }
+.flt-range-in { flex: 1; display: flex; align-items: center; gap: 4px; border: 1px solid var(--border, #E4E8F0); border-radius: 11px; padding: 0 12px; background: var(--bg, #fff); min-width: 0; }
+.flt-range-in .pre { color: var(--sub, #667085); font-size: 14px; font-weight: 700; }
+.flt-range-in .suf { color: var(--sub, #667085); font-size: 12px; font-weight: 600; }
+.flt-range-in input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; padding: 12px 0; font-size: 14px; color: var(--text, #101828); font-family: 'Inter', sans-serif; }
+.flt-range-sep { color: var(--sub, #667085); font-size: 13px; flex-shrink: 0; }
+.flt-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.flt-amenities { max-height: 168px; overflow-y: auto; padding: 2px; }
+.flt-pill { padding: 9px 16px; border-radius: 999px; border: 1.5px solid var(--border, #E4E8F0); background: var(--bg, #fff); color: var(--text, #101828); font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s; white-space: nowrap; }
+.flt-pill:active { transform: scale(.96); }
+.flt-pill.on { background: var(--blue, #1A3A8F); border-color: var(--blue, #1A3A8F); color: #fff; }
+
 /* ── VERIFY ──────────────────────────────────────────────────── */
 .verify-badge-preview { background: var(--blue-light); border: 1px solid rgba(26,58,143,.2); border-radius: var(--r-md); padding: 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .vbp-icon { width: 42px; height: 42px; background: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; }

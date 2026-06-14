@@ -7,17 +7,18 @@
     var rent = all.filter(function (l) { return !!l.rentalType; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
 
     var fSale = H._sel('property_sale', 'propType', 'Property Type', [['all', 'All Types'], ['residential', 'Residential'], ['commercial', 'Commercial'], ['land', 'Land / Stand'], ['units', 'Units / Flats']])
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
-      + H._sel('property_sale', 'beds', 'Bedrooms', [['any', 'Any'], ['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+'], ['5', '5+']])
-      + H._sel('property_sale', 'baths', 'Bathrooms', [['any', 'Any'], ['1', '1+'], ['2', '2+'], ['3', '3+']])
-      + '</div>'
-      + H._sel('property_sale', 'furnishing', 'Furnishing', [['all', 'All'], ['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['semi-furnished', 'Semi-Furnished']])
-      + H._citysel('property_sale') + H._priceRange('property_sale') + H._sortsel('property_sale');
+      + H._pills('property_sale', 'beds', 'Bedrooms', [['studio', 'Studio'], ['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+'], ['5', '5+']])
+      + H._pills('property_sale', 'baths', 'Bathrooms', [['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+']])
+      + H._pills('property_sale', 'furnishing', 'Furnishing', [['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['part furnished', 'Part Furnished']])
+      + H._priceRange('property_sale') + H._sizeRange('property_sale')
+      + H._citysel('property_sale') + H._amenityFilter('property_sale', 'property') + H._sortsel('property_sale');
 
     var fRent = H._sel('property_rent', 'propType', 'Category', [['all', 'All'], ['residential', 'Residential'], ['rooms', 'Rooms'], ['commercial', 'Commercial']])
-      + H._sel('property_rent', 'rentalType', 'Rental Type', [['all', 'All'], ['monthly', 'Monthly'], ['daily', 'Daily'], ['nightly', 'Nightly']])
-      + H._sel('property_rent', 'furnishing', 'Furnishing', [['all', 'All'], ['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['semi-furnished', 'Semi-Furnished']])
-      + H._citysel('property_rent') + H._priceRange('property_rent') + H._sortsel('property_rent');
+      + H._pills('property_rent', 'beds', 'Bedrooms', [['studio', 'Studio'], ['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+'], ['5', '5+']])
+      + H._pills('property_rent', 'baths', 'Bathrooms', [['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+']])
+      + H._pills('property_rent', 'furnishing', 'Furnishing', [['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['part furnished', 'Part Furnished']])
+      + H._priceRange('property_rent') + H._sizeRange('property_rent')
+      + H._citysel('property_rent') + H._amenityFilter('property_rent', 'property') + H._sortsel('property_rent');
 
     return '<div class="page active">'
       + H._catTopbar('Property', '#1A3A8F')

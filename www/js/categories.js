@@ -29,6 +29,7 @@
     if (fp) {
       fp.querySelectorAll('select').forEach(function (s) { s.value = ''; });
       fp.querySelectorAll('input[type=number],input[type=text]').forEach(function (i) { i.value = ''; });
+      fp.querySelectorAll('.flt-pill.on').forEach(function (b) { b.classList.remove('on'); });
     }
     H._applyFilters(catId);
   };
@@ -57,15 +58,24 @@
     if (f.furnishing && f.furnishing !== 'all') all = all.filter(function (l) { return (l.furnishing || '').toLowerCase() === f.furnishing; });
     if (f.propType && f.propType !== 'all') all = all.filter(function (l) { return (l.propType || '').toLowerCase() === f.propType; });
     if (f.rentalType && f.rentalType !== 'all') all = all.filter(function (l) { return (l.rentalType || '').toLowerCase() === f.rentalType; });
-    if (f.beds && f.beds !== 'any') all = all.filter(function (l) { return +(l.beds || 0) >= +f.beds; });
+    if (f.beds && f.beds !== 'any') {
+      if (f.beds === 'studio') all = all.filter(function (l) { return String(l.beds || '').toLowerCase() === 'studio' || +(l.beds || 0) === 0; });
+      else all = all.filter(function (l) { return String(l.beds).toLowerCase() !== 'studio' && +(l.beds || 0) >= +f.beds; });
+    }
     if (f.baths && f.baths !== 'any') all = all.filter(function (l) { return +(l.baths || 0) >= +f.baths; });
     if (f.subcat && f.subcat !== 'all') all = all.filter(function (l) { return (l.subcat || l.type || '').toLowerCase() === f.subcat; });
     if (f.brand) all = all.filter(function (l) { return (l.brand || l.make || '').toLowerCase().includes(f.brand.toLowerCase()); });
     if (f.gender && f.gender !== 'all') all = all.filter(function (l) { return (l.gender || '').toLowerCase() === f.gender; });
     if (f.size && f.size !== 'all') all = all.filter(function (l) { return (l.size || '').toLowerCase() === f.size; });
-    if (f.fuelType && f.fuelType !== 'all') all = all.filter(function (l) { return (l.fuelType || '').toLowerCase() === f.fuelType; });
+    if (f.sizeMin) all = all.filter(function (l) { return +(l.size || 0) >= +f.sizeMin; });
+    if (f.sizeMax) all = all.filter(function (l) { return +(l.size || 0) > 0 && +(l.size || 0) <= +f.sizeMax; });
+    if (f.fuelType && f.fuelType !== 'all') all = all.filter(function (l) { return (l.fuel || l.fuelType || '').toLowerCase() === f.fuelType; });
     if (f.yearMin) all = all.filter(function (l) { return +(l.year || 0) >= +f.yearMin; });
     if (f.yearMax) all = all.filter(function (l) { return +(l.year || 9999) <= +f.yearMax; });
+    if (Array.isArray(f.amenities) && f.amenities.length) all = all.filter(function (l) {
+      var feats = Array.isArray(l.features) ? l.features : ((l.attrs && Array.isArray(l.attrs.features)) ? l.attrs.features : []);
+      return f.amenities.every(function (a) { return feats.indexOf(a) !== -1; });
+    });
 
     var sort = f.sort || 'newest';
     all.sort(function (a, b) {
@@ -123,12 +133,61 @@
   };
 
   H._priceRange = function (id) {
-    return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
-      + '<div><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Min Price ($)</div>'
-      + '<input type="number" min="0" placeholder="0" oninput="H._setFilter(\'' + id + '\',\'priceMin\',this.value)" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none;box-sizing:border-box"></div>'
-      + '<div><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Max Price ($)</div>'
-      + '<input type="number" min="0" placeholder="Any" oninput="H._setFilter(\'' + id + '\',\'priceMax\',this.value)" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none;box-sizing:border-box"></div>'
-      + '</div>';
+    return '<div class="flt-section"><div class="flt-label">Price Range (USD)</div>'
+      + '<div class="flt-range">'
+      + '<div class="flt-range-in"><span class="pre">$</span><input type="number" min="0" placeholder="Min" oninput="H._setFilter(\'' + id + '\',\'priceMin\',this.value)"></div>'
+      + '<span class="flt-range-sep">to</span>'
+      + '<div class="flt-range-in"><span class="pre">$</span><input type="number" min="0" placeholder="Max" oninput="H._setFilter(\'' + id + '\',\'priceMax\',this.value)"></div>'
+      + '</div></div>';
+  };
+
+  // Area / Size range in m² (Zim standard).
+  H._sizeRange = function (id) {
+    return '<div class="flt-section"><div class="flt-label">Area / Size (m²)</div>'
+      + '<div class="flt-range">'
+      + '<div class="flt-range-in"><input type="number" min="0" placeholder="Min" oninput="H._setFilter(\'' + id + '\',\'sizeMin\',this.value)"><span class="suf">m²</span></div>'
+      + '<span class="flt-range-sep">to</span>'
+      + '<div class="flt-range-in"><input type="number" min="0" placeholder="Max" oninput="H._setFilter(\'' + id + '\',\'sizeMax\',this.value)"><span class="suf">m²</span></div>'
+      + '</div></div>';
+  };
+
+  // Selectable pill row (single-select). opts: array of value or [value,label].
+  H._pills = function (id, key, label, opts) {
+    return '<div class="flt-section"><div class="flt-label">' + label + '</div><div class="flt-pills" data-pillkey="' + key + '">'
+      + opts.map(function (o) {
+        var v = Array.isArray(o) ? o[0] : o, t = Array.isArray(o) ? o[1] : o;
+        return '<button type="button" class="flt-pill" onclick="H._setPill(\'' + id + '\',\'' + key + '\',\'' + H.escHtml(v) + '\',this)">' + H.escHtml(t) + '</button>';
+      }).join('')
+      + '</div></div>';
+  };
+
+  H._setPill = function (id, key, val, btn) {
+    var f = H._filters[id] = H._filters[id] || {};
+    var group = btn.parentNode;
+    if (f[key] === val) { f[key] = ''; btn.classList.remove('on'); }
+    else { f[key] = val; group.querySelectorAll('.flt-pill').forEach(function (b) { b.classList.remove('on'); }); btn.classList.add('on'); }
+    H._applyFilters(id);
+  };
+
+  // Amenity multi-select chips, drawn from the category's attribute schema.
+  H._amenityFilter = function (id, cat) {
+    var schema = (H.CATEGORY_ATTRS && H.CATEGORY_ATTRS[cat]) || [];
+    var field = schema.filter(function (x) { return x.type === 'chips'; })[0];
+    if (!field) return '';
+    return '<div class="flt-section"><div class="flt-label">' + H.escHtml(field.label) + '</div><div class="flt-pills flt-amenities">'
+      + field.options.map(function (o) {
+        return '<button type="button" class="flt-pill" onclick="H._toggleAmenity(\'' + id + '\',\'' + H.escHtml(o) + '\',this)">' + H.escHtml(o) + '</button>';
+      }).join('')
+      + '</div></div>';
+  };
+
+  H._toggleAmenity = function (id, val, btn) {
+    var f = H._filters[id] = H._filters[id] || {};
+    f.amenities = f.amenities || [];
+    var i = f.amenities.indexOf(val);
+    if (i >= 0) { f.amenities.splice(i, 1); btn.classList.remove('on'); }
+    else { f.amenities.push(val); btn.classList.add('on'); }
+    H._applyFilters(id);
   };
 
   H._citysel = function (id) {
