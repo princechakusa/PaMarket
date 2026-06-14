@@ -104,6 +104,24 @@ window.H = {
   saveState() {
     const safe = JSON.parse(JSON.stringify(this.state));
     if (safe.users) safe.users.forEach(u => { delete u._localPassword; });
+    // Keep localStorage small (the ~5MB quota fills fast otherwise). Base64 image
+    // blobs are the main offender — they're only needed in memory for instant
+    // preview; the cloud URL is what we persist. Stripping them from the SAVED
+    // copy (not this.state) keeps storage tiny without affecting the live view.
+    try {
+      if (Array.isArray(safe.listings)) {
+        safe.listings.forEach(l => {
+          if (Array.isArray(l.photos)) l.photos = l.photos.filter(p => typeof p === 'string' && p.indexOf('data:') !== 0);
+          if (l.attrs && Array.isArray(l.attrs.photos)) l.attrs.photos = l.attrs.photos.filter(p => typeof p === 'string' && p.indexOf('data:') !== 0);
+        });
+      }
+      // Don't persist unbounded chat history; the cloud holds the full thread.
+      if (Array.isArray(safe.conversations)) {
+        safe.conversations.forEach(c => {
+          if (Array.isArray(c.messages) && c.messages.length > 100) c.messages = c.messages.slice(-100);
+        });
+      }
+    } catch(_) {}
     safe._v = this.STATE_VERSION;
     const payload = JSON.stringify(safe);
     try {
