@@ -580,9 +580,10 @@ window.H = {
           if (typeof H.loadProfile === 'function') {
             H.loadProfile(_sid).then(() => {
               if (this.state.currentUserId && this.checkBan()) return;
-              // Refresh only when it can't disturb the user: still on a top-level
-              // page, nothing opened on top, and not typing.
-              if (['Home','Account'].includes(this.currentPageName) && !this.pageStack.length && !H._userIsTyping()) {
+              // Re-render only the Account page (which actually shows profile
+              // name/avatar). Home is listings-driven, so re-rendering it here
+              // just causes a startup flicker for no visible change.
+              if (this.currentPageName === 'Account' && !this.pageStack.length && !H._userIsTyping()) {
                 try { this.renderPage(this.currentPageName, this.currentPageParams); } catch(e) {}
               }
             }).catch(()=>{});
@@ -631,13 +632,15 @@ window.H = {
     else if (_act === 'post')   { if(this.currentUser()) setTimeout(()=>this.navTo('Post',null), 200); }
     else if (_act === 'browse') { setTimeout(()=>this.navTo('Browse',null), 200); }
     try {
+      const _sigBefore = (this.state.listings || []).filter(l => l.status === 'active').map(l => l.id).join(',');
       await this.fetchListingsFromSupabase();
       H._checkEngagementAlerts();
       await Promise.all([this.fetchAdsFromSupabase(), this.fetchAppSettings()]);
-      // Refresh the screen ONLY if the user is still sitting on Home. If they've
-      // already opened a listing, a chat, or anything else while the data loaded,
-      // re-rendering would flicker and yank them away from where they are.
-      if (this.currentPageName === 'Home' && !this.pageStack.length && !H._userIsTyping()) {
+      // Re-render Home only if the listings actually changed AND the user is still
+      // on Home — re-rendering identical content just reloads images and flickers
+      // (the common case on a warm start where cache already matches the cloud).
+      const _sigAfter = (this.state.listings || []).filter(l => l.status === 'active').map(l => l.id).join(',');
+      if (_sigBefore !== _sigAfter && this.currentPageName === 'Home' && !this.pageStack.length && !H._userIsTyping()) {
         await this.renderPage('Home', this.currentPageParams);
       }
     } catch(e) { console.warn('Boot fetch failed:', e); }
