@@ -1213,6 +1213,13 @@ select.fi {
 .subcat-all { font-weight: 800; }
 .subcat-all span { color: var(--text, #101828); }
 
+/* ── Post: chosen-category bar (category's own form) ───── */
+.post-cat-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--bg2, #f4f6fa); border: 1px solid var(--border, #E4E8F0); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; }
+.post-cat-bar-l { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 800; color: var(--text, #101828); }
+.post-cat-ic { display: inline-flex; color: var(--blue, #1A3A8F); }
+.post-cat-ic svg { width: 22px; height: 22px; }
+.post-cat-change { background: none; border: none; color: var(--blue, #1A3A8F); font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; padding: 4px 6px; }
+
 /* ── VERIFY ──────────────────────────────────────────────────── */
 .verify-badge-preview { background: var(--blue-light); border: 1px solid rgba(26,58,143,.2); border-radius: var(--r-md); padding: 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .vbp-icon { width: 42px; height: 42px; background: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; }

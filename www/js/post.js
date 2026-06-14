@@ -39,25 +39,37 @@
 
   function renderPostStep() {
     const s = postState;
-    if (s.step === 1) return `
-      <div class="fg">
-        <div class="fl">Category</div>
-        <div class="cat-3">
-          ${CATEGORIES.map(c => `
-            <div class="cat-opt ${s.cat === c.id ? 'sel' : ''}" onclick="H._post.setCat('${c.id}')">
-              <div style="font-size:22px">${c.icon}</div>
-              <div class="cat-opt-label">${c.name}</div>
-            </div>`).join('')}
+    if (s.step === 1) {
+      // Screen 1a — pick a category. Selecting one opens that category's own form.
+      if (!s.cat) {
+        return `
+        <div class="fg">
+          <div class="fl">What are you posting?</div>
+          <div class="cat-3">
+            ${CATEGORIES.map(c => `
+              <div class="cat-opt" onclick="H._post.setCat('${c.id}')">
+                <div style="font-size:22px">${c.icon}</div>
+                <div class="cat-opt-label">${c.name}</div>
+              </div>`).join('')}
+          </div>
+        </div>`;
+      }
+      // Screen 1b — the chosen category's own form (title, description, details).
+      const cat = CATEGORIES.find(c => c.id === s.cat) || { name: 'Listing', icon: '' };
+      return `
+        <div class="post-cat-bar">
+          <div class="post-cat-bar-l"><span class="post-cat-ic">${cat.icon}</span><span>${H.escHtml(cat.name)}</span></div>
+          <button class="post-cat-change" onclick="H._post.changeCat()">Change</button>
         </div>
-      </div>
-      <div class="fg"><div class="fl">Title</div>
-        <input class="fi" id="postTitle" value="${H.escHtml(s.title)}" placeholder="e.g. 3 Bedroom Flat in Avondale" maxlength="80">
-      </div>
-      <div class="fg"><div class="fl">Description</div>
-        <textarea class="fi" rows="4" id="postDesc" placeholder="Describe what you're selling · condition, features, why you're selling..." maxlength="2000">${H.escHtml(s.desc)}</textarea>
-      </div>
-      ${s.cat && H.renderAttrFields ? H.renderAttrFields(s.cat, s.attrs) : ''}
-      <div class="step-btns"><button class="btn-next" onclick="H._post.next()">Continue →</button></div>`;
+        <div class="fg"><div class="fl">Title</div>
+          <input class="fi" id="postTitle" value="${H.escHtml(s.title)}" placeholder="e.g. 3 Bedroom Flat in Avondale" maxlength="80">
+        </div>
+        <div class="fg"><div class="fl">Description</div>
+          <textarea class="fi" rows="4" id="postDesc" placeholder="Describe what you're selling · condition, features, why you're selling..." maxlength="2000">${H.escHtml(s.desc)}</textarea>
+        </div>
+        ${H.renderAttrFields ? H.renderAttrFields(s.cat, s.attrs) : ''}
+        <div class="step-btns"><button class="btn-next" onclick="H._post.next()">Continue →</button></div>`;
+    }
 
     if (s.step === 2) return `
       <div class="fg"><div class="fl">Price</div>
@@ -163,6 +175,13 @@
       const d = document.getElementById('postDesc');  if (d) postState.desc  = d.value;
       if (H.readAttrFields) postState.attrs = Object.assign({}, postState.attrs, H.readAttrFields(document.getElementById('postBody')));
       postState.cat = c; refreshBody();
+    },
+    changeCat() {
+      // Back to the category picker. Keep title/desc; drop the old category's attrs.
+      const t = document.getElementById('postTitle'); if (t) postState.title = t.value;
+      const d = document.getElementById('postDesc');  if (d) postState.desc  = d.value;
+      postState.cat = null; postState.attrs = {};
+      refreshBody();
     },
     toggleChip(btn) { if (btn) btn.classList.toggle('on'); },
     setCur(c)    { postState.currency = c; refreshBody(); },
