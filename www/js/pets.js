@@ -6,7 +6,7 @@
 
     var f = H._sel('pets', 'subcat', 'Pet Type', [['all', 'All'], ['dogs', 'Dogs'], ['cats', 'Cats'], ['birds', 'Birds'], ['fish', 'Fish & Aquatic'], ['rabbits', 'Rabbits & Small Animals'], ['reptiles', 'Reptiles'], ['livestock', 'Livestock'], ['other', 'Other']])
       + H._txtInput('pets', 'brand', 'Breed', 'e.g. German Shepherd, Persian Cat')
-      + H._citysel('pets') + H._priceRange('pets') + H._sortsel('pets');
+      + H._priceRange('pets') + H._citysel('pets') + H._amenityFilter('pets', 'pets') + H._sortsel('pets');
 
     return '<div class="page active">'
       + H._catTopbar('Pets', '#FB8C00')

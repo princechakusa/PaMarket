@@ -151,6 +151,16 @@
       + '</div></div>';
   };
 
+  // Year range (vehicles).
+  H._yearRange = function (id) {
+    return '<div class="flt-section"><div class="flt-label">Year</div>'
+      + '<div class="flt-range">'
+      + '<div class="flt-range-in"><input type="number" min="1960" max="2030" placeholder="From" oninput="H._setFilter(\'' + id + '\',\'yearMin\',this.value)"></div>'
+      + '<span class="flt-range-sep">to</span>'
+      + '<div class="flt-range-in"><input type="number" min="1960" max="2030" placeholder="To" oninput="H._setFilter(\'' + id + '\',\'yearMax\',this.value)"></div>'
+      + '</div></div>';
+  };
+
   // Selectable pill row (single-select). opts: array of value or [value,label].
   H._pills = function (id, key, label, opts) {
     return '<div class="flt-section"><div class="flt-label">' + label + '</div><div class="flt-pills" data-pillkey="' + key + '">'

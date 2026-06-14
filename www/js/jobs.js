@@ -1394,6 +1394,31 @@
     btn.style.border     = '1.5px solid #1A3A8F';
   };
 
+  // Single-select pill group writing to a hidden input (Notice Period, Education).
+  window._cpPick = function(btn) {
+    var wrap = btn.parentNode;
+    var hid = document.getElementById(wrap.getAttribute('data-target'));
+    var val = btn.getAttribute('data-val');
+    var already = hid && hid.value === val;
+    [].forEach.call(wrap.querySelectorAll('button[data-val]'), function(b) {
+      b.style.background = '#fff'; b.style.color = '#667085'; b.style.border = '1.5px solid #E4E8F0';
+    });
+    if (already) { if (hid) hid.value = ''; return; }
+    btn.style.background = '#1A3A8F'; btn.style.color = '#fff'; btn.style.border = '1.5px solid #1A3A8F';
+    if (hid) hid.value = val;
+  };
+
+  // Render a single-select pill row + its hidden input.
+  function _cpPillRow(target, options, current) {
+    return '<div data-target="' + target + '" style="display:flex;flex-wrap:wrap;gap:8px">'
+      + options.map(function(o) {
+        var v = Array.isArray(o) ? o[0] : o, t = Array.isArray(o) ? o[1] : o, sel = current === v;
+        return '<button type="button" onclick="_cpPick(this)" data-val="' + H.escHtml(v) + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (sel ? '#1A3A8F' : '#fff') + ';color:' + (sel ? '#fff' : '#667085') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : '#E4E8F0') + '">' + H.escHtml(t) + '</button>';
+      }).join('')
+      + '</div><input type="hidden" id="' + target + '" value="' + H.escHtml(current || '') + '">';
+  }
+  H._cpPillRow = _cpPillRow;
+
   window._cpOpenFile = function() {
     var fi = document.getElementById('cpResumeFile');
     if (fi) { try { fi.click(); } catch(e) {} }
@@ -1487,6 +1512,12 @@
           return '<button type="button" onclick="_cpJT(this)" data-jt="' + H.escHtml(t) + '" data-sel="' + (sel ? '1' : '0') + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (sel ? '#1A3A8F' : '#fff') + ';color:' + (sel ? '#fff' : '#667085') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : '#E4E8F0') + '">' + H.escHtml(t) + '</button>';
         }).join('')
       + '</div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Notice Period</label>'
+      + _cpPillRow('cpNotice', ['Available Immediately', 'Less than 2 weeks', '1 Month', 'More than 1 Month'], (u.cv && u.cv.noticePeriod) || u.noticePeriod || '')
+      + '</div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Education Level</label>'
+      + _cpPillRow('cpEduLevel', ['High School', 'Diploma', 'Bachelor’s Degree', 'Master’s Degree', 'PhD', 'Other'], (u.cv && u.cv.educationLevel) || u.educationLevel || '')
+      + '</div>'
 
       // ── Contact & Reach ──
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg>', 'Contact & Reach')
@@ -1702,6 +1733,8 @@
       });
     }
     u.jobTypes = jtArr.join(',');
+    u.noticePeriod   = (document.getElementById('cpNotice')   || {}).value || '';
+    u.educationLevel = (document.getElementById('cpEduLevel') || {}).value || '';
 
     // Contact method — read data-sel attribute
     var contactMethod = '';
@@ -1745,6 +1778,8 @@
       experience:     (H._cpExpArr || prevCv.experience || []),
       education:      prevCv.education      || [],
       certifications: prevCv.certifications || [],
+      noticePeriod:   u.noticePeriod   || prevCv.noticePeriod   || '',
+      educationLevel: u.educationLevel || prevCv.educationLevel || '',
       cvFileUrl:      prevCv.cvFileUrl      || u.cvFileUrl      || ''
     };
 
