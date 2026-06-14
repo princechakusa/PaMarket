@@ -208,10 +208,18 @@
   // ---- Posting: render the dynamic fields for a category ----
   H.renderAttrFields = function (cat, vals) {
     var schema = H.CATEGORY_ATTRS[cat];
-    if (!schema) return '';
+    var subs = H.SUBCATEGORIES[cat];
+    if (!schema && !subs) return '';
     vals = vals || {};
     var html = '<div class="fg"><div class="fl">Details</div><div class="attr-grid">';
-    schema.forEach(function (f) {
+    // Subcategory first — "what exactly are you listing?". Stored as `subcat`.
+    if (subs) {
+      html += '<div class="attr-field attr-field-full"><label class="attr-lbl">Subcategory</label>'
+        + '<select class="fi attr-in" data-attr="subcat"><option value="">Select…</option>'
+        + subs.map(function (o) { return '<option value="' + H.escHtml(o.key) + '"' + (vals.subcat === o.key ? ' selected' : '') + '>' + H.escHtml(o.label) + '</option>'; }).join('')
+        + '</select></div>';
+    }
+    (schema || []).forEach(function (f) {
       var v = vals[f.key];
       html += '<div class="attr-field' + (f.type === 'chips' ? ' attr-field-full' : '') + '">';
       html += '<label class="attr-lbl">' + H.escHtml(f.label) + (f.unit ? ' (' + f.unit + ')' : '') + '</label>';
@@ -274,10 +282,13 @@
 
   // ---- Detail: the Overview spec table ----
   H.attrOverviewHtml = function (l) {
-    var cat = l && l.cat; var schema = H.CATEGORY_ATTRS[cat];
+    var cat = l && l.cat; var schema = H.CATEGORY_ATTRS[cat] || [];
     var src = (l && l.attrs) || l || {};
-    if (!schema) return '';
+    if (!schema.length && !H.SUBCATEGORIES[cat]) return '';
     var rows = [];
+    // Subcategory first (its friendly label).
+    var subLabel = src.subcat ? H.subcatLabel(cat, src.subcat) : '';
+    if (subLabel) rows.push('<div class="ov-row"><span class="ov-k">Type</span><span class="ov-v">' + H.escHtml(subLabel) + '</span></div>');
     schema.forEach(function (f) {
       if (f.type === 'chips') return; // amenities render separately
       var v = src[f.key];

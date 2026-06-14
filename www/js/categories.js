@@ -176,16 +176,57 @@
   };
 
   // ── Override filterByCat for all 12 categories ────────────
+  var CAT_PAGE = {
+    property: 'Property', vehicles: 'Vehicles', rooms: 'Rooms',
+    electronics: 'Electronics', furniture: 'Furniture', fashion: 'Fashion',
+    services: 'Services', jobs: 'Jobs', agriculture: 'Agriculture',
+    pets: 'Pets', kids: 'Kids', other: 'Other'
+  };
+
+  // Open the listing page for a category (optionally pre-filtered by subcategory).
+  H._openCatPage = function (cid, subKey) {
+    function setF(fid) { H._filters[fid] = H._filters[fid] || {}; if (subKey) H._filters[fid].subcat = subKey; else delete H._filters[fid].subcat; }
+    setF(cid);
+    if (cid === 'property') { setF('property_sale'); setF('property_rent'); }
+    var page = CAT_PAGE[cid];
+    if (page) H.openInner(page, { cid: cid });
+    else H.openInner('CategoryView', { cid: cid });
+  };
+
+  // Tapping a category on Home: show its subcategory list first (if it has one),
+  // otherwise jump straight to the listing page.
   H.filterByCat = function (cid) {
-    var map = {
-      property: 'Property', vehicles: 'Vehicles', rooms: 'Rooms',
-      electronics: 'Electronics', furniture: 'Furniture', fashion: 'Fashion',
-      services: 'Services', jobs: 'Jobs', agriculture: 'Agriculture',
-      pets: 'Pets', kids: 'Kids', other: 'Other'
-    };
-    var page = map[cid];
-    if (page) { H.openInner(page, { cid: cid }); }
-    else { H.openInner('CategoryView', { cid: cid }); }
+    if (H.SUBCATEGORIES && H.SUBCATEGORIES[cid] && H.SUBCATEGORIES[cid].length) {
+      H.openInner('SubCat', { cid: cid });
+    } else {
+      H._openCatPage(cid, null);
+    }
+  };
+
+  H._catColor = function (cid) {
+    return ({ property:'#1A3A8F', vehicles:'#e53935', rooms:'#00838F', electronics:'#3949AB',
+      furniture:'#6D4C41', fashion:'#E91E63', services:'#00897B', agriculture:'#388E3C',
+      pets:'#8E24AA', kids:'#FB8C00', jobs:'#546E7A', other:'#546E7A' }[cid]) || '#1A3A8F';
+  };
+
+  // ── Subcategory picker (PaMarket's own drill-down) ──
+  H.pages.SubCat = function (params) {
+    var cid = params && params.cid;
+    var cat = (H.CATEGORIES || []).filter(function (c) { return c.id === cid; })[0];
+    var subs = (H.SUBCATEGORIES && H.SUBCATEGORIES[cid]) || [];
+    var name = cat ? cat.name : 'Browse';
+    var color = H._catColor(cid);
+    var chev = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+    var check = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="' + color + '" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var rows = '<button class="subcat-row subcat-all" onclick="H._openCatPage(\'' + cid + '\',null)">'
+      + '<span>All in ' + H.escHtml(name) + '</span>' + check + '</button>';
+    rows += subs.map(function (s) {
+      return '<button class="subcat-row" onclick="H._openCatPage(\'' + cid + '\',\'' + H.escHtml(s.key) + '\')">'
+        + '<span>' + H.escHtml(s.label) + '</span>' + chev + '</button>';
+    }).join('');
+    return '<div class="page active">'
+      + H.innerTopbar(name)
+      + '<div class="subcat-list">' + rows + '</div></div>';
   };
 
   // legacy compat
