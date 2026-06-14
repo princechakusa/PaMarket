@@ -290,8 +290,8 @@
           const verified = other && other.verified;
           const _lastOffer = parseOffer(last.text);
           const previewBody = _lastOffer
-            ? '💰 ' + (_lastOffer.k === 'accept' ? 'Offer accepted' : _lastOffer.k === 'decline' ? 'Offer declined' : (_lastOffer.k === 'counter' ? 'Counter: $' : 'Offer: $') + Number(_lastOffer.price || 0).toLocaleString())
-            : escHtml(msgPreview(last));
+            ? MIC.offer + (_lastOffer.k === 'accept' ? 'Offer accepted' : _lastOffer.k === 'decline' ? 'Offer declined' : (_lastOffer.k === 'counter' ? 'Counter: $' : 'Offer: $') + Number(_lastOffer.price || 0).toLocaleString())
+            : (last.image ? MIC.photo + 'Photo' : escHtml(msgPreview(last)));
           const preview = (mine ? previewTick(!!last.read) + ' ' : '') + previewBody;
           return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item${unread ? ' unread' : ''}" data-cid="${escHtml(c.id)}" data-oid="${escHtml(otherId || '')}" onclick="H.openChat('${c.id}')">
             <div class="p-av-wrap">${listAvatarHtml(other, otherDisplayName, color, 'p-av')}${online ? '<span class="p-on"></span>' : ''}</div>
@@ -406,7 +406,7 @@
       + '</div>'
       + (listing ? chatContextCard(listing) : '')
       + '<div class="chat-thread" id="chatThread"><div class="chat-thread-spacer"></div>'
-      + (c.messages.length < 6 ? '<div class="chat-safety"><span>🛡️</span><div><b>Stay safe.</b> Meet in a public place, inspect the item before you pay, and never send a deposit to someone you don\'t know.</div></div>' : '')
+      + (c.messages.length < 6 ? '<div class="chat-safety"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div><b>Stay safe.</b> Meet in a public place, inspect the item before you pay, and never send a deposit to someone you don\'t know.</div></div>' : '')
       + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">No messages yet. Say hello!</div>')
       + '<div class="chat-typing" id="chatTyping" style="display:none"><div class="chat-row-av">' + otherAvatar + '</div><div class="chat-bubble them chat-typing-bubble"><span></span><span></span><span></span></div></div>'
       + '</div>'
@@ -468,6 +468,12 @@
     try { const o = JSON.parse(text); return (o && o._reply) ? { ref: o._reply, text: (o.t || '') } : null; } catch (e) { return null; }
   }
   H._parseReply = parseReply;
+  // Tiny inline icons for previews (replace emojis with crisp SVGs).
+  var MIC = {
+    photo: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:3px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+    offer: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:3px"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>'
+  };
+  H._msgIcons = MIC;
   // The text a message actually shows (unwraps a reply envelope).
   function msgText(m) { const r = parseReply(m && m.text); return r ? r.text : ((m && m.text) || ''); }
   H._msgText = msgText;
@@ -483,8 +489,8 @@
   // One-line preview for lists / notifications (image, offer or reply-aware).
   function msgPreview(m) {
     if (!m) return '';
-    if (m.image) return '📷 Photo';
-    if (parseOffer(m.text)) return '💰 Offer';
+    if (m.image) return 'Photo';
+    if (parseOffer(m.text)) return 'Offer';
     return msgText(m);
   }
   H._msgPreview = msgPreview;
@@ -539,8 +545,10 @@
   function fmtMoney(n) { return '$' + Number(n || 0).toLocaleString(); }
   function offerCardHtml(of, mine, msgId, otherName) {
     const price = fmtMoney(of.price);
-    if (of.k === 'accept') return '<div class="offer-status accept">✓ Offer accepted at ' + price + ' — arrange your deal</div>';
-    if (of.k === 'decline') return '<div class="offer-status decline">✕ Offer declined</div>';
+    var icOk  = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>';
+    var icNo  = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    if (of.k === 'accept') return '<div class="offer-status accept">' + icOk + 'Offer accepted at ' + price + ' — arrange your deal</div>';
+    if (of.k === 'decline') return '<div class="offer-status decline">' + icNo + 'Offer declined</div>';
     const isCounter = of.k === 'counter';
     const label = isCounter ? (mine ? 'YOUR COUNTER-OFFER' : 'COUNTER-OFFER') : (mine ? 'YOUR OFFER' : 'OFFER');
     let html = '<div class="offer-card' + (mine ? ' mine' : '') + '">'

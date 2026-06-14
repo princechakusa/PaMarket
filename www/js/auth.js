@@ -308,7 +308,7 @@
     if (!card) return;
     card.innerHTML = ''
       + '<div style="text-align:center;padding:24px 0">'
-      + '<div style="font-size:42px;margin-bottom:12px">✉️</div>'
+      + '<div style="margin-bottom:14px;color:#1A3A8F"><svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></div>'
       + '<div style="font-size:18px;font-weight:700;color:var(--text)">Check Your Email</div>'
       + '<div style="font-size:14px;color:var(--sub);margin-top:10px;line-height:1.6">A reset link was sent to<br><strong style="color:var(--text)">' + H.escHtml(email) + '</strong><br><br>Click the link in the email to set a new password. Check your spam folder if you don\'t see it.</div>'
       + '</div>'
