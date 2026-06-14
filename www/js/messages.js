@@ -1085,6 +1085,11 @@
     if (!c) return;
     const u = H.currentUser();
     if (!u) { H.requireAuth('Sign in to send messages'); return; }
+    // Flood guard: block more than 5 messages in 10s to the same chat (spam/bots).
+    if (typeof H.isChatSpam === 'function' && H.isChatSpam(c.id, u.id)) {
+      H.toast('You’re sending messages too fast. Please slow down.', 3000, true);
+      return;
+    }
     var msgId = H.uid();
     var msgT = Date.now();
     c.messages.push({ id: msgId, from: u.id, senderName: u.name||'', text: text, t: msgT, read: false });

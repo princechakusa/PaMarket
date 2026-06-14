@@ -252,7 +252,20 @@
       if (H.state.allowImageUploads !== false && !s.photos.length) { H.toast('Please add at least one photo'); return; }
 
       const u = H.currentUser();
+      const listingId = H.uid();
+
+      // Content moderation + anti-spam: banned terms, duplicate titles, and a
+      // 5-posts-per-24h flood guard (see moderation.js). Runs before the photo
+      // upload so a rejected ad never wastes bandwidth.
+      let mod = { status: 'active', reason: null };
+      if (typeof H.moderateListing === 'function') {
+        try { mod = H.moderateListing({ id: listingId, title: s.title, desc: s.desc, cat: s.cat }, u) || mod; }
+        catch (e) { mod = { status: 'active', reason: null }; }
+        if (mod.status === 'rejected') { H.toast(mod.reason || 'Listing could not be posted', 5000, true); return; }
+      }
       const needsApproval = !!(H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified));
+      // Pending if the admin forces review OR moderation flagged it for review.
+      const finalStatus = (needsApproval || mod.status === 'pending') ? 'pending' : 'active';
 
       H._post._posting = true;
       const btn = document.querySelector('.btn-submit');
@@ -274,11 +287,11 @@
       }
 
       const l = {
-        id: H.uid(), sellerId: u.id, sellerName: u.name || '', sellerPhone: u.phone || '', title: s.title, desc: s.desc,
+        id: listingId, sellerId: u.id, sellerName: u.name || '', sellerPhone: u.phone || '', title: s.title, desc: s.desc,
         price: s.price, currency: s.currency, cat: s.cat,
         prov: s.prov, city: s.city, suburb: s.suburb,
         photos: photos, createdAt: Date.now(),
-        status: needsApproval ? 'pending' : 'active',
+        status: finalStatus,
         views: 0
       };
       H.state.listings.unshift(l);
@@ -292,8 +305,10 @@
       }
 
       H._post._posting = false;
-      if (needsApproval) {
-        H.toast('Ad submitted! It will go live after admin review.', 5000);
+      if (finalStatus === 'pending') {
+        H.toast(mod.status === 'pending' && !needsApproval
+          ? (mod.reason || 'Ad submitted for review before going live.')
+          : 'Ad submitted! It will go live after admin review.', 5000);
         H.openInner('MyListings');
       } else {
         H.toast('Your ad is live!');

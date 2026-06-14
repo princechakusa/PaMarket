@@ -108,7 +108,7 @@
   // -- CHAT SPAM DETECTION ------------------------------------
   H.isChatSpam = function (convoId, userId) {
     const c = (H.state.conversations || []).find(x => x.id === convoId);
-    if (!c) return false;
+    if (!c || !Array.isArray(c.messages)) return false;
     const last10s = Date.now() - 10000;
     const recent = c.messages.filter(m => m.from === userId && m.t > last10s).length;
     return recent >= 5;
