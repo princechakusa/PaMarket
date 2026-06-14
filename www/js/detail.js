@@ -84,7 +84,17 @@
           ${l.negotiable ? '<div class="nego-pill">Negotiable</div>' : ''}
         </div>
         <div class="det-listing-title">${H.escHtml(l.title)}</div>
+        ${H.attrQuickFactsHtml ? H.attrQuickFactsHtml(l) : ''}
         <div class="det-loc-row">${S.location} ${H.escHtml((l.suburb||l.city||'')+(l.prov?', '+l.prov:''))} · ${H.timeAgo(l.createdAt)} · ${S.eye} ${l.views||0} views</div>
+
+        ${H.attrOverviewHtml ? H.attrOverviewHtml(l) : ''}
+
+        <div class="det-section">
+          <div class="det-sec-title">Description</div>
+          <div class="desc-text" style="white-space:pre-line">${H.escHtml(l.desc||'No description provided.')}</div>
+        </div>
+
+        ${H.attrAmenitiesHtml ? H.attrAmenitiesHtml(l) : ''}
 
         <div class="seller-card" onclick="H.openUserProfile('${seller.id}')">
           <div style="position:relative;flex-shrink:0">
@@ -105,10 +115,6 @@
           </div>
           <div style="color:var(--sub);font-size:20px">›</div>
         </div>
-
-        <div class="desc-text" style="white-space:pre-line">${H.escHtml(l.desc||'No description provided.')}</div>
-
-        <div id="similarListingsPlaceholder" class="similar-loading" style="height:120px;background:var(--card);border-radius:14px;margin:16px 0;opacity:.5;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--sub)">Loading similar listings...</div>
 
         ${isMine ? `
           <button style="width:100%;padding:13px;background:#fee2e2;color:#dc2626;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" onclick="if(!confirm('Are you sure you want to delete this listing?')) return; H.deleteListing('${l.id}')">Delete Listing</button>
@@ -149,6 +155,8 @@
           else buttons = chatBtn + waBtn + callBtn + rptBtn;
           return buttons + shareWaBtn + rateSection;
         })()}
+
+        <div id="similarListingsPlaceholder" class="similar-loading" style="height:120px;background:var(--card);border-radius:14px;margin:16px 0;opacity:.5;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--sub)">Loading similar listings...</div>
       </div>
     </div>`;
   };

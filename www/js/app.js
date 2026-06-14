@@ -1080,7 +1080,7 @@ window.H = {
   async saveListingToCloud(listing) {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
-      const {error}=await window.supabase.from('listings').upsert({
+      const base = {
         id:listing.id, seller_id:listing.sellerId,
         seller_name:listing.sellerName||'', seller_phone:listing.sellerPhone||'',
         title:listing.title, description:listing.desc||'',
@@ -1090,8 +1090,17 @@ window.H = {
         photos:listing.photos||[], status:listing.status||'active',
         boost:listing.boost||null, views:listing.views||0,
         created_at:listing.createdAt?new Date(listing.createdAt).toISOString():new Date().toISOString()
-      });
-      if(error) console.warn('Cloud save failed:',error.message);
+      };
+      const attrs = (typeof H.collectAttrs==='function') ? H.collectAttrs(listing) : (listing.attrs||{});
+      const {error}=await window.supabase.from('listings').upsert(Object.assign({attributes:attrs}, base));
+      // If the attributes column hasn't been added yet, retry without it so
+      // posting never breaks before the migration is run.
+      if(error){
+        if(/attributes|column|schema cache|PGRST204/i.test(error.message||'')){
+          const {error:e2}=await window.supabase.from('listings').upsert(base);
+          if(e2) console.warn('Cloud save failed:',e2.message);
+        } else console.warn('Cloud save failed:',error.message);
+      }
     } catch(e){ console.warn('saveListingToCloud:',e.message); }
   },
 
@@ -1165,15 +1174,22 @@ window.H = {
         .order('created_at',{ascending:false})
         .limit(200);
       if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
-      const cloud=(data||[]).map(r=>({
-        id:r.id, sellerId:r.seller_id, sellerName:r.seller_name||'',
-        sellerPhone:r.seller_phone||'', title:r.title, desc:r.description,
-        price:r.price, currency:r.currency, cat:r.category,
-        prov:r.province, city:r.city, suburb:r.suburb,
-        photos:Array.isArray(r.photos)?r.photos:(r.photos?[r.photos]:[]),
-        status:r.status, boost:r.boost, views:r.views||0,
-        createdAt:r.created_at?new Date(r.created_at).getTime():Date.now()
-      }));
+      const cloud=(data||[]).map(r=>{
+        const o={
+          id:r.id, sellerId:r.seller_id, sellerName:r.seller_name||'',
+          sellerPhone:r.seller_phone||'', title:r.title, desc:r.description,
+          price:r.price, currency:r.currency, cat:r.category,
+          prov:r.province, city:r.city, suburb:r.suburb,
+          photos:Array.isArray(r.photos)?r.photos:(r.photos?[r.photos]:[]),
+          status:r.status, boost:r.boost, views:r.views||0,
+          createdAt:r.created_at?new Date(r.created_at).getTime():Date.now()
+        };
+        if(r.attributes && typeof r.attributes==='object'){
+          if(typeof H.applyAttrs==='function') H.applyAttrs(o, r.attributes);
+          else o.attrs=r.attributes;
+        }
+        return o;
+      });
       // Replace active listings entirely from cloud so deleted ones disappear.
       // Keep local non-active listings (pending, draft) that haven't synced yet.
       const nonActive=(H.state.listings||[]).filter(l=>l.status!=='active');

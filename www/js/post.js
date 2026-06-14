@@ -19,7 +19,7 @@
     postState = {
       step: 1, cat: null, title: '', desc: '', price: '',
       currency: 'USD', prov: PROVINCES[0],
-      city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: []
+      city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: [], attrs: {}
     };
     return renderPostShell();
   };
@@ -56,6 +56,7 @@
       <div class="fg"><div class="fl">Description</div>
         <textarea class="fi" rows="4" id="postDesc" placeholder="Describe what you're selling · condition, features, why you're selling..." maxlength="2000">${H.escHtml(s.desc)}</textarea>
       </div>
+      ${s.cat && H.renderAttrFields ? H.renderAttrFields(s.cat, s.attrs) : ''}
       <div class="step-btns"><button class="btn-next" onclick="H._post.next()">Continue →</button></div>`;
 
     if (s.step === 2) return `
@@ -155,7 +156,15 @@
 
   // Namespace for onclick calls
   H._post = {
-    setCat(c)    { if(c==='jobs'){H.openInner('PostJob');return;} postState.cat = c; refreshBody(); },
+    setCat(c)    {
+      if(c==='jobs'){H.openInner('PostJob');return;}
+      // Preserve anything already typed before the step re-renders.
+      const t = document.getElementById('postTitle'); if (t) postState.title = t.value;
+      const d = document.getElementById('postDesc');  if (d) postState.desc  = d.value;
+      if (H.readAttrFields) postState.attrs = Object.assign({}, postState.attrs, H.readAttrFields(document.getElementById('postBody')));
+      postState.cat = c; refreshBody();
+    },
+    toggleChip(btn) { if (btn) btn.classList.toggle('on'); },
     setCur(c)    { postState.currency = c; refreshBody(); },
     onProv(p)    { postState.prov = p; postState.city = CITIES_BY_PROV[p][0]; refreshBody(); },
     removePhoto(i) { postState.photos.splice(i, 1); document.getElementById('photoGrid').innerHTML = renderPhotoGrid(); },
@@ -222,6 +231,7 @@
         if (!s.cat)               { H.toast('Pick a category'); return; }
         if (s.title.length < 5)   { H.toast('Title needs at least 5 characters'); return; }
         if (s.desc.length < 10)   { H.toast('Description needs at least 10 characters'); return; }
+        if (H.readAttrFields)     s.attrs = Object.assign({}, s.attrs, H.readAttrFields(document.getElementById('postBody')));
       } else if (s.step === 2) {
         s.price  = document.getElementById('priceInput').value;
         s.prov   = document.getElementById('provinceSel').value;
@@ -294,6 +304,9 @@
         status: finalStatus,
         views: 0
       };
+      // Attach category-specific attributes (top-level too, so Browse filters see them).
+      if (H.applyAttrs) H.applyAttrs(l, s.attrs || {});
+      else l.attrs = s.attrs || {};
       H.state.listings.unshift(l);
       H.saveState();
       if (typeof H.saveListingToCloud === "function") {
