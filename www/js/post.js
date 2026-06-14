@@ -37,6 +37,21 @@
     </div>`;
   }
 
+  const TITLE_PH = {
+    property: 'e.g. 3 Bedroom House in Borrowdale',
+    vehicles: 'e.g. 2015 Toyota Hilux D4D',
+    rooms: 'e.g. Single room to rent in Avondale',
+    electronics: 'e.g. iPhone 13 Pro 128GB',
+    furniture: 'e.g. 3-Seater Leather Sofa',
+    fashion: "e.g. Men's Nike Air Max UK 9",
+    services: 'e.g. Professional Plumbing Services',
+    agriculture: 'e.g. 50 Bales of Quality Hay',
+    pets: 'e.g. Boerboel Puppies for Sale',
+    kids: 'e.g. Baby Stroller / Pram',
+    other: 'e.g. What are you selling?'
+  };
+  function titlePlaceholder(cat) { return TITLE_PH[cat] || 'e.g. What are you selling?'; }
+
   function renderPostStep() {
     const s = postState;
     if (s.step === 1) {
@@ -62,7 +77,7 @@
           <button class="post-cat-change" onclick="H._post.changeCat()">Change</button>
         </div>
         <div class="fg"><div class="fl">Title</div>
-          <input class="fi" id="postTitle" value="${H.escHtml(s.title)}" placeholder="e.g. 3 Bedroom Flat in Avondale" maxlength="80">
+          <input class="fi" id="postTitle" value="${H.escHtml(s.title)}" placeholder="${H.escHtml(titlePlaceholder(s.cat))}" maxlength="80">
         </div>
         <div class="fg"><div class="fl">Description</div>
           <textarea class="fi" rows="4" id="postDesc" placeholder="Describe what you're selling · condition, features, why you're selling..." maxlength="2000">${H.escHtml(s.desc)}</textarea>
