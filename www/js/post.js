@@ -184,7 +184,7 @@
   // Namespace for onclick calls
   H._post = {
     setCat(c)    {
-      if(c==='jobs'){H.openInner('PostJob');return;}
+      if(c==='jobs'){H.openInner('JobIntent');return;}
       // Preserve anything already typed before the step re-renders.
       const t = document.getElementById('postTitle'); if (t) postState.title = t.value;
       const d = document.getElementById('postDesc');  if (d) postState.desc  = d.value;

@@ -1235,6 +1235,15 @@ select.fi {
 .flt-pill:active { transform: scale(.96); }
 .flt-pill.on { background: var(--blue, #1A3A8F); border-color: var(--blue, #1A3A8F); color: #fff; }
 
+/* ── Jobs intent chooser cards ─────────────────────────── */
+.jobintent-card { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; border: none; border-radius: 18px; padding: 20px 18px; margin-bottom: 14px; cursor: pointer; font-family: 'Inter', sans-serif; box-shadow: 0 6px 20px -6px rgba(16,24,40,.3); transition: transform .12s; }
+.jobintent-card:active { transform: scale(.985); }
+.jobintent-card .jic-ic { width: 54px; height: 54px; border-radius: 14px; background: rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.jobintent-card .jic-body { flex: 1; min-width: 0; }
+.jobintent-card .jic-title { font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 3px; letter-spacing: -.3px; }
+.jobintent-card .jic-sub { font-size: 12.5px; color: rgba(255,255,255,.82); line-height: 1.4; }
+.jobintent-card .jic-go { color: #fff; flex-shrink: 0; opacity: .9; }
+
 /* ── VERIFY ──────────────────────────────────────────────────── */
 .verify-badge-preview { background: var(--blue-light); border: 1px solid rgba(26,58,143,.2); border-radius: var(--r-md); padding: 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .vbp-icon { width: 42px; height: 42px; background: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; }

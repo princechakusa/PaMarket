@@ -35,6 +35,31 @@
       + '</div></div></div></div>';
   }
 
+  // Entry chooser shown when you tap "Jobs" — Get Hired vs I'm Hiring.
+  H.pages.JobIntent = function () {
+    var briefcase = '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>';
+    var seeker = '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+    var arrow = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+    return '<div class="page active">'
+      + '<div class="det-topbar" style="background:#F5A623">'
+      + '<button class="back" onclick="H.goBack()" style="color:#1A3A8F"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      + '<div class="det-topbar-title" style="color:#1A3A8F">Jobs</div>'
+      + '<div style="width:40px"></div></div>'
+      + '<div style="padding:24px 16px">'
+      + '<div style="font-size:23px;font-weight:900;color:var(--text);margin-bottom:4px;letter-spacing:-.4px">What brings you here?</div>'
+      + '<div style="font-size:13.5px;color:var(--sub);margin-bottom:22px">Choose how you want to use PaMarket Jobs.</div>'
+      + '<button class="jobintent-card" onclick="H.openInner(\'JobSeekerProfile\')" style="background:linear-gradient(135deg,#22c55e,#15803d)">'
+      + '<div class="jic-ic">' + seeker + '</div>'
+      + '<div class="jic-body"><div class="jic-title">Get Hired</div><div class="jic-sub">Looking for a job? Pick your profession and build your CV profile so employers find you.</div></div>'
+      + '<div class="jic-go">' + arrow + '</div></button>'
+      + '<button class="jobintent-card" onclick="H.openInner(\'PostJob\')" style="background:linear-gradient(135deg,#1A3A8F,#0f2460)">'
+      + '<div class="jic-ic">' + briefcase + '</div>'
+      + '<div class="jic-body"><div class="jic-title">I’m Hiring</div><div class="jic-sub">Post a vacancy and reach qualified candidates. Verified employers get a badge.</div></div>'
+      + '<div class="jic-go">' + arrow + '</div></button>'
+      + '<div style="text-align:center;margin-top:14px"><button onclick="H.openInner(\'FindJobs\')" style="background:none;border:none;color:#1A3A8F;font-weight:700;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;padding:8px">Or browse all openings &rarr;</button></div>'
+      + '</div></div>';
+  };
+
   H.pages.Jobs = function () {
     var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat||'').toLowerCase() === 'jobs'; });
     var candidates = (H.state.users || []).filter(function (u) { return u.openToWork; });

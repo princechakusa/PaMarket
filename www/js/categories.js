@@ -255,6 +255,7 @@
   // Tapping a category on Home: show its subcategory list first (if it has one),
   // otherwise jump straight to the listing page.
   H.filterByCat = function (cid) {
+    if (cid === 'jobs') { H.openInner('JobIntent'); return; }
     if (H.SUBCATEGORIES && H.SUBCATEGORIES[cid] && H.SUBCATEGORIES[cid].length) {
       H.openInner('SubCat', { cid: cid });
     } else {
