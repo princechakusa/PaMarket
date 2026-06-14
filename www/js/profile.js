@@ -160,8 +160,12 @@
       onPicChange: async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (file.size > 3 * 1024 * 1024) { H.toast('Photo must be under 3 MB'); return; }
+        // The photo is compressed to 400px below, so any normal phone photo is
+        // fine — only block absurdly large files that could exhaust memory.
+        if (file.size > 40 * 1024 * 1024) { H.toast('That image is too large — please pick one under 40 MB'); return; }
+        H.toast('Processing photo…', 2000);
         const compressed = await H.compressImage(file, 400, 0.82);
+        if (!compressed) { H.toast('Could not read that image — try another'); return; }
         const u = H.currentUser();
         u.avatar = compressed;
         H.saveState();
