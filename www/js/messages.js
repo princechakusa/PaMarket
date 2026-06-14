@@ -663,13 +663,31 @@
     }
     try {
       if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c).catch(function () {});
-      if (typeof H.saveMessageToCloud === 'function') await H.saveMessageToCloud(c.id, c.messages[c.messages.length - 1]);
+      // Persist the offer reliably (same path + fallback as normal messages) so
+      // the other person actually receives it.
+      var saved = false;
+      if (typeof H.saveMessageToCloud === 'function') {
+        var r = await H.saveMessageToCloud(c.id, c.messages[c.messages.length - 1]);
+        saved = !(r && r.ok === false);
+      }
+      if (!saved && window.supabase && typeof window.supabase.from === 'function') {
+        var ins = await window.supabase.from('messages').insert({
+          id: msgId, conversation_id: c.id, sender_id: u.id, sender_name: u.name || '',
+          text: text, created_at: new Date(msgT).toISOString(), read: false
+        });
+        if (ins && ins.error) throw new Error(ins.error.message);
+        saved = true;
+      }
+      if (!saved) { H.toast('Offer saved on your device — will send when you’re online', 4000, true); return; }
       const otherId = c.members.find(function (m) { return m !== u.id; });
       if (otherId && typeof H.pushNotif === 'function') {
         const verb = of.k === 'accept' ? 'accepted your offer' : of.k === 'decline' ? 'declined your offer' : of.k === 'counter' ? 'sent a counter-offer' : 'made an offer';
         H.pushNotif(otherId, 'New offer', (u.name || 'Someone') + ' ' + verb + ' (' + fmtMoney(of.price) + ')');
       }
-    } catch (e) { console.warn('offer send:', e.message); }
+    } catch (e) {
+      console.warn('offer send:', e.message);
+      H.toast('Could not send the offer — please check your connection and try again', 4000, true);
+    }
   };
 
   // Show/hide the typing bubble (kept as the last child of the thread).
