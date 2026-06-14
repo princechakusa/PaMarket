@@ -1020,17 +1020,29 @@ window.H = {
     }
 
     // ── Touch handlers ─────────────────────────────────────────────
-    var startY = 0, curY = 0, pulling = false;
+    var startY = 0, curY = 0, pulling = false, committed = false;
+
+    // True if any scrollable ancestor of the touch target is scrolled down —
+    // in that case the user is scrolling content, not pulling to refresh.
+    function innerScrolled(node) {
+      while (node && node !== el && node.nodeType === 1) {
+        if (node.scrollHeight > node.clientHeight + 1) {
+          var oy = (getComputedStyle(node).overflowY || '');
+          if ((oy === 'auto' || oy === 'scroll') && node.scrollTop > 0) return true;
+        }
+        node = node.parentNode;
+      }
+      return false;
+    }
 
     function onStart(e) {
       if (refreshing || el.scrollTop > 0) return;
-      // Pages with their own internal scroller (bot chat) must not trigger PTR —
-      // mainArea stays at 0 so PTR would otherwise hijack every downward drag.
       if (H.currentPageName === 'ReportProblem') return;
       // Never start PTR from the bottom input/control area
       if (e.target && e.target.closest && e.target.closest('.chat-input-bar, .chat-attach-btn, .chat-send, input, button, textarea')) return;
-      // In Chat, mainArea has overflow:hidden so scrollTop is always 0.
-      // Check the actual chat thread scroll position instead.
+      // Don't hijack a gesture that's scrolling an inner scroller (chat thread,
+      // bot chat, any overflow container) that isn't at its top.
+      if (innerScrolled(e.target)) return;
       if (H.currentPageName === 'Chat') {
         const thread = document.getElementById('chatThread');
         if (thread && thread.scrollTop > 0) return;
@@ -1038,14 +1050,22 @@ window.H = {
       startY = e.touches[0].clientY;
       curY   = startY;
       pulling = true;
+      committed = false;
     }
 
     function onMove(e) {
       if (!pulling) return;
       curY = e.touches[0].clientY;
       var dist = curY - startY;
-      if (dist <= 0) { if (dist < -10) { pulling = false; snapBack(); hideIndicator(); } return; }
-      e.preventDefault(); // block native overscroll while we handle the pull
+      // Decide phase: don't touch the gesture until it's clearly a downward pull
+      // past a small deadzone. An upward/short move releases it to native scroll.
+      if (!committed) {
+        if (dist > 12) { committed = true; }
+        else if (dist < 0) { pulling = false; return; }
+        else return;
+      }
+      if (dist <= 0) { pulling = false; committed = false; snapBack(); hideIndicator(); return; }
+      e.preventDefault(); // block native overscroll only once we own the pull
       var visual = Math.min(damp(dist), MAX_VIS);
       moveContent(visual);
       moveIndicator(visual);
@@ -1056,12 +1076,13 @@ window.H = {
     function onEnd() {
       if (!pulling) return;
       pulling = false;
+      var wasCommitted = committed; committed = false;
       var dist = curY - startY;
-      if (dist >= THRESHOLD) { doRefresh(); }
+      if (wasCommitted && dist >= THRESHOLD) { doRefresh(); }
       else { snapBack(); hideIndicator(); }
     }
 
-    function onCancel() { pulling = false; snapBack(); hideIndicator(); }
+    function onCancel() { pulling = false; committed = false; snapBack(); hideIndicator(); }
 
     el.addEventListener('touchstart',  onStart,  { passive: true  });
     el.addEventListener('touchmove',   onMove,   { passive: false });
