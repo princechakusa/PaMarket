@@ -202,7 +202,7 @@
       if (m.image) {
         bubble.innerHTML = '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">';
       } else {
-        bubble.innerHTML = escHtml(m.text);
+        bubble.innerHTML = replyQuoteHtml(m) + escHtml(msgText(m));
       }
       bubble.innerHTML += '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>';
       row.appendChild(bubble);
@@ -291,7 +291,7 @@
           const _lastOffer = parseOffer(last.text);
           const previewBody = _lastOffer
             ? '💰 ' + (_lastOffer.k === 'accept' ? 'Offer accepted' : _lastOffer.k === 'decline' ? 'Offer declined' : (_lastOffer.k === 'counter' ? 'Counter: $' : 'Offer: $') + Number(_lastOffer.price || 0).toLocaleString())
-            : (last.image ? '📷 Photo' : escHtml(last.text || ''));
+            : escHtml(msgPreview(last));
           const preview = (mine ? previewTick(!!last.read) + ' ' : '') + previewBody;
           return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item${unread ? ' unread' : ''}" data-cid="${escHtml(c.id)}" data-oid="${escHtml(otherId || '')}" onclick="H.openChat('${c.id}')">
             <div class="p-av-wrap">${listAvatarHtml(other, otherDisplayName, color, 'p-av')}${online ? '<span class="p-on"></span>' : ''}</div>
@@ -349,6 +349,7 @@
     H.saveState();
     if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
     H._activeChat = id;
+    if (H._chat) H._chat.replyTarget = null;   // no carried-over reply target
 
     const otherIni = initials(otherDisplayName);
     const otherAvatarUrl = other && other.avatar;
@@ -376,7 +377,7 @@
       }
       const content = m.image
         ? '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">'
-        : escHtml(m.text);
+        : (replyQuoteHtml(m) + escHtml(msgText(m)));
       if (mine) {
         return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
@@ -458,6 +459,83 @@
     try { const o = JSON.parse(text); return (o && o._offer) ? o._offer : null; } catch (e) { return null; }
   }
   H._parseOffer = parseOffer;
+
+  // ----- Reply / quote support (WhatsApp-style swipe-to-reply) -----
+  // A reply is encoded in the message text as JSON, like offers, so it needs no
+  // schema change and syncs to every device:  {"_reply":{i,n,t}, "t":"<reply>"}
+  function parseReply(text) {
+    if (typeof text !== 'string' || text.charAt(0) !== '{' || text.indexOf('"_reply"') === -1) return null;
+    try { const o = JSON.parse(text); return (o && o._reply) ? { ref: o._reply, text: (o.t || '') } : null; } catch (e) { return null; }
+  }
+  H._parseReply = parseReply;
+  // The text a message actually shows (unwraps a reply envelope).
+  function msgText(m) { const r = parseReply(m && m.text); return r ? r.text : ((m && m.text) || ''); }
+  H._msgText = msgText;
+  // The quoted block rendered above a reply's own text.
+  function replyQuoteHtml(m) {
+    const r = parseReply(m && m.text);
+    if (!r || !r.ref) return '';
+    const nm = escHtml(r.ref.n || 'Message');
+    const tx = escHtml(String(r.ref.t || '').slice(0, 100));
+    return '<div class="chat-reply-quote" onclick="H._chat.jumpTo(\'' + escHtml(r.ref.i || '') + '\')"><span class="crq-name">' + nm + '</span><span class="crq-text">' + tx + '</span></div>';
+  }
+  H._replyQuoteHtml = replyQuoteHtml;
+  // One-line preview for lists / notifications (image, offer or reply-aware).
+  function msgPreview(m) {
+    if (!m) return '';
+    if (m.image) return '📷 Photo';
+    if (parseOffer(m.text)) return '💰 Offer';
+    return msgText(m);
+  }
+  H._msgPreview = msgPreview;
+
+  // Drag a message bubble to the right to reply to it (like WhatsApp). Delegated
+  // on the thread so it covers messages added live without re-binding each one.
+  function attachReplySwipe() {
+    const thread = document.getElementById('chatThread');
+    if (!thread || thread._replyBound) return;
+    thread._replyBound = true;
+    let row = null, sx = 0, sy = 0, dx = 0, active = false, decided = false, isReply = false;
+    thread.addEventListener('touchstart', function (e) {
+      const r = e.target.closest && e.target.closest('.chat-msg-row');
+      if (!r || !e.touches || !e.touches[0]) { row = null; active = false; return; }
+      row = r; sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+      dx = 0; active = true; decided = false; isReply = false;
+    }, { passive: true });
+    thread.addEventListener('touchmove', function (e) {
+      if (!active || !row || !e.touches || !e.touches[0]) return;
+      dx = e.touches[0].clientX - sx;
+      const dy = e.touches[0].clientY - sy;
+      if (!decided) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        decided = true;
+        // Only a clear rightward drag becomes a reply; otherwise let it scroll.
+        isReply = dx > 0 && Math.abs(dx) > Math.abs(dy);
+        if (!isReply) { active = false; row = null; return; }
+      }
+      if (isReply && dx > 0) {
+        e.preventDefault();
+        const d = Math.min(dx, 72);
+        row.style.transition = 'none';
+        row.style.transform = 'translateX(' + d + 'px)';
+        row.style.opacity = (1 - Math.min(d / 240, 0.25)).toFixed(2);
+      }
+    }, { passive: false });
+    function end() {
+      if (!row) { active = false; return; }
+      const r = row, fire = isReply && dx > 48;
+      row = null; active = false;
+      r.style.transition = 'transform .18s ease, opacity .18s ease';
+      r.style.transform = ''; r.style.opacity = '';
+      if (fire) {
+        const id = r.getAttribute('data-msg-id');
+        if (id) H._chat.startReply(id);
+      }
+    }
+    thread.addEventListener('touchend', end, { passive: true });
+    thread.addEventListener('touchcancel', end, { passive: true });
+  }
+
   function fmtMoney(n) { return '$' + Number(n || 0).toLocaleString(); }
   function offerCardHtml(of, mine, msgId, otherName) {
     const price = fmtMoney(of.price);
@@ -481,6 +559,44 @@
   }
 
   H._chat = H._chat || {};
+
+  // ----- Swipe-to-reply -----
+  H._chat.startReply = function (msgId) {
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function (x) { return x.id === msgId; });
+    if (!m) return;
+    const u = H.currentUser();
+    const who = (u && m.from === u.id) ? 'You' : (H._activeOtherName || 'Them');
+    H._chat.replyTarget = { id: msgId, name: who, text: String(msgPreview(m)).slice(0, 120) };
+    H._chat.renderReplyBar();
+    const inp = document.getElementById('chatIn'); if (inp) inp.focus();
+  };
+  H._chat.cancelReply = function () {
+    H._chat.replyTarget = null;
+    const bar = document.getElementById('chatReplyBar'); if (bar) bar.remove();
+  };
+  H._chat.renderReplyBar = function () {
+    const rt = H._chat.replyTarget; if (!rt) return;
+    const old = document.getElementById('chatReplyBar'); if (old) old.remove();
+    const inputBar = document.querySelector('.chat-input-bar');
+    if (!inputBar || !inputBar.parentNode) return;
+    const bar = document.createElement('div');
+    bar.id = 'chatReplyBar';
+    bar.className = 'chat-reply-bar';
+    bar.innerHTML = '<div class="crb-accent"></div><div class="crb-body"><span class="crb-name">Replying to ' + escHtml(rt.name) + '</span><span class="crb-text">' + escHtml(rt.text) + '</span></div>'
+      + '<button class="crb-x" onclick="H._chat.cancelReply()" aria-label="Cancel reply"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+    inputBar.parentNode.insertBefore(bar, inputBar);
+  };
+  H._chat.jumpTo = function (msgId) {
+    const sel = '[data-msg-id="' + (window.CSS && CSS.escape ? CSS.escape(msgId) : msgId) + '"]';
+    const row = document.querySelector(sel);
+    if (!row) return;
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    row.classList.add('chat-row-flash');
+    setTimeout(function () { row.classList.remove('chat-row-flash'); }, 1300);
+  };
+
   H._chat.makeOffer = function () {
     const c = conversations().find(function (x) { return x.id === H._activeChat; });
     if (!c) return;
@@ -591,6 +707,7 @@
     if (window._messagesPoll) { clearInterval(window._messagesPoll); window._messagesPoll = null; }
     const t = document.getElementById('chatThread');
     if (t) t.scrollTop = t.scrollHeight;
+    attachReplySwipe();
     const ma  = document.getElementById('mainArea');
     const wrap = document.getElementById('chatPageWrap');
 
@@ -1092,9 +1209,14 @@
     }
     var msgId = H.uid();
     var msgT = Date.now();
-    c.messages.push({ id: msgId, from: u.id, senderName: u.name||'', text: text, t: msgT, read: false });
+    // If replying, wrap the typed text in a reply envelope so the quote rides
+    // along to every device with no schema change.
+    const rt = H._chat && H._chat.replyTarget;
+    const storeText = rt ? JSON.stringify({ _reply: { i: rt.id, n: rt.name, t: rt.text }, t: text }) : text;
+    c.messages.push({ id: msgId, from: u.id, senderName: u.name||'', text: storeText, t: msgT, read: false });
     H.saveState();
     inp.value = '';
+    if (H._chat && H._chat.cancelReply) H._chat.cancelReply();
     if (typeof H.stopTyping === 'function') H.stopTyping();
     // Append to DOM directly — no full page re-render to avoid flicker
     const thread = document.getElementById('chatThread');
@@ -1104,7 +1226,7 @@
       row.setAttribute('data-msg-id', msgId);
       const bubble = document.createElement('div');
       bubble.className = 'chat-bubble me';
-      bubble.innerHTML = escHtml(text) + '<div class="chat-bubble-meta" style="text-align:right">just now ' + chatTick(false) + '</div>';
+      bubble.innerHTML = (rt ? replyQuoteHtml({ text: storeText }) : '') + escHtml(text) + '<div class="chat-bubble-meta" style="text-align:right">just now ' + chatTick(false) + '</div>';
       row.appendChild(bubble);
       const typing = thread.querySelector('#chatTyping');
       if (typing) thread.insertBefore(row, typing); else thread.appendChild(row);
@@ -1126,7 +1248,7 @@
         var r = await window.supabase.from('messages').insert({
           id: msgId, conversation_id: c.id,
           sender_id: u.id, sender_name: u.name || '',
-          text: text, created_at: new Date(msgT).toISOString(), read: false
+          text: storeText, created_at: new Date(msgT).toISOString(), read: false
         });
         if (r && r.error) throw new Error(r.error.message);
       }

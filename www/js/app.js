@@ -1204,7 +1204,7 @@ window.H = {
                 H._appendChatMessages(msg.conversation_id,[localMsg]);
               else if(H.currentPageName==='Messages'&&typeof H._refreshMessagesPage==='function')
                 H._refreshMessagesPage({ skipSync:true });
-              H.pushNotif&&H.pushNotif(H.state.currentUserId,'New message',msg.text||'');
+              H.pushNotif&&H.pushNotif(H.state.currentUserId,'New message',(H._msgPreview?H._msgPreview({text:msg.text}):msg.text)||'');
             }
           } else {
             // Message for a conversation we don't hold — possibly one the user

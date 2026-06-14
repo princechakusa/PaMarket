@@ -1165,6 +1165,21 @@ select.fi {
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.toast-err { background: #c0392b; white-space: normal; border-radius: 14px; line-height: 1.35; }
 
+/* ── Swipe-to-reply ─────────────────────────────────── */
+.chat-msg-row { will-change: transform; }
+.chat-reply-quote { display: block; border-left: 3px solid currentColor; padding: 4px 8px; margin: 0 0 5px; border-radius: 6px; background: rgba(0,0,0,.10); font-size: 12.5px; line-height: 1.3; cursor: pointer; max-width: 100%; overflow: hidden; }
+.chat-bubble.them .chat-reply-quote { background: rgba(0,0,0,.05); }
+.chat-reply-quote .crq-name { display: block; font-weight: 800; opacity: .9; font-size: 11.5px; margin-bottom: 1px; }
+.chat-reply-quote .crq-text { display: block; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-row-flash { animation: chatRowFlash 1.3s ease; }
+@keyframes chatRowFlash { 0%,100% { background: transparent; } 25% { background: rgba(26,58,143,.14); } }
+.chat-reply-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg2, #f4f6fa); border-top: 1px solid var(--border, #e5e7eb); }
+.chat-reply-bar .crb-accent { width: 3px; align-self: stretch; background: var(--blue, #1A3A8F); border-radius: 2px; flex-shrink: 0; }
+.chat-reply-bar .crb-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.chat-reply-bar .crb-name { font-size: 12px; font-weight: 800; color: var(--blue, #1A3A8F); }
+.chat-reply-bar .crb-text { font-size: 12.5px; color: var(--sub, #667085); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-reply-bar .crb-x { background: none; border: none; color: var(--sub, #667085); cursor: pointer; padding: 4px; flex-shrink: 0; display: flex; }
+
 /* ── VERIFY ──────────────────────────────────────────────────── */
 .verify-badge-preview { background: var(--blue-light); border: 1px solid rgba(26,58,143,.2); border-radius: var(--r-md); padding: 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .vbp-icon { width: 42px; height: 42px; background: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
