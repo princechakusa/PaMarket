@@ -545,8 +545,12 @@ select.fi {
 
 /* Toggles */
 .notif-section, .privacy-section, .security-section { display: flex; flex-direction: column; }
-.toggle-item { display: flex; align-items: flex-start; justify-content: space-between; padding: 15px 0; border-bottom: .5px solid var(--border); gap: 12px; }
+.toggle-item { display: flex; align-items: center; justify-content: space-between; padding: 14px; background: var(--card); border-bottom: .5px solid var(--border); gap: 12px; }
 .toggle-item:last-child { border-bottom: none; }
+/* Group toggle rows into one white card per section, matching .settings-item */
+.settings-section > .toggle-item:first-of-type { border-radius: var(--r-md) var(--r-md) 0 0; }
+.settings-section > .toggle-item:last-of-type { border-radius: 0 0 var(--r-md) var(--r-md); border-bottom: none; }
+.settings-section > .toggle-item:only-of-type { border-radius: var(--r-md); }
 .toggle-label { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .toggle-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; color: var(--blue); flex-shrink: 0; border: .5px solid var(--border); }
 .toggle-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
@@ -1346,7 +1350,7 @@ select.fi {
 [data-theme="dark"] .notif-toggle-title { color: var(--n1); }
 [data-theme="dark"] .admin-row { background: var(--card); border-color: var(--border); }
 [data-theme="dark"] .admin-row-name { color: var(--n1); }
-[data-theme="dark"] .toggle-item { border-color: var(--border); }
+[data-theme="dark"] .toggle-item { background: var(--card); border-color: var(--border); }
 [data-theme="dark"] .msg-item { background: var(--card); border-color: var(--border); }
 [data-theme="dark"] .msg-name { color: var(--n1); }
 [data-theme="dark"] .chat-bubble.them { background: var(--card); color: var(--n1); border-color: var(--border); }
