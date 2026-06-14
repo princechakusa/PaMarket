@@ -8,6 +8,28 @@
 (function (H) {
   const pages = H.pages;
 
+  // ── Official PaMarket social channels ──────────────────────
+  H.SOCIALS = [
+    { name: 'TikTok',    url: 'https://www.tiktok.com/@pamarketzimbabwe', bg: '#000000',
+      svg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M16.6 5.82a4.28 4.28 0 0 1-1.05-2.82h-3.07v12.2a2.43 2.43 0 1 1-2.43-2.43c.2 0 .4.02.59.06v-3.13a5.57 5.57 0 0 0-.59-.03 5.56 5.56 0 1 0 5.56 5.56V9.01a7.33 7.33 0 0 0 4.28 1.37V7.3a4.28 4.28 0 0 1-3.3-1.48z"/></svg>' },
+    { name: 'Facebook',  url: 'https://www.facebook.com/profile.php?id=61591000371129', bg: '#1877F2',
+      svg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M24 12a12 12 0 1 0-13.88 11.85v-8.38H7.08V12h3.04V9.36c0-3 1.79-4.67 4.53-4.67 1.31 0 2.68.24 2.68.24v2.95h-1.51c-1.49 0-1.96.93-1.96 1.87V12h3.33l-.53 3.47h-2.8v8.38A12 12 0 0 0 24 12z"/></svg>' },
+    { name: 'Instagram', url: 'https://www.instagram.com/pamarketzim/', bg: 'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)',
+      svg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg>' },
+    { name: 'YouTube',   url: 'https://www.youtube.com/@PaMarketZim', bg: '#FF0000',
+      svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.8a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 23.5 12 31 31 0 0 0 23 7.2zM9.8 15.3V8.7l5.7 3.3z"/></svg>' }
+  ];
+
+  // Reusable row of social buttons (used on About + anywhere else).
+  H._socialLinks = function () {
+    return H.SOCIALS.map(function (s) {
+      return '<a href="' + s.url + '" target="_blank" rel="noopener" title="' + s.name + '" aria-label="' + s.name + '"'
+        + ' onclick="event.preventDefault();(window.open(\'' + s.url + '\',\'_blank\',\'noopener\'))" '
+        + ' style="width:46px;height:46px;border-radius:50%;background:' + s.bg + ';display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 3px 10px -3px rgba(16,24,40,.4)">'
+        + s.svg + '</a>';
+    }).join('');
+  };
+
   // Icons (prefer H.ICONS, fallback set)
   const I = (window.H && H.ICONS) || {};
   const S = {
@@ -1102,6 +1124,12 @@ pages.HelpCommunity = function () {
               <div style="font-size:13px;font-weight:700;color:#25D366;margin-top:2px">+971 589 772 645</div>
             </div>
           </a>
+        </div>
+
+        ${sec('Follow Us')}
+        <div style="font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.6">Stay updated with the latest listings, deals and news from PaMarket Zimbabwe.</div>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          ${H._socialLinks ? H._socialLinks() : ''}
         </div>
 
         <div style="text-align:center;padding:32px 0 8px">
