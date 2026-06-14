@@ -3,6 +3,21 @@
 
   var JOB_CATS = ['Accounting & Finance', 'Sales & Marketing', 'IT & Technology', 'Construction', 'Healthcare', 'Education', 'Hospitality', 'Administration', 'Engineering', 'Driving & Logistics'];
 
+  // Granular profession list (Zim-flavoured) used by the Get Hired wizard.
+  var JOB_PROFESSIONS = [
+    'Accounting / Finance', 'Administration / Office', 'Agriculture / Farming',
+    'Automobile / Mechanic', 'Beauty / Salon / Spa', 'Cleaning / Housekeeping',
+    'Construction / Building', 'Cook / Chef / Catering', 'Customer Service / Call Centre',
+    'Data / IT / Software', 'Design / Creative', 'Driver / Delivery',
+    'Education / Teaching', 'Engineering', 'Events / Hospitality',
+    'General Worker / Labour', 'Healthcare / Medical', 'Human Resources',
+    'Legal', 'Logistics / Warehouse', 'Marketing / Sales', 'Media / Journalism',
+    'NGO / Development', 'Retail / Shop Assistant', 'Security / Guard',
+    'Tailoring / Textiles', 'Tourism / Travel', 'Trades (Plumber, Electrician, Welder)',
+    'Other'
+  ];
+  H.JOB_PROFESSIONS = JOB_PROFESSIONS;
+
   function parseLine(lines, key) {
     var found = lines.find(function (ln) { return ln.startsWith(key + ':'); });
     return found ? found.slice(key.length + 1).trim() : '';
@@ -48,9 +63,9 @@
       + '<div style="padding:24px 16px">'
       + '<div style="font-size:23px;font-weight:900;color:var(--text);margin-bottom:4px;letter-spacing:-.4px">What brings you here?</div>'
       + '<div style="font-size:13.5px;color:var(--sub);margin-bottom:22px">Choose how you want to use PaMarket Jobs.</div>'
-      + '<button class="jobintent-card" onclick="H.openInner(\'JobSeekerProfile\')" style="background:linear-gradient(135deg,#22c55e,#15803d)">'
+      + '<button class="jobintent-card" onclick="H._getHired()" style="background:linear-gradient(135deg,#22c55e,#15803d)">'
       + '<div class="jic-ic">' + seeker + '</div>'
-      + '<div class="jic-body"><div class="jic-title">Get Hired</div><div class="jic-sub">Looking for a job? Pick your profession and build your CV profile so employers find you.</div></div>'
+      + '<div class="jic-body"><div class="jic-title">Get Hired</div><div class="jic-sub">Looking for a job? Pick your location and profession, then build your CV profile so employers find you.</div></div>'
       + '<div class="jic-go">' + arrow + '</div></button>'
       + '<button class="jobintent-card" onclick="H.openInner(\'PostJob\')" style="background:linear-gradient(135deg,#1A3A8F,#0f2460)">'
       + '<div class="jic-ic">' + briefcase + '</div>'
@@ -58,6 +73,52 @@
       + '<div class="jic-go">' + arrow + '</div></button>'
       + '<div style="text-align:center;margin-top:14px"><button onclick="H.openInner(\'FindJobs\')" style="background:none;border:none;color:#1A3A8F;font-weight:700;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;padding:8px">Or browse all openings &rarr;</button></div>'
       + '</div></div>';
+  };
+
+  // Entry for the Get Hired wizard.
+  H._getHired = function () {
+    if (!H.currentUser()) { H.requireAuth('Sign in to create your job profile'); return; }
+    H.openInner('JobSeekerLocation');
+  };
+
+  // Get Hired step 1 — where do you want to work / be found?
+  H.pages.JobSeekerLocation = function () {
+    var ZW = H._ZW_CITIES || ['Harare', 'Bulawayo', 'Mutare', 'Gweru', 'Kwekwe', 'Masvingo', 'Chinhoyi', 'Marondera'];
+    var u = H.currentUser();
+    var cur = (u && u.city) || '';
+    var chev = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+    var check = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#15803d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var opts = ['Anywhere in Zimbabwe'].concat(ZW).concat(['Remote / Online']);
+    var rows = opts.map(function (c) {
+      var val = c === 'Anywhere in Zimbabwe' ? 'Any' : c;
+      var on = cur === val || (c === 'Anywhere in Zimbabwe' && !cur);
+      return '<button class="subcat-row" onclick="H.openInner(\'JobSeekerProfession\',{city:\'' + H.escHtml(val) + '\'})">'
+        + '<span>' + H.escHtml(c) + '</span>' + (on ? check : chev) + '</button>';
+    }).join('');
+    return '<div class="page active">'
+      + H.innerTopbar('Get Hired')
+      + '<div class="picker-intro"><div class="picker-step">Step 1 of 2</div><div class="picker-title">Where do you want to work?</div><div class="picker-sub">Pick the location where you want employers to find you.</div></div>'
+      + '<div class="subcat-list">' + rows + '</div></div>';
+  };
+
+  // Get Hired step 2 — choose your profession.
+  H.pages.JobSeekerProfession = function (params) {
+    var city = (params && params.city) || 'Any';
+    var cityLabel = city === 'Any' ? 'Anywhere in Zimbabwe' : city;
+    var u = H.currentUser();
+    var cur = (u && u.sector) || '';
+    var chev = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+    var check = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#15803d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var rows = JOB_PROFESSIONS.map(function (p) {
+      var on = cur === p;
+      return '<button class="subcat-row" onclick="H.openInner(\'CandidateProfile\',{city:\'' + H.escHtml(city) + '\',sector:\'' + H.escHtml(p).replace(/'/g, "\\'") + '\'})">'
+        + '<span>' + H.escHtml(p) + '</span>' + (on ? check : chev) + '</button>';
+    }).join('');
+    return '<div class="page active">'
+      + H.innerTopbar('Get Hired')
+      + '<div class="picker-intro"><div class="picker-step">Step 2 of 2</div><div class="picker-title">Choose your profession</div>'
+      + '<div class="picker-crumb"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + H.escHtml(cityLabel) + '</div></div>'
+      + '<div class="subcat-list">' + rows + '</div></div>';
   };
 
   H.pages.Jobs = function () {
@@ -1429,9 +1490,12 @@
     if (row) row.style.display = el.checked ? 'none' : '';
   };
 
-  H.pages.CandidateProfile = function () {
+  H.pages.CandidateProfile = function (params) {
     var u = H.currentUser();
     if (!u) return '<div class="page active">' + H.innerTopbar('Job Seeker Profile') + H.emptyState('Sign in required', 'Sign in to set up your job seeker profile', 'Sign In', "H.requireAuth('Job seeker profile')") + '</div>';
+    // Pre-fill from the Get Hired wizard (location + profession), else existing.
+    var preCity   = (params && params.city && params.city !== 'Any') ? params.city : (u.city || '');
+    var preSector = (params && params.sector) || u.sector || '';
     var ZW = H._ZW_CITIES || [];
     var expLevels = [['entry','Entry Level (0-2 yrs)'],['mid','3-5 Years'],['senior','5-10 Years'],['expert','10+ Years']];
     var on = u.openToWork ? '1' : '0';
@@ -1470,9 +1534,10 @@
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>', 'Basic Details')
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Current / Desired Job Title</label>'
       + '<input id="cpTitle" placeholder="e.g. Accountant, Driver, Teacher" value="' + H.escHtml(u.jobTitle || '') + '" style="' + inStyle + '"></div>'
-      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Industry / Sector</label>'
-      + '<select id="cpSector" style="' + inStyle + '"><option value="">Select sector…</option>'
-      + JOB_CATS.map(function(c){ return '<option value="' + H.escHtml(c) + '"' + (u.sector === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Profession / Sector</label>'
+      + '<select id="cpSector" style="' + inStyle + '"><option value="">Select profession…</option>'
+      + (JOB_PROFESSIONS.indexOf(preSector) === -1 && preSector ? '<option value="' + H.escHtml(preSector) + '" selected>' + H.escHtml(preSector) + '</option>' : '')
+      + JOB_PROFESSIONS.map(function(c){ return '<option value="' + H.escHtml(c) + '"' + (preSector === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
       + '</select></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Experience Level</label>'
       + '<select id="cpExp" style="' + inStyle + '"><option value="">Select level…</option>'
@@ -1480,8 +1545,8 @@
       + '</select></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">City</label>'
       + '<select id="cpCity" style="' + inStyle + '"><option value="">Select city…</option>'
-      + ZW.map(function(c){ return '<option value="' + H.escHtml(c) + '"' + (u.city === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
-      + '<option value="Remote"' + (u.city === 'Remote' ? ' selected' : '') + '>Remote / Any</option>'
+      + ZW.map(function(c){ return '<option value="' + H.escHtml(c) + '"' + (preCity === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
+      + '<option value="Remote / Online"' + (preCity === 'Remote / Online' ? ' selected' : '') + '>Remote / Online</option>'
       + '</select></div>'
 
       // ── Professional Background ──
