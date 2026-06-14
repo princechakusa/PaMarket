@@ -305,7 +305,8 @@
   </div>
 
   <!-- ── Supabase ──────────────────────────────────────── -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase JS — bundled locally so it always loads (CDN can fail on slow/blocked networks) -->
+  <script src="js/lib/supabase.umd.js?v=1"></script>
   <script>
     window.SUPABASE_URL      = 'https://gxgytumhknmnwspxjzxw.supabase.co';
     window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
@@ -325,7 +326,7 @@
 
   <!-- ── Pages ────────────────────────────────────────── -->
   <script src="js/browse.js?v=4"></script>
-  <script src="js/detail.js?v=11"></script>
+  <script src="js/detail.js?v=12"></script>
   <script src="js/post.js?v=13"></script>
   <script src="js/saved.js?v=2"></script>
   <script src="js/messages.js?v=26"></script>

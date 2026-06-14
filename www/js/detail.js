@@ -270,7 +270,9 @@
       title:'Delete this listing?', body:'This cannot be undone.', confirmText:'Delete', danger:true,
       onConfirm: async () => {
         var sc = window.supabase;
-        if (sc && typeof sc.from === 'function') {
+        // Only attempt a cloud delete when a real Supabase client is available
+        // (the mock fallback has no .auth). Otherwise just remove it locally.
+        if (sc && sc.auth && typeof sc.from === 'function') {
           try {
             var res = await sc.from('listings').delete().eq('id', id).select();
             if (res && res.error) {
@@ -278,8 +280,8 @@
               return;
             }
             if (!res.data || res.data.length === 0) {
-              H.toast('Could not delete — please try again');
-              return;
+              // Nothing deleted in the cloud — likely a local-only listing that
+              // never synced. Fall through and remove it locally.
             }
           } catch (e) {
             H.toast('Network error — try again');
