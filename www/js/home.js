@@ -125,6 +125,9 @@
           </div>
         </div>
 
+        <!-- SPONSORED — swipeable banner carousel (all active ads), right under categories -->
+        ${(H.adCarousel && H.activeAds) ? H.adCarousel(H.activeAds(), { title: 'Featured Partners' }) : ''}
+
         <!-- BANNER -->
         <div style="margin:0 12px 8px;background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:18px;padding:20px;display:flex;align-items:center;justify-content:space-between;overflow:hidden;position:relative">
           <div style="position:absolute;right:-24px;top:-24px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.07)"></div>
@@ -139,49 +142,6 @@
             <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.75);text-transform:uppercase;margin-top:3px">Active Ads</div>
           </div>
         </div>
-
-        <!-- HOT ON PAMARKET (paid ads horizontal scroll) -->
-        ${(function(){
-          var now = Date.now();
-          var ads = (H.state.paidAds||[]).filter(function(a){ return a.active && a.endsAt > now && a.type !== 'spotlight'; });
-          if (!ads.length) return '';
-          ads.forEach(function(a){ if(H.trackAdImpression) H.trackAdImpression(a.id); });
-          return '<div style="padding:20px 0 0">'
-            + '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">'
-            + '<div>'
-            + '<div style="font-size:10px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Sponsored</div>'
-            + '<span style="font-size:17px;font-weight:800;color:var(--text)">Hot on PaMarket</span>'
-            + '</div>'
-            + '</div>'
-            + '<div style="display:flex;gap:12px;padding:0 16px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">'
-            + ads.map(function(a){
-                var clickFn = 'H.trackAdClick(' + JSON.stringify(a.id) + ',' + JSON.stringify(a.linkUrl||'') + ')';
-                var title    = escHtml(a.headline || a.businessName || 'Sponsored');
-                var sub      = escHtml(a.tagline || '');
-                var bg       = escHtml(a.bgColor || '#1A3A8F');
-                var initials = (a.businessName||'AD').split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase();
-                /* Image is positioned absolute over the initials fallback.
-                   If it fails to load, onerror removes it and the initials show through. */
-                return '<div onclick="' + escHtml(clickFn) + '" style="width:170px;flex-shrink:0;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.12);background:var(--card)">'
-                  + '<div style="height:130px;background:' + bg + ';position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center">'
-                  /* initials always rendered as the base layer */
-                  + '<span style="font-size:38px;font-weight:900;color:rgba(255,255,255,0.35);letter-spacing:-1px;position:relative;z-index:1">' + escHtml(initials) + '</span>'
-                  /* image sits on top via absolute — removed on error so initials show */
-                  + (a.imageUrl ? '<img src="' + escHtml(a.imageUrl) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2" loading="lazy" onerror="this.parentNode.removeChild(this)">' : '')
-                  /* AD badge always on top */
-                  + '<span style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);color:#fff;font-size:8px;font-weight:700;padding:2px 7px;border-radius:6px;letter-spacing:.5px;z-index:3">AD</span>'
-                  /* gradient overlay at bottom for text legibility when image is shown */
-                  + (a.imageUrl ? '<div style="position:absolute;bottom:0;left:0;right:0;height:56px;background:linear-gradient(to top,rgba(0,0,0,0.55),transparent);z-index:2"></div>' : '')
-                  + '</div>'
-                  + '<div style="padding:10px 12px 13px">'
-                  + '<div style="font-size:13px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">' + title + '</div>'
-                  + (sub ? '<div style="font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + sub + '</div>' : '')
-                  + '</div>'
-                  + '</div>';
-              }).join('')
-            + '</div>'
-            + '</div>';
-        })()}
 
         <!-- POST AD BUTTON -->
         <div style="padding:12px 12px 0">
@@ -243,6 +203,7 @@
   };
 
   H.pages.Home_after = function () {
+    if (H._initAdCarousels) H._initAdCarousels();
     if (typeof H.fetchListingsFromSupabase !== 'function') return;
     const countBefore = (H.state.listings || []).filter(l => l.status === 'active').length;
     H.fetchListingsFromSupabase().then(() => {

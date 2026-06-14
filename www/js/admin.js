@@ -1144,22 +1144,21 @@
       const ad = id ? (H.state.paidAds||[]).find(a=>a.id===id) : null;
       const today = new Date().toISOString().slice(0,10);
       const inAMonth = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
-      const catOptions = CATS.map(c=>`<option value="${c}" ${ad&&ad.targetCat===c?'selected':''}>${c}</option>`).join('');
+      const catOptions = `<option value="" ${!ad||!ad.targetCat?'selected':''}>All / Home only</option>`
+        + CATS.map(c=>`<option value="${c}" ${ad&&ad.targetCat===c?'selected':''}>${c}</option>`).join('');
       H.modal({
         title: ad ? 'Edit Ad' : 'Create Paid Ad',
         body: `
-          <div class="fg" style="margin-top:8px"><div class="fl">Ad Type</div>
-            <select class="fi" id="_adType" onchange="document.getElementById('_spotlightRow').style.display=this.value==='spotlight'?'':'none'">
-              <option value="banner" ${!ad||ad.type==='banner'?'selected':''}>🖼 Home Banner</option>
-              <option value="spotlight" ${ad&&ad.type==='spotlight'?'selected':''}>⭐ Category Spotlight</option>
-            </select></div>
+          <input type="hidden" id="_adType" value="banner">
+          <div class="fg" style="margin-top:8px"><div class="fl">Show On</div>
+            <select class="fi" id="_adCat">${catOptions}</select>
+            <div style="font-size:11px;color:var(--sub);margin-top:4px">"All / Home only" shows it in the Home carousel. Pick a category to also show it on that category's page.</div></div>
           <div class="fg"><div class="fl">Business Name</div><input class="fi" id="_adBiz" value="${escHtml(ad?ad.businessName:'')}" placeholder="e.g. Mega Furniture Harare"></div>
           <div class="fg"><div class="fl">Headline / Tagline</div><input class="fi" id="_adHead" value="${escHtml(ad?ad.headline||'':'')}" placeholder="e.g. Best prices in Harare!"></div>
           <div class="fg"><div class="fl">Sub-tagline (optional)</div><input class="fi" id="_adTag" value="${escHtml(ad?ad.tagline||'':'')}" placeholder="e.g. Free delivery on orders over $50"></div>
           <div class="fg"><div class="fl">Image URL (optional)</div><input class="fi" id="_adImg" value="${escHtml(ad?ad.imageUrl||'':'')}" placeholder="https://... or leave blank for colour card"></div>
           <div class="fg"><div class="fl">Background Colour</div><div style="display:flex;align-items:center;gap:8px"><input type="color" id="_adColor" value="${ad?ad.bgColor||'#1A3A8F':'#1A3A8F'}" style="width:44px;height:36px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><span id="_adColorHex" style="font-size:13px;color:var(--sub)">${ad?ad.bgColor||'#1A3A8F':'#1A3A8F'}</span></div></div>
           <div class="fg"><div class="fl">Tap Destination URL (optional)</div><input class="fi" id="_adLink" value="${escHtml(ad?ad.linkUrl||'':'')}" placeholder="https://wa.me/2637... or leave blank"></div>
-          <div class="fg" id="_spotlightRow" style="display:${ad&&ad.type==='spotlight'?'':'none'}"><div class="fl">Target Category</div><select class="fi" id="_adCat">${catOptions}</select></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <div class="fg"><div class="fl">Start Date</div><input class="fi" type="date" id="_adStart" value="${ad?new Date(ad.startsAt).toISOString().slice(0,10):today}"></div>
             <div class="fg"><div class="fl">End Date</div><input class="fi" type="date" id="_adEnd" value="${ad?new Date(ad.endsAt).toISOString().slice(0,10):inAMonth}"></div>

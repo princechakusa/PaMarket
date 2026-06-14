@@ -1445,7 +1445,7 @@ function renderAds() {
     var advertiser = DATA.users.find(function(x){ return x.id===a.advertiser_id; })||{};
     var imgHtml = (a.image_url||a.image) ? '<img src="'+esc(a.image_url||a.image)+'" style="width:64px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display=\'none\'">'
       : '<div style="width:64px;height:48px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg></div>';
-    var sectionLabel = (a.type==='spotlight' && a.target_cat) ? ('Category: '+esc(a.target_cat.charAt(0).toUpperCase()+a.target_cat.slice(1))) : 'Home banner';
+    var sectionLabel = a.target_cat ? ('Home + '+esc(a.target_cat.charAt(0).toUpperCase()+a.target_cat.slice(1))) : 'Home carousel';
     html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px">';
     html+='<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">';
     html+=imgHtml;
@@ -1510,10 +1510,10 @@ function openCreateAd() {
     // Placement — controls exactly where the ad appears in the app
     +'<div class="form-row"><label class="form-label">Where should this ad show? <span style="color:var(--red)">*</span></label>'
     +'<select class="form-input" id="adPlacement" onchange="_onAdPlacementChange()">'
-    +'<option value="home">Home — "Hot on PaMarket" (under the buy/sell banner)</option>'
-    +'<option value="category">Category page — top of one category</option>'
+    +'<option value="home">Home — Featured Partners carousel (under the categories)</option>'
+    +'<option value="category">Home + a category page</option>'
     +'</select>'
-    +'<div style="font-size:11px;color:var(--sub);margin-top:4px">Home ads appear in the sponsored row on the home screen. Category ads appear at the top of that category\'s listings.</div></div>'
+    +'<div style="font-size:11px;color:var(--sub);margin-top:4px">All ads appear in the swipeable "Featured Partners" carousel on Home. Choosing a category also shows it in that category page\'s carousel.</div></div>'
     +'<div class="form-row" id="adCatRow" style="display:none"><label class="form-label">Which category?</label>'
     +'<select class="form-input" id="adCat">'
     +'<option value="electronics">Electronics</option>'

@@ -1227,6 +1227,25 @@ select.fi {
 .cp-card-title { font-size: 15px; font-weight: 800; color: var(--text, #101828); letter-spacing: -.2px; }
 .cp-card .fi, .cp-card input, .cp-card select, .cp-card textarea { margin-bottom: 0; }
 
+/* ── Sponsored ad carousel ─────────────────────────────── */
+.ad-caro { margin: 6px 0 4px; }
+.adc-head { display: flex; flex-direction: column; padding: 14px 16px 8px; }
+.adc-spon { font-size: 10px; font-weight: 800; color: var(--blue, #1A3A8F); letter-spacing: .8px; text-transform: uppercase; }
+.adc-title { font-size: 16px; font-weight: 800; color: var(--text, #101828); }
+.adc-track { display: flex; gap: 12px; padding: 2px 16px 4px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.adc-track::-webkit-scrollbar { display: none; }
+.adc-slide { position: relative; flex: 0 0 88%; height: 150px; border-radius: 18px; overflow: hidden; display: flex; align-items: center; padding: 0 20px; cursor: pointer; scroll-snap-align: center; box-shadow: 0 8px 22px -8px rgba(16,24,40,.4); }
+.adc-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.adc-scrim { position: absolute; inset: 0; z-index: 2; background: linear-gradient(90deg, rgba(0,0,0,.62) 0%, rgba(0,0,0,.30) 55%, rgba(0,0,0,.05) 100%); }
+.adc-badge { position: absolute; top: 10px; right: 10px; z-index: 4; background: rgba(0,0,0,.45); color: #fff; font-size: 9px; font-weight: 700; letter-spacing: .5px; padding: 3px 8px; border-radius: 6px; }
+.adc-txt { position: relative; z-index: 3; }
+.adc-kick { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,.88); }
+.adc-h { font-size: 22px; font-weight: 900; line-height: 1.05; letter-spacing: -.4px; color: #fff; margin: 4px 0 9px; max-width: 80%; }
+.adc-cta { display: inline-block; background: #fff; color: var(--blue, #1A3A8F); font-size: 12px; font-weight: 800; padding: 8px 16px; border-radius: 999px; }
+.adc-dots { display: flex; gap: 6px; justify-content: center; padding: 10px 0 2px; }
+.adc-dots i { width: 7px; height: 7px; border-radius: 50%; background: #cdd5e0; transition: all .2s; }
+.adc-dots i.on { background: var(--blue, #1A3A8F); width: 18px; border-radius: 4px; }
+
 /* ── Post: chosen-category bar (category's own form) ───── */
 .post-cat-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--bg2, #f4f6fa); border: 1px solid var(--border, #E4E8F0); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; }
 .post-cat-bar-l { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 800; color: var(--text, #101828); }
