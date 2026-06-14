@@ -94,6 +94,7 @@
     } catch(e) { console.warn('OAuth login handler:', e); }
   }
 
+  if (window.supabase && window.supabase.auth && typeof window.supabase.auth.onAuthStateChange === 'function')
   window.supabase.auth.onAuthStateChange(async function(event, session) {
     // Password reset link clicked — show the set-new-password form
     if (event === 'PASSWORD_RECOVERY') {

@@ -1375,13 +1375,18 @@
 
   var inStyle = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit';
 
+  var _cpCardOpen = false;
   function _cpSectionHead(icon, title) {
-    return '<div style="display:flex;align-items:center;gap:10px;margin:20px 0 10px">'
-      + '<span style="display:inline-flex;align-items:center;color:var(--sub)">' + icon + '</span>'
-      + '<span style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px">' + title + '</span>'
-      + '<span style="flex:1;height:1px;background:var(--border)"></span>'
+    // Each section is its own card; close the previous one (if any) and open a new.
+    var pre = _cpCardOpen ? '</div>' : '';
+    _cpCardOpen = true;
+    return pre + '<div class="cp-card"><div class="cp-card-head">'
+      + '<span class="cp-card-ic">' + icon + '</span>'
+      + '<span class="cp-card-title">' + title + '</span>'
       + '</div>';
   }
+  // Close the final open card.
+  function _cpSectionEnd() { var s = _cpCardOpen ? '</div>' : ''; _cpCardOpen = false; return s; }
 
   function _cpRenderSkillChips(skills) {
     return skills.map(function(s, i) {
@@ -1493,6 +1498,7 @@
   H.pages.CandidateProfile = function (params) {
     var u = H.currentUser();
     if (!u) return '<div class="page active">' + H.innerTopbar('Job Seeker Profile') + H.emptyState('Sign in required', 'Sign in to set up your job seeker profile', 'Sign In', "H.requireAuth('Job seeker profile')") + '</div>';
+    _cpCardOpen = false; // reset card-wrapping state for this render
     // Pre-fill from the Get Hired wizard (location + profession), else existing.
     var preCity   = (params && params.city && params.city !== 'Any') ? params.city : (u.city || '');
     var preSector = (params && params.sector) || u.sector || '';
@@ -1628,8 +1634,9 @@
 
       // ── Resume / CV ──
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>', 'Resume / CV')
-      + '<div id="cpResumeZone" style="margin-bottom:20px">' + _cpRenderResumeZone(cvFileName) + '</div>'
+      + '<div id="cpResumeZone" style="margin-bottom:4px">' + _cpRenderResumeZone(cvFileName) + '</div>'
       + '<input type="file" id="cpResumeFile" accept=".pdf,.doc,.docx" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">'
+      + _cpSectionEnd()
 
       + '</div>'
       + '<div style="position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #E4E8F0;z-index:200">'
@@ -1776,13 +1783,24 @@
 
   H._saveCandidateProfile = function () {
     var u = H.currentUser(); if (!u) return;
+
+    // Validate required basics so an empty profile can't be saved.
+    var vTitle  = ((document.getElementById('cpTitle')  || {}).value || '').trim();
+    var vSector = (document.getElementById('cpSector')  || {}).value || '';
+    var vCity   = (document.getElementById('cpCity')    || {}).value || '';
+    var vBio    = ((document.getElementById('cpBio')    || {}).value || '').trim();
+    if (!vTitle)  { H.toast('Add your job title to continue'); var e1=document.getElementById('cpTitle'); if(e1) e1.focus(); return; }
+    if (!vSector) { H.toast('Choose your profession / sector'); return; }
+    if (!vCity)   { H.toast('Choose your city'); return; }
+    if (vBio.length < 20) { H.toast('Write a short bio (at least 20 characters) so employers know you'); var e2=document.getElementById('cpBio'); if(e2) e2.focus(); return; }
+
     var saveBtn = document.getElementById('cpSaveBtn');
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
 
     // Collect all form values
     u.openToWork     = !!(document.getElementById('otwTog') && document.getElementById('otwTog').dataset.on === '1');
-    u.jobTitle       = ((document.getElementById('cpTitle')   || {}).value || '').trim();
-    u.sector         = (document.getElementById('cpSector')   || {}).value || '';
+    u.jobTitle       = vTitle;
+    u.sector         = vSector;
     u.exp            = (document.getElementById('cpExp')      || {}).value || '';
     u.city           = (document.getElementById('cpCity')     || {}).value || '';
     u.bio            = ((document.getElementById('cpBio')     || {}).value || '').trim();
