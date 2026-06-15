@@ -1681,18 +1681,40 @@
     H.openInner('ApplyJob', { jobId: jobId });
   };
 
+  // Education-level → qualification dropdown value (reuses Hire-Talent matcher).
+  var _QUAL_OPTS = [['none', 'No formal qualification'], ['secondary', 'High School / Secondary'], ['certificate', 'Certificate / Diploma'], ['degree', 'Bachelor’s Degree'], ['postgrad', 'Postgraduate']];
+
   H.pages.ApplyJob = function (params) {
     var jobId = params && params.jobId;
     var l = (H.state.listings || []).find(function(x){ return x.id === jobId; });
     if (!l) return '<div class="page active">' + H.innerTopbar('Apply') + H.emptyState('Job not found', '', null, null) + '</div>';
+    var u = H.currentUser() || {};
+    var cv = u.cv || {};
     var company = l.company || l.sellerName || 'Company';
     var questions = l.custom_questions || [];
     var inS = 'width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit';
 
+    // Prefill from the saved job-seeker profile
+    var preQual    = _candEduLevel(u) || '';
+    var preTitle   = u.jobTitle || cv.headline || '';
+    var preCat     = parseLine((l.desc || '').split('\n'), 'INDUSTRY') || '';
+    var lastExp    = (cv.experience && cv.experience[0]) || {};
+    var preCompany = lastExp.company || '';
+    var experienced = !!(u.exp && u.exp !== 'entry') || (cv.experience && cv.experience.length > 0);
+    var resumeName = u.cvFileName || (u.cvFileUrl ? 'Resume on file' : '');
+
+    function field(label, req, inner) {
+      return '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:7px">' + label + (req ? ' <span style="color:#ef4444">*</span>' : '') + '</label>' + inner + '</div>';
+    }
+
+    var statusBtn = function (val, label) {
+      var on = (experienced ? 'Experienced' : 'Fresher') === val;
+      return '<button type="button" data-val="' + val + '" onclick="H._ajStatus(this)" style="flex:1;padding:11px;border:1.5px solid ' + (on ? '#1A3A8F' : 'var(--border)') + ';border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:' + (on ? '#1A3A8F' : 'var(--card)') + ';color:' + (on ? '#fff' : 'var(--text)') + ';font-family:inherit">' + label + '</button>';
+    };
+
     var questionsHtml = questions.map(function (q, i) {
       var lbl = '<label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:8px;line-height:1.5">'
-        + (q.required ? '<span style="color:#ef4444;margin-right:2px">*</span>' : '')
-        + H.escHtml(q.question) + '</label>';
+        + (q.required ? '<span style="color:#ef4444;margin-right:2px">*</span>' : '') + H.escHtml(q.question) + '</label>';
       var inp = '';
       if (q.type === 'yesno') {
         inp = '<div id="applyQ_' + i + '" data-value="" style="display:flex;gap:8px">'
@@ -1700,10 +1722,8 @@
           + '<button type="button" onclick="var p=this.parentElement;p.dataset.value=\'No\';this.style.background=\'#1A3A8F\';this.style.color=\'#fff\';this.style.borderColor=\'#1A3A8F\';this.previousElementSibling.style.background=\'var(--card)\';this.previousElementSibling.style.color=\'var(--text)\';this.previousElementSibling.style.borderColor=\'var(--border)\'" style="flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--card);color:var(--text);font-family:inherit">No</button>'
           + '</div>';
       } else if (q.type === 'select') {
-        inp = '<select id="applyQ_' + i + '" style="' + inS + '">'
-          + '<option value="">Select an option…</option>'
-          + (q.options || []).map(function(o){ return '<option>' + H.escHtml(o) + '</option>'; }).join('')
-          + '</select>';
+        inp = '<select id="applyQ_' + i + '" style="' + inS + '"><option value="">Select an option…</option>'
+          + (q.options || []).map(function(o){ return '<option>' + H.escHtml(o) + '</option>'; }).join('') + '</select>';
       } else {
         inp = '<textarea id="applyQ_' + i + '" rows="2" placeholder="Your answer…" style="' + inS + ';resize:vertical"></textarea>';
       }
@@ -1711,64 +1731,148 @@
     }).join('');
 
     return '<div class="page active">'
-      + H.innerTopbar('Apply for ' + H.escHtml(l.title))
+      + H.innerTopbar('Job Application')
       + '<div style="padding:14px 14px 100px">'
-      + '<div style="background:#1A3A8F14;border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;gap:12px;align-items:center">'
+      // Job header
+      + '<div style="background:#1A3A8F14;border-radius:12px;padding:12px 14px;margin-bottom:18px;display:flex;gap:12px;align-items:center">'
       + '<div style="width:42px;height:42px;border-radius:10px;background:#1A3A8F;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0">' + H.escHtml(company.slice(0, 2).toUpperCase()) + '</div>'
       + '<div><div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(l.title) + '</div>'
       + '<div style="font-size:12px;color:var(--sub)">' + H.escHtml(company) + ' · ' + H.escHtml(l.city || 'Zimbabwe') + '</div></div>'
       + '</div>'
-      + '<div style="margin-bottom:16px">'
-      + '<label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:8px">Cover Message</label>'
-      + '<textarea id="applyMsg" rows="4" placeholder="Introduce yourself — your experience, why you\'re a great fit…" style="' + inS + ';resize:vertical"></textarea>'
-      + '<div style="font-size:11px;color:var(--sub);margin-top:5px">Your profile is shared with the employer. They may message you through PaMarket.</div>'
-      + '</div>'
+
+      + field('Full Name', true, '<input id="ajName" value="' + H.escHtml(u.name || '') + '" placeholder="Your full name" style="' + inS + '">')
+      + field('Email Address', true, '<input id="ajEmail" type="email" value="' + H.escHtml(u.email || '') + '" placeholder="you@example.com" style="' + inS + '">')
+      + field('Phone No.', true, '<input id="ajPhone" type="tel" value="' + H.escHtml(u.phone || u.whatsappFull || '') + '" placeholder="e.g. 077 123 4567" style="' + inS + '">')
+      + field('Currently located in', false, '<input id="ajCity" value="' + H.escHtml(u.city || '') + '" placeholder="e.g. Harare" style="' + inS + '">')
+      + field('Qualification degree', true, '<select id="ajQual" style="' + inS + '"><option value="">Select…</option>'
+          + _QUAL_OPTS.map(function(o){ return '<option value="' + o[0] + '"' + (preQual === o[0] ? ' selected' : '') + '>' + H.escHtml(o[1]) + '</option>'; }).join('') + '</select>')
+      + field('Job Status', true, '<div id="ajStatus" data-value="' + (experienced ? 'Experienced' : 'Fresher') + '" style="display:flex;gap:8px">' + statusBtn('Fresher', 'Fresher') + statusBtn('Experienced', 'Experienced') + '</div>')
+      + field('Job Title', true, '<input id="ajTitle" value="' + H.escHtml(preTitle) + '" placeholder="e.g. Customer Service Driver" style="' + inS + '">')
+      + field('Job Category', true, '<select id="ajCategory" style="' + inS + '"><option value="">Select…</option>'
+          + JOB_CATS.map(function(c){ return '<option' + (preCat === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('') + '<option' + (preCat === 'Other' ? ' selected' : '') + '>Other</option></select>')
+      + field('Industry', false, '<input id="ajIndustry" placeholder="e.g. Logistics, Retail…" style="' + inS + '">')
+      + field('Current / Last Company', false, '<input id="ajCompany" value="' + H.escHtml(preCompany) + '" placeholder="Most recent employer" style="' + inS + '">')
+      + field('Duration', false, '<div style="display:flex;gap:10px">'
+          + '<div style="flex:1"><input id="ajStart" type="month" style="' + inS + '"><div style="font-size:11px;color:var(--sub);margin-top:4px">Start</div></div>'
+          + '<div style="flex:1"><input id="ajEnd" type="month" style="' + inS + '"><div style="font-size:11px;color:var(--sub);margin-top:4px">End</div></div>'
+          + '</div>'
+          + '<label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer"><input type="checkbox" id="ajCurrent" onchange="var e=document.getElementById(\'ajEnd\');e.disabled=this.checked;if(this.checked)e.value=\'\'" style="width:16px;height:16px;accent-color:#1A3A8F"><span style="font-size:13px;font-weight:600;color:var(--text)">Currently working here</span></label>')
+
+      // Resume
+      + field('Resume', false, (resumeName
+          ? '<div style="display:flex;align-items:center;gap:10px;background:#22c55e18;border:1.5px solid #22c55e40;border-radius:10px;padding:11px 13px">'
+            + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#15803d" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+            + '<span style="flex:1;font-size:13px;font-weight:600;color:#15803d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(resumeName) + '</span>'
+            + (u.cvFileUrl ? '<a href="' + H.escHtml(u.cvFileUrl) + '" target="_blank" style="font-size:12px;font-weight:700;color:#15803d;text-decoration:none">View</a>' : '')
+            + '</div>'
+          : '<div onclick="H.openInner(\'CandidateProfile\')" style="display:flex;align-items:center;gap:10px;border:1.5px dashed var(--border);border-radius:10px;padding:13px;cursor:pointer">'
+            + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--sub)" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
+            + '<span style="font-size:13px;color:var(--sub)">Add a resume in your <strong style="color:#1A3A8F">Job-Seeker Profile</strong></span></div>'))
+
+      // Cover message
+      + field('Message to employer', false, '<textarea id="applyMsg" rows="3" placeholder="Why you’re a great fit…" style="' + inS + ';resize:vertical"></textarea>')
+
       + (questions.length
-        ? '<div style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:8px"><span style="flex:1;height:1px;background:var(--border)"></span>Application Questions<span style="flex:1;height:1px;background:var(--border)"></span></div>'
+        ? '<div style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin:6px 0 14px;display:flex;align-items:center;gap:8px"><span style="flex:1;height:1px;background:var(--border)"></span>Screening Questions<span style="flex:1;height:1px;background:var(--border)"></span></div>'
           + questionsHtml
         : '')
       + '</div>'
-      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
-      + '<button onclick="H._submitApplyJob(\'' + H.escHtml(jobId) + '\')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">'
-      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg> Submit Application</button>'
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200;display:flex;gap:10px">'
+      + '<button onclick="H._clearApplyForm()" style="flex:1;padding:14px;background:var(--bg);color:var(--sub);border:1.5px solid var(--border);border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Clear All</button>'
+      + '<button onclick="H._submitApplyJob(\'' + H.escHtml(jobId) + '\')" style="flex:2;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">'
+      + '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg> Save & Apply</button>'
       + '</div></div>';
   };
+
+  H._ajStatus = function (btn) {
+    var wrap = document.getElementById('ajStatus'); if (!wrap) return;
+    wrap.dataset.value = btn.getAttribute('data-val');
+    [].forEach.call(wrap.querySelectorAll('button'), function (b) {
+      var on = b === btn;
+      b.style.background = on ? '#1A3A8F' : 'var(--card)';
+      b.style.color = on ? '#fff' : 'var(--text)';
+      b.style.borderColor = on ? '#1A3A8F' : 'var(--border)';
+    });
+  };
+
+  H._clearApplyForm = function () {
+    ['ajName', 'ajEmail', 'ajPhone', 'ajCity', 'ajTitle', 'ajIndustry', 'ajCompany', 'ajStart', 'ajEnd', 'applyMsg'].forEach(function (id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    ['ajQual', 'ajCategory'].forEach(function (id) { var el = document.getElementById(id); if (el) el.selectedIndex = 0; });
+    var cur = document.getElementById('ajCurrent'); if (cur) cur.checked = false;
+    var end = document.getElementById('ajEnd'); if (end) end.disabled = false;
+    H.toast('Form cleared');
+  };
+
+  function _fmtMonth(v) { // "2022-06" → "06/2022"
+    if (!v) return '';
+    var p = v.split('-'); return p.length === 2 ? p[1] + '/' + p[0] : v;
+  }
 
   H._submitApplyJob = function (jobId) {
     var u = H.currentUser(); if (!u) return;
     var l = (H.state.listings || []).find(function(x){ return x.id === jobId; }); if (!l) return;
-    var msg = ((document.getElementById('applyMsg') || {}).value || '').trim();
-    var questions = l.custom_questions || [];
+    function val(id) { return ((document.getElementById(id) || {}).value || '').trim(); }
+    var name = val('ajName'), email = val('ajEmail'), phone = val('ajPhone');
+    var city = val('ajCity'), title = val('ajTitle');
+    var qualSel = document.getElementById('ajQual');
+    var qual = qualSel ? (qualSel.options[qualSel.selectedIndex] || {}).text || '' : '';
+    var qualVal = val('ajQual');
+    var category = val('ajCategory'), industry = val('ajIndustry'), curCompany = val('ajCompany');
+    var status = (document.getElementById('ajStatus') || {}).dataset ? document.getElementById('ajStatus').dataset.value : '';
+    var start = _fmtMonth(val('ajStart')), end = _fmtMonth(val('ajEnd'));
+    var current = !!(document.getElementById('ajCurrent') || {}).checked;
+    var duration = start ? (start + ' – ' + (current ? 'Present' : (end || '—'))) : '';
+
+    if (!name)  { H.toast('Please enter your full name'); return; }
+    if (!email) { H.toast('Please enter your email address'); return; }
+    if (!phone) { H.toast('Please enter your phone number'); return; }
+    if (!qualVal) { H.toast('Please select your qualification'); return; }
+    if (!title) { H.toast('Please enter your job title'); return; }
+    if (!category) { H.toast('Please select a job category'); return; }
+
+    var msg = val('applyMsg');
     var answers = [];
+    function add(q, a) { if (a) answers.push({ question: q, answer: a }); }
+    add('Located in', city);
+    add('Qualification', qual);
+    add('Job status', status);
+    add('Current / desired job title', title);
+    add('Category', category);
+    add('Industry', industry);
+    add('Current / last company', curCompany);
+    add('Duration', duration);
+    if (u.cvFileName || u.cvFileUrl) add('Resume', u.cvFileName || u.cvFileUrl);
+
+    // Screening questions
+    var questions = l.custom_questions || [];
     var valid = true;
     questions.forEach(function (q, i) {
       var el = document.getElementById('applyQ_' + i);
-      var val = '';
-      if (q.type === 'yesno') {
-        val = el ? (el.dataset.value || '') : '';
-      } else {
-        val = el ? ((el.value || '').trim()) : '';
-      }
-      if (q.required && !val) {
-        H.toast('Please answer: ' + q.question.slice(0, 60));
-        valid = false;
-      }
-      answers.push({ questionId: q.id, question: q.question, answer: val });
+      var v = (q.type === 'yesno') ? (el ? (el.dataset.value || '') : '') : (el ? ((el.value || '').trim()) : '');
+      if (q.required && !v) { H.toast('Please answer: ' + q.question.slice(0, 60)); valid = false; }
+      answers.push({ questionId: q.id, question: q.question, answer: v });
     });
     if (!valid) return;
-    H._submitJobApplication(jobId, msg, answers);
+
+    H._submitJobApplication(jobId, msg, answers, { name: name, email: email, phone: phone });
   };
 
-  H._submitJobApplication = function (jobId, message, answers) {
+  H._submitJobApplication = function (jobId, message, answers, profile) {
     var u = H.currentUser(); if (!u) return;
     var l = (H.state.listings || []).find(function(x){ return x.id === jobId; }); if (!l) return;
     var company = l.company || l.sellerName || 'Company';
+    profile = profile || {};
     H.state.applications = H.state.applications || [];
     var existing = H.state.applications.find(function(a){ return a.jobId === jobId && a.applicantId === u.id; });
     if (existing) { H.toast('You already applied for this job'); return; }
     var app = {
       id: H.uid(), jobId: jobId, jobTitle: l.title, company: company,
-      applicantId: u.id, applicantName: u.name || 'Applicant',
+      applicantId: u.id,
+      applicantName: profile.name || u.name || 'Applicant',
+      applicantEmail: profile.email || u.email || '',
+      applicantPhone: profile.phone || u.phone || '',
       message: message, answers: answers || [], status: 'pending', appliedAt: Date.now(),
       employerId: l.sellerId
     };
