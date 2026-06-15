@@ -786,6 +786,8 @@ window.H = {
     const _mb = document.getElementById('modalBg');
     if (_mb && _mb.classList.contains('open')) _mb.classList.remove('open');
     this.closeSheet();
+    // Tear down Hire Talent floating UI when navigating to any page (re-created by HireTalent_after)
+    ['talentFloatBar','talentFilterPanel','sheet_tsort'].forEach(function(id){ var e=document.getElementById(id); if(e) e.remove(); });
     // Remove chat keyboard listeners when navigating away from Chat
     if (window._chatKBShow) { try { window._chatKBShow.remove(); } catch(e){} window._chatKBShow = null; }
     if (window._chatKBHide) { try { window._chatKBHide.remove(); } catch(e){} window._chatKBHide = null; }

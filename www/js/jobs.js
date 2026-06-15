@@ -383,7 +383,6 @@
     var candidates = (H.state.users || []).filter(function (u) {
       return u.openToWork || (u.cv && u.cv.visible !== false && (u.cv.headline || u.cv.summary || (u.cv.experience && u.cv.experience.length)));
     });
-    var sectors = ['All'].concat(JOB_CATS);
     var ZW = H._ZW_CITIES || [];
 
     return '<div class="page active">'
@@ -394,24 +393,35 @@
       + '<input id="talentQ" placeholder="Search by name, skill, title…" autocomplete="off" oninput="H._filterTalent()" style="flex:1;border:none;outline:none;padding:12px 0;font-size:14px;background:transparent;color:#fff;font-family:Inter,sans-serif"></div>'
       + '<div style="color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-top:8px"><span id="talentCount">' + candidates.length + ' candidate' + (candidates.length !== 1 ? 's' : '') + '</span></div>'
       + '</div>'
-      + '<div id="sectorTabs" style="background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;white-space:nowrap;padding:10px 14px;display:flex;gap:8px">'
-      + sectors.map(function (s, i) {
-        return '<button onclick="H._talentSector(\'' + s + '\')" style="flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid ' + (i === 0 ? '#1A3A8F' : 'var(--border)') + ';background:' + (i === 0 ? '#1A3A8F' : 'var(--bg)') + ';color:' + (i === 0 ? '#fff' : 'var(--text)') + ';font-size:12px;font-weight:700;cursor:pointer">' + H.escHtml(s) + '</button>';
-      }).join('')
+      // Quick filter row — Filters button + City / Category / Experience
+      + '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;background:var(--card)">'
+      + '<button onclick="H._openTalentFilters()" style="flex-shrink:0;display:flex;align-items:center;gap:6px;padding:9px 14px;background:#1A3A8F;border:none;border-radius:11px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">'
+      + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/></svg>Filters'
+      + '<span id="talentFilterBadge" style="display:none;background:#fff;color:#1A3A8F;font-size:11px;font-weight:800;min-width:18px;height:18px;border-radius:9px;align-items:center;justify-content:center;padding:0 5px"></span></button>'
+      + _quickSel('city', [['all', 'City']].concat(ZW.map(function (c) { return [c, c]; })))
+      + _quickSel('sector', [['all', 'Category']].concat(JOB_PROFESSIONS.map(function (p) { return [p, p]; })))
+      + _quickSel('exp', [['all', 'Experience'], ['0-1', '0-1 Years'], ['1-2', '1-2 Years'], ['2-5', '2-5 Years'], ['5-10', '5-10 Years'], ['10+', '10+ Years']])
       + '</div>'
-      + '<div style="padding:10px 14px;display:flex;gap:10px;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:none">'
-      + _talentSelect('City', 'city', '<option value="all">All Cities</option>' + ZW.map(function (c) { return '<option value="' + c + '">' + c + '</option>'; }).join(''))
-      + _talentSelect('Experience', 'exp', '<option value="all">Any</option><option value="entry">Entry Level</option><option value="mid">3-5 Years</option><option value="senior">5+ Years</option><option value="expert">10+ Years</option>')
-      + _talentSelect('Education', 'edu', '<option value="all">Any</option><option value="certificate">Certificate / Diploma</option><option value="degree">Degree</option><option value="postgrad">Postgraduate</option>')
-      + _talentSelect('Sort by', 'sort', '<option value="recent">Most Recent</option><option value="experience">Most Experienced</option><option value="name">Name (A–Z)</option>')
-      + '</div>'
-      + '<div id="talentList" style="padding:12px 14px 88px">'
+      + '<div id="talentList" style="padding:12px 14px 120px">'
       + (candidates.length ? candidates.map(_candidateCard).join('') : _emptyTalent())
       + '</div></div>';
   };
 
+  H._mountTalentFloatBar = function () {
+    var ex = document.getElementById('talentFloatBar'); if (ex) ex.remove();
+    var bar = document.createElement('div');
+    bar.id = 'talentFloatBar';
+    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));z-index:160;display:flex;background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:0 6px 22px rgba(0,0,0,.22);overflow:hidden';
+    bar.innerHTML = '<button onclick="H._talentSortSheet()" style="display:flex;align-items:center;gap:6px;padding:11px 24px;background:none;border:none;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>Sort</button>'
+      + '<div style="width:1px;background:var(--border)"></div>'
+      + '<button onclick="H._saveTalentSearch()" style="display:flex;align-items:center;gap:6px;padding:11px 24px;background:none;border:none;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>Save</button>';
+    document.body.appendChild(bar);
+  };
+
   H.pages.HireTalent_after = function () {
-    H._currentTalentSector = 'All';
+    H._tSyncBadge();
+    H._filterTalent();
+    H._mountTalentFloatBar();
     var _sb = window.supabase;
     if (!_sb || typeof _sb.from !== 'function') return;
     // Load profiles that are open to work OR have a CV set to visible
@@ -448,82 +458,272 @@
       });
   };
 
-  function _talentSelect(label, key, opts) {
-    return '<div style="flex-shrink:0">'
-      + '<div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">' + label + '</div>'
-      + '<select onchange="H._setFilter(\'talent\',\'' + key + '\',this.value);H._filterTalent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none">'
-      + opts + '</select></div>';
-  }
-
-  // Derive highest education level from a candidate's CV.
+  // ── Candidate attribute derivation (for filters & cards) ──────
+  // Highest education level from a candidate's CV.
   function _candEduLevel(u) {
     var edu = (u.cv && u.cv.education) || [];
     var text = edu.map(function (e) { return (e.degree || e.qualification || ''); }).join(' ').toLowerCase();
     if (/\b(master|msc|m\.sc|mba|phd|doctorate|postgrad|post-grad)\b/.test(text)) return 'postgrad';
-    if (/\b(degree|bachelor|bsc|b\.sc|ba|beng|honours|hons)\b/.test(text)) return 'degree';
+    if (/\b(degree|bachelor|bsc|b\.sc|beng|honours|hons)\b/.test(text)) return 'degree';
+    if (/\b(o.level|a.level|high school|high-school|secondary|zjc|matric)\b/.test(text)) return 'secondary';
     if (/\b(certificate|diploma|hexco|cert)\b/.test(text)) return 'certificate';
     return '';
   }
-  // Approximate years of experience for sorting / filtering.
-  function _candExpYears(u) {
-    if (u.exp === 'expert') return 10;
-    if (u.exp === 'senior') return 7;
-    if (u.exp === 'mid') return 4;
-    if (u.exp === 'entry') return 1;
-    return ((u.cv && u.cv.experience) || []).length * 2;
+  // Years-of-experience range [min,max] for a candidate.
+  function _candExpRange(u) {
+    switch (u.exp) {
+      case 'entry':  return [0, 2];
+      case 'mid':    return [3, 5];
+      case 'senior': return [5, 10];
+      case 'expert': return [10, 99];
+    }
+    var y = ((u.cv && u.cv.experience) || []).length * 2;
+    return [y, y];
   }
+  function _candExpYears(u) { return _candExpRange(u)[1]; }
   function _candExpLevel(u) {
     if (u.exp) return u.exp;
     var y = _candExpYears(u);
     if (y >= 10) return 'expert';
-    if (y >= 5) return 'senior';
-    if (y >= 3) return 'mid';
+    if (y >= 5)  return 'senior';
+    if (y >= 3)  return 'mid';
     return 'entry';
   }
+  function _candSalary(u) {
+    var n = (u.cv && parseFloat(u.cv.expectedSalary)) || 0;
+    if (!n) { var s = (u.expectedSalary || '').replace(/[^\d.]/g, ''); n = parseFloat(s) || 0; }
+    return n || 0;
+  }
+  function _candCommitment(u) { return ((u.jobTypes || '') + ' ' + ((u.cv && u.cv.jobTypes) || '')).toLowerCase(); }
+  function _candPostedTs(u) { return u.profileUpdatedAt || u.createdAt || 0; }
 
-  H._talentSector = function (sector) {
-    H._currentTalentSector = sector;
-    document.querySelectorAll('#sectorTabs button').forEach(function (btn) {
-      var active = btn.textContent.trim() === sector;
-      btn.style.background = active ? '#1A3A8F' : 'var(--bg)';
-      btn.style.color = active ? '#fff' : 'var(--text)';
-      btn.style.borderColor = active ? '#1A3A8F' : 'var(--border)';
-    });
-    H._filterTalent();
-  };
+  // Quick dropdown in the filter row (label shown when value === 'all').
+  function _quickSel(key, opts) {
+    var f = H._filters['talent'] || {}; var cur = f[key] || 'all';
+    return '<select onchange="H._setFilter(\'talent\',\'' + key + '\',this.value);H._filterTalent()" style="flex-shrink:0;padding:9px 12px;border:1.5px solid ' + (cur !== 'all' ? '#1A3A8F' : 'var(--border)') + ';border-radius:11px;font-size:13px;font-weight:600;background:' + (cur !== 'all' ? '#1A3A8F0d' : 'var(--bg)') + ';color:' + (cur !== 'all' ? '#1A3A8F' : 'var(--text)') + ';outline:none;font-family:inherit;max-width:150px">'
+      + opts.map(function (o) { return '<option value="' + H.escHtml(o[0]) + '"' + (cur === o[0] ? ' selected' : '') + '>' + H.escHtml(o[1]) + '</option>'; }).join('')
+      + '</select>';
+  }
 
-  H._filterTalent = function () {
-    var el = document.getElementById('talentList');
-    var cnt = document.getElementById('talentCount');
-    if (!el) return;
-    var q = ((document.getElementById('talentQ') || {}).value || '').toLowerCase();
-    var sector = H._currentTalentSector || 'All';
+  var _EXP_BUCKET = { '0-1': [0, 1], '1-2': [1, 2], '2-5': [2, 5], '5-10': [5, 10], '10+': [10, 99] };
+
+  // Apply every active filter and return the sorted candidate list.
+  function _talentList() {
     var f = H._filters['talent'] || {};
+    var q = (((document.getElementById('talentQ') || {}).value || '') + ' ' + (f.kw || '')).toLowerCase().trim();
     var list = (H.state.users || []).filter(function (u) {
       return u.openToWork || (u.cv && u.cv.visible !== false && (u.cv.headline || u.cv.summary || (u.cv.experience && u.cv.experience.length)));
     });
     if (q) list = list.filter(function (u) {
       var cv = u.cv || {};
-      var searchText = [u.name||'', u.jobTitle||'', cv.headline||'', cv.summary||'',
+      var t = [u.name||'', u.jobTitle||'', u.sector||'', cv.headline||'', cv.summary||'',
         (cv.skills||[]).join(' '), (cv.experience||[]).map(function(e){return (e.title||'')+(e.company||'');}).join(' '),
         u.city||'', cv.location||''].join(' ').toLowerCase();
-      return searchText.includes(q);
+      return t.includes(q);
     });
-    if (sector && sector !== 'All') list = list.filter(function (u) {
+    if (f.sector && f.sector !== 'all') list = list.filter(function (u) {
+      if ((u.sector || '') === f.sector) return true;
+      var tok = f.sector.split(/[\/(,\s]/)[0].toLowerCase();
       var cv = u.cv || {};
       var text = [(u.sector||''), (u.jobTitle||''), (cv.headline||''), (cv.skills||[]).join(' ')].join(' ').toLowerCase();
-      return text.includes(sector.split(' ')[0].toLowerCase());
+      return tok.length > 2 && text.indexOf(tok) > -1;
     });
     if (f.city && f.city !== 'all') list = list.filter(function (u) {
       return ((u.cv && u.cv.location || u.city) || '').toLowerCase().includes(f.city.toLowerCase());
     });
-    if (f.exp && f.exp !== 'all') list = list.filter(function (u) { return _candExpLevel(u) === f.exp; });
-    if (f.edu && f.edu !== 'all') list = list.filter(function (u) { return _candEduLevel(u) === f.edu; });
+    if (f.exp && f.exp !== 'all') {
+      var b = _EXP_BUCKET[f.exp];
+      if (b) list = list.filter(function (u) { var r = _candExpRange(u); return r[0] <= b[1] && r[1] >= b[0]; });
+    }
+    if (f.edu && f.edu !== 'all') list = list.filter(function (u) {
+      var lvl = _candEduLevel(u); return f.edu === 'na' ? !lvl : lvl === f.edu;
+    });
+    if (f.salary && f.salary !== 'all') list = list.filter(function (u) {
+      var n = _candSalary(u);
+      switch (f.salary) {
+        case 'negotiable': return !n;
+        case '0-500':      return n > 0 && n < 500;
+        case '500-999':    return n >= 500 && n < 1000;
+        case '1000-1999':  return n >= 1000 && n < 2000;
+        case '2000+':      return n >= 2000;
+      }
+      return true;
+    });
+    if (f.commitment && f.commitment !== 'all') list = list.filter(function (u) {
+      var c = _candCommitment(u); if (!c.trim()) return false;
+      switch (f.commitment) {
+        case 'full':      return c.includes('full');
+        case 'part':      return c.includes('part');
+        case 'contract':  return c.includes('contract');
+        case 'temporary': return c.includes('temp');
+        case 'other':     return !/full|part|contract|temp/.test(c);
+      }
+      return true;
+    });
+    if (f.posted && f.posted !== 'all') {
+      var DAY = 86400000, now = Date.now();
+      var lim = { today: 1, '3d': 3, '1w': 7, '2w': 14 }[f.posted];
+      if (lim) list = list.filter(function (u) { var t = _candPostedTs(u); return t && (now - t) <= lim * DAY; });
+    }
+    if (f.verified === '1') list = list.filter(function (u) { return u.verified; });
     if (f.sort === 'experience') list.sort(function (a, b) { return _candExpYears(b) - _candExpYears(a); });
     else if (f.sort === 'name') list.sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); });
+    else if (f.sort === 'salary') list.sort(function (a, b) { return _candSalary(b) - _candSalary(a); });
     else list.sort(function (a, b) { return (b.profileUpdatedAt || b.createdAt || 0) - (a.profileUpdatedAt || a.createdAt || 0); });
+    return list;
+  }
+
+  H._filterTalent = function () {
+    var el = document.getElementById('talentList');
+    var cnt = document.getElementById('talentCount');
+    if (!el) return;
+    var list = _talentList();
     if (cnt) cnt.textContent = list.length + ' candidate' + (list.length !== 1 ? 's' : '');
     el.innerHTML = list.length ? list.map(_candidateCard).join('') : _emptyTalent();
+    H._tSyncBadge();
+  };
+
+  H._tSyncBadge = function () {
+    var f = H._filters['talent'] || {};
+    var keys = ['city', 'sector', 'salary', 'exp', 'edu', 'commitment', 'posted'];
+    var n = keys.filter(function (k) { return f[k] && f[k] !== 'all'; }).length;
+    if (f.kw) n++;
+    if (f.verified === '1') n++;
+    var b = document.getElementById('talentFilterBadge');
+    if (b) { b.textContent = n || ''; b.style.display = n ? 'inline-flex' : 'none'; }
+  };
+
+  // ── Sort sheet (floating Sort button) ─────────────────────────
+  H._talentSortSheet = function () {
+    var f = H._filters['talent'] || {};
+    var cur = f.sort || 'recent';
+    var opts = [['recent', 'Most Recent'], ['experience', 'Most Experienced'], ['salary', 'Highest Salary'], ['name', 'Name (A–Z)']];
+    var check = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var rows = opts.map(function (o) {
+      var on = cur === o[0];
+      return '<button onclick="H._setFilter(\'talent\',\'sort\',\'' + o[0] + '\');H._closeSheet(\'tsort\');H._filterTalent()" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:15px 18px;background:none;border:none;border-bottom:1px solid var(--border);font-size:14.5px;font-weight:' + (on ? '700' : '500') + ';color:' + (on ? '#1A3A8F' : 'var(--text)') + ';cursor:pointer;font-family:inherit">' + o[1] + (on ? check : '') + '</button>';
+    }).join('');
+    H._showSheet('tsort', 'Sort by', rows);
+  };
+
+  H._saveTalentSearch = function () {
+    var f = H._filters['talent'] || {};
+    var active = Object.keys(f).filter(function (k) { return k !== 'sort' && f[k] && f[k] !== 'all'; });
+    if (!active.length) { H.toast('Set some filters first, then Save'); return; }
+    H.state.savedSearches = H.state.savedSearches || [];
+    H.state.savedSearches.push({ id: H.uid(), type: 'talent', filters: JSON.parse(JSON.stringify(f)), createdAt: Date.now() });
+    H.saveState();
+    H.toast('Search saved');
+  };
+
+  // ── Generic bottom sheet helper (used by sort) ────────────────
+  H._showSheet = function (id, title, bodyHtml) {
+    H._closeSheet(id);
+    var d = document.createElement('div');
+    d.id = 'sheet_' + id;
+    d.style.cssText = 'position:fixed;inset:0;z-index:3200;background:rgba(0,0,0,.45);display:flex;align-items:flex-end';
+    d.onclick = function (e) { if (e.target === d) H._closeSheet(id); };
+    d.innerHTML = '<div style="width:100%;background:var(--card);border-radius:20px 20px 0 0;overflow:hidden;animation:sheetUp .2s ease">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)">'
+      + '<span style="font-size:16px;font-weight:800;color:var(--text)">' + H.escHtml(title) + '</span>'
+      + '<button onclick="H._closeSheet(\'' + id + '\')" style="background:none;border:none;cursor:pointer;color:var(--sub);padding:2px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>'
+      + '<div style="padding-bottom:calc(8px + env(safe-area-inset-bottom))">' + bodyHtml + '</div></div>';
+    document.body.appendChild(d);
+  };
+  H._closeSheet = function (id) { var el = document.getElementById('sheet_' + id); if (el) el.remove(); };
+
+  // ── Full "All Filters" sheet ──────────────────────────────────
+  function _tcStyle(on) {
+    return 'padding:9px 15px;border-radius:22px;border:1.5px solid ' + (on ? '#1A3A8F' : 'var(--border)') + ';background:' + (on ? '#1A3A8F' : 'var(--card)') + ';color:' + (on ? '#fff' : 'var(--text)') + ';font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;margin:0 8px 8px 0';
+  }
+  function _tChips(key, opts) {
+    var f = H._filters['talent'] || {}; var cur = f[key] || 'all';
+    return opts.map(function (o) {
+      return '<button data-tchip data-key="' + key + '" data-val="' + H.escHtml(o[0]) + '" onclick="H._tChip(this)" style="' + _tcStyle(cur === o[0]) + '">' + H.escHtml(o[1]) + '</button>';
+    }).join('');
+  }
+  function _fg(title, inner, scroll) {
+    return '<div style="padding:18px 16px;border-bottom:1px solid var(--border)">'
+      + '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">' + title + '</div>'
+      + (scroll
+        ? '<div style="display:flex;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px">' + inner + '</div>'
+        : '<div style="display:flex;flex-wrap:wrap">' + inner + '</div>')
+      + '</div>';
+  }
+  function _talentFilterGroups() {
+    var f = H._filters['talent'] || {};
+    var ZW = H._ZW_CITIES || [];
+    var von = f.verified === '1';
+    var kwField = '<div style="padding:18px 16px;border-bottom:1px solid var(--border)">'
+      + '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">Keyword</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;border:1.5px solid var(--border);border-radius:12px;padding:0 12px;background:var(--card)">'
+      + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+      + '<input id="tfKw" value="' + H.escHtml(f.kw || '') + '" oninput="(H._filters.talent=H._filters.talent||{}).kw=this.value;H._tUpdateResults()" placeholder="Search keywords" style="flex:1;border:none;outline:none;padding:12px 0;font-size:14px;background:transparent;color:var(--text);font-family:inherit"></div></div>';
+    var catField = '<div style="padding:18px 16px;border-bottom:1px solid var(--border)">'
+      + '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">Category</div>'
+      + '<select onchange="(H._filters.talent=H._filters.talent||{}).sector=this.value;H._tUpdateResults()" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;font-family:inherit">'
+      + '<option value="all">All Categories</option>'
+      + JOB_PROFESSIONS.map(function (p) { return '<option' + ((f.sector || 'all') === p ? ' selected' : '') + '>' + H.escHtml(p) + '</option>'; }).join('')
+      + '</select></div>';
+    var moreField = '<div style="padding:18px 16px">'
+      + '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">More Filters</div>'
+      + '<div onclick="H._tToggleVerified(this)" data-on="' + (von ? '1' : '0') + '" style="display:flex;align-items:center;gap:12px;border:1.5px solid ' + (von ? '#1A3A8F' : 'var(--border)') + ';border-radius:14px;padding:14px;cursor:pointer;background:' + (von ? '#1A3A8F0d' : 'var(--card)') + '">'
+      + '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0"><path d="M12 2l2.4 2.4 3.3-.6.6 3.3L21 12l-2.7 1.9.6 3.3-3.3.6L12 22l-2.4-2.4-3.3.6-.6-3.3L3 12l2.7-1.9-.6-3.3 3.3.6z"/><polyline points="9 12 11 14 15 10"/></svg>'
+      + '<div style="flex:1"><div style="font-size:13.5px;font-weight:700;color:var(--text)">Verified users only</div><div style="font-size:12px;color:var(--sub)">Show candidates with a verified badge</div></div>'
+      + '<div style="width:44px;height:25px;border-radius:13px;background:' + (von ? '#1A3A8F' : 'var(--border)') + ';position:relative;flex-shrink:0;transition:background .2s"><div style="position:absolute;top:3px;left:' + (von ? '22px' : '3px') + ';width:19px;height:19px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)"></div></div>'
+      + '</div></div>';
+    return _fg('City', _tChips('city', [['all', 'All Cities']].concat(ZW.map(function (c) { return [c, c]; }))), true)
+      + kwField
+      + catField
+      + _fg('Desired Salary', _tChips('salary', [['all', 'Any'], ['negotiable', 'Negotiable'], ['0-500', 'Less than $500'], ['500-999', '$500 – $999'], ['1000-1999', '$1,000 – $1,999'], ['2000+', '$2,000+']]))
+      + _fg('Experience', _tChips('exp', [['all', 'Any'], ['0-1', '0-1 Years'], ['1-2', '1-2 Years'], ['2-5', '2-5 Years'], ['5-10', '5-10 Years'], ['10+', '10+ Years']]))
+      + _fg('Education', _tChips('edu', [['all', 'Any'], ['na', 'N/A'], ['secondary', 'High School / Secondary'], ['certificate', 'Certificate / Diploma'], ['degree', 'Degree'], ['postgrad', 'Postgraduate']]))
+      + _fg('Commitment', _tChips('commitment', [['all', 'Any'], ['full', 'Full Time'], ['part', 'Part Time'], ['contract', 'Contract'], ['temporary', 'Temporary'], ['other', 'Other']]))
+      + _fg('Posted', _tChips('posted', [['all', 'Any time'], ['today', 'Today'], ['3d', 'Within 3 days'], ['1w', 'Within 1 week'], ['2w', 'Within 2 weeks']]))
+      + moreField;
+  }
+
+  H._openTalentFilters = function () {
+    H._closeTalentFilters();
+    var n = _talentList().length;
+    var html = '<div id="talentFilterPanel" style="position:fixed;inset:0;z-index:3100;background:var(--bg);display:flex;flex-direction:column">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0">'
+      + '<button onclick="H._closeTalentFilters()" style="background:none;border:none;cursor:pointer;color:var(--text);padding:2px"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      + '<span style="font-size:16px;font-weight:800;color:var(--text)">Filters</span>'
+      + '<button onclick="H._tResetFilters()" style="background:none;border:none;cursor:pointer;color:#1A3A8F;font-size:14px;font-weight:700;font-family:inherit">Reset</button></div>'
+      + '<div id="talentFilterBody" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">' + _talentFilterGroups() + '</div>'
+      + '<div style="padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);flex-shrink:0">'
+      + '<button id="talentResultsBtn" onclick="H._tApplyFilters()" style="width:100%;padding:15px;background:#1A3A8F;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Show ' + n + ' Result' + (n !== 1 ? 's' : '') + '</button></div>'
+      + '</div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+  };
+  H._closeTalentFilters = function () { var p = document.getElementById('talentFilterPanel'); if (p) p.remove(); };
+  H._tApplyFilters = function () { H._closeTalentFilters(); H._filterTalent(); };
+  H._tResetFilters = function () {
+    H._filters['talent'] = {};
+    var b = document.getElementById('talentFilterBody');
+    if (b) b.innerHTML = _talentFilterGroups();
+    H._tUpdateResults();
+  };
+  H._tChip = function (el) {
+    var key = el.getAttribute('data-key'), val = el.getAttribute('data-val');
+    (H._filters.talent = H._filters.talent || {})[key] = val;
+    document.querySelectorAll('[data-tchip][data-key="' + key + '"]').forEach(function (c) {
+      c.style.cssText = _tcStyle(c.getAttribute('data-val') === val);
+    });
+    H._tUpdateResults();
+  };
+  H._tToggleVerified = function (el) {
+    var f = H._filters.talent = H._filters.talent || {};
+    f.verified = f.verified === '1' ? '' : '1';
+    var b = document.getElementById('talentFilterBody');
+    if (b) b.innerHTML = _talentFilterGroups();
+    H._tUpdateResults();
+  };
+  H._tUpdateResults = function () {
+    var n = _talentList().length;
+    var btn = document.getElementById('talentResultsBtn');
+    if (btn) btn.textContent = 'Show ' + n + ' Result' + (n !== 1 ? 's' : '');
   };
 
   var _EXP_LABEL = { entry: 'Entry level', mid: '3–5 yrs exp', senior: '5–10 yrs exp', expert: '10+ yrs exp' };
