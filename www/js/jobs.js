@@ -971,12 +971,18 @@
 
   // Pull the latest status of my requests from the cloud.
   H.pages.MyContactRequests_after = function () {
+    // The re-render below re-invokes this hook; skip the refetch that one time
+    // so we never spin in a render→fetch→render loop (which caused flickering).
+    if (H._mcrSkipFetch) { H._mcrSkipFetch = false; return; }
     var u = H.currentUser(); if (!u) return;
     var _sb = window.supabase;
     if (!_sb || typeof _sb.from !== 'function') return;
     _sb.from('contact_requests').select('*').eq('requester_id', u.id).then(function (res) {
-      if (res.error || !res.data) return;
+      // Nothing returned (incl. empty list) → never re-render.
+      if (res.error || !Array.isArray(res.data) || !res.data.length) return;
       H.state.contactRequests = H.state.contactRequests || [];
+      var sig = function () { return (H.state.contactRequests || []).map(function (r) { return r.id + ':' + r.status; }).sort().join('|'); };
+      var before = sig();
       res.data.forEach(function (row) {
         var ex = H.state.contactRequests.find(function (x) { return x.id === row.id; });
         var mapped = {
@@ -988,7 +994,11 @@
         if (ex) Object.assign(ex, mapped); else H.state.contactRequests.push(mapped);
       });
       H.saveState();
-      if (H.currentPageName === 'MyContactRequests') H.renderPage('MyContactRequests');
+      // Only re-render when something actually changed, and guard the refetch.
+      if (before !== sig() && H.currentPageName === 'MyContactRequests') {
+        H._mcrSkipFetch = true;
+        H.renderPage('MyContactRequests');
+      }
     });
   };
 
@@ -1052,7 +1062,7 @@
 
     return '<div class="page active">'
       + H.innerTopbar('Candidate CV')
-      + '<div style="padding-bottom:100px">'
+      + '<div>'
       // ── header ──
       + '<div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952c8 100%);padding:22px 18px 20px">'
       + '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px">'
@@ -1074,15 +1084,15 @@
           + (u.websiteUrl  ? '<a href="' + H.escHtml(u.websiteUrl)  + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg> Portfolio</a>' : '')
           + '</div>' : '')
       + '</div></div></div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;padding:14px 18px 2px">'
       + (reveal
         ? (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;min-width:128px;display:flex;align-items:center;justify-content:center;gap:6px;background:#25D366;padding:11px 12px;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
-          + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;min-width:128px;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.16);padding:11px 12px;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
-          + '<div onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;min-width:128px;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.16);padding:11px 12px;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</div>'
+          + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;min-width:128px;display:flex;align-items:center;justify-content:center;gap:6px;background:#1A3A8F;padding:11px 12px;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
+          + '<div onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;min-width:128px;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--bg);padding:11px 12px;border-radius:10px;font-size:12.5px;font-weight:700;color:#1A3A8F;border:1.5px solid #1A3A8F;cursor:pointer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</div>'
         : reqBtnHeader)
       + '</div></div>'
       // ── body ──
-      + '<div style="padding:0 18px">'
+      + '<div style="padding:0 18px 140px">'
       + (!reveal ? '<div style="display:flex;align-items:flex-start;gap:10px;background:#1A3A8F0d;border:1px solid #1A3A8F22;border-radius:12px;padding:12px 14px;margin:16px 0 4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><div style="font-size:12.5px;color:var(--text);line-height:1.55">' + (pending ? 'Your request is under review. The full name and contact details unlock here once it’s approved.' : 'This candidate’s <strong>name and contact details are hidden</strong>. Send a request and our team will unlock them for you once approved.') + '</div></div>' : '')
       // Details
       + ((expLvl || eduLevel || commitment || expectedSal || postedOn)
