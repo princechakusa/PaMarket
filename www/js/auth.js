@@ -489,10 +489,11 @@
     var profile = res.data;
     var u = (H.state.users||[]).find(function(x){return x.id===userId;});
     if (!u) {
-      u = {id:userId,email:'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,verificationPending:!!profile.verification_pending,verification_pending:!!profile.verification_pending,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
+      u = {id:userId,email:profile.email||'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,verificationPending:!!profile.verification_pending,verification_pending:!!profile.verification_pending,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
       (H.state.users = H.state.users || []).push(u);
     } else {
       u.name=profile.name||u.name; u.phone=profile.phone||u.phone; u.avatar=profile.avatar||u.avatar; u.verified=profile.verified||false; u.role=profile.role||u.role||'user';
+      if (profile.email) u.email = profile.email;
       // Keep verification status in sync so an admin approval/rejection reflects in the app
       u.verificationPending = !!profile.verification_pending; u.verification_pending = !!profile.verification_pending;
       if (profile.company_verified != null) { u.companyVerified = profile.company_verified; u.company_verified = profile.company_verified; }
@@ -557,11 +558,15 @@
     const meta   = user.user_metadata || {};
     const name   = meta.full_name || meta.name || user.email || 'User';
     const avatar = meta.avatar_url || meta.picture || null;
+    const email  = user.email || '';
     try {
       const { data: existing } = await c.from('profiles').select('id').eq('id', userId).single();
-      if (!existing) { await c.from('profiles').upsert({ id: userId, name: name, avatar: avatar }); }
+      if (!existing) { await c.from('profiles').upsert({ id: userId, name: name, avatar: avatar, email: email || null }); }
+      else if (email) { c.from('profiles').update({ email: email }).eq('id', userId).then(function(){}, function(){}); }
     } catch(pe) {}
     try { await H.loadProfile(userId); } catch(pe) {}
+    // Ensure the login email is on the local user (Google sign-ins).
+    try { const _u = (H.state.users||[]).find(function(x){return x.id===userId;}); if (_u && email && !_u.email) _u.email = email; } catch(pe) {}
     H.state.currentUserId = userId;
     H.saveState();
     if (H.closeLoginModal) H.closeLoginModal();

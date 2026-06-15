@@ -595,6 +595,17 @@ window.H = {
         const _sid = _sr && _sr.data && _sr.data.session && _sr.data.session.user && _sr.data.session.user.id;
         if (_sid) {
           if (this.state.currentUserId !== _sid) { this.state.currentUserId = _sid; this.saveState(); }
+          // Backfill the login email from the auth session (Google sign-ins
+          // never wrote it to the profile, so the Edit Profile email was blank).
+          try {
+            const _semail = (_sr.data.session.user && _sr.data.session.user.email) || '';
+            const _cu = (typeof H.currentUser === 'function') ? H.currentUser() : (this.state.users || []).find(x => x.id === _sid);
+            if (_cu && _semail && _cu.email !== _semail) {
+              _cu.email = _semail;
+              this.saveState();
+              _sb.from('profiles').update({ email: _semail }).eq('id', _sid).then(function(){}, function(){});
+            }
+          } catch (e) {}
           if (typeof H.loadProfile === 'function') {
             H.loadProfile(_sid).then(() => {
               if (this.state.currentUserId && this.checkBan()) return;
