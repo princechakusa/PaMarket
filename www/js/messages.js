@@ -174,7 +174,7 @@
   function otherAvatarFor(c, u) {
     const otherId = c && Array.isArray(c.members) ? c.members.find(m => m !== u.id) : null;
     const other = otherId ? users().find(x => x.id === otherId) : null;
-    const ini = other ? initials(other.name || 'Deleted User') : '?';
+    const ini = other ? initials(other.name || 'PaMarket User') : '?';
     const initialsDiv = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + ini + '</div>';
     return (other && other.avatar)
       ? '<img src="' + escHtml(other.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
@@ -278,7 +278,9 @@
           // If name is still blank, trigger async profile fetch which will re-render when resolved
           if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
           else if (!other && otherId && !(c.otherName)) { H._resolveOtherName(otherId, c); }
-          const otherDisplayName = (other && other.name) || c.otherName || 'Deleted User';
+          // Only show "Deleted User" when the account is genuinely gone; while a
+          // name is still loading, a neutral placeholder avoids a false alarm.
+          const otherDisplayName = (other && other.name) || c.otherName || (c.otherDeleted ? 'Deleted User' : 'PaMarket User');
           const msgs   = c.messages || [];
           const last   = msgs[msgs.length - 1];
           if (!last) return '';
@@ -343,7 +345,7 @@
     // If name is still blank, trigger async profile fetch — will re-render when resolved
     if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
     else if (!other && otherId && !c.otherName) { H._resolveOtherName(otherId, c); }
-    const otherDisplayName = (other && other.name) || c.otherName || 'Deleted User';
+    const otherDisplayName = (other && other.name) || c.otherName || (c.otherDeleted ? 'Deleted User' : 'PaMarket User');
     const listing = (state.listings || []).find(l => l.id === c.listingId);
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
     H.saveState();
