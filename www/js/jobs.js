@@ -709,12 +709,12 @@
   H._openTalentFilters = function () {
     H._closeTalentFilters();
     var n = _talentList().length;
-    var html = '<div id="talentFilterPanel" style="position:fixed;inset:0;z-index:3100;background:var(--bg);display:flex;flex-direction:column">'
-      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0">'
-      + '<button onclick="H._closeTalentFilters()" style="background:none;border:none;cursor:pointer;color:var(--text);padding:2px"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    var html = '<div id="talentFilterPanel" style="position:fixed;inset:0;z-index:3100;background:var(--bg);display:flex;flex-direction:column;overflow:hidden">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;border-bottom:1px solid var(--border);flex-shrink:0">'
+      + '<button onclick="H._closeTalentFilters()" style="background:none;border:none;cursor:pointer;color:var(--text);padding:6px;margin:-6px"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
       + '<span style="font-size:16px;font-weight:800;color:var(--text)">Filters</span>'
       + '<button onclick="H._tResetFilters()" style="background:none;border:none;cursor:pointer;color:#1A3A8F;font-size:14px;font-weight:700;font-family:inherit">Reset</button></div>'
-      + '<div id="talentFilterBody" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">' + _talentFilterGroups() + '</div>'
+      + '<div id="talentFilterBody" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch">' + _talentFilterGroups() + '</div>'
       + '<div style="padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);flex-shrink:0">'
       + '<button id="talentResultsBtn" onclick="H._tApplyFilters()" style="width:100%;padding:15px;background:#1A3A8F;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Show ' + n + ' Result' + (n !== 1 ? 's' : '') + '</button></div>'
       + '</div>';
@@ -1058,9 +1058,9 @@
       + '</div></div></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
       + (reveal
-        ? (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="display:flex;align-items:center;gap:5px;background:#25D366;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Chat on WhatsApp</a>' : '')
-          + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="display:flex;align-items:center;gap:5px;background:#1A3A8F;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call Candidate</a>' : '')
-          + '<div onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#fff;cursor:pointer"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</div>'
+        ? (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;min-width:128px;display:flex;align-items:center;justify-content:center;gap:6px;background:#25D366;padding:11px 12px;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
+          + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;min-width:128px;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.16);padding:11px 12px;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
+          + '<div onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;min-width:128px;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.16);padding:11px 12px;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</div>'
         : reqBtnHeader)
       + '</div></div>'
       // ── body ──

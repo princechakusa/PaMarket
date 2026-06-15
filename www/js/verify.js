@@ -182,7 +182,7 @@
 
         <div style="display:flex;gap:10px;align-items:flex-start;background:#EEF2FB;border-radius:14px;padding:14px;margin-top:16px">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Your data is secure.</b> Your ID and selfie are stored privately and used only to confirm your identity — never sold or shared.</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Your data is secure.</b> Your ID and selfie are stored privately and used only to confirm your identity. They are never sold or shared.</div>
         </div>
       </div>
     </div>`;

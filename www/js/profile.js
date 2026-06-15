@@ -85,7 +85,7 @@
         <div class="info-row"><span class="info-label">Email</span><span class="info-val">${H.escHtml(u.email || 'N/A')}</span></div>
         <div class="info-row"><span class="info-label">Joined</span><span class="info-val">${new Date(u.joinedAt || u.createdAt || Date.now()).toLocaleDateString()}</span></div>
         <div class="info-row"><span class="info-label">Status</span><span class="info-val">${H.escHtml(u.status || 'Active')}</span></div>
-        ${u.bio ? `<div class="info-row"><span class="info-label">Bio</span><span class="info-val">${H.escHtml(u.bio)}</span></div>` : ''}
+        ${u.bio ? `<div style="padding:12px 0 2px"><div class="info-label" style="margin-bottom:6px">Bio</div><div style="font-size:13px;color:var(--text-primary);line-height:1.6;font-weight:400">${H.escHtml(u.bio)}</div></div>` : ''}
       </div>
 
       ${(() => {
@@ -433,7 +433,7 @@
         <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:22px;padding:22px 20px;margin-bottom:18px;color:#fff;box-shadow:0 10px 28px rgba(26,58,143,.28)">
           <div style="display:flex;align-items:center;gap:13px;margin-bottom:16px">
             <div style="width:50px;height:50px;border-radius:15px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#F5A623" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
-            <div style="flex:1"><div style="font-size:18px;font-weight:800;letter-spacing:-.3px">Identity Verification</div><div style="font-size:12.5px;color:rgba(255,255,255,.82);margin-top:1px">Submit your ID and a selfie — review takes up to 24 hours</div></div>
+            <div style="flex:1"><div style="font-size:18px;font-weight:800;letter-spacing:-.3px">Identity Verification</div><div style="font-size:12.5px;color:rgba(255,255,255,.82);margin-top:1px">Submit your ID and a selfie. Review takes up to 24 hours.</div></div>
           </div>
           <div style="display:flex;align-items:center;gap:10px">
             <div style="flex:1;height:8px;background:rgba(255,255,255,.18);border-radius:5px;overflow:hidden"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#F5A623,#ffc55c);border-radius:5px;transition:width .35s"></div></div>
@@ -475,7 +475,7 @@
 
         <div style="display:flex;gap:10px;align-items:flex-start;background:#EEF2FB;border-radius:14px;padding:14px;margin-top:16px">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Your data is secure.</b> Your ID and selfie are stored privately and used only to confirm your identity — never sold or shared.</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Your data is secure.</b> Your ID and selfie are stored privately and used only to confirm your identity. They are never sold or shared.</div>
         </div>
       </div>
     </div>`;
