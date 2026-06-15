@@ -35,7 +35,7 @@ drop policy if exists "Users read own reports" on public.reports;
 drop policy if exists "reports: read own or admin" on public.reports;
 create policy "reports: read own or admin" on public.reports
   for select to authenticated
-  using (public.is_admin() or reporter_id = auth.uid());
+  using (public.is_admin() or reporter_id = auth.uid()::text);
 
 drop policy if exists "reports: admin update" on public.reports;
 create policy "reports: admin update" on public.reports
