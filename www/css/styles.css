@@ -13,17 +13,17 @@
   --gold:         #F5A623;
   --gold-dark:    #C47D0A;
   --gold-light:   #FEF3C7;
-  --bg:           #F5F6FA;
+  --bg:           #FAFAFA;
   --card:         #FFFFFF;
-  --border:       #E4E8F0;
-  --border-mid:   #C5CFDF;
-  --text-primary: #101828;
-  --text-mid:     #344054;
-  --text-sub:     #667085;
-  --text-hint:    #9AA3B2;
+  --border:       #EDEDF0;
+  --border-mid:   #E2E2E7;
+  --text-primary: #18181B;
+  --text-mid:     #3F3F46;
+  --text-sub:     #52525B;
+  --text-hint:    #A1A1AA;
   --text:         var(--text-primary);
   --sub:          var(--text-sub);
-  --sub2:         #b0b8cc;
+  --sub2:         #C4C4CB;
   --n1:           #1a1f36;
   --n5:           #f0f2f8;
   --red:          #D92D20;
@@ -31,16 +31,16 @@
   --green:        #12B76A;
   --green-light:  #DCFCE7;
   --white:        #FFFFFF;
-  --font:         'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --r-sm:         8px;
-  --r-md:         12px;
-  --r-lg:         16px;
-  --r-xl:         20px;
+  --font:         'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --r-sm:         10px;
+  --r-md:         14px;
+  --r-lg:         18px;
+  --r-xl:         22px;
   --r-pill:       999px;
-  --shadow-xs:    0 1px 2px rgba(16,24,40,.05);
-  --shadow-sm:    0 1px 3px rgba(16,24,40,.1), 0 1px 2px rgba(16,24,40,.06);
-  --shadow-md:    0 4px 8px rgba(16,24,40,.08), 0 2px 4px rgba(16,24,40,.04);
-  --shadow-lg:    0 12px 24px rgba(16,24,40,.10), 0 4px 8px rgba(16,24,40,.06);
+  --shadow-xs:    0 1px 2px rgba(24,24,27,.04);
+  --shadow-sm:    0 1px 3px rgba(24,24,27,.05);
+  --shadow-md:    0 4px 14px rgba(24,24,27,.06);
+  --shadow-lg:    0 16px 40px rgba(24,24,27,.10);
   --shadow-blue:  0 4px 14px rgba(26,58,143,.3);
   --shadow-gold:  0 4px 14px rgba(245,166,35,.4);
   --ease:         cubic-bezier(0.16,1,0.3,1);
@@ -49,14 +49,14 @@
 
 /* ── DARK MODE ───────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --bg:           #0D1117;
-  --card:         #161B22;
-  --border:       #21262D;
-  --border-mid:   #30363D;
-  --text-primary: #F0F6FC;
-  --text-mid:     #C9D1D9;
-  --text-sub:     #8B949E;
-  --text-hint:    #6E7681;
+  --bg:           #0A0A0B;
+  --card:         #161618;
+  --border:       #242427;
+  --border-mid:   #2E2E33;
+  --text-primary: #FAFAFA;
+  --text-mid:     #D4D4D8;
+  --text-sub:     #A1A1AA;
+  --text-hint:    #71717A;
   --blue-light:   #1C2A4A;
   --blue-soft:    #162032;
   --gold-light:   #2A2010;
@@ -69,6 +69,8 @@
 
 /* ── RESET ───────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+/* Premium type system — force Plus Jakarta Sans everywhere, overriding any inline Inter declarations */
+*:not(svg):not(path):not(circle):not(line):not(polyline):not(polygon):not(rect) { font-family: var(--font) !important; }
 html, body { height: 100%; overflow: hidden; overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
 html { background: #1A3A8F; }
 body { background: #1A3A8F; font-family: var(--font); font-size: 14px; color: var(--text-primary); -webkit-font-smoothing: antialiased; }
