@@ -137,7 +137,7 @@
       + '<div style="font-size:13px;color:rgba(26,58,143,.75);margin-bottom:16px">' + jobs.length + ' opening' + (jobs.length !== 1 ? 's' : '') + ' across Zimbabwe</div>'
       + '<div style="background:rgba(255,255,255,.95);border-radius:14px;display:flex;align-items:center;padding:0 14px;gap:8px">'
       + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
-      + '<input placeholder="Search job title, company, skills…" autocomplete="off" oninput="H.openInner(\'FindJobs\',{q:this.value})" style="flex:1;border:none;outline:none;padding:14px 0;font-size:14px;background:transparent;color:#1A3A8F;font-family:Inter,sans-serif"></div>'
+      + '<input placeholder="Search job title, company, skills…" autocomplete="off" oninput="H.openInner(\'JobResults\',{q:this.value})" style="flex:1;border:none;outline:none;padding:14px 0;font-size:14px;background:transparent;color:#1A3A8F;font-family:Inter,sans-serif"></div>'
       + '</div>'
       + '<div style="padding:16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">'
       + '<div onclick="H.openInner(\'FindJobs\')" style="background:#1A3A8F;border-radius:16px;padding:20px 14px;cursor:pointer;box-shadow:0 4px 16px rgba(26,58,143,.25)">'
@@ -157,13 +157,13 @@
       + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
       + JOB_CATS.map(function (cat) {
         var cnt = jobs.filter(function (j) { return (j.title + ' ' + (j.desc || '')).toLowerCase().includes(cat.split(' ')[0].toLowerCase()); }).length;
-        return '<div onclick="H.openInner(\'FindJobs\',{cat:\'' + cat + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:8px 14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text)">' + H.escHtml(cat) + '<span style="color:var(--sub);margin-left:4px">(' + cnt + ')</span></div>';
+        return '<div onclick="H.openInner(\'JobResults\',{cat:\'' + cat + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:8px 14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text)">' + H.escHtml(cat) + '<span style="color:var(--sub);margin-left:4px">(' + cnt + ')</span></div>';
       }).join('')
       + '</div></div>'
       + (recent.length ? '<div style="padding:0 14px 16px">'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
         + '<div style="font-size:15px;font-weight:800;color:var(--text)">Recent Openings</div>'
-        + '<button onclick="H.openInner(\'FindJobs\')" style="background:none;border:none;color:#1A3A8F;font-size:12px;font-weight:700;cursor:pointer;padding:0">View All →</button>'
+        + '<button onclick="H.openInner(\'JobResults\')" style="background:none;border:none;color:#1A3A8F;font-size:12px;font-weight:700;cursor:pointer;padding:0">View All →</button>'
         + '</div>' + recent.map(jobCard).join('') + '</div>' : '')
       + '<div style="margin:0 14px 88px;background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:16px;padding:20px">'
       + '<div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:6px">Hiring? Post a Job Free</div>'
@@ -172,48 +172,185 @@
       + '</div></div>';
   };
 
-  H.pages.FindJobs = function (params) {
+  // ── Job taxonomy used across the discovery page ───────────────
+  var JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];
+  var JOB_QUALS = [
+    { key: 'none',        label: 'No formal qualification', match: ['no formal', 'no qualification', 'general worker'] },
+    { key: 'certificate', label: 'Certificate / Diploma',   match: ['certificate', 'diploma'] },
+    { key: 'degree',      label: 'Degree',                  match: ['degree', 'bachelor', 'bsc', 'ba '] },
+    { key: 'postgrad',    label: 'Postgraduate',            match: ['postgrad', 'masters', 'msc', 'mba', 'phd'] }
+  ];
+
+  // Compact line icon per job category.
+  var JOB_CAT_ICON = {
+    'Accounting & Finance': '<path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>',
+    'Sales & Marketing':    '<path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-5"/>',
+    'IT & Technology':      '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    'Construction':         '<path d="M2 20h20M4 20V8l8-5 8 5v12M9 20v-6h6v6"/>',
+    'Healthcare':           '<path d="M19 14a7 7 0 11-14 0 7 7 0 0114 0z"/><path d="M12 8v4M10 10h4"/>',
+    'Education':            '<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2 6 2s6-1 6-2v-5"/>',
+    'Hospitality':         '<path d="M3 11h18M5 11V7a7 7 0 0114 0v4M4 11v3a8 8 0 0016 0v-3"/>',
+    'Administration':       '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/>',
+    'Engineering':          '<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.1-.4-.4-2.1z"/>',
+    'Driving & Logistics':  '<path d="M1 3h15v13H1zM16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="18.5" cy="18.5" r="2"/>'
+  };
+
+  function _activeJobs() {
+    return (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat || '').toLowerCase() === 'jobs'; });
+  }
+  function _jobIndustry(l) { return parseLine((l.desc || '').split('\n'), 'INDUSTRY') || l.subcat || ''; }
+  function _jobTypeOf(l)   { return parseLine((l.desc || '').split('\n'), 'JOB TYPE') || ''; }
+  // A job belongs to a category when its stored INDUSTRY matches exactly, or
+  // (for distinctive category words ≥3 chars) the title/desc mentions it as a
+  // whole word. Short tokens like "IT" rely on the exact industry to avoid
+  // matching substrings such as "site" or "with".
+  function _jobInCat(l, cat) {
+    if (_jobIndustry(l) === cat) return true;
+    var tok = cat.split(/\s*&\s*|\s+/)[0].toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '');
+    if (tok.length < 3) return false;
+    return new RegExp('\\b' + tok + '\\b').test((l.title + ' ' + (l.desc || '')).toLowerCase());
+  }
+  function _catCount(jobs, cat) {
+    return jobs.filter(function (l) { return _jobInCat(l, cat); }).length;
+  }
+
+  // ── Find Jobs: professional discovery landing ─────────────────
+  H.pages.FindJobs = function () {
+    var jobs = _activeJobs().sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var popular = jobs.slice(0, 8);
+
+    var catCards = JOB_CATS.map(function (cat) {
+      var cnt = _catCount(jobs, cat);
+      var icon = JOB_CAT_ICON[cat] || '<rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>';
+      return '<div onclick="H.openInner(\'JobResults\',{cat:\'' + cat + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 12px;cursor:pointer;display:flex;align-items:center;gap:11px">'
+        + '<div style="width:40px;height:40px;border-radius:11px;background:#1A3A8F12;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#1A3A8F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + icon + '</svg></div>'
+        + '<div style="min-width:0"><div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.25;overflow:hidden;text-overflow:ellipsis">' + H.escHtml(cat) + '</div>'
+        + '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + cnt + ' job' + (cnt !== 1 ? 's' : '') + '</div></div></div>';
+    }).join('');
+
+    var typeCards = JOB_TYPES.map(function (t) {
+      var cnt = jobs.filter(function (l) { return _jobTypeOf(l).toLowerCase() === t.toLowerCase(); }).length;
+      return '<div onclick="H.openInner(\'JobResults\',{type:\'' + t + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">'
+        + '<span style="font-size:13px;font-weight:700;color:var(--text)">' + t + '</span>'
+        + '<span style="font-size:11px;font-weight:700;color:#1A3A8F;background:#1A3A8F12;padding:2px 8px;border-radius:10px">' + cnt + '</span></div>';
+    }).join('');
+
+    var qualCards = JOB_QUALS.map(function (q) {
+      return '<div onclick="H.openInner(\'JobResults\',{qual:\'' + q.key + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center">'
+        + '<div style="display:flex;justify-content:center;margin-bottom:8px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1A3A8F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2 6 2s6-1 6-2v-5"/></svg></div>'
+        + '<div style="font-size:12.5px;font-weight:700;color:var(--text);line-height:1.3">' + H.escHtml(q.label) + '</div></div>';
+    }).join('');
+
+    var sectionHead = function (title, action, onclick) {
+      return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+        + '<div style="font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.3px">' + title + '</div>'
+        + (action ? '<button onclick="' + onclick + '" style="background:none;border:none;color:#1A3A8F;font-size:12.5px;font-weight:700;cursor:pointer;padding:0;font-family:inherit">' + action + ' →</button>' : '')
+        + '</div>';
+    };
+
+    return '<div class="page active">'
+      + '<div class="det-topbar" style="background:#1A3A8F">'
+      + '<button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      + '<div class="det-topbar-title">Find Jobs</div>'
+      + '<div style="width:40px"></div></div>'
+      // Hero
+      + '<div style="background:linear-gradient(135deg,#1A3A8F 0%,#16307a 100%);padding:22px 16px 26px">'
+      + '<div style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:6px">Job hunting made easy</div>'
+      + '<div style="font-size:13px;color:rgba(255,255,255,.8);margin-bottom:16px">Discover thousands of openings across Zimbabwe.</div>'
+      + '<div onclick="H.openInner(\'JobResults\')" style="background:#fff;border-radius:14px;display:flex;align-items:center;padding:0 14px;gap:9px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.18)">'
+      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+      + '<span style="flex:1;padding:14px 0;font-size:14px;color:#999">Search job title, company, skills…</span></div>'
+      + '</div>'
+      + '<div style="padding:18px 14px 100px">'
+      // Popular jobs
+      + (popular.length
+        ? sectionHead('Popular Jobs', 'View all', "H.openInner('JobResults')")
+          + '<div style="display:flex;gap:12px;overflow-x:auto;margin:0 -14px 24px;padding:2px 14px;scrollbar-width:none">'
+          + popular.map(_popularJobCard).join('')
+          + '</div>'
+        : '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center;margin-bottom:24px"><div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No openings yet</div><div style="font-size:12.5px;color:var(--sub)">New jobs will appear here as employers post them.</div></div>')
+      // Jobs by category
+      + sectionHead('Jobs by Category', 'View all', "H.openInner('JobResults')")
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">' + catCards + '</div>'
+      // Jobs by type
+      + sectionHead('Jobs by Type', '', '')
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">' + typeCards + '</div>'
+      // Jobs by qualification
+      + sectionHead('Jobs by Qualification', '', '')
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">' + qualCards + '</div>'
+      // Update CV banner
+      + '<div onclick="H._getHired()" style="background:linear-gradient(135deg,#22c55e,#15803d);border-radius:18px;padding:20px;cursor:pointer;display:flex;align-items:center;gap:14px">'
+      + '<div style="width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:15.5px;font-weight:800;color:#fff;margin-bottom:3px">Update your CV</div><div style="font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.4">Build your profile so employers can find you.</div></div>'
+      + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
+      + '</div></div></div>';
+  };
+
+  function _popularJobCard(l) {
+    var lines = (l.desc || '').split('\n');
+    var company = l.company || l.sellerName || parseLine(lines, 'COMPANY') || 'Company';
+    var jobType = parseLine(lines, 'JOB TYPE') || '';
+    var salary  = parseLine(lines, 'SALARY') || 'Negotiable';
+    var logo = (l.photos && l.photos[0])
+      ? '<img src="' + l.photos[0] + '" style="width:38px;height:38px;border-radius:10px;object-fit:cover;border:1px solid var(--border)">'
+      : '<div style="width:38px;height:38px;border-radius:10px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#1A3A8F">' + company.slice(0, 2).toUpperCase() + '</div>';
+    return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + l.id + '\'})" style="flex:0 0 224px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">' + logo
+      + '<div style="min-width:0"><div style="font-size:12px;font-weight:700;color:#1A3A8F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(company) + '</div>'
+      + '<div style="font-size:10.5px;color:var(--sub)">' + H.timeAgo(l.createdAt) + '</div></div></div>'
+      + '<div style="font-size:14px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:10px;height:36px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">' + H.escHtml(l.title) + '</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:5px">'
+      + (jobType ? '<span style="background:#1A3A8F14;color:#1A3A8F;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px">' + H.escHtml(jobType) + '</span>' : '')
+      + (l.city ? '<span style="background:var(--bg);color:var(--sub);font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px">' + H.escHtml(l.city) + '</span>' : '')
+      + '</div>'
+      + '<div style="font-size:12.5px;font-weight:800;color:#c07800;margin-top:10px">' + H.escHtml(salary) + '</div>'
+      + '</div>';
+  }
+
+  // ── Job Results: filtered list ────────────────────────────────
+  H.pages.JobResults = function (params) {
     params = params || {};
-    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat||'').toLowerCase() === 'jobs'; })
-      .sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var jobs = _activeJobs().sort(function (a, b) { return b.createdAt - a.createdAt; });
 
     var filterHtml = H._sel('findjobs', 'subcat', 'Job Category', [['all', 'All Categories']].concat(JOB_CATS.map(function (c) { return [c, c]; })).concat([['Other', 'Other']]))
       + H._sel('findjobs', 'fuelType', 'Job Type', [['all', 'All'], ['full-time', 'Full-time'], ['part-time', 'Part-time'], ['contract', 'Contract'], ['freelance', 'Freelance'], ['internship', 'Internship']])
-      + H._sel('findjobs', 'propType', 'Qualification', [['all', 'All'], ['none', 'No formal qualification'], ['certificate', 'Certificate / Diploma'], ['degree', 'Degree'], ['postgrad', 'Postgraduate']])
+      + H._sel('findjobs', 'propType', 'Qualification', [['all', 'All']].concat(JOB_QUALS.map(function (q) { return [q.key, q.label]; })))
       + H._citysel('findjobs') + H._priceRange('findjobs') + H._sortsel('findjobs');
 
     return '<div class="page active">'
-      + '<div class="det-topbar" style="background:#F5A623">'
-      + '<button class="back" onclick="H.goBack()" style="color:#1A3A8F"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
-      + '<div class="det-topbar-title" style="color:#1A3A8F">Find Jobs</div>'
-      + '<button onclick="H.openInner(\'PostJob\')" style="background:#1A3A8F;border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:6px 12px;border-radius:8px">+ Post</button>'
+      + '<div class="det-topbar" style="background:#1A3A8F">'
+      + '<button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      + '<div class="det-topbar-title">All Jobs</div>'
+      + '<button onclick="H.openInner(\'PostJob\')" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:6px 12px;border-radius:8px">+ Post</button>'
       + '</div>'
-      + '<div style="background:#F5A623;padding:0 12px 12px">'
+      + '<div style="background:#1A3A8F;padding:0 12px 12px">'
       + '<div style="display:flex;gap:8px;align-items:center">'
-      + '<div style="background:rgba(255,255,255,.9);border-radius:12px;display:flex;align-items:center;padding:0 12px;gap:8px;flex:1">'
+      + '<div style="background:#fff;border-radius:12px;display:flex;align-items:center;padding:0 12px;gap:8px;flex:1">'
       + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
       + '<input id="cs_findjobs" placeholder="Search jobs…" autocomplete="off" value="' + H.escHtml(params.q || '') + '" oninput="H._applyJobFilters()" style="flex:1;border:none;outline:none;padding:12px 0;font-size:14px;background:transparent;color:#1A3A8F;font-family:Inter,sans-serif"></div>'
-      + '<button onclick="H._toggleFilters(\'findjobs\')" style="background:rgba(255,255,255,.25);border:none;color:#1A3A8F;padding:10px 12px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700">'
+      + '<button onclick="H._toggleFilters(\'findjobs\')" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:10px 12px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700">'
       + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/></svg>Filter'
-      + '<span id="fb_findjobs" style="display:none;background:#1A3A8F;color:#fff;font-size:10px;font-weight:800;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 4px"></span></button>'
+      + '<span id="fb_findjobs" style="display:none;background:#F5A623;color:#1A3A8F;font-size:10px;font-weight:800;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 4px"></span></button>'
       + '</div>'
-      + '<div style="color:rgba(26,58,143,.75);font-size:12px;font-weight:600;margin-top:8px"><span id="cc_findjobs">' + jobs.length + ' jobs</span></div>'
+      + '<div style="color:rgba(255,255,255,.75);font-size:12px;font-weight:600;margin-top:8px"><span id="cc_findjobs">' + jobs.length + ' jobs</span></div>'
       + '</div>'
-      + '<div id="fp_findjobs" style="display:none;background:var(--card);border-bottom:2px solid #F5A623;padding:16px 14px">'
+      + '<div id="fp_findjobs" style="display:none;background:var(--card);border-bottom:2px solid #1A3A8F;padding:16px 14px">'
       + filterHtml
       + '<div style="display:flex;gap:8px;margin-top:4px">'
       + '<button onclick="H._clearFilters(\'findjobs\')" style="flex:1;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">Clear</button>'
-      + '<button onclick="H._toggleFilters(\'findjobs\')" style="flex:2;padding:10px;background:#F5A623;border:none;border-radius:10px;font-size:13px;font-weight:700;color:#1A3A8F;cursor:pointer">Apply Filters</button>'
+      + '<button onclick="H._toggleFilters(\'findjobs\')" style="flex:2;padding:10px;background:#1A3A8F;border:none;border-radius:10px;font-size:13px;font-weight:700;color:#fff;cursor:pointer">Apply Filters</button>'
       + '</div></div>'
       + '<div id="cl_findjobs" style="padding:12px 12px 88px">'
       + (jobs.length ? jobs.map(jobCard).join('') : H.emptyState('No jobs yet', 'Check back soon!', 'Post a Job', "H.openInner('PostJob')"))
       + '</div></div>';
   };
 
-  H.pages.FindJobs_after = function (params) {
+  H.pages.JobResults_after = function (params) {
     params = params || {};
     H._filters['findjobs'] = {};
-    if (params.cat) H._filters['findjobs'].subcat = params.cat;
+    if (params.cat)  H._filters['findjobs'].subcat   = params.cat;
+    if (params.type) H._filters['findjobs'].fuelType = params.type.toLowerCase();
+    if (params.qual) H._filters['findjobs'].propType = params.qual;
     H._applyJobFilters();
   };
 
@@ -221,15 +358,19 @@
     var el = document.getElementById('cl_findjobs');
     if (!el) return;
     var f = H._filters['findjobs'] || {};
-    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat||'').toLowerCase() === 'jobs'; });
+    var jobs = _activeJobs();
     var q = ((document.getElementById('cs_findjobs') || {}).value || '').toLowerCase().trim();
     if (q) jobs = jobs.filter(function (l) { return (l.title + ' ' + (l.desc || '') + ' ' + (l.city || '') + ' ' + (l.sellerName || '')).toLowerCase().includes(q); });
     if (f.city && f.city !== 'all') jobs = jobs.filter(function (l) { return (l.city + ' ' + (l.prov || '')).toLowerCase().includes(f.city.toLowerCase()); });
-    if (f.subcat && f.subcat !== 'all') jobs = jobs.filter(function (l) { return (l.title + ' ' + (l.desc || '')).toLowerCase().includes(f.subcat.split(' ')[0].toLowerCase()); });
-    if (f.fuelType && f.fuelType !== 'all') jobs = jobs.filter(function (l) { return (l.desc || '').toLowerCase().includes(f.fuelType.replace('-', ' ')); });
+    if (f.subcat && f.subcat !== 'all') jobs = jobs.filter(function (l) { return _jobInCat(l, f.subcat); });
+    if (f.fuelType && f.fuelType !== 'all') jobs = jobs.filter(function (l) { return _jobTypeOf(l).toLowerCase().includes(f.fuelType.replace('-', ' ')); });
+    if (f.propType && f.propType !== 'all') {
+      var ql = (JOB_QUALS.find(function (x) { return x.key === f.propType; }) || {}).match || [];
+      jobs = jobs.filter(function (l) { var t = (l.desc || '').toLowerCase(); return ql.some(function (m) { return t.includes(m); }); });
+    }
     if (f.priceMin) jobs = jobs.filter(function (l) { return (l.price || 0) >= +f.priceMin; });
     if (f.priceMax) jobs = jobs.filter(function (l) { return (l.price || 0) <= +f.priceMax; });
-    jobs.sort(function (a, b) { return b.createdAt - a.createdAt; });
+    jobs.sort(function (a, b) { return f.sort === 'salary' ? (b.price || 0) - (a.price || 0) : b.createdAt - a.createdAt; });
     el.innerHTML = jobs.length ? jobs.map(jobCard).join('') : H.emptyState('No jobs match', 'Try adjusting your filters', null, null);
     var cnt = document.getElementById('cc_findjobs');
     if (cnt) cnt.textContent = jobs.length + ' job' + (jobs.length !== 1 ? 's' : '');
@@ -258,13 +399,11 @@
         return '<button onclick="H._talentSector(\'' + s + '\')" style="flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid ' + (i === 0 ? '#1A3A8F' : 'var(--border)') + ';background:' + (i === 0 ? '#1A3A8F' : 'var(--bg)') + ';color:' + (i === 0 ? '#fff' : 'var(--text)') + ';font-size:12px;font-weight:700;cursor:pointer">' + H.escHtml(s) + '</button>';
       }).join('')
       + '</div>'
-      + '<div style="padding:10px 14px;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid var(--border)">'
-      + '<div style="flex-shrink:0"><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">City</div>'
-      + '<select onchange="H._setFilter(\'talent\',\'city\',this.value);H._filterTalent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none">'
-      + '<option value="all">All Cities</option>' + ZW.map(function (c) { return '<option value="' + c + '">' + c + '</option>'; }).join('') + '</select></div>'
-      + '<div style="flex-shrink:0;margin-left:8px"><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Experience</div>'
-      + '<select onchange="H._setFilter(\'talent\',\'exp\',this.value);H._filterTalent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none">'
-      + '<option value="all">Any</option><option value="entry">Entry Level</option><option value="mid">3-5 Years</option><option value="senior">5+ Years</option><option value="expert">10+ Years</option></select></div>'
+      + '<div style="padding:10px 14px;display:flex;gap:10px;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:none">'
+      + _talentSelect('City', 'city', '<option value="all">All Cities</option>' + ZW.map(function (c) { return '<option value="' + c + '">' + c + '</option>'; }).join(''))
+      + _talentSelect('Experience', 'exp', '<option value="all">Any</option><option value="entry">Entry Level</option><option value="mid">3-5 Years</option><option value="senior">5+ Years</option><option value="expert">10+ Years</option>')
+      + _talentSelect('Education', 'edu', '<option value="all">Any</option><option value="certificate">Certificate / Diploma</option><option value="degree">Degree</option><option value="postgrad">Postgraduate</option>')
+      + _talentSelect('Sort by', 'sort', '<option value="recent">Most Recent</option><option value="experience">Most Experienced</option><option value="name">Name (A–Z)</option>')
       + '</div>'
       + '<div id="talentList" style="padding:12px 14px 88px">'
       + (candidates.length ? candidates.map(_candidateCard).join('') : _emptyTalent())
@@ -309,6 +448,39 @@
       });
   };
 
+  function _talentSelect(label, key, opts) {
+    return '<div style="flex-shrink:0">'
+      + '<div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">' + label + '</div>'
+      + '<select onchange="H._setFilter(\'talent\',\'' + key + '\',this.value);H._filterTalent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none">'
+      + opts + '</select></div>';
+  }
+
+  // Derive highest education level from a candidate's CV.
+  function _candEduLevel(u) {
+    var edu = (u.cv && u.cv.education) || [];
+    var text = edu.map(function (e) { return (e.degree || e.qualification || ''); }).join(' ').toLowerCase();
+    if (/\b(master|msc|m\.sc|mba|phd|doctorate|postgrad|post-grad)\b/.test(text)) return 'postgrad';
+    if (/\b(degree|bachelor|bsc|b\.sc|ba|beng|honours|hons)\b/.test(text)) return 'degree';
+    if (/\b(certificate|diploma|hexco|cert)\b/.test(text)) return 'certificate';
+    return '';
+  }
+  // Approximate years of experience for sorting / filtering.
+  function _candExpYears(u) {
+    if (u.exp === 'expert') return 10;
+    if (u.exp === 'senior') return 7;
+    if (u.exp === 'mid') return 4;
+    if (u.exp === 'entry') return 1;
+    return ((u.cv && u.cv.experience) || []).length * 2;
+  }
+  function _candExpLevel(u) {
+    if (u.exp) return u.exp;
+    var y = _candExpYears(u);
+    if (y >= 10) return 'expert';
+    if (y >= 5) return 'senior';
+    if (y >= 3) return 'mid';
+    return 'entry';
+  }
+
   H._talentSector = function (sector) {
     H._currentTalentSector = sector;
     document.querySelectorAll('#sectorTabs button').forEach(function (btn) {
@@ -345,23 +517,31 @@
     if (f.city && f.city !== 'all') list = list.filter(function (u) {
       return ((u.cv && u.cv.location || u.city) || '').toLowerCase().includes(f.city.toLowerCase());
     });
+    if (f.exp && f.exp !== 'all') list = list.filter(function (u) { return _candExpLevel(u) === f.exp; });
+    if (f.edu && f.edu !== 'all') list = list.filter(function (u) { return _candEduLevel(u) === f.edu; });
+    if (f.sort === 'experience') list.sort(function (a, b) { return _candExpYears(b) - _candExpYears(a); });
+    else if (f.sort === 'name') list.sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); });
+    else list.sort(function (a, b) { return (b.profileUpdatedAt || b.createdAt || 0) - (a.profileUpdatedAt || a.createdAt || 0); });
     if (cnt) cnt.textContent = list.length + ' candidate' + (list.length !== 1 ? 's' : '');
     el.innerHTML = list.length ? list.map(_candidateCard).join('') : _emptyTalent();
   };
+
+  var _EXP_LABEL = { entry: 'Entry level', mid: '3–5 yrs exp', senior: '5–10 yrs exp', expert: '10+ yrs exp' };
+  var _EDU_LABEL = { certificate: 'Certificate / Diploma', degree: 'Degree', postgrad: 'Postgraduate' };
 
   function _candidateCard(u) {
     var ini = H.initials(u.name || 'U');
     var cv  = u.cv || {};
     var verBadge = u.verified
-      ? '<span style="margin-left:6px;display:inline-flex;vertical-align:middle">' + H.verifiedBadge(14) + '</span>'
+      ? '<span style="display:inline-flex;align-items:center;gap:3px;background:#1A3A8F12;color:#1A3A8F;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">' + H.verifiedBadge(11) + 'Verified</span>'
       : '';
-    var headline = cv.headline || u.jobTitle || 'Open to Work';
+    var position = (cv.experience && cv.experience[0] && cv.experience[0].title) || cv.headline || u.jobTitle || '';
     var location = cv.location || u.city || '';
-    var expCount = (cv.experience || []).length;
-    var rawSkills = cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean);
-    var skills = rawSkills.slice(0, 4).map(function(s){ return s.trim(); }).filter(Boolean);
-    var latestExp = cv.experience && cv.experience[0];
+    var expLabel = _EXP_LABEL[_candExpLevel(u)] || '';
+    var eduLabel = _EDU_LABEL[_candEduLevel(u)] || '';
     var expectedSal = u.expectedSalary || (cv.expectedSalary ? '$' + cv.expectedSalary + '/mo' : '');
+    var posted = u.profileUpdatedAt || u.createdAt;
+    var saved = (H.state.savedCandidates || []).indexOf(u.id) > -1;
 
     // Contact logic
     var waFull  = u.whatsappFull || '';
@@ -369,37 +549,55 @@
     var canWa   = !!waFull   && (u.contactMethod !== 'call');
     var canCall = !!callNum  && (u.contactMethod !== 'whatsapp');
     var waUrl   = 'https://wa.me/' + waFull + '?text=' + encodeURIComponent('Hi ' + (u.name || '') + ', I saw your profile on PaMarket and I have a job opportunity for you.');
-    var hasDirectContact = canWa || canCall;
-    var msgStyle = hasDirectContact
-      ? 'flex:1;padding:9px;background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit'
-      : 'flex:1;padding:9px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit';
 
-    return '<div style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.05)">'
-      + '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">'
-      + '<div style="width:50px;height:50px;border-radius:50%;overflow:hidden;flex-shrink:0">'
-      + (u.avatar ? '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#3a6fd8);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff">' + ini + '</div>')
+    function metaRow(icon, label, val) {
+      if (!val) return '';
+      return '<div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text)">'
+        + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--sub)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">' + icon + '</svg>'
+        + '<span style="color:var(--sub)">' + label + '</span>'
+        + '<span style="font-weight:600;margin-left:auto;text-align:right">' + H.escHtml(val) + '</span></div>';
+    }
+
+    return '<div onclick="H.openInner(\'ViewCandidateCV\',{id:\'' + u.id + '\'})" style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer">'
+      + '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">'
+      + '<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;flex-shrink:0">'
+      + (u.avatar ? '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#3a6fd8);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:#fff">' + ini + '</div>')
       + '</div>'
       + '<div style="flex:1;min-width:0">'
-      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:2px"><div style="font-size:15px;font-weight:700;color:var(--text)">' + H.escHtml(u.name || 'Anonymous') + '</div>' + verBadge + '</div>'
-      + '<div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-bottom:2px">' + H.escHtml(headline) + '</div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--sub)">'
-      + (location ? '<span style="display:inline-flex;align-items:center;gap:3px">' + H.ICONS.location + H.escHtml(location) + '</span>' : '')
-      + (expCount ? '<span style="display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>' + expCount + ' position' + (expCount!==1?'s':'') + '</span>' : '')
-      + (expectedSal ? '<span style="display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' + H.escHtml(expectedSal) + '</span>' : '')
-      + '</div></div></div>'
-      + (latestExp ? '<div style="background:var(--bg);border-radius:10px;padding:8px 10px;margin-bottom:8px;border-left:3px solid #1A3A8F">'
-          + '<div style="font-size:12px;font-weight:700;color:var(--text)">' + H.escHtml(latestExp.title) + '</div>'
-          + '<div style="font-size:11px;color:var(--sub);margin-top:1px">' + H.escHtml(latestExp.company) + (latestExp.duration ? ' · ' + H.escHtml(latestExp.duration) : '') + '</div>'
-          + '</div>' : '')
-      + (skills.length ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">' + skills.map(function (s) { return '<span style="background:#1A3A8F12;border:1px solid #1A3A8F22;font-size:11px;padding:2px 8px;border-radius:6px;color:#1A3A8F;font-weight:600">' + H.escHtml(s) + '</span>'; }).join('') + '</div>' : '')
-      + (cv.summary ? '<div style="font-size:12px;color:var(--sub);line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + H.escHtml(cv.summary) + '</div>' : '')
-      + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
-      + '<button onclick="H.startChatWith(\'' + u.id + '\')" style="' + msgStyle + ';display:inline-flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'
-      + (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;padding:9px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
-      + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;padding:9px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
-      + '<button onclick="H.openInner(\'ViewCandidateCV\',{id:\'' + u.id + '\'})" style="flex:1;padding:9px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + (hasDirectContact ? 'CV' : 'View CV') + '</button>'
+      + '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(u.name || 'Anonymous') + '</div>'
+      + '<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#15803d;font-weight:700"><span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block"></span>Looking for a job</div>'
+      + '</div>'
+      + '<button onclick="event.stopPropagation();H._toggleSaveCandidate(\'' + u.id + '\')" style="background:none;border:none;cursor:pointer;padding:2px;flex-shrink:0;color:' + (saved ? '#F5A623' : 'var(--sub)') + '"><svg viewBox="0 0 24 24" width="20" height="20" fill="' + (saved ? '#F5A623' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;gap:8px;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:12px">'
+      + metaRow('<rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>', 'Current position', position)
+      + metaRow('<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>', 'Desired salary', expectedSal)
+      + metaRow('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', 'Experience', expLabel)
+      + metaRow('<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2 6 2s6-1 6-2v-5"/>', 'Education', eduLabel)
+      + metaRow('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>', 'Location', location)
+      + '</div>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+      + (verBadge || '<span></span>')
+      + (posted ? '<span style="font-size:11px;color:var(--sub)">' + H.timeAgo(posted) + '</span>' : '')
+      + '</div>'
+      + '<div style="display:flex;gap:8px">'
+      + (canWa
+        ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" onclick="event.stopPropagation()" style="flex:1;padding:11px;background:#25D366;color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>'
+        : (canCall
+          ? '<a href="tel:+' + H.escHtml(callNum) + '" onclick="event.stopPropagation()" style="flex:1;padding:11px;background:#1A3A8F;color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>'
+          : '<button onclick="event.stopPropagation();H.startChatWith(\'' + u.id + '\')" style="flex:1;padding:11px;background:#1A3A8F;color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'))
+      + '<button onclick="event.stopPropagation();H.openInner(\'ViewCandidateCV\',{id:\'' + u.id + '\'})" style="flex:1;padding:11px;background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">View Profile</button>'
       + '</div></div>';
   }
+
+  H._toggleSaveCandidate = function (id) {
+    H.state.savedCandidates = H.state.savedCandidates || [];
+    var i = H.state.savedCandidates.indexOf(id);
+    if (i > -1) { H.state.savedCandidates.splice(i, 1); H.toast('Removed from saved'); }
+    else { H.state.savedCandidates.push(id); H.toast('Candidate saved'); }
+    H.saveState();
+    H._filterTalent();
+  };
 
   function _cvSection(title, body) {
     return '<div style="margin-bottom:20px">'
