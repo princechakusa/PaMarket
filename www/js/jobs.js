@@ -755,18 +755,24 @@
   function _candidateCard(u) {
     var ini = H.initials(u.name || 'U');
     var cv  = u.cv || {};
+    var req = H._contactReqFor(u.id);
+    var unlocked = !!(req && req.status === 'approved');
+    var pending  = !!(req && req.status === 'pending');
     var verBadge = u.verified
       ? '<span style="display:inline-flex;align-items:center;gap:3px;background:#1A3A8F12;color:#1A3A8F;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">' + H.verifiedBadge(11) + 'Verified</span>'
       : '';
     var position = (cv.experience && cv.experience[0] && cv.experience[0].title) || cv.headline || u.jobTitle || '';
+    var headline = cv.headline || position || 'Candidate';
     var location = cv.location || u.city || '';
     var expLabel = _EXP_LABEL[_candExpLevel(u)] || '';
     var eduLabel = _EDU_LABEL[_candEduLevel(u)] || '';
     var expectedSal = u.expectedSalary || (cv.expectedSalary ? '$' + cv.expectedSalary + '/mo' : '');
+    var availability = cv.availability || cv.noticePeriod || (u.openToWork ? 'Available now' : '');
     var posted = u.profileUpdatedAt || u.createdAt;
     var saved = (H.state.savedCandidates || []).indexOf(u.id) > -1;
+    var skills = (cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',')).map(function (s) { return (s || '').trim(); }).filter(Boolean).slice(0, 4);
 
-    // Contact logic
+    // Contact details — revealed only after an approved request.
     var waFull  = u.whatsappFull || '';
     var callNum = u.phoneForCalls || waFull;
     var canWa   = !!waFull   && (u.contactMethod !== 'call');
@@ -781,14 +787,32 @@
         + '<span style="font-weight:600;margin-left:auto;text-align:right">' + H.escHtml(val) + '</span></div>';
     }
 
+    var userIcon = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+
+    // Bottom action depends on unlock state.
+    var actions;
+    if (unlocked) {
+      actions = (canWa
+        ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" onclick="event.stopPropagation()" style="flex:1;padding:11px;background:#25D366;color:#fff;border-radius:11px;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>'
+        : (canCall
+          ? '<a href="tel:+' + H.escHtml(callNum) + '" onclick="event.stopPropagation()" style="flex:1;padding:11px;background:#1A3A8F;color:#fff;border-radius:11px;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>'
+          : '<button onclick="event.stopPropagation();H.startChatWith(\'' + u.id + '\')" style="flex:1;padding:11px;background:#1A3A8F;color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'));
+    } else if (pending) {
+      actions = '<div style="flex:1;padding:11px;background:#F5A62318;color:#c07800;border-radius:11px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Pending review</div>';
+    } else {
+      actions = '<button onclick="event.stopPropagation();H._requestContact(\'' + u.id + '\')" style="flex:1;padding:11px;background:#1A3A8F;color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Request to contact</button>';
+    }
+
     return '<div onclick="H.openInner(\'ViewCandidateCV\',{id:\'' + u.id + '\'})" style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer">'
       + '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">'
       + '<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;flex-shrink:0">'
-      + (u.avatar ? '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#3a6fd8);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:#fff">' + ini + '</div>')
+      + (u.avatar ? '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#3a6fd8);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:#fff">' + (unlocked ? ini : userIcon) + '</div>')
       + '</div>'
       + '<div style="flex:1;min-width:0">'
-      + '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(u.name || 'Anonymous') + '</div>'
-      + '<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#15803d;font-weight:700"><span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block"></span>Looking for a job</div>'
+      + '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(unlocked ? (u.name || 'Candidate') : headline) + '</div>'
+      + (unlocked
+        ? '<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#1A3A8F;font-weight:700">' + (u.verified ? H.verifiedBadge(12) : '') + H.escHtml(headline) + '</div>'
+        : '<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#15803d;font-weight:700"><span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block"></span>Looking for a job</div>')
       + '</div>'
       + '<button onclick="event.stopPropagation();H._toggleSaveCandidate(\'' + u.id + '\')" style="background:none;border:none;cursor:pointer;padding:2px;flex-shrink:0;color:' + (saved ? '#F5A623' : 'var(--sub)') + '"><svg viewBox="0 0 24 24" width="20" height="20" fill="' + (saved ? '#F5A623' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>'
       + '</div>'
@@ -797,21 +821,92 @@
       + metaRow('<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>', 'Desired salary', expectedSal)
       + metaRow('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', 'Experience', expLabel)
       + metaRow('<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2 6 2s6-1 6-2v-5"/>', 'Education', eduLabel)
+      + metaRow('<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>', 'Availability', availability)
       + metaRow('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>', 'Location', location)
       + '</div>'
+      + (skills.length ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">' + skills.map(function (s) { return '<span style="background:#1A3A8F12;color:#1A3A8F;font-size:11px;font-weight:600;padding:3px 9px;border-radius:7px">' + H.escHtml(s) + '</span>'; }).join('') + '</div>' : '')
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
       + (verBadge || '<span></span>')
       + (posted ? '<span style="font-size:11px;color:var(--sub)">' + H.timeAgo(posted) + '</span>' : '')
       + '</div>'
       + '<div style="display:flex;gap:8px">'
-      + (canWa
-        ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" onclick="event.stopPropagation()" style="flex:1;padding:11px;background:#25D366;color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>'
-        : (canCall
-          ? '<a href="tel:+' + H.escHtml(callNum) + '" onclick="event.stopPropagation()" style="flex:1;padding:11px;background:#1A3A8F;color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>'
-          : '<button onclick="event.stopPropagation();H.startChatWith(\'' + u.id + '\')" style="flex:1;padding:11px;background:#1A3A8F;color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'))
+      + actions
       + '<button onclick="event.stopPropagation();H.openInner(\'ViewCandidateCV\',{id:\'' + u.id + '\'})" style="flex:1;padding:11px;background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">View Profile</button>'
       + '</div></div>';
   }
+
+  // Find the current user's request for a candidate (any status), or null.
+  H._contactReqFor = function (candidateId) {
+    var me = H.currentUser(); if (!me) return null;
+    return (H.state.contactRequests || []).find(function (r) {
+      return r.candidateId === candidateId && r.requesterId === me.id;
+    }) || null;
+  };
+
+  // Open the "Request to contact" form for a candidate.
+  H._requestContact = function (candidateId) {
+    var me = H.currentUser();
+    if (!me) { H.requireAuth('Sign in to request candidate contact'); return; }
+    if (me.id === candidateId) { H.toast('This is your own profile'); return; }
+    var req = H._contactReqFor(candidateId);
+    if (req && req.status === 'approved') { H.toast('Contact already unlocked'); return; }
+    if (req && req.status === 'pending') { H.toast('Your request is already under review'); return; }
+    var inStyle = 'width:100%;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit;margin-top:4px';
+    H.modal({
+      title: 'Request to contact',
+      body: '<div style="font-size:12.5px;color:var(--sub);line-height:1.6;margin-bottom:14px">Tell us a little about the role. Our team reviews each request and unlocks this candidate’s name and contact details once approved.</div>'
+        + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text)">Your company / organisation *</label><input id="crCompany" placeholder="e.g. Acme Logistics" value="' + H.escHtml(me.company || '') + '" style="' + inStyle + '"></div>'
+        + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text)">Role you’re hiring for *</label><input id="crRole" placeholder="e.g. Delivery Driver" style="' + inStyle + '"></div>'
+        + '<div><label style="font-size:12px;font-weight:700;color:var(--text)">Message (optional)</label><textarea id="crNote" rows="3" placeholder="Anything you’d like us to know…" style="' + inStyle + ';resize:vertical"></textarea></div>',
+      confirmText: 'Send request',
+      onConfirm: function () {
+        var company = ((document.getElementById('crCompany') || {}).value || '').trim();
+        var role    = ((document.getElementById('crRole') || {}).value || '').trim();
+        var note    = ((document.getElementById('crNote') || {}).value || '').trim();
+        if (!company || !role) { H.toast('Please add your company and the role'); return false; }
+        H._submitContactRequest(candidateId, company, role, note);
+      }
+    });
+  };
+
+  H._submitContactRequest = function (candidateId, company, role, note) {
+    var me = H.currentUser(); if (!me) return;
+    var cand = (H.state.users || []).find(function (x) { return x.id === candidateId; }) || {};
+    var existing = H._contactReqFor(candidateId);
+    var rec = {
+      id: existing ? existing.id : H.uid(),
+      requesterId: me.id, candidateId: candidateId,
+      requesterName: me.name || '', candidateName: cand.name || '',
+      candidateLocation: (cand.cv && cand.cv.location) || cand.city || '',
+      company: company, role: role, note: note || '',
+      status: 'pending', createdAt: Date.now()
+    };
+    H.state.contactRequests = H.state.contactRequests || [];
+    if (existing) Object.assign(existing, rec); else H.state.contactRequests.push(rec);
+    H.saveState();
+
+    var _sb = window.supabase;
+    if (_sb && typeof _sb.from === 'function') {
+      var row = {
+        requester_id: me.id, candidate_id: candidateId,
+        requester_name: me.name || '', candidate_name: cand.name || '',
+        company: company, role: role, note: note || '', status: 'pending'
+      };
+      // Clear any prior row for this pair (RLS forbids declined→pending updates),
+      // then insert a fresh pending request.
+      _sb.from('contact_requests').delete().eq('requester_id', me.id).eq('candidate_id', candidateId).then(function () {
+        _sb.from('contact_requests').insert(row).select().then(function (r) {
+          if (r && !r.error && r.data && r.data[0]) {
+            var local = H._contactReqFor(candidateId);
+            if (local) { local.id = r.data[0].id; H.saveState(); }
+          } else if (r && r.error) { console.warn('contact request error:', r.error.message); }
+        });
+      });
+    }
+    H.toast('Request sent — we’ll review and notify you');
+    if (H.currentPageName === 'ViewCandidateCV') H.renderPage('ViewCandidateCV', { id: candidateId });
+    else if (typeof H._filterTalent === 'function') H._filterTalent();
+  };
 
   H._toggleSaveCandidate = function (id) {
     H.state.savedCandidates = H.state.savedCandidates || [];
@@ -910,6 +1005,10 @@
     if (!u) return '<div class="page active">' + H.innerTopbar('Candidate CV') + H.emptyState('Not found', 'Candidate profile unavailable', null, null) + '</div>';
     var me = H.currentUser();
     var isMine = !!(me && me.id === uid);
+    var req = H._contactReqFor(uid);
+    var unlocked = !!(req && req.status === 'approved');
+    var pending  = !!(req && req.status === 'pending');
+    var reveal = isMine || unlocked;   // may we show name + contact?
     var cv  = u.cv || {};
     var ini = H.initials(u.name || 'U');
     var verBadge = u.verified ? '<span style="display:inline-flex;vertical-align:middle">' + H.verifiedBadge(14) + '</span>' : '';
@@ -924,10 +1023,14 @@
     var expectedSal = cv.expectedSalary ? '$' + cv.expectedSalary + '/mo' : (u.expectedSalary || '');
     var waFull  = u.whatsappFull || '';
     var callNum = u.phoneForCalls || waFull;
-    var canWa   = !!waFull   && (u.contactMethod !== 'call');
-    var canCall = !!callNum  && (u.contactMethod !== 'whatsapp');
+    var canWa   = reveal && !!waFull  && (u.contactMethod !== 'call');
+    var canCall = reveal && !!callNum && (u.contactMethod !== 'whatsapp');
     var waUrl   = 'https://wa.me/' + waFull + '?text=' + encodeURIComponent('Hi ' + (u.name || '') + ', I saw your profile on PaMarket and I have a job opportunity for you.');
     var jobTypes = (u.jobTypes || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    // Action used in the header + bottom bar when contact is still locked.
+    var reqBtnHeader = pending
+      ? '<div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Request pending</div>'
+      : '<div onclick="H._requestContact(\'' + H.escHtml(u.id) + '\')" style="display:flex;align-items:center;gap:5px;background:#F5A623;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;color:#1A3A8F;cursor:pointer"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Request to contact</div>';
 
     return '<div class="page active">'
       + H.innerTopbar('Candidate CV')
@@ -936,10 +1039,10 @@
       + '<div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952c8 100%);padding:22px 18px 20px">'
       + '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px">'
       + '<div style="width:64px;height:64px;border-radius:50%;overflow:hidden;flex-shrink:0;border:3px solid rgba(255,255,255,.3)">'
-      + (u.avatar ? '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">' + ini + '</div>')
+      + (u.avatar ? '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">' + (reveal ? ini : '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>') + '</div>')
       + '</div>'
       + '<div style="flex:1;min-width:0">'
-      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px"><div style="font-size:19px;font-weight:800;color:#fff">' + H.escHtml(u.name || 'Anonymous') + '</div>' + verBadge + '</div>'
+      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px"><div style="font-size:19px;font-weight:800;color:#fff">' + H.escHtml(reveal ? (u.name || 'Anonymous') : 'Candidate') + '</div>' + (reveal ? verBadge : '') + '</div>'
       + '<div style="font-size:13px;color:rgba(255,255,255,.9);font-weight:600;margin-bottom:5px">' + H.escHtml(headline) + '</div>'
       + '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:rgba(255,255,255,.72)">'
       + (location ? '<span style="display:inline-flex;align-items:center;gap:3px">' + H.ICONS.location + H.escHtml(location) + '</span>' : '')
@@ -947,19 +1050,22 @@
       + (expectedSal ? '<span style="display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' + H.escHtml(expectedSal) + '</span>' : '')
       + '</div>'
       + (jobTypes.length ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">' + jobTypes.map(function(t){ return '<span style="background:rgba(255,255,255,.2);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px">' + H.escHtml(t) + '</span>'; }).join('') + '</div>' : '')
-      + ((u.linkedinUrl || u.githubUrl || u.websiteUrl) ? '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:11px">'
+      + ((reveal && (u.linkedinUrl || u.githubUrl || u.websiteUrl)) ? '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:11px">'
           + (u.linkedinUrl ? '<a href="' + H.escHtml(u.linkedinUrl) + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> LinkedIn</a>' : '')
           + (u.githubUrl   ? '<a href="' + H.escHtml(u.githubUrl)   + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg> GitHub</a>' : '')
           + (u.websiteUrl  ? '<a href="' + H.escHtml(u.websiteUrl)  + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg> Portfolio</a>' : '')
           + '</div>' : '')
       + '</div></div></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-      + (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="display:flex;align-items:center;gap:5px;background:#25D366;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Chat on WhatsApp</a>' : '')
-      + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="display:flex;align-items:center;gap:5px;background:#1A3A8F;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call Candidate</a>' : '')
-      + '<div onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#fff;cursor:pointer"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</div>'
+      + (reveal
+        ? (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="display:flex;align-items:center;gap:5px;background:#25D366;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Chat on WhatsApp</a>' : '')
+          + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="display:flex;align-items:center;gap:5px;background:#1A3A8F;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call Candidate</a>' : '')
+          + '<div onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#fff;cursor:pointer"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</div>'
+        : reqBtnHeader)
       + '</div></div>'
       // ── body ──
       + '<div style="padding:16px 16px 0">'
+      + (!reveal ? '<div style="display:flex;align-items:flex-start;gap:10px;background:#1A3A8F0d;border:1px solid #1A3A8F22;border-radius:12px;padding:12px 14px;margin-bottom:18px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><div style="font-size:12.5px;color:var(--text);line-height:1.55">' + (pending ? 'Your request is under review. The full name and contact details unlock here once it’s approved.' : 'This candidate’s <strong>name and contact details are hidden</strong>. Send a request and our team will unlock them for you once approved.') + '</div></div>' : '')
       + (summary ? _cvSection('Professional Summary', '<p style="font-size:13px;color:var(--text);line-height:1.75;margin:0">' + H.escHtml(summary) + '</p>')
           : (u.bio ? _cvSection('Professional Summary', '<p style="font-size:13px;color:var(--text);line-height:1.75;margin:0">' + H.escHtml(u.bio) + '</p>') : ''))
       + (exp.length ? _cvSection('Work Experience', exp.map(function (e) {
@@ -993,10 +1099,14 @@
       + (isMine
         ? '<button onclick="H.openInner(\'CandidateProfile\')" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>'
           + '<button onclick="H._deleteJobProfile()" style="flex:1;padding:13px;background:var(--bg);color:#ef4444;border:1.5px solid #fecaca;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Delete Profile</button>'
-        : (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
-          + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
-          + '<button onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;' + (canWa || canCall ? 'background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;' : 'background:#1A3A8F;color:#fff;border:none;') + 'border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'
-          + '<button onclick="H._cvDownload(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952c8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CV</button>'
+        : (reveal
+          ? ((canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
+            + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
+            + '<button onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;' + (canWa || canCall ? 'background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;' : 'background:#1A3A8F;color:#fff;border:none;') + 'border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'
+            + '<button onclick="H._cvDownload(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952c8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CV</button>')
+          : (pending
+            ? '<div style="flex:1;padding:14px;background:#F5A62318;color:#c07800;border-radius:12px;font-size:13.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Request pending review</div>'
+            : '<button onclick="H._requestContact(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Request to contact</button>'))
       )
       + '</div></div>';
   };
