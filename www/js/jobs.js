@@ -50,28 +50,47 @@
       + '</div></div></div></div>';
   }
 
-  // Entry chooser shown when you tap "Jobs" — Get Hired vs I'm Hiring.
+  // Entry chooser shown when you tap "Jobs" — two doors, each with its own
+  // sub-actions (matches the Get Hired / I'm Hiring tree).
   H.pages.JobIntent = function () {
-    var briefcase = '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>';
-    var seeker = '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
-    var arrow = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+    var briefcase = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>';
+    var seeker = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+    var arrow = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+    function chip(label, onclick) {
+      return '<button onclick="event.stopPropagation();' + onclick + '" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:12px;font-weight:700;padding:7px 12px;border-radius:20px;cursor:pointer;font-family:inherit">' + label + '</button>';
+    }
     return '<div class="page active">'
       + '<div class="det-topbar" style="background:#F5A623">'
       + '<button class="back" onclick="H.goBack()" style="color:#1A3A8F"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
       + '<div class="det-topbar-title" style="color:#1A3A8F">Jobs</div>'
       + '<div style="width:40px"></div></div>'
-      + '<div style="padding:24px 16px">'
+      + '<div style="padding:22px 16px 32px">'
       + '<div style="font-size:23px;font-weight:900;color:var(--text);margin-bottom:4px;letter-spacing:-.4px">What brings you here?</div>'
       + '<div style="font-size:13.5px;color:var(--sub);margin-bottom:22px">Choose how you want to use PaMarket Jobs.</div>'
-      + '<button class="jobintent-card" onclick="H._getHired()" style="background:linear-gradient(135deg,#22c55e,#15803d)">'
-      + '<div class="jic-ic">' + seeker + '</div>'
-      + '<div class="jic-body"><div class="jic-title">Get Hired</div><div class="jic-sub">Looking for a job? Pick your location and profession, then build your CV profile so employers find you.</div></div>'
-      + '<div class="jic-go">' + arrow + '</div></button>'
-      + '<button class="jobintent-card" onclick="H.openInner(\'PostJob\')" style="background:linear-gradient(135deg,#1A3A8F,#0f2460)">'
-      + '<div class="jic-ic">' + briefcase + '</div>'
-      + '<div class="jic-body"><div class="jic-title">I’m Hiring</div><div class="jic-sub">Post a vacancy and reach qualified candidates. Verified employers get a badge.</div></div>'
-      + '<div class="jic-go">' + arrow + '</div></button>'
-      + '<div style="text-align:center;margin-top:14px"><button onclick="H.openInner(\'FindJobs\')" style="background:none;border:none;color:#1A3A8F;font-weight:700;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;padding:8px">Or browse all openings &rarr;</button></div>'
+
+      // ── Get Hired (job seeker) ──
+      + '<div onclick="H.openInner(\'FindJobs\')" style="background:linear-gradient(135deg,#22c55e,#15803d);border-radius:20px;padding:20px;margin-bottom:16px;cursor:pointer;box-shadow:0 6px 20px rgba(21,128,61,.25)">'
+      + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
+      + '<div style="width:52px;height:52px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">' + seeker + '</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;color:#fff">Get Hired</div><div style="font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.4">Browse jobs across Zimbabwe and apply in seconds.</div></div>'
+      + '<div style="color:#fff">' + arrow + '</div></div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
+      + chip('Browse Jobs', "H.openInner('FindJobs')")
+      + chip('My Applications', "H.openInner('AppliedJobs')")
+      + chip('My Profile', "H._getHired()")
+      + '</div></div>'
+
+      // ── I'm Hiring (employer) ──
+      + '<div onclick="H.openInner(\'HireTalent\')" style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 6px 20px rgba(26,58,143,.25)">'
+      + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
+      + '<div style="width:52px;height:52px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">' + briefcase + '</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;color:#fff">I’m Hiring</div><div style="font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.4">Browse available candidates and find the right person.</div></div>'
+      + '<div style="color:#fff">' + arrow + '</div></div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
+      + chip('Browse Candidates', "H.openInner('HireTalent')")
+      + chip('My Requests', "H.openInner('MyContactRequests')")
+      + chip('Post a Job', "H.openInner('PostJob')")
+      + '</div></div>'
       + '</div></div>';
   };
 
@@ -252,7 +271,7 @@
       + '<div class="det-topbar" style="background:#1A3A8F">'
       + '<button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
       + '<div class="det-topbar-title">Find Jobs</div>'
-      + '<div style="width:40px"></div></div>'
+      + '<button onclick="H.openInner(\'AppliedJobs\')" title="My Applications" style="background:rgba(255,255,255,.18);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:7px 11px;border-radius:9px">Applied</button></div>'
       // Hero
       + '<div style="background:linear-gradient(135deg,#1A3A8F 0%,#16307a 100%);padding:22px 16px 26px">'
       + '<div style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:6px">Job hunting made easy</div>'
@@ -321,7 +340,7 @@
       + '<div class="det-topbar" style="background:#1A3A8F">'
       + '<button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
       + '<div class="det-topbar-title">All Jobs</div>'
-      + '<button onclick="H.openInner(\'PostJob\')" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:6px 12px;border-radius:8px">+ Post</button>'
+      + '<button onclick="H.openInner(\'AppliedJobs\')" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:6px 12px;border-radius:8px">Applied</button>'
       + '</div>'
       + '<div style="background:#1A3A8F;padding:0 12px 12px">'
       + '<div style="display:flex;gap:8px;align-items:center">'
@@ -386,7 +405,11 @@
     var ZW = H._ZW_CITIES || [];
 
     return '<div class="page active">'
-      + '<div class="det-topbar" style="background:#1A3A8F"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Hire Talent</div></div>'
+      + '<div class="det-topbar" style="background:#1A3A8F"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Hire Talent</div>'
+      + '<div style="display:flex;gap:6px">'
+      + '<button onclick="H.openInner(\'MyContactRequests\')" title="My Requests" style="background:rgba(255,255,255,.18);border:none;color:#fff;cursor:pointer;padding:7px;border-radius:9px;display:flex"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></button>'
+      + '<button onclick="H.openInner(\'PostJob\')" style="background:rgba(255,255,255,.18);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:7px 11px;border-radius:9px">+ Post Job</button>'
+      + '</div></div>'
       + '<div style="background:#1A3A8F;padding:0 12px 14px">'
       + '<div style="background:rgba(255,255,255,.13);border-radius:12px;display:flex;align-items:center;padding:0 12px;gap:8px">'
       + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
@@ -797,6 +820,81 @@
     else { H.state.savedCandidates.push(id); H.toast('Candidate saved'); }
     H.saveState();
     H._filterTalent();
+  };
+
+  // ── Track Requests — the employer's own contact-unlock requests ──
+  // Helper: has the current user been approved to see this candidate?
+  H.isContactUnlocked = function (candidateId) {
+    var me = H.currentUser(); if (!me) return false;
+    return (H.state.contactRequests || []).some(function (r) {
+      return r.candidateId === candidateId && r.requesterId === me.id && r.status === 'approved';
+    });
+  };
+
+  H.pages.MyContactRequests = function () {
+    var u = H.currentUser();
+    if (!u) return '<div class="page active">' + H.innerTopbar('My Requests') + H.emptyState('Sign in required', 'Sign in to track your contact requests', null, null) + '</div>';
+    var reqs = (H.state.contactRequests || []).filter(function (r) { return r.requesterId === u.id; })
+      .sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+    var statusMeta = {
+      pending:  { c: '#F5A623', bg: '#F5A62318', label: 'Pending review' },
+      approved: { c: '#15803d', bg: '#22c55e1a', label: 'Approved' },
+      declined: { c: '#ef4444', bg: '#ef444418', label: 'Declined' }
+    };
+    var body;
+    if (!reqs.length) {
+      body = H.emptyState('No requests yet', 'When you request a candidate’s contact in Hire Talent, it shows here with its status.', 'Browse Candidates', "H.openInner('HireTalent')");
+    } else {
+      body = '<div style="padding:12px 14px 88px">' + reqs.map(function (r) {
+        var m = statusMeta[r.status] || statusMeta.pending;
+        var cand = (H.state.users || []).find(function (x) { return x.id === r.candidateId; }) || {};
+        var approved = r.status === 'approved';
+        var name = approved ? (cand.name || r.candidateName || 'Candidate') : ('Candidate · ' + (r.candidateLocation || cand.city || 'Zimbabwe'));
+        var phone = cand.whatsappFull || cand.phoneForCalls || cand.phone || '';
+        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
+          + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">'
+          + '<div style="min-width:0"><div style="font-size:15px;font-weight:800;color:var(--text)">' + H.escHtml(name) + '</div>'
+          + (r.role ? '<div style="font-size:12px;color:var(--sub);margin-top:1px">' + H.escHtml(r.role) + (r.company ? ' · ' + H.escHtml(r.company) : '') + '</div>' : '')
+          + '</div>'
+          + '<span style="flex-shrink:0;background:' + m.bg + ';color:' + m.c + ';font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px">' + m.label + '</span></div>'
+          + (approved
+            ? '<div style="background:var(--bg);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px">'
+              + '<div style="font-size:12px;color:var(--sub)">Contact unlocked — you can now reach this candidate:</div>'
+              + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+              + (phone ? '<a href="tel:+' + H.escHtml(phone) + '" style="display:inline-flex;align-items:center;gap:5px;background:#1A3A8F;color:#fff;text-decoration:none;font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg>Call</a>' : '')
+              + '<button onclick="H.openInner(\'ViewCandidateCV\',{id:\'' + H.escHtml(r.candidateId) + '\'})" style="display:inline-flex;align-items:center;gap:5px;background:var(--card);color:#1A3A8F;border:1.5px solid #1A3A8F;font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;font-family:inherit">View Profile</button>'
+              + '</div></div>'
+            : (r.status === 'declined'
+              ? '<div style="font-size:12px;color:var(--sub);line-height:1.5">This request was not approved. You can try another candidate.</div>'
+              : '<div style="font-size:12px;color:var(--sub);line-height:1.5">We’re reviewing your request. You’ll be notified once it’s approved and the contact details unlock here.</div>'))
+          + '<div style="font-size:11px;color:var(--sub2);margin-top:8px">Requested ' + H.timeAgo(r.createdAt) + '</div>'
+          + '</div>';
+      }).join('') + '</div>';
+    }
+    return '<div class="page active">' + H.innerTopbar('My Requests') + body + '</div>';
+  };
+
+  // Pull the latest status of my requests from the cloud.
+  H.pages.MyContactRequests_after = function () {
+    var u = H.currentUser(); if (!u) return;
+    var _sb = window.supabase;
+    if (!_sb || typeof _sb.from !== 'function') return;
+    _sb.from('contact_requests').select('*').eq('requester_id', u.id).then(function (res) {
+      if (res.error || !res.data) return;
+      H.state.contactRequests = H.state.contactRequests || [];
+      res.data.forEach(function (row) {
+        var ex = H.state.contactRequests.find(function (x) { return x.id === row.id; });
+        var mapped = {
+          id: row.id, requesterId: row.requester_id, candidateId: row.candidate_id,
+          candidateName: row.candidate_name || (ex && ex.candidateName) || '',
+          company: row.company || '', role: row.role || '', note: row.note || '',
+          status: row.status || 'pending', createdAt: ex && ex.createdAt ? ex.createdAt : (row.created_at ? new Date(row.created_at).getTime() : Date.now())
+        };
+        if (ex) Object.assign(ex, mapped); else H.state.contactRequests.push(mapped);
+      });
+      H.saveState();
+      if (H.currentPageName === 'MyContactRequests') H.renderPage('MyContactRequests');
+    });
   };
 
   function _cvSection(title, body) {

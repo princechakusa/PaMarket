@@ -68,7 +68,8 @@ window.H = {
     users:[], listings:[], conversations:[], reports:[], txns:[],
     saves:{}, notifs:{}, currentUserId:null, cityFilter:'All Zimbabwe',
     _sortMode:'newest', _priceMin:'', _priceMax:'',
-    adminLogs:[], supportTickets:[], paidAds:[], deletedConvIds:[]
+    adminLogs:[], supportTickets:[], paidAds:[], deletedConvIds:[],
+    applications:[], contactRequests:[], savedCandidates:[], savedSearches:[]
   },
 
   loadState() {
@@ -93,6 +94,11 @@ window.H = {
           cityFilter:      loaded.cityFilter    || base.cityFilter,
           txns:            Array.isArray(loaded.txns)            ? loaded.txns            : base.txns,
           deletedConvIds:  Array.isArray(loaded.deletedConvIds)  ? loaded.deletedConvIds  : base.deletedConvIds,
+          // Jobs-area user data — preserve across schema migrations
+          applications:    Array.isArray(loaded.applications)    ? loaded.applications    : base.applications,
+          contactRequests: Array.isArray(loaded.contactRequests) ? loaded.contactRequests : base.contactRequests,
+          savedCandidates: Array.isArray(loaded.savedCandidates) ? loaded.savedCandidates : base.savedCandidates,
+          savedSearches:   Array.isArray(loaded.savedSearches)   ? loaded.savedSearches   : base.savedSearches,
         });
         migrated._v = this.STATE_VERSION;
         return migrated;
@@ -736,7 +742,7 @@ window.H = {
 
   async openInner(name, params) {
     const H=window.H;
-    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob'];
+    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob','MyContactRequests'];
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
     try {
