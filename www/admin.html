@@ -297,6 +297,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
           Reports
           <span class="nav-badge" id="badge-reports" style="display:none">0</span>
         </button>
+        <button class="nav-item" data-tab="contacts" onclick="showTab('contacts')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-2-2"/></svg>
+          Contact Requests
+          <span class="nav-badge" id="badge-contacts" style="display:none">0</span>
+        </button>
         <button class="nav-item" data-tab="ads" onclick="showTab('ads')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
           Ads & Boosts
@@ -369,9 +374,10 @@ try {
 
 // ── State ─────────────────────────────────────────────────
 var DATA = {
-  users:[], listings:[], verifications:[], reports:[],
+  users:[], listings:[], verifications:[], reports:[], contactRequests:[],
   ads:[], settings:{}, notifHistory:[], chats:[]
 };
+var _contactFilter = 'pending';
 var currentTab = 'overview';
 var _listingFilter = 'pending';
 var _listingSearch = '';
@@ -480,7 +486,7 @@ function closeSidebar(){ document.getElementById('sidebar').classList.remove('op
 // ── Tab navigation ────────────────────────────────────────
 var TAB_TITLES = {
   overview:'Overview', listings:'Listings', users:'Users', verifications:'Verifications',
-  notifications:'Send Notification', reports:'Reports',
+  notifications:'Send Notification', reports:'Reports', contacts:'Contact Requests',
   ads:'Ads & Boosts', chats:'User Chats', analytics:'Analytics', settings:'Settings'
 };
 function showTab(name) {
@@ -496,7 +502,7 @@ function renderTab() {
   var fn = {
     overview: renderOverview, listings: renderListings, users: renderUsers,
     verifications: renderVerifications, notifications: renderNotifications,
-    reports: renderReports, ads: renderAds,
+    reports: renderReports, contacts: renderContactRequests, ads: renderAds,
     chats: renderChats, analytics: renderAnalytics, settings: renderSettings
   }[currentTab];
   if(fn) fn();
@@ -565,7 +571,7 @@ async function showDash() {
 // ── Data loading ──────────────────────────────────────────
 async function loadAllData() {
   document.getElementById('mainContent').innerHTML = '<div class="loading-msg">Loading dashboard data…</div>';
-  await Promise.allSettled([loadUsers(), loadListings(), loadVerifications(), loadReports(), loadAds(), loadSettings(), loadNotifHistory(), loadChats()]);
+  await Promise.allSettled([loadUsers(), loadListings(), loadVerifications(), loadReports(), loadContactRequests(), loadAds(), loadSettings(), loadNotifHistory(), loadChats()]);
   updateBadges();
   renderTab();
 }
@@ -635,6 +641,13 @@ async function loadReports() {
     else DATA.reports = [];
   } catch(e){ DATA.reports=[]; }
 }
+async function loadContactRequests() {
+  try {
+    var r = await sb.from('contact_requests').select('*').order('created_at',{ascending:false}).limit(300);
+    if(!r.error && r.data) DATA.contactRequests = r.data;
+    else DATA.contactRequests=[];
+  } catch(e){ DATA.contactRequests=[]; }
+}
 async function loadAds() {
   try {
     var r = await sb.from('paid_ads').select('*').order('created_at',{ascending:false}).limit(100);
@@ -661,6 +674,7 @@ function updateBadges() {
   var pendingV = DATA.verifications.filter(function(v){ return v.status==='pending'; }).length
     + DATA.users.filter(function(u){ return u.verification_pending && !DATA.verifications.find(function(v){ return v.user_id===u.id; }); }).length;
   var openR = DATA.reports.filter(function(r){ return r.status==='open'; }).length;
+  var pendingC = DATA.contactRequests.filter(function(c){ return c.status==='pending'; }).length;
 
   function setBadge(id, count) {
     var el=document.getElementById(id); if(!el) return;
@@ -669,7 +683,8 @@ function updateBadges() {
   setBadge('badge-listings', pendingL);
   setBadge('badge-verif', pendingV);
   setBadge('badge-reports', openR);
-  document.getElementById('badge-overview').style.display = (pendingL||pendingV||openR) ? '' : 'none';
+  setBadge('badge-contacts', pendingC);
+  document.getElementById('badge-overview').style.display = (pendingL||pendingV||openR||pendingC) ? '' : 'none';
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1416,6 +1431,82 @@ async function dismissReport(id) {
     }
     DATA.reports=DATA.reports.filter(function(x){return x.id!==id;});
     updateBadges(); renderReports(); toast('Report dismissed','info');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── CONTACT REQUESTS (Hire Talent unlocks) ────────────────
+function renderContactRequests() {
+  var all = DATA.contactRequests;
+  var filtered = all.filter(function(c){ return _contactFilter==='all'||c.status===_contactFilter; });
+  var counts = {
+    all: all.length,
+    pending: all.filter(function(c){return c.status==='pending';}).length,
+    approved: all.filter(function(c){return c.status==='approved';}).length,
+    declined: all.filter(function(c){return c.status==='declined';}).length
+  };
+
+  var html = '<div class="sec-head"><div class="sec-title">Contact Requests</div><div class="sec-actions">';
+  ['all','pending','approved','declined'].forEach(function(f){
+    html+='<button class="filter-btn'+((_contactFilter===f)?' on':'')+'" onclick="_contactFilter=\''+f+'\';renderContactRequests()">'+f.charAt(0).toUpperCase()+f.slice(1)+' ('+counts[f]+')</button>';
+  });
+  html+='</div></div>';
+
+  html+='<div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:var(--sub);line-height:1.7">';
+  html+='<strong style="color:var(--text)">What is this?</strong><br>';
+  html+='When an employer wants a candidate\'s contact details in <em>Hire Talent</em>, they send a request here. Approving it unlocks that candidate\'s name, phone and email <em>for that employer only</em>. Any payment is arranged privately off-app — it is never shown or handled inside the application.';
+  html+='</div>';
+
+  if(!all.length) {
+    html+='<div class="empty-msg">No contact requests yet. They appear here when an employer asks to unlock a candidate in Hire Talent. <br><br>If you just created the <code>contact_requests</code> table, this will populate as employers start requesting.</div>';
+    document.getElementById('mainContent').innerHTML=html; return;
+  }
+
+  html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Employer</th><th>Candidate</th><th>Role / Company</th><th>Note</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+  if(!filtered.length) html+='<tr><td colspan="7"><div class="empty-msg">No requests match this filter</div></td></tr>';
+  filtered.forEach(function(c){
+    var reqUser = DATA.users.find(function(x){ return x.id===c.requester_id; })||{};
+    var candUser = DATA.users.find(function(x){ return x.id===c.candidate_id; })||{};
+    var reqName = c.requester_name || reqUser.name || (c.requester_id||'').slice(0,8);
+    var candName = c.candidate_name || candUser.name || (c.candidate_id||'').slice(0,8);
+    var statusColor = c.status==='pending'?'amber':c.status==='approved'?'active':'rejected';
+    html+='<tr>';
+    html+='<td style="font-size:13px;font-weight:600">'+esc(reqName)+'<div style="font-size:11px;color:var(--sub)">'+esc(reqUser.phone||reqUser.email||'')+'</div></td>';
+    html+='<td style="font-size:13px;font-weight:600">'+esc(candName)+'<div style="font-size:11px;color:var(--sub)">'+esc(candUser.phone||candUser.email||'')+'</div></td>';
+    html+='<td style="font-size:12px">'+esc(c.role||'—')+(c.company?'<div style="font-size:11px;color:var(--sub)">'+esc(c.company)+'</div>':'')+'</td>';
+    html+='<td style="color:var(--sub);font-size:12px;max-width:220px">'+esc(c.note||'—')+'</td>';
+    html+='<td><span class="badge badge-'+statusColor+'">'+esc(c.status||'—')+'</span></td>';
+    html+='<td style="color:var(--sub);font-size:12px">'+fmtDate(c.created_at)+'</td>';
+    html+='<td><div style="display:flex;gap:4px">';
+    if(c.status!=='approved') html+='<button class="ab ab-approve" onclick="decideContact(\''+c.id+'\',\'approved\')">Approve</button>';
+    if(c.status!=='declined') html+='<button class="ab ab-delete" onclick="decideContact(\''+c.id+'\',\'declined\')">Decline</button>';
+    html+='</div></td></tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+async function decideContact(id, status) {
+  try {
+    var c = DATA.contactRequests.find(function(x){ return x.id===id; });
+    var r = await sb.from('contact_requests').update({ status:status, decided_at:new Date().toISOString() }).eq('id',id);
+    if(r.error) throw r.error;
+    if(c) { c.status=status; c.decided_at=new Date().toISOString(); }
+    // Notify the employer that their request was reviewed (best-effort; ignore failures)
+    if(c && c.requester_id) {
+      try {
+        var candName = (c.candidate_name) || ((DATA.users.find(function(x){return x.id===c.candidate_id;})||{}).name) || 'the candidate';
+        await sb.from('notifications').insert({
+          id: notifId(), user_id: c.requester_id, type: 'contact',
+          title: status==='approved' ? 'Contact unlocked' : 'Contact request declined',
+          body: status==='approved'
+            ? ('You can now view '+candName+'’s contact details in Hire Talent.')
+            : ('Your request to contact '+candName+' was not approved.'),
+          created_at: new Date().toISOString()
+        });
+      } catch(e){}
+    }
+    updateBadges(); renderContactRequests();
+    toast(status==='approved' ? 'Contact unlocked for employer' : 'Request declined', status==='approved'?'success':'info');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
 
