@@ -1032,6 +1032,24 @@
       ? '<div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Request pending</div>'
       : '<div onclick="H._requestContact(\'' + H.escHtml(u.id) + '\')" style="display:flex;align-items:center;gap:5px;background:#F5A623;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;color:#1A3A8F;cursor:pointer"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Request to contact</div>';
 
+    var coverLetter = cv.coverLetter || '';
+    var eduLevel = cv.educationLevel || u.educationLevel
+      || ({ secondary: 'High School / Secondary', certificate: 'Certificate / Diploma', degree: "Bachelor's Degree", postgrad: 'Postgraduate' }[_candEduLevel(u)] || '');
+    var commitment = jobTypes.join(', ');
+    var postedTs = u.profileUpdatedAt || u.createdAt;
+    var postedOn = postedTs ? new Date(postedTs).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    // Clean, left-aligned section (matches the reference; no flanking rules)
+    var sec = function (title, body) {
+      return '<div style="padding:20px 0;border-top:1px solid var(--border)">'
+        + '<div style="font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.015em;margin-bottom:13px">' + title + '</div>' + body + '</div>';
+    };
+    var drow = function (k, v) {
+      return v ? '<div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0"><span style="font-size:13.5px;color:var(--sub);font-weight:500">' + k + '</span><span style="font-size:13.5px;color:var(--text);font-weight:600;text-align:right">' + H.escHtml(v) + '</span></div>' : '';
+    };
+    var longDesc = coverLetter.length > 260;
+    var descHtml = '<div id="cvDescBox" style="font-size:13.5px;color:var(--text);line-height:1.75;white-space:pre-wrap;' + (longDesc ? 'max-height:118px;overflow:hidden;' : '') + '">' + H.escHtml(coverLetter) + '</div>'
+      + (longDesc ? '<button onclick="var d=document.getElementById(\'cvDescBox\');d.style.maxHeight=\'none\';this.style.display=\'none\'" style="background:none;border:none;color:#1A3A8F;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px;padding:0">Show full description</button>' : '');
+
     return '<div class="page active">'
       + H.innerTopbar('Candidate CV')
       + '<div style="padding-bottom:100px">'
@@ -1064,11 +1082,18 @@
         : reqBtnHeader)
       + '</div></div>'
       // ── body ──
-      + '<div style="padding:16px 16px 0">'
-      + (!reveal ? '<div style="display:flex;align-items:flex-start;gap:10px;background:#1A3A8F0d;border:1px solid #1A3A8F22;border-radius:12px;padding:12px 14px;margin-bottom:18px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><div style="font-size:12.5px;color:var(--text);line-height:1.55">' + (pending ? 'Your request is under review. The full name and contact details unlock here once it’s approved.' : 'This candidate’s <strong>name and contact details are hidden</strong>. Send a request and our team will unlock them for you once approved.') + '</div></div>' : '')
-      + (summary ? _cvSection('Professional Summary', '<p style="font-size:13px;color:var(--text);line-height:1.75;margin:0">' + H.escHtml(summary) + '</p>')
-          : (u.bio ? _cvSection('Professional Summary', '<p style="font-size:13px;color:var(--text);line-height:1.75;margin:0">' + H.escHtml(u.bio) + '</p>') : ''))
-      + (exp.length ? _cvSection('Work Experience', exp.map(function (e) {
+      + '<div style="padding:0 18px">'
+      + (!reveal ? '<div style="display:flex;align-items:flex-start;gap:10px;background:#1A3A8F0d;border:1px solid #1A3A8F22;border-radius:12px;padding:12px 14px;margin:16px 0 4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><div style="font-size:12.5px;color:var(--text);line-height:1.55">' + (pending ? 'Your request is under review. The full name and contact details unlock here once it’s approved.' : 'This candidate’s <strong>name and contact details are hidden</strong>. Send a request and our team will unlock them for you once approved.') + '</div></div>' : '')
+      // Details
+      + ((expLvl || eduLevel || commitment || expectedSal || postedOn)
+          ? sec('Details', drow('Work experience', expLvl) + drow('Education level', eduLevel) + drow('Commitment', commitment) + drow('Desired salary', expectedSal) + drow('Posted on', postedOn))
+          : '')
+      // Description (cover letter)
+      + (coverLetter ? sec('Description', descHtml) : '')
+      // About / summary
+      + ((summary || u.bio) ? sec('About', '<p style="font-size:13.5px;color:var(--text);line-height:1.7;margin:0;white-space:pre-wrap">' + H.escHtml(summary || u.bio) + '</p>') : '')
+      // Work experience
+      + (exp.length ? sec('Work Experience', exp.map(function (e) {
           return '<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">'
             + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:3px">'
             + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(e.title || '') + '</div>'
@@ -1078,17 +1103,17 @@
             + (e.description ? '<div style="font-size:12px;color:var(--sub);line-height:1.65">' + H.escHtml(e.description) + '</div>' : '')
             + '</div>';
         }).join('')) : '')
-      + (edu.length ? _cvSection('Education', edu.map(function (e) {
+      + (edu.length ? sec('Education', edu.map(function (e) {
           return '<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">'
             + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(e.degree || e.qualification || '') + '</div>'
             + '<div style="font-size:12px;color:#1A3A8F;font-weight:600">' + H.escHtml(e.school || e.institution || '') + '</div>'
             + (e.year ? '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + H.escHtml(e.year) + '</div>' : '')
             + '</div>';
         }).join('')) : '')
-      + (skills.length ? _cvSection('Skills', '<div style="display:flex;flex-wrap:wrap;gap:6px">' + skills.map(function (s) {
+      + (skills.length ? sec('Skills', '<div style="display:flex;flex-wrap:wrap;gap:6px">' + skills.map(function (s) {
           return '<span style="background:#1A3A8F14;border:1px solid #1A3A8F30;color:#1A3A8F;font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px">' + H.escHtml(s) + '</span>';
         }).join('') + '</div>') : '')
-      + (certs.length ? _cvSection('Certifications', certs.map(function (c) {
+      + (certs.length ? sec('Certifications', certs.map(function (c) {
           var name = typeof c === 'string' ? c : (c.name || '');
           return '<div style="margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:var(--text)">' + H.escHtml(name) + '</div>'
             + (c.issuer ? '<div style="font-size:12px;color:var(--sub)">' + H.escHtml(c.issuer) + (c.year ? ' · ' + H.escHtml(c.year) : '') + '</div>' : '') + '</div>';
@@ -2270,6 +2295,10 @@
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Bio / About Me</label>'
       + '<textarea id="cpBio" maxlength="300" placeholder="Tell employers a bit about yourself…" style="' + inStyle + 'height:90px;resize:vertical">' + H.escHtml(u.bio || '') + '</textarea>'
       + '<div style="text-align:right;font-size:11px;color:#667085;margin-top:3px"><span id="cpBioCount">' + (u.bio || '').length + '</span>/300</div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Cover Letter <span style="font-weight:400;text-transform:none">(optional)</span></label>'
+      + '<div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.5">A short letter to employers, e.g. <em>“Dear Hiring Manager, I am writing to express my interest…”</em>. This shows as the Description on your profile.</div>'
+      + '<textarea id="cpCover" maxlength="2000" placeholder="Dear Hiring Manager,&#10;&#10;I am writing to express my strong interest in…" style="' + inStyle + 'height:150px;resize:vertical;line-height:1.6">' + H.escHtml((u.cv && u.cv.coverLetter) || '') + '</textarea>'
+      + '<div style="text-align:right;font-size:11px;color:#667085;margin-top:3px"><span id="cpCoverCount">' + (((u.cv && u.cv.coverLetter) || '').length) + '</span>/2000</div></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Skills</label>'
       + '<div id="cpSkillsChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' + _cpRenderSkillChips(existingSkills) + '</div>'
       + '<input id="cpSkillsInput" placeholder="Type a skill and press comma or Enter…" style="' + inStyle + '">'
@@ -2430,6 +2459,14 @@
         if (cnt) cnt.textContent = this.value.length;
       });
     }
+    // Cover letter counter
+    var coverEl = document.getElementById('cpCover');
+    if (coverEl) {
+      coverEl.addEventListener('input', function() {
+        var cnt = document.getElementById('cpCoverCount');
+        if (cnt) cnt.textContent = this.value.length;
+      });
+    }
 
     // Skills chip logic
     H._cpSkillsArr = (document.getElementById('cpSkillsVal') || {value:''}).value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
@@ -2565,6 +2602,7 @@
       headline:       u.jobTitle       || prevCv.headline       || '',
       location:       u.city           || prevCv.location       || '',
       summary:        u.bio            || prevCv.summary        || '',
+      coverLetter:    ((document.getElementById('cpCover') || {}).value || '').trim() || prevCv.coverLetter || '',
       skills:         (u.skills || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean),
       expectedSalary: u.expectedSalary || prevCv.expectedSalary || '',
       visible:        !!u.openToWork,
