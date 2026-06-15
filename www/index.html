@@ -472,8 +472,17 @@
     });
 
     // ── Prevent rubber-band scroll on iOS ────────────────
+    // Allow native scrolling inside known scrollers and any full-screen overlay,
+    // then fall back to allowing ANY real scroll container so new overlays
+    // (filter sheets, etc.) never end up "numb". Only block on non-scrollables.
     document.addEventListener('touchmove', function(e) {
-      if (e.target.closest('#mainArea, .action-sheet, #docSheet, .modal-body-scroll, .login-modal, .modal')) return;
+      if (e.target.closest('#mainArea, .action-sheet, #docSheet, .modal-body-scroll, .login-modal, .modal, #talentFilterPanel, [data-scrollable]')) return;
+      var n = e.target;
+      while (n && n.nodeType === 1 && n !== document.body) {
+        var oy = ''; try { oy = getComputedStyle(n).overflowY; } catch (err) {}
+        if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 1) return;
+        n = n.parentNode;
+      }
       e.preventDefault();
     }, { passive: false });
 
