@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PaMarket — Premium Redesign Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #FAFAFA;
+    --surface: #FFFFFF;
+    --n50: #F8FAFC;
+    --n100: #F1F5F9;
+    --n200: #E2E8F0;
+    --n400: #94A3B8;
+    --n600: #475569;
+    --n700: #334155;
+    --n900: #0F172A;
+    --accent: #2563EB;
+    --accent-soft: #EFF6FF;
+    --green: #16A34A;
+    --green-soft: #F0FDF4;
+    --green-border: #BBF7D0;
+    --font: 'Inter', -apple-system, sans-serif;
+  }
+  body {
+    font-family: var(--font);
+    background: #111827;
+    color: var(--n900);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ── LAYOUT ── */
+  .page-title {
+    text-align: center;
+    padding: 40px 24px 24px;
+    color: #fff;
+  }
+  .page-title h1 { font-size: 28px; font-weight: 700; letter-spacing: -.5px; margin-bottom: 8px; }
+  .page-title p { font-size: 15px; color: #9CA3AF; max-width: 560px; margin: 0 auto; line-height: 1.6; }
+
+  .comparison {
+    display: flex;
+    gap: 24px;
+    padding: 0 24px 24px;
+    max-width: 900px;
+    margin: 0 auto;
+    align-items: flex-start;
+  }
+  .col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .col-label {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 0 12px;
+    color: #6B7280;
+  }
+  .col-label.after { color: #34D399; }
+
+  .phone {
+    background: var(--surface);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.08);
+    max-width: 380px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ── SECTION LABELS ── */
+  .section-break {
+    text-align: center;
+    padding: 40px 24px 8px;
+    color: #6B7280;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .section-break span {
+    display: inline-block;
+    border: 1px solid #374151;
+    border-radius: 999px;
+    padding: 6px 20px;
+    color: #9CA3AF;
+  }
+
+  /* ════════════════════════════════════════════
+     OLD DESIGN — reproducing what's in the code
+     ════════════════════════════════════════════ */
+
+  /* old topbar */
+  .old-topbar {
+    background: #1A3A8F;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .old-back {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,.12);
+    border: .5px solid rgba(255,255,255,.2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .old-back svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2.2; }
+  .old-topbar-title { font-size: 15px; font-weight: 700; color: #fff; }
+
+  /* old hero */
+  .old-hero {
+    background: linear-gradient(135deg, #1A3A8F 0%, #2952c8 100%);
+    padding: 22px 18px 20px;
+  }
+  .old-hero-row { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+  .old-avatar {
+    width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(255,255,255,.2);
+    border: 3px solid rgba(255,255,255,.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800; color: #fff;
+  }
+  .old-name { font-size: 19px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .old-title { font-size: 13px; color: rgba(255,255,255,.9); font-weight: 600; margin-bottom: 5px; }
+  .old-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11px; color: rgba(255,255,255,.72); margin-bottom: 8px; }
+  .old-jt-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .old-jt-tag { background: rgba(255,255,255,.2); color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+  .old-action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .old-btn-wa { display: flex; align-items: center; gap: 5px; background: #25D366; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; color: #fff; }
+  .old-btn-call { display: flex; align-items: center; gap: 5px; background: #1A3A8F; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; color: #fff; border: 1px solid rgba(255,255,255,.3); }
+  .old-btn-msg { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,.15); padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #fff; cursor: pointer; }
+
+  /* old cv section */
+  .old-cv-section { background: #fff; border-radius: 0; margin: 0; border-bottom: .5px solid #E4E8F0; }
+  .old-cv-section-head { background: #1A3A8F0d; border-bottom: 1px solid #1A3A8F22; padding: 12px 16px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: #1A3A8F; text-transform: uppercase; letter-spacing: .5px; }
+  .old-cv-section-body { padding: 14px 16px; }
+  .old-exp-entry { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid #E4E8F0; }
+  .old-exp-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 3px; }
+  .old-exp-title { font-size: 14px; font-weight: 700; color: #101828; }
+  .old-exp-dur { font-size: 11px; color: #667085; white-space: nowrap; flex-shrink: 0; }
+  .old-exp-company { font-size: 12px; color: #1A3A8F; font-weight: 600; margin-bottom: 4px; }
+  .old-exp-desc { font-size: 12px; color: #667085; line-height: 1.65; }
+  .old-skill-chip { background: #1A3A8F14; border: 1px solid #1A3A8F30; color: #1A3A8F; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 8px; display: inline-block; margin: 0 4px 6px 0; }
+  .old-summary { font-size: 13px; color: #101828; line-height: 1.75; }
+
+  /* old fixed bottom */
+  .old-bottom {
+    background: #fff;
+    padding: 12px 14px;
+    border-top: 1px solid #E4E8F0;
+    display: flex;
+    gap: 8px;
+  }
+  .old-bottom-wa { flex: 1; padding: 13px; background: #25D366; color: #fff; border: none; border-radius: 12px; font-size: 13px; font-weight: 700; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .old-bottom-call { flex: 1; padding: 13px; background: #1A3A8F; color: #fff; border: none; border-radius: 12px; font-size: 13px; font-weight: 700; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .old-bottom-msg { flex: 1; padding: 13px; background: #F5F6FA; color: #1A3A8F; border: 1.5px solid #1A3A8F; border-radius: 12px; font-size: 13px; font-weight: 700; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .old-bottom-cv { flex: 1; padding: 13px; background: linear-gradient(135deg, #1A3A8F, #2952c8); color: #fff; border: none; border-radius: 12px; font-size: 13px; font-weight: 700; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+  /* old form */
+  .old-section-head {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 800; color: #667085;
+    text-transform: uppercase; letter-spacing: .8px;
+    padding: 20px 0 10px;
+    border-bottom: 1px solid #E4E8F0;
+    margin-bottom: 16px;
+  }
+  .old-label { font-size: 12px; font-weight: 700; color: #101828; text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 6px; }
+  .old-input { width: 100%; padding: 13px; border: 1.5px solid #E4E8F0; border-radius: 12px; font-size: 14px; background: #fff; color: #101828; outline: none; font-family: inherit; box-sizing: border-box; }
+  .old-banner { margin-bottom: 16px; background: #22c55e18; border-radius: 12px; padding: 12px 14px; display: flex; gap: 10px; }
+  .old-banner-text { font-size: 12px; color: #15803d; font-weight: 600; line-height: 1.6; }
+  .old-otw-card { margin-bottom: 16px; background: #fff; border-radius: 12px; padding: 16px; border: 1px solid #E4E8F0; display: flex; align-items: center; justify-content: space-between; }
+  .old-otw-label { font-size: 15px; font-weight: 700; color: #101828; }
+  .old-otw-sub { font-size: 12px; color: #667085; margin-top: 2px; }
+  .old-toggle { width: 46px; height: 26px; border-radius: 13px; background: #22c55e; position: relative; flex-shrink: 0; }
+  .old-toggle-dot { position: absolute; top: 3px; left: 23px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+  .old-save-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #22c55e, #15803d); color: #fff; border: none; border-radius: 14px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; }
+  .old-jt-btn { padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; background: #1A3A8F; color: #fff; border: 1.5px solid #1A3A8F; margin: 0 4px 8px 0; }
+  .old-jt-btn-off { padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; background: #fff; color: #667085; border: 1.5px solid #E4E8F0; margin: 0 4px 8px 0; }
+
+  /* ════════════════════════════════════════════
+     NEW DESIGN — Premium / Linear / Airbnb
+     ════════════════════════════════════════════ */
+
+  /* New topbar */
+  .new-topbar {
+    background: var(--surface);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--n100);
+  }
+  .new-back {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--n100);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .new-back svg { width: 16px; height: 16px; stroke: var(--n700); fill: none; stroke-width: 2; }
+  .new-topbar-title { font-size: 14px; font-weight: 600; color: var(--n900); letter-spacing: -.1px; }
+  .new-topbar-action { margin-left: auto; font-size: 13px; font-weight: 500; color: var(--accent); }
+
+  /* New hero */
+  .new-hero {
+    background: var(--surface);
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--n100);
+  }
+  .new-hero-row { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+  .new-avatar {
+    width: 72px; height: 72px; border-radius: 20px; flex-shrink: 0;
+    background: var(--n100);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 600; color: var(--n600);
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    overflow: hidden;
+  }
+  .new-avatar-inner {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #E0E7FF, #C7D2FE);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 700; color: #4338CA;
+  }
+  .new-name-block { flex: 1; min-width: 0; }
+  .new-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .new-name { font-size: 20px; font-weight: 700; color: var(--n900); letter-spacing: -.4px; }
+  .new-verified { display: inline-flex; align-items: center; gap: 3px; background: #EFF6FF; border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #2563EB; }
+  .new-verified svg { width: 12px; height: 12px; }
+  .new-headline { font-size: 14px; font-weight: 400; color: var(--n600); margin-bottom: 8px; line-height: 1.4; }
+  .new-meta-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .new-meta-item { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--n400); font-weight: 500; }
+  .new-meta-item svg { width: 13px; height: 13px; flex-shrink: 0; }
+  .new-otw-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--green-soft); border: 1px solid var(--green-border); border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600; color: var(--green); margin-top: 10px; }
+  .new-otw-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+  /* New quick contact row */
+  .new-contact-row {
+    display: flex;
+    gap: 8px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--n100);
+  }
+  .new-contact-btn-primary {
+    flex: 2; padding: 11px 16px;
+    background: var(--n900); color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 13px; font-weight: 600; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer;
+  }
+  .new-contact-btn-primary svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2; }
+  .new-contact-btn-secondary {
+    flex: 1; padding: 11px 12px;
+    background: var(--surface); color: var(--n700);
+    border: 1px solid var(--n200); border-radius: 10px;
+    font-size: 13px; font-weight: 500; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer;
+  }
+  .new-contact-btn-secondary svg { width: 14px; height: 14px; stroke: var(--n700); fill: none; stroke-width: 2; }
+  .new-contact-btn-ghost {
+    padding: 11px 12px;
+    background: var(--surface); color: var(--n600);
+    border: 1px solid var(--n200); border-radius: 10px;
+    font-size: 13px; font-weight: 500; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .new-contact-btn-ghost svg { width: 14px; height: 14px; stroke: var(--n600); fill: none; stroke-width: 2; }
+
+  /* New CV content */
+  .new-content { background: var(--bg); }
+  .new-cv-section { background: var(--surface); margin-bottom: 1px; }
+  .new-cv-section-inner { padding: 20px 20px; }
+  .new-cv-section-title { font-size: 13px; font-weight: 600; color: var(--n900); letter-spacing: -.1px; margin-bottom: 14px; }
+  .new-exp-entry { padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--n100); }
+  .new-exp-entry:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+  .new-exp-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 2px; }
+  .new-exp-title { font-size: 14px; font-weight: 600; color: var(--n900); }
+  .new-exp-dur { font-size: 11px; color: var(--n400); white-space: nowrap; flex-shrink: 0; font-weight: 500; }
+  .new-exp-company { font-size: 13px; color: var(--n600); font-weight: 500; margin-bottom: 6px; }
+  .new-exp-desc { font-size: 13px; color: var(--n600); line-height: 1.65; }
+  .new-skill-chip { background: var(--n100); color: var(--n700); font-size: 12px; font-weight: 500; padding: 5px 11px; border-radius: 999px; display: inline-block; margin: 0 5px 6px 0; }
+  .new-summary { font-size: 14px; color: var(--n700); line-height: 1.75; font-weight: 400; }
+
+  /* New fixed bottom */
+  .new-bottom {
+    background: var(--surface);
+    padding: 12px 20px;
+    border-top: 1px solid var(--n100);
+    display: flex;
+    gap: 8px;
+  }
+  .new-bottom-primary {
+    flex: 1; padding: 13px;
+    background: var(--n900); color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 600; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    cursor: pointer;
+  }
+  .new-bottom-primary svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2; }
+  .new-bottom-ghost {
+    padding: 13px 14px;
+    background: var(--surface); color: var(--n600);
+    border: 1px solid var(--n200); border-radius: 10px;
+    font-size: 13px; font-weight: 500; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .new-bottom-ghost svg { width: 14px; height: 14px; stroke: var(--n600); fill: none; stroke-width: 2; }
+
+  /* ── Form redesign ── */
+  .new-form-wrap { background: var(--bg); padding: 0; }
+  .new-form-section { background: var(--surface); margin-bottom: 8px; }
+  .new-form-section-title { font-size: 16px; font-weight: 600; color: var(--n900); letter-spacing: -.2px; padding: 20px 20px 4px; }
+  .new-form-section-sub { font-size: 13px; color: var(--n400); padding: 0 20px 16px; }
+  .new-form-body { padding: 0 20px 20px; }
+  .new-form-label { font-size: 13px; font-weight: 500; color: var(--n700); display: block; margin-bottom: 6px; }
+  .new-form-hint { font-size: 12px; color: var(--n400); margin-top: 4px; }
+  .new-form-group { margin-bottom: 20px; }
+  .new-input {
+    width: 100%; padding: 11px 14px;
+    border: 1px solid var(--n200); border-radius: 8px;
+    font-size: 14px; background: var(--surface); color: var(--n900);
+    outline: none; font-family: inherit; box-sizing: border-box;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .new-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #2563EB18; }
+  .new-input::placeholder { color: var(--n400); }
+
+  /* New toggle (OTW) */
+  .new-otw-row { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px; border-bottom: 1px solid var(--n100); }
+  .new-otw-label-block {}
+  .new-otw-row-title { font-size: 15px; font-weight: 600; color: var(--n900); }
+  .new-otw-row-sub { font-size: 13px; color: var(--n400); margin-top: 2px; }
+  .new-toggle { width: 44px; height: 24px; border-radius: 12px; background: var(--green); position: relative; flex-shrink: 0; }
+  .new-toggle-dot { position: absolute; top: 2px; left: 22px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+
+  /* New job type pills */
+  .new-jt-pill { padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; background: var(--n100); color: var(--n700); border: none; margin: 0 6px 8px 0; transition: all .15s; }
+  .new-jt-pill-on { padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; background: var(--n900); color: #fff; border: none; margin: 0 6px 8px 0; }
+
+  /* New save button */
+  .new-save-btn { width: 100%; padding: 14px; background: var(--n900); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; letter-spacing: -.1px; }
+
+  /* ── Color annotations ── */
+  .annotate {
+    background: #1F2937;
+    border-radius: 16px;
+    padding: 20px;
+    margin: 0 24px 24px;
+    max-width: 852px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .annotate h3 { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 14px; letter-spacing: -.1px; }
+  .annotate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media(max-width: 600px) { .annotate-grid { grid-template-columns: 1fr; } }
+  .annotate-item { }
+  .annotate-label { font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+  .annotate-row { display: flex; align-items: flex-start; gap: 10px; }
+  .x-mark { flex-shrink: 0; width: 16px; height: 16px; background: #EF4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+  .x-mark::before { content: '✕'; font-size: 9px; color: #fff; font-weight: 800; }
+  .check-mark { flex-shrink: 0; width: 16px; height: 16px; background: #10B981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+  .check-mark::before { content: '✓'; font-size: 10px; color: #fff; font-weight: 800; }
+  .annotate-text { font-size: 12px; color: #D1D5DB; line-height: 1.5; }
+  .annotate-text strong { color: #F9FAFB; }
+  .sep { height: 1px; background: #374151; margin: 16px 0; }
+
+  /* ── Color system swatches ── */
+  .swatch-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 24px; max-width: 852px; margin-left: auto; margin-right: auto; }
+  .swatch { border-radius: 10px; overflow: hidden; flex: 1; min-width: 80px; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  .swatch-color { height: 48px; }
+  .swatch-info { padding: 8px 10px; background: #1F2937; }
+  .swatch-name { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+  .swatch-val { font-size: 11px; color: #E5E7EB; font-family: monospace; }
+
+  /* ── JobSeekerProfile (own view) ── */
+  .new-profile-identity {
+    background: var(--surface);
+    padding: 24px 20px;
+    border-bottom: 1px solid var(--n100);
+  }
+  .new-profile-avatar-row { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+  .new-profile-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: linear-gradient(135deg, #E0E7FF, #C7D2FE);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700; color: #4338CA;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+  .new-profile-name { font-size: 18px; font-weight: 700; color: var(--n900); letter-spacing: -.3px; }
+  .new-profile-headline { font-size: 13px; color: var(--n600); margin-top: 3px; }
+  .new-profile-loc { font-size: 12px; color: var(--n400); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+  .new-profile-loc svg { width: 12px; height: 12px; stroke: var(--n400); fill: none; stroke-width: 2; }
+  .new-profile-stats { display: flex; gap: 24px; padding: 14px 0 0; border-top: 1px solid var(--n100); }
+  .new-stat { text-align: center; }
+  .new-stat-val { font-size: 17px; font-weight: 700; color: var(--n900); letter-spacing: -.3px; }
+  .new-stat-label { font-size: 11px; color: var(--n400); font-weight: 500; margin-top: 2px; }
+
+  /* Own view section */
+  .new-own-section { background: var(--surface); margin-bottom: 1px; }
+  .new-own-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 0;
+  }
+  .new-own-section-title { font-size: 14px; font-weight: 600; color: var(--n900); }
+  .new-own-section-action { font-size: 12px; font-weight: 600; color: var(--accent); cursor: pointer; }
+  .new-own-section-body { padding: 12px 20px 16px; }
+  .new-own-divider { height: 1px; background: var(--n100); margin: 0; }
+
+  /* Misc */
+  .scroll-hint { text-align: center; padding: 16px; color: #6B7280; font-size: 12px; }
+
+  @media(max-width: 700px) {
+    .comparison { flex-direction: column; padding: 0 16px 24px; }
+    .col { max-width: 100%; }
+    .annotate { margin: 0 16px 24px; }
+    .swatch-row { margin: 0 16px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>PaMarket · Premium Redesign Preview</h1>
+  <p>Each pair below shows the current UI (left) vs the proposed redesign (right). Scroll to see all three screens. Approve to proceed with implementation.</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     COLOR SYSTEM
+     ══════════════════════════════════════════ -->
+<div class="section-break"><span>New Design System</span></div>
+
+<div class="swatch-row">
+  <div class="swatch">
+    <div class="swatch-color" style="background:#FAFAFA;border:1px solid #E5E7EB"></div>
+    <div class="swatch-info"><div class="swatch-name">Background</div><div class="swatch-val">#FAFAFA</div></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#FFFFFF;border:1px solid #E5E7EB"></div>
+    <div class="swatch-info"><div class="swatch-name">Surface</div><div class="swatch-val">#FFFFFF</div></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#F1F5F9"></div>
+    <div class="swatch-info"><div class="swatch-name">Neutral-100</div><div class="swatch-val">#F1F5F9</div></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#E2E8F0"></div>
+    <div class="swatch-info"><div class="swatch-name">Divider</div><div class="swatch-val">#E2E8F0</div></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#94A3B8"></div>
+    <div class="swatch-info"><div class="swatch-name">Neutral-400</div><div class="swatch-val">#94A3B8</div></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#475569"></div>
+    <div class="swatch-info"><div class="swatch-name">Secondary</div><div class="swatch-val">#475569</div></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#0F172A"></div>
+    <div class="swatch-info"><div class="swatch-name">Primary</div><div class="swatch-val">#0F172A</div></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#2563EB"></div>
+    <div class="swatch-info"><div class="swatch-name">Accent</div><div class="swatch-val">#2563EB</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 1 — ViewCandidateCV (Employer View)
+     ══════════════════════════════════════════ -->
+<div class="section-break"><span>Screen 1 — Candidate CV (Employer View)</span></div>
+
+<div class="comparison">
+  <!-- BEFORE -->
+  <div class="col">
+    <div class="col-label">BEFORE — Current</div>
+    <div class="phone">
+      <!-- old topbar -->
+      <div class="old-topbar">
+        <div class="old-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="old-topbar-title">Candidate CV</div>
+      </div>
+      <!-- old hero -->
+      <div class="old-hero">
+        <div class="old-hero-row">
+          <div class="old-avatar">TM</div>
+          <div>
+            <div class="old-name">Tendai Moyo</div>
+            <div class="old-title">Senior Software Developer</div>
+            <div class="old-meta">
+              <span>📍 Harare</span>
+              <span>💼 5–10 Years</span>
+              <span>💰 $2,400/mo</span>
+            </div>
+            <div class="old-jt-tags">
+              <span class="old-jt-tag">Full-time</span>
+              <span class="old-jt-tag">Remote</span>
+              <span class="old-jt-tag">Contract</span>
+            </div>
+          </div>
+        </div>
+        <div class="old-action-row">
+          <div class="old-btn-wa">💬 WhatsApp</div>
+          <div class="old-btn-call">📞 Call</div>
+          <div class="old-btn-msg">✉ Message</div>
+        </div>
+      </div>
+      <!-- old sections -->
+      <div class="old-cv-section">
+        <div class="old-cv-section-head">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>
+          Professional Summary
+        </div>
+        <div class="old-cv-section-body">
+          <div class="old-summary">Experienced software developer with 7 years building scalable web applications. Specialising in React and Node.js.</div>
+        </div>
+      </div>
+      <div class="old-cv-section">
+        <div class="old-cv-section-head">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/></svg>
+          Work Experience
+        </div>
+        <div class="old-cv-section-body">
+          <div class="old-exp-entry">
+            <div class="old-exp-row">
+              <div class="old-exp-title">Frontend Lead</div>
+              <div class="old-exp-dur">2021 – Present</div>
+            </div>
+            <div class="old-exp-company">TechHub Zimbabwe</div>
+            <div class="old-exp-desc">Led a team of 5 engineers building the company's core SaaS product.</div>
+          </div>
+        </div>
+      </div>
+      <div class="old-cv-section">
+        <div class="old-cv-section-head">⚡ Skills</div>
+        <div class="old-cv-section-body">
+          <span class="old-skill-chip">React</span>
+          <span class="old-skill-chip">Node.js</span>
+          <span class="old-skill-chip">PostgreSQL</span>
+          <span class="old-skill-chip">TypeScript</span>
+          <span class="old-skill-chip">AWS</span>
+        </div>
+      </div>
+      <!-- old fixed bottom (simulated) -->
+      <div class="old-bottom">
+        <div class="old-bottom-wa">💬 WhatsApp</div>
+        <div class="old-bottom-call">📞 Call</div>
+        <div class="old-bottom-msg">✉ Msg</div>
+        <div class="old-bottom-cv">↓ CV</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AFTER -->
+  <div class="col">
+    <div class="col-label after">AFTER — Premium Redesign</div>
+    <div class="phone">
+      <!-- new topbar -->
+      <div class="new-topbar">
+        <div class="new-back">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="new-topbar-title">Candidate Profile</div>
+        <div class="new-topbar-action">Save</div>
+      </div>
+      <!-- new hero -->
+      <div class="new-hero">
+        <div class="new-hero-row">
+          <div class="new-avatar">
+            <div class="new-avatar-inner">TM</div>
+          </div>
+          <div class="new-name-block">
+            <div class="new-name-row">
+              <div class="new-name">Tendai Moyo</div>
+              <div class="new-verified">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Verified
+              </div>
+            </div>
+            <div class="new-headline">Senior Software Developer</div>
+            <div class="new-meta-row">
+              <div class="new-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Harare
+              </div>
+              <div class="new-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+                5–10 yrs
+              </div>
+              <div class="new-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                $2,400/mo
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+              <span class="new-skill-chip" style="background:#F0FDF4;color:#16A34A">Full-time</span>
+              <span class="new-skill-chip" style="background:#F0FDF4;color:#16A34A">Remote</span>
+              <span class="new-skill-chip" style="background:#F0FDF4;color:#16A34A">Contract</span>
+            </div>
+          </div>
+        </div>
+        <div class="new-otw-badge">
+          <div class="new-otw-dot"></div>
+          Open to Work
+        </div>
+      </div>
+      <!-- new contact row -->
+      <div class="new-contact-row">
+        <div class="new-contact-btn-primary">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          WhatsApp
+        </div>
+        <div class="new-contact-btn-secondary">
+          <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg>
+          Call
+        </div>
+        <div class="new-contact-btn-ghost">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Message
+        </div>
+      </div>
+      <!-- new cv sections -->
+      <div class="new-content">
+        <div class="new-cv-section">
+          <div class="new-cv-section-inner">
+            <div class="new-cv-section-title">About</div>
+            <div class="new-summary">Experienced software developer with 7 years building scalable web applications. Specialising in React and Node.js.</div>
+          </div>
+        </div>
+        <div style="height:8px;background:var(--bg)"></div>
+        <div class="new-cv-section">
+          <div class="new-cv-section-inner">
+            <div class="new-cv-section-title">Experience</div>
+            <div class="new-exp-entry">
+              <div class="new-exp-header">
+                <div class="new-exp-title">Frontend Lead</div>
+                <div class="new-exp-dur">2021 – Present</div>
+              </div>
+              <div class="new-exp-company">TechHub Zimbabwe</div>
+              <div class="new-exp-desc">Led a team of 5 engineers building the company's core SaaS product.</div>
+            </div>
+          </div>
+        </div>
+        <div style="height:8px;background:var(--bg)"></div>
+        <div class="new-cv-section">
+          <div class="new-cv-section-inner">
+            <div class="new-cv-section-title">Skills</div>
+            <div>
+              <span class="new-skill-chip">React</span>
+              <span class="new-skill-chip">Node.js</span>
+              <span class="new-skill-chip">PostgreSQL</span>
+              <span class="new-skill-chip">TypeScript</span>
+              <span class="new-skill-chip">AWS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- new fixed bottom -->
+      <div class="new-bottom">
+        <div class="new-bottom-primary">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download CV
+        </div>
+        <div class="new-bottom-ghost">
+          <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 2 — JobSeekerProfile (Own View)
+     ══════════════════════════════════════════ -->
+<div class="section-break"><span>Screen 2 — My Job Profile (Own View)</span></div>
+
+<div class="comparison">
+  <!-- BEFORE -->
+  <div class="col">
+    <div class="col-label">BEFORE — Current</div>
+    <div class="phone">
+      <div class="old-topbar">
+        <div class="old-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="old-topbar-title">My Job Profile</div>
+      </div>
+      <!-- blue gradient card -->
+      <div style="padding:14px;background:#F5F6FA">
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:20px;padding:20px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start">
+          <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;border:2.5px solid rgba(255,255,255,.4);flex-shrink:0">TM</div>
+          <div>
+            <div style="font-size:17px;font-weight:800;color:#fff">Tendai Moyo</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.9);font-weight:600;margin-top:3px">Senior Software Developer</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:4px">📍 Harare</div>
+            <div style="display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.25);border:1px solid rgba(34,197,94,.5);border-radius:20px;padding:3px 10px;margin-top:6px"><span style="font-size:11px;font-weight:700;color:#86efac">● Open to Work</span></div>
+          </div>
+        </div>
+        <!-- section card with blue header -->
+        <div style="background:#fff;border-radius:16px;margin-bottom:12px;border:1px solid #E4E8F0;overflow:hidden">
+          <div style="padding:14px 16px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #F0F4FF">
+            <div style="font-size:12px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.5px">⚡ Skills</div>
+            </div>
+          <div style="padding:14px 16px">
+            <span style="display:inline-block;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">React</span>
+            <span style="display:inline-block;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">Node.js</span>
+            <span style="display:inline-block;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">TypeScript</span>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:16px;margin-bottom:12px;border:1px solid #E4E8F0;overflow:hidden">
+          <div style="padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #F0F4FF">
+            <div style="font-size:12px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.5px">💼 Work Experience</div>
+            <button style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>
+          </div>
+          <div style="padding:14px 16px">
+            <div style="font-size:14px;font-weight:700;color:#101828">Frontend Lead</div>
+            <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">TechHub Zimbabwe</div>
+            <div style="font-size:12px;color:#667085;margin-top:2px">2021 – Present · Current</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
+              <button style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- old bottom edit btn -->
+      <div style="background:#fff;padding:12px 16px;border-top:1px solid #E4E8F0">
+        <button style="width:100%;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">✏️ Edit Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AFTER -->
+  <div class="col">
+    <div class="col-label after">AFTER — Premium Redesign</div>
+    <div class="phone">
+      <div class="new-topbar">
+        <div class="new-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="new-topbar-title">Job Profile</div>
+        <div class="new-topbar-action">Edit</div>
+      </div>
+      <!-- clean identity block -->
+      <div class="new-profile-identity">
+        <div class="new-profile-avatar-row">
+          <div class="new-profile-avatar">TM</div>
+          <div>
+            <div class="new-profile-name">Tendai Moyo</div>
+            <div class="new-profile-headline">Senior Software Developer</div>
+            <div class="new-profile-loc">
+              <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Harare, Zimbabwe
+            </div>
+          </div>
+        </div>
+        <div class="new-otw-badge">
+          <div class="new-otw-dot"></div>
+          Open to Work
+        </div>
+      </div>
+      <!-- sections as content areas -->
+      <div style="background:var(--bg)">
+        <div class="new-own-section">
+          <div class="new-own-section-header">
+            <div class="new-own-section-title">Skills</div>
+            <div class="new-own-section-action">Edit</div>
+          </div>
+          <div class="new-own-section-body">
+            <span class="new-skill-chip">React</span>
+            <span class="new-skill-chip">Node.js</span>
+            <span class="new-skill-chip">TypeScript</span>
+            <span class="new-skill-chip">AWS</span>
+            <span class="new-skill-chip">PostgreSQL</span>
+          </div>
+        </div>
+        <div class="new-own-divider"></div>
+        <div class="new-own-section">
+          <div class="new-own-section-header">
+            <div class="new-own-section-title">Experience</div>
+            <div class="new-own-section-action">+ Add</div>
+          </div>
+          <div class="new-own-section-body">
+            <div class="new-exp-entry">
+              <div class="new-exp-header">
+                <div class="new-exp-title">Frontend Lead</div>
+                <div class="new-exp-dur">2021–now</div>
+              </div>
+              <div class="new-exp-company">TechHub Zimbabwe</div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <button style="font-size:12px;font-weight:500;padding:5px 11px;border-radius:6px;background:var(--n100);color:var(--n700);border:none;cursor:pointer;font-family:inherit">Edit</button>
+                <button style="font-size:12px;font-weight:500;padding:5px 11px;border-radius:6px;background:var(--n100);color:#EF4444;border:none;cursor:pointer;font-family:inherit">Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="new-own-divider"></div>
+        <div class="new-own-section">
+          <div class="new-own-section-header">
+            <div class="new-own-section-title">Availability</div>
+            <div class="new-own-section-action">Edit</div>
+          </div>
+          <div class="new-own-section-body" style="display:flex;justify-content:space-between;font-size:13px">
+            <span style="color:var(--n600)">Notice period</span>
+            <span style="color:var(--n900);font-weight:600">Available now</span>
+          </div>
+        </div>
+        <div style="height:8px"></div>
+      </div>
+      <!-- clean bottom CTA -->
+      <div class="new-bottom">
+        <div class="new-bottom-primary">
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Profile
+        </div>
+        <div class="new-bottom-ghost">
+          <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 3 — CandidateProfile (Edit Form)
+     ══════════════════════════════════════════ -->
+<div class="section-break"><span>Screen 3 — Edit / Create Profile Form</span></div>
+
+<div class="comparison">
+  <!-- BEFORE -->
+  <div class="col">
+    <div class="col-label">BEFORE — Current</div>
+    <div class="phone">
+      <div class="old-topbar">
+        <div class="old-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="old-topbar-title">Job Seeker Profile</div>
+      </div>
+      <div style="padding:0 14px 20px;background:#F5F6FA">
+        <!-- green info banner -->
+        <div class="old-banner">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#15803d" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div class="old-banner-text">Employers in Hire Talent can find and contact you when you turn on Open to Work.</div>
+        </div>
+        <!-- old otw toggle card -->
+        <div class="old-otw-card">
+          <div>
+            <div class="old-otw-label">Open to Work</div>
+            <div class="old-otw-sub">Appear in employer searches</div>
+          </div>
+          <div class="old-toggle"><div class="old-toggle-dot"></div></div>
+        </div>
+        <!-- old section header -->
+        <div class="old-section-head">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          Basic Details
+        </div>
+        <!-- old field -->
+        <div style="margin-bottom:14px">
+          <div class="old-label">Current / Desired Job Title</div>
+          <input class="old-input" placeholder="e.g. Accountant, Driver, Teacher" value="Senior Software Developer">
+        </div>
+        <div style="margin-bottom:14px">
+          <div class="old-label">Experience Level</div>
+          <select class="old-input"><option>5–10 Years</option></select>
+        </div>
+        <!-- old section head: job prefs -->
+        <div class="old-section-head">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Job Preferences
+        </div>
+        <div style="margin-bottom:14px">
+          <div class="old-label">Job Type / Availability</div>
+          <div>
+            <button class="old-jt-btn">Full-Time</button>
+            <button class="old-jt-btn">Remote</button>
+            <button class="old-jt-btn-off">Part-Time</button>
+            <button class="old-jt-btn-off">Contract</button>
+            <button class="old-jt-btn-off">Casual</button>
+          </div>
+        </div>
+      </div>
+      <!-- old save btn -->
+      <div style="background:#fff;padding:12px 16px;border-top:1px solid #E4E8F0">
+        <button class="old-save-btn">Save Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AFTER -->
+  <div class="col">
+    <div class="col-label after">AFTER — Premium Redesign</div>
+    <div class="phone">
+      <div class="new-topbar">
+        <div class="new-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="new-topbar-title">Edit Profile</div>
+      </div>
+      <div class="new-form-wrap">
+        <!-- OTW row at the very top, no separate card -->
+        <div style="background:var(--surface)">
+          <div class="new-otw-row">
+            <div class="new-otw-label-block">
+              <div class="new-otw-row-title">Open to Work</div>
+              <div class="new-otw-row-sub">Visible to employers in Hire Talent</div>
+            </div>
+            <div class="new-toggle"><div class="new-toggle-dot"></div></div>
+          </div>
+        </div>
+        <div style="height:8px;background:var(--bg)"></div>
+        <!-- basics section -->
+        <div class="new-form-section">
+          <div class="new-form-section-title">Basics</div>
+          <div class="new-form-body">
+            <div class="new-form-group">
+              <label class="new-form-label">Job title</label>
+              <input class="new-input" placeholder="e.g. Accountant, Software Developer" value="Senior Software Developer">
+            </div>
+            <div class="new-form-group" style="margin-bottom:0">
+              <label class="new-form-label">Experience level</label>
+              <select class="new-input"><option>5–10 Years</option></select>
+            </div>
+          </div>
+        </div>
+        <div style="height:8px;background:var(--bg)"></div>
+        <!-- preferences section -->
+        <div class="new-form-section">
+          <div class="new-form-section-title">Job Preferences</div>
+          <div class="new-form-section-sub">Select all that apply</div>
+          <div class="new-form-body" style="padding-top:0">
+            <div style="margin-bottom:0">
+              <div class="new-jt-pill-on">Full-Time</div>
+              <div class="new-jt-pill-on">Remote</div>
+              <div class="new-jt-pill">Part-Time</div>
+              <div class="new-jt-pill">Contract</div>
+              <div class="new-jt-pill">Casual</div>
+            </div>
+            <div style="margin-top:16px">
+              <label class="new-form-label">Notice period</label>
+              <select class="new-input"><option>Available Immediately</option></select>
+            </div>
+          </div>
+        </div>
+        <div style="height:8px;background:var(--bg)"></div>
+        <!-- professional links -->
+        <div class="new-form-section">
+          <div class="new-form-section-title">Professional Links</div>
+          <div class="new-form-section-sub">Optional — helps employers verify your background</div>
+          <div class="new-form-body">
+            <div class="new-form-group">
+              <label class="new-form-label">LinkedIn</label>
+              <input class="new-input" placeholder="linkedin.com/in/your-name">
+            </div>
+            <div class="new-form-group" style="margin-bottom:0">
+              <label class="new-form-label">Portfolio / Website</label>
+              <input class="new-input" placeholder="yourname.com">
+            </div>
+          </div>
+        </div>
+        <div style="height:8px;background:var(--bg)"></div>
+      </div>
+      <!-- clean save btn -->
+      <div class="new-bottom">
+        <button class="new-save-btn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     WHAT CHANGES — ANNOTATION
+     ══════════════════════════════════════════ -->
+<div class="section-break"><span>What Exactly Changes</span></div>
+
+<div class="annotate">
+  <h3>Pattern-by-Pattern Diagnosis & Fix</h3>
+  <div class="annotate-grid">
+    <div class="annotate-item">
+      <div class="annotate-label">Header / Hero</div>
+      <div class="annotate-row">
+        <div class="x-mark"></div>
+        <div class="annotate-text"><strong>Now:</strong> Full-width gradient blue block (<code>linear-gradient(#1A3A8F → #2952c8)</code>) — the single strongest AI-template signal. Action buttons jammed inside the colored hero area.</div>
+      </div>
+      <div style="height:8px"></div>
+      <div class="annotate-row">
+        <div class="check-mark"></div>
+        <div class="annotate-text"><strong>New:</strong> White surface with avatar at 72px rounded-square, name in Inter 700 dark, metadata in muted neutral-400. Color lives only in small badges. Action row is its own strip below.</div>
+      </div>
+    </div>
+    <div class="annotate-item">
+      <div class="annotate-label">Section Headers</div>
+      <div class="annotate-row">
+        <div class="x-mark"></div>
+        <div class="annotate-text"><strong>Now:</strong> Blue-tinted headers with icon + <code>text-transform:uppercase;letter-spacing:.5px;color:#1A3A8F</code> on every section — classic form-builder pattern.</div>
+      </div>
+      <div style="height:8px"></div>
+      <div class="annotate-row">
+        <div class="check-mark"></div>
+        <div class="annotate-text"><strong>New:</strong> Clean Inter 600 13px / 14px, <code>color:#0F172A</code>, sentence case, no decorative icons. Hierarchy via spacing and weight, not color.</div>
+      </div>
+    </div>
+    <div class="annotate-item">
+      <div class="annotate-label">Skill Chips / Tags</div>
+      <div class="annotate-row">
+        <div class="x-mark"></div>
+        <div class="annotate-text"><strong>Now:</strong> <code>background:#1A3A8F14;border:1px solid #1A3A8F30;color:#1A3A8F</code> — blue-tinted bordered pills. Heavy-handed and Template™.</div>
+      </div>
+      <div style="height:8px"></div>
+      <div class="annotate-row">
+        <div class="check-mark"></div>
+        <div class="annotate-text"><strong>New:</strong> <code>background:#F1F5F9;color:#475569;border:none;border-radius:999px</code> — neutral quiet chips. Accent only for availability/open-to-work status.</div>
+      </div>
+    </div>
+    <div class="annotate-item">
+      <div class="annotate-label">Buttons</div>
+      <div class="annotate-row">
+        <div class="x-mark"></div>
+        <div class="annotate-text"><strong>Now:</strong> 4 competing CTAs in the bottom bar all same height. Multiple gradients (green for save, blue gradient for edit). Heavy box shadows on primary buttons.</div>
+      </div>
+      <div style="height:8px"></div>
+      <div class="annotate-row">
+        <div class="check-mark"></div>
+        <div class="annotate-text"><strong>New:</strong> One primary CTA (<code>#0F172A</code> flat fill, 600 weight). Secondary as ghost border. Tertiary as icon-only. No gradients on any button.</div>
+      </div>
+    </div>
+    <div class="annotate-item">
+      <div class="annotate-label">Topbar / Navigation</div>
+      <div class="annotate-row">
+        <div class="x-mark"></div>
+        <div class="annotate-text"><strong>Now:</strong> Solid <code>#1A3A8F</code> blue bar with white text and ghost-circle back button. Matches government-portal aesthetics.</div>
+      </div>
+      <div style="height:8px"></div>
+      <div class="annotate-row">
+        <div class="check-mark"></div>
+        <div class="annotate-text"><strong>New:</strong> White surface, 1px neutral-100 border-bottom. Back button as 32px neutral-100 rounded square. Title in Inter 600 dark. Contextual action text-link on right.</div>
+      </div>
+    </div>
+    <div class="annotate-item">
+      <div class="annotate-label">Form Labels</div>
+      <div class="annotate-row">
+        <div class="x-mark"></div>
+        <div class="annotate-text"><strong>Now:</strong> <code>text-transform:uppercase;letter-spacing:.5px;font-weight:700;font-size:12px</code> — 100% Bootstrap form-builder look.</div>
+      </div>
+      <div style="height:8px"></div>
+      <div class="annotate-row">
+        <div class="check-mark"></div>
+        <div class="annotate-text"><strong>New:</strong> Sentence case, <code>font-size:13px;font-weight:500;color:#475569</code>. Inputs with <code>border:1px solid #E2E8F0;border-radius:8px</code>. Focus ring: <code>3px #2563EB18</code>.</div>
+      </div>
+    </div>
+    <div class="annotate-item">
+      <div class="annotate-label">Card Stacking</div>
+      <div class="annotate-row">
+        <div class="x-mark"></div>
+        <div class="annotate-text"><strong>Now:</strong> Every section wrapped in its own white card with border + shadow. Sections float on a grey bg. Creates a "dashboard widget" feel.</div>
+      </div>
+      <div style="height:8px"></div>
+      <div class="annotate-row">
+        <div class="check-mark"></div>
+        <div class="annotate-text"><strong>New:</strong> Full-bleed white sections separated by 8px neutral-50 gaps (iOS Settings pattern). Sections breathe as content areas, not floating cards.</div>
+      </div>
+    </div>
+    <div class="annotate-item">
+      <div class="annotate-label">Info Banners</div>
+      <div class="annotate-row">
+        <div class="x-mark"></div>
+        <div class="annotate-text"><strong>Now:</strong> Tinted-background inline banners (<code>#22c55e18</code>, <code>#1A3A8F18</code>) with colored text and icon. Feels like a Bootstrap alert.</div>
+      </div>
+      <div style="height:8px"></div>
+      <div class="annotate-row">
+        <div class="check-mark"></div>
+        <div class="annotate-text"><strong>New:</strong> Removed. Context delivered through section subtitles in neutral-400. Critical info as a left-border callout if absolutely needed.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div style="font-size:13px;color:#9CA3AF;line-height:1.7">
+    <strong style="color:#E5E7EB">Scope of changes:</strong>
+    The CSS system (styles.css + pages-patch.css) gets updated tokens. The HTML generation in <code>jobs.js</code> (ViewCandidateCV, CandidateProfile) and <code>profile.js</code> (JobSeekerProfile) gets new markup patterns. The topbar helper in <code>app.js</code> (innerTopbar) gets the new white-surface treatment. No functionality changes — pure visual layer.
+  </div>
+</div>
+
+<div class="scroll-hint">— End of preview — Reply to approve and implementation begins immediately —</div>
+</body>
+</html>
