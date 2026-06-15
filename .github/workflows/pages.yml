@@ -22,6 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Strip non-public files from the deploy
+        # The admin panel and backend source must NOT be served on the public
+        # site. They stay in the repo (run admin.html locally), but are removed
+        # from the GitHub Pages artifact so the public site can't serve them.
+        run: |
+          rm -f www/admin.html
+          rm -rf supabase android qa-system
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
