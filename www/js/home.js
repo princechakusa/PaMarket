@@ -107,6 +107,8 @@
 
       <div style="padding-bottom:88px">
 
+        <div id="notifEnableBanner"></div>
+
         <!-- CATEGORIES GRID -->
         <div style="background:var(--card);padding:18px 16px 20px;margin-bottom:8px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -204,6 +206,7 @@
 
   H.pages.Home_after = function () {
     if (H._initAdCarousels) H._initAdCarousels();
+    if (typeof H.maybeShowNotifBanner === 'function') H.maybeShowNotifBanner();
     if (typeof H.fetchListingsFromSupabase !== 'function') return;
     const countBefore = (H.state.listings || []).filter(l => l.status === 'active').length;
     H.fetchListingsFromSupabase().then(() => {

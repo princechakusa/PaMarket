@@ -268,6 +268,7 @@
       ? `${convos.length} chat${convos.length === 1 ? '' : 's'}${totalUnread > 0 ? ` · ${totalUnread} unread` : ''}`
       : '';
     return `<div class="page active">${H.innerTopbar('Messages')}
+      <div id="notifEnableBanner"></div>
       ${convos.length ? `<div class="msg-search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
         <input id="msgSearch" type="text" placeholder="Search conversations" autocomplete="off" oninput="H._filterMsgList(this.value)">
@@ -978,6 +979,8 @@
   };
 
   pages.Messages_after = function () {
+    // Nudge to enable phone notifications if they're off
+    if (typeof H.maybeShowNotifBanner === 'function') H.maybeShowNotifBanner();
     // Mark all received messages as read when the inbox is opened
     const _u = H.currentUser();
     if (_u) {

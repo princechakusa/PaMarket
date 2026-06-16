@@ -2282,6 +2282,67 @@ H._handleDeepLink = function(route) {
     }
   };
 
+  // Current notification permission: 'granted' | 'denied' | 'prompt' | 'unsupported'
+  H.notifStatus = async function() {
+    try {
+      if (_isNative()) {
+        var PN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications;
+        if (!PN) return 'unsupported';
+        var p = await PN.checkPermissions();
+        var r = p && p.receive;
+        return (r === 'prompt-with-rationale') ? 'prompt' : (r || 'prompt');
+      }
+      if (!('Notification' in window)) return 'unsupported';
+      return Notification.permission === 'default' ? 'prompt' : Notification.permission;
+    } catch (e) { return 'unsupported'; }
+  };
+
+  // Ask the user to enable notifications (from the in-app banner / button).
+  H.promptEnableNotifications = async function() {
+    var status = await H.notifStatus();
+    if (status === 'granted') { H.toast('Notifications are already on'); H._refreshNotifBanner(); return; }
+    if (status === 'unsupported') { H.toast('Notifications are not supported on this device'); return; }
+    if (status === 'denied') {
+      // Permanently blocked — the OS won't show the prompt again; guide to settings.
+      if (typeof H.modal === 'function') {
+        H.modal({
+          title: 'Turn on notifications',
+          body: '<div style="font-size:13.5px;color:var(--sub);line-height:1.7">Notifications are turned off for PaMarket. To get message alerts:<br><br><b style="color:var(--text)">Phone Settings → Apps → PaMarket → Notifications → Allow</b></div>',
+          confirmText: 'Got it', cancelText: null
+        });
+      } else {
+        H.toast('Enable notifications in Settings → Apps → PaMarket', 4000);
+      }
+      return;
+    }
+    // 'prompt' → trigger the system permission request + token registration
+    await H.setupPush();
+    var after = await H.notifStatus();
+    if (after === 'granted') H.toast('Notifications enabled');
+    H._refreshNotifBanner();
+  };
+
+  // Fill #notifEnableBanner with a nudge card when notifications aren't on.
+  H.maybeShowNotifBanner = async function() {
+    var el = document.getElementById('notifEnableBanner');
+    if (!el) return;
+    if (H._notifBannerDismissed) { el.innerHTML = ''; return; }
+    if (!H.currentUser()) { el.innerHTML = ''; return; }
+    var status = await H.notifStatus();
+    if (status === 'granted' || status === 'unsupported') { el.innerHTML = ''; return; }
+    el.innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px;background:var(--blue-light);border:1px solid rgba(26,58,143,.18);border-radius:14px;padding:13px 14px;margin:12px 14px">'
+      + '<div style="width:38px;height:38px;border-radius:11px;background:rgba(26,58,143,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+      + '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#1A3A8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--text)">Turn on notifications</div>'
+      + '<div style="font-size:12px;color:var(--sub);line-height:1.4;margin-top:1px">Get alerted the moment someone messages you.</div></div>'
+      + '<button onclick="H.promptEnableNotifications()" style="flex-shrink:0;background:#1A3A8F;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">Enable</button>'
+      + '<button onclick="H._dismissNotifBanner()" aria-label="Dismiss" style="flex-shrink:0;background:none;border:none;color:var(--sub);cursor:pointer;padding:4px;display:flex"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      + '</div>';
+  };
+  H._dismissNotifBanner = function() { H._notifBannerDismissed = true; var el = document.getElementById('notifEnableBanner'); if (el) el.innerHTML = ''; };
+  H._refreshNotifBanner = function() { try { H.maybeShowNotifBanner(); } catch (e) {} };
+
   // Handle deeplink sent from the service worker when user taps a notification
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', function(event) {
