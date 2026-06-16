@@ -1273,7 +1273,7 @@ window.H = {
             if (!Array.isArray(conv.messages)) conv.messages = [];
             const ex=conv.messages.find(m=>m.id===msg.id);
             if(!ex){
-              const localMsg = {id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,t:new Date(msg.created_at).getTime(),read:false};
+              const localMsg = {id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,image:msg.image||null,t:new Date(msg.created_at).getTime(),read:false};
               conv.messages.push(localMsg);
               H.saveState();
               if(H.currentPageName==='Chat'&&H.currentPageParams&&H.currentPageParams.id===msg.conversation_id&&typeof H._appendChatMessages==='function')
@@ -1631,7 +1631,7 @@ window.H = {
       const { error } = await sb.from('messages').upsert({
         id: msg.id, conversation_id: convId,
         sender_id: msg.from, sender_name: msg.senderName || '',
-        text: msg.text, read: msg.read || false,
+        text: msg.text, image: msg.image || null, read: msg.read || false,
         created_at: new Date(msg.t || Date.now()).toISOString()
       });
       if (error) { console.warn('saveMessageToCloud:', error.message); return { ok:false, error:error.message }; }

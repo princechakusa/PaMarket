@@ -89,7 +89,11 @@
   H._resolvedProfileFetch = H._resolvedProfileFetch || {};
   H._resolveOtherName = function(otherId, conv) {
     // Skip if a fetch is already in-flight OR if we've already resolved a non-empty name
-    if (!otherId || H._pendingProfileFetch[otherId] || H._resolvedProfileFetch[otherId]) return;
+    if (!otherId || H._pendingProfileFetch[otherId]) return;
+    // Allow a re-fetch if we resolved the name earlier but still have no avatar
+    // (e.g. the other person added/changed their profile picture afterwards).
+    var _ex0 = (H.state.users || []).find(function (x) { return x.id === otherId; });
+    if (H._resolvedProfileFetch[otherId] && _ex0 && _ex0.avatar) return;
     H._pendingProfileFetch[otherId] = true;
     var sb = window.supabase;
     if (!sb || typeof sb.from !== 'function') { delete H._pendingProfileFetch[otherId]; return; }
@@ -104,7 +108,7 @@
           var existing = (H.state.users||[]).find(function(x){ return x.id === p.id; });
           if (existing) {
             if (p.name) { existing.name = p.name; }
-            if (p.avatar && !existing.avatar) { existing.avatar = p.avatar; }
+            if (p.avatar) { existing.avatar = p.avatar; }
             nameResolved = existing.name;
           } else {
             var entry = {
@@ -277,6 +281,7 @@
           const other   = otherId ? users().find(x => x.id === otherId) : null;
           // If name is still blank, trigger async profile fetch which will re-render when resolved
           if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
+          else if (other && !other.avatar && otherId) { H._resolveOtherName(otherId, c); }
           else if (!other && otherId && !(c.otherName)) { H._resolveOtherName(otherId, c); }
           // Only show "Deleted User" when the account is genuinely gone; while a
           // name is still loading, a neutral placeholder avoids a false alarm.
