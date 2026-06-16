@@ -684,7 +684,7 @@
       const otherId = c.members.find(function (m) { return m !== u.id; });
       if (otherId && typeof H.pushNotif === 'function') {
         const verb = of.k === 'accept' ? 'accepted your offer' : of.k === 'decline' ? 'declined your offer' : of.k === 'counter' ? 'sent a counter-offer' : 'made an offer';
-        H.pushNotif(otherId, 'New offer', (u.name || 'Someone') + ' ' + verb + ' (' + fmtMoney(of.price) + ')');
+        H.pushNotif(otherId, 'New offer', (u.name || 'Someone') + ' ' + verb + ' (' + fmtMoney(of.price) + ')', 'message', null, 'Chat?id=' + c.id);
       }
     } catch (e) {
       console.warn('offer send:', e.message);
@@ -1198,7 +1198,7 @@
         });
       }
       var otherId = c.members.find(function(m){ return m !== u.id; });
-      if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Photo', (u.name || 'Someone') + ' sent you a photo', 'message');
+      if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Photo', (u.name || 'Someone') + ' sent you a photo', 'message', null, 'Chat?id=' + c.id);
     } catch(e) { console.warn('Image cloud sync:', e.message); }
   };
 
@@ -1281,7 +1281,7 @@
         if (r && r.error) throw new Error(r.error.message);
       }
       var otherId = c.members.find(function(m){ return m !== u.id; });
-      if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Message', (u.name || 'Someone') + ': ' + text.slice(0, 80), 'message');
+      if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Message', (u.name || 'Someone') + ': ' + text.slice(0, 80), 'message', null, 'Chat?id=' + c.id);
     } catch(e) {
       console.warn('Msg cloud error:', e.message);
       H.toast('Message could not be sent. Check your connection and try again.', 5000, true);

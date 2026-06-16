@@ -290,17 +290,12 @@
   }
 
   // ── Notification tap navigation ───────────────────────────
+  const _openChat = (id) => { if (typeof H.openChat === 'function') H.openChat(id); else H.openInner('Chat', { id }); };
+
   H._notifNavigate = function (link, type) {
-    // If there's a deep link, follow it
     if (link) {
-      // In-app listing detail: URL contains ?id=xxx or &id=xxx
-      const listingMatch = link.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-      if (listingMatch) {
-        H.openInner('Detail', { id: listingMatch[1] });
-        return;
-      }
       // External URL — open in system browser
-      if (link.startsWith('http')) {
+      if (/^https?:\/\//i.test(link)) {
         try {
           if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
             window.Capacitor.Plugins.Browser.open({ url: link });
@@ -310,24 +305,28 @@
         } catch (e) { window.open(link, '_blank', 'noopener,noreferrer'); }
         return;
       }
-      // In-app named route like "Messages" or "detail?id=xxx"
-      const routeMatch = link.match(/^(\w+)(?:\?(.*))?$/);
+      // "chat:convId" shorthand (used by push notifications)
+      const chatShort = link.match(/^chat:(.+)$/i);
+      if (chatShort) { _openChat(chatShort[1]); return; }
+      // Named in-app route: "Chat?id=xxx", "Detail?id=xxx", "Messages", …
+      const routeMatch = link.match(/^([A-Za-z][\w-]*)(?:\?(.*))?$/);
       if (routeMatch) {
         const page = routeMatch[1];
         const params = {};
-        if (routeMatch[2]) new URLSearchParams(routeMatch[2]).forEach((v, k) => { params[k] = v; });
+        if (routeMatch[2]) { try { new URLSearchParams(routeMatch[2]).forEach((v, k) => { params[k] = v; }); } catch (e) {} }
+        if ((page === 'Chat' || page === 'chat') && params.id) { _openChat(params.id); return; }
         if (Object.keys(params).length) H.openInner(page, params);
         else H.navTo(page);
         return;
       }
+      // Legacy listing deep link containing id=xxx
+      const idMatch = link.match(/(?:[?&]|^)id=([a-zA-Z0-9_-]+)/);
+      if (idMatch) { H.openInner('Detail', { id: idMatch[1] }); return; }
     }
-    // No deep link — navigate based on notification type
+    // No usable deep link — navigate based on notification type
     const t = type || '';
-    if (t === 'message')                    { H.navTo('Messages'); return; }
-    if (t === 'sale')                        { H.navTo('Account'); return; }
-    if (t === 'boost' || t === 'verify' || t === 'review' || t === 'ban' || t === 'report') {
-      H.navTo('Account'); return;
-    }
+    if (t === 'message')                                                       { H.navTo('Messages'); return; }
+    if (t === 'sale' || t === 'boost' || t === 'verify' || t === 'review' || t === 'ban' || t === 'report') { H.navTo('Account'); return; }
     // info / system / unknown — go to Home so something always happens
     H.navTo('Home');
   };
@@ -420,6 +419,13 @@
       saveState();
       H._updateNotifBadge();
       if (H.updateNotifBadge) H.updateNotifBadge();
+      // Persist read state to the server so viewed notifications don't come
+      // back as "new" after a refresh, on another device, or after a cache clear.
+      const c = sb();
+      if (c) {
+        c.from('notifications').update({ read: true }).eq('user_id', u.id).eq('read', false)
+          .then(r => { if (r && r.error) console.warn('notif read-sync failed:', r.error.message); });
+      }
     }
     // Sync from Supabase whenever the page is opened
     if (typeof H.syncNotifications === 'function') H.syncNotifications();
