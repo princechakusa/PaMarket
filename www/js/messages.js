@@ -89,11 +89,10 @@
   H._resolvedProfileFetch = H._resolvedProfileFetch || {};
   H._resolveOtherName = function(otherId, conv) {
     // Skip if a fetch is already in-flight OR if we've already resolved a non-empty name
-    if (!otherId || H._pendingProfileFetch[otherId]) return;
-    // Allow a re-fetch if we resolved the name earlier but still have no avatar
-    // (e.g. the other person added/changed their profile picture afterwards).
-    var _ex0 = (H.state.users || []).find(function (x) { return x.id === otherId; });
-    if (H._resolvedProfileFetch[otherId] && _ex0 && _ex0.avatar) return;
+    // Fetch a given profile at most once per session — prevents a render→fetch
+    // →render loop (which caused the Messages list to flicker for contacts who
+    // have no avatar). The avatar is still applied on that one fetch below.
+    if (!otherId || H._pendingProfileFetch[otherId] || H._resolvedProfileFetch[otherId]) return;
     H._pendingProfileFetch[otherId] = true;
     var sb = window.supabase;
     if (!sb || typeof sb.from !== 'function') { delete H._pendingProfileFetch[otherId]; return; }
@@ -281,7 +280,6 @@
           const other   = otherId ? users().find(x => x.id === otherId) : null;
           // If name is still blank, trigger async profile fetch which will re-render when resolved
           if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
-          else if (other && !other.avatar && otherId) { H._resolveOtherName(otherId, c); }
           else if (!other && otherId && !(c.otherName)) { H._resolveOtherName(otherId, c); }
           // Only show "Deleted User" when the account is genuinely gone; while a
           // name is still loading, a neutral placeholder avoids a false alarm.
@@ -350,6 +348,25 @@
     // If name is still blank, trigger async profile fetch — will re-render when resolved
     if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
     else if (!other && otherId && !c.otherName) { H._resolveOtherName(otherId, c); }
+    // One-time avatar fetch for the chat header (only if we have the name but no
+    // photo). The guard is set BEFORE the fetch so it can never re-fire — no loop.
+    H._chatAvatarTried = H._chatAvatarTried || {};
+    if (otherId && other && other.name && !other.avatar && !H._chatAvatarTried[otherId]) {
+      H._chatAvatarTried[otherId] = true;
+      var _sbAv = window.supabase;
+      if (_sbAv && typeof _sbAv.from === 'function') {
+        _sbAv.from('profiles').select('avatar').eq('id', otherId).maybeSingle().then(function (res) {
+          var p = res && res.data;
+          if (!p || !p.avatar) return;
+          var ex = (H.state.users || []).find(function (x) { return x.id === otherId; });
+          if (ex && ex.avatar !== p.avatar) {
+            ex.avatar = p.avatar;
+            H.saveState();
+            if (H.currentPageName === 'Chat' && !(H._userIsTyping && H._userIsTyping())) H.renderPage('Chat', H.currentPageParams);
+          }
+        }).catch(function () {});
+      }
+    }
     const otherDisplayName = (other && other.name) || c.otherName || (c.otherDeleted ? 'Deleted User' : 'PaMarket User');
     const listing = (state.listings || []).find(l => l.id === c.listingId);
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
