@@ -13,6 +13,10 @@
         <item name="windowNoTitle">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowDisablePreview">true</item>
+        <!-- Status bar: white (light) icons on the brand navy header/strip, so the
+             clock/wifi/battery stay visible in BOTH light and dark mode. -->
+        <item name="android:statusBarColor">#1A3A8F</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
     <style name="AppTheme.NoActionBarLaunch" parent="AppTheme.NoActionBar">
