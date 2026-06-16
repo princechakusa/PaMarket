@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
 
     const title = record.sender_name || 'New message';
     const body = preview(record.text, !!record.image);
-    const data = { type: 'message', deepLink: 'Messages', conversationId: String(record.conversation_id) };
+    const data = { type: 'message', deepLink: 'chat:' + String(record.conversation_id), conversationId: String(record.conversation_id) };
 
     let sent = 0, failed = 0;
     await Promise.all(tokens.map(async (p: any) => {

@@ -2217,6 +2217,22 @@ H._handleDeepLink = function(route) {
         console.warn('FCM registration error:', err && err.error);
       });
 
+      // Android 8+ only shows pushes on a registered channel. Create the one
+      // the server targets (channel_id: 'pamarket_default') so message
+      // notifications reliably appear on the lock screen / tray.
+      if (typeof PN.createChannel === 'function') {
+        PN.createChannel({
+          id: 'pamarket_default',
+          name: 'Messages & Alerts',
+          description: 'New messages and account activity',
+          importance: 5,   // HIGH — heads-up banner + sound
+          visibility: 1,   // show on lock screen
+          sound: 'default',
+          vibration: true,
+          lights: true
+        }).catch(function(){ /* best-effort */ });
+      }
+
       // User tapped a notification — route to the deep link if present
       PN.addListener('pushNotificationActionPerformed', function(action) {
         var data = action && action.notification && action.notification.data;
