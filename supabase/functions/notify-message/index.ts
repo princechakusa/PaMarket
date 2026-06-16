@@ -106,22 +106,50 @@ Deno.serve(async (req) => {
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
     const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
-    // Recipients = conversation members who didn't send the message.
-    const convRes = await db.from('conversations').select('members').eq('id', record.conversation_id).maybeSingle();
-    if (convRes.error) console.warn('conversation lookup error:', convRes.error.message);
-    let members: string[] = (convRes.data && Array.isArray(convRes.data.members)) ? convRes.data.members : [];
-    if (!members.length) {
-      // Fallback: derive the other member from prior messages in this conversation.
-      const others = await db.from('messages').select('sender_id').eq('conversation_id', record.conversation_id).neq('sender_id', record.sender_id).limit(1);
-      members = [record.sender_id, ...((others.data || []).map((r: any) => r.sender_id))];
+    const convId = String(record.conversation_id);
+    const senderId = String(record.sender_id);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(convId);
+
+    // ── Find recipient ids ────────────────────────────────────────────
+    let recipients: string[] = [];
+
+    // 1) conversations.members — only query when the id is a real uuid key,
+    //    otherwise it throws "invalid input syntax for type uuid".
+    if (isUuid) {
+      const convRes = await db.from('conversations').select('members').eq('id', convId).maybeSingle();
+      if (convRes.error) console.warn('conversation lookup error:', convRes.error.message);
+      const members: string[] = (convRes.data && Array.isArray(convRes.data.members)) ? convRes.data.members : [];
+      recipients = members.filter((m) => m && m !== senderId);
     }
-    const recipients = members.filter((m) => m && m !== record.sender_id);
-    if (!recipients.length) return json({ skipped: 'no recipient' });
+
+    // 2) Derive from the conversation id, which encodes each member's id tail,
+    //    e.g. "conv_<a6>_<b6>" or "job_<x>_<a6>_<b6>". Robust for one-way chats
+    //    (recipient never replied) where a messages scan would find no one.
+    if (!recipients.length) {
+      const parts = convId.split('_');
+      const tails = parts.slice(-2).map((s) => s.toLowerCase()).filter((s) => /^[0-9a-z]{5,}$/.test(s));
+      const senderTail = senderId.slice(-6).toLowerCase();
+      const wantTails = tails.filter((t) => t !== senderTail);
+      if (wantTails.length) {
+        const pr = await db.from('profiles').select('id').not('push_token', 'is', null).limit(5000);
+        recipients = (pr.data || [])
+          .map((p: any) => String(p.id))
+          .filter((id) => id !== senderId && wantTails.some((t) => id.toLowerCase().endsWith(t)));
+      }
+    }
+
+    // 3) Last resort: any other sender who has posted in this conversation.
+    if (!recipients.length) {
+      const others = await db.from('messages').select('sender_id').eq('conversation_id', convId).neq('sender_id', senderId).limit(5);
+      recipients = [...new Set((others.data || []).map((r: any) => String(r.sender_id)))];
+    }
+
+    if (!recipients.length) { console.log('skipped: no recipient for', convId); return json({ skipped: 'no recipient' }); }
 
     const profRes = await db.from('profiles').select('id, push_token').in('id', recipients);
     if (profRes.error) console.warn('profiles lookup error:', profRes.error.message);
     const tokens = (profRes.data || []).filter((p: any) => p.push_token);
-    console.log('conversation:', record.conversation_id, '| recipients:', recipients.length, '| with token:', tokens.length);
+    console.log('conversation:', convId, '| recipients:', recipients.length, '| with token:', tokens.length);
     if (!tokens.length) return json({ skipped: 'no push tokens' });
 
     const saEnv = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
