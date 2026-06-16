@@ -85,6 +85,9 @@ a { color: var(--blue); text-decoration: none; }
 
 /* ── APP SHELL ───────────────────────────────────────────────── */
 #app { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg); padding-top: env(safe-area-inset-top); }
+/* Brand-navy strip behind the system status bar (clock/battery) so the white
+   status icons always sit on navy — consistent in light AND dark mode. */
+#app::before { content: ''; position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top); background: #1A3A8F; z-index: 9990; pointer-events: none; }
 .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
 .scroll-area::-webkit-scrollbar { display: none; }
 .page { display: none; min-height: 100%; }
@@ -624,9 +627,9 @@ select.fi {
 .msg-summary b { font-size: 13px; font-weight: 800; color: var(--text-primary); }
 .msg-markall { background: none; border: none; font-size: 12px; font-weight: 700; color: var(--blue); cursor: pointer; padding: 4px 0; font-family: inherit; }
 
-.msg-item { background: var(--card); display: flex; gap: 13px; padding: 13px 15px; cursor: pointer; align-items: center; transition: background .15s; box-shadow: inset 0 -1px 0 #f1f3f6; }
+.msg-item { background: var(--card); display: flex; gap: 13px; padding: 13px 15px; cursor: pointer; align-items: center; transition: background .15s; box-shadow: inset 0 -1px 0 #f1f3f6; position: relative; z-index: 1; }
 .msg-item:active { background: var(--bg); }
-.msg-item.unread { background: linear-gradient(90deg, rgba(26,58,143,.045), transparent 62%); }
+.msg-item.unread { background: linear-gradient(90deg, rgba(26,58,143,.045), transparent 62%), var(--card); }
 .p-av-wrap { position: relative; flex-shrink: 0; width: 52px; height: 52px; }
 .p-av { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; color: #fff; box-shadow: 0 3px 8px rgba(0,0,0,.13); }
 .p-on { position: absolute; right: 1px; bottom: 1px; width: 13px; height: 13px; border-radius: 50%; background: #22c55e; border: 2.5px solid var(--card); }
