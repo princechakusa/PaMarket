@@ -1440,7 +1440,7 @@
           <div style="text-align:center;padding:16px 0 20px">
             <div style="display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px">
               ${other.avatar
-                ? `<img src="${escHtml(other.avatar)}" style="width:80px;height:80px;border-radius:50%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;font-family:'Inter',-apple-system,sans-serif">${ini}</div>`
+                ? `<img src="${escHtml(other.avatar)}" onclick="H.viewImage('${(other.avatar||'').replace(/'/g, "\\'")}')" style="width:80px;height:80px;border-radius:50%;object-fit:cover;cursor:zoom-in" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;font-family:'Inter',-apple-system,sans-serif">${ini}</div>`
                 : `<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;font-family:'Inter',-apple-system,sans-serif">${ini}</div>`}
             </div>
             <div style="font-size:18px;font-weight:800;color:var(--text);font-family:'Inter',-apple-system,sans-serif">${escHtml(other.name || 'User')}${other.verified ? '&nbsp;' + H.verifiedBadge(15) + '' : ''}</div>
