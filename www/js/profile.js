@@ -31,6 +31,10 @@
       ? (H.state.users || []).find(x => x.id === viewId)
       : H.currentUser();
 
+    if (!u && viewId) {
+      // Viewing another user we don't hold locally yet — Profile_after fetches it.
+      return '<div class="page active">' + H.innerTopbar('Profile') + '<div style="padding:64px 20px;text-align:center;color:var(--sub);font-size:14px">Loading profile…</div></div>';
+    }
     if (!u) return H.emptyState('Not logged in', 'Please sign in to continue', 'Sign In', "H.authPage()");
 
     const isOwn      = !viewId || (H.currentUser() && viewId === H.currentUser().id);
@@ -103,6 +107,47 @@
       })()}
       <div style="height:24px"></div>
     </div>`;
+  };
+
+  // When viewing another user's profile, pull their latest name + photo from the
+  // cloud so it's never stuck on initials / "User". Loop-safe: the guard is set
+  // before the fetch and we only re-render when something actually changed.
+  pages.Profile_after = function (params) {
+    const viewId = params && params.id;
+    if (!viewId) return;                       // own profile already loaded
+    const sb = window.supabase;
+    if (!sb || typeof sb.from !== 'function') return;
+    H._profileFetched = H._profileFetched || {};
+    if (H._profileFetched[viewId]) return;
+    H._profileFetched[viewId] = true;
+    sb.from('profiles')
+      .select('id,name,phone,email,avatar,verified,bio,city,created_at')
+      .eq('id', viewId).maybeSingle()
+      .then(function (res) {
+        const p = res && res.data;
+        if (!p) return;
+        const users = H.state.users = H.state.users || [];
+        let ex = users.find(function (x) { return x.id === viewId; });
+        let changed = false;
+        if (!ex) {
+          ex = { id: p.id, name: p.name || '', phone: p.phone || '', email: p.email || '',
+                 avatar: p.avatar || null, verified: !!p.verified, bio: p.bio || '', city: p.city || '',
+                 role: 'user', status: 'active', joinedAt: p.created_at ? new Date(p.created_at).getTime() : Date.now() };
+          users.push(ex); changed = true;
+        } else {
+          if (p.name   && ex.name   !== p.name)   { ex.name = p.name; changed = true; }
+          if (p.avatar && ex.avatar !== p.avatar) { ex.avatar = p.avatar; changed = true; }
+          if (p.phone  && !ex.phone)              { ex.phone = p.phone; changed = true; }
+          if (!!p.verified !== !!ex.verified)     { ex.verified = !!p.verified; changed = true; }
+          if (p.bio    && !ex.bio)                { ex.bio = p.bio; changed = true; }
+          if (p.city   && !ex.city)               { ex.city = p.city; changed = true; }
+        }
+        if (changed) {
+          H.saveState();
+          if (H.currentPageName === 'Profile') H.renderPage('Profile', H.currentPageParams);
+        }
+      })
+      .catch(function () {});
   };
 
   pages.EditProfile = function () {

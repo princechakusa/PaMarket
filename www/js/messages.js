@@ -99,7 +99,7 @@
     sb.from('profiles')
       .select('id,name,phone,email,avatar,verified,role,status,created_at')
       .eq('id', otherId)
-      .single()
+      .maybeSingle()
       .then(function(res) {
         var p = res && res.data;
         var nameResolved = '';
@@ -141,8 +141,12 @@
           if ((page === 'Messages' || page === 'Chat') && !(H._userIsTyping && H._userIsTyping())) {
             H.renderPage(page, H.currentPageParams);
           }
-        } else if (!nameResolved && res && !res.data && res.error && res.error.code === 'PGRST116') {
-          // Profile definitively not found (user deleted their account) — hide this conversation
+        } else if (res && res.data) {
+          // Row exists but no usable name (rare) — stop retrying to avoid churn.
+          H._resolvedProfileFetch[otherId] = true;
+        } else if (res && !res.data && !res.error) {
+          // No profile row at all (maybeSingle → null, no error) = deleted account.
+          // Mark resolved so we don't retry forever (which showed "PaMarket User").
           H._resolvedProfileFetch[otherId] = true;
           if (conv && !conv.otherDeleted) {
             conv.otherDeleted = true;
@@ -1414,7 +1418,7 @@
       const listings = (H.state.listings || []).filter(l => l.sellerId === userId && l.status === 'active');
       const ini = H.initials(other.name || 'U');
       const avatar = other.avatar
-        ? `<img src="${escHtml(other.avatar)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='flex')"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">${ini}</div>`
+        ? `<img src="${escHtml(other.avatar)}" onclick="H.viewImage('${(other.avatar||'').replace(/'/g, "\\'")}')" style="width:64px;height:64px;border-radius:50%;object-fit:cover;cursor:zoom-in" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='flex')"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">${ini}</div>`
         : `<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">${ini}</div>`;
       const listingCards = listings.slice(0, 4).map(l => {
         const ph = (l.photos && l.photos[0])
