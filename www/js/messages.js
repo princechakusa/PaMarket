@@ -1224,7 +1224,9 @@
     } catch(e) { console.warn('Image cloud sync:', e.message); }
   };
 
-  H._chat.viewImg = function(url) {
+  // Global full-screen image viewer (chat photos, profile pictures, etc.)
+  H.viewImage = function(url) {
+    if (!url) return;
     // Full-screen image viewer
     var overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:16px';
@@ -1242,6 +1244,7 @@
     overlay.appendChild(close);
     document.body.appendChild(overlay);
   };
+  H._chat.viewImg = H.viewImage;   // alias kept for existing chat-image taps
 
   H.sendChat = async function () {
     if (H.checkBan && H.checkBan()) return;

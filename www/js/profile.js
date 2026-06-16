@@ -48,7 +48,7 @@
       <div class="profile-hero">
         <div class="profile-pic" style="position:relative">
           ${u.avatar
-            ? `<img src="${u.avatar}" alt="${H.escHtml(u.name||'')}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">`
+            ? `<img src="${u.avatar}" alt="${H.escHtml(u.name||'')}" onclick="H.viewImage('${(u.avatar||'').replace(/'/g, "\\'")}')" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">`
             : `<div class="profile-initials">${H.initials(u.name)}</div>`}
           ${showActivityDot ? `<div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid var(--card,#fff)"></div>` : ''}
         </div>
