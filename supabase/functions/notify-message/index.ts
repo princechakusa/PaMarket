@@ -1,21 +1,25 @@
 // notify-message — sends an FCM push to the recipient when a chat message is
 // inserted. Wired via a Supabase Database Webhook on public.messages (INSERT).
-// The app already shows the in-app notification; this makes it appear on the
-// phone's lock screen / tray even when the app is backgrounded or closed.
 //
 // Required Edge Function secrets:
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  (provided automatically)
-//   FIREBASE_SERVICE_ACCOUNT                 (same JSON used by send-push)
-//   NOTIFY_WEBHOOK_SECRET                    (a random string; also set as the
-//                                             webhook's "x-webhook-secret" header)
+//   FIREBASE_SERVICE_ACCOUNT                 (service-account JSON)
+//   NOTIFY_WEBHOOK_SECRET                    (must match the webhook header)
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-secret',
 };
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// ── OAuth token cache (reused across invocations while the instance is warm) ──
+let _tokenCache: { value: string; exp: number } | null = null;
+
 async function getFCMAccessToken(sa: any): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
+  if (_tokenCache && _tokenCache.exp - 120 > now) return _tokenCache.value; // reuse until ~2 min before expiry
+
   const b64url = (o: object) => btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   const header = { alg: 'RS256', typ: 'JWT' };
   const payload = { iss: sa['client_email'], scope: 'https://www.googleapis.com/auth/firebase.messaging', aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600 };
@@ -27,11 +31,15 @@ async function getFCMAccessToken(sa: any): Promise<string> {
   const res = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt });
   const tokenData = await res.json();
   if (!res.ok || !tokenData['access_token']) throw new Error('FCM auth failed (' + res.status + '): ' + JSON.stringify(tokenData));
-  return tokenData['access_token'];
+
+  const ttl = Number(tokenData['expires_in']) || 3600;
+  _tokenCache = { value: tokenData['access_token'], exp: now + ttl };
+  return _tokenCache.value;
 }
 
 type FCMResult = { ok: boolean; invalid: boolean; status: number; error?: string };
 
+// Send one FCM message, retrying transient failures (network / 5xx / 429).
 async function sendFCM(pushToken: string, projectId: string, accessToken: string, title: string, body: string, data: Record<string, string>): Promise<FCMResult> {
   const message = {
     token: pushToken,
@@ -39,42 +47,49 @@ async function sendFCM(pushToken: string, projectId: string, accessToken: string
     data,
     android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default' } },
   };
-  let res: Response;
-  let result: any = {};
-  try {
-    res = await fetch('https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
-    });
-    result = await res.json().catch(() => ({}));
-  } catch (e) {
-    console.error('FCM fetch threw:', (e as Error).message);
-    return { ok: false, invalid: false, status: 0, error: (e as Error).message };
+  const url = 'https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send';
+  const MAX = 3;
+
+  for (let attempt = 1; attempt <= MAX; attempt++) {
+    let res: Response | null = null;
+    let result: any = {};
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+      result = await res.json().catch(() => ({}));
+    } catch (e) {
+      // Network error — transient. Retry with backoff, else give up.
+      if (attempt < MAX) { await sleep(attempt * 400); continue; }
+      console.error('FCM fetch threw (gave up):', (e as Error).message);
+      return { ok: false, invalid: false, status: 0, error: (e as Error).message };
+    }
+
+    if (res.ok && !result['error']) {
+      console.log('FCM ok →', pushToken.slice(0, 12) + '…');
+      return { ok: true, invalid: false, status: res.status };
+    }
+
+    const err = result['error'] || {};
+    const fcmStatus: string = err['status'] || '';
+    const errorCode: string = (Array.isArray(err['details']) ? err['details'].find((d: any) => d['errorCode'])?.['errorCode'] : '') || '';
+    const invalid =
+      res.status === 404 ||
+      fcmStatus === 'NOT_FOUND' || fcmStatus === 'UNREGISTERED' || fcmStatus === 'INVALID_ARGUMENT' ||
+      errorCode === 'UNREGISTERED' || errorCode === 'INVALID_ARGUMENT';
+    const transient = res.status === 429 || res.status >= 500 || fcmStatus === 'UNAVAILABLE' || fcmStatus === 'INTERNAL';
+
+    if (transient && attempt < MAX) { await sleep(attempt * 400); continue; }
+
+    console.warn('FCM fail →', pushToken.slice(0, 12) + '…', 'http:', res.status, 'status:', fcmStatus, 'code:', errorCode, 'invalid:', invalid);
+    return { ok: false, invalid, status: res.status, error: fcmStatus || errorCode || ('http_' + res.status) };
   }
-
-  if (res.ok && !result['error']) {
-    console.log('FCM ok →', pushToken.slice(0, 12) + '…', 'name:', result['name'] || '');
-    return { ok: true, invalid: false, status: res.status };
-  }
-
-  // Failed — work out whether the token itself is dead so we can prune it.
-  const err = result['error'] || {};
-  const fcmStatus: string = err['status'] || '';
-  const errorCode: string = (Array.isArray(err['details']) ? err['details'].find((d: any) => d['errorCode'])?.['errorCode'] : '') || '';
-  const invalid =
-    res.status === 404 ||
-    fcmStatus === 'NOT_FOUND' ||
-    fcmStatus === 'UNREGISTERED' ||
-    errorCode === 'UNREGISTERED' ||
-    errorCode === 'INVALID_ARGUMENT' ||
-    fcmStatus === 'INVALID_ARGUMENT';
-
-  console.warn('FCM fail →', pushToken.slice(0, 12) + '…', 'http:', res.status, 'status:', fcmStatus, 'code:', errorCode, 'invalid:', invalid, 'raw:', JSON.stringify(result).slice(0, 300));
-  return { ok: false, invalid, status: res.status, error: fcmStatus || errorCode || ('http_' + res.status) };
+  return { ok: false, invalid: false, status: 0, error: 'exhausted' };
 }
 
-// Turn the stored message text into a clean preview (offers/replies are JSON).
+// Clean preview text (offers/replies are stored as JSON).
 function preview(text: string | null, hasImage: boolean): string {
   if (hasImage) return '📷 Photo';
   if (typeof text === 'string' && text.charAt(0) === '{') {
@@ -92,7 +107,6 @@ Deno.serve(async (req) => {
   const json = (d: unknown, s?: number) => new Response(JSON.stringify(d), { status: s || 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
 
   try {
-    // Verify the webhook secret so only your DB webhook can trigger pushes.
     const expected = Deno.env.get('NOTIFY_WEBHOOK_SECRET');
     if (expected && req.headers.get('x-webhook-secret') !== expected) {
       console.warn('Rejected: bad or missing x-webhook-secret');
@@ -100,7 +114,7 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const record = payload && (payload.record || payload.new || payload); // DB webhook -> .record
+    const record = payload && (payload.record || payload.new || payload);
     if (!record || !record.conversation_id || !record.sender_id) return json({ skipped: 'no record' });
 
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
@@ -108,42 +122,21 @@ Deno.serve(async (req) => {
 
     const convId = String(record.conversation_id);
     const senderId = String(record.sender_id);
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(convId);
 
-    // ── Find recipient ids ────────────────────────────────────────────
+    // ── Recipients: the conversation members who aren't the sender ──
+    // Canonical source is conversations.members. (For this to work reliably,
+    // conversations.id must be TEXT — matching the app's "conv_/job_" ids.)
     let recipients: string[] = [];
+    const convRes = await db.from('conversations').select('members').eq('id', convId).maybeSingle();
+    if (convRes.error) console.warn('conversation lookup:', convRes.error.message);
+    const members: string[] = (convRes.data && Array.isArray(convRes.data.members)) ? convRes.data.members : [];
+    recipients = members.filter((m) => m && m !== senderId);
 
-    // 1) conversations.members — only query when the id is a real uuid key,
-    //    otherwise it throws "invalid input syntax for type uuid".
-    if (isUuid) {
-      const convRes = await db.from('conversations').select('members').eq('id', convId).maybeSingle();
-      if (convRes.error) console.warn('conversation lookup error:', convRes.error.message);
-      const members: string[] = (convRes.data && Array.isArray(convRes.data.members)) ? convRes.data.members : [];
-      recipients = members.filter((m) => m && m !== senderId);
-    }
-
-    // 2) Derive from the conversation id, which encodes each member's id tail,
-    //    e.g. "conv_<a6>_<b6>" or "job_<x>_<a6>_<b6>". Robust for one-way chats
-    //    (recipient never replied) where a messages scan would find no one.
+    // Fallback (bounded): other participants who have posted in the thread.
     if (!recipients.length) {
-      const parts = convId.split('_');
-      const tails = parts.slice(-2).map((s) => s.toLowerCase()).filter((s) => /^[0-9a-z]{5,}$/.test(s));
-      const senderTail = senderId.slice(-6).toLowerCase();
-      const wantTails = tails.filter((t) => t !== senderTail);
-      if (wantTails.length) {
-        const pr = await db.from('profiles').select('id').not('push_token', 'is', null).limit(5000);
-        recipients = (pr.data || [])
-          .map((p: any) => String(p.id))
-          .filter((id) => id !== senderId && wantTails.some((t) => id.toLowerCase().endsWith(t)));
-      }
-    }
-
-    // 3) Last resort: any other sender who has posted in this conversation.
-    if (!recipients.length) {
-      const others = await db.from('messages').select('sender_id').eq('conversation_id', convId).neq('sender_id', senderId).limit(5);
+      const others = await db.from('messages').select('sender_id').eq('conversation_id', convId).neq('sender_id', senderId).limit(10);
       recipients = [...new Set((others.data || []).map((r: any) => String(r.sender_id)))];
     }
-
     if (!recipients.length) { console.log('skipped: no recipient for', convId); return json({ skipped: 'no recipient' }); }
 
     const profRes = await db.from('profiles').select('id, push_token').in('id', recipients);
@@ -159,20 +152,16 @@ Deno.serve(async (req) => {
 
     const title = record.sender_name || 'New message';
     const body = preview(record.text, !!record.image);
-    const data = { type: 'message', deepLink: 'chat:' + String(record.conversation_id), conversationId: String(record.conversation_id) };
+    const data = { type: 'message', deepLink: 'chat:' + convId, conversationId: convId };
 
     let sent = 0, failed = 0;
     const deadTokenIds: string[] = [];
     await Promise.all(tokens.map(async (p: any) => {
       const r = await sendFCM(p.push_token, sa['project_id'], accessToken, title, body, data);
-      if (r.ok) { sent++; }
-      else {
-        failed++;
-        if (r.invalid) deadTokenIds.push(p.id);
-      }
+      if (r.ok) { sent++; } else { failed++; if (r.invalid) deadTokenIds.push(p.id); }
     }));
 
-    // Prune dead/expired tokens so we stop trying to push to them.
+    // Prune dead/expired tokens so we stop pushing to them.
     if (deadTokenIds.length) {
       const del = await db.from('profiles').update({ push_token: null }).in('id', deadTokenIds);
       if (del.error) console.warn('failed to clear dead tokens:', del.error.message);
