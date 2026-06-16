@@ -26,24 +26,52 @@ async function getFCMAccessToken(sa: any): Promise<string> {
   const jwt = sigInput + '.' + btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   const res = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt });
   const tokenData = await res.json();
-  if (!tokenData['access_token']) throw new Error('FCM auth failed: ' + JSON.stringify(tokenData));
+  if (!res.ok || !tokenData['access_token']) throw new Error('FCM auth failed (' + res.status + '): ' + JSON.stringify(tokenData));
   return tokenData['access_token'];
 }
 
-async function sendFCM(pushToken: string, projectId: string, accessToken: string, title: string, body: string, data: Record<string, string>): Promise<boolean> {
+type FCMResult = { ok: boolean; invalid: boolean; status: number; error?: string };
+
+async function sendFCM(pushToken: string, projectId: string, accessToken: string, title: string, body: string, data: Record<string, string>): Promise<FCMResult> {
   const message = {
     token: pushToken,
     notification: { title, body },
     data,
     android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default' } },
   };
-  const res = await fetch('https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send', {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message }),
-  });
-  const result = await res.json();
-  return !result['error'];
+  let res: Response;
+  let result: any = {};
+  try {
+    res = await fetch('https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+    result = await res.json().catch(() => ({}));
+  } catch (e) {
+    console.error('FCM fetch threw:', (e as Error).message);
+    return { ok: false, invalid: false, status: 0, error: (e as Error).message };
+  }
+
+  if (res.ok && !result['error']) {
+    console.log('FCM ok →', pushToken.slice(0, 12) + '…', 'name:', result['name'] || '');
+    return { ok: true, invalid: false, status: res.status };
+  }
+
+  // Failed — work out whether the token itself is dead so we can prune it.
+  const err = result['error'] || {};
+  const fcmStatus: string = err['status'] || '';
+  const errorCode: string = (Array.isArray(err['details']) ? err['details'].find((d: any) => d['errorCode'])?.['errorCode'] : '') || '';
+  const invalid =
+    res.status === 404 ||
+    fcmStatus === 'NOT_FOUND' ||
+    fcmStatus === 'UNREGISTERED' ||
+    errorCode === 'UNREGISTERED' ||
+    errorCode === 'INVALID_ARGUMENT' ||
+    fcmStatus === 'INVALID_ARGUMENT';
+
+  console.warn('FCM fail →', pushToken.slice(0, 12) + '…', 'http:', res.status, 'status:', fcmStatus, 'code:', errorCode, 'invalid:', invalid, 'raw:', JSON.stringify(result).slice(0, 300));
+  return { ok: false, invalid, status: res.status, error: fcmStatus || errorCode || ('http_' + res.status) };
 }
 
 // Turn the stored message text into a clean preview (offers/replies are JSON).
@@ -66,7 +94,10 @@ Deno.serve(async (req) => {
   try {
     // Verify the webhook secret so only your DB webhook can trigger pushes.
     const expected = Deno.env.get('NOTIFY_WEBHOOK_SECRET');
-    if (expected && req.headers.get('x-webhook-secret') !== expected) return json({ error: 'unauthorized' }, 401);
+    if (expected && req.headers.get('x-webhook-secret') !== expected) {
+      console.warn('Rejected: bad or missing x-webhook-secret');
+      return json({ error: 'unauthorized' }, 401);
+    }
 
     const payload = await req.json();
     const record = payload && (payload.record || payload.new || payload); // DB webhook -> .record
@@ -76,7 +107,8 @@ Deno.serve(async (req) => {
     const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
     // Recipients = conversation members who didn't send the message.
-    const convRes = await db.from('conversations').select('members').eq('id', record.conversation_id).single();
+    const convRes = await db.from('conversations').select('members').eq('id', record.conversation_id).maybeSingle();
+    if (convRes.error) console.warn('conversation lookup error:', convRes.error.message);
     let members: string[] = (convRes.data && Array.isArray(convRes.data.members)) ? convRes.data.members : [];
     if (!members.length) {
       // Fallback: derive the other member from prior messages in this conversation.
@@ -87,7 +119,9 @@ Deno.serve(async (req) => {
     if (!recipients.length) return json({ skipped: 'no recipient' });
 
     const profRes = await db.from('profiles').select('id, push_token').in('id', recipients);
+    if (profRes.error) console.warn('profiles lookup error:', profRes.error.message);
     const tokens = (profRes.data || []).filter((p: any) => p.push_token);
+    console.log('conversation:', record.conversation_id, '| recipients:', recipients.length, '| with token:', tokens.length);
     if (!tokens.length) return json({ skipped: 'no push tokens' });
 
     const saEnv = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
@@ -100,13 +134,27 @@ Deno.serve(async (req) => {
     const data = { type: 'message', deepLink: 'chat:' + String(record.conversation_id), conversationId: String(record.conversation_id) };
 
     let sent = 0, failed = 0;
+    const deadTokenIds: string[] = [];
     await Promise.all(tokens.map(async (p: any) => {
-      const ok = await sendFCM(p.push_token, sa['project_id'], accessToken, title, body, data);
-      if (ok) sent++; else failed++;
+      const r = await sendFCM(p.push_token, sa['project_id'], accessToken, title, body, data);
+      if (r.ok) { sent++; }
+      else {
+        failed++;
+        if (r.invalid) deadTokenIds.push(p.id);
+      }
     }));
 
-    return json({ success: true, sent, failed });
+    // Prune dead/expired tokens so we stop trying to push to them.
+    if (deadTokenIds.length) {
+      const del = await db.from('profiles').update({ push_token: null }).in('id', deadTokenIds);
+      if (del.error) console.warn('failed to clear dead tokens:', del.error.message);
+      else console.log('cleared dead push tokens for', deadTokenIds.length, 'profile(s)');
+    }
+
+    console.log('done → sent:', sent, 'failed:', failed, 'pruned:', deadTokenIds.length);
+    return json({ success: true, sent, failed, pruned: deadTokenIds.length });
   } catch (err) {
+    console.error('notify-message error:', (err as Error).message);
     return json({ error: (err as Error).message }, 500);
   }
 });
