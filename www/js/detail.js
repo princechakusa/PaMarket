@@ -37,7 +37,13 @@
 
   pages.Detail = function ({ id }) {
     const l = (H.state.listings||[]).find(x => x.id === id);
-    if (!l) return `<div class="page active">${H.innerTopbar('Listing')}<div class="empty-state"><div class="empty-icon">${S.crossCircle}</div><div class="empty-title">Listing not found</div></div></div>`;
+    if (!l) {
+      // Genuinely gone after an on-demand fetch attempt → show not-found.
+      if (H._detailFetchFailed === id)
+        return `<div class="page active">${H.innerTopbar('Listing')}<div class="empty-state"><div class="empty-icon">${S.crossCircle}</div><div class="empty-title">Listing not found</div><div class="empty-sub">This listing may have been removed or is no longer available.</div></div></div>`;
+      // Not in the local cache yet — show a loader; Detail_after fetches it by id.
+      return `<div class="page active">${H.innerTopbar('Listing')}<div class="empty-state" id="detailLoading"><div class="empty-title">Loading…</div></div></div>`;
+    }
 
     const seller      = getSeller(l);
     const u           = H.currentUser();
@@ -178,7 +184,27 @@
 
     const l = H.state.listings.find(x => x.id === params.id);
     const placeholder = document.getElementById('similarListingsPlaceholder');
-    if (!l) { if (placeholder) placeholder.remove(); return; }
+    if (!l) {
+      if (placeholder) placeholder.remove();
+      // Listing isn't in the local cache (stale after idle, deleted-from-cache,
+      // or older than the cached set). Fetch it by id once before giving up, so
+      // tapping a listing never dead-ends on "Listing not found".
+      if (H._detailFetchFailed === params.id) return;   // already tried — not-found shown
+      if (H._detailFetchTrying === params.id) return;   // fetch in flight
+      if (typeof H._fetchListingById !== 'function') { H._detailFetchFailed = params.id; return; }
+      H._detailFetchTrying = params.id;
+      H._fetchListingById(params.id).then(function (found) {
+        H._detailFetchTrying = null;
+        if (found) H._detailFetchFailed = null; else H._detailFetchFailed = params.id;
+        // Only act if the user is still looking at this listing.
+        if (H.currentPageName !== 'Detail' || !H.currentPageParams || H.currentPageParams.id !== params.id) return;
+        if (found && found.cat === 'jobs') { H.openInner('JobDetail', { id: params.id }); return; }
+        H.renderPage('Detail', params);
+      });
+      return;
+    }
+    // Reaching a valid listing clears any stale not-found marker.
+    if (H._detailFetchFailed === params.id) H._detailFetchFailed = null;
     const similar = (H.state.listings||[]).filter(x => x.id!==l.id && x.cat===l.cat && x.status==='active').slice(0,4);
     // Recently viewed (tracked in localStorage by openListing) — skip the current
     // listing and anything already shown under "Similar".
@@ -586,8 +612,15 @@
   };
 
   H.openListing = window.openListing = function(id) {
-    const l = (H.state.listings||[]).find(x => x.id === id); if (!l) return;
-    if (l.cat === 'jobs') { l.views=(l.views||0)+1; H.saveState(); H.openInner('JobDetail',{id}); return; }
+    const l = (H.state.listings||[]).find(x => x.id === id);
+    if (l) {
+      if (l.cat === 'jobs') { l.views=(l.views||0)+1; H.saveState(); H.openInner('JobDetail',{id}); return; }
+      H.openInner('Detail', {id});
+      return;
+    }
+    // Not in the local cache (e.g. dropped after the app sat idle, or older than
+    // the cached set). Open Detail anyway — it fetches the listing by id on demand
+    // instead of dead-ending on "Listing not found".
     H.openInner('Detail', {id});
   };
 

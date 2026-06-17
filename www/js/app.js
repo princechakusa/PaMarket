@@ -1225,6 +1225,39 @@ window.H = {
     if(a) H.toast((a.businessName||'Sponsored') + (a.tagline ? ' · ' + a.tagline : ''), 3000);
   },
 
+  // Map a raw cloud `listings` row to the app's local listing shape.
+  _mapCloudListing(r) {
+    const o={
+      id:r.id, sellerId:r.seller_id, sellerName:r.seller_name||'',
+      sellerPhone:r.seller_phone||'', title:r.title, desc:r.description,
+      price:r.price, currency:r.currency, cat:r.category,
+      prov:r.province, city:r.city, suburb:r.suburb,
+      photos:Array.isArray(r.photos)?r.photos:(r.photos?[r.photos]:[]),
+      status:r.status, boost:r.boost, views:r.views||0,
+      createdAt:r.created_at?new Date(r.created_at).getTime():Date.now()
+    };
+    if(r.attributes && typeof r.attributes==='object'){
+      if(typeof H.applyAttrs==='function') H.applyAttrs(o, r.attributes);
+      else o.attrs=r.attributes;
+    }
+    return o;
+  },
+
+  // Fetch a single listing by id when it isn't in the local cache (e.g. after the
+  // app has been idle and the cache was refreshed/pruned, or the listing is older
+  // than the cached set). Returns the listing, or null if genuinely unavailable.
+  async _fetchListingById(id) {
+    try {
+      if(!window.supabase||typeof window.supabase.from!=='function') return null;
+      const { data, error } = await window.supabase.from('listings').select('*').eq('id', id).maybeSingle();
+      if (error || !data) return null;
+      const o = H._mapCloudListing(data);
+      H.state.listings = H.state.listings || [];
+      if (!H.state.listings.find(x => x.id === o.id)) { H.state.listings.push(o); H.saveState(); }
+      return o;
+    } catch(e) { return null; }
+  },
+
   async fetchListingsFromSupabase() {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
@@ -1234,22 +1267,7 @@ window.H = {
         .order('created_at',{ascending:false})
         .limit(200);
       if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
-      const cloud=(data||[]).map(r=>{
-        const o={
-          id:r.id, sellerId:r.seller_id, sellerName:r.seller_name||'',
-          sellerPhone:r.seller_phone||'', title:r.title, desc:r.description,
-          price:r.price, currency:r.currency, cat:r.category,
-          prov:r.province, city:r.city, suburb:r.suburb,
-          photos:Array.isArray(r.photos)?r.photos:(r.photos?[r.photos]:[]),
-          status:r.status, boost:r.boost, views:r.views||0,
-          createdAt:r.created_at?new Date(r.created_at).getTime():Date.now()
-        };
-        if(r.attributes && typeof r.attributes==='object'){
-          if(typeof H.applyAttrs==='function') H.applyAttrs(o, r.attributes);
-          else o.attrs=r.attributes;
-        }
-        return o;
-      });
+      const cloud=(data||[]).map(r=>H._mapCloudListing(r));
       // Replace active listings entirely from cloud so deleted ones disappear.
       // Keep local non-active listings (pending, draft) that haven't synced yet.
       const nonActive=(H.state.listings||[]).filter(l=>l.status!=='active');
