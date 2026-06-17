@@ -233,7 +233,7 @@
     const l = H.state.listings.find(x => x.id === id); if (!l) return;
     const text = l.title+' · '+H.fmtPrice(l.price, l.currency)+' on PaMarket Zimbabwe';
     if (navigator.share) navigator.share({title:l.title, text, url:location.href}).catch(()=>{});
-    else { if (navigator.clipboard) navigator.clipboard.writeText(text+' '+location.href); H.toast('Link copied'); }
+    else { if (navigator.clipboard) navigator.clipboard.writeText(text+' '+location.href).catch(()=>{}); H.toast('Link copied'); }
   };
 
   H.toggleSave = function(id) {
@@ -311,7 +311,7 @@
     if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
       location.href = 'tel:'+clean;
     } else {
-      if (navigator.clipboard) navigator.clipboard.writeText(clean);
+      if (navigator.clipboard) navigator.clipboard.writeText(clean).catch(()=>{});
       H.toast('Number copied: '+clean);
     }
   };

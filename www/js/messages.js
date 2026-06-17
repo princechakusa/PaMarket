@@ -1243,9 +1243,10 @@
     var close = document.createElement('button');
     close.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     close.style.cssText = 'position:absolute;top:env(safe-area-inset-top,16px);right:16px;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation';
-    var dismiss = function() { document.body.removeChild(overlay); };
+    // Idempotent — the close button used to fire dismiss twice (onclick + the
+    // addEventListener below), and the second removeChild threw NotFoundError.
+    var dismiss = function() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
     overlay.onclick = dismiss;
-    close.onclick   = dismiss;
     close.addEventListener('click', function(e){ e.stopPropagation(); dismiss(); });
     overlay.appendChild(img);
     overlay.appendChild(close);
