@@ -2185,9 +2185,9 @@
   window._cpJT = function(btn) {
     var on = btn.getAttribute('data-sel') !== '1';
     btn.setAttribute('data-sel', on ? '1' : '0');
-    btn.style.background  = on ? '#1A3A8F' : '#fff';
-    btn.style.color       = on ? '#fff'    : '#667085';
-    btn.style.border      = on ? '1.5px solid #1A3A8F' : '1.5px solid #E4E8F0';
+    btn.style.background  = on ? '#1A3A8F' : 'var(--card)';
+    btn.style.color       = on ? '#fff'    : 'var(--text)';
+    btn.style.border      = on ? '1.5px solid #1A3A8F' : '1.5px solid var(--border)';
   };
 
   window._cpCM = function(btn) {
@@ -2195,9 +2195,9 @@
     if (!wrap) return;
     [].forEach.call(wrap.querySelectorAll('button[data-cm]'), function(b) {
       b.setAttribute('data-sel', '0');
-      b.style.background = '#fff';
-      b.style.color      = '#667085';
-      b.style.border     = '1.5px solid #E4E8F0';
+      b.style.background = 'var(--card)';
+      b.style.color      = 'var(--text)';
+      b.style.border     = '1.5px solid var(--border)';
     });
     btn.setAttribute('data-sel', '1');
     btn.style.background = '#1A3A8F';
@@ -2212,7 +2212,7 @@
     var val = btn.getAttribute('data-val');
     var already = hid && hid.value === val;
     [].forEach.call(wrap.querySelectorAll('button[data-val]'), function(b) {
-      b.style.background = '#fff'; b.style.color = '#667085'; b.style.border = '1.5px solid #E4E8F0';
+      b.style.background = 'var(--card)'; b.style.color = 'var(--text)'; b.style.border = '1.5px solid var(--border)';
     });
     if (already) { if (hid) hid.value = ''; return; }
     btn.style.background = '#1A3A8F'; btn.style.color = '#fff'; btn.style.border = '1.5px solid #1A3A8F';
@@ -2224,7 +2224,7 @@
     return '<div data-target="' + target + '" style="display:flex;flex-wrap:wrap;gap:8px">'
       + options.map(function(o) {
         var v = Array.isArray(o) ? o[0] : o, t = Array.isArray(o) ? o[1] : o, sel = current === v;
-        return '<button type="button" onclick="_cpPick(this)" data-val="' + H.escHtml(v) + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (sel ? '#1A3A8F' : '#fff') + ';color:' + (sel ? '#fff' : '#667085') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : '#E4E8F0') + '">' + H.escHtml(t) + '</button>';
+        return '<button type="button" onclick="_cpPick(this)" data-val="' + H.escHtml(v) + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--text)') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + '">' + H.escHtml(t) + '</button>';
       }).join('')
       + '</div><input type="hidden" id="' + target + '" value="' + H.escHtml(current || '') + '">';
   }
@@ -2250,7 +2250,7 @@
     var ZW = H._ZW_CITIES || [];
     var expLevels = [['entry','Entry Level (0-2 yrs)'],['mid','3-5 Years'],['senior','5-10 Years'],['expert','10+ Years']];
     var on = u.openToWork ? '1' : '0';
-    var togBg   = u.openToWork ? '#22c55e' : '#E4E8F0';
+    var togBg   = u.openToWork ? '#22c55e' : 'var(--border)';
     var togLeft = u.openToWork ? '23px' : '3px';
     var existingSkills = (u.skills || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
     var jobTypesList = ['Full-Time','Part-Time','Contract','Casual / Day Labor','Remote'];
@@ -2263,7 +2263,7 @@
     var waCCOptions = [['263','ZW +263'],['27','ZA +27'],['267','BW +267'],['260','ZM +260'],['255','TZ +255'],['254','KE +254'],['234','NG +234'],['44','GB +44'],['1','US +1']];
     var cvFileName = H._cpResumeFileName || u.cvFileName || '';
 
-    var jt_off = '1.5px solid #E4E8F0';
+    var jt_off = '1.5px solid var(--border)';
     var jt_on  = '1.5px solid #1A3A8F';
 
     return '<div class="page active">'
@@ -2275,9 +2275,9 @@
       + '<div style="padding:0 14px 100px">'
 
       // ── Open to Work toggle ──
-      + '<div style="margin-bottom:16px;background:#fff;border-radius:12px;padding:16px;border:1px solid #E4E8F0;display:flex;align-items:center;justify-content:space-between">'
-      + '<div><div style="font-size:15px;font-weight:700;color:var(--text)">Open to Work</div><div style="font-size:12px;color:#667085;margin-top:2px">Appear in employer searches</div></div>'
-      + '<div id="otwTog" onclick="var o=this.dataset.on===\'1\'?\'0\':\'1\';this.dataset.on=o;this.style.background=o===\'1\'?\'#22c55e\':\'#E4E8F0\';this.querySelector(\'div\').style.left=o===\'1\'?\'23px\':\'3px\'" data-on="' + on + '" style="width:46px;height:26px;border-radius:13px;background:' + togBg + ';position:relative;cursor:pointer;transition:background .2s;flex-shrink:0">'
+      + '<div style="margin-bottom:16px;background:var(--card);border-radius:12px;padding:16px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">'
+      + '<div><div style="font-size:15px;font-weight:700;color:var(--text)">Open to Work</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Appear in employer searches</div></div>'
+      + '<div id="otwTog" onclick="var o=this.dataset.on===\'1\'?\'0\':\'1\';this.dataset.on=o;this.style.background=o===\'1\'?\'#22c55e\':\'var(--border)\';this.querySelector(\'div\').style.left=o===\'1\'?\'23px\':\'3px\'" data-on="' + on + '" style="width:46px;height:26px;border-radius:13px;background:' + togBg + ';position:relative;cursor:pointer;transition:background .2s;flex-shrink:0">'
       + '<div style="position:absolute;top:3px;left:' + togLeft + ';width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div></div>'
       + '</div>'
 
@@ -2304,11 +2304,11 @@
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>', 'Professional Background')
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Bio / About Me</label>'
       + '<textarea id="cpBio" maxlength="300" placeholder="Tell employers a bit about yourself…" style="' + inStyle + 'height:90px;resize:vertical">' + H.escHtml(u.bio || '') + '</textarea>'
-      + '<div style="text-align:right;font-size:11px;color:#667085;margin-top:3px"><span id="cpBioCount">' + (u.bio || '').length + '</span>/300</div></div>'
+      + '<div style="text-align:right;font-size:11px;color:var(--sub);margin-top:3px"><span id="cpBioCount">' + (u.bio || '').length + '</span>/300</div></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Cover Letter <span style="font-weight:400;text-transform:none">(optional)</span></label>'
       + '<div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.5">A short letter to employers, e.g. <em>“Dear Hiring Manager, I am writing to express my interest…”</em>. This shows as the Description on your profile.</div>'
       + '<textarea id="cpCover" maxlength="2000" placeholder="Dear Hiring Manager,&#10;&#10;I am writing to express my strong interest in…" style="' + inStyle + 'height:150px;resize:vertical;line-height:1.6">' + H.escHtml((u.cv && u.cv.coverLetter) || '') + '</textarea>'
-      + '<div style="text-align:right;font-size:11px;color:#667085;margin-top:3px"><span id="cpCoverCount">' + (((u.cv && u.cv.coverLetter) || '').length) + '</span>/2000</div></div>'
+      + '<div style="text-align:right;font-size:11px;color:var(--sub);margin-top:3px"><span id="cpCoverCount">' + (((u.cv && u.cv.coverLetter) || '').length) + '</span>/2000</div></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Skills</label>'
       + '<div id="cpSkillsChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' + _cpRenderSkillChips(existingSkills) + '</div>'
       + '<input id="cpSkillsInput" placeholder="Type a skill and press comma or Enter…" style="' + inStyle + '">'
@@ -2329,7 +2329,7 @@
       + '<div id="cpJTWrap" style="display:flex;flex-wrap:wrap;gap:8px">'
       + jobTypesList.map(function(t) {
           var sel = selectedJobTypes.indexOf(t) !== -1;
-          return '<button type="button" onclick="_cpJT(this)" data-jt="' + H.escHtml(t) + '" data-sel="' + (sel ? '1' : '0') + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (sel ? '#1A3A8F' : '#fff') + ';color:' + (sel ? '#fff' : '#667085') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : '#E4E8F0') + '">' + H.escHtml(t) + '</button>';
+          return '<button type="button" onclick="_cpJT(this)" data-jt="' + H.escHtml(t) + '" data-sel="' + (sel ? '1' : '0') + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--text)') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + '">' + H.escHtml(t) + '</button>';
         }).join('')
       + '</div></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Notice Period</label>'
@@ -2343,12 +2343,12 @@
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg>', 'Contact & Reach')
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">WhatsApp Number</label>'
       + '<div style="display:flex;gap:8px">'
-      + '<select id="cpWaCC" style="padding:13px;border:1.5px solid #E4E8F0;border-radius:12px;font-size:14px;background:#fff;color:var(--text);outline:none;flex-shrink:0;font-family:inherit">'
+      + '<select id="cpWaCC" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;flex-shrink:0;font-family:inherit">'
       + waCCOptions.map(function(o){ return '<option value="' + o[0] + '"' + (waCC === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('')
       + '</select>'
       + '<input id="cpWaNum" type="tel" placeholder="712 345 678" value="' + H.escHtml(waNum) + '" style="' + inStyle + '">'
       + '</div>'
-      + '<div style="font-size:11px;color:#667085;margin-top:5px">Employers can message you directly on WhatsApp</div>'
+      + '<div style="font-size:11px;color:var(--sub);margin-top:5px">Employers can message you directly on WhatsApp</div>'
       + '</div>'
       + '<div style="margin-bottom:14px;display:flex;align-items:center;gap:8px">'
       + '<input type="checkbox" id="cpSamePhone"' + (samePhone ? ' checked' : '') + ' onchange="_cpSamePhone(this)" style="width:16px;height:16px;cursor:pointer">'
@@ -2364,7 +2364,7 @@
           ['<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Both', 'both']
         ].map(function(cm) {
           var sel = contactMethod === cm[1];
-          return '<button type="button" onclick="_cpCM(this)" data-cm="' + cm[1] + '" data-sel="' + (sel ? '1' : '0') + '" style="flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;background:' + (sel ? '#1A3A8F' : '#fff') + ';color:' + (sel ? '#fff' : '#667085') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : '#E4E8F0') + '">' + cm[0] + '</button>';
+          return '<button type="button" onclick="_cpCM(this)" data-cm="' + cm[1] + '" data-sel="' + (sel ? '1' : '0') + '" style="flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--text)') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + '">' + cm[0] + '</button>';
         }).join('')
       + '</div></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Best Time to Contact</label>'
@@ -2388,7 +2388,7 @@
       + _cpSectionEnd()
 
       + '</div>'
-      + '<div style="position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #E4E8F0;z-index:200">'
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
       + '<button id="cpSaveBtn" onclick="H._saveCandidateProfile()" style="width:100%;padding:15px;background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Save Profile</button>'
       + '</div></div>';
   };

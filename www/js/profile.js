@@ -772,9 +772,9 @@
     const hasProfile = !!(headline || bio || skills.length || exp.length || edu.length);
 
     const sec = (title, icon, content) => `
-      <div style="background:#fff;border-radius:16px;margin-bottom:12px;border:1px solid #E4E8F0;overflow:hidden">
-        <div style="padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #F0F4FF">
-          <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.5px">${icon}${title}</div>
+      <div style="background:var(--card);border-radius:16px;margin-bottom:12px;border:1px solid var(--border);overflow:hidden">
+        <div style="padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--blue-text);text-transform:uppercase;letter-spacing:.5px">${icon}${title}</div>
           ${title==='Experience'?`<button onclick="H._cvProfile.addExp()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>`:''}
           ${title==='Education'?`<button onclick="H._cvProfile.addEdu()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>`:''}
         </div>
@@ -782,54 +782,54 @@
       </div>`;
 
     const expHtml = exp.length ? exp.map((e, i) => `
-      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #F0F4FF">
+      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border)">
         <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(e.title||'')}</div>
-        <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.company||'')}</div>
-        <div style="font-size:12px;color:#667085;margin-top:2px">${H.escHtml(e.duration||'')}${e.current?' · Current':''}</div>
+        <div style="font-size:13px;color:var(--blue-text);font-weight:600;margin-top:2px">${H.escHtml(e.company||'')}</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:2px">${H.escHtml(e.duration||'')}${e.current?' · Current':''}</div>
         ${e.desc?`<div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.55">${H.escHtml(e.desc)}</div>`:''}
         <div style="display:flex;gap:8px;margin-top:8px">
           <button onclick="H._cvProfile.editExp(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
           <button onclick="H._cvProfile.delExp(${i})"  style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
         </div>
       </div>`).join('')
-      : '<div style="color:#667085;font-size:13px">No experience added yet</div>';
+      : '<div style="color:var(--sub);font-size:13px">No experience added yet</div>';
 
     const eduHtml = edu.length ? edu.map((e, i) => `
-      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #F0F4FF">
+      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border)">
         <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(e.degree||'')}</div>
-        <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.school||'')}</div>
-        <div style="font-size:12px;color:#667085;margin-top:2px">${H.escHtml(e.year||'')}</div>
+        <div style="font-size:13px;color:var(--blue-text);font-weight:600;margin-top:2px">${H.escHtml(e.school||'')}</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:2px">${H.escHtml(e.year||'')}</div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button onclick="H._cvProfile.editEdu(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
           <button onclick="H._cvProfile.delEdu(${i})"  style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
         </div>
       </div>`).join('')
-      : '<div style="color:#667085;font-size:13px">No education added yet</div>';
+      : '<div style="color:var(--sub);font-size:13px">No education added yet</div>';
 
     const skillsHtml = skills.length
       ? skills.map(s => `<span style="display:inline-block;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">${H.escHtml(s)}</span>`).join('')
-      : '<div style="color:#667085;font-size:13px">No skills added yet</div>';
+      : '<div style="color:var(--sub);font-size:13px">No skills added yet</div>';
 
     const jtHtml = jobTypes.length
       ? jobTypes.map(t => `<span style="display:inline-block;background:#F0FDF4;color:#15803d;border:1px solid #BBF7D0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">${H.escHtml(t)}</span>`).join('')
-      : '<div style="color:#667085;font-size:13px">Not set</div>';
+      : '<div style="color:var(--sub);font-size:13px">Not set</div>';
 
     const contactHtml = (() => {
       const rows = [];
       if (u.whatsappFull || u.whatsappNum) rows.push(`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span style="font-size:13px;color:var(--text)">+${H.escHtml(u.whatsappFull||u.whatsappNum||'')}</span></div>`);
-      if (u.contactMethod) rows.push(`<div style="font-size:13px;color:#667085">Preferred: <strong style="color:var(--text)">${H.escHtml(u.contactMethod)}</strong></div>`);
-      if (u.linkedinUrl)   rows.push(`<div style="margin-top:6px;font-size:13px"><a href="${H.escHtml(u.linkedinUrl)}" target="_blank" style="color:#1A3A8F;font-weight:600">LinkedIn Profile</a></div>`);
-      if (u.websiteUrl)    rows.push(`<div style="margin-top:4px;font-size:13px"><a href="${H.escHtml(u.websiteUrl)}" target="_blank" style="color:#1A3A8F;font-weight:600">Portfolio / Website</a></div>`);
-      return rows.length ? rows.join('') : '<div style="color:#667085;font-size:13px">No contact info added yet</div>';
+      if (u.contactMethod) rows.push(`<div style="font-size:13px;color:var(--sub)">Preferred: <strong style="color:var(--text)">${H.escHtml(u.contactMethod)}</strong></div>`);
+      if (u.linkedinUrl)   rows.push(`<div style="margin-top:6px;font-size:13px"><a href="${H.escHtml(u.linkedinUrl)}" target="_blank" style="color:var(--blue-text);font-weight:600">LinkedIn Profile</a></div>`);
+      if (u.websiteUrl)    rows.push(`<div style="margin-top:4px;font-size:13px"><a href="${H.escHtml(u.websiteUrl)}" target="_blank" style="color:var(--blue-text);font-weight:600">Portfolio / Website</a></div>`);
+      return rows.length ? rows.join('') : '<div style="color:var(--sub);font-size:13px">No contact info added yet</div>';
     })();
 
     const resumeHtml = (u.cvFileUrl || u.cvFileName)
       ? `<div style="display:flex;align-items:center;gap:10px;background:#F8FAFF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 14px">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${H.escHtml(u.cvFileName||'Resume')}</div></div>
-          ${u.cvFileUrl?`<a href="${H.escHtml(u.cvFileUrl)}" target="_blank" style="font-size:12px;font-weight:700;color:#1A3A8F;text-decoration:none;flex-shrink:0">View</a>`:''}
+          ${u.cvFileUrl?`<a href="${H.escHtml(u.cvFileUrl)}" target="_blank" style="font-size:12px;font-weight:700;color:var(--blue-text);text-decoration:none;flex-shrink:0">View</a>`:''}
         </div>`
-      : '<div style="color:#667085;font-size:13px">No resume uploaded yet</div>';
+      : '<div style="color:var(--sub);font-size:13px">No resume uploaded yet</div>';
 
     if (!hasProfile) {
       return `<div class="page active">
@@ -839,7 +839,7 @@
             <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#1A3A8F" stroke-width="1.5"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
           </div>
           <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">You don't have a job profile yet</div>
-          <div style="font-size:13px;color:#667085;line-height:1.6;margin-bottom:24px">Create your profile so employers in Hire Talent can find and contact you.</div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">Create your profile so employers in Hire Talent can find and contact you.</div>
           <button onclick="H.openInner('CandidateProfile')" style="width:100%;max-width:280px;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Create Job Profile</button>
         </div>
       </div>`;
@@ -869,8 +869,8 @@
         ${sec('Skills','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> ', skillsHtml)}
         ${jobTypes.length?sec('Job Type / Availability','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> ', jtHtml):''}
         ${(cv.noticePeriod||cv.educationLevel)?sec('Availability & Education','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ',
-          (cv.noticePeriod?`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#667085">Notice Period</span><span style="font-weight:700;color:var(--text)">${H.escHtml(cv.noticePeriod)}</span></div>`:'')
-          +(cv.educationLevel?`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-top:1px solid #F0F4FF"><span style="color:#667085">Education</span><span style="font-weight:700;color:var(--text)">${H.escHtml(cv.educationLevel)}</span></div>`:'')):''}
+          (cv.noticePeriod?`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:var(--sub)">Notice Period</span><span style="font-weight:700;color:var(--text)">${H.escHtml(cv.noticePeriod)}</span></div>`:'')
+          +(cv.educationLevel?`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-top:1px solid #F0F4FF"><span style="color:var(--sub)">Education</span><span style="font-weight:700;color:var(--text)">${H.escHtml(cv.educationLevel)}</span></div>`:'')):''}
         ${salary?sec('Expected Salary','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> ',`<div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(String(salary))}</div>`):''}
         ${sec('Work Experience','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> ', expHtml)}
         ${sec('Education','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> ', eduHtml)}
@@ -880,7 +880,7 @@
       </div>
 
       <!-- Fixed bottom Edit button -->
-      <div style="position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #E4E8F0;z-index:200">
+      <div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">
         <button onclick="H.openInner('CandidateProfile')" style="width:100%;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           Edit Profile
