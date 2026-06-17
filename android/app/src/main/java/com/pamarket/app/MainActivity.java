@@ -35,9 +35,9 @@ public class MainActivity extends BridgeActivity {
         // behind the HTML splash.
         webView.setBackgroundColor(Color.parseColor("#1A3A8F"));
 
-        // ── Edge-to-edge handling (fixes status/nav-bar overlap on Android 15) ──
-        // Android 15 (targetSDK 35) forces edge-to-edge: the WebView draws BEHIND
-        // the status and navigation bars, and android:statusBarColor is ignored.
+        // ── Edge-to-edge handling (fixes status/nav-bar overlap on Android 15/16) ──
+        // Android 15+ (targetSDK 35/36) forces edge-to-edge: the WebView draws
+        // BEHIND the status and navigation bars, and android:statusBarColor is ignored.
         // CSS env(safe-area-inset-*) is unreliable here — on Android it only
         // reports display cutouts (0 on most phones, e.g. this Redmi), so headers
         // would render under the system clock. We opt into edge-to-edge explicitly
