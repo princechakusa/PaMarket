@@ -760,6 +760,22 @@
 
   pages.Chat_after = function () {
     if (window._messagesPoll) { clearInterval(window._messagesPoll); window._messagesPoll = null; }
+    // Tear down keyboard/viewport listeners from a PREVIOUS Chat mount before we
+    // wire new ones. Without this they accumulate on every chat open, so over a
+    // session N handlers fire on each keyboard show/hide — a real source of
+    // Android jank and eventual freezing. The input focus/blur listeners die
+    // with the old DOM (input is re-created each render), so only these leak.
+    if (window.visualViewport && window._chatVPHandler) {
+      window.visualViewport.removeEventListener('resize', window._chatVPHandler);
+      window.visualViewport.removeEventListener('scroll', window._chatVPHandler);
+      window._chatVPHandler = null;
+    }
+    if (window._chatKBResizeHandler) {
+      window.removeEventListener('resize', window._chatKBResizeHandler);
+      window._chatKBResizeHandler = null;
+    }
+    if (window._chatKBShow && typeof window._chatKBShow.remove === 'function') { try { window._chatKBShow.remove(); } catch (e) {} window._chatKBShow = null; }
+    if (window._chatKBHide && typeof window._chatKBHide.remove === 'function') { try { window._chatKBHide.remove(); } catch (e) {} window._chatKBHide = null; }
     const t = document.getElementById('chatThread');
     if (t) t.scrollTop = t.scrollHeight;
     attachReplySwipe();

@@ -99,6 +99,7 @@
     const p1 = sb.from('profiles')
       .select('id,name,email,phone,verification_pending,id_type,verified,verified_at,avatar_url,role')
       .or('verification_pending.eq.true,verified.eq.true')
+      .limit(1000)
       .then(function (res) {
         const data = res && res.data;
         if (!data || !data.length) return;
@@ -134,6 +135,8 @@
 
     const p2 = sb.from('verifications')
       .select('user_id,id_doc,selfie,status,submitted_at')
+      .order('submitted_at', { ascending: false })
+      .limit(500)
       .then(function (res) {
         const data = res && res.data;
         if (!data) return;
