@@ -2058,13 +2058,24 @@ window.H = {
       });
     };
 
-    // Benign rejections we never want to nag the user about.
+    // Benign rejections we never want to nag the user about. These are still
+    // logged to error_logs (for diagnosis) — we just don't slam a red toast over
+    // an unrelated screen. They're background noise the user can't act on:
+    // network flaps on mobile, realtime reconnects, image loads, browser quirks,
+    // and the conversations.id uuid mismatch we resolve at the DB layer.
     function isBenignError(err) {
       if (!err) return true;
       var name = err.name || '';
       var msg  = String(err.message || err);
       if (name === 'AbortError') return true;
-      if (/Load failed|NetworkError|Failed to fetch/i.test(msg) && !navigator.onLine) return true; // offline already handled elsewhere
+      // Network blips — on mobile the radio drops constantly; navigator.onLine
+      // is unreliable, so treat these as benign regardless of its value.
+      if (/Load failed|NetworkError|Failed to fetch|network ?error|ERR_NETWORK|ERR_INTERNET|fetch failed/i.test(msg)) return true;
+      // Supabase/Postgres transient sync errors (e.g. the conversations.id
+      // uuid↔text mismatch) — fixed at the DB, never actionable by the user.
+      if (/invalid input syntax for type uuid|JWT expired|PGRST|supabase|realtime/i.test(msg)) return true;
+      // Browser/runtime noise that never reflects a real app failure.
+      if (/ResizeObserver loop|Script error\.?$|^Object$|^undefined$|^null$/i.test(msg)) return true;
       return false;
     }
 
