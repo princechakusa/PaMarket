@@ -1254,9 +1254,52 @@ window.H = {
       // Keep local non-active listings (pending, draft) that haven't synced yet.
       const nonActive=(H.state.listings||[]).filter(l=>l.status!=='active');
       H.state.listings=[...cloud,...nonActive];
+
+      // Backfill seller verified status for EVERY listing seller so the blue
+      // verified badge shows consistently — not just for sellers we've chatted
+      // with. The listings table doesn't carry the seller's verified flag, so we
+      // resolve it from profiles in one batched query and set it authoritatively
+      // (covers both newly-verified and revoked accounts). Only re-render the
+      // current listing page when something actually changed, so it converges
+      // (the next fetch finds nothing changed → no re-render, no loop).
+      let verifiedChanged = false;
+      try {
+        const sellerIds = [...new Set(cloud.map(l => l.sellerId).filter(Boolean))];
+        if (sellerIds.length) {
+          const { data: sps } = await window.supabase
+            .from('profiles').select('id,name,avatar,verified').in('id', sellerIds);
+          if (Array.isArray(sps) && sps.length) {
+            H.state.users = H.state.users || [];
+            sps.forEach(p => {
+              const su = H.state.users.find(x => x.id === p.id);
+              if (su) {
+                if (su.verified !== !!p.verified) { su.verified = !!p.verified; verifiedChanged = true; }
+                if (p.name && !su.name)     su.name = p.name;
+                if (p.avatar && !su.avatar) su.avatar = p.avatar;
+              } else {
+                H.state.users.push({ id: p.id, name: p.name || '', phone: '', email: '',
+                  avatar: p.avatar || null, verified: !!p.verified, role: 'user',
+                  status: 'active', joinedAt: Date.now() });
+                if (p.verified) verifiedChanged = true;
+              }
+            });
+          }
+        }
+      } catch(e) { /* verified backfill is best-effort */ }
+
       H.saveState();
       // Notify on new listings matching the user's saved searches.
       if (typeof H._checkSavedSearchAlerts === 'function') { try { H._checkSavedSearchAlerts(); } catch(e){} }
+
+      // Refresh the visible page so freshly-resolved badges appear. Guarded by
+      // verifiedChanged so it can't loop (a re-render re-runs this fetch, but the
+      // second pass finds verified already correct → verifiedChanged=false).
+      if (verifiedChanged) {
+        const p = H.currentPageName;
+        if (p === 'Home' || p === 'Browse' || p === 'Detail' || p === 'CategoryView') {
+          try { H.renderPage(p, H.currentPageParams); } catch(e){}
+        }
+      }
     } catch(e){ console.warn('fetchListingsFromSupabase:',e.message); }
   },
 
@@ -1590,7 +1633,7 @@ window.H = {
               // Update entry — especially fill in the name if we now have one
               if (p.name && !existing.name) { existing.name = p.name; changed = true; }
               if (p.avatar && !existing.avatar) { existing.avatar = p.avatar; changed = true; }
-              if (p.verified && !existing.verified) { existing.verified = true; changed = true; }
+              if (existing.verified !== !!p.verified) { existing.verified = !!p.verified; changed = true; }
             } else {
               (H.state.users = H.state.users||[]).push({
                 id: p.id, name: p.name||'', phone: p.phone||'',
