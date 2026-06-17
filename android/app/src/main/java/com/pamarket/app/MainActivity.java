@@ -2,8 +2,14 @@ package com.pamarket.app;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.webkit.WebView;
 
 import androidx.core.splashscreen.SplashScreen;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.BridgeActivity;
 
@@ -23,12 +29,43 @@ public class MainActivity extends BridgeActivity {
 
         splashScreen.setKeepOnScreenCondition(() -> !contentReady);
 
+        final WebView webView = getBridge().getWebView();
+
         // Paint the WebView solid brand blue so nothing white/black leaks through
         // behind the HTML splash.
-        getBridge().getWebView().setBackgroundColor(Color.parseColor("#1A3A8F"));
+        webView.setBackgroundColor(Color.parseColor("#1A3A8F"));
+
+        // ── Edge-to-edge handling (fixes status/nav-bar overlap on Android 15) ──
+        // Android 15 (targetSDK 35) forces edge-to-edge: the WebView draws BEHIND
+        // the status and navigation bars, and android:statusBarColor is ignored.
+        // CSS env(safe-area-inset-*) is unreliable here — on Android it only
+        // reports display cutouts (0 on most phones, e.g. this Redmi), so headers
+        // would render under the system clock. We opt into edge-to-edge explicitly
+        // (identical behaviour on every Android version), keep white status-bar
+        // icons over the navy header, and feed the REAL system-bar insets to CSS
+        // as --safe-top / --safe-bottom so layouts pad correctly everywhere.
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        WindowInsetsControllerCompat ic = WindowCompat.getInsetsController(getWindow(), webView);
+        if (ic != null) ic.setAppearanceLightStatusBars(false); // white icons on navy
+
+        final float density = getResources().getDisplayMetrics().density;
+        ViewCompat.setOnApplyWindowInsetsListener(webView, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            int top = Math.round(bars.top / density);
+            int bottom = Math.round(bars.bottom / density);
+            final String js = "(function(){var d=document.documentElement;if(!d)return;" +
+                "d.style.setProperty('--safe-top','" + top + "px');" +
+                "d.style.setProperty('--safe-bottom','" + bottom + "px');})();";
+            v.post(() -> webView.evaluateJavascript(js, null));
+            return insets;
+        });
 
         // Give the local HTML splash time to paint, then release the system splash
-        // straight into it — blue-to-blue, no visible handoff.
-        getBridge().getWebView().postDelayed(() -> contentReady = true, 600);
+        // straight into it — blue-to-blue, no visible handoff — and re-apply insets
+        // now that the HTML (and :root vars) are loaded.
+        webView.postDelayed(() -> {
+            contentReady = true;
+            ViewCompat.requestApplyInsets(webView);
+        }, 600);
     }
 }

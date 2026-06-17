@@ -6,6 +6,11 @@
 
 /* ── TOKENS ─────────────────────────────────────────────────── */
 :root {
+  /* Safe-area insets. On iOS/PWA these resolve from env(); on Android the native
+     MainActivity overrides --safe-top/--safe-bottom with the REAL measured
+     system-bar insets (env() only reports notch cutouts on Android = unreliable). */
+  --safe-top:     env(safe-area-inset-top, 0px);
+  --safe-bottom:  env(safe-area-inset-bottom, 0px);
   --blue:         #1A3A8F;
   --blue-text:    #1A3A8F;  /* navy accent text on card surfaces; lightens in dark mode for contrast */
   --blue-mid:     #2550C0;
@@ -86,10 +91,10 @@ img { display: block; max-width: 100%; }
 a { color: var(--blue); text-decoration: none; }
 
 /* ── APP SHELL ───────────────────────────────────────────────── */
-#app { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg); padding-top: env(safe-area-inset-top); }
+#app { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg); padding-top: var(--safe-top); }
 /* Brand-navy strip behind the system status bar (clock/battery) so the white
    status icons always sit on navy — consistent in light AND dark mode. */
-#app::before { content: ''; position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top); background: #1A3A8F; z-index: 9990; pointer-events: none; }
+#app::before { content: ''; position: fixed; top: 0; left: 0; right: 0; height: var(--safe-top); background: #1A3A8F; z-index: 9990; pointer-events: none; }
 .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
 .scroll-area::-webkit-scrollbar { display: none; }
 .page { display: none; min-height: 100%; }
@@ -647,7 +652,7 @@ select.fi {
 .msg-rr.read { color: var(--blue); }
 .msg-badge { min-width: 20px; height: 20px; border-radius: 11px; background: var(--blue); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0; }
 .msg-unread-dot { width: 9px; height: 9px; background: var(--blue); border-radius: 50%; flex-shrink: 0; }
-.chat-header { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 6px 12px; padding-top: calc(6px + env(safe-area-inset-top, 0px)); background: var(--blue); color: #fff; }
+.chat-header { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 6px 12px; padding-top: calc(6px + var(--safe-top)); background: var(--blue); color: #fff; }
 .chat-hdr-back { background: none; border: none; color: #fff; cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 2px; }
 .chat-hdr-back svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2.5; }
 .chat-hdr-av { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; overflow: hidden; border: 1.5px solid rgba(255,255,255,.3); cursor: pointer; }
@@ -666,7 +671,7 @@ select.fi {
 .chat-bubble.them { background: var(--card); color: var(--text-primary); border-bottom-left-radius: 5px; border: .5px solid var(--border); }
 .chat-bubble-meta { font-size: 10px; opacity: .6; margin-top: 4px; }
 .chat-msg-row.me .chat-bubble-meta { text-align: right; }
-.chat-input-bar { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 10px 14px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); background: var(--card); border-top: .5px solid var(--border); }
+.chat-input-bar { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 10px 14px; padding-bottom: calc(10px + var(--safe-bottom)); background: var(--card); border-top: .5px solid var(--border); }
 .chat-input-bar input { flex: 1; min-width: 0; border: 1.5px solid var(--border); border-radius: var(--r-pill); padding: 11px 16px; font-size: 14px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; outline: none; background: var(--bg); color: var(--text-primary); transition: border-color .2s; min-height: 44px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .chat-input-bar input:focus { border-color: var(--blue); }
 .chat-send { background: var(--blue); color: #fff; border: none; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform .15s, opacity .15s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
@@ -850,7 +855,7 @@ select.fi {
 .voice-btn:active { color: var(--blue); }
 
 /* ── AUTH ────────────────────────────────────────────────────── */
-.auth-wrap { flex: 1; display: flex; flex-direction: column; background: var(--blue); color: #fff; padding: env(safe-area-inset-top) 20px 20px; overflow-y: auto; }
+.auth-wrap { flex: 1; display: flex; flex-direction: column; background: var(--blue); color: #fff; padding: var(--safe-top) 20px 20px; overflow-y: auto; }
 .auth-logo { font-size: 52px; font-weight: 900; letter-spacing: -1.5px; margin-top: 64px; text-align: center; color: #fff; line-height: 1; }
 .auth-logo span { color: var(--gold); }
 .auth-logo em { color: var(--gold); font-style: normal; }
@@ -1147,7 +1152,7 @@ select.fi {
 .account-row-badge + svg { margin-left: 0; }
 
 /* ── ACTION SHEET ────────────────────────────────────────────── */
-.action-sheet { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-radius: var(--r-xl) var(--r-xl) 0 0; padding: 22px 16px calc(22px + env(safe-area-inset-bottom)); z-index: 9100; transform: translateY(100%); transition: transform .28s var(--ease); box-shadow: 0 -8px 30px rgba(16,24,40,.12); border-top: .5px solid var(--border); }
+.action-sheet { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-radius: var(--r-xl) var(--r-xl) 0 0; padding: 22px 16px calc(22px + var(--safe-bottom)); z-index: 9100; transform: translateY(100%); transition: transform .28s var(--ease); box-shadow: 0 -8px 30px rgba(16,24,40,.12); border-top: .5px solid var(--border); }
 .action-sheet.open { transform: translateY(0); }
 .sheet-bg { position: fixed; inset: 0; background: rgba(16,24,40,.4); z-index: 9050; display: none; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
 .sheet-bg.open { display: block; }
@@ -1166,13 +1171,13 @@ select.fi {
 /* ── DOC SHEET (Terms / Privacy) ────────────────────────────── */
 #docSheet { position: fixed; inset: 0; background: var(--card); z-index: 10000; display: none; }
 #docSheet.open { display: block; }
-#docSheetBar { position: absolute; top: 0; left: 0; right: 0; height: calc(54px + env(safe-area-inset-top, 0px)); display: flex; align-items: flex-end; gap: 12px; padding: 0 16px 8px; padding-top: env(safe-area-inset-top, 0px); border-bottom: 1px solid var(--border); background: var(--card); z-index: 1; }
+#docSheetBar { position: absolute; top: 0; left: 0; right: 0; height: calc(54px + var(--safe-top)); display: flex; align-items: flex-end; gap: 12px; padding: 0 16px 8px; padding-top: var(--safe-top); border-bottom: 1px solid var(--border); background: var(--card); z-index: 1; }
 #docSheetClose { background: none; border: none; cursor: pointer; color: var(--text-primary); padding: 8px; display: flex; align-items: center; flex-shrink: 0; min-width: 44px; min-height: 44px; }
 #docSheetTitle { font-size: 16px; font-weight: 700; color: var(--text-primary); }
-#docSheetBody { position: absolute; top: calc(54px + env(safe-area-inset-top, 0px)); bottom: 0; left: 0; right: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
+#docSheetBody { position: absolute; top: calc(54px + var(--safe-top)); bottom: 0; left: 0; right: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
 
 /* ── TOAST ───────────────────────────────────────────────────── */
-.toast { position: fixed; bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 16px); left: 50%; transform: translateX(-50%) translateY(10px); background: var(--text-primary); color: #fff; font-size: 13px; padding: 11px 22px; border-radius: var(--r-pill); opacity: 0; transition: all .3s var(--ease); pointer-events: none; z-index: 9999; font-weight: 600; box-shadow: var(--shadow-lg); max-width: 320px; text-align: center; white-space: nowrap; }
+.toast { position: fixed; bottom: calc(64px + var(--safe-bottom) + 16px); left: 50%; transform: translateX(-50%) translateY(10px); background: var(--text-primary); color: #fff; font-size: 13px; padding: 11px 22px; border-radius: var(--r-pill); opacity: 0; transition: all .3s var(--ease); pointer-events: none; z-index: 9999; font-weight: 600; box-shadow: var(--shadow-lg); max-width: 320px; text-align: center; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.toast-err { background: #c0392b; color: #fff; white-space: normal; border-radius: 14px; line-height: 1.35; }
 /* In dark mode --text-primary is near-white, so the default rule above would
@@ -1334,7 +1339,7 @@ select.fi {
 /* ── ACCESSIBILITY & SAFE AREA ───────────────────────────────── */
 :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 4px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
-.bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px); height: calc(64px + env(safe-area-inset-bottom, 0px)); }
+.bottom-nav { padding-bottom: var(--safe-bottom); height: calc(64px + var(--safe-bottom)); }
 
 /* ── TEXTURE BACKGROUNDS (listing placeholders) ──────────────── */
 .texture-plaster { background: linear-gradient(160deg, #D8D4CC 0%, #C8C4BC 100%); }
