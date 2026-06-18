@@ -265,3 +265,6 @@ create policy "business_qr: owner rw"
   on public.business_quick_replies for all
   using (exists (select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid()))
   with check (exists (select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid()));
+
+-- ── MODULE 9: featured/boosted listings ────────────────────
+alter table public.listings add column if not exists featured_until timestamptz;

@@ -694,6 +694,7 @@ window.H = {
     if(typeof H.syncApplications==='function') H.syncApplications();
     if(typeof H.fetchMyBusinesses==='function') H.fetchMyBusinesses();
     if(typeof H.processSubscriptionExpiry==='function') H.processSubscriptionExpiry();
+    if(typeof H.processFeaturedExpiry==='function') H.processFeaturedExpiry();
     if(typeof H.syncNotifications==='function') H.syncNotifications();
     if(typeof H._setupRealtimeNotifs==='function') H._setupRealtimeNotifs();
     if(typeof H.startRealtime==='function') H.startRealtime();

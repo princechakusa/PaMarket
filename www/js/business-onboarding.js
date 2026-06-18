@@ -430,6 +430,7 @@
 
         <button class="btn-pri" style="width:100%;margin-bottom:10px" onclick="H._bizProfile.openEdit('${b.id}')">Edit Profile</button>
         <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizListings.open('${b.id}')">Listings</button>
+        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizFeat.open('${b.id}')">Featured &amp; Boost</button>
         <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizLeads.open('${b.id}')">Leads</button>
         <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizMsg.open('${b.id}')">Quick Replies</button>
         <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizVerify.open('${b.id}')">Get Verified${(b.verificationLevel||0) >= 2 ? ' ' + H.verifiedBadge(15) : ''}</button>
