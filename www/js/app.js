@@ -168,7 +168,27 @@ window.H = {
           });
         }
         localStorage.setItem(this.KEY, JSON.stringify(safe));
-      } catch(e3) {
+        return;
+      } catch(e3) { /* still too big — prune heavy collections below */ }
+      // Aggressive prune: trim the collections that grow unbounded. Everything
+      // dropped here is re-fetched from the cloud, so the app stays correct.
+      try {
+        if (safe.notifs && typeof safe.notifs === 'object') {
+          Object.keys(safe.notifs).forEach(k => {
+            if (Array.isArray(safe.notifs[k]) && safe.notifs[k].length > 50) safe.notifs[k] = safe.notifs[k].slice(0, 50);
+          });
+        }
+        if (Array.isArray(safe.conversations)) {
+          safe.conversations.forEach(c => { if (Array.isArray(c.messages) && c.messages.length > 30) c.messages = c.messages.slice(-30); });
+        }
+        localStorage.setItem(this.KEY, JSON.stringify(safe));
+        return;
+      } catch(e4) { /* one last shrink */ }
+      try {
+        if (Array.isArray(safe.listings) && safe.listings.length > 60) safe.listings = safe.listings.slice(0, 60);
+        if (Array.isArray(safe.users) && safe.users.length > 200) safe.users = safe.users.slice(0, 200);
+        localStorage.setItem(this.KEY, JSON.stringify(safe));
+      } catch(e5) {
         this.toast('Could not save — please clear some browser storage');
       }
     }

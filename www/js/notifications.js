@@ -292,7 +292,49 @@
   // ── Notification tap navigation ───────────────────────────
   const _openChat = (id) => { if (typeof H.openChat === 'function') H.openChat(id); else H.openInner('Chat', { id }); };
 
-  H._notifNavigate = function (link, type) {
+  function _findNotif(id) {
+    var u = H.currentUser && H.currentUser(); if (!u) return null;
+    var list = (H.state.notifs && H.state.notifs[u.id]) || [];
+    return list.find(function (x) { return x.id === id; }) || null;
+  }
+
+  // Navigational notification types jump straight to a screen. Everything else
+  // (admin broadcasts / info / announcements) opens a detail view so the user can
+  // read the full message and see the shared image.
+  var _NAV_TYPES = { message: 1, sale: 1, boost: 1, verify: 1, review: 1, ban: 1, report: 1 };
+
+  H._closeNotifDetail = function () { var m = document.getElementById('notifDetailModal'); if (m) m.remove(); };
+
+  H._openNotifDetail = function (id) {
+    var n = _findNotif(id); if (!n) return;
+    if (document.getElementById('notifDetailModal')) return;
+    var imgSafe = (n.imageUrl || '').replace(/'/g, "\\'");
+    var img = n.imageUrl
+      ? '<img src="' + escHtml(n.imageUrl) + '" onclick="H.viewImage&&H.viewImage(\'' + imgSafe + '\')" style="width:100%;max-height:260px;object-fit:cover;border-radius:14px;margin-bottom:14px;cursor:zoom-in" onerror="this.style.display=\'none\'">'
+      : '';
+    var openBtn = n.deepLink
+      ? '<button onclick="H._closeNotifDetail();H._notifNavigate(\'' + escHtml(n.deepLink) + '\',\'' + escHtml(n.type || '') + '\')" style="width:100%;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px">Open</button>'
+      : '';
+    var ov = document.createElement('div');
+    ov.id = 'notifDetailModal';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(16,24,40,.55);z-index:9600;display:flex;align-items:center;justify-content:center;padding:22px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)';
+    ov.innerHTML =
+      '<div style="background:var(--card);border-radius:18px;max-width:380px;width:100%;max-height:86vh;overflow-y:auto;padding:18px;font-family:Inter,sans-serif;box-shadow:0 20px 60px rgba(16,24,40,.32)">'
+      + img
+      + '<div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px;line-height:1.3">' + escHtml(n.title || '') + '</div>'
+      + '<div style="font-size:14px;color:var(--text);line-height:1.6;white-space:pre-wrap;margin-bottom:8px">' + escHtml(n.body || '') + '</div>'
+      + '<div style="font-size:11px;color:var(--sub);margin-bottom:16px">' + timeAgo(n.t) + '</div>'
+      + openBtn
+      + '<button onclick="H._closeNotifDetail()" style="width:100%;padding:12px;background:' + (n.deepLink ? 'transparent' : '#1A3A8F') + ';color:' + (n.deepLink ? 'var(--sub)' : '#fff') + ';border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Close</button>'
+      + '</div>';
+    ov.addEventListener('click', function (e) { if (e.target === ov) H._closeNotifDetail(); });
+    document.body.appendChild(ov);
+  };
+
+  H._notifNavigate = function (link, type, id) {
+    // Admin broadcasts / info / announcements → open the detail view (full text +
+    // shared image) instead of bouncing to Home.
+    if (id && !_NAV_TYPES[type]) { H._openNotifDetail(id); return; }
     if (link) {
       // External URL — open in system browser
       if (/^https?:\/\//i.test(link)) {
@@ -362,7 +404,7 @@
           const type = n.type || _inferType(n.title);
           const color = _notifColor(type);
           const safeLink = n.deepLink ? escHtml(n.deepLink) : '';
-          const tapAction = `H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)';H._notifNavigate(${safeLink ? `'${safeLink}'` : 'null'},'${type}');`;
+          const tapAction = `H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)';H._notifNavigate(${safeLink ? `'${safeLink}'` : 'null'},'${type}','${n.id}');`;
           const navHint = type === 'message' ? 'Open Messages ›'
             : type === 'sale' ? 'Open Account ›'
             : n.deepLink ? 'Tap to open ›'
