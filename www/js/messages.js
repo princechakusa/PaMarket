@@ -440,10 +440,10 @@
       + '<div class="chat-typing" id="chatTyping" style="display:none"><div class="chat-row-av">' + otherAvatar + '</div><div class="chat-bubble them chat-typing-bubble"><span></span><span></span><span></span></div></div>'
       + '</div>'
       + '<div class="chat-input-bar">'
-      + '<button class="chat-attach-btn" onclick="H._chat.openAttach()" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
-      + '<button class="chat-offer-btn" onclick="H._chat.makeOffer()" aria-label="Make an offer"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1.5" x2="12" y2="22.5"/><path d="M17 5.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></button>'
-      + '<input id="chatIn" type="text" inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Message…" oninput="H.notifyTyping&&H.notifyTyping()" onblur="H.stopTyping&&H.stopTyping()" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}">'
-      + '<button class="chat-send chat-send-grad" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
+      + '<button class="chat-attach-btn" onmousedown="event.preventDefault()" onclick="H._chat.openAttach()" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
+      + '<button class="chat-offer-btn" onmousedown="event.preventDefault()" onclick="H._chat.makeOffer()" aria-label="Make an offer"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1.5" x2="12" y2="22.5"/><path d="M17 5.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></button>'
+      + '<textarea id="chatIn" rows="1" inputmode="text" enterkeyhint="enter" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Message…" oninput="H.notifyTyping&&H.notifyTyping();H._autoGrowChat&&H._autoGrowChat(this)" onblur="H.stopTyping&&H.stopTyping()"></textarea>'
+      + '<button class="chat-send chat-send-grad" onmousedown="event.preventDefault()" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
       + '</div>'
       + '<input type="file" id="chatImgGallery" accept="image/*" style="display:none" onchange="H._chat.handleImageFile(this,false)">'
       + '<input type="file" id="chatImgCamera" accept="image/*" capture="environment" style="display:none" onchange="H._chat.handleImageFile(this,true)">'
@@ -462,7 +462,15 @@
   function chatTick(read) { return '<span class="chat-rr' + (read ? ' read' : '') + '">' + (read ? '✓✓' : '✓') + '</span>'; }
   H._chatTick = chatTick;
   function chatHdrSubHtml(other, online) {
-    if (online) return '<span class="chat-presence-dot"></span><span style="color:#7CF6B0">Online now</span>';
+    // Privacy: if the other user disabled activity sharing, show no presence at
+    // all (parity with the existing online behaviour — hidden only when set off).
+    var sharing = !(other && other.privacySettings && other.privacySettings.showActivity === false);
+    if (sharing && H._otherTyping) return '<span style="color:#FFD27A">Typing…</span>';
+    if (sharing && online) return '<span class="chat-presence-dot"></span><span style="color:#7CF6B0">Online now</span>';
+    if (sharing && other && H._lastSeen && H._lastSeen[other.id] && typeof H.formatLastSeen === 'function') {
+      var ls = H.formatLastSeen(H._lastSeen[other.id]);
+      if (ls) return '<span style="color:#cfe0ff">' + ls + '</span>';
+    }
     if (other && other.verified) return H.verifiedBadge(12) + '<span style="color:#9fd4ff">Verified</span>';
     return 'Tap to view profile';
   }
@@ -879,6 +887,19 @@
       if (typeof H.markConversationReadInCloud === 'function' && H._activeOtherId) {
         H.markConversationReadInCloud(cid, H._activeOtherId);
       }
+      // Last-seen: fetch the partner's last_seen + privacy, then refresh the header.
+      if (typeof H.fetchLastSeen === 'function' && H._activeOtherId) {
+        H.fetchLastSeen(H._activeOtherId).then(function () {
+          if (typeof H._refreshChatPresence === 'function') H._refreshChatPresence();
+        });
+      }
+      // Keep the "last seen X ago" label current while the chat is open. Cleared
+      // at the top of Chat_after on the next mount so it never accumulates.
+      if (window._lastSeenTick) { clearInterval(window._lastSeenTick); }
+      window._lastSeenTick = setInterval(function () {
+        if (H.currentPageName !== 'Chat') { clearInterval(window._lastSeenTick); window._lastSeenTick = null; return; }
+        if (typeof H._refreshChatPresence === 'function') H._refreshChatPresence();
+      }, 60000);
     }
   };
 
@@ -1270,6 +1291,14 @@
   };
   H._chat.viewImg = H.viewImage;   // alias kept for existing chat-image taps
 
+  // Auto-grow the message textarea from 1 line up to its CSS max-height, then
+  // let it scroll. Keeps the composer compact but supports multi-line messages.
+  H._autoGrowChat = function (el) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  };
+
   H.sendChat = async function () {
     if (H.checkBan && H.checkBan()) return;
     const inp = document.getElementById('chatIn');
@@ -1293,6 +1322,11 @@
     c.messages.push({ id: msgId, from: u.id, senderName: u.name||'', text: storeText, t: msgT, read: false });
     H.saveState();
     inp.value = '';
+    if (typeof H._autoGrowChat === 'function') H._autoGrowChat(inp);   // collapse back to one line
+    // Keep the keyboard open and the cursor in the field so the user can keep
+    // typing. The send button uses onmousedown preventDefault so it never stole
+    // focus; this refocus is a belt-and-braces guarantee across platforms.
+    try { inp.focus({ preventScroll: true }); } catch (e) { try { inp.focus(); } catch (e2) {} }
     if (H._chat && H._chat.cancelReply) H._chat.cancelReply();
     if (typeof H.stopTyping === 'function') H.stopTyping();
     // Append to DOM directly — no full page re-render to avoid flicker

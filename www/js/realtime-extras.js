@@ -84,12 +84,14 @@
         if (String(p.userId) === String(u.id)) return;        // ignore our own echo
         H._otherTyping = !!p.typing;
         if (typeof H._renderTyping === 'function') H._renderTyping(H._otherTyping);
+        if (typeof H._refreshChatPresence === 'function') H._refreshChatPresence();   // header shows "Typing…"
         // Auto-clear if the "stopped" event is ever missed.
         clearTimeout(H._otherTypingClear);
         if (H._otherTyping) {
           H._otherTypingClear = setTimeout(function () {
             H._otherTyping = false;
             if (typeof H._renderTyping === 'function') H._renderTyping(false);
+            if (typeof H._refreshChatPresence === 'function') H._refreshChatPresence();
           }, 5000);
         }
       });
@@ -163,6 +165,59 @@
   };
 
   // ===================================================================
+  // LAST SEEN  (persisted to profiles.last_seen; respects showActivity privacy)
+  // ===================================================================
+  H._lastSeen = H._lastSeen || {};          // cache: userId -> last_seen (ms)
+  H._lastSeenWroteAt = 0;
+
+  // Write our own last_seen (throttled to ≥60s unless forced, e.g. on background).
+  // Honours the user's own activity-sharing preference — same rule as presence.
+  H.touchLastSeen = function (force) {
+    var u = me(); if (!u) return;
+    if (u.privacySettings && u.privacySettings.showActivity === false) return;
+    var s = sb(); if (!s || typeof s.from !== 'function') return;
+    var now = Date.now();
+    if (!force && now - H._lastSeenWroteAt < 60000) return;
+    H._lastSeenWroteAt = now;
+    try { s.from('profiles').update({ last_seen: new Date(now).toISOString() }).eq('id', u.id).then(function () {}, function () {}); } catch (e) {}
+  };
+
+  // Fetch a chat partner's last_seen + privacy so the header can show it and
+  // honour their showActivity setting (stored in profiles.privacy).
+  H.fetchLastSeen = function (otherId) {
+    var s = sb();
+    if (!otherId || !s || typeof s.from !== 'function') return Promise.resolve();
+    return s.from('profiles').select('last_seen, privacy').eq('id', String(otherId)).maybeSingle()
+      .then(function (res) {
+        var d = res && res.data; if (!d) return;
+        if (d.last_seen) H._lastSeen[String(otherId)] = new Date(d.last_seen).getTime();
+        if (d.privacy && typeof d.privacy === 'object') {
+          var ou = (H.state.users || []).find(function (x) { return String(x.id) === String(otherId); });
+          if (ou) ou.privacySettings = Object.assign({}, ou.privacySettings || {}, d.privacy);
+        }
+      }, function () {});
+  };
+
+  // Format a last_seen timestamp into the chat-header label.
+  H.formatLastSeen = function (ts) {
+    if (!ts) return null;
+    var t = (typeof ts === 'number') ? ts : new Date(ts).getTime();
+    if (!t || isNaN(t)) return null;
+    var now = Date.now();
+    var diff = now - t; if (diff < 0) diff = 0;
+    if (diff < 45000) return 'Last seen just now';
+    var min = Math.floor(diff / 60000);
+    if (min < 60) return 'Last seen ' + min + ' minute' + (min === 1 ? '' : 's') + ' ago';
+    var d = new Date(t), nd = new Date(now);
+    var time = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    if (d.toDateString() === nd.toDateString()) return 'Last seen today at ' + time;
+    var y = new Date(now); y.setDate(nd.getDate() - 1);
+    if (d.toDateString() === y.toDateString()) return 'Last seen yesterday';
+    if (diff < 7 * 86400000) return 'Last seen ' + d.toLocaleDateString(undefined, { weekday: 'long' });
+    return 'Last seen ' + d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  };
+
+  // ===================================================================
   // BOOTSTRAP — wait for supabase + a signed-in user, then wire everything.
   // ===================================================================
   var tries = 0;
@@ -171,14 +226,39 @@
     if (canRealtime() && me()) {
       H.initPresence();
       H.initReadReceipts();
+      H.touchLastSeen(true);                 // mark active on app open
+      // Keep our last_seen fresh while the app is foregrounded.
+      if (!H._lastSeenInterval) {
+        H._lastSeenInterval = setInterval(function () {
+          if (!document.hidden && me()) H.touchLastSeen();
+        }, 60000);
+      }
     } else if (tries < 60) {
       setTimeout(boot, 1000);
     }
   })();
 
-  // Re-establish presence after returning to the app.
+  // App open/close/background — keep presence + last_seen accurate.
   document.addEventListener('visibilitychange', function () {
-    if (!document.hidden && me()) { H.initPresence(); H.initReadReceipts(); }
+    if (!me()) return;
+    if (document.hidden) {
+      H.touchLastSeen(true);                 // record the moment we left
+    } else {
+      H.initPresence(); H.initReadReceipts();
+      H.touchLastSeen(true);                 // we're back
+    }
   });
+  // Native (Capacitor) background/foreground — covers Android app-switch where
+  // visibilitychange can be unreliable.
+  try {
+    var App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+    if (App && typeof App.addListener === 'function') {
+      App.addListener('appStateChange', function (st) {
+        if (!me()) return;
+        H.touchLastSeen(true);
+        if (st && st.isActive) { H.initPresence(); H.initReadReceipts(); }
+      });
+    }
+  } catch (e) {}
 
 })(window.H);
