@@ -218,3 +218,7 @@ create policy "business_staff: owner delete"
   on public.business_staff for delete
   using (exists (select 1 from public.businesses b
                  where b.id = business_id and b.owner_user_id = auth.uid()));
+
+-- ── MODULE 5: link listings to a business ──────────────────
+alter table public.listings add column if not exists business_id uuid references public.businesses(id) on delete set null;
+create index if not exists listings_business_idx on public.listings (business_id);
