@@ -107,10 +107,36 @@ create unique index if not exists business_staff_unique
   on public.business_staff (business_id, user_id);
 create index if not exists business_staff_user_idx on public.business_staff (user_id);
 
+-- ── business_verifications (MODULE 4 — Verification System) ──
+-- A submission raising a business's verification_level. Approved by Admin
+-- (Module 12), which writes businesses.verification_level. Levels:
+--   1 = phone verified, 2 = owner ID verified, 3 = business document verified.
+create table if not exists public.business_verifications (
+  id              uuid primary key default gen_random_uuid(),
+  business_id     uuid not null references public.businesses(id) on delete cascade,
+  level_requested int  not null check (level_requested between 1 and 3),
+  id_doc_path     text,
+  reg_doc_path    text,
+  status          text not null default 'pending'
+                    check (status in ('pending','approved','rejected')),
+  admin_note      text,
+  submitted_at    timestamptz not null default now()
+);
+create index if not exists business_verif_business_idx on public.business_verifications (business_id);
+
 -- ── Row Level Security ───────────────────────────────────────
 alter table public.businesses            enable row level security;
 alter table public.business_subscriptions enable row level security;
 alter table public.business_staff         enable row level security;
+alter table public.business_verifications enable row level security;
+
+drop policy if exists "business_verif: owner rw" on public.business_verifications;
+create policy "business_verif: owner rw"
+  on public.business_verifications for all
+  using (exists (select 1 from public.businesses b
+                 where b.id = business_id and b.owner_user_id = auth.uid()))
+  with check (exists (select 1 from public.businesses b
+                      where b.id = business_id and b.owner_user_id = auth.uid()));
 
 -- Active businesses are publicly readable (so buyers can see the storefront);
 -- the owner can always read their own, even while still in draft.
