@@ -2245,6 +2245,17 @@ window.pushNotif=(uid,title,body)=>H.pushNotif&&H.pushNotif(uid,title,body);
 window.openListing=id=>H.openListing(id);
 
 // Deep link router — called when user taps a push notification
+// Route a deep link, but wait until the app is booted (cold start from a
+// notification tap can fire before navTo/state exist).
+H._routeDeepLinkWhenReady = function(route, attempts) {
+  attempts = attempts || 0;
+  if (route && typeof H.navTo === 'function' && H.state && typeof H.openInner === 'function') {
+    H._handleDeepLink(route);
+  } else if (attempts < 40) {
+    setTimeout(function(){ H._routeDeepLinkWhenReady(route, attempts + 1); }, 250);
+  }
+};
+
 H._handleDeepLink = function(route) {
   if (!route) return;
   if (route.startsWith('listing:')) {
@@ -2256,6 +2267,61 @@ H._handleDeepLink = function(route) {
     var allowed = ['Home','Browse','Post','Account','Messages','Notifications'];
     if (allowed.indexOf(route) !== -1) H.navTo(route);
   }
+};
+
+// ── In-app "Rate Our App" prompt ──────────────────────────
+// Shown to users who haven't rated yet, after they've used the app a few times.
+// "Rate Now" opens the Play Store listing (rating). "Later" snoozes ~5 days.
+// State is kept in localStorage (survives logout / state resets).
+H.maybeShowRatingPrompt = function() {
+  try {
+    if (H._rateChecked) return;            // once per app session
+    H._rateChecked = true;
+    var LS = window.localStorage; if (!LS) return;
+    if (LS.getItem('pm_rate_done') === '1') return;     // already rated
+    var opens = (parseInt(LS.getItem('pm_rate_opens') || '0', 10) || 0) + 1;
+    LS.setItem('pm_rate_opens', String(opens));
+    if (opens < 3) return;                  // let them use the app a bit first
+    var snooze = parseInt(LS.getItem('pm_rate_snooze') || '0', 10) || 0;
+    if (snooze && Date.now() - snooze < 5 * 86400000) return;   // "Later" = wait 5 days
+    setTimeout(function(){ H._showRatingPrompt(); }, 1800);     // let the screen settle
+  } catch(e) {}
+};
+
+H._showRatingPrompt = function() {
+  if (document.getElementById('rateAppModal')) return;
+  // Don't stack on top of another sheet/modal.
+  if (document.querySelector('.action-sheet.open') || document.querySelector('.sheet-bg.open')) return;
+  var ov = document.createElement('div');
+  ov.id = 'rateAppModal';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(16,24,40,.5);z-index:9600;display:flex;align-items:center;justify-content:center;padding:24px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)';
+  ov.innerHTML =
+    '<div style="background:var(--card);border-radius:20px;max-width:340px;width:100%;padding:26px 22px 18px;text-align:center;box-shadow:0 20px 60px rgba(16,24,40,.32);font-family:Inter,sans-serif">'
+    + '<div style="font-size:36px;line-height:1;margin-bottom:8px">⭐</div>'
+    + '<div style="font-size:19px;font-weight:800;color:var(--text);margin-bottom:8px">Rate Our App</div>'
+    + '<div style="font-size:14px;color:var(--sub);line-height:1.55;margin-bottom:22px">Enjoying the app? Your rating helps us improve and reach more users.</div>'
+    + '<button onclick="H.openAppRating()" style="width:100%;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px">Rate Now</button>'
+    + '<button onclick="H._dismissRating()" style="width:100%;padding:11px;background:transparent;color:var(--sub);border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Later</button>'
+    + '</div>';
+  ov.addEventListener('click', function(e){ if (e.target === ov) H._dismissRating(); });
+  document.body.appendChild(ov);
+};
+
+H._dismissRating = function() {
+  var ov = document.getElementById('rateAppModal'); if (ov) ov.remove();
+  try { window.localStorage.setItem('pm_rate_snooze', String(Date.now())); } catch(e) {}
+};
+
+H.openAppRating = function() {
+  try { window.localStorage.setItem('pm_rate_done', '1'); } catch(e) {}
+  var ov = document.getElementById('rateAppModal'); if (ov) ov.remove();
+  var url = 'https://play.google.com/store/apps/details?id=com.pamarket.app';
+  try {
+    var native = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    // On Android the https Play link opens the Play Store app straight on the
+    // listing (where the rating stars are). '_system' routes it out of the WebView.
+    window.open(url, native ? '_system' : '_blank');
+  } catch(e) { try { window.open(url, '_blank'); } catch(e2){} }
 };
 
 // ── Web Push subscription ─────────────────────────────────
@@ -2316,11 +2382,13 @@ H._handleDeepLink = function(route) {
         }).catch(function(){ /* best-effort */ });
       }
 
-      // User tapped a notification — route to the deep link if present
+      // User tapped a notification — route to the deep link if present, otherwise
+      // open the Notifications screen (where broadcast content lives). Wrapped so a
+      // cold start (app launched by the tap) waits until the app is ready.
       PN.addListener('pushNotificationActionPerformed', function(action) {
         var data = action && action.notification && action.notification.data;
-        var link = data && (data.deepLink || data.deep_link);
-        if (link) H._handleDeepLink(link);
+        var link = (data && (data.deepLink || data.deep_link)) || 'Notifications';
+        H._routeDeepLinkWhenReady(link);
       });
     }
 

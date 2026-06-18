@@ -1,4 +1,4 @@
-const CACHE = 'pamarket-v166';
+const CACHE = 'pamarket-v167';
 
 // Never cache these — auth tokens, API data, realtime
 const NO_CACHE = [
@@ -86,16 +86,17 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const link = event.notification.data && event.notification.data.deepLink;
+  // Default to the Notifications screen so a tapped broadcast always opens content.
+  const link = (event.notification.data && event.notification.data.deepLink) || 'Notifications';
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       const win = list.find(w => 'focus' in w);
       if (win) {
         win.focus();
-        if (link) win.postMessage({ type: 'deeplink', route: link });
+        win.postMessage({ type: 'deeplink', route: link });
         return;
       }
-      return clients.openWindow(link ? ('./?deeplink=' + encodeURIComponent(link)) : './');
+      return clients.openWindow('./?deeplink=' + encodeURIComponent(link));
     })
   );
 });

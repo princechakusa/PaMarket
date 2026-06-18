@@ -207,6 +207,7 @@
   H.pages.Home_after = function () {
     if (H._initAdCarousels) H._initAdCarousels();
     if (typeof H.maybeShowNotifBanner === 'function') H.maybeShowNotifBanner();
+    if (typeof H.maybeShowRatingPrompt === 'function') H.maybeShowRatingPrompt();
     if (typeof H.fetchListingsFromSupabase !== 'function') return;
     const countBefore = (H.state.listings || []).filter(l => l.status === 'active').length;
     H.fetchListingsFromSupabase().then(() => {
