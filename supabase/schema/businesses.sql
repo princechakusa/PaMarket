@@ -250,3 +250,18 @@ drop policy if exists "business_leads: owner updates" on public.business_leads;
 create policy "business_leads: owner updates"
   on public.business_leads for update
   using (exists (select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid()));
+
+-- ── business_quick_replies (MODULE 7 — Messaging) ────────────
+create table if not exists public.business_quick_replies (
+  id          uuid primary key default gen_random_uuid(),
+  business_id uuid not null references public.businesses(id) on delete cascade,
+  text        text not null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists business_qr_business_idx on public.business_quick_replies (business_id);
+alter table public.business_quick_replies enable row level security;
+drop policy if exists "business_qr: owner rw" on public.business_quick_replies;
+create policy "business_qr: owner rw"
+  on public.business_quick_replies for all
+  using (exists (select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid()))
+  with check (exists (select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid()));
