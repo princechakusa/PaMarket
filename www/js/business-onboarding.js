@@ -436,6 +436,7 @@
         <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizMsg.open('${b.id}')">Quick Replies</button>
         <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizVerify.open('${b.id}')">Get Verified${(b.verificationLevel||0) >= 2 ? ' ' + H.verifiedBadge(15) : ''}</button>
         <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizSub.open('${b.id}')">Subscription &amp; Plan</button>
+        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizBilling.open('${b.id}')">Billing &amp; Payments</button>
         <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:18px" onclick="H._bizOnboard.createAnother()">Create Another Business</button>
 
         <div style="display:flex;gap:10px;align-items:flex-start;background:#FFF8EC;border-radius:14px;padding:14px">

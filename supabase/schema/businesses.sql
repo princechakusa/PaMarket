@@ -268,3 +268,21 @@ create policy "business_qr: owner rw"
 
 -- ── MODULE 9: featured/boosted listings ────────────────────
 alter table public.listings add column if not exists featured_until timestamptz;
+
+-- ── business_payments (MODULE 11 — Monetization) ─────────────
+create table if not exists public.business_payments (
+  id           uuid primary key default gen_random_uuid(),
+  business_id  uuid not null references public.businesses(id) on delete cascade,
+  type         text not null check (type in ('subscription','featured','boost')),
+  amount       numeric(12,2) not null default 0,
+  description  text,
+  status       text not null default 'paid' check (status in ('paid','pending','failed','refunded')),
+  created_at   timestamptz not null default now()
+);
+create index if not exists business_payments_business_idx on public.business_payments (business_id);
+alter table public.business_payments enable row level security;
+drop policy if exists "business_payments: owner rw" on public.business_payments;
+create policy "business_payments: owner rw"
+  on public.business_payments for all
+  using (exists (select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid()))
+  with check (exists (select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid()));

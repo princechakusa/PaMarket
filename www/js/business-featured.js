@@ -92,6 +92,12 @@
       const used = listingsOf(businessId).filter(H.isFeatured).length;
       if (slots !== Infinity && used >= slots) { toast('No featured slots left — upgrade your plan'); return; }
       const l = (H.state.listings || []).find(x => x.id === listingId); if (!l) return;
+      // Module 11 — charge the featured fee against the wallet (no-op if monetization not loaded).
+      if (typeof H.chargeBusiness === 'function') {
+        const price = typeof H.featuredPrice === 'function' ? H.featuredPrice(days) : 0;
+        const res = await H.chargeBusiness(businessId, 'featured', price, days + '-day boost: ' + (l.title || 'listing'));
+        if (!res || !res.ok) { toast((res && res.msg) || 'Payment failed'); return; }
+      }
       l.featuredUntil = Date.now() + days * DAY; l.boost = true; saveState();
       await cloudFeature(listingId, l.featuredUntil);
       toast('Boosted for ' + days + ' days');
