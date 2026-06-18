@@ -286,3 +286,23 @@ create policy "business_payments: owner rw"
   on public.business_payments for all
   using (exists (select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid()))
   with check (exists (select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid()));
+
+-- ── MODULE 12: Admin overrides (Business Platform section) ───
+-- Admins (profiles.role = 'admin') can read/manage all business-platform rows.
+create or replace function public.is_admin() returns boolean
+  language sql stable as $$ select exists(select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin') $$;
+
+drop policy if exists "businesses: admin all" on public.businesses;
+create policy "businesses: admin all" on public.businesses for all
+  using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "biz_subs: admin all" on public.business_subscriptions;
+create policy "biz_subs: admin all" on public.business_subscriptions for all
+  using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "biz_verif: admin all" on public.business_verifications;
+create policy "biz_verif: admin all" on public.business_verifications for all
+  using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "biz_leads: admin read" on public.business_leads;
+create policy "biz_leads: admin read" on public.business_leads for select using (public.is_admin());
