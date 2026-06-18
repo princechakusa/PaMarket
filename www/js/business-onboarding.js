@@ -359,7 +359,7 @@
     if (b.status !== 'active') {
       return `<div class="page active">${innerTopbar('My Business')}
         <div class="inner-content" style="text-align:center;padding:40px 24px">
-          <div style="font-size:42px;margin-bottom:10px">🚧</div>
+          <div style="width:64px;height:64px;border-radius:50%;background:#EEF2FB;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#1A3A8F" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
           <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">${escHtml(b.name || 'Your business')}</div>
           <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">Setup isn't finished yet. Continue where you left off to activate it.</div>
           <button class="btn-pri" style="width:100%;max-width:300px" onclick="H._bizOnboard.edit('${b.id}')">Continue Setup</button>
@@ -415,7 +415,7 @@
         <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:18px" onclick="H._bizOnboard.createAnother()">Create Another Business</button>
 
         <div style="display:flex;gap:10px;align-items:flex-start;background:#FFF8EC;border-radius:14px;padding:14px">
-          <span style="font-size:18px">📊</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Listings, leads & analytics</b> for this business arrive with the Business Dashboard — coming next.</div>
         </div>
       </div>
