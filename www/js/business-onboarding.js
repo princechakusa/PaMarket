@@ -412,6 +412,7 @@
         </div>
 
         <button class="btn-pri" style="width:100%;margin-bottom:10px" onclick="H._bizProfile.openEdit('${b.id}')">Edit Profile</button>
+        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizSub.open('${b.id}')">Subscription &amp; Plan</button>
         <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:18px" onclick="H._bizOnboard.createAnother()">Create Another Business</button>
 
         <div style="display:flex;gap:10px;align-items:flex-start;background:#FFF8EC;border-radius:14px;padding:14px">

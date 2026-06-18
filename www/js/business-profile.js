@@ -135,7 +135,7 @@
     if (!isOwner(b)) return `<div class="page active">${innerTopbar('Staff')}${H.emptyState('Owner only', 'Only the business owner can manage staff.')}</div>`;
 
     const staff = staffOf(b.id).filter(s => s.status !== 'removed');
-    const limit = STAFF_LIMIT[b.planId] != null ? STAFF_LIMIT[b.planId] : 0;
+    const limit = (typeof H.planEntitlements === 'function' ? H.planEntitlements(b.planId).staffLimit : (STAFF_LIMIT[b.planId] != null ? STAFF_LIMIT[b.planId] : 0));
     const full = staff.length >= limit;
     const planName = (H.BIZ_PLANS.find(p => p.id === b.planId) || {}).name || 'Free';
     const limitLabel = limit === Infinity ? 'Unlimited' : limit;
@@ -276,7 +276,7 @@
 
     async invite(businessId) {
       const b = getBiz(businessId); if (!b || !isOwner(b)) { toast('Owner only'); return; }
-      const limit = STAFF_LIMIT[b.planId] != null ? STAFF_LIMIT[b.planId] : 0;
+      const limit = (typeof H.planEntitlements === 'function' ? H.planEntitlements(b.planId).staffLimit : (STAFF_LIMIT[b.planId] != null ? STAFF_LIMIT[b.planId] : 0));
       const current = staffOf(businessId).filter(s => s.status !== 'removed');
       if (current.length >= limit) { toast('Seat limit reached for your plan'); return; }
       const el = document.getElementById('stContact'); const q = el ? el.value.trim() : '';

@@ -693,6 +693,7 @@ window.H = {
     if(typeof H.syncConversations==='function') H.syncConversations();
     if(typeof H.syncApplications==='function') H.syncApplications();
     if(typeof H.fetchMyBusinesses==='function') H.fetchMyBusinesses();
+    if(typeof H.processSubscriptionExpiry==='function') H.processSubscriptionExpiry();
     if(typeof H.syncNotifications==='function') H.syncNotifications();
     if(typeof H._setupRealtimeNotifs==='function') H._setupRealtimeNotifs();
     if(typeof H.startRealtime==='function') H.startRealtime();
@@ -753,7 +754,7 @@ window.H = {
 
   async openInner(name, params) {
     const H=window.H;
-    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob','MyContactRequests','BusinessOnboarding','BusinessActivated','BusinessView','BusinessEditProfile','BusinessStaff'];
+    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob','MyContactRequests','BusinessOnboarding','BusinessActivated','BusinessView','BusinessEditProfile','BusinessStaff','BusinessSubscription'];
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
     try {

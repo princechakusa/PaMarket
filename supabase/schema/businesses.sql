@@ -73,7 +73,9 @@ create table if not exists public.business_subscriptions (
   billing_cycle   text not null default 'monthly'
                     check (billing_cycle in ('monthly','yearly')),
   status          text not null default 'active'
-                    check (status in ('active','expired','downgraded')),
+                    check (status in ('active','expired','downgraded','scheduled')),
+  current_period_end timestamptz,
+  auto_renew      boolean not null default true,
   selected_at     timestamptz not null default now(),
   created_at      timestamptz not null default now()
 );
