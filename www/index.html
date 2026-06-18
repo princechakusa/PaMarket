@@ -411,21 +411,18 @@
 
     // ── Service Worker ───────────────────────────────────
     if ('serviceWorker' in navigator) {
-      // Auto-reload when a new SW takes control so users always get the latest version
-      var _swRefreshing = false;
+      // IMPORTANT: do NOT auto-reload the page when a new service worker takes
+      // control. Auto-reloading yanked users mid-action — it felt like the app
+      // "opening and closing on its own", caused flicker on Account / My Listings
+      // as the page reloaded under them, and could serve a half-updated mix of
+      // old + new JS (e.g. an old Account screen calling into new code, sending
+      // the Business row to the wrong page). Instead, surface the existing manual
+      // "Update available" banner and let the user reload when they choose to.
       var _hadSwController = !!navigator.serviceWorker.controller;
       navigator.serviceWorker.addEventListener('controllerchange', function() {
-        if (!_hadSwController) { _hadSwController = true; return; } // first-ever install — no reload
-        if (_swRefreshing) return;
-        _swRefreshing = true;
-        try {
-          if (window.H && window.H.toast) {
-            window.H.toast('Updating to latest version...');
-            setTimeout(function() { window.location.reload(); }, 1200);
-          } else {
-            window.location.reload();
-          }
-        } catch(e) { window.location.reload(); }
+        if (!_hadSwController) { _hadSwController = true; return; } // first-ever install — nothing to update
+        var b = document.getElementById('updateBanner');
+        if (b) b.style.display = 'flex'; // user taps "Update" → location.reload(true)
       });
 
       navigator.serviceWorker.register('sw.js').then(function(reg) {
