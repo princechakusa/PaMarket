@@ -85,7 +85,7 @@
           // tapping resumes the wizard. Until those modules ship, both route to the wizard.
           const label = active ? H.escHtml(active.name || 'My Business') : (biz.length ? 'Finish Business Setup' : 'Create a Business');
           const badge = active ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : '';
-          return `<div onclick="H._bizOnboard.open()"
+          return `<div onclick="H._bizOnboard.openFromAccount()"
               style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent">
             <div style="width:38px;height:38px;border-radius:12px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">${icon}</div>
             <div style="flex:1;font-size:15px;font-weight:600;color:var(--text)">${label}</div>

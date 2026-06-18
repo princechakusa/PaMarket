@@ -298,7 +298,7 @@
       </div>
       <div style="display:flex;gap:10px">
         <button class="ml-act-btn" style="flex:1;padding:13px" onclick="H._bizOnboard.back('activate')">Back</button>
-        <button class="btn-pri" id="bzActivateBtn" style="flex:2" onclick="H._bizOnboard.activate()">Activate Business</button>
+        <button class="btn-pri" id="bzActivateBtn" style="flex:2" onclick="H._bizOnboard.activate()">${_mode === 'edit' ? 'Save Changes' : 'Activate Business'}</button>
       </div>`;
   }
 
@@ -323,7 +323,101 @@
         <div style="font-size:13.5px;color:var(--sub);line-height:1.6;max-width:300px;margin:0 auto 28px">
           <b>${escHtml(d.name || 'Your business')}</b> is now active on PaMarket. Start adding listings to receive leads and track performance.
         </div>
-        <button class="btn-pri" style="width:100%;max-width:300px" onclick="H.navTo('Account')">Go to Account</button>
+        <button class="btn-pri" style="width:100%;max-width:300px;margin-bottom:10px" onclick="H._bizOnboard.view('${d.id}')">View My Business</button>
+        <button class="ml-act-btn" style="width:100%;max-width:300px;padding:13px" onclick="H.navTo('Account')">Go to Account</button>
+      </div>
+    </div>`;
+  };
+
+  // ── PAGE: Business (standalone) ─────────────────────────────
+  // The business's own page — opened from the Account row once a business
+  // exists. Read-only overview for now; listings/analytics/settings arrive with
+  // the Business Dashboard (Module 8) and will mount here.
+  let _viewId = null;
+
+  function getBiz(id) {
+    return (H.state.businesses || []).find(b => b.id === id) || null;
+  }
+  function myBusinesses() {
+    const u = currentUser();
+    return (H.state.businesses || []).filter(b => b.ownerUserId === (u && u.id));
+  }
+
+  pages.BusinessView = function (params) {
+    const u = currentUser();
+    if (!u) return `<div class="page active">${innerTopbar('My Business')}${H.emptyState('Sign in required', 'Sign in to view your business.', 'Sign In', 'H.authPage()')}</div>`;
+
+    const id = (params && params.id) || _viewId;
+    const b = getBiz(id) || myBusinesses().find(x => x.status === 'active') || myBusinesses()[0];
+    if (!b) {
+      return `<div class="page active">${innerTopbar('My Business')}
+        ${H.emptyState('No business yet', 'Create your business to start receiving leads.', 'Create a Business', 'H._bizOnboard.open()')}</div>`;
+    }
+    _viewId = b.id;
+
+    // Still mid-setup → guide them back into the wizard instead of showing a blank profile.
+    if (b.status !== 'active') {
+      return `<div class="page active">${innerTopbar('My Business')}
+        <div class="inner-content" style="text-align:center;padding:40px 24px">
+          <div style="font-size:42px;margin-bottom:10px">🚧</div>
+          <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">${escHtml(b.name || 'Your business')}</div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">Setup isn't finished yet. Continue where you left off to activate it.</div>
+          <button class="btn-pri" style="width:100%;max-width:300px" onclick="H._bizOnboard.edit('${b.id}')">Continue Setup</button>
+        </div></div>`;
+    }
+
+    const plan = H.BIZ_PLANS.find(p => p.id === b.planId);
+    const cat  = H.CATEGORIES.find(c => c.id === b.category);
+    const typeLabel = { individual: 'Individual', company: 'Registered Company', agency: 'Agency' }[b.bizType] || b.bizType;
+    const loc = [b.suburb, b.city, b.province].filter(Boolean).join(', ') || '—';
+    const detail = (label, val) => val ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border,#E8ECF4)">
+        <span style="font-size:13px;color:var(--sub)">${label}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text);text-align:right;max-width:62%">${val}</span></div>` : '';
+
+    return `<div class="page active">
+      ${innerTopbar('My Business')}
+
+      <!-- Hero -->
+      <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);padding:26px 20px;color:#fff">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="width:62px;height:62px;border-radius:16px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px;font-weight:800;overflow:hidden">
+            ${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:19px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.8);margin-top:2px">${typeLabel}${cat ? ' · ' + cat.name : ''}</div>
+            <span style="display:inline-block;margin-top:8px;font-size:10.5px;font-weight:800;letter-spacing:.4px;background:#16a34a;color:#fff;border-radius:20px;padding:3px 10px">ACTIVE</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="inner-content" style="padding-bottom:40px">
+        <!-- Plan -->
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#EEF2FB;border-radius:14px;padding:14px 16px;margin-bottom:16px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.4px">CURRENT PLAN</div>
+            <div style="font-size:16px;font-weight:800;color:#1A3A8F;margin-top:2px">${plan ? plan.name : 'Active'}${b.billingCycle ? ` · ${b.billingCycle === 'yearly' ? 'Yearly' : 'Monthly'}` : ''}</div>
+          </div>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1A3A8F" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+
+        <!-- Details -->
+        <div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:16px;padding:4px 16px;margin-bottom:18px">
+          ${detail('Category', cat ? cat.name : '')}
+          ${detail('Description', escHtml(b.description || ''))}
+          ${detail('Phone', escHtml(b.phone || ''))}
+          ${detail('WhatsApp', escHtml(b.whatsapp || ''))}
+          ${detail('Email', escHtml(b.email || ''))}
+          ${detail('Location', escHtml(loc))}
+        </div>
+
+        <button class="btn-pri" style="width:100%;margin-bottom:10px" onclick="H._bizOnboard.edit('${b.id}')">Edit Business Details</button>
+        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:18px" onclick="H._bizOnboard.createAnother()">Create Another Business</button>
+
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#FFF8EC;border-radius:14px;padding:14px">
+          <span style="font-size:18px">📊</span>
+          <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Listings, leads & analytics</b> for this business arrive with the Business Dashboard — coming next.</div>
+        </div>
       </div>
     </div>`;
   };
@@ -338,8 +432,34 @@
     Object.keys(map).forEach(id => { const val = v(id); if (val !== undefined) d[map[id]] = val; });
   }
 
+  let _mode = 'create'; // 'create' | 'edit'
+
   H._bizOnboard = {
-    open() { _draft = null; ensureDraft(); H.openInner('BusinessOnboarding'); },
+    // Called from the Account row. Routes to the right place depending on whether
+    // the user already has a business — never dumps them into a blank new wizard.
+    openFromAccount() {
+      const mine = myBusinesses();
+      const active = mine.find(b => b.status === 'active');
+      if (active) { this.view(active.id); return; }          // has a live business → its page
+      const pending = mine.find(b => b.status !== 'active' && b.status !== 'suspended');
+      if (pending) { _mode = 'create'; _draft = JSON.parse(JSON.stringify(pending)); H.openInner('BusinessOnboarding'); return; } // resume setup
+      this.open();                                            // none yet → start fresh
+    },
+
+    view(id) { _viewId = id || _viewId; H.openInner('BusinessView', { id: _viewId }); },
+
+    edit(id) {
+      const b = getBiz(id);
+      if (!b) { toast('Business not found'); return; }
+      _mode = 'edit';
+      _draft = JSON.parse(JSON.stringify(b));
+      _draft.onboardingStep = 'details';
+      H.openInner('BusinessOnboarding');
+    },
+
+    createAnother() { _mode = 'create'; _draft = blankDraft(); H.openInner('BusinessOnboarding'); },
+
+    open() { _mode = 'create'; _draft = null; ensureDraft(); H.openInner('BusinessOnboarding'); },
 
     setType(t) { ensureDraft(); collectDetails(); _draft.bizType = t; renderPage('BusinessOnboarding'); },
 
@@ -388,10 +508,19 @@
       const btn = document.getElementById('bzActivateBtn');
       if (btn) { btn.disabled = true; btn.textContent = 'Activating…'; }
 
+      const wasEdit = _mode === 'edit';
       d.status = 'active';
       d.onboardingStep = 'done';
       persistDraft();
       if (typeof H.saveBusinessSubscriptionToCloud === 'function') await H.saveBusinessSubscriptionToCloud(d);
+
+      if (wasEdit) {
+        _mode = 'create';
+        toast('Business updated');
+        _viewId = d.id;
+        renderPage('BusinessView', { id: d.id });
+        return;
+      }
 
       if (typeof H.pushNotif === 'function') {
         try { H.pushNotif(currentUser().id, 'Business activated', `${d.name} is now live on PaMarket.`, 'business'); } catch (e) {}
