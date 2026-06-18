@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
+  body{background:#EEF1F6;padding:40px;color:#18181B}
+  .wrap{display:flex;gap:90px;justify-content:center;align-items:flex-start}
+  .col{width:380px}
+  .tag{font-size:20px;font-weight:900;letter-spacing:.5px;margin-bottom:6px;text-transform:uppercase}
+  .tag.before{color:#B9472F}
+  .tag.after{color:#1A7F4B}
+  .sub{font-size:13px;color:#667085;margin-bottom:16px;height:18px}
+  /* phone */
+  .phone{width:380px;height:760px;background:#0A0A0B;border-radius:40px;padding:11px;box-shadow:0 24px 60px rgba(16,24,40,.28)}
+  .screen{width:100%;height:100%;background:#F4F6FA;border-radius:30px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  /* status strip */
+  .stat{height:30px;background:#1A3A8F;display:flex;align-items:center;justify-content:space-between;padding:0 18px;color:#fff;font-size:12px;font-weight:700}
+  /* chat header */
+  .hdr{background:#1A3A8F;color:#fff;padding:10px 14px;display:flex;align-items:center;gap:11px}
+  .hdr .back{font-size:20px;opacity:.9}
+  .hdr .av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#3a6fd8,#2952cc);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+  .hdr .nm{font-size:15.5px;font-weight:800}
+  .hdr .sub{margin:0;height:auto;font-size:12px;display:flex;align-items:center;gap:5px;color:#cfe0ff}
+  .dot{width:8px;height:8px;border-radius:50%;background:#34E08A;display:inline-block;box-shadow:0 0 0 2px rgba(52,224,138,.25)}
+  .green{color:#7CF6B0;font-weight:600}
+  .gold{color:#FFD27A;font-weight:600}
+  /* thread */
+  .thread{flex:1;padding:16px 14px;display:flex;flex-direction:column;gap:9px;overflow:hidden;background:#F4F6FA}
+  .b{max-width:74%;padding:9px 13px;border-radius:16px;font-size:13.5px;line-height:1.4}
+  .them{align-self:flex-start;background:#fff;border:.5px solid #E6E9F0;border-bottom-left-radius:5px;color:#18181B}
+  .me{align-self:flex-end;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border-bottom-right-radius:5px}
+  .meta{font-size:10px;opacity:.6;margin-top:3px}
+  /* input bar */
+  .inbar{background:#fff;border-top:.5px solid #E6E9F0;padding:9px 12px;display:flex;align-items:flex-end;gap:9px}
+  .plus{width:38px;height:38px;border-radius:50%;background:#EEF2FF;color:#1A3A8F;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;flex-shrink:0}
+  .field{flex:1;border:1.5px solid #E2E6EE;border-radius:20px;padding:9px 14px;font-size:13.5px;color:#18181B;background:#fff;min-height:40px;display:flex;align-items:center}
+  .field.multi{align-items:flex-start;line-height:1.45}
+  .field .cur{display:inline-block;width:1.5px;height:15px;background:#1A3A8F;margin-left:1px;vertical-align:middle}
+  .send{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .send svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2}
+  /* keyboard */
+  .kb{background:#D5D9E0;padding:8px 5px 12px;display:flex;flex-direction:column;gap:7px}
+  .krow{display:flex;gap:5px;justify-content:center}
+  .key{background:#fff;border-radius:6px;height:34px;flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;box-shadow:0 1px 0 rgba(0,0,0,.18)}
+  .key.wide{flex:1.6;background:#ACB3BF;color:#fff;font-size:11px;font-weight:700}
+  .key.ret-send{flex:1.9;background:#1A3A8F;color:#fff;font-size:11px;font-weight:800}
+  .key.ret-enter{flex:1.9;background:#fff;color:#18181B;font-size:15px;font-weight:800}
+  .key.space{flex:4}
+  /* callouts */
+  .notes{margin-top:18px;display:flex;flex-direction:column;gap:9px}
+  .note{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.4}
+  .num{flex-shrink:0;width:20px;height:20px;border-radius:50%;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .before .num{background:#B9472F}
+  .after .num{background:#1A7F4B}
+  .note b{font-weight:800}
+  .title{text-align:center;font-size:26px;font-weight:900;color:#1A3A8F;margin-bottom:4px}
+  .title em{font-style:normal;color:#F5A623}
+  .caption{text-align:center;font-size:13px;color:#667085;margin-bottom:30px}
+  .pill{display:inline-block;background:#FFF4D6;color:#92670A;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+  <div class="title">Pa<em>Market</em> · Chat UX Fixes</div>
+  <div class="caption">Affected screen: <b>Chat</b> only · Issues 1–4 · Before vs After (no redesign — same branding &amp; layout)</div>
+  <div class="wrap">
+
+    <!-- ================= BEFORE ================= -->
+    <div class="col">
+      <div class="tag before">Before</div>
+      <div class="sub">Current behavior</div>
+      <div class="phone"><div class="screen">
+        <div class="stat"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="hdr">
+          <span class="back">‹</span>
+          <div class="av">TM</div>
+          <div>
+            <div class="nm">Tinashe M.</div>
+            <div class="sub"><span class="dot"></span><span class="green">Online now</span></div>
+          </div>
+        </div>
+        <div class="thread">
+          <div class="b them">Is the car still available?<div class="meta">5:40 PM</div></div>
+          <div class="b me">Yes it is 👍<div class="meta">5:41 PM ✓✓</div></div>
+          <div class="b them">Great, can I come see it<div class="meta">5:41 PM</div></div>
+        </div>
+        <div class="inbar">
+          <div class="plus">+</div>
+          <div class="field">Sure, tomorrow works<span class="cur"></span></div>
+          <div class="send"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+        </div>
+        <div class="kb">
+          <div class="krow"><div class="key">q</div><div class="key">w</div><div class="key">e</div><div class="key">r</div><div class="key">t</div><div class="key">y</div><div class="key">u</div><div class="key">i</div><div class="key">o</div><div class="key">p</div></div>
+          <div class="krow"><div class="key">a</div><div class="key">s</div><div class="key">d</div><div class="key">f</div><div class="key">g</div><div class="key">h</div><div class="key">j</div><div class="key">k</div><div class="key">l</div></div>
+          <div class="krow"><div class="key wide">⇧</div><div class="key">z</div><div class="key">x</div><div class="key">c</div><div class="key">v</div><div class="key">b</div><div class="key">n</div><div class="key">m</div><div class="key wide">⌫</div></div>
+          <div class="krow"><div class="key wide">123</div><div class="key space">space</div><div class="key ret-send">Send</div></div>
+        </div>
+      </div></div>
+      <div class="notes">
+        <div class="note before"><span class="num">1</span><span>Keyboard action key is <b>“Send”</b> — pressing Return <b>sends</b> the message. No way to add a new line.</span></div>
+        <div class="note before"><span class="num">2</span><span>Tapping the blue send button <b>closes the keyboard</b> — you must tap the field again for the next message.</span></div>
+        <div class="note before"><span class="num">3</span><span>Tapping <b>+ / $ / camera / image</b> also <b>dismisses the keyboard</b>.</span></div>
+        <div class="note before"><span class="num">4</span><span>Header only ever shows <b>“Online now”</b> — no “last seen”, no typing state when offline.</span></div>
+      </div>
+    </div>
+
+    <!-- ================= AFTER ================= -->
+    <div class="col">
+      <div class="tag after">After</div>
+      <div class="sub">Fixed behavior</div>
+      <div class="phone"><div class="screen">
+        <div class="stat"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="hdr">
+          <span class="back">‹</span>
+          <div class="av">TM</div>
+          <div>
+            <div class="nm">Tinashe M.</div>
+            <div class="sub"><span class="gold">Last seen 2 minutes ago</span></div>
+          </div>
+        </div>
+        <div class="thread">
+          <div class="b them">Is the car still available?<div class="meta">5:40 PM</div></div>
+          <div class="b me">Yes it is 👍<div class="meta">5:41 PM ✓✓</div></div>
+          <div class="b them">Great, can I come see it<div class="meta">5:41 PM</div></div>
+        </div>
+        <div class="inbar">
+          <div class="plus">+</div>
+          <div class="field multi">Sure, tomorrow works.<br>Come by around 10am 🙂<span class="cur"></span></div>
+          <div class="send"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+        </div>
+        <div class="kb">
+          <div class="krow"><div class="key">q</div><div class="key">w</div><div class="key">e</div><div class="key">r</div><div class="key">t</div><div class="key">y</div><div class="key">u</div><div class="key">i</div><div class="key">o</div><div class="key">p</div></div>
+          <div class="krow"><div class="key">a</div><div class="key">s</div><div class="key">d</div><div class="key">f</div><div class="key">g</div><div class="key">h</div><div class="key">j</div><div class="key">k</div><div class="key">l</div></div>
+          <div class="krow"><div class="key wide">⇧</div><div class="key">z</div><div class="key">x</div><div class="key">c</div><div class="key">v</div><div class="key">b</div><div class="key">n</div><div class="key">m</div><div class="key wide">⌫</div></div>
+          <div class="krow"><div class="key wide">123</div><div class="key space">space</div><div class="key ret-enter">return ↵</div></div>
+        </div>
+      </div></div>
+      <div class="notes">
+        <div class="note after"><span class="num">1</span><span>Action key is the standard <b>“return ↵”</b> — inserts a <b>new line</b>, never sends. Multi-line messages now possible.</span></div>
+        <div class="note after"><span class="num">2</span><span>Blue button is the <b>only</b> way to send. After sending: field clears, <b>keyboard stays open</b>, cursor stays in field.</span></div>
+        <div class="note after"><span class="num">3</span><span><b>+ / $</b> sheets open <b>without closing the keyboard</b>. <span class="pill">Camera / Image use the OS picker — keyboard returns after</span></span></div>
+        <div class="note after"><span class="num">4</span><span>Header shows live presence: <b>Online</b> · <b>Typing…</b> · <b>Last seen just now / X min ago / today at 5:42 PM / yesterday / Monday</b>. Hidden if user disabled activity sharing.</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- presence variants strip -->
+  <div style="max-width:850px;margin:34px auto 0;background:#fff;border:1px solid #E6E9F0;border-radius:16px;padding:18px 22px">
+    <div style="font-size:13px;font-weight:800;color:#1A3A8F;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Issue 4 — Header presence states (priority order)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <span style="background:#1A3A8F;color:#7CF6B0;font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:20px">● Online now</span>
+      <span style="background:#1A3A8F;color:#FFD27A;font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:20px">Typing…</span>
+      <span style="background:#1A3A8F;color:#cfe0ff;font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:20px">Last seen just now</span>
+      <span style="background:#1A3A8F;color:#cfe0ff;font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:20px">Last seen 2 minutes ago</span>
+      <span style="background:#1A3A8F;color:#cfe0ff;font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:20px">Last seen today at 5:42 PM</span>
+      <span style="background:#1A3A8F;color:#cfe0ff;font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:20px">Last seen yesterday</span>
+      <span style="background:#1A3A8F;color:#cfe0ff;font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:20px">Last seen Monday</span>
+      <span style="background:#1A3A8F;color:#9aa6bd;font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:20px">Tap to view profile <span style="opacity:.7">(activity sharing off)</span></span>
+    </div>
+  </div>
+</body>
+</html>
