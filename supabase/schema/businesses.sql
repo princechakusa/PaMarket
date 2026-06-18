@@ -85,9 +85,30 @@ create unique index if not exists biz_subs_one_active_idx
   on public.business_subscriptions (business_id)
   where status = 'active';
 
+-- ── business_staff (MODULE 2 — Business Profiles) ────────────
+-- Join table linking PaMarket users to a business as staff. The owner is NOT a
+-- row here (ownership lives on businesses.owner_user_id); this is additive staff.
+create table if not exists public.business_staff (
+  id            uuid primary key default gen_random_uuid(),
+  business_id   uuid not null references public.businesses(id) on delete cascade,
+  user_id       uuid not null references public.profiles(id)  on delete cascade,
+  role          text not null default 'staff'
+                  check (role in ('manager','staff')),
+  invited_by    uuid references public.profiles(id),
+  status        text not null default 'invited'
+                  check (status in ('invited','active','removed')),
+  created_at    timestamptz not null default now()
+);
+
+-- A user can hold only one membership row per business.
+create unique index if not exists business_staff_unique
+  on public.business_staff (business_id, user_id);
+create index if not exists business_staff_user_idx on public.business_staff (user_id);
+
 -- ── Row Level Security ───────────────────────────────────────
 alter table public.businesses            enable row level security;
 alter table public.business_subscriptions enable row level security;
+alter table public.business_staff         enable row level security;
 
 -- Active businesses are publicly readable (so buyers can see the storefront);
 -- the owner can always read their own, even while still in draft.
@@ -133,3 +154,39 @@ create policy "biz_subs: owner update"
     select 1 from public.businesses b
     where b.id = business_id and b.owner_user_id = auth.uid()
   ));
+
+-- ── business_staff policies ──────────────────────────────────
+-- A staff row is visible to: the business owner, or the staff member themselves.
+drop policy if exists "business_staff: visible to owner or member" on public.business_staff;
+create policy "business_staff: visible to owner or member"
+  on public.business_staff for select
+  using (
+    user_id = auth.uid()
+    or exists (select 1 from public.businesses b
+               where b.id = business_id and b.owner_user_id = auth.uid())
+  );
+
+-- Only the business owner can add staff.
+drop policy if exists "business_staff: owner invites" on public.business_staff;
+create policy "business_staff: owner invites"
+  on public.business_staff for insert
+  with check (exists (select 1 from public.businesses b
+                      where b.id = business_id and b.owner_user_id = auth.uid()));
+
+-- Owner can change role/remove; a staff member can update their OWN row
+-- (e.g. accept/decline an invite by moving invited → active/removed).
+drop policy if exists "business_staff: owner or self update" on public.business_staff;
+create policy "business_staff: owner or self update"
+  on public.business_staff for update
+  using (
+    user_id = auth.uid()
+    or exists (select 1 from public.businesses b
+               where b.id = business_id and b.owner_user_id = auth.uid())
+  );
+
+-- Owner can delete staff rows outright.
+drop policy if exists "business_staff: owner delete" on public.business_staff;
+create policy "business_staff: owner delete"
+  on public.business_staff for delete
+  using (exists (select 1 from public.businesses b
+                 where b.id = business_id and b.owner_user_id = auth.uid()));
