@@ -69,7 +69,8 @@ window.H = {
     saves:{}, notifs:{}, currentUserId:null, cityFilter:'All Zimbabwe',
     _sortMode:'newest', _priceMin:'', _priceMax:'',
     adminLogs:[], supportTickets:[], paidAds:[], deletedConvIds:[],
-    applications:[], contactRequests:[], savedCandidates:[], savedSearches:[]
+    applications:[], contactRequests:[], savedCandidates:[], savedSearches:[],
+    businesses:[]
   },
 
   loadState() {
@@ -99,6 +100,8 @@ window.H = {
           contactRequests: Array.isArray(loaded.contactRequests) ? loaded.contactRequests : base.contactRequests,
           savedCandidates: Array.isArray(loaded.savedCandidates) ? loaded.savedCandidates : base.savedCandidates,
           savedSearches:   Array.isArray(loaded.savedSearches)   ? loaded.savedSearches   : base.savedSearches,
+          // Business Platform — preserve owner's businesses across migrations
+          businesses:      Array.isArray(loaded.businesses)      ? loaded.businesses      : base.businesses,
         });
         migrated._v = this.STATE_VERSION;
         return migrated;
@@ -590,14 +593,21 @@ window.H = {
       }
     } catch(e) {}
     // Reconcile the cached user id with the live Supabase session so every read and
-    // write targets the SAME profile. getSession() reads the locally stored session
-    // (no network round trip), so this stays fast on slow connections; the profile
-    // refresh itself runs in the background after first paint instead of blocking
-    // startup behind one or two network calls.
+    // write targets the SAME profile. getSession() USUALLY reads the locally stored
+    // session, but supabase-js refreshes over the network when the stored token has
+    // expired — and on a flaky/offline cold start that refresh can hang with no
+    // timeout, blocking startup (and the splash) forever. Race it against a short
+    // timeout: if it doesn't answer fast, treat it as "no live session" and carry on.
+    // The local login is preserved by the else-branch below (silent background
+    // refresh), so a slow network never traps the user on the splash screen.
     try {
       const _sb = window.supabase;
       if (_sb && _sb.auth && typeof _sb.auth.getSession === 'function') {
-        const _sr = await _sb.auth.getSession();
+        const _sr = await Promise.race([
+          _sb.auth.getSession(),
+          new Promise(res => setTimeout(() => res({ data: { session: null }, _timedOut: true }), 4000))
+        ]);
+        if (_sr && _sr._timedOut) console.warn('[PaMarket] getSession() timed out on boot — continuing with local session.');
         const _sid = _sr && _sr.data && _sr.data.session && _sr.data.session.user && _sr.data.session.user.id;
         if (_sid) {
           if (this.state.currentUserId !== _sid) { this.state.currentUserId = _sid; this.saveState(); }
@@ -682,6 +692,7 @@ window.H = {
     if(typeof H.syncReports==='function') H.syncReports();
     if(typeof H.syncConversations==='function') H.syncConversations();
     if(typeof H.syncApplications==='function') H.syncApplications();
+    if(typeof H.fetchMyBusinesses==='function') H.fetchMyBusinesses();
     if(typeof H.syncNotifications==='function') H.syncNotifications();
     if(typeof H._setupRealtimeNotifs==='function') H._setupRealtimeNotifs();
     if(typeof H.startRealtime==='function') H.startRealtime();
@@ -742,7 +753,7 @@ window.H = {
 
   async openInner(name, params) {
     const H=window.H;
-    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob','MyContactRequests'];
+    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob','MyContactRequests','BusinessOnboarding','BusinessActivated'];
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
     try {
