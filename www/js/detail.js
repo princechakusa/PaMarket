@@ -328,6 +328,7 @@
     const phone  = (seller.phone||l.sellerPhone||'').replace(/[^\d+]/g,'');
     if (!phone) { H.toast('No WhatsApp number available'); return; }
     const txt = encodeURIComponent('Hi! I saw your "'+l.title+'" listing on PaMarket Zimbabwe. Is it still available?');
+    if (typeof H.recordLead === 'function') H.recordLead(id, 'whatsapp');
     window.open('https://wa.me/'+phone.replace('+','')+'?text='+txt, '_blank');
   };
 
@@ -346,6 +347,7 @@
     if (!H.currentUser()) { H.requireAuth('Sign in to message sellers'); return; }
     const u = H.currentUser();
     if (!sellerId || sellerId === u.id) { H.toast('You cannot message yourself'); return; }
+    if (listingId && typeof H.recordLead === 'function') H.recordLead(listingId, 'chat');
     if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
     const ids = [u.id, sellerId].sort();
     // One conversation per person (listing kept as context, not in the id) and

@@ -222,3 +222,31 @@ create policy "business_staff: owner delete"
 -- ── MODULE 5: link listings to a business ──────────────────
 alter table public.listings add column if not exists business_id uuid references public.businesses(id) on delete set null;
 create index if not exists listings_business_idx on public.listings (business_id);
+
+-- ── business_leads (MODULE 6 — Lead System, no payments) ─────
+create table if not exists public.business_leads (
+  id           uuid primary key default gen_random_uuid(),
+  business_id  uuid not null references public.businesses(id) on delete cascade,
+  listing_id   uuid references public.listings(id) on delete set null,
+  user_id      uuid references public.profiles(id) on delete set null,
+  user_name    text,
+  type         text not null check (type in ('whatsapp','call','chat')),
+  status       text not null default 'new' check (status in ('new','active','closed')),
+  created_at   timestamptz not null default now()
+);
+create index if not exists business_leads_business_idx on public.business_leads (business_id);
+alter table public.business_leads enable row level security;
+
+drop policy if exists "business_leads: owner reads" on public.business_leads;
+create policy "business_leads: owner reads"
+  on public.business_leads for select
+  using (exists (select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid()));
+
+drop policy if exists "business_leads: anyone inserts" on public.business_leads;
+create policy "business_leads: anyone inserts"
+  on public.business_leads for insert to authenticated with check (true);
+
+drop policy if exists "business_leads: owner updates" on public.business_leads;
+create policy "business_leads: owner updates"
+  on public.business_leads for update
+  using (exists (select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid()));
