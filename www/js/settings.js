@@ -83,10 +83,10 @@
             <span class="toggle-icon">${I.exchange || '$'}</span>
             <div class="toggle-text">
               <span class="toggle-name">USD → ZiG rate</span>
-              <span class="toggle-desc">Approximate only · edit when the rate changes</span>
+              <span class="toggle-desc">Set by PaMarket${(H.state && H.state.fxRateUpdatedAt) ? ' · updated ' + H.timeAgo(H.state.fxRateUpdatedAt) : ''}</span>
             </div>
           </div>
-          <input type="number" min="1" value="${Number((H.state && H.state.fxRate) || 36)}" onchange="H.setFxRate(this.value)" style="width:80px;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:700;text-align:right;font-family:inherit;color:var(--text-primary);background:var(--bg)">
+          <span style="font-size:15px;font-weight:800;color:var(--text-primary)">1 USD = ${Number((H.state && H.state.fxRate) || 36).toLocaleString()} ZiG</span>
         </div>
       </div>
 

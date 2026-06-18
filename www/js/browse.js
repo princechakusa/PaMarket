@@ -51,7 +51,9 @@
     const loc = locEl ? locEl.value : (browseState.location || 'all');
 
     const pool = (list || []).filter(function (l) {
-      const price = l.price || 0;
+      // Compare in canonical USD so the price range works for any listing
+      // (including legacy ones still stored in ZiG).
+      const price = (typeof H.toUSD === 'function') ? H.toUSD(l.price, l.currency) : (l.price || 0);
       if (price < pMin || price > pMax) return false;
       if (cond !== 'all' && (l.condition || '') !== cond) return false;
       if (cur !== 'all' && (l.currency || 'USD') !== cur) return false;
@@ -68,8 +70,9 @@
 
     // Honour the sort dropdown. 'recent' keeps relevance/newest order from filterListings.
     const sortBy = browseState.sortBy || 'recent';
-    if (sortBy === 'price_asc')       matched.sort(function (a, b) { return (a.price || 0) - (b.price || 0); });
-    else if (sortBy === 'price_desc') matched.sort(function (a, b) { return (b.price || 0) - (a.price || 0); });
+    const _usd = function (l) { return (typeof H.toUSD === 'function') ? H.toUSD(l.price, l.currency) : (l.price || 0); };
+    if (sortBy === 'price_asc')       matched.sort(function (a, b) { return _usd(a) - _usd(b); });
+    else if (sortBy === 'price_desc') matched.sort(function (a, b) { return _usd(b) - _usd(a); });
     else if (sortBy === 'oldest')     matched.sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
     else if (sortBy === 'views')      matched.sort(function (a, b) { return (b.views || 0) - (a.views || 0); });
     return matched;

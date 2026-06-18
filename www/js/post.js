@@ -330,9 +330,17 @@
         /* fall back to whatever we have */
       }
 
+      // USD is the canonical currency. If the seller entered ZiG, convert to USD
+      // now using the central rate and store it as USD, so every price across the
+      // app uses one source of truth.
+      let _priceUSD = Number(s.price) || 0;
+      if (s.currency === 'ZiG' && typeof H.toUSD === 'function') {
+        _priceUSD = Math.round(H.toUSD(s.price, 'ZiG') * 100) / 100;
+      }
+
       const l = {
         id: listingId, sellerId: u.id, sellerName: u.name || '', sellerPhone: u.phone || '', title: s.title, desc: s.desc,
-        price: s.price, currency: s.currency, cat: s.cat,
+        price: _priceUSD, currency: 'USD', cat: s.cat,
         prov: s.prov, city: s.city, suburb: s.suburb,
         photos: photos, createdAt: Date.now(),
         status: finalStatus,

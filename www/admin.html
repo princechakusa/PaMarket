@@ -1858,6 +1858,22 @@ function renderSettings() {
   });
   html+='</div>';
 
+  // ── Exchange rate (USD is the canonical currency) ──
+  var rate = Number(s.fxRate || 36);
+  var upd  = s.fxRateUpdatedAt ? new Date(s.fxRateUpdatedAt) : null;
+  var stale = !upd || (Date.now() - upd.getTime() > 7*86400000);
+  html+='<div class="tbl-wrap" style="padding:18px;margin-top:14px">';
+  html+='<div style="font-size:14px;font-weight:800;margin-bottom:6px">Exchange Rate (USD base)</div>';
+  html+='<div style="font-size:12.5px;color:var(--sub);margin-bottom:12px">All prices are stored and displayed in USD. This rate converts any ZiG entry to USD across the whole app.</div>';
+  html+='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
+  html+='<span style="font-size:14px;font-weight:700">1 USD =</span>';
+  html+='<input type="number" min="1" step="0.01" id="fxRateInput" value="'+rate+'" style="width:120px;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:800;text-align:right">';
+  html+='<span style="font-size:14px;font-weight:700">ZiG</span>';
+  html+='<button onclick="saveFxRate()" style="margin-left:auto;padding:9px 18px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Save rate</button>';
+  html+='</div>';
+  html+='<div style="font-size:12px;margin-top:11px;color:'+(stale?'#B42318':'var(--sub)')+'">'+(upd ? ((stale?'⚠️ ':'')+'Last updated '+upd.toLocaleString()+(stale?' — please review the current rate.':'')) : '⚠️ Rate has never been set — please set the current rate.')+'</div>';
+  html+='</div>';
+
   html+='<div class="tbl-wrap" style="padding:18px;margin-top:14px">';
   html+='<div style="font-size:14px;font-weight:800;margin-bottom:14px">App Info</div>';
   html+='<div style="font-size:13px;color:var(--sub);line-height:2">';
@@ -1877,6 +1893,20 @@ async function saveSetting(key, value) {
     var sr = await sb.from('app_settings').upsert({id:1,settings:DATA.settings,updated_at:new Date().toISOString()});
     if(sr.error) throw sr.error;
     toast('Setting saved');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function saveFxRate() {
+  var v = parseFloat((document.getElementById('fxRateInput')||{}).value);
+  if (!v || v <= 0) { toast('Enter a valid rate','error'); return; }
+  try {
+    DATA.settings = DATA.settings || {};
+    DATA.settings.fxRate = v;
+    DATA.settings.fxRateUpdatedAt = new Date().toISOString();
+    var sr = await sb.from('app_settings').upsert({id:1,settings:DATA.settings,updated_at:new Date().toISOString()});
+    if (sr.error) throw sr.error;
+    toast('Exchange rate updated');
+    renderSettings();
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
 

@@ -219,17 +219,28 @@ window.H = {
     if (s<604800) return Math.floor(s/86400)+'d ago';
     return new Date(t).toLocaleDateString();
   },
+  // Canonical USD rate (admin-set, loaded from app_settings into state.fxRate).
+  fxRate() { const r = Number((this.state && this.state.fxRate) || 36); return r > 0 ? r : 36; },
+
+  // Convert any stored amount to its canonical USD value. USD is the source of
+  // truth; a ZiG amount is divided by the central rate. Legacy listings stored in
+  // ZiG therefore display/compare correctly without a destructive migration.
+  toUSD(p, c) {
+    const n = Number(p) || 0;
+    if (c === 'ZiG' || c === 'ZIG' || c === 'ZWG' || c === 'zig') return n / this.fxRate();
+    return n; // USD (or unspecified) is already canonical
+  },
+
   fmtPrice(p,c) {
-    if (!p && p!==0) return c==='USD'?'$0':'0 ZiG';
-    const n = Number(p).toLocaleString();
-    const base = c==='USD' ? '$'+n : n+' ZiG';
-    // Optional approximate ZiG value alongside USD prices (user preference).
+    if (!p && p!==0) return '$0';
+    const usd  = this.toUSD(p, c);
+    const base = '$' + usd.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    // Optionally show the approximate ZiG value alongside (user preference).
     try {
-      const u = this.currentUser && this.currentUser();
+      const u  = this.currentUser && this.currentUser();
       const ps = u && u.privacySettings;
-      if (ps && ps.showZig && c === 'USD' && Number(p) > 0) {
-        const rate = Number((this.state && this.state.fxRate) || 36);
-        return base + ' ≈ ' + Math.round(Number(p)*rate).toLocaleString() + ' ZiG';
+      if (ps && ps.showZig && usd > 0) {
+        return base + ' ≈ ' + Math.round(usd * this.fxRate()).toLocaleString() + ' ZiG';
       }
     } catch(e){}
     return base;
