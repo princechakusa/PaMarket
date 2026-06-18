@@ -755,7 +755,7 @@ window.H = {
 
   async openInner(name, params) {
     const H=window.H;
-    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob','MyContactRequests','BusinessOnboarding','BusinessActivated','BusinessView','BusinessEditProfile','BusinessStaff','BusinessSubscription','BusinessVerify','BusinessListings','BusinessAssignListing','BusinessLeads','BusinessQuickReplies'];
+    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob','MyContactRequests','BusinessOnboarding','BusinessActivated','BusinessView','BusinessEditProfile','BusinessStaff','BusinessSubscription','BusinessVerify','BusinessListings','BusinessAssignListing','BusinessLeads','BusinessQuickReplies','BusinessFeatured','BusinessAnalytics'];
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
     try {
