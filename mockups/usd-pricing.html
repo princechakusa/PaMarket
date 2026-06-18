@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
+body{background:#EEF1F6;padding:40px;color:#18181B}
+.title{text-align:center;font-size:26px;font-weight:900;color:#1A3A8F;margin-bottom:4px}
+.title em{font-style:normal;color:#F5A623}
+.caption{text-align:center;font-size:13px;color:#667085;margin-bottom:30px}
+.wrap{display:flex;gap:60px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+.col{width:360px}
+.lbl{display:block;text-align:center;background:#1A3A8F;color:#fff;font-size:11px;font-weight:800;letter-spacing:.4px;padding:5px 0;border-radius:8px;margin-bottom:14px}
+.phone{width:360px;height:640px;background:#0A0A0B;border-radius:38px;padding:10px;box-shadow:0 24px 60px rgba(16,24,40,.26)}
+.screen{width:100%;height:100%;background:#F4F6FA;border-radius:28px;overflow:hidden;display:flex;flex-direction:column}
+.stat{height:28px;background:#1A3A8F;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:700}
+.hdr{background:#1A3A8F;color:#fff;padding:11px 14px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800}
+.hdr .back{font-size:20px;font-weight:300}
+.body{flex:1;padding:18px 16px;overflow:hidden}
+.flabel{font-size:12px;font-weight:700;color:#475467;text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px}
+.priceRow{display:flex;gap:8px;margin-bottom:8px}
+.pinput{flex:1;border:1.5px solid #E2E6EE;border-radius:11px;padding:12px 14px;font-size:17px;font-weight:800;color:#18181B;background:#fff;display:flex;align-items:center}
+.curtog{display:flex;border:1.5px solid #E2E6EE;border-radius:11px;overflow:hidden}
+.curtog .c{padding:0 15px;display:flex;align-items:center;font-size:14px;font-weight:800;background:#fff;color:#98A2B3}
+.curtog .c.on{background:#1A3A8F;color:#fff}
+.conv{background:#EAF1FF;border:1px solid #C7DBFF;border-radius:11px;padding:11px 13px;display:flex;align-items:center;gap:9px;margin-top:4px}
+.conv .big{font-size:15px;font-weight:800;color:#1A3A8F}
+.conv .sm{font-size:11.5px;color:#5B6B8C}
+.note{margin-top:16px;font-size:11.5px;color:#98A2B3;line-height:1.5}
+/* detail */
+.dimg{height:150px;background:linear-gradient(135deg,#c9d4ea,#aab8d6);display:flex;align-items:center;justify-content:center;color:#7488b0;font-size:13px;font-weight:700}
+.dwrap{padding:16px}
+.dtitle{font-size:17px;font-weight:800;color:#18181B;margin-bottom:6px}
+.dusd{font-size:30px;font-weight:900;color:#1A3A8F;letter-spacing:-.5px;line-height:1}
+.dzig{font-size:13px;color:#667085;font-weight:600;margin-top:5px}
+.badge{display:inline-block;background:#EAF7EF;color:#1A7F4B;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:20px;margin-top:10px}
+.card{max-width:760px;margin:30px auto 0;background:#fff;border:1px solid #E6E9F0;border-radius:18px;padding:22px 24px}
+.card h3{font-size:13px;font-weight:800;color:#1A3A8F;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.pt{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;margin-bottom:11px}
+.pt b{font-weight:800}
+.tick{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#1A7F4B;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+</style></head>
+<body>
+<div class="title">Pa<em>Market</em> · USD as the base currency</div>
+<div class="caption">USD is canonical everywhere. ZiG is auto-converted to USD on save (admin-set rate); ZiG shown for reference only.</div>
+
+<div class="wrap">
+  <!-- POST: enter ZiG, converts to USD -->
+  <div class="col">
+    <span class="lbl">POSTING — SELLER ENTERS ZiG</span>
+    <div class="phone"><div class="screen">
+      <div class="stat"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="hdr"><span class="back">‹</span><span>Post an Ad · Price</span></div>
+      <div class="body">
+        <div class="flabel">Price</div>
+        <div class="priceRow">
+          <div class="pinput">3,600</div>
+          <div class="curtog"><div class="c">USD</div><div class="c on">ZiG</div></div>
+        </div>
+        <div class="conv">
+          <div style="font-size:20px">≈</div>
+          <div>
+            <div class="big">Saves as $100 USD</div>
+            <div class="sm">Converted at 1 USD = 36 ZiG (current rate)</div>
+          </div>
+        </div>
+        <div class="note">Your price is stored in USD so it stays consistent and comparable across the whole app. Buyers see USD, with the ZiG estimate underneath.</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- DETAIL: USD primary, ZiG reference -->
+  <div class="col">
+    <span class="lbl">EVERYWHERE ELSE — USD PRIMARY</span>
+    <div class="phone"><div class="screen">
+      <div class="stat"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="hdr"><span class="back">‹</span><span>2017 Toyota Aqua</span></div>
+      <div class="dimg">Listing photo</div>
+      <div class="dwrap">
+        <div class="dtitle">2017 Toyota Aqua</div>
+        <div class="dusd">$100</div>
+        <div class="dzig">≈ 3,600 ZiG</div>
+        <div class="badge">✓ Priced in USD</div>
+        <div class="note" style="margin-top:16px">Sorting, filters, comparisons, subscriptions and reports all use the USD value as the single source of truth.</div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>How it works</h3>
+  <div class="pt"><span class="tick">$</span><span><b>USD is the source of truth.</b> Every price is stored, sorted, compared, and reported in USD — including subscriptions and boosts.</span></div>
+  <div class="pt"><span class="tick">⇄</span><span><b>ZiG auto-converts to USD on save.</b> Sellers can still type in ZiG; the app converts it using the central rate and stores USD. ZiG is shown only as a reference estimate.</span></div>
+  <div class="pt"><span class="tick">⚙</span><span><b>One admin-set rate.</b> You maintain a single USD→ZiG rate in Admin (app_settings); every device uses it, so conversions are consistent for everyone.</span></div>
+  <div class="pt"><span class="tick">🛡</span><span><b>Existing ZiG listings are safe.</b> They display their USD equivalent immediately and are saved as USD the next time they’re edited — no risky bulk change.</span></div>
+</div>
+</body></html>
