@@ -392,6 +392,23 @@
       </div>
 
       <div class="inner-content" style="padding-bottom:40px">
+        <!-- Overview (Module 8 — Dashboard) -->
+        ${(() => {
+          const mine = (H.state.listings || []).filter(l => l.businessId === b.id);
+          const views = mine.reduce((n, l) => n + (l.views || 0), 0);
+          const activeL = mine.filter(l => l.status === 'active').length;
+          const leads = ((H.state.businessLeads || {})[b.id] || []);
+          const newLeads = leads.filter(l => l.status === 'new').length;
+          const stat = (val, label, onclick) => `<div ${onclick ? `onclick="${onclick}"` : ''} style="flex:1;min-width:0;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:14px 8px;text-align:center;${onclick ? 'cursor:pointer' : ''}">
+            <div style="font-size:22px;font-weight:800;color:#1A3A8F">${val}</div>
+            <div style="font-size:11px;color:var(--sub);font-weight:600;margin-top:2px">${label}</div></div>`;
+          return `<div style="display:flex;gap:10px;margin-bottom:16px">
+            ${stat(views, 'Views', `H._bizListings.open('${b.id}')`)}
+            ${stat(leads.length, 'Leads', `H._bizLeads.open('${b.id}')`)}
+            ${stat(newLeads, 'New', `H._bizLeads.open('${b.id}')`)}
+            ${stat(activeL, 'Active', `H._bizListings.open('${b.id}')`)}
+          </div>`;
+        })()}
         <!-- Plan -->
         <div style="display:flex;align-items:center;justify-content:space-between;background:#EEF2FB;border-radius:14px;padding:14px 16px;margin-bottom:16px">
           <div>
