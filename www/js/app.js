@@ -1270,7 +1270,13 @@ window.H = {
     const a = (H.state.paidAds||[]).find(x=>x.id===id);
     // Listing link takes priority over external URL
     if(a && a.listingId) { H.openListing(a.listingId); return; }
-    if(url) { window.open(url,'_blank','noopener'); return; }
+    if(url) {
+      try {
+        var _native=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+        window.open(url,_native?'_system':'_blank',_native?'':' noopener');
+      } catch(e){ try{window.open(url,'_blank');}catch(e2){} }
+      return;
+    }
     if(a) H.toast((a.businessName||'Sponsored') + (a.tagline ? ' · ' + a.tagline : ''), 3000);
   },
 

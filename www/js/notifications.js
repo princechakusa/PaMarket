@@ -370,8 +370,10 @@
         const params = {};
         if (routeMatch[2]) { try { new URLSearchParams(routeMatch[2]).forEach((v, k) => { params[k] = v; }); } catch (e) {} }
         if ((page === 'Chat' || page === 'chat') && params.id) { _openChat(params.id); return; }
-        if (Object.keys(params).length) H.openInner(page, params);
-        else H.navTo(page);
+        const _rootPages = ['Home','Browse','Messages','Post','Account','Notifications'];
+        if (Object.keys(params).length) { H.openInner(page, params); return; }
+        if (_rootPages.indexOf(page) !== -1) H.navTo(page);
+        else H.openInner(page);
         return;
       }
       // Legacy listing deep link containing id=xxx

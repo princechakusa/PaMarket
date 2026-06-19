@@ -751,6 +751,11 @@
     const oid = H._activeOtherId;
     const other = (H.state.users || []).find(x => x.id === oid) || null;
     const online = typeof H.isUserOnline === 'function' && H.isUserOnline(oid);
+    // When the partner's profile is not yet in state.users, fall back to raw last_seen
+    if (!other && oid && H._lastSeen && H._lastSeen[oid] && typeof H.formatLastSeen === 'function') {
+      var ls = H.formatLastSeen(H._lastSeen[oid]);
+      if (ls) { el.innerHTML = '<span style="color:#cfe0ff">' + ls + '</span>'; return; }
+    }
     el.innerHTML = chatHdrSubHtml(other, online);
   };
   // Refresh ✓/✓✓ receipts on the user's own messages in the open chat.

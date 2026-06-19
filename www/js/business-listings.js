@@ -189,7 +189,8 @@
     createNew(businessId) {
       const b = getBiz(businessId); if (!b) return;
       H._postBizTarget = businessId;
-      if (typeof H.navTo === 'function') H.navTo('Post');
+      if (typeof H.openInner === 'function') H.openInner('Post');
+      else if (typeof H.navTo === 'function') H.navTo('Post');
     },
 
     async assign(listingId, businessId) {

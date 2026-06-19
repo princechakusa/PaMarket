@@ -1,4 +1,4 @@
-const CACHE = 'pamarket-v187';
+const CACHE = 'pamarket-v188';
 
 // Never cache these — auth tokens, API data, realtime
 const NO_CACHE = [
@@ -48,20 +48,23 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Stale-while-revalidate: serve cached version immediately, update cache in background.
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        if (response && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE).then(cache => cache.put(event.request, clone));
-        }
-        return response;
+    caches.open(CACHE).then(cache =>
+      cache.match(event.request).then(cached => {
+        const networkFetch = fetch(event.request).then(response => {
+          if (response && response.status === 200) {
+            cache.put(event.request, response.clone());
+          }
+          return response;
+        }).catch(() => cached || (
+          event.request.mode === 'navigate'
+            ? caches.match('./offline.html')
+            : new Response('Offline', { status: 503 })
+        ));
+        return cached || networkFetch;
       })
-      .catch(() => caches.match(event.request).then(r => {
-        if (r) return r;
-        if (event.request.mode === 'navigate') return caches.match('./offline.html');
-        return new Response('Offline', { status: 503 });
-      }))
+    )
   );
 });
 

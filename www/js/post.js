@@ -215,7 +215,6 @@
       const s = postState;
       if (s.step > 1) { this.prev(); return; }
       if (s.cat) { this.changeCat(); return; }
-      if (s.businessId && H._bizListings && H._bizListings.open) { H._bizListings.open(s.businessId); return; }
       if (typeof H.goBack === 'function') H.goBack(); else H.navTo('Home');
     },
     readVariations() {
