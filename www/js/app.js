@@ -69,6 +69,7 @@ window.H = {
     saves:{}, notifs:{}, currentUserId:null, cityFilter:'All Zimbabwe',
     _sortMode:'newest', _priceMin:'', _priceMax:'',
     adminLogs:[], supportTickets:[], paidAds:[], deletedConvIds:[],
+    deletedConvMeta:{},
     applications:[], contactRequests:[], savedCandidates:[], savedSearches:[],
     businesses:[]
   },
@@ -79,119 +80,121 @@ window.H = {
       if (!raw) return JSON.parse(JSON.stringify(this.defaultState));
       const loaded = JSON.parse(raw);
       const base   = JSON.parse(JSON.stringify(this.defaultState));
-      if (loaded._v !== this.STATE_VERSION) {
-        console.warn(
-          '[PaMarket] State schema mismatch (stored _v=' + loaded._v +
-          ', expected ' + this.STATE_VERSION + '). Migrating — preserving listings, users, conversations.'
-        );
-        // Preserve critical user-generated data; reset ephemeral/structural fields.
-        const migrated = Object.assign(base, {
-          users:           Array.isArray(loaded.users)           ? loaded.users           : base.users,
-          listings:        Array.isArray(loaded.listings)        ? loaded.listings        : base.listings,
-          conversations:   Array.isArray(loaded.conversations)   ? loaded.conversations   : base.conversations,
-          saves:           loaded.saves  && typeof loaded.saves  === 'object' ? loaded.saves  : base.saves,
-          notifs:          loaded.notifs && typeof loaded.notifs === 'object' ? loaded.notifs : base.notifs,
-          currentUserId:   loaded.currentUserId || base.currentUserId,
-          cityFilter:      loaded.cityFilter    || base.cityFilter,
-          txns:            Array.isArray(loaded.txns)            ? loaded.txns            : base.txns,
-          deletedConvIds:  Array.isArray(loaded.deletedConvIds)  ? loaded.deletedConvIds  : base.deletedConvIds,
-          // Jobs-area user data — preserve across schema migrations
-          applications:    Array.isArray(loaded.applications)    ? loaded.applications    : base.applications,
-          contactRequests: Array.isArray(loaded.contactRequests) ? loaded.contactRequests : base.contactRequests,
-          savedCandidates: Array.isArray(loaded.savedCandidates) ? loaded.savedCandidates : base.savedCandidates,
-          savedSearches:   Array.isArray(loaded.savedSearches)   ? loaded.savedSearches   : base.savedSearches,
-          // Business Platform — preserve owner's businesses across migrations
-          businesses:      Array.isArray(loaded.businesses)      ? loaded.businesses      : base.businesses,
-        });
-        migrated._v = this.STATE_VERSION;
-        return migrated;
-      }
-      return Object.assign(base, loaded);
-    } catch { return JSON.parse(JSON.stringify(this.defaultState)); }
+      // Merge loaded fields onto defaults. Fields absent from the lean snapshot
+      // (listings from other sellers, paidAds, etc.) fall back to empty arrays
+      // from base and will be populated by the first cloud fetch.
+      const merged = Object.assign(base, {
+        currentUserId:   loaded.currentUserId || base.currentUserId,
+        cityFilter:      loaded.cityFilter    || base.cityFilter,
+        _sortMode:       loaded._sortMode     || base._sortMode,
+        _priceMin:       loaded._priceMin     !== undefined ? loaded._priceMin : base._priceMin,
+        _priceMax:       loaded._priceMax     !== undefined ? loaded._priceMax : base._priceMax,
+        users:           Array.isArray(loaded.users)           ? loaded.users           : base.users,
+        listings:        Array.isArray(loaded.listings)        ? loaded.listings        : base.listings,
+        conversations:   Array.isArray(loaded.conversations)   ? loaded.conversations   : base.conversations,
+        saves:           loaded.saves  && typeof loaded.saves  === 'object' ? loaded.saves  : base.saves,
+        notifs:          loaded.notifs && typeof loaded.notifs === 'object' ? loaded.notifs : base.notifs,
+        deletedConvIds:  Array.isArray(loaded.deletedConvIds)  ? loaded.deletedConvIds  : base.deletedConvIds,
+        deletedConvMeta: loaded.deletedConvMeta && typeof loaded.deletedConvMeta === 'object' ? loaded.deletedConvMeta : {},
+        applications:    Array.isArray(loaded.applications)    ? loaded.applications    : base.applications,
+        contactRequests: Array.isArray(loaded.contactRequests) ? loaded.contactRequests : base.contactRequests,
+        savedCandidates: Array.isArray(loaded.savedCandidates) ? loaded.savedCandidates : base.savedCandidates,
+        savedSearches:   Array.isArray(loaded.savedSearches)   ? loaded.savedSearches   : base.savedSearches,
+        businesses:      Array.isArray(loaded.businesses)      ? loaded.businesses      : base.businesses,
+      });
+      merged._v = this.STATE_VERSION;
+      return merged;
+    } catch(e) { return JSON.parse(JSON.stringify(this.defaultState)); }
   },
 
   saveState() {
-    const safe = JSON.parse(JSON.stringify(this.state));
-    if (safe.users) safe.users.forEach(u => { delete u._localPassword; });
-    // Keep localStorage small (the ~5MB quota fills fast otherwise). Base64 image
-    // blobs are the main offender — they're only needed in memory for instant
-    // preview; the cloud URL is what we persist. Stripping them from the SAVED
-    // copy (not this.state) keeps storage tiny without affecting the live view.
     try {
-      if (Array.isArray(safe.listings)) {
-        safe.listings.forEach(l => {
-          if (Array.isArray(l.photos)) l.photos = l.photos.filter(p => typeof p === 'string' && p.indexOf('data:') !== 0);
-          if (l.attrs && Array.isArray(l.attrs.photos)) l.attrs.photos = l.attrs.photos.filter(p => typeof p === 'string' && p.indexOf('data:') !== 0);
-        });
+      const uid = this.state.currentUserId || null;
+
+      // ── Lean snapshot: only what cannot be re-fetched from Supabase on boot ──
+      // Excluded (always re-fetched): users (except self), listings (except own),
+      // paidAds, adminLogs, supportTickets, reports, txns.
+      const snap = {
+        _v: this.STATE_VERSION,
+        currentUserId: uid,
+        cityFilter:  this.state.cityFilter  || 'All Zimbabwe',
+        _sortMode:   this.state._sortMode   || 'newest',
+        _priceMin:   this.state._priceMin   || '',
+        _priceMax:   this.state._priceMax   || '',
+        saves:              this.state.saves              || {},
+        businesses:         this.state.businesses         || [],
+        applications:       this.state.applications       || [],
+        contactRequests:    this.state.contactRequests    || [],
+        savedCandidates:    this.state.savedCandidates    || [],
+        savedSearches:      this.state.savedSearches      || [],
+        deletedConvIds:    (this.state.deletedConvIds    || []).slice(0, 300),
+        deletedConvMeta:    this.state.deletedConvMeta   || {},
+      };
+
+      // Current user's profile only (needed for instant Account page render).
+      const selfProfile = uid && (this.state.users || []).find(u => u.id === uid);
+      if (selfProfile) {
+        const su = Object.assign({}, selfProfile);
+        delete su._localPassword;
+        snap.users = [su];
+      } else {
+        snap.users = [];
       }
-      // Don't persist unbounded chat history; the cloud holds the full thread.
-      if (Array.isArray(safe.conversations)) {
-        safe.conversations.forEach(c => {
-          if (Array.isArray(c.messages) && c.messages.length > 100) c.messages = c.messages.slice(-100);
-        });
+
+      // Current user's own listings only (all statuses: active, pending, sold, rejected).
+      // Other users' listings are always re-fetched from Supabase on boot.
+      if (uid && Array.isArray(this.state.listings)) {
+        snap.listings = this.state.listings
+          .filter(l => l.sellerId === uid)
+          .map(l => {
+            const lc = Object.assign({}, l);
+            if (Array.isArray(lc.photos)) lc.photos = lc.photos.filter(p => typeof p === 'string' && !p.startsWith('data:'));
+            return lc;
+          });
+      } else {
+        snap.listings = [];
       }
-    } catch(_) {}
-    safe._v = this.STATE_VERSION;
-    const payload = JSON.stringify(safe);
-    try {
-      localStorage.setItem(this.KEY, payload);
-    } catch(e) {
-      if (e.name !== 'QuotaExceededError') return;
-      this.toast('Storage full — clearing old data to free space');
-      // Remove non-critical cached keys to reclaim space.
-      const evictKeys = ['pamarket_rv', 'pamarket_search_cache', 'pamarket_img_cache'];
-      evictKeys.forEach(k => { try { localStorage.removeItem(k); } catch(_) {} });
-      // Also evict any unknown keys that are not our primary state key.
-      try {
-        const allKeys = Object.keys(localStorage);
-        allKeys.forEach(k => {
-          if (k !== this.KEY && k.startsWith('pamarket_')) {
-            try { localStorage.removeItem(k); } catch(_) {}
-          }
+
+      // Conversations: 50 most-recent, 30 messages each, no base64 images.
+      if (Array.isArray(this.state.conversations)) {
+        const sorted = this.state.conversations.slice().sort((a, b) => {
+          const at = ((a.messages || []).slice(-1)[0] || {}).t || 0;
+          const bt = ((b.messages || []).slice(-1)[0] || {}).t || 0;
+          return bt - at;
         });
-      } catch(_) {}
-      // Retry once after freeing space.
-      try {
-        localStorage.setItem(this.KEY, payload);
-        return;
-      } catch(e2) { /* still too big — fall through to last resort */ }
-      // Last resort: drop heavy base64 photo blobs from the cached state. The
-      // listings remain (with their cloud-hosted URL photos); only un-uploaded
-      // base64 originals are dropped. This guarantees a post can never crash the
-      // app on a full storage quota.
-      try {
-        if (Array.isArray(safe.listings)) {
-          safe.listings.forEach(l => {
-            if (Array.isArray(l.photos)) {
-              l.photos = l.photos.filter(p => typeof p === 'string' && p.indexOf('data:') !== 0);
+        snap.conversations = sorted.slice(0, 50).map(c => {
+          const msgs = (c.messages || []).slice(-30).map(m => {
+            if (m.image && typeof m.image === 'string' && m.image.startsWith('data:')) {
+              const mc = Object.assign({}, m); delete mc.image; return mc;
             }
+            return m;
           });
-        }
-        localStorage.setItem(this.KEY, JSON.stringify(safe));
-        return;
-      } catch(e3) { /* still too big — prune heavy collections below */ }
-      // Aggressive prune: trim the collections that grow unbounded. Everything
-      // dropped here is re-fetched from the cloud, so the app stays correct.
-      try {
-        if (safe.notifs && typeof safe.notifs === 'object') {
-          Object.keys(safe.notifs).forEach(k => {
-            if (Array.isArray(safe.notifs[k]) && safe.notifs[k].length > 50) safe.notifs[k] = safe.notifs[k].slice(0, 50);
-          });
-        }
-        if (Array.isArray(safe.conversations)) {
-          safe.conversations.forEach(c => { if (Array.isArray(c.messages) && c.messages.length > 30) c.messages = c.messages.slice(-30); });
-        }
-        localStorage.setItem(this.KEY, JSON.stringify(safe));
-        return;
-      } catch(e4) { /* one last shrink */ }
-      try {
-        if (Array.isArray(safe.listings) && safe.listings.length > 60) safe.listings = safe.listings.slice(0, 60);
-        if (Array.isArray(safe.users) && safe.users.length > 200) safe.users = safe.users.slice(0, 200);
-        localStorage.setItem(this.KEY, JSON.stringify(safe));
-      } catch(e5) {
-        this.toast('Could not save — please clear some browser storage');
+          return Object.assign({}, c, { messages: msgs });
+        });
+      } else {
+        snap.conversations = [];
       }
-    }
+
+      // Notifications: current user's only, latest 30.
+      snap.notifs = {};
+      if (uid && this.state.notifs && Array.isArray(this.state.notifs[uid])) {
+        snap.notifs[uid] = this.state.notifs[uid].slice(0, 30);
+      }
+
+      // ── Write ──
+      const _write = (obj) => localStorage.setItem(this.KEY, JSON.stringify(obj));
+      try {
+        _write(snap);
+      } catch (e) {
+        if (e.name !== 'QuotaExceededError') return;
+        // Drop conversations and retry — they are fully re-synced from cloud.
+        snap.conversations = [];
+        snap.notifs = {};
+        try { _write(snap); return; } catch(e2) { /* fall through */ }
+        // Nuclear: bare preferences only.
+        try { _write({ _v: this.STATE_VERSION, currentUserId: uid, cityFilter: snap.cityFilter, saves: snap.saves, users: snap.users }); } catch(e3) {}
+      }
+    } catch(e) { /* saveState must never propagate */ }
   },
 
   uid() {
@@ -894,7 +897,7 @@ window.H = {
     l.views=(l.views||0)+1;
     const rv=JSON.parse(localStorage.getItem('pamarket_rv')||'[]');
     const filtered=[...new Set([id,...rv.filter(x=>x!==id)])].slice(0,10);
-    localStorage.setItem('pamarket_rv',JSON.stringify(filtered));
+    try{localStorage.setItem('pamarket_rv',JSON.stringify(filtered));}catch(_){}
     this.saveState();
     this.openInner('Detail',{id});
   },
@@ -2122,6 +2125,13 @@ window.H = {
     this.state.listings=(this.state.listings||[]).filter(l=>!String(l.id).startsWith('demo'));
     this.state.users=(this.state.users||[]).filter(u=>!String(u.id).startsWith('demo'));
     if (hadDemo) this.saveState();
+    // One-time cleanup: evict other localStorage keys that may hold stale large data
+    // from previous app versions (search cache, image cache, etc.).
+    try {
+      ['pamarket_search_cache','pamarket_img_cache'].forEach(function(k){
+        try { localStorage.removeItem(k); } catch(_){}
+      });
+    } catch(_) {}
     // Reusable error logger — console + error_logs table. Use H.logError(context, err)
     // in catch blocks instead of swallowing failures silently.
     window.H.logError = function(context, err, code) {
