@@ -67,9 +67,16 @@
           act.status = 'expired';
           const b = getBiz(bid); if (b) { b.planId = 'free'; }
           changed = true;
-        } else { // auto-renew: roll the period forward
+        } else { // auto-renew: roll the period forward + raise a renewal invoice
           act.currentPeriodEnd = periodEnd(act.billingCycle);
           changed = true;
+          // Google-safe: a paid renewal raises a PENDING invoice (admin marks paid).
+          const b = getBiz(bid);
+          const plan = (H.BIZ_PLANS || []).find(p => p.id === (act.planId || (b && b.planId)));
+          const amount = plan ? (act.billingCycle === 'yearly' ? plan.price * 10 : plan.price) : 0;
+          if (amount > 0 && typeof H.chargeBusiness === 'function') {
+            H.chargeBusiness(bid, 'subscription', amount, (plan ? plan.name : 'Plan') + ' renewal (' + (act.billingCycle || 'monthly') + ')');
+          }
         }
       }
     });

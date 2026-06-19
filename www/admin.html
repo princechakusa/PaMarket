@@ -2011,6 +2011,17 @@ function renderSettings() {
   html+='<div style="font-size:12px;margin-top:11px;color:'+(stale?'#B42318':'var(--sub)')+'">'+(upd ? ((stale?'⚠️ ':'')+'Last updated '+upd.toLocaleString()+(stale?' — please review the current rate.':'')) : '⚠️ Rate has never been set — please set the current rate.')+'</div>';
   html+='</div>';
 
+  // ── Support WhatsApp (shown as the "Pay via WhatsApp" target for business invoices) ──
+  var supportWa = s.supportWhatsapp || '';
+  html+='<div class="tbl-wrap" style="padding:18px;margin-top:14px">';
+  html+='<div style="font-size:14px;font-weight:800;margin-bottom:6px">Support WhatsApp</div>';
+  html+='<div style="font-size:12.5px;color:var(--sub);margin-bottom:12px">Number (with country code, digits only) businesses contact to pay invoices. Powers the "Pay via WhatsApp" button.</div>';
+  html+='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
+  html+='<span style="font-size:14px;font-weight:700">+</span>';
+  html+='<input type="text" inputmode="numeric" id="supportWaInput" value="'+esc(supportWa)+'" placeholder="263771234567" style="flex:1;min-width:160px;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:700">';
+  html+='<button onclick="saveSupportWa()" style="padding:9px 18px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Save</button>';
+  html+='</div></div>';
+
   html+='<div class="tbl-wrap" style="padding:18px;margin-top:14px">';
   html+='<div style="font-size:14px;font-weight:800;margin-bottom:14px">App Info</div>';
   html+='<div style="font-size:13px;color:var(--sub);line-height:2">';
@@ -2043,6 +2054,18 @@ async function saveFxRate() {
     var sr = await sb.from('app_settings').upsert({id:1,settings:DATA.settings,updated_at:new Date().toISOString()});
     if (sr.error) throw sr.error;
     toast('Exchange rate updated');
+    renderSettings();
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function saveSupportWa() {
+  var raw = ((document.getElementById('supportWaInput')||{}).value || '').replace(/\D/g,'');
+  try {
+    DATA.settings = DATA.settings || {};
+    DATA.settings.supportWhatsapp = raw;
+    var sr = await sb.from('app_settings').upsert({id:1,settings:DATA.settings,updated_at:new Date().toISOString()});
+    if (sr.error) throw sr.error;
+    toast(raw ? 'Support number saved' : 'Support number cleared');
     renderSettings();
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
