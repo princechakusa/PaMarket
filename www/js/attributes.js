@@ -66,6 +66,8 @@
       { key:'ftype',        label:'Type',          type:'select', options:['Clothing','Shoes','Bags','Watches','Jewellery','Accessories'] },
       { key:'gender',       label:'For',           type:'select', options:['Women','Men','Unisex','Kids'] },
       { key:'size',         label:'Size',          type:'text',   placeholder:'e.g. M, UK 8' },
+      { key:'color',        label:'Colour',        type:'text',   placeholder:'e.g. Blue, Black' },
+      { key:'fabric',       label:'Fabric / Material', type:'select', options:['Cotton','Polyester','Nylon','Wool','Denim','Leather','Silk','Linen','Suede','Synthetic','Other'] },
       { key:'condition',    label:'Condition',     type:'select', options:['Brand New','Used'] },
       { key:'brand',        label:'Brand',         type:'text',   placeholder:'optional' }
     ],
