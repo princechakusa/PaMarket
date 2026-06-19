@@ -314,6 +314,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           Analytics
         </button>
+        <div class="nav-section">Business Platform</div>
+        <button class="nav-item" data-tab="businesses" onclick="showTab('businesses')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9l2-5h14l2 5"/><line x1="12" y1="13" x2="12" y2="17"/></svg>
+          Businesses
+        </button>
         <div class="nav-section">Config</div>
         <button class="nav-item" data-tab="settings" onclick="showTab('settings')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -375,8 +380,10 @@ try {
 // ── State ─────────────────────────────────────────────────
 var DATA = {
   users:[], listings:[], verifications:[], reports:[], contactRequests:[],
-  ads:[], settings:{}, notifHistory:[], chats:[]
+  ads:[], settings:{}, notifHistory:[], chats:[],
+  businesses:[], businessSubs:[], businessLeads:[]
 };
+var _bizFilter = 'all';
 var _contactFilter = 'pending';
 var currentTab = 'overview';
 var _listingFilter = 'pending';
@@ -487,7 +494,8 @@ function closeSidebar(){ document.getElementById('sidebar').classList.remove('op
 var TAB_TITLES = {
   overview:'Overview', listings:'Listings', users:'Users', verifications:'Verifications',
   notifications:'Send Notification', reports:'Reports', contacts:'Contact Requests',
-  ads:'Ads & Boosts', chats:'User Chats', analytics:'Analytics', settings:'Settings'
+  ads:'Ads & Boosts', chats:'User Chats', analytics:'Analytics', settings:'Settings',
+  businesses:'Business Platform'
 };
 function showTab(name) {
   currentTab = name;
@@ -503,7 +511,8 @@ function renderTab() {
     overview: renderOverview, listings: renderListings, users: renderUsers,
     verifications: renderVerifications, notifications: renderNotifications,
     reports: renderReports, contacts: renderContactRequests, ads: renderAds,
-    chats: renderChats, analytics: renderAnalytics, settings: renderSettings
+    chats: renderChats, analytics: renderAnalytics, settings: renderSettings,
+    businesses: renderBusinesses
   }[currentTab];
   if(fn) fn();
 }
@@ -571,7 +580,7 @@ async function showDash() {
 // ── Data loading ──────────────────────────────────────────
 async function loadAllData() {
   document.getElementById('mainContent').innerHTML = '<div class="loading-msg">Loading dashboard data…</div>';
-  await Promise.allSettled([loadUsers(), loadListings(), loadVerifications(), loadReports(), loadContactRequests(), loadAds(), loadSettings(), loadNotifHistory(), loadChats()]);
+  await Promise.allSettled([loadUsers(), loadListings(), loadVerifications(), loadReports(), loadContactRequests(), loadAds(), loadSettings(), loadNotifHistory(), loadChats(), loadBusinesses()]);
   updateBadges();
   renderTab();
 }
@@ -597,7 +606,7 @@ async function loadUsers() {
 }
 async function loadListings() {
   try {
-    var r = await sb.from('listings').select('id,title,price,currency,cat:category,prov:province,city,photos,status,sellerId:seller_id,sellerName:seller_name,createdAt:created_at,views,desc:description').order('created_at',{ascending:false}).limit(300);
+    var r = await sb.from('listings').select('id,title,price,currency,cat:category,prov:province,city,photos,status,sellerId:seller_id,sellerName:seller_name,createdAt:created_at,views,desc:description,business_id').order('created_at',{ascending:false}).limit(300);
     if(!r.error && r.data) DATA.listings = r.data;
   } catch(e){}
 }
@@ -667,6 +676,134 @@ async function loadNotifHistory() {
     if(!r.error && r.data) DATA.notifHistory = r.data;
     else DATA.notifHistory=[];
   } catch(e){ DATA.notifHistory=[]; }
+}
+
+// ════════════════════════════════════════════════════════════
+// BUSINESS PLATFORM SECTION (Module 12)
+// ════════════════════════════════════════════════════════════
+var BIZ_PLANS = ['free','starter','pro','premium'];
+async function loadBusinesses() {
+  try {
+    var rb = await sb.from('businesses').select('*').order('created_at',{ascending:false}).limit(500);
+    DATA.businesses = (!rb.error && rb.data) ? rb.data : [];
+  } catch(e){ DATA.businesses = []; }
+  try {
+    var rs = await sb.from('business_subscriptions').select('business_id,plan_id,billing_cycle,status,current_period_end').eq('status','active');
+    DATA.businessSubs = (!rs.error && rs.data) ? rs.data : [];
+  } catch(e){ DATA.businessSubs = []; }
+  try {
+    var rl = await sb.from('business_leads').select('business_id,status').limit(2000);
+    DATA.businessLeads = (!rl.error && rl.data) ? rl.data : [];
+  } catch(e){ DATA.businessLeads = []; }
+}
+
+function bizActivePlan(id){ var s=DATA.businessSubs.find(function(x){return x.business_id===id;}); return s?s.plan_id:'free'; }
+function bizLeadCount(id){ return DATA.businessLeads.filter(function(l){return l.business_id===id;}).length; }
+function bizListingCount(id){ return DATA.listings.filter(function(l){return l.business_id===id;}).length; }
+function ownerName(uid){ var u=DATA.users.find(function(x){return x.id===uid;}); return u?(u.name||u.email||'—'):'—'; }
+
+function renderBusinesses() {
+  var list = DATA.businesses.filter(function(b){ return _bizFilter==='all' || b.status===_bizFilter; });
+  var counts = {
+    all: DATA.businesses.length,
+    active: DATA.businesses.filter(function(b){return b.status==='active';}).length,
+    suspended: DATA.businesses.filter(function(b){return b.status==='suspended';}).length,
+    draft: DATA.businesses.filter(function(b){return b.status==='draft'||b.status==='pending_activation';}).length
+  };
+
+  var html = '<div class="sec-head"><div class="sec-title">Business Platform</div><div class="sec-actions">';
+  ['all','active','suspended','draft'].forEach(function(f){
+    html += '<button class="filter-btn'+((_bizFilter===f)?' on':'')+'" onclick="_bizFilter=\''+f+'\';renderBusinesses()">'+f.charAt(0).toUpperCase()+f.slice(1)+' ('+counts[f]+')</button>';
+  });
+  html += '<button class="btn-refresh" onclick="loadBusinesses().then(renderBusinesses)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button>';
+  html += '</div></div>';
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Business</th><th>Owner</th><th>Type</th><th>Plan</th><th>Verify</th><th>Listings</th><th>Leads</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  if(!list.length){ html += '<tr><td colspan="9"><div class="empty-msg">No businesses found</div></td></tr>'; }
+  list.forEach(function(b){
+    var plan = bizActivePlan(b.id);
+    var st = b.status||'draft';
+    var stClass = st==='active'?'active':(st==='suspended'?'rejected':'pending');
+    html += '<tr>';
+    html += '<td style="max-width:170px"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px">'+esc(b.name||'Unnamed')+'</div><div style="color:var(--sub);font-size:11px">'+esc((b.city||'')+(b.province?', '+b.province:''))+'</div></td>';
+    html += '<td style="color:var(--sub);font-size:12px">'+esc(ownerName(b.owner_user_id))+'</td>';
+    html += '<td><span class="badge badge-info">'+esc(b.biz_type||'—')+'</span></td>';
+    html += '<td><span class="badge badge-info" style="text-transform:capitalize">'+esc(plan)+'</span></td>';
+    html += '<td><span class="badge badge-info">L'+(b.verification_level||0)+'</span></td>';
+    html += '<td style="text-align:center">'+bizListingCount(b.id)+'</td>';
+    html += '<td style="text-align:center">'+bizLeadCount(b.id)+'</td>';
+    html += '<td><span class="badge badge-'+stClass+'">'+esc(st)+'</span></td>';
+    html += '<td><div style="display:flex;gap:4px;flex-wrap:wrap">';
+    html += '<button class="ab ab-view" onclick="viewBusiness(\''+b.id+'\')">View</button>';
+    if(st==='suspended') html += '<button class="ab ab-approve" onclick="bizSetStatus(\''+b.id+'\',\'active\')">Activate</button>';
+    else html += '<button class="ab ab-reject" onclick="bizSetStatus(\''+b.id+'\',\'suspended\')">Suspend</button>';
+    html += '<button class="ab ab-view" onclick="bizSetPlan(\''+b.id+'\')">Plan</button>';
+    html += '<button class="ab ab-view" onclick="bizSetVerify(\''+b.id+'\')">Verify</button>';
+    html += '</div></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function viewBusiness(id) {
+  var b = DATA.businesses.find(function(x){return x.id===id;}); if(!b) return;
+  var plan = bizActivePlan(id);
+  var sub = DATA.businessSubs.find(function(x){return x.business_id===id;});
+  var leadsNew = DATA.businessLeads.filter(function(l){return l.business_id===id && l.status==='new';}).length;
+  openModal('<div class="modal-title">'+esc(b.name||'Business')+'<button class="modal-close" onclick="closeModal()">×</button></div>'
+    + '<div style="font-size:13px;color:var(--sub);line-height:1.8">'
+    + '<div><b>Owner:</b> '+esc(ownerName(b.owner_user_id))+'</div>'
+    + '<div><b>Type:</b> '+esc(b.biz_type||'—')+' &nbsp; <b>Category:</b> '+esc(b.category||'—')+'</div>'
+    + '<div><b>Contact:</b> '+esc(b.phone||'—')+(b.email?(' · '+esc(b.email)):'')+'</div>'
+    + '<div><b>Location:</b> '+esc([b.suburb,b.city,b.province].filter(Boolean).join(', ')||'—')+'</div>'
+    + '<div><b>Plan:</b> '+esc(plan)+(sub&&sub.billing_cycle?(' ('+esc(sub.billing_cycle)+')'):'')+(sub&&sub.current_period_end?(' · renews '+fmtDate(sub.current_period_end)):'')+'</div>'
+    + '<div><b>Verification level:</b> '+(b.verification_level||0)+'</div>'
+    + '<div><b>Status:</b> '+esc(b.status||'—')+'</div>'
+    + '<div><b>Listings:</b> '+bizListingCount(id)+' &nbsp; <b>Leads:</b> '+bizLeadCount(id)+' ('+leadsNew+' new)</div>'
+    + '</div>'
+    + (b.description?'<div style="font-size:13px;color:var(--sub);line-height:1.6;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">'+esc(b.description)+'</div>':'')
+    + '<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">'
+    + (b.status==='suspended'
+        ? '<button class="btn-verif-approve" onclick="bizSetStatus(\''+id+'\',\'active\');closeModal()">Activate</button>'
+        : '<button class="btn-verif-reject" onclick="bizSetStatus(\''+id+'\',\'suspended\');closeModal()">Suspend</button>')
+    + '<button class="btn-verif-approve" style="background:#1A3A8F" onclick="bizSetPlan(\''+id+'\')">Override Plan</button>'
+    + '</div>'
+  );
+}
+
+async function bizSetStatus(id, status) {
+  try {
+    var r = await sb.from('businesses').update({status:status}).eq('id',id);
+    if(r.error) throw r.error;
+    var b = DATA.businesses.find(function(x){return x.id===id;}); if(b) b.status=status;
+    renderBusinesses(); toast('Business '+status);
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function bizSetVerify(id) {
+  var b = DATA.businesses.find(function(x){return x.id===id;}); if(!b) return;
+  var next = ((b.verification_level||0)+1)%4;
+  try {
+    var r = await sb.from('businesses').update({verification_level:next}).eq('id',id);
+    if(r.error) throw r.error;
+    b.verification_level = next;
+    renderBusinesses(); toast('Verification level set to '+next);
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function bizSetPlan(id) {
+  var cur = bizActivePlan(id);
+  var next = BIZ_PLANS[(BIZ_PLANS.indexOf(cur)+1)%BIZ_PLANS.length];
+  try {
+    // Supersede current active sub, insert a new active one (admin override).
+    await sb.from('business_subscriptions').update({status:'downgraded'}).eq('business_id',id).eq('status','active');
+    var r = await sb.from('business_subscriptions').insert({business_id:id, plan_id:next, billing_cycle:'monthly', status:'active'});
+    if(r.error) throw r.error;
+    var s = DATA.businessSubs.find(function(x){return x.business_id===id;});
+    if(s) s.plan_id=next; else DATA.businessSubs.push({business_id:id,plan_id:next,billing_cycle:'monthly',status:'active'});
+    if(currentTab==='businesses') renderBusinesses();
+    toast('Plan overridden to '+next);
+  } catch(e){ toast('Error: '+e.message,'error'); }
 }
 
 function updateBadges() {
