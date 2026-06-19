@@ -256,6 +256,230 @@
   // Public entry point (listings/search will call this).
   H.openBusinessProfile = function (id) { H.openInner('BusinessProfile', { id }); };
 
+  // ── PAGE: BusinessShop — SHEIN-style full storefront ─────────
+  let _shopCat = 'all';
+  let _shopQ   = '';
+
+  function shopProducts(b) {
+    return (H.state.listings || []).filter(function (l) {
+      return l.status === 'active' && (
+        String(l.businessId) === String(b.id) ||
+        String(l.sellerId)   === String(b.ownerUserId) ||
+        String(l.userId)     === String(b.ownerUserId)
+      );
+    });
+  }
+
+  pages.BusinessShop = function (params) {
+    const b = getBiz(params && params.id);
+    if (!b) return `<div class="page active">${innerTopbar('Shop')}${H.emptyState('Shop not found', '')}</div>`;
+    if (b.status !== 'active' && !canEdit(b)) {
+      return `<div class="page active">${innerTopbar('Shop')}${H.emptyState('Unavailable', 'This shop is not currently active.')}</div>`;
+    }
+
+    const u = currentUser();
+    const verified = (b.verificationLevel || 0) >= 2;
+    const loc = [b.city, b.province].filter(Boolean).join(', ') || 'Zimbabwe';
+    const waNum = (b.whatsapp || '').replace(/[^0-9]/g, '');
+    const isOwn = canEdit(b);
+
+    const allProds = shopProducts(b);
+    const catIds  = allProds.map(function (l) { return l.cat; }).filter(Boolean)
+      .filter(function (v, i, a) { return a.indexOf(v) === i; });
+    const shopCats = catIds.map(function (id) {
+      return H.CATEGORIES && H.CATEGORIES.find(function (c) { return c.id === id; });
+    }).filter(Boolean);
+
+    const q = (_shopQ || '').toLowerCase();
+    let shown = _shopCat === 'all' ? allProds : allProds.filter(function (l) { return l.cat === _shopCat; });
+    if (q) shown = shown.filter(function (l) { return (l.title || '').toLowerCase().indexOf(q) !== -1; });
+
+    const coverStyle = b.cover
+      ? `background-image:url('${escHtml(b.cover)}');background-size:cover;background-position:center`
+      : 'background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 50%,#2245b8 100%)';
+
+    const fmtP = function (l) { return H.fmtPrice ? H.fmtPrice(l.price, l.currency) : ('$' + (l.price || 0)); };
+
+    const productCard = function (l) {
+      const hasPhoto = l.photos && l.photos[0];
+      const icon = typeof H.categoryIcon === 'function' ? H.categoryIcon(l.cat) : '';
+      return `<div onclick="H.openListing&&H.openListing('${escHtml(String(l.id))}')"
+        style="background:var(--card,#fff);border-radius:14px;overflow:hidden;border:1px solid var(--border,#E8ECF4);cursor:pointer;position:relative">
+        <div style="aspect-ratio:1/1;background:#EEF2FB;position:relative;overflow:hidden">
+          ${hasPhoto
+            ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover">`
+            : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px">${icon}</div>`}
+          <div onclick="event.stopPropagation()"
+            style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;cursor:pointer">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1A3A8F" stroke-width="2.2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </div>
+          ${l.negotiable ? `<span style="position:absolute;top:8px;left:8px;background:#F59E0B;color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:6px;letter-spacing:.3px">NEG</span>` : ''}
+        </div>
+        <div style="padding:8px 10px 12px">
+          <div style="font-size:14px;font-weight:900;color:#1A3A8F;margin-bottom:2px">${escHtml(fmtP(l))}</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${escHtml(l.title || 'Untitled')}</div>
+          ${l.size
+            ? `<div style="font-size:10.5px;color:var(--sub)">Size: <span style="color:var(--text);font-weight:700">${escHtml(l.size)}</span></div>`
+            : `<div style="font-size:10.5px;color:var(--sub)">${escHtml(loc)}</div>`}
+        </div>
+      </div>`;
+    };
+
+    const chipStyle = function (active) {
+      return active
+        ? 'flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #1A3A8F;background:#1A3A8F;color:#fff'
+        : 'flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text)';
+    };
+
+    return `<div class="page active">
+
+      <!-- Sticky header -->
+      <div style="position:sticky;top:0;z-index:100;background:var(--card,#fff);border-bottom:1px solid var(--border,#E8ECF4);display:flex;align-items:center;gap:10px;padding:10px 14px">
+        <div onclick="H.goBack&&H.goBack()" style="width:34px;height:34px;border-radius:50%;background:var(--bg,#EEF2FB);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <span style="flex:1;font-size:15px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(b.name)}</span>
+        ${verified ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#E8F5E9;color:#2E7D32;border-radius:20px;padding:4px 10px;font-size:10.5px;font-weight:800;flex-shrink:0;white-space:nowrap">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="#2E7D32"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Verified Shop
+        </span>` : ''}
+      </div>
+
+      <!-- Cover banner -->
+      <div style="height:140px;${coverStyle}"></div>
+
+      <!-- Identity block -->
+      <div style="background:var(--card,#fff);padding:0 16px 16px">
+        <div style="display:flex;align-items:flex-end;gap:14px;margin-top:-32px;margin-bottom:12px">
+          <div style="width:64px;height:64px;border-radius:50%;border:3px solid var(--card,#fff);overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#1A3A8F,#2245b8);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;box-shadow:0 3px 12px rgba(0,0,0,0.18)">
+            ${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}
+          </div>
+          <div style="flex:1;min-width:0;padding-bottom:2px">
+            <div style="font-size:17px;font-weight:900;color:var(--text);line-height:1.1">${escHtml(b.name)}</div>
+            <div style="font-size:12px;color:var(--sub);margin-top:3px;display:flex;align-items:center;gap:4px">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              ${escHtml(loc)}
+            </div>
+          </div>
+          ${!isOwn ? `<button id="bsFollowBtn" onclick="H.toggleFollowBusiness&&H.toggleFollowBusiness('${b.id}')"
+            style="flex-shrink:0;padding:8px 16px;border-radius:20px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;background:transparent;color:#1A3A8F;border:1.5px solid #1A3A8F">
+            ${H.isFollowingBusiness && H.isFollowingBusiness(b.id) ? 'Following' : 'Follow Shop'}
+          </button>` : ''}
+        </div>
+
+        <!-- Rating + stats -->
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+          <span style="font-size:13.5px;font-weight:800;color:var(--text)">${b.rating || '4.8'}</span>
+          <span style="color:#F59E0B;font-size:13px;letter-spacing:1px">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+          <span style="font-size:12px;color:var(--sub)">(${b.reviewCount || Math.max(allProds.length * 3, 1)} reviews)</span>
+          <span style="color:var(--border,#E8ECF4)">|</span>
+          <span style="font-size:12px;color:var(--sub)">${allProds.length} product${allProds.length === 1 ? '' : 's'}</span>
+        </div>
+
+        ${b.description ? `<div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:12px">${escHtml(b.description)}</div>` : ''}
+
+        <!-- Contact pills -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${b.phone ? `<a href="tel:${escHtml(b.phone)}" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;background:#EEF2FB;color:#1A3A8F;font-size:12.5px;font-weight:700;text-decoration:none">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.58a16 16 0 0 0 6.06 6.06l1.65-1.85a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Call
+          </a>` : ''}
+          ${waNum ? `<a href="https://wa.me/${escHtml(waNum.startsWith('263') ? waNum : '263' + waNum.replace(/^0/, ''))}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;background:#DCFCE7;color:#15803D;font-size:12.5px;font-weight:700;text-decoration:none">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="#16a34a"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp
+          </a>` : ''}
+          <button onclick="H.openInner('Messages')" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;background:var(--bg,#F4F6FB);color:var(--sub);font-size:12.5px;font-weight:700;border:none;cursor:pointer;font-family:inherit">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Message
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div style="margin:10px 12px 6px;background:var(--card,#fff);border:1.5px solid var(--border,#E8ECF4);border-radius:14px;display:flex;align-items:center;gap:8px;padding:10px 13px">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2.3"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input id="shopSearchIn" value="${escHtml(_shopQ)}" oninput="H._bizShop.onSearch('${escHtml(String(b.id))}',this.value)" placeholder="Search in ${escHtml(b.name)}..." style="flex:1;border:none;outline:none;background:transparent;font-size:13.5px;color:var(--text);font-family:inherit">
+      </div>
+
+      <!-- Category chips -->
+      ${shopCats.length >= 1 ? `<div style="display:flex;gap:8px;overflow-x:auto;padding:4px 12px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+        <button onclick="H._bizShop.setCat('${escHtml(String(b.id))}','all')" style="${chipStyle(_shopCat === 'all')}">All</button>
+        ${shopCats.map(function (c) {
+          return `<button onclick="H._bizShop.setCat('${escHtml(String(b.id))}','${escHtml(c.id)}')" style="${chipStyle(_shopCat === c.id)}">${escHtml(c.name)}</button>`;
+        }).join('')}
+      </div>` : '<div style="height:6px"></div>'}
+
+      <!-- Count row -->
+      <div style="padding:0 14px 8px">
+        <span style="font-size:13px;color:var(--sub)">Showing <strong style="color:var(--text)">${shown.length}</strong> item${shown.length === 1 ? '' : 's'}</span>
+      </div>
+
+      <!-- Product grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 10px ${isOwn ? '80px' : '100px'}">
+        ${shown.length
+          ? shown.map(productCard).join('')
+          : `<div style="grid-column:1/-1;text-align:center;color:var(--sub);font-size:13px;padding:40px 16px">No products yet.</div>`}
+      </div>
+
+      <!-- Sticky CTA -->
+      <div style="position:sticky;bottom:0;background:rgba(var(--card-rgb,255,255,255),0.97);backdrop-filter:blur(10px);padding:10px 14px 14px;border-top:1px solid var(--border,#E8ECF4)">
+        ${isOwn
+          ? `<button onclick="H._bizProfile.openEdit('${escHtml(String(b.id))}')" style="width:100%;padding:15px;background:#1A3A8F;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Edit Shop</button>`
+          : `<button onclick="H.openInner('Messages')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#2245b8);color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 5px 18px rgba(26,58,143,0.3)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Message This Shop
+          </button>`}
+      </div>
+
+    </div>`;
+  };
+
+  pages.BusinessShop_after = function (params) {
+    const id = params && params.id; if (!id) return;
+    if (typeof H.fetchBusinessFollow === 'function') {
+      H.fetchBusinessFollow(id).then(function (changed) {
+        if (changed && H.currentPageName === 'BusinessShop') H.renderPage('BusinessShop', { id });
+      });
+    }
+  };
+
+  H.openBusinessShop = function (id) { H.openInner('BusinessShop', { id }); };
+
+  H._bizShop = {
+    setCat: function (id, cat) { _shopCat = cat; _shopQ = ''; H.renderPage('BusinessShop', { id: id }); },
+    onSearch: function (id, v) {
+      _shopQ = v || '';
+      // Re-render only the product grid so the search input keeps focus.
+      const b = getBiz(id); if (!b) return;
+      const allProds = shopProducts(b);
+      const q = _shopQ.toLowerCase();
+      let shown = _shopCat === 'all' ? allProds : allProds.filter(function (l) { return l.cat === _shopCat; });
+      if (q) shown = shown.filter(function (l) { return (l.title || '').toLowerCase().indexOf(q) !== -1; });
+      const fmtP = function (l) { return H.fmtPrice ? H.fmtPrice(l.price, l.currency) : ('$' + (l.price || 0)); };
+      const loc = [b.city, b.province].filter(Boolean).join(', ') || 'Zimbabwe';
+      const icon = function (cat) { return typeof H.categoryIcon === 'function' ? H.categoryIcon(cat) : ''; };
+      const html = shown.length ? shown.map(function (l) {
+        const hasPhoto = l.photos && l.photos[0];
+        return `<div onclick="H.openListing&&H.openListing('${escHtml(String(l.id))}')" style="background:var(--card,#fff);border-radius:14px;overflow:hidden;border:1px solid var(--border,#E8ECF4);cursor:pointer;position:relative">
+          <div style="aspect-ratio:1/1;background:#EEF2FB;position:relative;overflow:hidden">
+            ${hasPhoto ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px">${icon(l.cat)}</div>`}
+            <div onclick="event.stopPropagation()" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1A3A8F" stroke-width="2.2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+            ${l.negotiable ? `<span style="position:absolute;top:8px;left:8px;background:#F59E0B;color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:6px">NEG</span>` : ''}
+          </div>
+          <div style="padding:8px 10px 12px">
+            <div style="font-size:14px;font-weight:900;color:#1A3A8F;margin-bottom:2px">${escHtml(fmtP(l))}</div>
+            <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${escHtml(l.title || 'Untitled')}</div>
+            ${l.size ? `<div style="font-size:10.5px;color:var(--sub)">Size: <span style="color:var(--text);font-weight:700">${escHtml(l.size)}</span></div>` : `<div style="font-size:10.5px;color:var(--sub)">${escHtml(loc)}</div>`}
+          </div>
+        </div>`;
+      }).join('') : `<div style="grid-column:1/-1;text-align:center;color:var(--sub);font-size:13px;padding:40px 16px">No results.</div>`;
+      const grid = document.querySelector('.page.active [style*="grid-template-columns:1fr 1fr"]');
+      if (grid) grid.innerHTML = html;
+    }
+  };
+
   // ── PAGE: Browse / search businesses (storefront discovery) ──
   let _bizQ = '', _bizCat = 'all';
 

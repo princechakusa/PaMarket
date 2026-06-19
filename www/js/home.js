@@ -130,29 +130,37 @@
         <!-- SPONSORED — swipeable banner carousel (all active ads), right under categories -->
         ${(H.adCarousel && H.activeAds) ? H.adCarousel(H.activeAds(), { title: 'Featured Partners' }) : ''}
 
-        <!-- LOCAL SHOPS -->
+        <!-- LOCAL SHOPS — 3-col grid matching image reference -->
         ${(() => {
           const activeShops = (H.state.businesses || []).filter(function(b) { return b.status === 'active'; });
           if (!activeShops.length) return '';
-          const cards = activeShops.slice(0, 12).map(function(b) {
+          const cards = activeShops.slice(0, 6).map(function(b) {
             const ini = H.initials ? H.initials(b.name || 'Shop') : (b.name || 'S').charAt(0).toUpperCase();
             const lCount = (H.state.listings || []).filter(function(l) {
               return l.status === 'active' && (String(l.sellerId) === String(b.ownerUserId) || String(l.businessId) === String(b.id));
             }).length;
-            return '<div onclick="H.openBusinessProfile && H.openBusinessProfile(\'' + escHtml(String(b.id)) + '\')" style="flex:0 0 86px;min-width:86px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:4px 0">'
-              + (b.logo
-                ? '<img src="' + escHtml(b.logo) + '" style="width:58px;height:58px;border-radius:14px;object-fit:cover;border:1px solid var(--border)" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
-                  + '<div style="width:58px;height:58px;border-radius:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">' + ini + '</div>'
-                : '<div style="width:58px;height:58px;border-radius:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">' + ini + '</div>')
-              + '<div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:82px">' + escHtml((b.name || '').slice(0, 18)) + '</div>'
-              + (lCount ? '<div style="font-size:10px;color:var(--sub)">' + lCount + ' item' + (lCount === 1 ? '' : 's') + '</div>' : '')
-              + '</div></div>';
+            const catName = (H.CATEGORIES && H.CATEGORIES.find(function(c){ return c.id === b.category; }) || {}).name || '';
+            const sub = catName ? escHtml(catName) + (lCount ? ' (' + lCount + ' item' + (lCount===1?'':'s') + ')' : '') : (lCount ? lCount + ' item' + (lCount===1?'':'s') : 'Shop');
+            const coverBg = b.cover
+              ? 'background-image:url(' + JSON.stringify(b.cover) + ');background-size:cover;background-position:center'
+              : 'background:linear-gradient(135deg,#1A3A8F 0%,#2245b8 100%)';
+            return '<div onclick="H.openBusinessShop && H.openBusinessShop(\'' + escHtml(String(b.id)) + '\')" style="background:var(--card,#fff);border-radius:14px;overflow:hidden;cursor:pointer;border:1px solid var(--border,#E8ECF4);box-shadow:0 2px 8px rgba(0,0,0,0.05)">'
+              + '<div style="aspect-ratio:1/1;position:relative;overflow:hidden;' + coverBg + '">'
+              + (!b.cover ? '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:rgba(255,255,255,0.9)">' + escHtml(ini) + '</div>' : '')
+              + (b.logo ? '<div style="position:absolute;bottom:6px;left:6px;width:30px;height:30px;border-radius:50%;border:2px solid #fff;overflow:hidden;background:#fff;flex-shrink:0"><img src="' + escHtml(b.logo) + '" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.style.display=\'none\'"></div>' : '')
+              + '</div>'
+              + '<div style="padding:7px 8px 9px">'
+              + '<div style="font-size:11.5px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml((b.name || '').slice(0, 20)) + '</div>'
+              + '<div style="font-size:10px;color:var(--sub);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + sub + '</div>'
+              + '</div>'
+              + '</div>';
           }).join('');
-          return '<div style="padding:20px 0 8px">'
-            + '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">'
-            + '<span style="font-size:16px;font-weight:800;color:var(--text)">Local Shops</span>'
+          return '<div style="background:var(--card,#fff);padding:18px 16px 16px;margin-bottom:8px">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+            + '<span style="font-size:15px;font-weight:800;color:var(--text)">Local Shops</span>'
+            + '<span onclick="H._bizSearch&&H._bizSearch.open()" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>'
             + '</div>'
-            + '<div style="display:flex;gap:10px;padding:0 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">'
+            + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'
             + cards
             + '</div></div>';
         })()}
