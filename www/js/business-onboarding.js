@@ -255,16 +255,21 @@
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px">
         ${H.BIZ_PLANS.map(p => {
           const sel = d.planId === p.id;
+          const popular = p.id === 'pro';
           return `<button type="button" onclick="H._bizOnboard.setPlan('${p.id}')"
-            style="text-align:left;padding:16px;border-radius:16px;cursor:pointer;font-family:inherit;
-            border:2px solid ${sel ? '#1A3A8F' : 'var(--border,#E8ECF4)'};
+            style="position:relative;text-align:left;padding:16px;border-radius:16px;cursor:pointer;font-family:inherit;
+            border:2px solid ${sel ? '#1A3A8F' : (popular ? '#F5A623' : 'var(--border,#E8ECF4)')};
             background:${sel ? '#EEF2FB' : 'var(--card,#fff)'};box-shadow:0 2px 8px rgba(16,24,40,.04)">
+            ${popular ? `<span style="position:absolute;top:-9px;right:14px;background:#F5A623;color:#fff;font-size:9.5px;font-weight:900;letter-spacing:.4px;padding:3px 9px;border-radius:20px">MOST POPULAR</span>` : ''}
             <div style="display:flex;align-items:center;justify-content:space-between">
-              <div style="font-size:16px;font-weight:800;color:${sel ? '#1A3A8F' : 'var(--text)'}">${p.name}</div>
+              <div style="display:flex;align-items:center;gap:9px">
+                <span style="width:18px;height:18px;border-radius:50%;flex-shrink:0;border:2px solid ${sel ? '#1A3A8F' : 'var(--border,#CBD2E0)'};background:${sel ? '#1A3A8F' : 'transparent'};display:flex;align-items:center;justify-content:center">${sel ? '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</span>
+                <div style="font-size:16px;font-weight:800;color:${sel ? '#1A3A8F' : 'var(--text)'}">${p.name}</div>
+              </div>
               <div style="font-size:15px;font-weight:800;color:#1A3A8F">${priceOf(p)}</div>
             </div>
-            <div style="font-size:12px;color:var(--sub);margin:2px 0 8px">${p.tagline}</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <div style="font-size:12px;color:var(--sub);margin:6px 0 8px 27px">${p.tagline}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-left:27px">
               ${p.features.map(f => `<span style="font-size:11px;font-weight:600;color:#1A3A8F;background:#1A3A8F12;border-radius:20px;padding:3px 9px">${f}</span>`).join('')}
             </div>
           </button>`;
