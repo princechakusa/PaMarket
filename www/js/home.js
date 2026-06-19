@@ -130,6 +130,33 @@
         <!-- SPONSORED — swipeable banner carousel (all active ads), right under categories -->
         ${(H.adCarousel && H.activeAds) ? H.adCarousel(H.activeAds(), { title: 'Featured Partners' }) : ''}
 
+        <!-- LOCAL SHOPS -->
+        ${(() => {
+          const activeShops = (H.state.businesses || []).filter(function(b) { return b.status === 'active'; });
+          if (!activeShops.length) return '';
+          const cards = activeShops.slice(0, 12).map(function(b) {
+            const ini = H.initials ? H.initials(b.name || 'Shop') : (b.name || 'S').charAt(0).toUpperCase();
+            const lCount = (H.state.listings || []).filter(function(l) {
+              return l.status === 'active' && (String(l.sellerId) === String(b.ownerUserId) || String(l.businessId) === String(b.id));
+            }).length;
+            return '<div onclick="H.openBusinessProfile && H.openBusinessProfile(\'' + escHtml(String(b.id)) + '\')" style="flex:0 0 86px;min-width:86px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:4px 0">'
+              + (b.logo
+                ? '<img src="' + escHtml(b.logo) + '" style="width:58px;height:58px;border-radius:14px;object-fit:cover;border:1px solid var(--border)" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+                  + '<div style="width:58px;height:58px;border-radius:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">' + ini + '</div>'
+                : '<div style="width:58px;height:58px;border-radius:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">' + ini + '</div>')
+              + '<div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:82px">' + escHtml((b.name || '').slice(0, 18)) + '</div>'
+              + (lCount ? '<div style="font-size:10px;color:var(--sub)">' + lCount + ' item' + (lCount === 1 ? '' : 's') + '</div>' : '')
+              + '</div></div>';
+          }).join('');
+          return '<div style="padding:20px 0 8px">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">'
+            + '<span style="font-size:16px;font-weight:800;color:var(--text)">Local Shops</span>'
+            + '</div>'
+            + '<div style="display:flex;gap:10px;padding:0 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">'
+            + cards
+            + '</div></div>';
+        })()}
+
         <!-- BANNER -->
         <div style="margin:0 12px 8px;background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:18px;padding:20px;display:flex;align-items:center;justify-content:space-between;overflow:hidden;position:relative">
           <div style="position:absolute;right:-24px;top:-24px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.07)"></div>
@@ -208,6 +235,14 @@
     if (H._initAdCarousels) H._initAdCarousels();
     if (typeof H.maybeShowNotifBanner === 'function') H.maybeShowNotifBanner();
     if (typeof H.maybeShowRatingPrompt === 'function') H.maybeShowRatingPrompt();
+    if (typeof H.fetchAllActiveBusinesses === 'function') {
+      const bizBefore = (H.state.businesses || []).filter(function(b) { return b.status === 'active'; }).length;
+      H.fetchAllActiveBusinesses().then(function () {
+        if (H.currentPageName !== 'Home') return;
+        const bizAfter = (H.state.businesses || []).filter(function(b) { return b.status === 'active'; }).length;
+        if (bizAfter !== bizBefore) H.renderPage('Home');
+      }).catch(function () {});
+    }
     if (typeof H.fetchListingsFromSupabase !== 'function') return;
     const countBefore = (H.state.listings || []).filter(l => l.status === 'active').length;
     H.fetchListingsFromSupabase().then(() => {

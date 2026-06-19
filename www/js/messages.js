@@ -392,16 +392,21 @@
 
     // Date separators between calendar days + ✓/✓✓ receipts on the user's own messages.
     let lastDay = '';
-    const msgs = c.messages.map(function(m) {
+    const msgs = c.messages.map(function(m, idx) {
       let sep = '';
       const dl = chatDayLabel(m.t);
       if (dl !== lastDay) { lastDay = dl; sep = '<div class="chat-datesep"><span>' + escHtml(dl) + '</span></div>'; }
       const mine = m.from === u.id;
       const _of = parseOffer(m.text);
       if (_of) {
+        const resolved = (_of.k === 'offer' || _of.k === 'counter') &&
+          c.messages.slice(idx + 1).some(function(later) {
+            const lof = parseOffer(later.text);
+            return lof && (lof.k === 'accept' || lof.k === 'decline' || lof.k === 'counter');
+          });
         return sep + '<div class="chat-msg-row ' + (mine ? 'me' : 'them') + '" data-msg-id="' + escHtml(m.id) + '">'
           + (mine ? '' : '<div class="chat-row-av">' + otherAvatar + '</div>')
-          + offerCardHtml(_of, mine, m.id, otherDisplayName)
+          + offerCardHtml(_of, mine, m.id, otherDisplayName, resolved)
           + '</div>';
       }
       const content = m.image
@@ -586,7 +591,7 @@
   }
 
   function fmtMoney(n) { return '$' + Number(n || 0).toLocaleString(); }
-  function offerCardHtml(of, mine, msgId, otherName) {
+  function offerCardHtml(of, mine, msgId, otherName, resolved) {
     const price = fmtMoney(of.price);
     var icOk  = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>';
     var icNo  = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
@@ -594,17 +599,21 @@
     if (of.k === 'decline') return '<div class="offer-status decline">' + icNo + 'Offer declined</div>';
     const isCounter = of.k === 'counter';
     const label = isCounter ? (mine ? 'YOUR COUNTER-OFFER' : 'COUNTER-OFFER') : (mine ? 'YOUR OFFER' : 'OFFER');
+    const listingLine = of.listingTitle
+      ? '<div style="font-size:11px;color:var(--sub);margin:-1px 0 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">for ' + escHtml(String(of.listingTitle).slice(0, 50)) + '</div>'
+      : '';
     let html = '<div class="offer-card' + (mine ? ' mine' : '') + '">'
       + '<div class="offer-card-top">' + label + '</div>'
+      + listingLine
       + '<div class="offer-card-price">' + price + '</div>';
-    if (!mine) {
+    if (!mine && !resolved) {
       html += '<div class="offer-card-actions">'
         + '<button class="offer-btn accept" onclick="H._chat.respondOffer(\'' + escHtml(msgId) + '\',\'accept\')">Accept</button>'
         + '<button class="offer-btn counter" onclick="H._chat.respondOffer(\'' + escHtml(msgId) + '\',\'counter\')">Counter</button>'
         + '<button class="offer-btn decline" onclick="H._chat.respondOffer(\'' + escHtml(msgId) + '\',\'decline\')">Decline</button>'
         + '</div>';
     } else {
-      html += '<div class="offer-card-foot">Sent · waiting for a reply</div>';
+      html += '<div class="offer-card-foot">' + (resolved ? 'Offer closed' : 'Sent · waiting for a reply') + '</div>';
     }
     return html + '</div>';
   }
@@ -652,20 +661,69 @@
     const c = conversations().find(function (x) { return x.id === H._activeChat; });
     if (!c) return;
     if (!H.currentUser()) { H.requireAuth('Sign in to make an offer'); return; }
-    const listing = (state.listings || []).find(function (l) { return l.id === c.listingId; });
-    const suggested = listing && listing.price ? listing.price : '';
+    const otherId = H._activeOtherId;
+    const sellerListings = (H.state.listings || []).filter(function (l) {
+      return (String(l.sellerId) === String(otherId) || String(l.userId) === String(otherId)) && l.status !== 'deleted';
+    });
+    H._chat._offerListings = sellerListings;
+    if (sellerListings.length <= 1) {
+      const l = sellerListings[0] || (state.listings || []).find(function (l) { return l.id === c.listingId; });
+      H._chat._openOfferAmount(l && l.id, l && l.title, l && l.price);
+      return;
+    }
+    const rows = sellerListings.slice(0, 8).map(function (l, i) {
+      const ph = (l.photos && l.photos[0])
+        ? '<img src="' + escHtml(l.photos[0]) + '" style="width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'">'
+        : '<div style="width:44px;height:44px;border-radius:8px;background:var(--bg);flex-shrink:0"></div>';
+      return '<button onclick="H._chat._pickOfferListing(' + i + ')" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:8px">'
+        + ph
+        + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(l.title || 'Untitled') + '</div>'
+        + '<div style="font-size:12px;color:var(--blue);font-weight:700">' + (l.price ? ('$' + Number(l.price).toLocaleString()) : 'No price') + '</div></div>'
+        + '</button>';
+    }).join('');
+    H.modal({
+      title: 'Which listing?',
+      body: '<div style="font-size:13px;color:var(--sub);margin-bottom:12px">Choose a listing to make an offer on.</div>'
+        + '<div style="max-height:55vh;overflow-y:auto">' + rows + '</div>',
+      confirmText: null,
+      cancelText: 'Cancel',
+    });
+  };
+  H._chat._openOfferAmount = function (listingId, listingTitle, suggestedPrice) {
     H.modal({
       title: 'Make an offer',
-      body: '<div style="font-size:12.5px;color:var(--sub);margin-bottom:10px">Propose a price. No money is sent in the app — you agree a price here, then arrange the deal in person.</div>'
+      body: '<div style="font-size:12.5px;color:var(--sub);margin-bottom:10px">Propose a price. No money is sent in the app - you agree a price here, then arrange the deal in person.</div>'
+        + (listingTitle ? '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px;padding:8px 10px;background:var(--bg);border-radius:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">For: ' + escHtml(String(listingTitle).slice(0, 50)) + '</div>' : '')
         + '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px;font-weight:900;color:var(--blue)">$</span>'
-        + '<input class="fi" id="offerAmt" type="number" inputmode="decimal" min="1" placeholder="Amount" value="' + (suggested || '') + '" style="flex:1;font-size:18px;font-weight:700"></div>',
+        + '<input class="fi" id="offerAmt" type="number" inputmode="decimal" min="1" placeholder="Amount" value="' + (suggestedPrice || '') + '" style="flex:1;font-size:18px;font-weight:700"></div>',
       confirmText: 'Send offer',
       onConfirm: function () {
         const v = parseFloat((document.getElementById('offerAmt') || {}).value);
         if (!v || v <= 0) { H.toast('Enter a valid amount'); return; }
-        H._chat.sendOfferMessage({ k: 'offer', price: v });
+        const offerObj = { k: 'offer', price: v };
+        if (listingId) offerObj.listingId = listingId;
+        if (listingTitle) offerObj.listingTitle = String(listingTitle).slice(0, 50);
+        H._chat.sendOfferMessage(offerObj);
       }
     });
+  };
+  H._chat._pickOfferListing = function (idx) {
+    const l = H._chat._offerListings && H._chat._offerListings[idx];
+    if (!l) return;
+    H.closeModal();
+    setTimeout(function () { H._chat._openOfferAmount(l.id, l.title, l.price); }, 120);
+  };
+  H._chat._closeOfferCard = function (msgId) {
+    var sel = '[data-msg-id="' + (window.CSS && CSS.escape ? CSS.escape(msgId) : msgId) + '"]';
+    var row = document.querySelector(sel);
+    if (!row) return;
+    var actions = row.querySelector('.offer-card-actions');
+    if (!actions) return;
+    var foot = document.createElement('div');
+    foot.className = 'offer-card-foot';
+    foot.style.color = 'var(--sub)';
+    foot.textContent = 'Offer closed';
+    actions.parentNode.replaceChild(foot, actions);
   };
   H._chat.respondOffer = function (msgId, action) {
     const c = conversations().find(function (x) { return x.id === H._activeChat; });
@@ -673,9 +731,13 @@
     const msg = (c.messages || []).find(function (m) { return m.id === msgId; });
     const of = msg && parseOffer(msg.text);
     if (!of) return;
-    if (action === 'accept') H._chat.sendOfferMessage({ k: 'accept', price: of.price });
-    else if (action === 'decline') H._chat.sendOfferMessage({ k: 'decline', price: of.price });
-    else if (action === 'counter') {
+    if (action === 'accept') {
+      H._chat._closeOfferCard(msgId);
+      H._chat.sendOfferMessage({ k: 'accept', price: of.price });
+    } else if (action === 'decline') {
+      H._chat._closeOfferCard(msgId);
+      H._chat.sendOfferMessage({ k: 'decline', price: of.price });
+    } else if (action === 'counter') {
       H.modal({
         title: 'Counter-offer',
         body: '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px;font-weight:900;color:var(--blue)">$</span>'
@@ -684,6 +746,7 @@
         onConfirm: function () {
           const v = parseFloat((document.getElementById('offerAmt') || {}).value);
           if (!v || v <= 0) { H.toast('Enter a valid amount'); return; }
+          H._chat._closeOfferCard(msgId);
           H._chat.sendOfferMessage({ k: 'counter', price: v });
         }
       });
@@ -1106,6 +1169,14 @@
         m.read = true;
         gotIncoming = true;
         appendThemMessage(thread, ava2, m);
+        var _inOf = parseOffer(m.text);
+        if (_inOf && (_inOf.k === 'accept' || _inOf.k === 'decline' || _inOf.k === 'counter')) {
+          document.querySelectorAll('.offer-card-actions').forEach(function (el) {
+            var r2 = el.closest('[data-msg-id]');
+            var mid2 = r2 && r2.getAttribute('data-msg-id');
+            if (mid2 && typeof H._chat._closeOfferCard === 'function') H._chat._closeOfferCard(mid2);
+          });
+        }
       });
       if (gotIncoming) {
         thread.scrollTop = thread.scrollHeight;
