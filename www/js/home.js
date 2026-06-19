@@ -51,7 +51,7 @@
     const filtered       = filterListings(activeListings);
 
     const catSections = CATEGORIES.map(c => ({
-      ...c, items: filtered.filter(l => l.cat === c.id).slice(0, 4)
+      ...c, items: filtered.filter(l => l.cat === c.id).slice(0, 8)
     })).filter(s => s.items.length > 0);
 
     return `<div class="page active" style="background:var(--bg)">
@@ -171,8 +171,8 @@
                 </div>
                 <span onclick="H.filterByCat('${s.id}')" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px">
-                ${s.items.map(l => renderHCard(l)).join('')}
+              <div style="display:flex;gap:10px;padding:0 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">
+                ${s.items.map(l => `<div style="flex:0 0 156px;min-width:156px">${renderHCard(l)}</div>`).join('')}
               </div>
             </div>
           `).join('') : `<div style="padding:32px 16px">${H.emptyState('No listings yet', 'Be the first to post in your area!', 'Post your first ad', "H.navTo('Post',null)")}</div>`}

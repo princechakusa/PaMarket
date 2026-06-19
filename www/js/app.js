@@ -1277,8 +1277,8 @@ window.H = {
       a.clicks=(a.clicks||0)+1;
       window.supabase.from('paid_ads').update({clicks:a.clicks}).eq('id',id).then(()=>{});
     }
-    // Listing link takes priority over external URL
-    if(a && a.listingId) { H.openListing(a.listingId); return; }
+    // Listing link takes priority over external URL; open Detail directly (not business routing)
+    if(a && a.listingId) { H.openInner('Detail', {id: a.listingId}); return; }
     const url = a && a.linkUrl;
     if(url) {
       try {

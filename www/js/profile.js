@@ -356,16 +356,35 @@
     };
   };
 
+  function elPhotoThumbHtml(p, i) {
+    return '<div style="position:relative;width:88px;height:88px">'
+      + '<img src="' + H.escHtml(p) + '" style="width:88px;height:88px;object-fit:cover;border-radius:10px;border:1.5px solid var(--border)">'
+      + '<button onclick="H._editListing.removePhoto(' + i + ')" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0;line-height:1" aria-label="Remove">x</button>'
+      + (i === 0 ? '<div style="position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:4px">COVER</div>' : '')
+      + '</div>';
+  }
+
   pages.EditListing = function (params) {
     const id = params && params.listingId;
     const l  = id ? (H.state.listings || []).find(x => x.id === id) : null;
     if (!l) return `<div class="page active">${H.innerTopbar('Edit Listing')}${H.emptyState('Listing not found','')}</div>`;
+    H._elPhotos = Array.isArray(l.photos) ? l.photos.slice() : [];
     return `<div class="page active">
       ${H.innerTopbar('Edit Listing')}
       <div class="form-wrap">
         <div class="fg"><div class="fl">Title</div><input class="fi" id="elTitle" value="${H.escHtml(l.title || '')}" placeholder="Listing title" maxlength="80"></div>
         <div class="fg"><div class="fl">Price (USD)</div><input class="fi" id="elPrice" type="number" min="0" value="${H.escHtml(String(l.price || ''))}" placeholder="0"></div>
         <div class="fg"><div class="fl">Description</div><textarea class="fi" id="elDesc" rows="5" placeholder="Describe your item...">${H.escHtml(l.description || '')}</textarea></div>
+        <div class="fg">
+          <div class="fl">Photos <span style="font-weight:400;color:var(--sub);text-transform:none;letter-spacing:0">(first is cover &middot; up to 8)</span></div>
+          <div id="elPhotoGrid" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">${H._elPhotos.map(elPhotoThumbHtml).join('')}</div>
+          <input type="file" id="elPhotoInput" accept="image/*" multiple style="display:none" onchange="H._editListing.addPhotos(event)">
+          <button type="button" onclick="document.getElementById('elPhotoInput').click()" style="width:100%;padding:13px;background:var(--card);border:1.5px dashed var(--border-mid,#ccc);border-radius:12px;color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Photos
+          </button>
+          <div id="elPhotoProgress" style="display:none;text-align:center;font-size:13px;color:var(--blue);font-weight:600;padding:8px 0"></div>
+        </div>
         <div id="elErr" style="display:none;color:#ef4444;font-size:13px;font-weight:600;padding:6px 0"></div>
         <button id="elSaveBtn" class="btn-pri" onclick="H._editListing.save('${id}')">Save Changes</button>
         <button class="btn-sec" onclick="H.goBack()">Cancel</button>
@@ -375,7 +394,42 @@
 
   pages.EditListing_after = function () {
     H._editListing = {
-      save: (id) => {
+      removePhoto(i) {
+        if (!Array.isArray(H._elPhotos)) return;
+        H._elPhotos.splice(i, 1);
+        const g = document.getElementById('elPhotoGrid');
+        if (g) g.innerHTML = H._elPhotos.map(elPhotoThumbHtml).join('');
+      },
+      async addPhotos(event) {
+        if (!event || !event.target || !event.target.files) return;
+        const files = Array.from(event.target.files);
+        if (!files.length) return;
+        if (!Array.isArray(H._elPhotos)) H._elPhotos = [];
+        const canAdd = 8 - H._elPhotos.length;
+        if (canAdd <= 0) { H.toast('Maximum 8 photos allowed'); return; }
+        const toProcess = files.slice(0, canAdd);
+        const prog = document.getElementById('elPhotoProgress');
+        if (prog) { prog.textContent = 'Processing photos…'; prog.style.display = ''; }
+        for (const f of toProcess) {
+          try {
+            const d = typeof H.compressImage === 'function'
+              ? await H.compressImage(f, 1024, 0.72)
+              : await new Promise(function(resolve) {
+                  const reader = new FileReader();
+                  reader.onload = function(e) { resolve(e.target.result); };
+                  reader.readAsDataURL(f);
+                });
+            if (d) {
+              H._elPhotos.push(d);
+              const g = document.getElementById('elPhotoGrid');
+              if (g) g.innerHTML = H._elPhotos.map(elPhotoThumbHtml).join('');
+            }
+          } catch (err) { /* skip failed photo */ }
+        }
+        if (prog) prog.style.display = 'none';
+        event.target.value = '';
+      },
+      async save(id) {
         const title = document.getElementById('elTitle')?.value.trim();
         const price = parseFloat(document.getElementById('elPrice')?.value);
         const desc  = document.getElementById('elDesc')?.value.trim();
@@ -387,10 +441,31 @@
         if (!desc) { showErr('Description is required'); return; }
         const l = (H.state.listings || []).find(x => x.id === id);
         if (!l) { showErr('Listing not found'); return; }
-        l.title=title; l.price=price; l.description=desc; l.updatedAt=Date.now();
-        if (l.status === 'rejected') l.status = 'pending';
         if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+        // Upload any new base64 photos to cloud storage
+        let photos = Array.isArray(H._elPhotos) ? H._elPhotos.slice() : (l.photos || []);
+        const u = H.currentUser();
+        if (u && typeof H.uploadListingPhotos === 'function' && photos.some(p => typeof p === 'string' && p.indexOf('data:') === 0)) {
+          const prog = document.getElementById('elPhotoProgress');
+          if (prog) { prog.textContent = 'Uploading photos…'; prog.style.display = ''; }
+          try { photos = await H.uploadListingPhotos(photos, u.id); } catch(e) {}
+          if (prog) prog.style.display = 'none';
+        }
+
+        l.title = title; l.price = price; l.description = desc;
+        l.photos = photos; l.updatedAt = Date.now();
+        if (l.status === 'rejected') l.status = 'pending';
         H.saveState();
+
+        // Persist to Supabase
+        if (window.supabase && typeof window.supabase.from === 'function') {
+          window.supabase.from('listings').update({
+            title: title, price: price, description: desc,
+            photos: photos, updated_at: new Date().toISOString()
+          }).eq('id', id).then(function(){}, function(){});
+        }
+
         H.toast('Listing updated!');
         H.goBack();
       }

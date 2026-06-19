@@ -472,7 +472,8 @@
       var ls = H.formatLastSeen(H._lastSeen[oid]);
       if (ls) return '<span style="color:#cfe0ff">' + ls + '</span>';
     }
-    if (other && other.verified) return H.verifiedBadge(12) + '<span style="color:#9fd4ff">Verified</span>';
+    // Offline with no last_seen data — show generic offline state (never show Verified here)
+    if (sharing) return '<span style="color:#9baec8">Offline</span>';
     return 'Tap to view profile';
   }
   H._chatHdrSubHtml = chatHdrSubHtml;

@@ -243,14 +243,12 @@
     H.initPresence(); H.initReadReceipts();
     H.touchLastSeen(true);
     // Re-fetch stale data silently; small delay lets the network settle.
+    // Avoid H.renderPage here — a full re-render causes a visible flicker every
+    // time the user switches back to the app. Existing polls handle UI updates.
     setTimeout(function () {
       if (typeof H.fetchListingsFromSupabase === 'function') H.fetchListingsFromSupabase().catch(function () {});
       if (me() && typeof H.syncConversations === 'function') H.syncConversations().catch(function () {});
       if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
-      // Re-render the current page so any new data is visible immediately.
-      if (typeof H.renderPage === 'function' && H.currentPageName) {
-        H.renderPage(H.currentPageName, H.currentPageParams);
-      }
     }, 800);
   }
 
