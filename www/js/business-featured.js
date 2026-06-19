@@ -93,14 +93,17 @@
       if (slots !== Infinity && used >= slots) { toast('No featured slots left — upgrade your plan'); return; }
       const l = (H.state.listings || []).find(x => x.id === listingId); if (!l) return;
       // Module 11 — charge the featured fee against the wallet (no-op if monetization not loaded).
+      let _invoiced = false;
       if (typeof H.chargeBusiness === 'function') {
         const price = typeof H.featuredPrice === 'function' ? H.featuredPrice(days) : 0;
         const res = await H.chargeBusiness(businessId, 'featured', price, days + '-day boost: ' + (l.title || 'listing'));
-        if (!res || !res.ok) { toast((res && res.msg) || 'Payment failed'); return; }
+        if (!res || !res.ok) { toast((res && res.msg) || 'Could not boost — please try again'); return; }
+        _invoiced = !!res.pending;
       }
       l.featuredUntil = Date.now() + days * DAY; l.boost = true; saveState();
       await cloudFeature(listingId, l.featuredUntil);
-      toast('Boosted for ' + days + ' days');
+      if (_invoiced) toast('Boosted for ' + days + ' days — invoice created. Open Billing to pay.', 4500);
+      else toast('Boosted for ' + days + ' days');
       renderPage('BusinessFeatured', { id: businessId });
     },
     async unboost(businessId, listingId) {

@@ -202,9 +202,10 @@
       const p = H.BIZ_PLANS.find(x => x.id === planId);
       const amount = p ? (b.billingCycle === 'yearly' ? p.price * 10 : p.price) : 0;
       const charge = await H.onSubscriptionCharge(planId, b.billingCycle, amount);
-      if (!charge || !charge.ok) { toast('Payment not completed'); return; }
+      if (!charge || !charge.ok) { toast('Could not change plan — please try again'); return; }
       setActivePlan(b, planId, b.billingCycle);
-      toast('Upgraded to ' + H.planEntitlements(planId).name);
+      if (charge.pending) toast('Upgraded to ' + H.planEntitlements(planId).name + ' — invoice created. Open Billing to pay.', 4500);
+      else toast('Plan changed to ' + H.planEntitlements(planId).name);
       renderPage('BusinessSubscription', { id });
     },
 
