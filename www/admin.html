@@ -318,6 +318,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
         <button class="nav-item" data-tab="businesses" onclick="showTab('businesses')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9l2-5h14l2 5"/><line x1="12" y1="13" x2="12" y2="17"/></svg>
           Businesses
+          <span class="nav-badge" id="badge-biz-upgrades" style="display:none">0</span>
         </button>
         <div class="nav-section">Config</div>
         <button class="nav-item" data-tab="settings" onclick="showTab('settings')">
@@ -381,7 +382,7 @@ try {
 var DATA = {
   users:[], listings:[], verifications:[], reports:[], contactRequests:[],
   ads:[], settings:{}, notifHistory:[], chats:[],
-  businesses:[], businessSubs:[], businessLeads:[]
+  businesses:[], businessSubs:[], businessLeads:[], bizUpgradeRequests:[]
 };
 var _bizFilter = 'all';
 var _contactFilter = 'pending';
@@ -682,6 +683,114 @@ async function loadNotifHistory() {
 // BUSINESS PLATFORM SECTION (Module 12)
 // ════════════════════════════════════════════════════════════
 var BIZ_PLANS = ['free','starter','pro','premium'];
+var BIZ_PLAN_PRICES = { free: 0, starter: 9, pro: 29, premium: 79 };
+
+function extractPlanFromDesc(desc) {
+  var m = (desc||'').match(/\[([a-z0-9_]+)\]\s*$/i);
+  return m ? m[1].toLowerCase() : null;
+}
+
+function renderBizUpgradeSection() {
+  var pending = (DATA.bizUpgradeRequests||[]).filter(function(r){ return r.status==='pending'; });
+  var recent  = (DATA.bizUpgradeRequests||[]).filter(function(r){ return r.status==='paid'||r.status==='failed'; }).slice(0,5);
+  if (!pending.length && !recent.length) return '';
+
+  var html = '<div style="background:#1E293B;border:1px solid #334155;border-radius:16px;padding:18px;margin-bottom:20px">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">';
+  html += '<div style="display:flex;align-items:center;gap:8px">';
+  html += '<div style="background:'+(pending.length?'#F59E0B':'#334155')+';border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>';
+  html += '<span style="font-size:14px;font-weight:800;color:var(--text)">Subscription Upgrade Requests</span>';
+  if(pending.length) html += '<span style="background:#F59E0B;color:#000;border-radius:20px;padding:2px 9px;font-size:11px;font-weight:800">'+pending.length+' pending</span>';
+  html += '</div></div>';
+
+  if (!pending.length) {
+    html += '<div style="font-size:13px;color:var(--sub);margin-bottom:10px">No pending requests.</div>';
+  }
+
+  pending.forEach(function(req) {
+    var biz = DATA.businesses.find(function(b){ return b.id===req.business_id; });
+    var planId = extractPlanFromDesc(req.description);
+    var planLabel = planId ? (planId.charAt(0).toUpperCase()+planId.slice(1)) : (req.description||'Unknown');
+    var cleanDesc = (req.description||'').replace(/\s*\[[a-z0-9]+\]\s*$/i,'');
+    html += '<div style="background:#263044;border:1px solid #FFE2A8;border-radius:12px;padding:14px;margin-bottom:8px">';
+    html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">';
+    html += '<div style="min-width:0">';
+    html += '<div style="font-size:13.5px;font-weight:700;color:var(--text)">'+(biz?esc(biz.name):'<span style="color:var(--sub)">Unknown Business</span>')+'</div>';
+    html += '<div style="font-size:12px;color:#F59E0B;font-weight:700;margin-top:3px">Upgrade to '+esc(planLabel)+' plan</div>';
+    html += '<div style="font-size:11.5px;color:var(--sub);margin-top:2px">'+esc(cleanDesc)+' &nbsp;·&nbsp; <b style="color:var(--green)">$'+fmt(req.amount||0)+'</b> &nbsp;·&nbsp; '+fmtDate(req.created_at)+'</div>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:6px;flex-shrink:0;align-items:flex-start">';
+    if(planId && BIZ_PLANS.includes(planId)) {
+      html += '<button class="ab ab-approve" style="padding:7px 14px;font-size:12px" onclick="approveBizUpgrade(\''+esc(req.id)+'\',\''+esc(req.business_id)+'\',\''+esc(planId)+'\')">Approve + Activate</button>';
+    }
+    html += '<button class="ab ab-reject" style="padding:7px 12px;font-size:12px" onclick="declineBizUpgrade(\''+esc(req.id)+'\')">Decline</button>';
+    html += '</div></div></div>';
+  });
+
+  if(recent.length) {
+    html += '<div style="border-top:1px solid #334155;padding-top:12px;margin-top:4px">';
+    html += '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Recent</div>';
+    recent.forEach(function(req) {
+      var biz = DATA.businesses.find(function(b){ return b.id===req.business_id; });
+      var planId = extractPlanFromDesc(req.description);
+      var planLabel = planId ? (planId.charAt(0).toUpperCase()+planId.slice(1)) : 'Unknown';
+      var statusColor = req.status==='paid' ? 'var(--green)' : 'var(--red)';
+      var statusLabel = req.status==='paid' ? 'Approved' : 'Declined';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1E293B;font-size:12px">';
+      html += '<span style="color:var(--sub)">'+(biz?esc(biz.name):'Unknown')+' <span style="color:var(--text)">'+esc(planLabel)+'</span></span>';
+      html += '<span style="font-weight:700;color:'+statusColor+'">'+statusLabel+'</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+async function approveBizUpgrade(paymentId, businessId, planId) {
+  if(!BIZ_PLANS.includes(planId)){ toast('Unknown plan: '+planId,'error'); return; }
+  var biz = DATA.businesses.find(function(b){return b.id===businessId;});
+  var confirmed = await confirm2(
+    'Approve Upgrade',
+    'Activate '+planId.charAt(0).toUpperCase()+planId.slice(1)+' plan for '+(biz?biz.name:'this business')+'? Mark as paid and activate the subscription now.',
+    'Approve + Activate', 'confirm-ok'
+  );
+  if(!confirmed) return;
+  try {
+    var rp = await sb.from('business_payments').update({status:'paid'}).eq('id',paymentId);
+    if(rp.error) throw rp.error;
+    await sb.from('business_subscriptions').update({status:'downgraded'}).eq('business_id',businessId).eq('status','active');
+    var now = new Date(); now.setMonth(now.getMonth()+1);
+    var rs = await sb.from('business_subscriptions').insert({business_id:businessId,plan_id:planId,billing_cycle:'monthly',status:'active',current_period_end:now.toISOString()});
+    if(rs.error) throw rs.error;
+    await sb.from('businesses').update({plan_id:planId}).eq('id',businessId);
+    var req = DATA.bizUpgradeRequests.find(function(r){return r.id===paymentId;});
+    if(req) req.status='paid';
+    DATA.businessSubs = DATA.businessSubs.map(function(s){
+      if(s.business_id===businessId&&s.status==='active') s.status='downgraded'; return s;
+    });
+    DATA.businessSubs.push({business_id:businessId,plan_id:planId,billing_cycle:'monthly',status:'active'});
+    if(biz) biz.plan_id=planId;
+    toast('Plan activated: '+(planId.charAt(0).toUpperCase()+planId.slice(1))+' for '+(biz?biz.name:'business'));
+    updateBadges(); renderBusinesses();
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function declineBizUpgrade(paymentId) {
+  var req = DATA.bizUpgradeRequests.find(function(r){return r.id===paymentId;});
+  var biz = req && DATA.businesses.find(function(b){return b.id===req.business_id;});
+  var confirmed = await confirm2('Decline Request','Decline the upgrade request'+(biz?' for '+biz.name:'')+' and mark it as failed?','Decline','confirm-ok');
+  if(!confirmed) return;
+  try {
+    var rp = await sb.from('business_payments').update({status:'failed'}).eq('id',paymentId);
+    if(rp.error) throw rp.error;
+    if(req) req.status='failed';
+    toast('Upgrade request declined');
+    updateBadges(); renderBusinesses();
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
 async function loadBusinesses() {
   try {
     var rb = await sb.from('businesses').select('*').order('created_at',{ascending:false}).limit(500);
@@ -695,6 +804,10 @@ async function loadBusinesses() {
     var rl = await sb.from('business_leads').select('business_id,status').limit(2000);
     DATA.businessLeads = (!rl.error && rl.data) ? rl.data : [];
   } catch(e){ DATA.businessLeads = []; }
+  try {
+    var ru = await sb.from('business_payments').select('id,business_id,type,amount,description,status,created_at').eq('type','subscription').in('status',['pending','paid','failed']).order('created_at',{ascending:false}).limit(200);
+    DATA.bizUpgradeRequests = (!ru.error && ru.data) ? ru.data : [];
+  } catch(e){ DATA.bizUpgradeRequests = []; }
 }
 
 function bizActivePlan(id){ var s=DATA.businessSubs.find(function(x){return x.business_id===id;}); return s?s.plan_id:'free'; }
@@ -717,6 +830,8 @@ function renderBusinesses() {
   });
   html += '<button class="btn-refresh" onclick="loadBusinesses().then(renderBusinesses)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button>';
   html += '</div></div>';
+
+  html += renderBizUpgradeSection();
 
   html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Business</th><th>Owner</th><th>Type</th><th>Plan</th><th>Verify</th><th>Listings</th><th>Leads</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
   if(!list.length){ html += '<tr><td colspan="9"><div class="empty-msg">No businesses found</div></td></tr>'; }
@@ -791,18 +906,41 @@ async function bizSetVerify(id) {
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
 
-async function bizSetPlan(id) {
+function bizSetPlan(id) {
   var cur = bizActivePlan(id);
-  var next = BIZ_PLANS[(BIZ_PLANS.indexOf(cur)+1)%BIZ_PLANS.length];
+  var b = DATA.businesses.find(function(x){return x.id===id;}); if(!b) return;
+  var rows = BIZ_PLANS.map(function(p){
+    var price = BIZ_PLAN_PRICES[p] || 0;
+    var priceLabel = price===0 ? 'Free' : ('$'+price+'/mo');
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)">'
+      +'<div><span style="font-size:13px;font-weight:700;color:var(--text);text-transform:capitalize">'+esc(p)+'</span>'
+      +' <span style="font-size:12px;color:var(--sub)">'+priceLabel+'</span></div>'
+      +(cur===p
+        ? '<span class="badge badge-active">Current</span>'
+        : '<button class="ab ab-approve" style="padding:6px 14px" onclick="doSetPlan(\''+id+'\',\''+p+'\')">Set</button>')
+      +'</div>';
+  }).join('');
+  openModal('<div class="modal-title">Override Plan: '+esc(b.name||'Business')+'<button class="modal-close" onclick="closeModal()">×</button></div>'
+    +'<div style="font-size:12px;color:var(--sub);margin-bottom:14px;line-height:1.5">Admin override activates the plan immediately without requiring payment. Use this to manually apply an approved plan.</div>'
+    +rows
+  );
+}
+
+async function doSetPlan(id, next) {
+  closeModal();
   try {
-    // Supersede current active sub, insert a new active one (admin override).
     await sb.from('business_subscriptions').update({status:'downgraded'}).eq('business_id',id).eq('status','active');
-    var r = await sb.from('business_subscriptions').insert({business_id:id, plan_id:next, billing_cycle:'monthly', status:'active'});
+    var now = new Date(); now.setMonth(now.getMonth()+1);
+    var r = await sb.from('business_subscriptions').insert({business_id:id,plan_id:next,billing_cycle:'monthly',status:'active',current_period_end:now.toISOString()});
     if(r.error) throw r.error;
-    var s = DATA.businessSubs.find(function(x){return x.business_id===id;});
-    if(s) s.plan_id=next; else DATA.businessSubs.push({business_id:id,plan_id:next,billing_cycle:'monthly',status:'active'});
-    if(currentTab==='businesses') renderBusinesses();
-    toast('Plan overridden to '+next);
+    await sb.from('businesses').update({plan_id:next}).eq('id',id);
+    DATA.businessSubs = DATA.businessSubs.map(function(s){
+      if(s.business_id===id&&s.status==='active') s.status='downgraded'; return s;
+    });
+    DATA.businessSubs.push({business_id:id,plan_id:next,billing_cycle:'monthly',status:'active'});
+    var biz = DATA.businesses.find(function(b){return b.id===id;});
+    if(biz) biz.plan_id=next;
+    renderBusinesses(); toast('Plan overridden to '+next);
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
 
@@ -817,10 +955,12 @@ function updateBadges() {
     var el=document.getElementById(id); if(!el) return;
     el.textContent=count; el.style.display=count>0?'':'none';
   }
+  var pendingUpgrades = (DATA.bizUpgradeRequests||[]).filter(function(r){return r.status==='pending';}).length;
   setBadge('badge-listings', pendingL);
   setBadge('badge-verif', pendingV);
   setBadge('badge-reports', openR);
   setBadge('badge-contacts', pendingC);
+  setBadge('badge-biz-upgrades', pendingUpgrades);
   document.getElementById('badge-overview').style.display = (pendingL||pendingV||openR||pendingC) ? '' : 'none';
 }
 
