@@ -19,7 +19,7 @@
     postState = {
       step: 1, cat: null, title: '', desc: '', price: '',
       currency: 'USD', prov: PROVINCES[0],
-      city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: [], attrs: {},
+      city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: [], attrs: {}, variations: [],
       businessId: H._postBizTarget || null   // set by "Create new business product"
     };
     H._postBizTarget = null;                  // consume once
@@ -54,6 +54,27 @@
   };
   function titlePlaceholder(cat) { return TITLE_PH[cat] || 'e.g. What are you selling?'; }
 
+  // Optional variants editor (colour / size / stock). Stored on the listing's
+  // attrs so it syncs without a new column and shows on the detail page.
+  function renderVariantRows() {
+    const vs = postState.variations || [];
+    if (!vs.length) return '<div style="font-size:12.5px;color:var(--sub2,#98A2B3);padding:6px 0">No variants added.</div>';
+    return vs.map((v, i) => `<div class="pv-row" style="display:flex;gap:6px;margin-bottom:7px;align-items:center">
+      <input class="fi pv-color" style="flex:1;padding:9px" placeholder="Colour" value="${H.escHtml(v.color || '')}">
+      <input class="fi pv-size" style="flex:1;padding:9px" placeholder="Size" value="${H.escHtml(v.size || '')}">
+      <input class="fi pv-stock" style="width:62px;padding:9px" type="number" min="0" placeholder="Qty" value="${v.stock != null ? v.stock : ''}">
+      <button type="button" onclick="H._post.removeVariation(${i})" aria-label="Remove" style="width:34px;height:34px;flex-shrink:0;border:none;background:#FFF1F0;color:#EF4444;border-radius:8px;cursor:pointer;font-size:17px;font-weight:700">×</button>
+    </div>`).join('');
+  }
+  function renderVariantsSection() {
+    return `<div class="fg" style="margin-top:6px">
+      <div class="fl">Variants &amp; stock <span style="font-weight:400;color:var(--sub);text-transform:none">(optional)</span></div>
+      <div style="font-size:12px;color:var(--sub);margin:-2px 0 8px;line-height:1.45">Add colours, sizes and stock for each option. Leave empty if not needed.</div>
+      <div id="postVariants">${renderVariantRows()}</div>
+      <button type="button" onclick="H._post.addVariation()" style="width:100%;padding:11px;border:1.5px dashed var(--border,#E4E8F0);border-radius:10px;background:var(--card,#fff);color:#1A3A8F;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px">+ Add variation</button>
+    </div>`;
+  }
+
   function renderPostStep() {
     const s = postState;
     if (s.step === 1) {
@@ -85,6 +106,7 @@
           <textarea class="fi" rows="4" id="postDesc" placeholder="Describe what you're selling · condition, features, why you're selling..." maxlength="2000">${H.escHtml(s.desc)}</textarea>
         </div>
         ${H.renderAttrFields ? H.renderAttrFields(s.cat, s.attrs) : ''}
+        ${renderVariantsSection()}
         <div class="step-btns"><button class="btn-next" onclick="H._post.next()">Continue →</button></div>`;
     }
 
@@ -185,6 +207,28 @@
 
   // Namespace for onclick calls
   H._post = {
+    readVariations() {
+      const out = [];
+      document.querySelectorAll('#postVariants .pv-row').forEach(function (r) {
+        const color = ((r.querySelector('.pv-color') || {}).value || '').trim();
+        const size = ((r.querySelector('.pv-size') || {}).value || '').trim();
+        const stockRaw = (r.querySelector('.pv-stock') || {}).value || '';
+        if (color || size || stockRaw !== '') out.push({ color: color, size: size, stock: stockRaw === '' ? null : Number(stockRaw) });
+      });
+      postState.variations = out;
+      return out;
+    },
+    addVariation() {
+      this.readVariations();
+      postState.variations = postState.variations || [];
+      postState.variations.push({ color: '', size: '', stock: null });
+      const el = document.getElementById('postVariants'); if (el) el.innerHTML = renderVariantRows();
+    },
+    removeVariation(i) {
+      this.readVariations();
+      postState.variations.splice(i, 1);
+      const el = document.getElementById('postVariants'); if (el) el.innerHTML = renderVariantRows();
+    },
     setCat(c)    {
       if(c==='jobs'){H.openInner('JobIntent');return;}
       // Preserve anything already typed before the step re-renders.
@@ -268,6 +312,7 @@
         if (s.title.length < 5)   { H.toast('Title needs at least 5 characters'); return; }
         if (s.desc.length < 10)   { H.toast('Description needs at least 10 characters'); return; }
         if (H.readAttrFields)     s.attrs = Object.assign({}, s.attrs, H.readAttrFields(document.getElementById('postBody')));
+        this.readVariations();
       } else if (s.step === 2) {
         s.price  = document.getElementById('priceInput').value;
         s.prov   = document.getElementById('provinceSel').value;
@@ -352,6 +397,10 @@
       // Attach category-specific attributes (top-level too, so Browse filters see them).
       if (H.applyAttrs) H.applyAttrs(l, s.attrs || {});
       else l.attrs = s.attrs || {};
+      // Variants (colour / size / stock) — stored in attrs so they sync + restore.
+      this.readVariations();
+      const vars = (s.variations || []).filter(v => v.color || v.size || (v.stock != null && v.stock !== ''));
+      if (vars.length) { l.attrs = l.attrs || {}; l.attrs.variations = vars; l.variations = vars; }
       H.state.listings.unshift(l);
       H.saveState();
       if (typeof H.saveListingToCloud === "function") {

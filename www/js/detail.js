@@ -35,6 +35,27 @@
     };
   }
 
+  // Render the variants table (colour / size / stock) if the listing has any.
+  H._variationsHtml = function (l) {
+    var vars = (l && (l.variations || (l.attrs && l.attrs.variations))) || [];
+    if (!Array.isArray(vars) || !vars.length) return '';
+    var row = function (v) {
+      var parts = [];
+      if (v.color) parts.push(H.escHtml(v.color));
+      if (v.size) parts.push(H.escHtml(v.size));
+      var label = parts.join(' · ') || 'Option';
+      var out = (v.stock != null && v.stock !== '') ? Number(v.stock) : null;
+      var stockTxt = out === null ? '' : (out > 0
+        ? '<span style="font-size:11.5px;font-weight:700;color:#0f7a3d;background:#EAF7EF;border-radius:20px;padding:2px 9px">' + out + ' in stock</span>'
+        : '<span style="font-size:11.5px;font-weight:700;color:#B42318;background:#FEE4E2;border-radius:20px;padding:2px 9px">Out of stock</span>');
+      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border,#E8ECF4)">'
+        + '<span style="font-size:13.5px;font-weight:600;color:var(--text)">' + label + '</span>' + stockTxt + '</div>';
+    };
+    return '<div class="det-section"><div class="det-sec-title">Available options</div>'
+      + '<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:2px 14px">'
+      + vars.map(row).join('') + '</div></div>';
+  };
+
   pages.Detail = function ({ id }) {
     const l = (H.state.listings||[]).find(x => x.id === id);
     if (!l) {
@@ -94,6 +115,7 @@
         <div class="det-loc-row">${S.location} ${H.escHtml((l.suburb||l.city||'')+(l.prov?', '+l.prov:''))} · ${H.timeAgo(l.createdAt)} · ${S.eye} ${l.views||0} views</div>
 
         ${H.attrOverviewHtml ? H.attrOverviewHtml(l) : ''}
+        ${H._variationsHtml ? H._variationsHtml(l) : ''}
 
         <div class="det-section">
           <div class="det-sec-title">Description</div>
