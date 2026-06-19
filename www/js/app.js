@@ -2289,6 +2289,35 @@ H._routeDeepLinkWhenReady = function(route, attempts) {
   }
 };
 
+// Route a notification-tray tap from the full push payload. Waits for the app to
+// boot (cold start) before acting.
+H._routeNotifTapWhenReady = function(data, attempts) {
+  attempts = attempts || 0;
+  if (typeof H.navTo === 'function' && H.state && typeof H.openInner === 'function') {
+    H._handleNotifTap(data || {});
+  } else if (attempts < 40) {
+    setTimeout(function(){ H._routeNotifTapWhenReady(data, attempts + 1); }, 250);
+  }
+};
+
+H._handleNotifTap = function(data) {
+  data = data || {};
+  var type = data.type || '';
+  var link = data.deepLink || data.deep_link || '';
+  var NAV  = { message:1, sale:1, boost:1, verify:1, review:1, ban:1, report:1 };
+  // Broadcast / info / announcement → open the detail (full message + image)
+  // straight from the payload. Land on Notifications so Close returns there.
+  if (type && !NAV[type] && (data.title || data.body || data.image || data.imageUrl)) {
+    if (typeof H._openNotifDetailFromData === 'function') {
+      H.navTo('Notifications');
+      setTimeout(function(){ H._openNotifDetailFromData(data); }, 220);
+      return;
+    }
+  }
+  // Otherwise use the deep link (chat/listing/named page), or fall back to the list.
+  H._handleDeepLink(link || 'Notifications');
+};
+
 H._handleDeepLink = function(route) {
   if (!route) return;
   if (route.startsWith('listing:')) {
@@ -2415,13 +2444,12 @@ H.openAppRating = function() {
         }).catch(function(){ /* best-effort */ });
       }
 
-      // User tapped a notification — route to the deep link if present, otherwise
-      // open the Notifications screen (where broadcast content lives). Wrapped so a
-      // cold start (app launched by the tap) waits until the app is ready.
+      // User tapped a notification — open broadcasts straight to their detail
+      // (full message + image) from the payload, else follow the deep link, else
+      // open the Notifications list. Wrapped so a cold start waits until ready.
       PN.addListener('pushNotificationActionPerformed', function(action) {
-        var data = action && action.notification && action.notification.data;
-        var link = (data && (data.deepLink || data.deep_link)) || 'Notifications';
-        H._routeDeepLinkWhenReady(link);
+        var data = (action && action.notification && action.notification.data) || {};
+        H._routeNotifTapWhenReady(data);
       });
     }
 
@@ -2530,7 +2558,10 @@ H.openAppRating = function() {
   // Handle deeplink sent from the service worker when user taps a notification
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', function(event) {
-      if (event.data && event.data.type === 'deeplink' && event.data.route) {
+      if (!event.data) return;
+      if (event.data.type === 'notif-tap') {
+        H._routeNotifTapWhenReady(event.data.data || {});
+      } else if (event.data.type === 'deeplink' && event.data.route) {
         H._handleDeepLink(event.data.route);
       }
     });

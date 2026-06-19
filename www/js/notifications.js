@@ -305,31 +305,44 @@
 
   H._closeNotifDetail = function () { var m = document.getElementById('notifDetailModal'); if (m) m.remove(); };
 
-  H._openNotifDetail = function (id) {
-    var n = _findNotif(id); if (!n) return;
+  // Render the broadcast/info detail overlay from a plain object. Used both by an
+  // in-app tap (looked up by id) and by a notification-tray tap (built straight
+  // from the push payload, so it works even on a cold start).
+  function _renderNotifDetail(d) {
+    if (!d) return;
     if (document.getElementById('notifDetailModal')) return;
-    var imgSafe = (n.imageUrl || '').replace(/'/g, "\\'");
-    var img = n.imageUrl
-      ? '<img src="' + escHtml(n.imageUrl) + '" onclick="H.viewImage&&H.viewImage(\'' + imgSafe + '\')" style="width:100%;max-height:260px;object-fit:cover;border-radius:14px;margin-bottom:14px;cursor:zoom-in" onerror="this.style.display=\'none\'">'
+    var image = d.image || d.imageUrl || '';
+    var imgSafe = image.replace(/'/g, "\\'");
+    var img = image
+      ? '<img src="' + escHtml(image) + '" onclick="H.viewImage&&H.viewImage(\'' + imgSafe + '\')" style="width:100%;max-height:260px;object-fit:cover;border-radius:14px;margin-bottom:14px;cursor:zoom-in" onerror="this.style.display=\'none\'">'
       : '';
-    var openBtn = n.deepLink
-      ? '<button onclick="H._closeNotifDetail();H._notifNavigate(\'' + escHtml(n.deepLink) + '\',\'' + escHtml(n.type || '') + '\')" style="width:100%;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px">Open</button>'
+    var openBtn = d.deepLink
+      ? '<button onclick="H._closeNotifDetail();H._notifNavigate(\'' + escHtml(d.deepLink) + '\',\'' + escHtml(d.type || '') + '\')" style="width:100%;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px">Open</button>'
       : '';
+    var timeLine = d.t ? '<div style="font-size:11px;color:var(--sub);margin-bottom:16px">' + timeAgo(d.t) + '</div>' : '<div style="margin-bottom:8px"></div>';
     var ov = document.createElement('div');
     ov.id = 'notifDetailModal';
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(16,24,40,.55);z-index:9600;display:flex;align-items:center;justify-content:center;padding:22px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)';
     ov.innerHTML =
       '<div style="background:var(--card);border-radius:18px;max-width:380px;width:100%;max-height:86vh;overflow-y:auto;padding:18px;font-family:Inter,sans-serif;box-shadow:0 20px 60px rgba(16,24,40,.32)">'
       + img
-      + '<div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px;line-height:1.3">' + escHtml(n.title || '') + '</div>'
-      + '<div style="font-size:14px;color:var(--text);line-height:1.6;white-space:pre-wrap;margin-bottom:8px">' + escHtml(n.body || '') + '</div>'
-      + '<div style="font-size:11px;color:var(--sub);margin-bottom:16px">' + timeAgo(n.t) + '</div>'
+      + '<div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px;line-height:1.3">' + escHtml(d.title || '') + '</div>'
+      + '<div style="font-size:14px;color:var(--text);line-height:1.6;white-space:pre-wrap;margin-bottom:8px">' + escHtml(d.body || '') + '</div>'
+      + timeLine
       + openBtn
-      + '<button onclick="H._closeNotifDetail()" style="width:100%;padding:12px;background:' + (n.deepLink ? 'transparent' : '#1A3A8F') + ';color:' + (n.deepLink ? 'var(--sub)' : '#fff') + ';border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Close</button>'
+      + '<button onclick="H._closeNotifDetail()" style="width:100%;padding:12px;background:' + (d.deepLink ? 'transparent' : '#1A3A8F') + ';color:' + (d.deepLink ? 'var(--sub)' : '#fff') + ';border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Close</button>'
       + '</div>';
     ov.addEventListener('click', function (e) { if (e.target === ov) H._closeNotifDetail(); });
     document.body.appendChild(ov);
+  }
+
+  H._openNotifDetail = function (id) {
+    var n = _findNotif(id); if (!n) return;
+    _renderNotifDetail({ title: n.title, body: n.body, image: n.imageUrl, deepLink: n.deepLink, type: n.type, t: n.t });
   };
+
+  // Open the detail straight from a push payload (tray tap / cold start).
+  H._openNotifDetailFromData = function (d) { _renderNotifDetail(d || {}); };
 
   H._notifNavigate = function (link, type, id) {
     // Admin broadcasts / info / announcements → open the detail view (full text +

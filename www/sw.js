@@ -76,7 +76,14 @@ self.addEventListener('push', event => {
     badge:     './img/icon-192.png',
     tag:       d.type || 'pamarket',
     renotify:  true,
-    data:      { deepLink: d.deepLink || d.deep_link || null }
+    // Carry the full content so a click can open the broadcast detail directly.
+    data:      {
+      deepLink: d.deepLink || d.deep_link || null,
+      type:     d.type || '',
+      title:    d.title || '',
+      body:     d.body || '',
+      image:    d.image || d.imageUrl || ''
+    }
   };
   if (d.image) opts.image = d.image;
   event.waitUntil(
@@ -86,14 +93,15 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  // Default to the Notifications screen so a tapped broadcast always opens content.
-  const link = (event.notification.data && event.notification.data.deepLink) || 'Notifications';
+  const data = event.notification.data || {};
+  const link = data.deepLink || 'Notifications';
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       const win = list.find(w => 'focus' in w);
       if (win) {
         win.focus();
-        win.postMessage({ type: 'deeplink', route: link });
+        // Hand the whole payload to the app so it can open the broadcast detail.
+        win.postMessage({ type: 'notif-tap', data: data, route: link });
         return;
       }
       return clients.openWindow('./?deeplink=' + encodeURIComponent(link));

@@ -250,6 +250,11 @@ Deno.serve(async (req) => {
         const accessToken = await getFCMAccessToken(sa);
         const fcmData: Record<string, string> = { type };
         if (deepLink) fcmData['deepLink'] = deepLink;
+        // Carry the content in the payload so a tray tap can open the broadcast
+        // detail (full message + image) directly — no extra DB lookup needed.
+        if (title) fcmData['title'] = String(title).slice(0, 200);
+        if (msg) fcmData['body'] = String(msg).slice(0, 1000);
+        if (imageUrl) fcmData['image'] = String(imageUrl);
         for (let i = 0; i < withFCM.length; i += 25) {
           const batch = withFCM.slice(i, i + 25);
           const results = await Promise.all(batch.map((p) => sendFCM(p['push_token'], sa['project_id'], accessToken, title, msg, fcmData, imageUrl)));
