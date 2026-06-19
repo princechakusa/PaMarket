@@ -303,7 +303,7 @@
   pages.MyListings = function () {
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
-    const all      = (H.state.listings || []).filter(l => l.sellerId === u.id);
+    const all      = (H.state.listings || []).filter(l => l.sellerId === u.id && !l.businessId);
     const active   = all.filter(l => l.status === 'active');
     const pending  = all.filter(l => l.status === 'pending');
     const sold     = all.filter(l => l.status === 'sold');

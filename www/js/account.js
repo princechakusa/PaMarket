@@ -27,7 +27,7 @@
       </div>`;
     }
 
-    const activeAds = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active').length;
+    const activeAds = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active' && !l.businessId).length;
     const savedAds  = ((H.state.saves || {})[u.id] || []).length;
     if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
     const unread    = H.state.conversations.reduce((n, c) =>

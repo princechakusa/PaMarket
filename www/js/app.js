@@ -790,7 +790,7 @@ window.H = {
 
   async openInner(name, params) {
     const H=window.H;
-    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob','MyContactRequests','BusinessOnboarding','BusinessActivated','BusinessView','BusinessEditProfile','BusinessStaff','BusinessSubscription','BusinessVerify','BusinessListings','BusinessAssignListing','BusinessLeads','BusinessQuickReplies','BusinessFeatured','BusinessAnalytics','BusinessBilling','BusinessAdmin'];
+    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob','MyContactRequests','BusinessOnboarding','BusinessActivated','BusinessView','BusinessEditProfile','BusinessStaff','BusinessSubscription','BusinessVerify','BusinessListings','BusinessAssignListing','BusinessAddProduct','BusinessLeads','BusinessQuickReplies','BusinessFeatured','BusinessAnalytics','BusinessBilling','BusinessAdmin'];
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
     try {
@@ -1197,6 +1197,7 @@ window.H = {
         city:listing.city||'', suburb:listing.suburb||'',
         photos:listing.photos||[], status:listing.status||'active',
         boost:listing.boost||null, views:listing.views||0,
+        business_id:listing.businessId||null,
         created_at:listing.createdAt?new Date(listing.createdAt).toISOString():new Date().toISOString()
       };
       const attrs = (typeof H.collectAttrs==='function') ? H.collectAttrs(listing) : (listing.attrs||{});
@@ -1282,6 +1283,7 @@ window.H = {
       prov:r.province, city:r.city, suburb:r.suburb,
       photos:Array.isArray(r.photos)?r.photos:(r.photos?[r.photos]:[]),
       status:r.status, boost:r.boost, views:r.views||0,
+      businessId:r.business_id||null,
       createdAt:r.created_at?new Date(r.created_at).getTime():Date.now()
     };
     if(r.attributes && typeof r.attributes==='object'){
@@ -1951,7 +1953,7 @@ window.H = {
       return;
     }
 
-    const activeAds=(this.state.listings||[]).filter(l=>l.sellerId===u.id&&l.status==='active').length;
+    const activeAds=(this.state.listings||[]).filter(l=>l.sellerId===u.id&&l.status==='active'&&!l.businessId).length;
     const savedAds=((this.state.saves||{})[u.id]||[]).length;
     if (!Array.isArray(this.state.conversations)) this.state.conversations = [];
     const unread=this.state.conversations.reduce((n,c)=>Array.isArray(c.members)&&c.members.includes(u.id)?n+(c.messages||[]).filter(m=>m.from!==u.id&&!m.read).length:n,0);

@@ -19,16 +19,18 @@
     postState = {
       step: 1, cat: null, title: '', desc: '', price: '',
       currency: 'USD', prov: PROVINCES[0],
-      city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: [], attrs: {}
+      city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: [], attrs: {},
+      businessId: H._postBizTarget || null   // set by "Create new business product"
     };
+    H._postBizTarget = null;                  // consume once
     return renderPostShell();
   };
 
   function renderPostShell() {
     return `<div class="page active">
       <div class="post-header">
-        <div class="post-h">Post a Free Ad</div>
-        <div class="post-sub-txt">Reach buyers across Zimbabwe in minutes</div>
+        <div class="post-h">${postState.businessId ? 'Add Business Product' : 'Post a Free Ad'}</div>
+        <div class="post-sub-txt">${postState.businessId ? 'Publishing to your business store' : 'Reach buyers across Zimbabwe in minutes'}</div>
       </div>
       <div class="steps-bar" id="stepsBar">
         ${[1, 2, 3, 4].map(n => `<div class="sdot ${n < postState.step ? 'done' : n === postState.step ? 'cur' : ''}"></div>`).join('')}
@@ -344,6 +346,7 @@
         prov: s.prov, city: s.city, suburb: s.suburb,
         photos: photos, createdAt: Date.now(),
         status: finalStatus,
+        businessId: s.businessId || null,   // business product (kept out of personal listings)
         views: 0
       };
       // Attach category-specific attributes (top-level too, so Browse filters see them).
@@ -360,6 +363,12 @@
       }
 
       H._post._posting = false;
+      // Business product: return to the store catalog, not the personal listings.
+      if (s.businessId && typeof H._bizListings === 'object' && H._bizListings.open) {
+        H.toast('Product added to your store!');
+        H._bizListings.open(s.businessId);
+        return;
+      }
       if (finalStatus === 'pending') {
         H.toast(mod.status === 'pending' && !needsApproval
           ? (mod.reason || 'Ad submitted for review before going live.')
