@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
+body{background:#EEF1F6;padding:40px;color:#18181B;display:flex;gap:60px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+.title{width:100%;text-align:center;font-size:25px;font-weight:900;color:#1A3A8F;margin-bottom:2px}
+.title em{font-style:normal;color:#F5A623}
+.cap{width:100%;text-align:center;font-size:13px;color:#667085;margin-bottom:26px}
+.lbl{display:block;text-align:center;font-size:11px;font-weight:800;letter-spacing:.4px;padding:5px 0;border-radius:8px;margin-bottom:12px;color:#fff}
+.before .lbl{background:#B9472F}.after .lbl{background:#1A7F4B}
+.phone{width:380px;height:790px;background:#0A0A0B;border-radius:40px;padding:10px}
+.screen{width:100%;height:100%;background:#F4F6FA;border-radius:30px;overflow:hidden;display:flex;flex-direction:column}
+.stat{height:28px;background:#1A3A8F;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:700}
+.top{background:#1A3A8F;color:#fff;padding:11px 14px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800}
+.top .bk{font-size:20px;font-weight:300}
+.body{flex:1;overflow:hidden;background:#F4F6FA}
+/* BEFORE list */
+.bbtn{margin:0 16px 10px;background:#fff;border:1px solid #E8ECF4;border-radius:24px;padding:15px 18px;font-size:14px;font-weight:700;color:#3a3a40}
+.bbanner{margin:14px 16px;background:#FFF8EC;border-radius:12px;padding:13px;font-size:12px;color:#5b6b8c;line-height:1.5}
+/* AFTER seller center */
+.hero{background:linear-gradient(135deg,#1A3A8F,#2952cc);padding:16px 16px 18px;color:#fff}
+.hrow{display:flex;gap:12px;align-items:center}
+.logo{width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;border:1.5px solid rgba(255,255,255,.3)}
+.bname{font-size:17px;font-weight:800;display:flex;align-items:center;gap:6px}
+.badges{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
+.bdg{font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px}
+.bdg.ver{background:#EAF7EF;color:#1A7F4B}.bdg.plan{background:#FFE9C7;color:#92670A}.bdg.act{background:rgba(255,255,255,.2);color:#cfe9d6}
+.switch{margin-left:auto;font-size:11px;background:rgba(255,255,255,.16);padding:6px 10px;border-radius:20px;font-weight:700}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:14px}
+.scard{background:rgba(255,255,255,.12);border-radius:12px;padding:9px 6px;text-align:center}
+.snum{font-size:18px;font-weight:900;line-height:1}.slbl{font-size:9.5px;color:#cfe0ff;margin-top:3px;font-weight:600}
+.qa{display:flex;gap:9px;padding:14px 16px 4px}
+.qbtn{flex:1;background:#fff;border:1px solid #E8ECF4;border-radius:13px;padding:11px;text-align:center;font-size:12px;font-weight:800;color:#1A3A8F;display:flex;flex-direction:column;gap:5px;align-items:center}
+.qbtn.gold{background:linear-gradient(135deg,#F5A623,#e2920f);color:#fff;border:none}
+.qi{width:20px;height:20px}
+.sec{font-size:11px;font-weight:800;color:#98A2B3;text-transform:uppercase;letter-spacing:.5px;padding:16px 18px 7px}
+.card{margin:0 16px;background:#fff;border:1px solid #E8ECF4;border-radius:14px;overflow:hidden}
+.item{display:flex;align-items:center;gap:13px;padding:13px 15px;border-bottom:1px solid #F0F2F6}
+.item:last-child{border-bottom:none}
+.ico{width:34px;height:34px;border-radius:9px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F}
+.ico svg{width:18px;height:18px}
+.iname{flex:1;font-size:14px;font-weight:700;color:#18181B}
+.ival{font-size:12px;font-weight:700;color:#98A2B3}
+.pill{font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px}
+.pill.new{background:#FEE4E2;color:#B42318}.pill.gold{background:#FFE9C7;color:#92670A}.pill.ok{background:#EAF7EF;color:#1A7F4B}
+.chev{color:#CBD2E0;font-size:17px}
+.note{width:380px;background:#fff;border:1px solid #E6E9F0;border-radius:16px;padding:20px 22px;margin-top:6px}
+.note h3{font-size:13px;font-weight:800;color:#1A3A8F;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.pt{display:flex;gap:9px;font-size:12.5px;line-height:1.5;margin-bottom:10px}
+.pt .t{flex-shrink:0;width:18px;height:18px;border-radius:50%;background:#1A7F4B;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.pt.rm .t{background:#B9472F}
+</style></head>
+<body>
+<div class="title">Pa<em>Market</em> · Business (Seller) Center — redesign</div>
+<div class="cap">Trendyol/SHEIN-style hub · live dashboard (no "coming soon") · grouped, connected to app + admin</div>
+
+<!-- BEFORE -->
+<div class="before">
+  <div class="lbl">BEFORE — flat button list</div>
+  <div class="phone"><div class="screen">
+    <div class="stat"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="top"><span class="bk">‹</span><span>My Business</span></div>
+    <div class="body" style="padding-top:14px">
+      <div class="bbtn" style="background:#1A3A8F;color:#fff;border:none">Edit Profile</div>
+      <div class="bbtn">Listings</div>
+      <div class="bbtn">Featured &amp; Boost</div>
+      <div class="bbtn">Leads</div>
+      <div class="bbtn">Analytics</div>
+      <div class="bbtn">Quick Replies</div>
+      <div class="bbtn">Get Verified</div>
+      <div class="bbtn">Subscription &amp; Plan</div>
+      <div class="bbtn">Billing &amp; Payments</div>
+      <div class="bbtn">Create Another Business</div>
+      <div class="bbanner">📊 Listings, leads &amp; analytics for this business arrive with the Business Dashboard — coming next.</div>
+    </div>
+  </div></div>
+</div>
+
+<!-- AFTER -->
+<div class="after">
+  <div class="lbl">AFTER — seller center + live dashboard</div>
+  <div class="phone"><div class="screen">
+    <div class="stat"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="top"><span class="bk">‹</span><span>Seller Center</span></div>
+    <div class="body" style="overflow:hidden">
+      <div class="hero">
+        <div class="hrow">
+          <div class="logo">MX</div>
+          <div>
+            <div class="bname">Maxfashion <svg viewBox="0 0 24 24" width="15" height="15" fill="#34E08A" stroke="#1A3A8F" stroke-width="2"><polygon points="12 2 15 8 22 9 17 14 18 21 12 17 6 21 7 14 2 9 9 8"/></svg></div>
+            <div class="badges"><span class="bdg ver">✓ Verified</span><span class="bdg plan">PRO plan</span><span class="bdg act">● Active</span></div>
+          </div>
+          <span class="switch">Switch ▾</span>
+        </div>
+        <div class="stats">
+          <div class="scard"><div class="snum">12</div><div class="slbl">Listings</div></div>
+          <div class="scard"><div class="snum">5</div><div class="slbl">New leads</div></div>
+          <div class="scard"><div class="snum">1.2k</div><div class="slbl">Views</div></div>
+          <div class="scard"><div class="snum">2</div><div class="slbl">Boosts</div></div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <div class="qbtn gold"><svg class="qi" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Listing</div>
+        <div class="qbtn"><svg class="qi" viewBox="0 0 24 24" fill="none" stroke="#1A3A8F" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Boost</div>
+        <div class="qbtn"><svg class="qi" viewBox="0 0 24 24" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg>Analytics</div>
+      </div>
+
+      <div class="sec">Store</div>
+      <div class="card">
+        <div class="item"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="iname">Listings</div><span class="ival">12 active</span><span class="chev">›</span></div>
+        <div class="item"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="iname">Featured &amp; Boost</div><span class="pill gold">2 live</span><span class="chev">›</span></div>
+        <div class="item"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="iname">Quick Replies</div><span class="ival">4 saved</span><span class="chev">›</span></div>
+      </div>
+
+      <div class="sec">Customers</div>
+      <div class="card">
+        <div class="item"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div class="iname">Leads</div><span class="pill new">5 new</span><span class="chev">›</span></div>
+        <div class="item"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg></div><div class="iname">Analytics</div><span class="ival">This week</span><span class="chev">›</span></div>
+      </div>
+
+      <div class="sec">Business</div>
+      <div class="card">
+        <div class="item"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></div><div class="iname">Get Verified</div><span class="pill ok">Verified</span><span class="chev">›</span></div>
+        <div class="item"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><div class="iname">Subscription &amp; Plan</div><span class="pill gold">PRO</span><span class="chev">›</span></div>
+        <div class="item"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="iname">Billing &amp; Payments</div><span class="ival">Invoices</span><span class="chev">›</span></div>
+      </div>
+      <div style="height:18px"></div>
+    </div>
+  </div></div>
+</div>
+
+<div class="note">
+  <h3>What changes</h3>
+  <div class="pt"><span class="t">✓</span><span><b>Live Dashboard built in</b> — real stats (listings, new leads, views, active boosts). The "coming next" banner is <b>removed</b>; the dashboard <b>is</b> the hub.</span></div>
+  <div class="pt"><span class="t">✓</span><span><b>Grouped like Trendyol/SHEIN</b> — Store / Customers / Business, each with an icon + live value/badge (e.g. "5 new" leads).</span></div>
+  <div class="pt"><span class="t">✓</span><span><b>Quick actions</b> — Add Listing, Boost, Analytics at a glance.</span></div>
+  <div class="pt"><span class="t">✓</span><span><b>Business switcher</b> in the header (replaces the "Create Another Business" button; "+ Add business" lives inside it).</span></div>
+  <div class="pt"><span class="t">✓</span><span><b>Admin connected</b> — verification approve/reject UI + subscription/billing controls in admin (no in-app payment; invoices marked paid by admin after off-app payment).</span></div>
+  <div class="pt rm"><span class="t">✕</span><span><b>Removed</b> — the "coming soon" banner and the standalone "Create Another Business" button.</span></div>
+</div>
+</body></html>
