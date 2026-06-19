@@ -207,12 +207,22 @@
     async upgrade(id, planId) {
       const b = getBiz(id); if (!b) return;
       const p = H.BIZ_PLANS.find(x => x.id === planId);
-      const amount = p ? (b.billingCycle === 'yearly' ? p.price * 10 : p.price) : 0;
-      const charge = await H.onSubscriptionCharge(planId, b.billingCycle, amount);
-      if (!charge || !charge.ok) { toast('Could not change plan — please try again'); return; }
-      setActivePlan(b, planId, b.billingCycle);
-      if (charge.pending) toast('Upgraded to ' + H.planEntitlements(planId).name + ' — invoice created. Open Billing to pay.', 4500);
-      else toast('Plan changed to ' + H.planEntitlements(planId).name);
+      const cycle = b.billingCycle || 'monthly';
+      const amount = p ? (cycle === 'yearly' ? p.price * 10 : p.price) : 0;
+      const name = H.planEntitlements(planId).name;
+      // Free (or no charge) applies immediately.
+      if (planId === 'free' || amount <= 0) {
+        setActivePlan(b, planId, cycle);
+        toast('Plan changed to ' + name);
+        renderPage('BusinessSubscription', { id });
+        return;
+      }
+      // Paid plans are NOT activated on tap. We raise a pending invoice and the
+      // plan activates only when an admin confirms the off-app payment. The
+      // [planId] tag lets the admin's "Mark paid" action activate the right plan.
+      const res = await H.chargeBusiness(id, 'subscription', amount, name + ' plan (' + cycle + ') [' + planId + ']');
+      if (!res || !res.ok) { toast('Could not request the upgrade. Please try again.'); return; }
+      toast('Upgrade requested. Your ' + name + ' plan activates once we confirm your payment.', 5000);
       renderPage('BusinessSubscription', { id });
     },
 

@@ -87,7 +87,7 @@
 
     const invCard = (p) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border,#E8ECF4)">
       <div style="min-width:0"><div style="font-size:13px;font-weight:700;color:var(--text)">${escHtml(bizNameOf(p.businessId))}</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:1px">${escHtml(p.description || p.type)} · ${typeof H.timeAgo === 'function' ? H.timeAgo(p.createdAt) : ''}</div></div>
+        <div style="font-size:11px;color:var(--sub);margin-top:1px">${escHtml((p.description || p.type).replace(/\s*\[[a-z0-9]+\]\s*$/i, ''))} · ${typeof H.timeAgo === 'function' ? H.timeAgo(p.createdAt) : ''}</div></div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0"><span style="font-size:14px;font-weight:800;color:#1A3A8F">$${(p.amount || 0).toFixed(2)}</span>
         <button onclick="H._bizAdmin.markPaid('${p.id}')" style="padding:7px 12px;border-radius:9px;border:none;background:#16a34a;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Mark paid</button></div></div>`;
 
@@ -134,10 +134,27 @@
     },
     _find(id) { return adminList().find(b => b.id === id); },
 
-    // Mark a pending invoice paid (admin reconciles off-app payment).
+    // Mark a pending invoice paid (admin reconciles off-app payment). If the
+    // invoice is a plan upgrade ("... [planid]"), this is also what ACTIVATES the
+    // plan — paid plans never activate until the admin confirms payment here.
     async markPaid(id) {
+      const inv = (H.state.adminInvoices || []).find(x => x.id === id);
       H.state.adminInvoices = (H.state.adminInvoices || []).filter(x => x.id !== id); saveState();
-      const sb = window.supabase; if (sb) { try { await sb.from('business_payments').update({ status: 'paid' }).eq('id', id); } catch (e) {} }
+      const sb = window.supabase;
+      if (sb) { try { await sb.from('business_payments').update({ status: 'paid' }).eq('id', id); } catch (e) {} }
+      if (inv && inv.type === 'subscription' && inv.description) {
+        const m = inv.description.match(/\[([a-z0-9]+)\]\s*$/i);
+        if (m && sb) {
+          const planId = m[1];
+          const cycle = /\(yearly\)/i.test(inv.description) ? 'yearly' : 'monthly';
+          try { await sb.from('business_subscriptions').update({ status: 'downgraded' }).eq('business_id', inv.businessId).eq('status', 'active'); } catch (e) {}
+          try { await sb.from('business_subscriptions').insert({ business_id: inv.businessId, plan_id: planId, billing_cycle: cycle, status: 'active' }); } catch (e) {}
+          try { await sb.from('businesses').update({ plan_id: planId }).eq('id', inv.businessId); } catch (e) {}
+          const b = this._find(inv.businessId); if (b) b.planId = planId;
+          const owner = bizOwnerOf(inv.businessId);
+          if (owner && H.pushNotif) H.pushNotif(owner, 'Plan activated', 'Your ' + planId.toUpperCase() + ' plan is now active.', 'info', null, 'BusinessView');
+        }
+      }
       toast('Invoice marked paid'); renderPage('BusinessAdmin');
     },
 

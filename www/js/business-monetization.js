@@ -88,8 +88,9 @@
 
     const row = (p) => {
       const s = STATUS_BADGE[p.status] || STATUS_BADGE.pending;
+      const desc = (p.description || TYPE_LABEL[p.type] || p.type).replace(/\s*\[[a-z0-9]+\]\s*$/i, '');
       return `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border,#E8ECF4)">
-        <div style="min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--text)">${escHtml(p.description || TYPE_LABEL[p.type] || p.type)}</div>
+        <div style="min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--text)">${escHtml(desc)}</div>
         <div style="font-size:11.5px;color:var(--sub);margin-top:2px">${TYPE_LABEL[p.type] || p.type} · ${typeof H.timeAgo === 'function' ? H.timeAgo(p.createdAt) : ''}</div></div>
         <div style="text-align:right;flex-shrink:0"><div style="font-size:14px;font-weight:800;color:#1A3A8F">$${(p.amount || 0).toFixed(2)}</div>
         <span style="font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:${s[0]};color:${s[1]}">${s[2]}</span></div></div>`;
