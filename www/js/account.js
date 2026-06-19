@@ -67,6 +67,36 @@
           </div>`).join('')}
       </div>
 
+      <!-- Business Card (prominent, top-level) -->
+      ${(() => {
+        const biz = (H.state.businesses || []).filter(b => b.ownerUserId === u.id);
+        const active = biz.find(b => b.status === 'active');
+        if (active) {
+          const logo = active.logo
+            ? `<img src="${H.escHtml(active.logo)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`
+            : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">${H.initials(active.name)}</div>`;
+          const products = (H.state.listings || []).filter(l => l.businessId === active.id && l.status === 'active').length;
+          return `<div onclick="H._bizOnboard.openFromAccount()" style="margin:12px 12px 0;background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+            <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.2);overflow:hidden;flex-shrink:0;border:2px solid rgba(255,255,255,.35)">${logo}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${H.escHtml(active.name)}</div>
+              <div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">${products} product${products === 1 ? '' : 's'} · ${H.escHtml((active.planId || 'free').charAt(0).toUpperCase() + (active.planId || 'free').slice(1))} plan</div>
+            </div>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>`;
+        }
+        return `<div onclick="H._bizOnboard.openFromAccount()" style="margin:12px 12px 0;background:var(--card);border:1.5px dashed var(--border);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          <div style="width:52px;height:52px;border-radius:14px;background:#EEF2FB;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9l2-5h14l2 5"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:800;color:var(--text)">${biz.length ? 'Finish Business Setup' : 'Open a Business'}</div>
+            <div style="font-size:11.5px;color:var(--sub);margin-top:2px">Create your shop and reach more customers</div>
+          </div>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--sub)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>`;
+      })()}
+
       <!-- Menu Rows -->
       <div style="margin-top:12px">
         ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', 'My Profile', 'Profile', '')}

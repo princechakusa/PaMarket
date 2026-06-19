@@ -575,6 +575,10 @@ window.H = {
           if (_mb && _mb.classList.contains('open')) { H.closeModal(); return; }
           var _sb = document.getElementById('sheetBg');
           if (_sb && _sb.classList.contains('open')) { H.closeSheet(); return; }
+          // Post page: back button must follow the step-aware logic, not bypass it.
+          if (H.currentPageName === 'Post' && H._post && typeof H._post.headerBack === 'function') {
+            H._post.headerBack(); return;
+          }
           if (H.pageStack && H.pageStack.length) { H.goBack(); return; }
           if (H.currentPageName && H.currentPageName !== 'Home') { H.navTo('Home'); return; }
           if (_AppPlugin.minimizeApp) _AppPlugin.minimizeApp();
@@ -899,6 +903,8 @@ window.H = {
     const filtered=[...new Set([id,...rv.filter(x=>x!==id)])].slice(0,10);
     try{localStorage.setItem('pamarket_rv',JSON.stringify(filtered));}catch(_){}
     this.saveState();
+    // Business listings open the shop/store page, not a plain listing detail.
+    if(l.businessId){this.openInner('BusinessProfile',{id:l.businessId,highlightListing:id});return;}
     this.openInner('Detail',{id});
   },
 
@@ -1265,14 +1271,15 @@ window.H = {
     window.supabase.from('paid_ads').update({impressions:a.impressions}).eq('id',id).then(()=>{});
   },
 
-  trackAdClick(id, url) {
-    if(id&&window.supabase&&typeof window.supabase.from==='function'){
-      const a = (H.state.paidAds||[]).find(x=>x.id===id);
-      if(a){ a.clicks=(a.clicks||0)+1; window.supabase.from('paid_ads').update({clicks:a.clicks}).eq('id',id).then(()=>{}); }
-    }
+  trackAdClick(id) {
     const a = (H.state.paidAds||[]).find(x=>x.id===id);
+    if(a&&window.supabase&&typeof window.supabase.from==='function'){
+      a.clicks=(a.clicks||0)+1;
+      window.supabase.from('paid_ads').update({clicks:a.clicks}).eq('id',id).then(()=>{});
+    }
     // Listing link takes priority over external URL
     if(a && a.listingId) { H.openListing(a.listingId); return; }
+    const url = a && a.linkUrl;
     if(url) {
       try {
         var _native=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());

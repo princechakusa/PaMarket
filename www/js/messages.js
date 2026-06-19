@@ -463,13 +463,13 @@
   function chatTick(read) { return '<span class="chat-rr' + (read ? ' read' : '') + '">' + (read ? '✓✓' : '✓') + '</span>'; }
   H._chatTick = chatTick;
   function chatHdrSubHtml(other, online) {
-    // Privacy: if the other user disabled activity sharing, show no presence at
-    // all (parity with the existing online behaviour — hidden only when set off).
+    // Use other.id when available, fall back to the active chat partner id.
+    var oid = (other && other.id) || H._activeOtherId;
     var sharing = !(other && other.privacySettings && other.privacySettings.showActivity === false);
-    if (sharing && H._otherTyping) return '<span style="color:#FFD27A">Typing…</span>';
+    if (sharing && H._otherTyping) return '<span style="color:#FFD27A">Typing...</span>';
     if (sharing && online) return '<span class="chat-presence-dot"></span><span style="color:#7CF6B0">Online now</span>';
-    if (sharing && other && H._lastSeen && H._lastSeen[other.id] && typeof H.formatLastSeen === 'function') {
-      var ls = H.formatLastSeen(H._lastSeen[other.id]);
+    if (sharing && oid && H._lastSeen && H._lastSeen[oid] && typeof H.formatLastSeen === 'function') {
+      var ls = H.formatLastSeen(H._lastSeen[oid]);
       if (ls) return '<span style="color:#cfe0ff">' + ls + '</span>';
     }
     if (other && other.verified) return H.verifiedBadge(12) + '<span style="color:#9fd4ff">Verified</span>';

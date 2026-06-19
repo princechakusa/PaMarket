@@ -28,7 +28,9 @@
     var esc = H.escHtml;
     var slides = ads.map(function (a) {
       if (H.trackAdImpression) { try { H.trackAdImpression(a.id); } catch (e) {} }
-      var click = 'H.trackAdClick(' + JSON.stringify(a.id) + ',' + JSON.stringify(a.linkUrl || '') + ')';
+      // Use a data attribute and safe id (UUIDs have no special chars) so no
+      // HTML-escaping of JS strings is needed in the onclick attribute.
+      var safeId = String(a.id || '').replace(/['"\\<>&]/g, '');
       var bg = esc(a.bgColor || '#1A3A8F');
       var kick = esc(a.businessName || 'Sponsored');
       var head = esc(a.headline || a.businessName || '');
@@ -36,7 +38,7 @@
       var img = a.imageUrl
         ? '<img class="adc-img" src="' + esc(a.imageUrl) + '" loading="lazy" onerror="this.remove()">'
         + '<div class="adc-scrim"></div>' : '';
-      return '<div class="adc-slide" style="background:' + bg + '" onclick="' + esc(click) + '">'
+      return '<div class="adc-slide" style="background:' + bg + '" onclick="H.trackAdClick(\'' + safeId + '\')">'
         + img
         + '<span class="adc-badge">AD</span>'
         + '<div class="adc-txt">'

@@ -238,14 +238,29 @@
     }
   })();
 
+  // Refresh data after the app returns to the foreground.
+  function onForeground() {
+    H.initPresence(); H.initReadReceipts();
+    H.touchLastSeen(true);
+    // Re-fetch stale data silently; small delay lets the network settle.
+    setTimeout(function () {
+      if (typeof H.fetchListingsFromSupabase === 'function') H.fetchListingsFromSupabase().catch(function () {});
+      if (me() && typeof H.syncConversations === 'function') H.syncConversations().catch(function () {});
+      if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
+      // Re-render the current page so any new data is visible immediately.
+      if (typeof H.renderPage === 'function' && H.currentPageName) {
+        H.renderPage(H.currentPageName, H.currentPageParams);
+      }
+    }, 800);
+  }
+
   // App open/close/background — keep presence + last_seen accurate.
   document.addEventListener('visibilitychange', function () {
     if (!me()) return;
     if (document.hidden) {
       H.touchLastSeen(true);                 // record the moment we left
     } else {
-      H.initPresence(); H.initReadReceipts();
-      H.touchLastSeen(true);                 // we're back
+      onForeground();
     }
   });
   // Native (Capacitor) background/foreground — covers Android app-switch where
@@ -255,8 +270,8 @@
     if (App && typeof App.addListener === 'function') {
       App.addListener('appStateChange', function (st) {
         if (!me()) return;
-        H.touchLastSeen(true);
-        if (st && st.isActive) { H.initPresence(); H.initReadReceipts(); }
+        if (st && st.isActive) { onForeground(); }
+        else { H.touchLastSeen(true); }
       });
     }
   } catch (e) {}

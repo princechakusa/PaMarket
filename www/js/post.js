@@ -192,7 +192,13 @@
 
   function renderPhotoGrid() {
     return postState.photos.map((p, i) =>
-      `<div class="photo-thumb"><img src="${p}"><button class="rm" onclick="H._post.removePhoto(${i})">×</button></div>`
+      `<div class="photo-thumb" style="position:relative">
+        <img src="${p}">
+        <button class="rm" onclick="H._post.removePhoto(${i})" aria-label="Remove">x</button>
+        ${i === 0
+          ? '<span style="position:absolute;bottom:4px;left:4px;font-size:9px;font-weight:800;background:#1A3A8F;color:#fff;border-radius:6px;padding:2px 6px;pointer-events:none">Cover</span>'
+          : `<button onclick="H._post.setCover(${i})" style="position:absolute;bottom:4px;left:4px;font-size:9px;font-weight:800;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:6px;padding:2px 6px;cursor:pointer;-webkit-tap-highlight-color:transparent">Set cover</button>`}
+      </div>`
     ).join('');
   }
 
@@ -258,6 +264,14 @@
     setCur(c)    { postState.currency = c; refreshBody(); },
     onProv(p)    { postState.prov = p; postState.city = CITIES_BY_PROV[p][0]; refreshBody(); },
     removePhoto(i) { postState.photos.splice(i, 1); document.getElementById('photoGrid').innerHTML = renderPhotoGrid(); },
+    setCover(i) {
+      if (i > 0 && i < postState.photos.length) {
+        const cover = postState.photos.splice(i, 1)[0];
+        postState.photos.unshift(cover);
+        const g = document.getElementById('photoGrid');
+        if (g) g.innerHTML = renderPhotoGrid();
+      }
+    },
     pick(mode) {
       if (H._post._compressing) { H.toast('Still processing the last photos…', 2500); return; }
       const el = document.getElementById(mode === 'camera' ? 'photoFileCamera' : 'photoFileUpload');

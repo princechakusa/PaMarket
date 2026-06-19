@@ -60,6 +60,7 @@
       <div class="empty-state"><div class="empty-icon">${S.deny}</div><div class="empty-title">Access Denied</div></div>
     </div>`;
 
+    const pendingUpgrades = (H.state.txns||[]).filter(t=>t.type==='subscription'&&t.status==='pending').length;
     const tabs = [
       ['overview',      'Overview'],
       ['users',         `Users (${(H.state.users||[]).length})`],
@@ -72,7 +73,8 @@
       ['notifications', 'Notify'],
       ['support',       `Support (${(H.state.supportTickets||[]).filter(t=>t.status!=='closed').length})`],
       ['logs',          `Logs (${(H.state.adminLogs||[]).length})`],
-      ['messages',      `Messages (${(H.state.conversations||[]).length})`]
+      ['messages',      `Messages (${(H.state.conversations||[]).length})`],
+      ['business',      `Business${pendingUpgrades ? ' (' + pendingUpgrades + ')' : ''}`]
     ];
 
     return `<div class="page active">${innerTopbar('Admin Panel')}
@@ -162,6 +164,7 @@
       case 'support':        return renderSupport();
       case 'logs':           return renderLogs();
       case 'messages':       return renderMessages();
+      case 'business':       return renderBusinessTools();
       default: return '';
     }
   }
@@ -1323,8 +1326,124 @@
           saveState(); toast('Ad deleted'); this.setTab('ads');
         }
       });
+    },
+
+    approveBusiness(id) {
+      const b = (H.state.businesses||[]).find(x=>x.id===id); if (!b) return;
+      b.status = 'active'; b.approvedAt = Date.now();
+      saveState();
+      if (window.supabase) { try { window.supabase.from('businesses').update({status:'active',approved_at:new Date().toISOString()}).eq('id',id).then(()=>{}); } catch(e){} }
+      if (typeof H.pushNotif === 'function') { try { H.pushNotif(b.ownerUserId,'Business approved',`${b.name} is now live on PaMarket!`,'business'); } catch(e){} }
+      alog('Approved business: ' + b.name);
+      toast('Business approved'); renderBody_update();
+    },
+
+    rejectBusiness(id) {
+      const b = (H.state.businesses||[]).find(x=>x.id===id); if (!b) return;
+      modal({
+        title: 'Reject Business',
+        body: `Reject <strong>${escHtml(b.name)}</strong>? The owner will be notified.`,
+        confirmText: 'Reject', danger: true,
+        onConfirm: () => {
+          b.status = 'rejected'; saveState();
+          if (window.supabase) { try { window.supabase.from('businesses').update({status:'rejected'}).eq('id',id).then(()=>{}); } catch(e){} }
+          if (typeof H.pushNotif === 'function') { try { H.pushNotif(b.ownerUserId,'Business not approved',`${b.name} was not approved. Contact support for details.`,'business'); } catch(e){} }
+          alog('Rejected business: ' + b.name); toast('Rejected'); renderBody_update();
+        }
+      });
+    },
+
+    approveUpgrade(txnId) {
+      const txn = (H.state.txns||[]).find(t=>t.id===txnId); if (!txn) return;
+      const match = (txn.note||'').match(/\[([a-z]+)\]/);
+      const planId = match ? match[1] : null;
+      if (planId && typeof H._bizSub !== 'undefined' && H._bizSub.upgrade) {
+        const b = (H.state.businesses||[]).find(x=>x.id===txn.businessId);
+        if (b && typeof H.planEntitlements === 'function') {
+          const cycle = b.billingCycle || 'monthly';
+          const rows = ((H.state.businessSubscriptions||{})[b.id]||[]);
+          rows.forEach(s=>{ if(s.status==='active') s.status='downgraded'; });
+          const newSub = { id: H.uid ? H.uid() : Date.now().toString(36), businessId: b.id, planId, billingCycle: cycle,
+            status:'active', autoRenew:true, currentPeriodEnd: null, createdAt: Date.now() };
+          if (!H.state.businessSubscriptions) H.state.businessSubscriptions = {};
+          H.state.businessSubscriptions[b.id] = rows.concat(newSub);
+          b.planId = planId; b.updatedAt = Date.now();
+          if (window.supabase) { try { window.supabase.from('business_subscriptions').upsert({id:newSub.id,business_id:b.id,plan_id:planId,billing_cycle:cycle,status:'active',created_at:new Date().toISOString()}).then(()=>{}); } catch(e){} }
+        }
+      }
+      txn.status = 'paid'; txn.paidAt = Date.now();
+      saveState();
+      if (window.supabase) { try { window.supabase.from('transactions').update({status:'paid',paid_at:new Date().toISOString()}).eq('id',txnId).then(()=>{}); } catch(e){} }
+      if (typeof H.pushNotif === 'function' && txn.userId) { try { H.pushNotif(txn.userId,'Upgrade approved','Your plan has been upgraded. Enjoy the new features!','business'); } catch(e){} }
+      alog('Approved upgrade txn: ' + txnId); toast('Upgrade approved'); renderBody_update();
     }
   };
+
+  function renderBody_update() {
+    const body = document.getElementById('adminBody');
+    if (body) body.innerHTML = renderBody();
+  }
+
+  function renderBusinessTools() {
+    const businesses = H.state.businesses || [];
+    const pending = businesses.filter(b => b.status === 'pending' || !b.status);
+    const active  = businesses.filter(b => b.status === 'active');
+    const upgrades = (H.state.txns||[]).filter(t=>t.type==='subscription'&&t.status==='pending');
+
+    function bizRow(b) {
+      const owner = (H.state.users||[]).find(u=>u.id===b.ownerUserId);
+      const ownerName = owner ? escHtml(owner.name||owner.email||b.ownerUserId) : escHtml(b.ownerUserId||'Unknown');
+      const statusColor = b.status==='active' ? '#16a34a' : b.status==='rejected' ? '#dc2626' : '#F5A623';
+      return `<div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:40px;height:40px;border-radius:10px;background:#EEF2FB;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;font-weight:800;color:#1A3A8F;overflow:hidden">
+            ${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml((b.name||'B').slice(0,1))}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">${escHtml(b.name||'Unnamed')}</div>
+            <div style="font-size:11.5px;color:var(--sub)">Owner: ${ownerName} · ${escHtml(b.bizType||'')} · Plan: ${escHtml(b.planId||'free')}</div>
+            <span style="font-size:10.5px;font-weight:700;background:${statusColor}22;color:${statusColor};border-radius:6px;padding:1px 6px">${escHtml(b.status||'pending')}</span>
+          </div>
+        </div>
+        ${b.status !== 'active' ? `<div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="H._admin.approveBusiness('${escHtml(b.id)}')" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>
+          <button onclick="H._admin.rejectBusiness('${escHtml(b.id)}')" style="flex:1;padding:8px;background:#FFF1F0;color:#dc2626;border:1px solid #FECACA;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Reject</button>
+        </div>` : `<div style="margin-top:8px"><button onclick="H.openBusinessProfile&&H.openBusinessProfile('${escHtml(b.id)}')" style="padding:8px 16px;background:#EEF2FB;color:#1A3A8F;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">View Shop</button></div>`}
+      </div>`;
+    }
+
+    function upgradeRow(t) {
+      const b = (H.state.businesses||[]).find(x=>x.id===t.businessId);
+      const bName = b ? escHtml(b.name) : escHtml(t.businessId||'Unknown');
+      return `<div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px">${bName}</div>
+        <div style="font-size:12px;color:var(--sub);margin-bottom:8px">${escHtml(t.note||'')} · $${t.amount||0}</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="H._admin.approveUpgrade('${escHtml(t.id)}')" style="flex:1;padding:8px;background:#1A3A8F;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Mark Paid / Approve</button>
+        </div>
+      </div>`;
+    }
+
+    return `
+      <div class="section-card" style="padding:0;margin-bottom:16px">
+        <div style="padding:14px 16px;font-size:14px;font-weight:800;color:var(--text);border-bottom:1px solid var(--border)">
+          Pending Upgrade Requests (${upgrades.length})
+        </div>
+        ${upgrades.length ? upgrades.map(upgradeRow).join('') : '<div style="padding:20px 16px;text-align:center;color:var(--sub);font-size:13px">No pending upgrade requests.</div>'}
+      </div>
+      <div class="section-card" style="padding:0;margin-bottom:16px">
+        <div style="padding:14px 16px;font-size:14px;font-weight:800;color:var(--text);border-bottom:1px solid var(--border)">
+          Pending Business Approvals (${pending.length})
+        </div>
+        ${pending.length ? pending.map(bizRow).join('') : '<div style="padding:20px 16px;text-align:center;color:var(--sub);font-size:13px">No businesses awaiting approval.</div>'}
+      </div>
+      <div class="section-card" style="padding:0">
+        <div style="padding:14px 16px;font-size:14px;font-weight:800;color:var(--text);border-bottom:1px solid var(--border)">
+          Active Businesses (${active.length})
+        </div>
+        ${active.length ? active.map(bizRow).join('') : '<div style="padding:20px 16px;text-align:center;color:var(--sub);font-size:13px">No active businesses yet.</div>'}
+      </div>`;
+  }
 
 })(window.H = window.H || {});
 
