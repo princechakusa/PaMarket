@@ -99,6 +99,12 @@
         </div>
       </div>
 
+      <div onclick="H._bizSearch && H._bizSearch.open()" style="margin:14px 16px 4px;display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border-radius:14px;padding:13px 15px;cursor:pointer">
+        <span style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M9 20v-6h6v6"/></svg></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:800">Browse Stores</span><span style="font-size:12px;color:rgba(255,255,255,.85)">Find shops, dealers, pharmacies and more</span></span>
+        <span style="font-size:18px;opacity:.8">›</span>
+      </div>
+
       <div class="browse-controls">
         <button class="filter-btn" onclick="H._browse.toggleFilters()">
           ${S.filter} Filters

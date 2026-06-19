@@ -205,26 +205,137 @@
         </div>
       </div>
       <div class="inner-content" style="padding-bottom:40px">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <div style="font-size:20px;font-weight:800;color:var(--text)">${escHtml(b.name)}</div>
-          ${verified ? `<span title="Verified business">${H.verifiedBadge(18)}</span>` : ''}
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <div style="font-size:20px;font-weight:800;color:var(--text)">${escHtml(b.name)}</div>
+              ${verified ? `<span title="Verified business">${H.verifiedBadge(18)}</span>` : ''}
+            </div>
+            <div style="font-size:13px;color:var(--sub);margin-top:3px">${escHtml(typeLabel)}${cat ? ' · ' + escHtml(cat.name) : ''}</div>
+          </div>
+          ${!canEdit(b) ? `<button id="bizFollowBtn" onclick="H.toggleFollowBusiness('${b.id}')" style="flex-shrink:0;border:none;border-radius:20px;padding:9px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;${H.isFollowingBusiness(b.id) ? 'background:var(--bg,#EEF2FB);color:#1A3A8F;border:1.5px solid #1A3A8F' : 'background:#1A3A8F;color:#fff'}">${H.isFollowingBusiness(b.id) ? 'Following' : 'Follow'}</button>` : ''}
         </div>
-        <div style="font-size:13px;color:var(--sub);margin-top:3px">${escHtml(typeLabel)}${cat ? ' · ' + escHtml(cat.name) : ''}</div>
-        ${loc ? `<div style="font-size:12.5px;color:var(--sub);margin-top:5px;display:flex;align-items:center;gap:5px">${H.ICONS.location} ${escHtml(loc)}</div>` : ''}
-        ${b.description ? `<div style="font-size:13.5px;color:var(--text);line-height:1.6;margin-top:14px">${escHtml(b.description)}</div>` : ''}
+        <div style="display:flex;gap:18px;margin-top:10px">
+          <div><span id="bizFollowerCount" style="font-size:15px;font-weight:800;color:var(--text)">${b.followerCount || 0}</span> <span style="font-size:12.5px;color:var(--sub)">followers</span></div>
+          <div><span style="font-size:15px;font-weight:800;color:var(--text)">${(H.state.listings || []).filter(l => l.businessId === b.id && l.status === 'active').length}</span> <span style="font-size:12.5px;color:var(--sub)">products</span></div>
+        </div>
+        ${loc ? `<div style="font-size:12.5px;color:var(--sub);margin-top:8px;display:flex;align-items:center;gap:5px">${H.ICONS.location} ${escHtml(loc)}</div>` : ''}
+        ${b.description ? `<div style="font-size:13.5px;color:var(--text);line-height:1.6;margin-top:12px">${escHtml(b.description)}</div>` : ''}
 
-        <div style="display:flex;gap:10px;margin-top:18px">
+        <div style="display:flex;gap:10px;margin-top:16px">
           ${action('Call', H.ICONS.phone || '', b.phone ? 'tel:' + escHtml(b.phone) : '', '#1A3A8F')}
           ${action('WhatsApp', '', waNum ? 'https://wa.me/' + (waNum.indexOf('263') === 0 ? waNum : '263' + waNum.replace(/^0/, '')) : '', '#16a34a')}
           ${action('Email', '', b.email ? 'mailto:' + escHtml(b.email) : '', '#475569')}
         </div>
-        ${canEdit(b) ? `<button class="ml-act-btn" style="width:100%;padding:13px;margin-top:18px" onclick="H._bizProfile.openEdit('${b.id}')">Edit Profile</button>` : ''}
+        ${canEdit(b) ? `<button class="ml-act-btn" style="width:100%;padding:13px;margin-top:14px" onclick="H._bizProfile.openEdit('${b.id}')">Edit Profile</button>` : ''}
+
+        ${(() => {
+          const products = (H.state.listings || []).filter(l => l.businessId === b.id && l.status === 'active');
+          if (!products.length) return `<div style="text-align:center;color:var(--sub);font-size:13px;padding:28px 0 6px">No products listed yet.</div>`;
+          const card = (l) => `<div onclick="H.openListing && H.openListing('${l.id}')" style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:13px;overflow:hidden;cursor:pointer">
+            <div style="aspect-ratio:1/1;background:#EEF2FB;display:flex;align-items:center;justify-content:center;color:#1A3A8F;overflow:hidden">${l.photos && l.photos[0] ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover">` : (typeof H.categoryIcon === 'function' ? H.categoryIcon(l.cat) : '')}</div>
+            <div style="padding:9px 10px"><div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title || 'Untitled')}</div><div style="font-size:13px;font-weight:800;color:#1A3A8F;margin-top:2px">${escHtml(H.fmtPrice ? H.fmtPrice(l.price, l.currency) : l.price)}</div></div>
+          </div>`;
+          return `<div style="font-size:13px;font-weight:800;color:var(--text);margin:22px 0 10px">Products (${products.length})</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${products.map(card).join('')}</div>`;
+        })()}
       </div>
     </div>`;
   };
 
+  // Load follower count + the current user's follow state when the storefront opens.
+  pages.BusinessProfile_after = function (params) {
+    const id = params && params.id; if (!id) return;
+    if (typeof H.fetchBusinessFollow === 'function') {
+      H.fetchBusinessFollow(id).then(function (changed) {
+        if (changed && H.currentPageName === 'BusinessProfile') H.renderPage('BusinessProfile', { id });
+      });
+    }
+  };
+
   // Public entry point (listings/search will call this).
   H.openBusinessProfile = function (id) { H.openInner('BusinessProfile', { id }); };
+
+  // ── PAGE: Browse / search businesses (storefront discovery) ──
+  let _bizQ = '', _bizCat = 'all';
+
+  H.fetchAllActiveBusinesses = async function () {
+    const sb = window.supabase; if (!sb) return H.state.businesses || [];
+    try {
+      const { data, error } = await sb.from('businesses').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(300);
+      if (error || !Array.isArray(data)) return H.state.businesses || [];
+      H.state.businesses = H.state.businesses || [];
+      data.forEach(row => {
+        const mapped = { id: row.id, ownerUserId: row.owner_user_id, name: row.name || '', logo: row.logo, cover: row.cover, description: row.description, bizType: row.biz_type || 'individual', category: row.category, phone: row.phone, whatsapp: row.whatsapp, email: row.email, province: row.province, city: row.city, suburb: row.suburb, status: row.status, verificationLevel: row.verification_level || 0 };
+        const i = H.state.businesses.findIndex(b => b.id === mapped.id);
+        if (i >= 0) H.state.businesses[i] = Object.assign(H.state.businesses[i], mapped); else H.state.businesses.push(mapped);
+      });
+      saveState();
+      return H.state.businesses;
+    } catch (e) { return H.state.businesses || []; }
+  };
+
+  function bizSearchList() {
+    const q = (_bizQ || '').toLowerCase().trim();
+    let list = (H.state.businesses || []).filter(b => b.status === 'active');
+    if (_bizCat !== 'all') list = list.filter(b => b.category === _bizCat);
+    if (q) list = list.filter(b => {
+      const cn = ((H.CATEGORIES.find(c => c.id === b.category) || {}).name || '').toLowerCase();
+      return (b.name || '').toLowerCase().indexOf(q) !== -1 || (b.description || '').toLowerCase().indexOf(q) !== -1 || cn.indexOf(q) !== -1 || (b.city || '').toLowerCase().indexOf(q) !== -1;
+    });
+    return list;
+  }
+
+  function bizSearchCards() {
+    const list = bizSearchList();
+    if (!list.length) return `<div style="text-align:center;color:var(--sub);font-size:13px;padding:36px 16px">No stores found. Try a different search.</div>`;
+    return list.map(b => {
+      const cat = H.CATEGORIES.find(c => c.id === b.category);
+      const loc = [b.city, b.province].filter(Boolean).join(', ');
+      const prods = (H.state.listings || []).filter(l => l.businessId === b.id && l.status === 'active').length;
+      const verified = (b.verificationLevel || 0) >= 2;
+      return `<div onclick="H.openBusinessProfile('${b.id}')" style="display:flex;gap:12px;align-items:center;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:12px;margin:0 16px 10px;cursor:pointer">
+        <div style="width:52px;height:52px;border-radius:13px;overflow:hidden;background:#EEF2FB;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#1A3A8F">${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:5px"><span style="font-size:14.5px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}</span>${verified ? H.verifiedBadge(14) : ''}</div>
+          <div style="font-size:12px;color:var(--sub);margin-top:2px">${cat ? escHtml(cat.name) : ''}${loc ? ' · ' + escHtml(loc) : ''}</div>
+          <div style="font-size:11.5px;color:var(--sub2,#98A2B3);margin-top:3px">${prods} product${prods === 1 ? '' : 's'}</div>
+        </div>
+        <span style="color:#CBD2E0;font-size:18px">›</span>
+      </div>`;
+    }).join('');
+  }
+
+  pages.BusinessSearch = function () {
+    const chip = (id, label) => `<button onclick="H._bizSearch.setCat('${id}')" style="flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid ${_bizCat === id ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${_bizCat === id ? '#1A3A8F' : 'var(--card,#fff)'};color:${_bizCat === id ? '#fff' : 'var(--text)'}">${label}</button>`;
+    return `<div class="page active">
+      ${innerTopbar('Stores')}
+      <div style="padding:12px 16px 8px">
+        <div style="display:flex;align-items:center;gap:8px;background:var(--card,#fff);border:1.5px solid var(--border,#E8ECF4);border-radius:12px;padding:10px 14px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--sub)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="bizSearchIn" value="${escHtml(_bizQ)}" oninput="H._bizSearch.onQuery(this.value)" placeholder="Search stores, e.g. Pharmacy, Furniture" style="flex:1;border:none;outline:none;background:none;font-size:14px;color:var(--text);font-family:inherit">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding:4px 16px 12px;-webkit-overflow-scrolling:touch">
+        ${chip('all', 'All')}${H.CATEGORIES.map(c => chip(c.id, c.name)).join('')}
+      </div>
+      <div id="bizSearchResults">${bizSearchCards()}</div>
+    </div>`;
+  };
+
+  pages.BusinessSearch_after = function () {
+    if (typeof H.fetchAllActiveBusinesses === 'function') {
+      H.fetchAllActiveBusinesses().then(function () {
+        if (H.currentPageName === 'BusinessSearch') { const el = document.getElementById('bizSearchResults'); if (el) el.innerHTML = bizSearchCards(); }
+      });
+    }
+  };
+
+  H._bizSearch = {
+    open() { _bizQ = ''; _bizCat = 'all'; H.openInner('BusinessSearch'); },
+    onQuery(v) { _bizQ = v || ''; const el = document.getElementById('bizSearchResults'); if (el) el.innerHTML = bizSearchCards(); },
+    setCat(id) { _bizCat = id; H.renderPage('BusinessSearch'); }
+  };
 
   // ── Handlers ─────────────────────────────────────────────────
   function collectEdit() {
@@ -323,6 +434,55 @@
       const s = staffOf(businessId).find(x => x.id === staffRowId); if (s) { s.status = 'active'; saveState(); }
       toast('Invite accepted');
     }
+  };
+
+  // ── Follow / followers ───────────────────────────────────────
+  H.isFollowingBusiness = function (id) {
+    return Array.isArray(H.state.followedBusinesses) && H.state.followedBusinesses.indexOf(id) !== -1;
+  };
+
+  H.toggleFollowBusiness = function (id) {
+    const u = H.currentUser(); if (!u) { H.requireAuth && H.requireAuth('Sign in to follow businesses'); return; }
+    H.state.followedBusinesses = H.state.followedBusinesses || [];
+    const b = getBiz(id);
+    const sb = window.supabase;
+    if (H.isFollowingBusiness(id)) {
+      H.state.followedBusinesses = H.state.followedBusinesses.filter(x => x !== id);
+      if (b) b.followerCount = Math.max(0, (b.followerCount || 1) - 1);
+      if (sb) { try { sb.from('business_followers').delete().eq('business_id', id).eq('user_id', u.id).then(() => {}, () => {}); } catch (e) {} }
+    } else {
+      H.state.followedBusinesses.push(id);
+      if (b) b.followerCount = (b.followerCount || 0) + 1;
+      if (sb) { try { sb.from('business_followers').insert({ business_id: id, user_id: u.id }).then(() => {}, () => {}); } catch (e) {} }
+      try { if (b && b.ownerUserId && b.ownerUserId !== u.id && H.pushNotif) H.pushNotif(b.ownerUserId, 'New follower', (u.name || 'Someone') + ' followed ' + (b.name || 'your business'), 'info', null, 'BusinessView'); } catch (e) {}
+    }
+    saveState();
+    const f = H.isFollowingBusiness(id);
+    const btn = document.getElementById('bizFollowBtn');
+    if (btn) { btn.textContent = f ? 'Following' : 'Follow'; btn.style.cssText = 'flex-shrink:0;border-radius:20px;padding:9px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;' + (f ? 'background:var(--bg,#EEF2FB);color:#1A3A8F;border:1.5px solid #1A3A8F' : 'background:#1A3A8F;color:#fff;border:none'); }
+    const cnt = document.getElementById('bizFollowerCount');
+    if (cnt && b) cnt.textContent = b.followerCount || 0;
+  };
+
+  H.fetchBusinessFollow = function (id) {
+    const sb = window.supabase; const u = H.currentUser();
+    if (!sb || !id) return Promise.resolve(false);
+    const b = getBiz(id);
+    return Promise.all([
+      sb.from('business_followers').select('user_id', { count: 'exact', head: true }).eq('business_id', id),
+      u ? sb.from('business_followers').select('user_id').eq('business_id', id).eq('user_id', u.id).maybeSingle() : Promise.resolve({ data: null })
+    ]).then(function (res) {
+      let changed = false;
+      const cnt = res[0] && res[0].count;
+      if (typeof cnt === 'number' && b && b.followerCount !== cnt) { b.followerCount = cnt; changed = true; }
+      const mine = res[1] && res[1].data;
+      H.state.followedBusinesses = H.state.followedBusinesses || [];
+      const has = H.state.followedBusinesses.indexOf(id) !== -1;
+      if (mine && !has) { H.state.followedBusinesses.push(id); changed = true; }
+      if (!mine && has) { H.state.followedBusinesses = H.state.followedBusinesses.filter(x => x !== id); changed = true; }
+      if (changed) saveState();
+      return changed;
+    }, function () { return false; });
   };
 
 })(window.H = window.H || {});
