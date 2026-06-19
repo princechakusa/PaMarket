@@ -468,11 +468,15 @@
     var sharing = !(other && other.privacySettings && other.privacySettings.showActivity === false);
     if (sharing && H._otherTyping) return '<span style="color:#FFD27A">Typing...</span>';
     if (sharing && online) return '<span class="chat-presence-dot"></span><span style="color:#7CF6B0">Online now</span>';
-    if (sharing && oid && H._lastSeen && H._lastSeen[oid] && typeof H.formatLastSeen === 'function') {
-      var ls = H.formatLastSeen(H._lastSeen[oid]);
-      if (ls) return '<span style="color:#cfe0ff">' + ls + '</span>';
+    if (sharing && oid && H._lastSeen) {
+      var ts = H._lastSeen[oid];
+      if (ts > 0 && typeof H.formatLastSeen === 'function') {
+        var ls = H.formatLastSeen(ts);
+        if (ls) return '<span style="color:#cfe0ff">' + ls + '</span>';
+      }
+      // ts === 0 means fetched but no data at all — show a generic indicator
+      if (ts === 0) return '<span style="color:#9baec8">Seen a while ago</span>';
     }
-    // Offline with no last_seen data — show generic offline state (never show Verified here)
     if (sharing) return '<span style="color:#9baec8">Offline</span>';
     return 'Tap to view profile';
   }
@@ -752,10 +756,14 @@
     const oid = H._activeOtherId;
     const other = (H.state.users || []).find(x => x.id === oid) || null;
     const online = typeof H.isUserOnline === 'function' && H.isUserOnline(oid);
-    // When the partner's profile is not yet in state.users, fall back to raw last_seen
-    if (!other && oid && H._lastSeen && H._lastSeen[oid] && typeof H.formatLastSeen === 'function') {
-      var ls = H.formatLastSeen(H._lastSeen[oid]);
-      if (ls) { el.innerHTML = '<span style="color:#cfe0ff">' + ls + '</span>'; return; }
+    // When the partner's profile is not yet in state.users, check last_seen directly
+    if (!other && oid && H._lastSeen) {
+      var ts = H._lastSeen[oid];
+      if (ts > 0 && typeof H.formatLastSeen === 'function') {
+        var ls = H.formatLastSeen(ts);
+        if (ls) { el.innerHTML = '<span style="color:#cfe0ff">' + ls + '</span>'; return; }
+      }
+      if (ts === 0) { el.innerHTML = '<span style="color:#9baec8">Seen a while ago</span>'; return; }
     }
     el.innerHTML = chatHdrSubHtml(other, online);
   };

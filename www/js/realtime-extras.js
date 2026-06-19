@@ -187,15 +187,38 @@
   H.fetchLastSeen = function (otherId) {
     var s = sb();
     if (!otherId || !s || typeof s.from !== 'function') return Promise.resolve();
+    // Best message timestamp from this user across all local conversations — used
+    // as fallback when profiles.last_seen is NULL (not yet written to DB).
+    function latestMsgTs() {
+      var latest = 0;
+      ((H.state && H.state.conversations) || []).forEach(function(c) {
+        (c.messages || []).forEach(function(m) {
+          if (String(m.from) === String(otherId) && (m.t||0) > latest) latest = m.t;
+        });
+      });
+      return latest;
+    }
     return s.from('profiles').select('last_seen, privacy').eq('id', String(otherId)).maybeSingle()
       .then(function (res) {
-        var d = res && res.data; if (!d) return;
-        if (d.last_seen) H._lastSeen[String(otherId)] = new Date(d.last_seen).getTime();
-        if (d.privacy && typeof d.privacy === 'object') {
-          var ou = (H.state.users || []).find(function (x) { return String(x.id) === String(otherId); });
-          if (ou) ou.privacySettings = Object.assign({}, ou.privacySettings || {}, d.privacy);
+        var d = res && res.data;
+        if (d) {
+          // Use DB last_seen when available; fall back to last message time.
+          var ts = d.last_seen ? new Date(d.last_seen).getTime() : latestMsgTs();
+          H._lastSeen[String(otherId)] = ts || 0;  // 0 = fetched but truly no data
+          if (d.privacy && typeof d.privacy === 'object') {
+            var ou = (H.state.users || []).find(function (x) { return String(x.id) === String(otherId); });
+            if (ou) ou.privacySettings = Object.assign({}, ou.privacySettings || {}, d.privacy);
+          }
+        } else {
+          // No profile row — use last message time as best available signal.
+          H._lastSeen[String(otherId)] = latestMsgTs() || 0;
         }
-      }, function () {});
+      }, function () {
+        // Network error — use local conversation data as silent fallback.
+        if (H._lastSeen[String(otherId)] === undefined) {
+          H._lastSeen[String(otherId)] = latestMsgTs() || 0;
+        }
+      });
   };
 
   // Format a last_seen timestamp into the chat-header label.
