@@ -34,6 +34,29 @@
     } catch (e) { return adminList(); }
   };
 
+  H.fetchPendingInvoices = async function () {
+    const sb = window.supabase; if (!sb) return H.state.adminInvoices || [];
+    try {
+      const { data, error } = await sb.from('business_payments').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(200);
+      if (error || !Array.isArray(data)) return H.state.adminInvoices || [];
+      H.state.adminInvoices = data.map(r => ({ id: r.id, businessId: r.business_id, type: r.type, amount: Number(r.amount) || 0, description: r.description, createdAt: new Date(r.created_at || Date.now()).getTime() }));
+      saveState(); return H.state.adminInvoices;
+    } catch (e) { return H.state.adminInvoices || []; }
+  };
+
+  H.fetchPendingBizVerifs = async function () {
+    const sb = window.supabase; if (!sb) return H.state.adminVerifs || [];
+    try {
+      const { data, error } = await sb.from('business_verifications').select('*').eq('status', 'pending').order('submitted_at', { ascending: false }).limit(200);
+      if (error || !Array.isArray(data)) return H.state.adminVerifs || [];
+      H.state.adminVerifs = data.map(r => ({ id: r.id, businessId: r.business_id, level: r.level_requested || 1, idDoc: r.id_doc_path, regDoc: r.reg_doc_path, submittedAt: new Date(r.submitted_at || Date.now()).getTime() }));
+      saveState(); return H.state.adminVerifs;
+    } catch (e) { return H.state.adminVerifs || []; }
+  };
+
+  function bizNameOf(id) { const b = adminList().find(x => x.id === id); return b ? (b.name || 'Business') : 'Business'; }
+  function bizOwnerOf(id) { const b = adminList().find(x => x.id === id); return b ? b.ownerUserId : null; }
+
   pages.BusinessAdmin = function () {
     if (!H.isAdmin || !H.isAdmin()) return `<div class="page active">${innerTopbar('Business Admin')}${H.emptyState('Admins only', 'You do not have access to this area.')}</div>`;
     const list = adminList();
@@ -59,6 +82,33 @@
       </div>
     </div>`;
 
+    const invoices = H.state.adminInvoices || [];
+    const verifs   = H.state.adminVerifs || [];
+
+    const invCard = (p) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border,#E8ECF4)">
+      <div style="min-width:0"><div style="font-size:13px;font-weight:700;color:var(--text)">${escHtml(bizNameOf(p.businessId))}</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:1px">${escHtml(p.description || p.type)} · ${typeof H.timeAgo === 'function' ? H.timeAgo(p.createdAt) : ''}</div></div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0"><span style="font-size:14px;font-weight:800;color:#1A3A8F">$${(p.amount || 0).toFixed(2)}</span>
+        <button onclick="H._bizAdmin.markPaid('${p.id}')" style="padding:7px 12px;border-radius:9px;border:none;background:#16a34a;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Mark paid</button></div></div>`;
+
+    const verCard = (v) => `<div style="padding:11px 0;border-bottom:1px solid var(--border,#E8ECF4)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div style="min-width:0"><div style="font-size:13px;font-weight:700;color:var(--text)">${escHtml(bizNameOf(v.businessId))}</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:1px">Level ${v.level} requested · ${typeof H.timeAgo === 'function' ? H.timeAgo(v.submittedAt) : ''}</div></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        ${v.idDoc ? `<button onclick="H._bizAdmin.viewDoc('${escHtml(v.idDoc)}')" style="padding:7px 10px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit">ID doc</button>` : ''}
+        ${v.regDoc ? `<button onclick="H._bizAdmin.viewDoc('${escHtml(v.regDoc)}')" style="padding:7px 10px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit">Business doc</button>` : ''}
+        <button onclick="H._bizAdmin.approveVerify('${v.id}','${v.businessId}',${v.level})" style="flex:1;min-width:90px;padding:8px;border-radius:9px;border:none;background:#16a34a;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Approve</button>
+        <button onclick="H._bizAdmin.rejectVerify('${v.id}','${v.businessId}')" style="flex:1;min-width:90px;padding:8px;border-radius:9px;border:1px solid #FECACA;background:#FFF1F0;color:#EF4444;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Reject</button>
+      </div></div>`;
+
+    const queue = (title, count, inner) => `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:4px 16px 8px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px">
+        <div style="font-size:13px;font-weight:800;color:var(--text)">${title}</div>
+        ${count ? `<span style="font-size:11px;font-weight:800;background:#FEE4E2;color:#B42318;border-radius:20px;padding:2px 9px">${count}</span>` : ''}</div>
+      ${inner}</div>`;
+
     return `<div class="page active">
       ${innerTopbar('Business Platform — Admin')}
       <div class="inner-content" style="padding-bottom:40px">
@@ -66,6 +116,9 @@
           <div style="font-size:13px;color:var(--sub)">Total businesses</div>
           <div style="font-size:16px;font-weight:800;color:#1A3A8F">${list.length}</div>
         </div>
+        ${queue('Pending invoices', invoices.length, invoices.length ? invoices.map(invCard).join('') : `<div style="font-size:12.5px;color:var(--sub);padding:8px 0 12px">No invoices awaiting payment.</div>`)}
+        ${queue('Verification requests', verifs.length, verifs.length ? verifs.map(verCard).join('') : `<div style="font-size:12.5px;color:var(--sub);padding:8px 0 12px">No pending verification requests.</div>`)}
+        <div style="font-size:13px;font-weight:800;color:var(--text);margin:4px 0 8px">All businesses</div>
         ${list.length ? list.map(card).join('') : `<div style="text-align:center;color:var(--sub);font-size:13px;padding:24px 0">No businesses loaded. Pull to refresh or check admin access.</div>`}
       </div>
     </div>`;
@@ -74,8 +127,50 @@
   const PLANS = ['free', 'starter', 'pro', 'premium'];
 
   H._bizAdmin = {
-    open() { H.openInner('BusinessAdmin'); H.fetchAllBusinesses().then(() => renderPage('BusinessAdmin')); },
+    open() {
+      H.openInner('BusinessAdmin');
+      Promise.all([H.fetchAllBusinesses(), H.fetchPendingInvoices(), H.fetchPendingBizVerifs()])
+        .then(() => renderPage('BusinessAdmin'));
+    },
     _find(id) { return adminList().find(b => b.id === id); },
+
+    // Mark a pending invoice paid (admin reconciles off-app payment).
+    async markPaid(id) {
+      H.state.adminInvoices = (H.state.adminInvoices || []).filter(x => x.id !== id); saveState();
+      const sb = window.supabase; if (sb) { try { await sb.from('business_payments').update({ status: 'paid' }).eq('id', id); } catch (e) {} }
+      toast('Invoice marked paid'); renderPage('BusinessAdmin');
+    },
+
+    // Approve a verification request: set the business verification level + notify owner.
+    async approveVerify(vid, bizId, level) {
+      level = Number(level) || 1;
+      const sb = window.supabase;
+      if (sb) {
+        try { await sb.from('business_verifications').update({ status: 'approved' }).eq('id', vid); } catch (e) {}
+        try { await sb.from('businesses').update({ verification_level: level }).eq('id', bizId); } catch (e) {}
+      }
+      const b = this._find(bizId); if (b) b.verificationLevel = level;
+      H.state.adminVerifs = (H.state.adminVerifs || []).filter(x => x.id !== vid); saveState();
+      try { const owner = bizOwnerOf(bizId); if (owner && H.pushNotif) H.pushNotif(owner, 'Business Verified', (bizNameOf(bizId)) + ' is now verified.', 'info', null, 'BusinessView'); } catch (e) {}
+      toast('Verification approved'); renderPage('BusinessAdmin');
+    },
+
+    async rejectVerify(vid, bizId) {
+      const sb = window.supabase; if (sb) { try { await sb.from('business_verifications').update({ status: 'rejected' }).eq('id', vid); } catch (e) {} }
+      H.state.adminVerifs = (H.state.adminVerifs || []).filter(x => x.id !== vid); saveState();
+      try { const owner = bizOwnerOf(bizId); if (owner && H.pushNotif) H.pushNotif(owner, 'Verification Not Approved', 'Your business verification needs more detail. Please resubmit.', 'report', null, 'BusinessView'); } catch (e) {}
+      toast('Verification rejected'); renderPage('BusinessAdmin');
+    },
+
+    // Open a private verification document via a signed URL.
+    async viewDoc(path) {
+      const sb = window.supabase; if (!sb || !path) { toast('Document unavailable'); return; }
+      try {
+        const { data, error } = await sb.storage.from('verification-docs').createSignedUrl(path, 3600);
+        if (error || !data || !data.signedUrl) { toast('Could not open document'); return; }
+        window.open(data.signedUrl, '_blank');
+      } catch (e) { toast('Could not open document'); }
+    },
     async setStatus(id, status) {
       const b = this._find(id); if (b) { b.status = status; saveState(); }
       const sb = window.supabase; if (sb) { try { await sb.from('businesses').update({ status }).eq('id', id); } catch (e) {} }

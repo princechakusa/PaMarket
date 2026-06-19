@@ -345,19 +345,19 @@
 
   pages.BusinessView = function (params) {
     const u = currentUser();
-    if (!u) return `<div class="page active">${innerTopbar('My Business')}${H.emptyState('Sign in required', 'Sign in to view your business.', 'Sign In', 'H.authPage()')}</div>`;
+    if (!u) return `<div class="page active">${innerTopbar('Seller Center')}${H.emptyState('Sign in required', 'Sign in to view your business.', 'Sign In', 'H.authPage()')}</div>`;
 
     const id = (params && params.id) || _viewId;
     const b = getBiz(id) || myBusinesses().find(x => x.status === 'active') || myBusinesses()[0];
     if (!b) {
-      return `<div class="page active">${innerTopbar('My Business')}
+      return `<div class="page active">${innerTopbar('Seller Center')}
         ${H.emptyState('No business yet', 'Create your business to start receiving leads.', 'Create a Business', 'H._bizOnboard.open()')}</div>`;
     }
     _viewId = b.id;
 
     // Still mid-setup → guide them back into the wizard instead of showing a blank profile.
     if (b.status !== 'active') {
-      return `<div class="page active">${innerTopbar('My Business')}
+      return `<div class="page active">${innerTopbar('Seller Center')}
         <div class="inner-content" style="text-align:center;padding:40px 24px">
           <div style="width:64px;height:64px;border-radius:50%;background:#EEF2FB;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#1A3A8F" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
           <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">${escHtml(b.name || 'Your business')}</div>
@@ -375,7 +375,7 @@
         <span style="font-size:13px;font-weight:700;color:var(--text);text-align:right;max-width:62%">${val}</span></div>` : '';
 
     return `<div class="page active">
-      ${innerTopbar('My Business')}
+      ${innerTopbar('Seller Center')}
 
       <!-- Hero -->
       <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);padding:26px 20px;color:#fff">
@@ -386,63 +386,67 @@
           <div style="flex:1;min-width:0">
             <div style="font-size:19px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.8);margin-top:2px">${typeLabel}${cat ? ' · ' + cat.name : ''}</div>
-            <span style="display:inline-block;margin-top:8px;font-size:10.5px;font-weight:800;letter-spacing:.4px;background:#16a34a;color:#fff;border-radius:20px;padding:3px 10px">ACTIVE</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+              ${(b.verificationLevel||0) >= 2 ? '<span style="font-size:10px;font-weight:800;background:#EAF7EF;color:#0f7a3d;border-radius:20px;padding:3px 9px">✓ Verified</span>' : ''}
+              <span style="font-size:10px;font-weight:800;background:#FFE9C7;color:#92670A;border-radius:20px;padding:3px 9px">${(plan ? plan.name : 'Free').toUpperCase()}</span>
+              <span style="font-size:10px;font-weight:800;background:rgba(255,255,255,.2);color:#cfe9d6;border-radius:20px;padding:3px 9px">● Active</span>
+            </div>
           </div>
+          ${myBusinesses().length > 1 ? `<button onclick="H._bizOnboard.switcher()" style="align-self:flex-start;background:rgba(255,255,255,.16);border:none;color:#fff;font-size:11px;font-weight:700;padding:6px 11px;border-radius:20px;cursor:pointer;font-family:inherit">Switch ▾</button>` : ''}
         </div>
-      </div>
 
-      <div class="inner-content" style="padding-bottom:40px">
-        <!-- Overview (Module 8 — Dashboard) -->
+        <!-- Live dashboard -->
         ${(() => {
           const mine = (H.state.listings || []).filter(l => l.businessId === b.id);
           const views = mine.reduce((n, l) => n + (l.views || 0), 0);
           const activeL = mine.filter(l => l.status === 'active').length;
           const leads = ((H.state.businessLeads || {})[b.id] || []);
           const newLeads = leads.filter(l => l.status === 'new').length;
-          const stat = (val, label, onclick) => `<div ${onclick ? `onclick="${onclick}"` : ''} style="flex:1;min-width:0;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:14px 8px;text-align:center;${onclick ? 'cursor:pointer' : ''}">
-            <div style="font-size:22px;font-weight:800;color:#1A3A8F">${val}</div>
-            <div style="font-size:11px;color:var(--sub);font-weight:600;margin-top:2px">${label}</div></div>`;
-          return `<div style="display:flex;gap:10px;margin-bottom:16px">
-            ${stat(views, 'Views', `H._bizListings.open('${b.id}')`)}
-            ${stat(leads.length, 'Leads', `H._bizLeads.open('${b.id}')`)}
-            ${stat(newLeads, 'New', `H._bizLeads.open('${b.id}')`)}
-            ${stat(activeL, 'Active', `H._bizListings.open('${b.id}')`)}
-          </div>`;
+          const boosts = mine.filter(l => typeof H.isFeatured === 'function' && H.isFeatured(l)).length;
+          const vstr = views >= 1000 ? (views/1000).toFixed(1).replace(/\.0$/,'') + 'k' : String(views);
+          const sc = (val, label) => `<div style="background:rgba(255,255,255,.12);border-radius:12px;padding:9px 6px;text-align:center"><div style="font-size:18px;font-weight:900;line-height:1">${val}</div><div style="font-size:9.5px;color:#cfe0ff;margin-top:3px;font-weight:600">${label}</div></div>`;
+          return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px">${sc(activeL,'Listings')}${sc(newLeads,'New leads')}${sc(vstr,'Views')}${sc(boosts,'Boosts')}</div>`;
         })()}
-        <!-- Plan -->
-        <div style="display:flex;align-items:center;justify-content:space-between;background:#EEF2FB;border-radius:14px;padding:14px 16px;margin-bottom:16px">
-          <div>
-            <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.4px">CURRENT PLAN</div>
-            <div style="font-size:16px;font-weight:800;color:#1A3A8F;margin-top:2px">${plan ? plan.name : 'Active'}${b.billingCycle ? ` · ${b.billingCycle === 'yearly' ? 'Yearly' : 'Monthly'}` : ''}</div>
-          </div>
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1A3A8F" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+
+      <div class="inner-content" style="padding-bottom:40px">
+        <!-- Quick actions -->
+        <div style="display:flex;gap:9px;margin:14px 0 4px">
+          <button onclick="H._bizListings.open('${b.id}')" style="flex:1;background:linear-gradient(135deg,#F5A623,#e2920f);border:none;color:#fff;border-radius:13px;padding:11px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:5px;align-items:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Listing</button>
+          <button onclick="H._bizFeat.open('${b.id}')" style="flex:1;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);color:#1A3A8F;border-radius:13px;padding:11px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:5px;align-items:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Boost</button>
+          <button onclick="H._bizAnalytics.open('${b.id}')" style="flex:1;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);color:#1A3A8F;border-radius:13px;padding:11px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:5px;align-items:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg>Analytics</button>
         </div>
 
-        <!-- Details -->
-        <div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:16px;padding:4px 16px;margin-bottom:18px">
-          ${detail('Category', cat ? cat.name : '')}
-          ${detail('Description', escHtml(b.description || ''))}
-          ${detail('Phone', escHtml(b.phone || ''))}
-          ${detail('WhatsApp', escHtml(b.whatsapp || ''))}
-          ${detail('Email', escHtml(b.email || ''))}
-          ${detail('Location', escHtml(loc))}
-        </div>
-
-        <button class="btn-pri" style="width:100%;margin-bottom:10px" onclick="H._bizProfile.openEdit('${b.id}')">Edit Profile</button>
-        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizListings.open('${b.id}')">Listings</button>
-        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizFeat.open('${b.id}')">Featured &amp; Boost</button>
-        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizLeads.open('${b.id}')">Leads</button>
-        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizAnalytics.open('${b.id}')">Analytics</button>
-        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizMsg.open('${b.id}')">Quick Replies</button>
-        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizVerify.open('${b.id}')">Get Verified${(b.verificationLevel||0) >= 2 ? ' ' + H.verifiedBadge(15) : ''}</button>
-        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizSub.open('${b.id}')">Subscription &amp; Plan</button>
-        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:10px" onclick="H._bizBilling.open('${b.id}')">Billing &amp; Payments</button>
-        <button class="ml-act-btn" style="width:100%;padding:13px;margin-bottom:18px" onclick="H._bizOnboard.createAnother()">Create Another Business</button>
-
-        <div style="display:flex;gap:10px;align-items:flex-start;background:#FFF8EC;border-radius:14px;padding:14px">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Listings, leads & analytics</b> for this business arrive with the Business Dashboard — coming next.</div>
-        </div>
+        ${(() => {
+          const mine = (H.state.listings || []).filter(l => l.businessId === b.id);
+          const activeL = mine.filter(l => l.status === 'active').length;
+          const leads = ((H.state.businessLeads || {})[b.id] || []);
+          const newLeads = leads.filter(l => l.status === 'new').length;
+          const boosts = mine.filter(l => typeof H.isFeatured === 'function' && H.isFeatured(l)).length;
+          const replies = ((H.state.businessReplies || {})[b.id] || []).length;
+          const verified = (b.verificationLevel || 0) >= 2;
+          const ico = (p) => `<span style="width:34px;height:34px;border-radius:9px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">${p}</svg></span>`;
+          const valTxt = (t) => `<span style="font-size:12px;font-weight:700;color:var(--sub2,#98A2B3)">${t}</span>`;
+          const pill = (t, bg, c) => `<span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;background:${bg};color:${c}">${t}</span>`;
+          const mi = (icon, name, right, onclick) => `<button onclick="${onclick}" style="display:flex;align-items:center;gap:13px;padding:13px 15px;width:100%;background:none;border:none;border-bottom:1px solid var(--border,#F0F2F6);text-align:left;cursor:pointer;font-family:inherit">${icon}<span style="flex:1;font-size:14px;font-weight:700;color:var(--text)">${name}</span>${right || ''}<span style="color:#CBD2E0;font-size:17px;margin-left:6px">›</span></button>`;
+          const group = (title, items) => `<div style="font-size:11px;font-weight:800;color:var(--sub2,#98A2B3);text-transform:uppercase;letter-spacing:.5px;padding:16px 4px 7px">${title}</div><div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;overflow:hidden">${items.join('')}</div>`;
+          return group('Store', [
+            mi(ico('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'), 'Listings', valTxt(activeL + ' active'), `H._bizListings.open('${b.id}')`),
+            mi(ico('<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'), 'Featured &amp; Boost', boosts ? pill(boosts + ' live', '#FFE9C7', '#92670A') : valTxt('Boost'), `H._bizFeat.open('${b.id}')`),
+            mi(ico('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'), 'Quick Replies', valTxt(replies + ' saved'), `H._bizMsg.open('${b.id}')`)
+          ]) + group('Customers', [
+            mi(ico('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>'), 'Leads', newLeads ? pill(newLeads + ' new', '#FEE4E2', '#B42318') : valTxt(leads.length + ' total'), `H._bizLeads.open('${b.id}')`),
+            mi(ico('<path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/>'), 'Analytics', valTxt('View'), `H._bizAnalytics.open('${b.id}')`)
+          ]) + group('Business', [
+            mi(ico('<path d="M9 12l2 2 4-4"/><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/>'), 'Get Verified', verified ? pill('Verified', '#EAF7EF', '#0f7a3d') : pill('Start', '#EEF2FF', '#1A3A8F'), `H._bizVerify.open('${b.id}')`),
+            mi(ico('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>'), 'Subscription &amp; Plan', pill((plan ? plan.name : 'Free'), '#FFE9C7', '#92670A'), `H._bizSub.open('${b.id}')`),
+            mi(ico('<path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'), 'Billing &amp; Invoices', valTxt('Invoices'), `H._bizBilling.open('${b.id}')`)
+          ]) + group('Profile', [
+            mi(ico('<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>'), 'Edit Business Profile', '', `H._bizProfile.openEdit('${b.id}')`),
+            mi(ico('<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>'), 'View Public Page', '', `H.openBusinessProfile('${b.id}')`),
+            mi(ico('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'), 'Add Another Business', '', `H._bizOnboard.createAnother()`)
+          ]);
+        })()}
       </div>
     </div>`;
   };
@@ -458,6 +462,8 @@
   }
 
   let _mode = 'create'; // 'create' | 'edit'
+
+  H._closeBizSwitcher = function () { var m = document.getElementById('bizSwitcher'); if (m) m.remove(); };
 
   H._bizOnboard = {
     // Called from the Account row. Routes to the right place depending on whether
@@ -483,6 +489,27 @@
     },
 
     createAnother() { _mode = 'create'; _draft = blankDraft(); H.openInner('BusinessOnboarding'); },
+
+    // Bottom-sheet switcher between the user's businesses (+ add another).
+    switcher() {
+      const mine = myBusinesses();
+      const ov = document.createElement('div');
+      ov.id = 'bizSwitcher';
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(16,24,40,.5);z-index:9300;display:flex;align-items:flex-end;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)';
+      const rows = mine.map(b => `<button onclick="H._closeBizSwitcher();H._bizOnboard.view('${b.id}')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;background:none;border:none;border-bottom:1px solid var(--border,#F0F2F6);cursor:pointer;font-family:inherit;text-align:left">
+          <span style="width:38px;height:38px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1A3A8F;flex-shrink:0;overflow:hidden">${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}</span>
+          <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}</span><span style="font-size:11px;color:var(--sub)">${b.status === 'active' ? 'Active' : 'Setup in progress'}</span></span>
+          ${b.id === _viewId ? '<span style="color:#1A7F4B;font-weight:800;font-size:16px">✓</span>' : ''}
+        </button>`).join('');
+      ov.innerHTML = `<div style="background:var(--card,#fff);width:100%;border-radius:20px 20px 0 0;padding:6px 0 calc(12px + var(--safe-bottom,0px));max-height:72vh;overflow-y:auto;font-family:Inter,sans-serif">
+          <div style="width:38px;height:4px;border-radius:2px;background:var(--border,#E2E6EE);margin:8px auto 6px"></div>
+          <div style="text-align:center;padding:8px 12px 12px;font-size:15px;font-weight:800;color:var(--text)">Your Businesses</div>
+          ${rows}
+          <button onclick="H._closeBizSwitcher();H._bizOnboard.createAnother()" style="display:flex;align-items:center;gap:12px;width:100%;padding:15px 16px;background:none;border:none;cursor:pointer;font-family:inherit;color:#1A3A8F;font-weight:800;font-size:14px"><span style="width:38px;height:38px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>Add another business</button>
+        </div>`;
+      ov.addEventListener('click', e => { if (e.target === ov) H._closeBizSwitcher(); });
+      document.body.appendChild(ov);
+    },
 
     open() { _mode = 'create'; _draft = null; ensureDraft(); H.openInner('BusinessOnboarding'); },
 
