@@ -36,6 +36,16 @@
   <link rel="stylesheet" href="css/pages-patch.css?v=2">
 
   <style>
+    /* ── Critical shell layout ─────────────────────────────
+       Guarantees the app frame (scrollable content + bottom nav) even if the
+       external stylesheet is stale or missing — e.g. an old cached service
+       worker serving a previous styles.css. Without this, a stale CSS leaves
+       #mainArea with no height and the nav flows to the top of the screen. */
+    html, body { height: 100%; margin: 0; }
+    #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+    #mainArea, .scroll-area { flex: 1 1 0%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .bottom-nav { display: flex; flex-shrink: 0; }
+
     /* ── Splash Screen ─────────────────────────────────── */
     #pamarketSplash {
       position: fixed; inset: 0;
