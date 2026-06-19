@@ -1266,13 +1266,14 @@ window.H = {
 
   trackAdImpression(id) {
     if(!id||!window.supabase||typeof window.supabase.from!=='function') return;
-    const a = (H.state.paidAds||[]).find(x=>x.id===id); if(!a) return;
+    const a = (H.state.paidAds||[]).find(x=>String(x.id)===String(id)); if(!a) return;
     a.impressions = (a.impressions||0)+1;
     window.supabase.from('paid_ads').update({impressions:a.impressions}).eq('id',id).then(()=>{});
   },
 
   trackAdClick(id) {
-    const a = (H.state.paidAds||[]).find(x=>x.id===id);
+    // Use String comparison — DB ids may be numeric but onclick passes a string.
+    const a = (H.state.paidAds||[]).find(x=>String(x.id)===String(id));
     if(a&&window.supabase&&typeof window.supabase.from==='function'){
       a.clicks=(a.clicks||0)+1;
       window.supabase.from('paid_ads').update({clicks:a.clicks}).eq('id',id).then(()=>{});
