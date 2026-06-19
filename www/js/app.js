@@ -563,6 +563,10 @@ window.H = {
       if (_AppPlugin && _AppPlugin.addListener && !H._backBtnBound) {
         H._backBtnBound = true;
         _AppPlugin.addListener('backButton', function () {
+          if (typeof H._imgViewerClose === 'function') { try { H._imgViewerClose(); } catch (e) {} return; }
+          if (document.getElementById('notifDetailModal')) { try { H._closeNotifDetail(); } catch (e) {} return; }
+          if (document.getElementById('bizSwitcher')) { try { H._closeBizSwitcher(); } catch (e) {} return; }
+          if (document.getElementById('rateAppModal')) { try { H._dismissRating(); } catch (e) {} return; }
           if (document.getElementById('pvOverlay')) { try { H.closePhotoViewer(); } catch (e) {} return; }
           var _mb = document.getElementById('modalBg');
           if (_mb && _mb.classList.contains('open')) { H.closeModal(); return; }

@@ -1272,22 +1272,42 @@
   // Global full-screen image viewer (chat photos, profile pictures, etc.)
   H.viewImage = function(url) {
     if (!url) return;
-    // Full-screen image viewer
+    if (document.getElementById('imgViewer')) return;   // guard double-open
     var overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:16px';
+    overlay.id = 'imgViewer';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:100000;display:flex;flex-direction:column';
+
+    // Top bar with a real back arrow, pushed BELOW the status bar (var(--safe-top)
+    // is set by the native layer; env() alone is 0 on most Android devices, which
+    // is why the old X sat under the status bar and "didn't respond").
+    var bar = document.createElement('div');
+    bar.style.cssText = 'flex-shrink:0;display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:calc(10px + var(--safe-top,0px));background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0))';
+    var back = document.createElement('button');
+    back.setAttribute('aria-label', 'Back');
+    back.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+    back.style.cssText = 'width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.18);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;flex-shrink:0';
+    bar.appendChild(back);
+
+    var imgWrap = document.createElement('div');
+    imgWrap.style.cssText = 'flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 12px 16px;cursor:zoom-out';
     var img = document.createElement('img');
     img.src = url;
     img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:8px';
-    var close = document.createElement('button');
-    close.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-    close.style.cssText = 'position:absolute;top:env(safe-area-inset-top,16px);right:16px;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation';
-    // Idempotent — the close button used to fire dismiss twice (onclick + the
-    // addEventListener below), and the second removeChild threw NotFoundError.
-    var dismiss = function() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
-    overlay.onclick = dismiss;
-    close.addEventListener('click', function(e){ e.stopPropagation(); dismiss(); });
-    overlay.appendChild(img);
-    overlay.appendChild(close);
+    imgWrap.appendChild(img);
+
+    overlay.appendChild(bar);
+    overlay.appendChild(imgWrap);
+
+    var dismiss = function() {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      document.removeEventListener('keydown', onKey);
+      H._imgViewerClose = null;
+    };
+    H._imgViewerClose = dismiss;   // lets the Android hardware-back button close it
+    function onKey(e){ if (e.key === 'Escape') dismiss(); }
+    back.addEventListener('click', function(e){ e.stopPropagation(); dismiss(); });
+    imgWrap.addEventListener('click', dismiss);   // tapping the photo area also closes
+    document.addEventListener('keydown', onKey);
     document.body.appendChild(overlay);
   };
   H._chat.viewImg = H.viewImage;   // alias kept for existing chat-image taps
