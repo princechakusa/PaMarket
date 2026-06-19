@@ -291,7 +291,9 @@
     }).filter(Boolean);
 
     const q = (_shopQ || '').toLowerCase();
-    let shown = _shopCat === 'all' ? allProds : allProds.filter(function (l) { return l.cat === _shopCat; });
+    let shown = _shopCat === 'new'
+      ? allProds.slice().sort(function(a,b){ return (b.createdAt||b.created_at||'') > (a.createdAt||a.created_at||'') ? 1 : -1; }).slice(0,12)
+      : (_shopCat === 'all' ? allProds : allProds.filter(function (l) { return l.cat === _shopCat; }));
     if (q) shown = shown.filter(function (l) { return (l.title || '').toLowerCase().indexOf(q) !== -1; });
 
     const coverStyle = b.cover
@@ -303,25 +305,34 @@
     const productCard = function (l) {
       const hasPhoto = l.photos && l.photos[0];
       const icon = typeof H.categoryIcon === 'function' ? H.categoryIcon(l.cat) : '';
+      const sizesArr = Array.isArray(l.sizes) ? l.sizes : (l.size ? [l.size] : []);
+      const colorsArr = Array.isArray(l.colors) ? l.colors : (l.color ? [l.color] : []);
+      const sizePills = sizesArr.slice(0, 4).map(function(s) {
+        return '<span style="display:inline-block;padding:2px 6px;border:1px solid var(--border,#E8ECF4);border-radius:3px;font-size:9px;font-weight:700;color:var(--sub)">' + escHtml(String(s)) + '</span>';
+      }).join('');
+      const colorDots = colorsArr.slice(0, 5).map(function(c) {
+        return '<span style="display:inline-block;width:13px;height:13px;border-radius:50%;background:' + escHtml(String(c)) + ';border:1px solid rgba(0,0,0,0.12)"></span>';
+      }).join('');
+      const hasVariants = sizesArr.length > 0 || colorsArr.length > 0;
       return `<div onclick="H.openListing&&H.openListing('${escHtml(String(l.id))}')"
-        style="background:var(--card,#fff);border-radius:14px;overflow:hidden;border:1px solid var(--border,#E8ECF4);cursor:pointer;position:relative">
-        <div style="aspect-ratio:1/1;background:#EEF2FB;position:relative;overflow:hidden">
+        style="background:var(--card,#fff);border-radius:8px;overflow:hidden;border:1px solid var(--border,#E8ECF4);cursor:pointer;position:relative">
+        <div style="aspect-ratio:1/1;background:#F4F6FB;position:relative;overflow:hidden">
           ${hasPhoto
-            ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover">`
+            ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover" loading="lazy">`
             : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px">${icon}</div>`}
           <div onclick="event.stopPropagation()"
-            style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;cursor:pointer">
+            style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.95);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.12)">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1A3A8F" stroke-width="2.2">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
           </div>
-          ${l.negotiable ? `<span style="position:absolute;top:8px;left:8px;background:#F59E0B;color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:6px;letter-spacing:.3px">NEG</span>` : ''}
+          ${l.negotiable ? `<span style="position:absolute;top:8px;left:8px;background:#F59E0B;color:#fff;font-size:8px;font-weight:800;padding:2px 6px;border-radius:3px;letter-spacing:.4px">NEG</span>` : ''}
         </div>
-        <div style="padding:8px 10px 12px">
-          <div style="font-size:14px;font-weight:900;color:#1A3A8F;margin-bottom:2px">${escHtml(fmtP(l))}</div>
-          <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${escHtml(l.title || 'Untitled')}</div>
-          ${l.size
-            ? `<div style="font-size:10.5px;color:var(--sub)">Size: <span style="color:var(--text);font-weight:700">${escHtml(l.size)}</span></div>`
+        <div style="padding:10px 10px 13px">
+          <div style="font-size:15px;font-weight:900;color:#1A3A8F;margin-bottom:3px;letter-spacing:-.3px">${escHtml(fmtP(l))}</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px">${escHtml(l.title || 'Untitled')}</div>
+          ${hasVariants
+            ? `<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${sizePills}${colorDots}</div>`
             : `<div style="font-size:10.5px;color:var(--sub)">${escHtml(loc)}</div>`}
         </div>
       </div>`;
@@ -329,8 +340,8 @@
 
     const chipStyle = function (active) {
       return active
-        ? 'flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #1A3A8F;background:#1A3A8F;color:#fff'
-        : 'flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text)';
+        ? 'flex-shrink:0;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #1A3A8F;background:#1A3A8F;color:#fff'
+        : 'flex-shrink:0;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text)';
     };
 
     return `<div class="page active">
@@ -364,7 +375,7 @@
             </div>
           </div>
           ${!isOwn ? `<button id="bsFollowBtn" onclick="H.toggleFollowBusiness&&H.toggleFollowBusiness('${b.id}')"
-            style="flex-shrink:0;padding:8px 16px;border-radius:20px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;background:transparent;color:#1A3A8F;border:1.5px solid #1A3A8F">
+            style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;background:#1A3A8F;color:#fff;border:none;letter-spacing:.2px">
             ${H.isFollowingBusiness && H.isFollowingBusiness(b.id) ? 'Following' : 'Follow Shop'}
           </button>` : ''}
         </div>
@@ -404,12 +415,13 @@
       </div>
 
       <!-- Category chips -->
-      ${shopCats.length >= 1 ? `<div style="display:flex;gap:8px;overflow-x:auto;padding:4px 12px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+      <div style="display:flex;gap:8px;overflow-x:auto;padding:4px 12px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
         <button onclick="H._bizShop.setCat('${escHtml(String(b.id))}','all')" style="${chipStyle(_shopCat === 'all')}">All</button>
+        <button onclick="H._bizShop.setCat('${escHtml(String(b.id))}','new')" style="${chipStyle(_shopCat === 'new')}">New Arrivals</button>
         ${shopCats.map(function (c) {
           return `<button onclick="H._bizShop.setCat('${escHtml(String(b.id))}','${escHtml(c.id)}')" style="${chipStyle(_shopCat === c.id)}">${escHtml(c.name)}</button>`;
         }).join('')}
-      </div>` : '<div style="height:6px"></div>'}
+      </div>
 
       <!-- Count row -->
       <div style="padding:0 14px 8px">
@@ -417,7 +429,7 @@
       </div>
 
       <!-- Product grid -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 10px ${isOwn ? '80px' : '100px'}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 12px ${isOwn ? '80px' : '100px'}">
         ${shown.length
           ? shown.map(productCard).join('')
           : `<div style="grid-column:1/-1;text-align:center;color:var(--sub);font-size:13px;padding:40px 16px">No products yet.</div>`}
@@ -451,27 +463,33 @@
     setCat: function (id, cat) { _shopCat = cat; _shopQ = ''; H.renderPage('BusinessShop', { id: id }); },
     onSearch: function (id, v) {
       _shopQ = v || '';
-      // Re-render only the product grid so the search input keeps focus.
       const b = getBiz(id); if (!b) return;
       const allProds = shopProducts(b);
       const q = _shopQ.toLowerCase();
-      let shown = _shopCat === 'all' ? allProds : allProds.filter(function (l) { return l.cat === _shopCat; });
+      let shown = _shopCat === 'new'
+        ? allProds.slice().sort(function(a,b){ return (b.createdAt||b.created_at||'') > (a.createdAt||a.created_at||'') ? 1 : -1; }).slice(0,12)
+        : (_shopCat === 'all' ? allProds : allProds.filter(function (l) { return l.cat === _shopCat; }));
       if (q) shown = shown.filter(function (l) { return (l.title || '').toLowerCase().indexOf(q) !== -1; });
       const fmtP = function (l) { return H.fmtPrice ? H.fmtPrice(l.price, l.currency) : ('$' + (l.price || 0)); };
       const loc = [b.city, b.province].filter(Boolean).join(', ') || 'Zimbabwe';
       const icon = function (cat) { return typeof H.categoryIcon === 'function' ? H.categoryIcon(cat) : ''; };
       const html = shown.length ? shown.map(function (l) {
         const hasPhoto = l.photos && l.photos[0];
-        return `<div onclick="H.openListing&&H.openListing('${escHtml(String(l.id))}')" style="background:var(--card,#fff);border-radius:14px;overflow:hidden;border:1px solid var(--border,#E8ECF4);cursor:pointer;position:relative">
-          <div style="aspect-ratio:1/1;background:#EEF2FB;position:relative;overflow:hidden">
-            ${hasPhoto ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px">${icon(l.cat)}</div>`}
-            <div onclick="event.stopPropagation()" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1A3A8F" stroke-width="2.2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
-            ${l.negotiable ? `<span style="position:absolute;top:8px;left:8px;background:#F59E0B;color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:6px">NEG</span>` : ''}
+        const sizesArr = Array.isArray(l.sizes) ? l.sizes : (l.size ? [l.size] : []);
+        const colorsArr = Array.isArray(l.colors) ? l.colors : (l.color ? [l.color] : []);
+        const sizePills = sizesArr.slice(0,4).map(function(s){ return '<span style="display:inline-block;padding:2px 6px;border:1px solid var(--border,#E8ECF4);border-radius:3px;font-size:9px;font-weight:700;color:var(--sub)">' + escHtml(String(s)) + '</span>'; }).join('');
+        const colorDots = colorsArr.slice(0,5).map(function(c){ return '<span style="display:inline-block;width:13px;height:13px;border-radius:50%;background:' + escHtml(String(c)) + ';border:1px solid rgba(0,0,0,0.12)"></span>'; }).join('');
+        const hasVariants = sizesArr.length > 0 || colorsArr.length > 0;
+        return `<div onclick="H.openListing&&H.openListing('${escHtml(String(l.id))}')" style="background:var(--card,#fff);border-radius:8px;overflow:hidden;border:1px solid var(--border,#E8ECF4);cursor:pointer;position:relative">
+          <div style="aspect-ratio:1/1;background:#F4F6FB;position:relative;overflow:hidden">
+            ${hasPhoto ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover" loading="lazy">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px">${icon(l.cat)}</div>`}
+            <div onclick="event.stopPropagation()" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.95);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.12)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1A3A8F" stroke-width="2.2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+            ${l.negotiable ? `<span style="position:absolute;top:8px;left:8px;background:#F59E0B;color:#fff;font-size:8px;font-weight:800;padding:2px 6px;border-radius:3px;letter-spacing:.4px">NEG</span>` : ''}
           </div>
-          <div style="padding:8px 10px 12px">
-            <div style="font-size:14px;font-weight:900;color:#1A3A8F;margin-bottom:2px">${escHtml(fmtP(l))}</div>
-            <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${escHtml(l.title || 'Untitled')}</div>
-            ${l.size ? `<div style="font-size:10.5px;color:var(--sub)">Size: <span style="color:var(--text);font-weight:700">${escHtml(l.size)}</span></div>` : `<div style="font-size:10.5px;color:var(--sub)">${escHtml(loc)}</div>`}
+          <div style="padding:10px 10px 13px">
+            <div style="font-size:15px;font-weight:900;color:#1A3A8F;margin-bottom:3px;letter-spacing:-.3px">${escHtml(fmtP(l))}</div>
+            <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px">${escHtml(l.title || 'Untitled')}</div>
+            ${hasVariants ? `<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${sizePills}${colorDots}</div>` : `<div style="font-size:10.5px;color:var(--sub)">${escHtml(loc)}</div>`}
           </div>
         </div>`;
       }).join('') : `<div style="grid-column:1/-1;text-align:center;color:var(--sub);font-size:13px;padding:40px 16px">No results.</div>`;

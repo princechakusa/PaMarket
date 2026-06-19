@@ -130,37 +130,52 @@
         <!-- SPONSORED — swipeable banner carousel (all active ads), right under categories -->
         ${(H.adCarousel && H.activeAds) ? H.adCarousel(H.activeAds(), { title: 'Featured Partners' }) : ''}
 
-        <!-- LOCAL SHOPS — 3-col grid matching image reference -->
+        <!-- LOCAL SHOPS — horizontal scroll landscape cards -->
         ${(() => {
           const activeShops = (H.state.businesses || []).filter(function(b) { return b.status === 'active'; });
           if (!activeShops.length) return '';
-          const cards = activeShops.slice(0, 6).map(function(b) {
+          const placeholderSvg = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#B0BAD0" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M9 21V9"/></svg>';
+          const cards = activeShops.slice(0, 8).map(function(b) {
             const ini = H.initials ? H.initials(b.name || 'Shop') : (b.name || 'S').charAt(0).toUpperCase();
-            const lCount = (H.state.listings || []).filter(function(l) {
+            const bProds = (H.state.listings || []).filter(function(l) {
               return l.status === 'active' && (String(l.sellerId) === String(b.ownerUserId) || String(l.businessId) === String(b.id));
-            }).length;
+            });
+            const lCount = bProds.length;
             const catName = (H.CATEGORIES && H.CATEGORIES.find(function(c){ return c.id === b.category; }) || {}).name || '';
-            const sub = catName ? escHtml(catName) + (lCount ? ' (' + lCount + ' item' + (lCount===1?'':'s') + ')' : '') : (lCount ? lCount + ' item' + (lCount===1?'':'s') : 'Shop');
-            const coverBg = b.cover
-              ? 'background-image:url(' + JSON.stringify(b.cover) + ');background-size:cover;background-position:center'
-              : 'background:linear-gradient(135deg,#1A3A8F 0%,#2245b8 100%)';
-            return '<div onclick="H.openBusinessShop && H.openBusinessShop(\'' + escHtml(String(b.id)) + '\')" style="background:var(--card,#fff);border-radius:14px;overflow:hidden;cursor:pointer;border:1px solid var(--border,#E8ECF4);box-shadow:0 2px 8px rgba(0,0,0,0.05)">'
-              + '<div style="aspect-ratio:1/1;position:relative;overflow:hidden;' + coverBg + '">'
-              + (!b.cover ? '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:rgba(255,255,255,0.9)">' + escHtml(ini) + '</div>' : '')
-              + (b.logo ? '<div style="position:absolute;bottom:6px;left:6px;width:30px;height:30px;border-radius:50%;border:2px solid #fff;overflow:hidden;background:#fff;flex-shrink:0"><img src="' + escHtml(b.logo) + '" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.style.display=\'none\'"></div>' : '')
+            const niche = catName || 'Local Shop';
+            const thumbProds = bProds.filter(function(l) { return l.photos && l.photos[0]; }).slice(0, 2);
+            var thumbsHtml = '';
+            for (var ti = 0; ti < 2; ti++) {
+              if (thumbProds[ti]) {
+                thumbsHtml += '<div style="width:50px;height:50px;border-radius:4px;overflow:hidden;background:#EEF2FB;flex-shrink:0">'
+                  + '<img src="' + escHtml(thumbProds[ti].photos[0]) + '" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
+                  + '</div>';
+              } else {
+                thumbsHtml += '<div style="width:50px;height:50px;border-radius:4px;background:#EEF2FB;flex-shrink:0;display:flex;align-items:center;justify-content:center">' + placeholderSvg + '</div>';
+              }
+            }
+            return '<div onclick="H.openBusinessShop && H.openBusinessShop(\'' + escHtml(String(b.id)) + '\')" '
+              + 'style="flex-shrink:0;width:calc(100vw - 76px);max-width:305px;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:8px;padding:12px 13px;display:flex;align-items:center;gap:12px;cursor:pointer">'
+              // Square logo
+              + '<div style="width:54px;height:54px;border-radius:6px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#1A3A8F,#2245b8);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;border:1px solid rgba(0,0,0,0.07)">'
+              + (b.logo ? '<img src="' + escHtml(b.logo) + '" style="width:100%;height:100%;object-fit:cover">' : escHtml(ini))
               + '</div>'
-              + '<div style="padding:7px 8px 9px">'
-              + '<div style="font-size:11.5px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml((b.name || '').slice(0, 20)) + '</div>'
-              + '<div style="font-size:10px;color:var(--sub);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + sub + '</div>'
+              // Info
+              + '<div style="flex:1;min-width:0">'
+              + '<div style="font-size:13px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">' + escHtml(b.name) + '</div>'
+              + '<div style="font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:5px">' + escHtml(niche) + '</div>'
+              + '<div style="font-size:10.5px;font-weight:800;color:#1A3A8F">' + lCount + ' item' + (lCount === 1 ? '' : 's') + '</div>'
               + '</div>'
+              // Product thumbnails
+              + '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">' + thumbsHtml + '</div>'
               + '</div>';
           }).join('');
-          return '<div style="background:var(--card,#fff);padding:18px 16px 16px;margin-bottom:8px">'
-            + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+          return '<div style="background:var(--card,#fff);padding:18px 0 20px;margin-bottom:8px">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">'
             + '<span style="font-size:15px;font-weight:800;color:var(--text)">Local Shops</span>'
             + '<span onclick="H._bizSearch&&H._bizSearch.open()" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>'
             + '</div>'
-            + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'
+            + '<div style="display:flex;gap:10px;overflow-x:auto;padding:2px 16px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none">'
             + cards
             + '</div></div>';
         })()}
