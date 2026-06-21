@@ -95,9 +95,11 @@
       if (!b) return '';
       const list = repliesOf(b.id);
       if (!list.length) { H.fetchBusinessReplies(b.id); return ''; }
-      return '<div class="biz-qr-row" style="display:flex;gap:7px;overflow-x:auto;padding:8px 12px 0;-webkit-overflow-scrolling:touch">'
+      return '<div class="biz-qr-row" style="background:var(--bg,#F9FAFB);border-top:1px solid var(--border,#E8ECF4)">'
+        + '<div style="padding:6px 12px 2px;font-size:11px;font-weight:700;color:var(--sub,#6B7280);text-transform:uppercase;letter-spacing:.5px">Quick Replies</div>'
+        + '<div style="display:flex;gap:7px;overflow-x:auto;padding:0 12px 8px;-webkit-overflow-scrolling:touch">'
         + list.map(r => `<button onclick="H._bizMsg.use('${escHtml(r.text).replace(/'/g, "&#39;")}')" style="flex-shrink:0;white-space:nowrap;background:#EEF2FB;color:#1A3A8F;border:none;border-radius:16px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">${escHtml(r.text)}</button>`).join('')
-        + '</div>';
+        + '</div></div>';
     },
 
     use(text) {
