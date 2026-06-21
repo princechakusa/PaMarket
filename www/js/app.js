@@ -1179,10 +1179,15 @@ window.H = {
       var wasCommitted = committed; committed = false;
       var dist = curY - startY;
       if (wasCommitted && dist >= THRESHOLD) { doRefresh(); }
-      else { snapBack(); hideIndicator(); }
+      else if (wasCommitted) { snapBack(); hideIndicator(); }
+      // Simple tap (never committed to a pull) — skip animations to avoid GPU flash
     }
 
-    function onCancel() { pulling = false; committed = false; snapBack(); hideIndicator(); }
+    function onCancel() {
+      var wasCommitted = committed;
+      pulling = false; committed = false;
+      if (wasCommitted) { snapBack(); hideIndicator(); }
+    }
 
     el.addEventListener('touchstart',  onStart,  { passive: true  });
     el.addEventListener('touchmove',   onMove,   { passive: false });
