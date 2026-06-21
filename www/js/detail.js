@@ -336,6 +336,7 @@
             return;
           }
         }
+        if (H._deletedListingIds) H._deletedListingIds[id] = Date.now();
         H.state.listings = (H.state.listings || []).filter(l => l.id !== id);
         H.saveState();
         H.toast('Listing deleted');
