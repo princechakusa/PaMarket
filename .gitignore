@@ -42,3 +42,7 @@ keystore.properties
 
 # Throwaway design mockups / preview screenshots
 preview/
+.pw-browsers/
+website/_mockup_*.html
+website/_mockup_*.png
+website/_shot.js
