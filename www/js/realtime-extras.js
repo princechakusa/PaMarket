@@ -802,22 +802,19 @@
     }
   })();
 
-  // Refresh data after the app returns to the foreground.
-  // RM (refresh-manager.js) handles re-fetching and re-rendering all RM-managed
-  // pages (Home, Browse, categories, Notifications, etc.) via its own
-  // appStateChange + visibilitychange listeners. Here we handle:
-  //   • presence / last-seen housekeeping
-  //   • user-specific data (conversations, notifications) that RM doesn't own
-  //   • immediate kick for Messages / Chat, which use their own polls outside RM
-  function onForeground() {
+  // ===================================================================
+  // LIFECYCLE CALLBACKS  (invoked by lifecycle.js — not registered here)
+  // All OS event listeners live in lifecycle.js (single lifecycle owner).
+  // These three functions are the RT module's response to each state change.
+  // ===================================================================
+
+  // Called by H._onAppStateChange('foreground').
+  // Reconnects realtime and catches up on missed user-specific history.
+  H._rtOnForeground = function () {
     H.touchLastSeen(true);
-    // Re-establish EVERY realtime channel through the supervisor (listings,
-    // businesses, reviews, messages, notifications, presence, receipts + the open
-    // chat). The WebSocket is frequently dropped by the OS while backgrounded.
     H.RT.reconnectAll('foreground');
-    // Short delay so the network re-establishes after an app switch, then catch
-    // up on history the realtime stream can't backfill (messages / notifications
-    // that arrived while we were away) and kick the page-specific polls.
+    // Short delay lets the network re-establish before syncing history
+    // the realtime stream cannot backfill (messages, notifications).
     setTimeout(function () {
       var pg = H.currentPageName;
       if (pg === 'Messages' && typeof H._refreshMessagesPage === 'function') {
@@ -828,38 +825,18 @@
       if (me() && typeof H.syncConversations === 'function') H.syncConversations().catch(function () {});
       if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
     }, 600);
-  }
+  };
 
-  // App open/close/background. onForeground reconnects realtime (public channels
-  // need no auth; user channels self-gate on me()), so we call it even when
-  // signed out — that keeps the public feed live for browsing visitors too.
-  document.addEventListener('visibilitychange', function () {
-    if (document.hidden) {
-      if (me()) H.touchLastSeen(true);       // record the moment we left
-    } else {
-      onForeground();
-    }
-  });
-  // Native (Capacitor) background/foreground — covers Android app-switch where
-  // visibilitychange can be unreliable.
-  try {
-    var App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
-    if (App && typeof App.addListener === 'function') {
-      App.addListener('appStateChange', function (st) {
-        if (st && st.isActive) { onForeground(); }
-        else if (me()) { H.touchLastSeen(true); }
-      });
-    }
-  } catch (e) {}
+  // Called by H._onAppStateChange('background').
+  H._rtOnBackground = function () {
+    if (me()) H.touchLastSeen(true);
+  };
 
-  // Network recovery — when the device regains connectivity (mobile data toggled,
-  // Wi-Fi reconnected, tunnel re-established) the realtime socket is usually dead.
-  // Reconnect every channel and immediately refresh the visible page so content
-  // catches up the instant the connection returns.
-  window.addEventListener('online', function () {
+  // Called by H._onAppStateChange('online').
+  H._rtOnOnline = function () {
     if (!canRealtime()) return;
     H.RT.reconnectAll('online');
     if (!document.hidden && H.RM && typeof H.RM.resume === 'function') H.RM.resume();
-  });
+  };
 
 })(window.H);
