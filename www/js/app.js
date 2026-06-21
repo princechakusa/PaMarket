@@ -11,16 +11,16 @@ window.H = {
 
   PROVINCES: ['Harare','Bulawayo','Manicaland','Mashonaland West','Mashonaland East','Mashonaland Central','Midlands','Masvingo','Matabeleland North','Matabeleland South'],
   CITIES_BY_PROV: {
-    'Harare':             ['Harare CBD','Borrowdale','Avondale','Mabelreign','Marlborough','Belvedere','Greendale','Hatfield','Highfield','Mbare','Glen View','Budiriro','Kuwadzana','Warren Park','Chitungwiza','Epworth','Norton','Ruwa'],
-    'Bulawayo':           ['Bulawayo CBD','Hillside','Khumalo','Suburbs','Famona','Pumula','Cowdray Park','Nkulumane','Magwegwe','Plumtree'],
-    'Manicaland':         ['Mutare','Chipinge','Chimanimani','Rusape','Nyanga','Birchenough Bridge'],
-    'Mashonaland West':   ['Chinhoyi','Kadoma','Karoi','Kariba','Mhangura','Banket','Norton'],
-    'Mashonaland East':   ['Marondera','Mutoko','Murehwa','Wedza','Hwedza'],
-    'Mashonaland Central':['Bindura','Mt Darwin','Shamva','Concession','Mvurwi'],
-    'Midlands':           ['Gweru','Kwekwe','Zvishavane','Shurugwi','Redcliff','Mberengwa'],
-    'Masvingo':           ['Masvingo','Chiredzi','Bikita','Triangle','Mwenezi'],
-    'Matabeleland North': ['Hwange','Victoria Falls','Lupane','Binga'],
-    'Matabeleland South': ['Beitbridge','Gwanda','Plumtree','Filabusi']
+    'Harare':             ['Harare CBD','Avondale','Avondale West','Belgravia','Belvedere','Borrowdale','Borrowdale Brooke','Braeside','Budiriro','Chitungwiza','Cranborne','Dzivarasekwa','Eastlea','Epworth','Glen Norah','Glen View','Glenora','Greendale','Greystone Park','Hatfield','Highfield','Highland','Kambuzuma','Kuwadzana','Mabelreign','Mabvuku','Mandara','Marlborough','Mbare','Msasa','Msasa Park','Mt Pleasant','Mufakose','Norton','Prospect','Ruwa','Southerton','Sunningdale','Tafara','Tynwald','Warren Park','Waterfalls','Willowvale'],
+    'Bulawayo':           ['Bulawayo CBD','Cowdray Park','Emganwini','Entumbane','Famona','Gwabalanda','Hillside','Hyde Park','Khumalo','Luveve','Magwegwe','Makokoba','Mpopoma','Mzilikazi','Newlands','Njube','Nkulumane','Paddonhurst','Parklands','Pelandaba','Pumula','Selborne','Sizinda','Suburbs','Sunninghill','Tshabalala'],
+    'Manicaland':         ['Birchenough Bridge','Buhera','Chimanimani','Chipinge','Headlands','Juliasdale','Mutare','Mutare North','Mutasa','Nyanga','Penhalonga','Rusape','Sakubva'],
+    'Mashonaland West':   ['Banket','Chinhoyi','Chegutu','Kadoma','Kariba','Karoi','Makonde','Mhangura','Murombedzi','Norton','Raffingora','Zvimba'],
+    'Mashonaland East':   ['Chikomba','Goromonzi','Hwedza','Macheke','Marondera','Murehwa','Mutoko','Ruwa','Seke','Wedza'],
+    'Mashonaland Central':['Bindura','Centenary','Concession','Guruve','Mazowe','Mt Darwin','Mvurwi','Rushinga','Shamva'],
+    'Midlands':           ['Gokwe','Gweru','Kwekwe','Lalapanzi','Mberengwa','Mvuma','Redcliff','Shurugwi','Silobela','Zvishavane'],
+    'Masvingo':           ['Bikita','Chiredzi','Gutu','Masvingo','Mwenezi','Ngundu','Triangle','Zaka','Zvishavane'],
+    'Matabeleland North': ['Binga','Dete','Hwange','Lupane','Nkayi','Tsholotsho','Umguza','Victoria Falls'],
+    'Matabeleland South': ['Beitbridge','Filabusi','Gwanda','Insiza','Matobo','Plumtree','Umzingwane']
   },
 
   ICONS: {

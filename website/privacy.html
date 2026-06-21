@@ -3,226 +3,194 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Privacy Policy — PaMarket Zimbabwe</title>
-<meta name="description" content="PaMarket Privacy Policy — how we collect, use, and protect your personal information.">
+<meta name="description" content="PaMarket Privacy Policy - how we collect, use, and protect your personal information. Zimbabwe's free marketplace.">
+<title>Privacy Policy - PaMarket</title>
 <link rel="icon" href="img/icon-192.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --primary:#1A3A8F;--primary-dark:#0f2460;--primary-mid:#2550C0;--primary-light:#EEF2FF;
-  --accent:#F5A623;--accent-dark:#D4891A;
-  --bg:#F5F7FA;--text:#1A1A2E;--sub:#667085;--border:#E4E8F0;--white:#ffffff;
-  --success:#10b981;--danger:#ef4444;
-  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-pill:999px;
-  --shadow-sm:0 1px 4px rgba(0,0,0,.06);--shadow-md:0 4px 16px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.12);
-  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-}
-body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
-a{text-decoration:none;color:inherit}
-img{display:block;max-width:100%}
-button{cursor:pointer;font-family:var(--font);border:none;background:none}
-.hidden{display:none!important}
-.container{max-width:1280px;margin:0 auto;padding:0 24px}
-@media(max-width:768px){.container{padding:0 16px}}
-
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;text-decoration:none;white-space:nowrap}
-.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-mid)}
-.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:var(--accent-dark)}
-.btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--primary)}.btn-outline:hover{background:var(--primary-light)}
-.btn-sm{padding:8px 16px;font-size:13px}
-
-/* HEADER */
-#site-header{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm)}
-.header-inner{display:flex;align-items:center;gap:20px;height:68px;padding:0 24px;max-width:1280px;margin:0 auto}
-.logo-text{font-size:24px;font-weight:900;color:var(--primary);letter-spacing:-0.5px;text-decoration:none;display:inline-block}
-.logo-accent{color:var(--accent)}
-.header-nav{display:flex;gap:4px;margin-left:8px}
-.nav-link{padding:8px 14px;font-size:14px;font-weight:600;color:var(--sub);border-radius:var(--r-sm);transition:all .2s;text-decoration:none;white-space:nowrap}
-.nav-link:hover,.nav-link.active{color:var(--primary);background:var(--primary-light)}
-.header-search{flex:1;max-width:360px;display:flex;align-items:center;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-pill);overflow:hidden;transition:border-color .2s}
-.header-search:focus-within{border-color:var(--primary)}
-.header-search input{flex:1;border:none;background:transparent;padding:0 16px;height:40px;font-size:14px;color:var(--text);outline:none}
-.header-search input::placeholder{color:var(--sub);opacity:.7}
-.header-search button{width:44px;height:40px;border:none;background:transparent;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s}
-.header-search button:hover{color:var(--primary)}
-.header-actions{display:flex;gap:10px;flex-shrink:0;margin-left:auto}
-.hamburger{display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--text);align-items:center;justify-content:center}
-.mobile-nav{position:absolute;top:68px;left:0;right:0;background:#fff;border-bottom:1px solid var(--border);padding:16px 24px;box-shadow:var(--shadow-md);z-index:999;display:flex;flex-direction:column;gap:4px}
-.mobile-nav.hidden{display:none}
-.mobile-nav a{padding:12px 16px;font-size:15px;font-weight:600;color:var(--text);border-radius:var(--r-sm);text-decoration:none;display:block}
-.mobile-nav a:hover{background:var(--bg)}
-.mobile-nav-actions{display:flex;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-.mobile-nav-actions .btn{flex:1;justify-content:center}
-@media(max-width:900px){.header-nav{display:none}.header-search{max-width:220px}}
-@media(max-width:600px){.header-search{display:none}.hamburger{display:flex}.header-actions{display:none}}
-
-/* PAGE HERO */
-.page-hero{background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary) 60%,#2563eb 100%);padding:72px 24px 80px;text-align:center;position:relative;overflow:hidden}
-.page-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,.15) 0%,transparent 70%)}
-.page-hero-inner{position:relative;z-index:1;max-width:640px;margin:0 auto}
-.page-hero h1{font-size:clamp(28px,5vw,52px);font-weight:900;color:#fff;letter-spacing:-1px;margin-bottom:12px}
-.page-hero p{font-size:clamp(14px,2vw,18px);color:rgba(255,255,255,.82)}
-
-/* CONTENT */
-.content-wrap{max-width:800px;margin:0 auto;padding:56px 24px 80px}
-.content-wrap h2{font-size:20px;font-weight:800;color:var(--primary);margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--border)}
-.content-wrap h2:first-child{margin-top:0;border-top:none}
-.content-wrap p{font-size:15px;color:#444;line-height:1.8;margin-bottom:14px}
-.content-wrap ul{padding-left:24px;margin-bottom:16px}
-.content-wrap ul li{font-size:15px;color:#444;line-height:1.8;margin-bottom:8px}
-.content-wrap a{color:var(--primary);text-decoration:underline}
-.content-wrap a:hover{color:var(--primary-mid)}
-.updated-badge{display:inline-block;background:var(--primary-light);color:var(--primary);font-size:13px;font-weight:600;padding:6px 14px;border-radius:var(--r-pill);margin-bottom:32px}
-.info-box{background:var(--primary-light);border-left:4px solid var(--primary);border-radius:var(--r-sm);padding:16px 20px;margin-bottom:24px}
-.info-box p{margin-bottom:0;color:var(--primary)}
-
-/* FOOTER */
-footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin-top:0}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
-.footer-logo{font-size:22px;font-weight:900;color:#fff;margin-bottom:12px}
-.footer-logo span{color:var(--accent)}
-.footer-brand p{font-size:14px;line-height:1.7;max-width:260px;color:rgba(255,255,255,.65)}
-.footer-col h4{font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px}
-.footer-col a{display:block;font-size:14px;color:rgba(255,255,255,.65);margin-bottom:10px;text-decoration:none;transition:color .2s}
-.footer-col a:hover{color:#fff}
-.footer-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:24px;display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.5)}
-@media(max-width:900px){.footer-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.footer-grid{grid-template-columns:1fr}.footer-bottom{flex-direction:column;gap:8px}}
+.legal-wrap{max-width:760px;margin:0 auto;padding:56px 40px 80px}
+.legal-wrap h2{font-size:18px;font-weight:700;color:var(--navy);margin:38px 0 10px;padding-top:10px;border-top:1px solid var(--line)}
+.legal-wrap h2:first-of-type{margin-top:0;border-top:none}
+.legal-wrap p{font-size:15px;color:var(--sub);line-height:1.8;margin-bottom:13px}
+.legal-wrap ul{padding-left:22px;margin-bottom:14px}
+.legal-wrap ul li{font-size:15px;color:var(--sub);line-height:1.8;margin-bottom:7px}
+.legal-wrap a{color:var(--navy);text-decoration:underline}
+.legal-updated{display:inline-block;background:var(--navy-tint);color:var(--navy);font-size:13px;font-weight:600;padding:6px 14px;border-radius:20px;margin-bottom:30px}
+.info-box{background:var(--navy-tint);border-left:4px solid var(--navy);border-radius:10px;padding:16px 20px;margin-bottom:24px}
+.info-box p{margin-bottom:0;color:var(--navy)}
+.rights-table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:14px}
+.rights-table th{background:var(--navy-tint);color:var(--navy);font-weight:600;padding:10px 14px;text-align:left;border:1px solid var(--line)}
+.rights-table td{padding:10px 14px;border:1px solid var(--line);color:var(--sub);line-height:1.6}
+@media(max-width:860px){.legal-wrap{padding:40px 22px 60px}.rights-table{font-size:13px}}
 </style>
 </head>
 <body>
 
 <header id="site-header">
-  <div class="header-inner">
-    <a href="index.html" class="logo-text">Pa<span class="logo-accent">Market</span></a>
-        <nav class="header-nav">
-      <a href="browse.html" class="nav-link">Browse</a>
-      <a href="jobs.html" class="nav-link">Jobs</a>
-      <a href="services.html" class="nav-link">Services</a>
-      <a href="about.html" class="nav-link">About</a>
-      <a href="advertise.html" class="nav-link">Advertise</a>
+  <div class="hdr">
+    <a href="index.html" class="logo">Pa<span>Market</span></a>
+    <nav class="hdr-nav">
+      <a href="browse.html" class="nav-a">Browse</a>
+      <a href="browse.html?shops=1" class="nav-a">Shops</a>
+      <a href="jobs.html" class="nav-a">Hire Talent</a>
+      <a href="advertise.html" class="nav-a">Advertise</a>
+      <a href="about.html" class="nav-a">About</a>
     </nav>
-    <div class="header-search">
-      <input type="text" id="headerSearchInput" placeholder="Search listings…" onkeydown="if(event.key==='Enter')doSearch()">
-      <button onclick="doSearch()" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
+    <div class="hdr-actions">
+      <a href="post-ad.html" class="btn btn-accent btn-sm">Post Free Ad</a>
     </div>
-    <div class="header-actions">
-      <div id="headerAuth"></div>
-      <a href="post-ad.html" class="btn btn-accent btn-sm">Post Ad</a>
-    </div>
-    <button class="hamburger" onclick="toggleMobileNav()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
+    <button class="hamburger" onclick="toggleMob()" aria-label="Toggle menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+    </button>
   </div>
-  <div id="mobileNav" class="mobile-nav hidden">
-        <a href="index.html">Home</a>
-    <a href="browse.html">Browse All</a>
-    <a href="jobs.html">Jobs</a>
-    <a href="services.html">Services</a>
-    <a href="about.html">About</a>
-    <a href="advertise.html">Advertise</a>
-    <div class="mobile-nav-actions"><div id="mobileNavAuth"></div><a href="post-ad.html" class="btn btn-accent">Post Ad</a></div>
-  </div>
+  <nav id="mobNav" class="mob-nav">
+    <a href="index.html">Home</a><a href="browse.html">Browse All</a><a href="browse.html?shops=1">Shops</a>
+    <a href="jobs.html">Hire Talent</a><a href="advertise.html">Advertise</a><a href="about.html">About</a>
+    <div class="mob-nav-btns"><a href="post-ad.html" class="btn btn-accent">Post Free Ad</a></div>
+  </nav>
 </header>
 
 <section class="page-hero">
-  <div class="page-hero-inner">
+  <div class="wrap" style="padding:64px 40px 56px">
+    <div class="pagetag">Legal</div>
     <h1>Privacy Policy</h1>
-    <p>How PaMarket collects, uses, and protects your personal information.</p>
+    <p>How PaMarket collects, uses, stores, and protects your personal information.</p>
   </div>
 </section>
 
 <main>
-  <div class="content-wrap">
-    <div class="updated-badge">Last updated: January 2026</div>
+  <div class="legal-wrap">
+    <div class="legal-updated">Last updated: June 2026</div>
 
     <div class="info-box">
-      <p>PaMarket is committed to protecting your privacy. This policy explains what information we collect, how we use it, and the choices you have. By using PaMarket, you agree to the practices described here.</p>
+      <p>PaMarket is committed to protecting your privacy. This Policy explains what personal information we collect, why we collect it, and the rights you have over it. By using PaMarket you agree to the practices described here.</p>
     </div>
 
-    <h2>1. Information We Collect</h2>
-    <p>We collect information you provide directly to us, information collected automatically when you use our services, and information from third parties.</p>
-    <p><strong>Information you provide:</strong></p>
-    <ul>
-      <li>Account details — name, email address, phone number, and password when you register</li>
-      <li>Listing information — title, description, photos, price, location, and category when you post an ad</li>
-      <li>Messages — content of communications between buyers and sellers on our platform</li>
-      <li>Contact form submissions, support requests, and feedback you send us</li>
-    </ul>
-    <p><strong>Information collected automatically:</strong></p>
-    <ul>
-      <li>Log data — IP address, browser type, pages visited, time spent, and referring URLs</li>
-      <li>Device information — device type, operating system, and unique device identifiers</li>
-      <li>Location data — approximate location based on IP address, or precise location if you grant permission</li>
-      <li>Cookies and similar tracking technologies (see Section 6 below)</li>
-    </ul>
+    <h2>1. Who We Are</h2>
+    <p>PaMarket Zimbabwe operates the PaMarket website (pamarket.co.zw), Android and iOS mobile applications, and related services. We are the data controller for personal information collected through these services.</p>
+    <p>Contact: <a href="mailto:chakusaprince@gmail.com">chakusaprince@gmail.com</a> | WhatsApp: <a href="https://wa.me/971589772645" target="_blank" rel="noopener">+971 58 977 2645</a></p>
 
-    <h2>2. How We Use Your Information</h2>
-    <p>We use the information we collect to:</p>
+    <h2>2. Information We Collect</h2>
+    <p><strong>Information you give us directly:</strong></p>
     <ul>
-      <li>Provide, operate, and improve the PaMarket platform and services</li>
-      <li>Create and manage your account, and verify your identity</li>
-      <li>Display your listings to other users and facilitate buyer-seller connections</li>
-      <li>Send transactional messages, including listing confirmations and account alerts</li>
-      <li>Send marketing communications, where you have opted in to receive them</li>
-      <li>Detect, investigate, and prevent fraudulent activity, spam, and abuse</li>
-      <li>Comply with legal obligations and enforce our Terms of Service</li>
-      <li>Analyse usage patterns to understand how users interact with our platform</li>
-      <li>Respond to your questions, comments, and support requests</li>
+      <li>Account registration details: name, email address, phone number, and password</li>
+      <li>Profile information: profile photo and bio (optional)</li>
+      <li>Listing content: title, description, photos, price, location, and category when you post an ad</li>
+      <li>Business information: business name, registration details, product catalogue, and business category for Shop operators</li>
+      <li>Job and CV information: work history, skills, education, certifications, and availability when using Hire Talent</li>
+      <li>Messages: content of conversations between users on our platform</li>
+      <li>Support requests, feedback, and contact form submissions</li>
+      <li>Identity verification documents (national ID, passport) when you opt in to verified status</li>
     </ul>
-
-    <h2>3. Information Sharing and Disclosure</h2>
-    <p>We do not sell your personal information to third parties. We may share your information in the following limited circumstances:</p>
+    <p><strong>Information collected automatically when you use PaMarket:</strong></p>
     <ul>
-      <li><strong>Other users:</strong> Your listing details (title, description, photos, price, general location) and contact name are visible to all users. Your phone number is only shared when you choose to make it public on a listing.</li>
-      <li><strong>Service providers:</strong> We work with trusted third-party vendors (hosting, analytics, email delivery, payment processing) who access data only to perform services on our behalf and are bound by confidentiality obligations.</li>
-      <li><strong>Legal requirements:</strong> We may disclose information if required by law, court order, or to protect the rights, property, or safety of PaMarket, our users, or the public.</li>
-      <li><strong>Business transfers:</strong> If PaMarket is acquired or merged with another company, your information may be transferred as part of that transaction.</li>
+      <li>Log data: IP address, browser type and version, pages visited, time and duration, and referring URLs</li>
+      <li>Device information: device type, model, operating system, and unique device identifiers</li>
+      <li>Location data: province and city you select when posting a listing, or approximate location from IP address; precise GPS location only if you grant explicit permission</li>
+      <li>Usage data: listings you view, searches you perform, and features you interact with</li>
+      <li>Push notification tokens: when you enable push notifications on your device</li>
+      <li>App version and crash reports to help us identify and fix bugs</li>
+    </ul>
+    <p><strong>Information from third parties:</strong></p>
+    <ul>
+      <li>Google Sign-In: if you register or log in with Google, we receive your name, email address, and profile photo from Google, subject to Google's own privacy policy</li>
     </ul>
 
-    <h2>4. Data Retention</h2>
-    <p>We retain your personal information for as long as your account is active or as needed to provide services. You may request deletion of your account at any time by contacting us at <a href="mailto:chakusaprince@gmail.com">chakusaprince@gmail.com</a>. We will delete your personal data within 30 days, except where we are required to retain it for legal or regulatory purposes.</p>
-    <p>Listing data may be retained in anonymised form for analytics purposes after an account is deleted.</p>
-
-    <h2>5. Data Security</h2>
-    <p>We implement industry-standard security measures to protect your information, including:</p>
+    <h2>3. How We Use Your Information</h2>
+    <p>We use your personal information to:</p>
     <ul>
-      <li>Encryption of data in transit using TLS (HTTPS)</li>
-      <li>Secure storage of passwords using one-way hashing (bcrypt)</li>
-      <li>Access controls that limit data access to authorised personnel only</li>
-      <li>Regular security audits and monitoring of our systems</li>
+      <li>Create, manage, and secure your account</li>
+      <li>Display your listings to other users and power the marketplace search</li>
+      <li>Enable direct messaging between buyers, sellers, and businesses</li>
+      <li>Deliver push notifications for new messages, listing updates, and offers (if you have enabled them)</li>
+      <li>Operate the Hire Talent section and surface relevant candidates to employers</li>
+      <li>Verify your identity to issue a Verified badge and increase trust on the platform</li>
+      <li>Send transactional communications: account confirmations, listing approvals, and security alerts</li>
+      <li>Send marketing communications about PaMarket features and promotions, where you have opted in</li>
+      <li>Detect, investigate, and prevent fraud, spam, scams, and abuse</li>
+      <li>Enforce our Terms of Service and Community Guidelines</li>
+      <li>Analyse usage patterns in aggregated, anonymised form to improve our platform</li>
+      <li>Comply with legal obligations under Zimbabwean law and court orders</li>
     </ul>
-    <p>While we take reasonable precautions, no method of transmission over the internet is 100% secure. We encourage you to use a strong, unique password for your PaMarket account.</p>
 
-    <h2>6. Cookies and Tracking</h2>
-    <p>We use cookies and similar technologies to:</p>
+    <h2>4. Data Storage and Processors</h2>
+    <p>PaMarket uses <strong>Supabase</strong> (supabase.com) as our primary database and authentication infrastructure. Data is stored on servers located in the European Union (AWS eu-west-1 region). Supabase is bound by a data processing agreement with us and implements strong security standards including encryption at rest and in transit.</p>
+    <p>Other third-party service providers we use include:</p>
     <ul>
-      <li>Keep you signed in to your account between visits</li>
-      <li>Remember your search preferences and recently viewed listings</li>
-      <li>Understand how users navigate our platform (analytics)</li>
+      <li><strong>Google Firebase Cloud Messaging (FCM):</strong> delivery of push notifications</li>
+      <li><strong>Apple Push Notification Service (APNS):</strong> delivery of push notifications on iOS</li>
+      <li><strong>Google Fonts:</strong> loading web fonts on the website (IP address shared with Google)</li>
+    </ul>
+    <p>All processors are contractually bound to handle your data only as instructed by us and to maintain appropriate security standards.</p>
+
+    <h2>5. Information Sharing and Disclosure</h2>
+    <p>We do not sell, rent, or trade your personal information. We share data only in these limited circumstances:</p>
+    <ul>
+      <li><strong>With other users:</strong> Your listing details (title, description, photos, price, general location, and seller name) are visible to all users. Your phone number is only shared if you choose to display it on a listing. Business inbox messages are seen by the business account owner.</li>
+      <li><strong>With service providers:</strong> As described in Section 4, we share data with processors only to deliver our services.</li>
+      <li><strong>For legal compliance:</strong> We may disclose information to law enforcement, courts, or regulators where required by Zimbabwean law or a valid court order.</li>
+      <li><strong>For safety:</strong> We may share information to protect the rights, property, or safety of PaMarket, our users, or third parties, including reporting illegal listings to the Zimbabwe Republic Police.</li>
+      <li><strong>Business transfer:</strong> If PaMarket is sold or merged, your data may be transferred as part of that transaction, with notice provided to users.</li>
+    </ul>
+
+    <h2>6. Data Retention</h2>
+    <p>We retain your personal information for as long as your account is active or as needed to provide our services. Specifically:</p>
+    <ul>
+      <li>Account data is retained until you delete your account, plus up to 30 days to allow for recovery</li>
+      <li>Listing data is retained for the life of the listing and up to 12 months after expiry for dispute resolution purposes</li>
+      <li>Message data is retained for up to 12 months and then automatically purged</li>
+      <li>Identity verification documents are deleted within 30 days of verification completion</li>
+      <li>Log data is retained for up to 90 days for security monitoring purposes</li>
+    </ul>
+    <p>You may request deletion of your account and associated data at any time (see Section 8). We will process deletion within 30 days, except where retention is required by law.</p>
+
+    <h2>7. Data Security</h2>
+    <p>We implement industry-standard security measures to protect your information:</p>
+    <ul>
+      <li>All data in transit is encrypted using TLS 1.2 or higher (HTTPS)</li>
+      <li>Passwords are never stored in plain text; Supabase uses bcrypt hashing</li>
+      <li>Database access is restricted to authorised systems and personnel only</li>
+      <li>Row-level security policies on our database prevent users from accessing each other's private data</li>
+      <li>Push notification tokens are stored securely and associated only with your account</li>
+      <li>We regularly review our security configuration and respond promptly to incidents</li>
+    </ul>
+    <p>No method of internet transmission is 100% secure. We encourage you to use a strong, unique password and to enable Google Sign-In where possible for added account security.</p>
+
+    <h2>8. Your Rights and Choices</h2>
+    <table class="rights-table">
+      <tr><th>Right</th><th>What it means</th><th>How to exercise</th></tr>
+      <tr><td>Access</td><td>Request a copy of the personal data we hold about you</td><td>Email us at chakusaprince@gmail.com</td></tr>
+      <tr><td>Correction</td><td>Update or correct inaccurate information</td><td>Edit directly in Account Settings, or email us</td></tr>
+      <tr><td>Deletion</td><td>Request deletion of your account and personal data</td><td>Email us; processed within 30 days</td></tr>
+      <tr><td>Opt-out</td><td>Unsubscribe from marketing emails</td><td>Use the unsubscribe link in any email we send</td></tr>
+      <tr><td>Notifications</td><td>Disable push notifications</td><td>Device Settings or Account Settings in the app</td></tr>
+      <tr><td>Portability</td><td>Request your data in a structured, machine-readable format</td><td>Email us at chakusaprince@gmail.com</td></tr>
+    </table>
+    <p>To exercise any of these rights, contact us at <a href="mailto:chakusaprince@gmail.com">chakusaprince@gmail.com</a>. We will respond within 30 days.</p>
+
+    <h2>9. Cookies and Local Storage</h2>
+    <p>The PaMarket website uses browser cookies and localStorage to:</p>
+    <ul>
+      <li>Keep you signed in between sessions (authentication token stored in localStorage)</li>
+      <li>Remember your recently viewed listings and search preferences</li>
+      <li>Store offline-capable app data for use when your connection is limited</li>
       <li>Detect and prevent fraudulent or abusive activity</li>
     </ul>
-    <p>You can control cookies through your browser settings. Disabling cookies may affect the functionality of certain features, such as staying signed in.</p>
+    <p>We do not use third-party advertising cookies or cross-site tracking cookies. You can clear localStorage data through your browser settings, though this will sign you out of PaMarket.</p>
 
-    <h2>7. Your Rights and Choices</h2>
-    <p>You have the right to:</p>
-    <ul>
-      <li><strong>Access:</strong> Request a copy of the personal information we hold about you</li>
-      <li><strong>Correction:</strong> Update or correct inaccurate information in your account settings</li>
-      <li><strong>Deletion:</strong> Request deletion of your account and associated personal data</li>
-      <li><strong>Opt-out:</strong> Unsubscribe from marketing emails using the link in any email we send</li>
-      <li><strong>Portability:</strong> Request your data in a machine-readable format</li>
-    </ul>
-    <p>To exercise any of these rights, please contact us at <a href="mailto:chakusaprince@gmail.com">chakusaprince@gmail.com</a>.</p>
+    <h2>10. Children's Privacy</h2>
+    <p>PaMarket is not intended for persons under 18 years of age. We do not knowingly collect personal information from minors. If you believe a minor has registered on PaMarket, please contact us immediately at <a href="mailto:chakusaprince@gmail.com">chakusaprince@gmail.com</a> and we will take steps to remove the account.</p>
 
-    <h2>8. Children's Privacy</h2>
-    <p>PaMarket is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13. If you believe we have collected information from a child, please contact us immediately and we will take steps to delete it.</p>
+    <h2>11. Third-Party Links</h2>
+    <p>Listings on PaMarket may contain links to external websites. We are not responsible for the content or privacy practices of those websites. We encourage you to read the privacy policy of every website you visit.</p>
 
-    <h2>9. Third-Party Links</h2>
-    <p>PaMarket may contain links to third-party websites. We are not responsible for the privacy practices of those websites. We encourage you to read the privacy policy of every website you visit.</p>
+    <h2>12. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time to reflect changes in our practices, technology, or applicable law. When we make significant changes, we will notify you by in-app notification or email at least 14 days before the change takes effect. Your continued use of PaMarket after the effective date constitutes acceptance of the updated Policy.</p>
 
-    <h2>10. Changes to This Policy</h2>
-    <p>We may update this Privacy Policy from time to time to reflect changes in our practices or applicable law. When we make significant changes, we will notify you by email (if you have an account) or by posting a prominent notice on the PaMarket homepage. Your continued use of PaMarket after the effective date of any change constitutes your acceptance of the updated policy.</p>
-
-    <h2>11. Contact Us</h2>
+    <h2>13. Contact Us</h2>
     <p>If you have questions, concerns, or complaints about this Privacy Policy or our data practices, please contact us:</p>
     <ul>
       <li>Email: <a href="mailto:chakusaprince@gmail.com">chakusaprince@gmail.com</a></li>
@@ -233,22 +201,20 @@ footer{background:#0f2460;color:rgba(255,255,255,.75);padding:56px 0 24px;margin
 </main>
 
 <footer>
-  <div class="container">
-    <div class="footer-grid">
-      <div class="footer-brand"><div class="footer-logo">Pa<span>Market</span></div><p>Zimbabwe's #1 free classified marketplace. Buy and sell anything, anywhere.</p></div>
-      <div class="footer-col"><h4>Marketplace</h4><a href="browse.html">Browse All</a><a href="browse.html?cat=Property">Property</a><a href="browse.html?cat=Vehicles">Vehicles</a><a href="browse.html?cat=Electronics">Electronics</a><a href="jobs.html">Jobs</a><a href="services.html">Services</a></div>
-      <div class="footer-col"><h4>Business</h4><a href="advertise.html">Advertise</a><a href="post-ad.html">Post Free Ad</a><a href="advertise.html#pricing">Pricing</a></div>
-      <div class="footer-col"><h4>Company</h4><a href="about.html">About Us</a><a href="contact.html">Contact</a><a href="help.html">Help Center</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></div>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div><a href="index.html" class="logo">Pa<span>Market</span></a><p>Zimbabwe's free marketplace. Buy, sell, hire and grow your business across all ten provinces.</p></div>
+      <div class="foot"><h4>Marketplace</h4><a href="browse.html">Browse</a><a href="post-ad.html">Post a Free Ad</a><a href="browse.html?shops=1">Shops</a><a href="jobs.html">Hire Talent</a></div>
+      <div class="foot"><h4>Company</h4><a href="about.html">About</a><a href="advertise.html">Advertise</a><a href="contact.html">Contact</a><a href="help.html">Help</a></div>
+      <div class="foot"><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="community-guidelines.html">Guidelines</a><a href="help.html">Safety</a></div>
     </div>
-    <div class="footer-bottom"><span>&copy; 2026 PaMarket. All rights reserved.</span><span>Made in Zimbabwe 🇿🇼</span></div>
+    <div class="footer-bottom">&copy; 2026 PaMarket. App version 1.5.0. Made in Zimbabwe. All rights reserved.</div>
   </div>
 </footer>
 
 <script>
-function doSearch(){const q=document.getElementById('headerSearchInput')?.value?.trim();if(q)window.location.href='browse.html?q='+encodeURIComponent(q)}
-function toggleMobileNav(){document.getElementById('mobileNav').classList.toggle('hidden')}
-document.addEventListener('click',function(e){const nav=document.getElementById('mobileNav');const hdr=document.getElementById('site-header');if(!nav.classList.contains('hidden')&&!hdr.contains(e.target))nav.classList.add('hidden')})
+function toggleMob(){document.getElementById('mobNav').classList.toggle('open')}
+document.addEventListener('click',e=>{const n=document.getElementById('mobNav');if(n.classList.contains('open')&&!document.getElementById('site-header').contains(e.target))n.classList.remove('open')});
 </script>
-<script src="auth.js"></script>
 </body>
 </html>
