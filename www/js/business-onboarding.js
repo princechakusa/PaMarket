@@ -88,7 +88,8 @@
         whatsapp: b.whatsapp || null, email: b.email || null,
         province: b.province || null, city: b.city || null, suburb: b.suburb || null,
         status: b.status || 'draft', onboarding_step: b.onboardingStep || 'details',
-        verification_level: b.verificationLevel || 0
+        verification_level: b.verificationLevel || 0,
+        featured_listing_ids: (b.featuredListingIds && b.featuredListingIds.length) ? b.featuredListingIds : null
       };
       const { error } = await sb.from('businesses').upsert(row, { onConflict: 'id' });
       if (error) console.warn('saveBusinessToCloud:', error.message);
