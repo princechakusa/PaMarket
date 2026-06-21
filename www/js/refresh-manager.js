@@ -39,12 +39,6 @@
     var bz = (H.state && H.state.businesses) || [];
     return bz.length + (bz[0] ? '|' + bz[0].id + bz[0].status : '');
   }
-  function _sigConvs() {
-    var cvs = (H.state && H.state.conversations) || [];
-    return cvs.reduce(function (s, c) {
-      return s + (c.id || '') + ':' + ((c.messages && c.messages.length) || 0) + ',';
-    }, String(cvs.length));
-  }
   function _sigNotifs() {
     var u = H.currentUser && H.currentUser();
     var ns = (u && H.state && H.state.notifs && H.state.notifs[u.id]) || [];
@@ -124,19 +118,27 @@
     // Allow other modules to add/override page configs
     register: function (name, cfg) { _cfg[name] = cfg; },
 
-    // Start polling for a page — called from each page's _after hook
+    // Start polling for a page — called from each page's _after hook.
+    // Debounced: rapid successive calls (e.g. realtime + boot) only set
+    // the interval once, from the LAST call within a 500ms window.
     start: function (name, params) {
       RM.stopAll();
       RM._current = name;
       RM._params  = params || null;
       var c = _cfg[name];
       if (!c) return;
-      RM._poll(name, params, false);
-      RM._loops[name] = setInterval(function () {
-        if (!RM._appActive || document.hidden) return;
-        if (RM._current !== name) { RM.stop(name); return; }
+      // Debounce interval creation so rapid re-renders (realtime events,
+      // initial boot sequence) don't keep resetting the 45s countdown.
+      clearTimeout(RM._startTimer);
+      RM._startTimer = setTimeout(function () {
+        if (RM._current !== name) return; // navigated away during debounce
         RM._poll(name, params, false);
-      }, c.interval);
+        RM._loops[name] = setInterval(function () {
+          if (!RM._appActive || document.hidden) return;
+          if (RM._current !== name) { RM.stop(name); return; }
+          RM._poll(name, params, false);
+        }, c.interval);
+      }, 300);
     },
 
     stop: function (name) {
@@ -144,6 +146,7 @@
     },
 
     stopAll: function () {
+      clearTimeout(RM._startTimer);
       Object.keys(RM._loops).forEach(function (name) { RM.stop(name); });
     },
 
@@ -156,6 +159,7 @@
       var params = RM._params;
       if (!name || document.hidden) return;
       RM.stop(name);
+      clearTimeout(RM._startTimer);
       RM._poll(name, params, true);
       var c = _cfg[name];
       if (!c) return;
@@ -191,7 +195,10 @@
       });
     },
 
-    // Re-render while preserving scroll position and active input value + cursor
+    // Re-render while preserving scroll position and active input value + cursor.
+    // Works correctly for both sync and async renderPage: keeps _inBgRender=true
+    // until the page and its _after hook have fully completed, preventing the
+    // _after hook from triggering a second RM.start() or redundant fetch.
     _renderPreserved: function (name, params) {
       if (RM._inBgRender) return;
       RM._inBgRender = true;
@@ -203,21 +210,37 @@
       var fVal = (fTag === 'INPUT' || fTag === 'TEXTAREA') ? focused.value : null;
       var fS   = fVal !== null && focused.selectionStart !== undefined ? focused.selectionStart : null;
       var fE   = fVal !== null && focused.selectionEnd   !== undefined ? focused.selectionEnd   : null;
-      try {
-        if (typeof H.renderPage === 'function') H.renderPage(name, params);
-      } finally {
+
+      function _restore() {
         RM._inBgRender = false;
-      }
-      if (area) area.scrollTop = scrollTop;
-      if (fId) {
-        var el = document.getElementById(fId);
-        if (el) {
-          el.focus();
-          if (fVal !== null) {
-            el.value = fVal;
-            if (fS !== null) { try { el.setSelectionRange(fS, fE); } catch (e) {} }
+        if (area) area.scrollTop = scrollTop;
+        if (fId) {
+          var el = document.getElementById(fId);
+          if (el) {
+            el.focus();
+            if (fVal !== null) {
+              el.value = fVal;
+              if (fS !== null) { try { el.setSelectionRange(fS, fE); } catch (e) {} }
+            }
           }
         }
+      }
+
+      var result;
+      try {
+        result = typeof H.renderPage === 'function' ? H.renderPage(name, params) : null;
+      } catch (e) {
+        _restore();
+        return;
+      }
+
+      // If renderPage returned a Promise (async page), keep _inBgRender=true
+      // until the Promise settles — that's when the _after hook will have run.
+      if (result && typeof result.then === 'function') {
+        result.then(_restore, _restore);
+      } else {
+        // Sync page: renderPage already ran _after synchronously; restore now.
+        _restore();
       }
     }
   };
