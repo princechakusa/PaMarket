@@ -89,6 +89,7 @@
     const body = document.getElementById('adminBody');
     const reRender = function () { if (body) body.innerHTML = renderBody(); };
     const syncs = [syncVerificationsFromSupabase()];
+    if (typeof H.fetchAllListingsForAdmin === 'function') syncs.push(H.fetchAllListingsForAdmin());
     if (typeof H.syncReports === 'function') syncs.push(H.syncReports());
     if (typeof H.syncConversations === 'function') syncs.push(H.syncConversations());
     Promise.all(syncs).then(reRender);
