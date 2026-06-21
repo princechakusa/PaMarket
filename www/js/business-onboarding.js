@@ -32,6 +32,43 @@
     { id: 'pro',     name: 'Pro',     price: 15, limit: 60,   tagline: 'Grow faster',      features: ['Up to 60 listings', 'Higher ranking', 'Full analytics', '1 featured slot'] },
     { id: 'premium', name: 'Premium', price: 40, limit: -1,   tagline: 'Maximum reach',    features: ['Unlimited listings', 'Top ranking', 'Full analytics', 'Featured placement'] }
   ];
+
+  // ── Category compatibility ───────────────────────────────────
+  // Affinity groups: a business may only pick from ONE non-universal group.
+  // Services and Other are universal — they pair with any group.
+  H.BIZ_CAT_GROUPS = [
+    { id: 'home',      label: 'Home & Property',        cats: ['property', 'furniture', 'rooms'] },
+    { id: 'transport', label: 'Vehicles & Transport',   cats: ['vehicles'] },
+    { id: 'style',     label: 'Fashion & Electronics',  cats: ['fashion', 'kids', 'electronics'] },
+    { id: 'nature',    label: 'Agriculture & Pets',     cats: ['agriculture', 'pets'] },
+    { id: 'work',      label: 'Jobs & Recruitment',     cats: ['jobs'] },
+    { id: 'universal', label: 'Universal',              cats: ['services', 'other'] },
+  ];
+
+  // Returns { ok: true } or { ok: false, msg: '...' }
+  H.bizCatCompat = function (existing, newCat) {
+    var groups   = H.BIZ_CAT_GROUPS;
+    var univCats = (groups.find(function(g){ return g.id === 'universal'; }) || {}).cats || [];
+    if (univCats.includes(newCat)) return { ok: true };
+
+    var newGroup = groups.find(function(g){ return g.id !== 'universal' && g.cats.includes(newCat); });
+    if (!newGroup) return { ok: true };
+
+    var usedGroups = [];
+    (existing || []).forEach(function(c) {
+      if (univCats.includes(c)) return;
+      var g = groups.find(function(gr){ return gr.id !== 'universal' && gr.cats.includes(c); });
+      if (g && !usedGroups.find(function(x){ return x.id === g.id; })) usedGroups.push(g);
+    });
+
+    if (usedGroups.length === 0 || usedGroups.find(function(g){ return g.id === newGroup.id; })) return { ok: true };
+
+    var clash = usedGroups[0];
+    return {
+      ok:  false,
+      msg: newGroup.label + ' does not match ' + clash.label + '. Choose categories from the same type of business.'
+    };
+  };
   const STEPS = ['details', 'category', 'plan', 'activate'];
   const STEP_LABELS = { details: 'Details', category: 'Category', plan: 'Plan', activate: 'Activate' };
 
@@ -534,7 +571,15 @@
       ensureDraft();
       _draft.categories = Array.isArray(_draft.categories) ? _draft.categories : (_draft.category ? [_draft.category] : []);
       const idx = _draft.categories.indexOf(c);
-      if (idx >= 0) _draft.categories.splice(idx, 1); else _draft.categories.push(c);
+      if (idx >= 0) {
+        // Deselecting — always allowed
+        _draft.categories.splice(idx, 1);
+      } else {
+        // Selecting — check compatibility first
+        const check = typeof H.bizCatCompat === 'function' ? H.bizCatCompat(_draft.categories, c) : { ok: true };
+        if (!check.ok) { toast(check.msg); return; }
+        _draft.categories.push(c);
+      }
       _draft.category = _draft.categories[0] || '';
       renderPage('BusinessOnboarding');
     },

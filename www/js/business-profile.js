@@ -792,7 +792,13 @@
       collectEdit();
       _edit.categories = _edit.categories || [];
       const idx = _edit.categories.indexOf(catId);
-      if (idx >= 0) _edit.categories.splice(idx, 1); else _edit.categories.push(catId);
+      if (idx >= 0) {
+        _edit.categories.splice(idx, 1);
+      } else {
+        const check = typeof H.bizCatCompat === 'function' ? H.bizCatCompat(_edit.categories, catId) : { ok: true };
+        if (!check.ok) { toast(check.msg); return; }
+        _edit.categories.push(catId);
+      }
       renderPage('BusinessEditProfile');
     },
     onProvince(p) { collectEdit(); _edit.province = p; _edit.city = ''; renderPage('BusinessEditProfile'); },
