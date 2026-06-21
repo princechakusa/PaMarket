@@ -1,6 +1,12 @@
 'use strict';
 (function (H) {
 
+  // Coerce a CV field to an array. Profile data can arrive as a string (older
+  // shapes, partial cloud rows, manual edits); calling .map on a string would
+  // throw and crash the whole Hire Talent page to "Page not found". This keeps
+  // every candidate render defensive.
+  function _arr(v) { return Array.isArray(v) ? v : []; }
+
   var JOB_CATS = ['Accounting & Finance', 'Sales & Marketing', 'IT & Technology', 'Construction', 'Healthcare', 'Education', 'Hospitality', 'Administration', 'Engineering', 'Driving & Logistics'];
 
   // Granular profession list (Zim-flavoured) used by the Get Hired wizard.
@@ -484,7 +490,7 @@
   // ── Candidate attribute derivation (for filters & cards) ──────
   // Highest education level from a candidate's CV.
   function _candEduLevel(u) {
-    var edu = (u.cv && u.cv.education) || [];
+    var edu = _arr(u.cv && u.cv.education);
     var text = edu.map(function (e) { return (e.degree || e.qualification || ''); }).join(' ').toLowerCase();
     if (/\b(master|msc|m\.sc|mba|phd|doctorate|postgrad|post-grad)\b/.test(text)) return 'postgrad';
     if (/\b(degree|bachelor|bsc|b\.sc|beng|honours|hons)\b/.test(text)) return 'degree';
@@ -540,7 +546,7 @@
     if (q) list = list.filter(function (u) {
       var cv = u.cv || {};
       var t = [u.name||'', u.jobTitle||'', u.sector||'', cv.headline||'', cv.summary||'',
-        (cv.skills||[]).join(' '), (cv.experience||[]).map(function(e){return (e.title||'')+(e.company||'');}).join(' '),
+        _arr(cv.skills).join(' '), _arr(cv.experience).map(function(e){return (e.title||'')+(e.company||'');}).join(' '),
         u.city||'', cv.location||''].join(' ').toLowerCase();
       return t.includes(q);
     });
@@ -548,7 +554,7 @@
       if ((u.sector || '') === f.sector) return true;
       var tok = f.sector.split(/[\/(,\s]/)[0].toLowerCase();
       var cv = u.cv || {};
-      var text = [(u.sector||''), (u.jobTitle||''), (cv.headline||''), (cv.skills||[]).join(' ')].join(' ').toLowerCase();
+      var text = [(u.sector||''), (u.jobTitle||''), (cv.headline||''), _arr(cv.skills).join(' ')].join(' ').toLowerCase();
       return tok.length > 2 && text.indexOf(tok) > -1;
     });
     if (f.city && f.city !== 'all') list = list.filter(function (u) {
@@ -770,7 +776,7 @@
     var availability = cv.availability || cv.noticePeriod || (u.openToWork ? 'Available now' : '');
     var posted = u.profileUpdatedAt || u.createdAt;
     var saved = (H.state.savedCandidates || []).indexOf(u.id) > -1;
-    var skills = (cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',')).map(function (s) { return (s || '').trim(); }).filter(Boolean).slice(0, 4);
+    var skills = (Array.isArray(cv.skills) && cv.skills.length ? cv.skills : (u.skills || '').split(',')).map(function (s) { return (s || '').trim(); }).filter(Boolean).slice(0, 4);
 
     // Contact details — revealed only after an approved request.
     var waFull  = u.whatsappFull || '';
@@ -1023,10 +1029,10 @@
     var ini = H.initials(u.name || 'U');
     var verBadge = u.verified ? '<span style="display:inline-flex;vertical-align:middle">' + H.verifiedBadge(14) + '</span>' : '';
     var expLvl = { entry: 'Entry Level (0–2 yrs)', mid: '3–5 Years', senior: '5–10 Years', expert: '10+ Years' }[u.exp || ''] || '';
-    var skills = cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean).map(function (s) { return s.trim(); }).filter(Boolean);
-    var exp   = cv.experience     || [];
-    var edu   = cv.education      || [];
-    var certs = cv.certifications || [];
+    var skills = Array.isArray(cv.skills) && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean).map(function (s) { return s.trim(); }).filter(Boolean);
+    var exp   = _arr(cv.experience);
+    var edu   = _arr(cv.education);
+    var certs = _arr(cv.certifications);
     var headline    = cv.headline || u.jobTitle || 'Open to Work';
     var location    = cv.location || u.city || '';
     var summary     = cv.summary  || '';
@@ -1153,10 +1159,10 @@
     // Open the uploaded file directly if available
     var fileUrl = cv.cvFileUrl || u.cvFileUrl || '';
     if (fileUrl) { window.open(fileUrl, '_blank'); return; }
-    var skills = cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean).map(function (s) { return s.trim(); }).filter(Boolean);
-    var exp   = cv.experience     || [];
-    var edu   = cv.education      || [];
-    var certs = cv.certifications || [];
+    var skills = Array.isArray(cv.skills) && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean).map(function (s) { return s.trim(); }).filter(Boolean);
+    var exp   = _arr(cv.experience);
+    var edu   = _arr(cv.education);
+    var certs = _arr(cv.certifications);
     var line  = '─────────────────────────────────────────────────────';
     var thick = '═════════════════════════════════════════════════════';
     var lines = [];
