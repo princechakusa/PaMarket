@@ -815,19 +815,31 @@ window.H = {
     else if (_act === 'post')   { if(this.currentUser()) setTimeout(()=>this.navTo('Post',null), 200); }
     else if (_act === 'browse') { setTimeout(()=>this.navTo('Browse',null), 200); }
     try {
-      const _sigBefore = (this.state.listings || []).filter(l => l.status === 'active').map(l => l.id).join(',');
-      await this.fetchListingsFromSupabase();
-      H._checkEngagementAlerts();
-      await Promise.all([this.fetchAdsFromSupabase(), this.fetchAppSettings()]);
-      // Re-render Home only if the listings actually changed AND the user is still
-      // on Home — re-rendering identical content just reloads images and flickers
-      // (the common case on a warm start where cache already matches the cloud).
-      const _sigAfter = (this.state.listings || []).filter(l => l.status === 'active').map(l => l.id).join(',');
-      if (_sigBefore !== _sigAfter && this.currentPageName === 'Home' && !this.pageStack.length && !H._userIsTyping()) {
-        await this.renderPage('Home', this.currentPageParams);
+      const _hasCachedListings = (this.state.listings || []).filter(l => l.status === 'active').length > 0;
+      if (_hasCachedListings) {
+        // Warm start: Home already shows cached data. Fire fetches in the background
+        // and let Realtime subscriptions + RM polling update the UI as data arrives.
+        const _self = this;
+        _self.fetchListingsFromSupabase().then(function() {
+          if (typeof H._checkEngagementAlerts === 'function') H._checkEngagementAlerts();
+        }).catch(function(){});
+        _self.fetchAdsFromSupabase().catch(function(){});
+        _self.fetchAppSettings().catch(function(){});
+      } else {
+        // Cold start (first install or cleared cache): await so Home fills immediately.
+        const _sigBefore = (this.state.listings || []).filter(l => l.status === 'active').map(l => l.id).join(',');
+        await this.fetchListingsFromSupabase();
+        H._checkEngagementAlerts();
+        await Promise.all([this.fetchAdsFromSupabase(), this.fetchAppSettings()]);
+        const _sigAfter = (this.state.listings || []).filter(l => l.status === 'active').map(l => l.id).join(',');
+        if (_sigBefore !== _sigAfter && this.currentPageName === 'Home' && !this.pageStack.length && !H._userIsTyping()) {
+          await this.renderPage('Home', this.currentPageParams);
+        }
       }
     } catch(e) { console.warn('Boot fetch failed:', e); }
     if(typeof H._setupRealtimeMessages==='function') H._setupRealtimeMessages();
+    if(typeof H._setupRealtimeListings==='function') H._setupRealtimeListings();
+    if(typeof H._setupRealtimeBusinesses==='function') H._setupRealtimeBusinesses();
     if(typeof H.syncReports==='function') H.syncReports();
     if(typeof H.syncConversations==='function') H.syncConversations();
     if(typeof H.syncApplications==='function') H.syncApplications();
@@ -1446,31 +1458,27 @@ window.H = {
         .limit(200);
       if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
       const cloud=(data||[]).map(r=>H._mapCloudListing(r));
-      // Replace active listings entirely from cloud so deleted ones disappear.
-      // Keep local non-active listings (pending, draft) that haven't synced yet.
       const nonActive=(H.state.listings||[]).filter(l=>l.status!=='active');
       H.state.listings=[...cloud,...nonActive];
+      H.saveState();
+      if (typeof H._checkSavedSearchAlerts === 'function') { try { H._checkSavedSearchAlerts(); } catch(e){} }
 
-      // Backfill seller verified status for EVERY listing seller so the blue
-      // verified badge shows consistently — not just for sellers we've chatted
-      // with. The listings table doesn't carry the seller's verified flag, so we
-      // resolve it from profiles in one batched query and set it authoritatively
-      // (covers both newly-verified and revoked accounts). Only re-render the
-      // current listing page when something actually changed, so it converges
-      // (the next fetch finds nothing changed → no re-render, no loop).
-      let verifiedChanged = false;
-      try {
-        const sellerIds = [...new Set(cloud.map(l => l.sellerId).filter(Boolean))];
-        if (sellerIds.length) {
-          const { data: sps } = await window.supabase
-            .from('profiles').select('id,name,avatar,verified').in('id', sellerIds);
-          if (Array.isArray(sps) && sps.length) {
+      // Seller verified-badge backfill runs in the background so it never
+      // delays the main fetch return. The UI already has fresh listings above;
+      // badge updates arrive a moment later and only trigger a re-render when
+      // something actually changed (prevents an infinite re-render loop).
+      const sellerIds = [...new Set(cloud.map(l => l.sellerId).filter(Boolean))];
+      if (sellerIds.length) {
+        window.supabase.from('profiles').select('id,name,avatar,verified').in('id', sellerIds)
+          .then(function(res) {
+            if (!Array.isArray(res.data) || !res.data.length) return;
             H.state.users = H.state.users || [];
-            sps.forEach(p => {
-              const su = H.state.users.find(x => x.id === p.id);
+            let verifiedChanged = false;
+            res.data.forEach(function(p) {
+              const su = H.state.users.find(function(x) { return x.id === p.id; });
               if (su) {
                 if (su.verified !== !!p.verified) { su.verified = !!p.verified; verifiedChanged = true; }
-                if (p.name && !su.name)     su.name = p.name;
+                if (p.name && !su.name)     su.name   = p.name;
                 if (p.avatar && !su.avatar) su.avatar = p.avatar;
               } else {
                 H.state.users.push({ id: p.id, name: p.name || '', phone: '', email: '',
@@ -1479,22 +1487,14 @@ window.H = {
                 if (p.verified) verifiedChanged = true;
               }
             });
-          }
-        }
-      } catch(e) { /* verified backfill is best-effort */ }
-
-      H.saveState();
-      // Notify on new listings matching the user's saved searches.
-      if (typeof H._checkSavedSearchAlerts === 'function') { try { H._checkSavedSearchAlerts(); } catch(e){} }
-
-      // Refresh the visible page so freshly-resolved badges appear. Guarded by
-      // verifiedChanged so it can't loop (a re-render re-runs this fetch, but the
-      // second pass finds verified already correct → verifiedChanged=false).
-      if (verifiedChanged) {
-        const p = H.currentPageName;
-        if (p === 'Home' || p === 'Browse' || p === 'Detail' || p === 'CategoryView') {
-          try { H.renderPage(p, H.currentPageParams); } catch(e){}
-        }
+            if (verifiedChanged) {
+              H.saveState();
+              const pg = H.currentPageName;
+              if (pg === 'Home' || pg === 'Browse' || pg === 'Detail' || pg === 'CategoryView') {
+                try { H.renderPage(pg, H.currentPageParams); } catch(e) {}
+              }
+            }
+          }).catch(function() {});
       }
     } catch(e){ console.warn('fetchListingsFromSupabase:',e.message); }
   },
@@ -1564,6 +1564,106 @@ window.H = {
           }
         }).subscribe();
     } catch(e){ console.warn('Realtime setup failed:',e.message); }
+  },
+
+  // Supabase Realtime for the listings feed — INSERT/UPDATE/DELETE arrive
+  // instantly and update the UI without waiting for the next poll cycle.
+  // Requires 'listings' to be in the Supabase realtime publication.
+  // Falls back to RM polling silently if the channel errors.
+  _setupRealtimeListings() {
+    try {
+      const sb = window.supabase;
+      if (!sb || typeof sb.channel !== 'function') return;
+      if (window._listingsChannel) { try { sb.removeChannel(window._listingsChannel); } catch(e){} }
+      const FEED_PAGES = { Home:1, Browse:1, Property:1, Vehicles:1, Electronics:1,
+        Fashion:1, Furniture:1, Services:1, Agriculture:1, Pets:1, Kids:1,
+        Other:1, Jobs:1, Rooms:1, Detail:1, MyListings:1, Favorites:1, BusinessShop:1 };
+      window._listingsChannel = sb.channel('listings-live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, function(payload) {
+          try {
+            H.state.listings = H.state.listings || [];
+            const evt = payload.eventType;
+            if (evt === 'DELETE') {
+              const oldId = payload.old && payload.old.id;
+              if (oldId) H.state.listings = H.state.listings.filter(function(l) { return l.id !== oldId; });
+            } else if (evt === 'INSERT' || evt === 'UPDATE') {
+              if (!payload.new) return;
+              const mapped = H._mapCloudListing(payload.new);
+              if (mapped.status === 'active') {
+                const idx = H.state.listings.findIndex(function(l) { return l.id === mapped.id; });
+                if (idx >= 0) {
+                  H.state.listings[idx] = Object.assign({}, H.state.listings[idx], mapped);
+                } else {
+                  H.state.listings.unshift(mapped);
+                }
+              } else {
+                H.state.listings = H.state.listings.filter(function(l) { return l.id !== mapped.id; });
+              }
+            }
+            H.saveState();
+            const pg = H.currentPageName;
+            if (FEED_PAGES[pg] && H.RM && typeof H.RM._renderPreserved === 'function' && !H.RM._inBgRender) {
+              H.RM._renderPreserved(pg, H.currentPageParams);
+            }
+          } catch(e) { console.warn('listings RT handler:', e); }
+        })
+        .subscribe(function(status) {
+          if (status === 'CHANNEL_ERROR') console.warn('listings realtime channel error — polling is the fallback');
+        });
+    } catch(e) { console.warn('_setupRealtimeListings:', e.message); }
+  },
+
+  // Supabase Realtime for businesses — same pattern as listings.
+  // Requires 'businesses' to be in the Supabase realtime publication.
+  _setupRealtimeBusinesses() {
+    try {
+      const sb = window.supabase;
+      if (!sb || typeof sb.channel !== 'function') return;
+      if (window._bizRtChannel) { try { sb.removeChannel(window._bizRtChannel); } catch(e){} }
+      const BIZ_PAGES = { Home:1, BusinessSearch:1, BusinessShop:1, BusinessProfile:1 };
+      window._bizRtChannel = sb.channel('businesses-live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'businesses' }, function(payload) {
+          try {
+            H.state.businesses = H.state.businesses || [];
+            const evt = payload.eventType;
+            if (evt === 'DELETE') {
+              const oldId = payload.old && payload.old.id;
+              if (oldId) H.state.businesses = H.state.businesses.filter(function(b) { return b.id !== oldId; });
+            } else if (evt === 'INSERT' || evt === 'UPDATE') {
+              const row = payload.new; if (!row) return;
+              const _cats = (row.category || '').split('|').filter(Boolean);
+              const mapped = { id: row.id, ownerUserId: row.owner_user_id, name: row.name || '',
+                logo: row.logo, cover: row.cover, description: row.description,
+                bizType: row.biz_type || 'individual', category: _cats[0] || null, categories: _cats,
+                phone: row.phone, whatsapp: row.whatsapp, email: row.email,
+                province: row.province, city: row.city, suburb: row.suburb,
+                status: row.status, verificationLevel: row.verification_level || 0,
+                featuredListingIds: Array.isArray(row.featured_listing_ids) ? row.featured_listing_ids : [] };
+              if (mapped.status === 'active') {
+                const idx = H.state.businesses.findIndex(function(b) { return b.id === mapped.id; });
+                if (idx >= 0) {
+                  const prev = H.state.businesses[idx];
+                  if (!mapped.logo && prev.logo) mapped.logo = prev.logo;
+                  if (!mapped.cover && prev.cover) mapped.cover = prev.cover;
+                  H.state.businesses[idx] = Object.assign({}, prev, mapped);
+                } else {
+                  H.state.businesses.unshift(mapped);
+                }
+              } else {
+                H.state.businesses = H.state.businesses.filter(function(b) { return b.id !== mapped.id; });
+              }
+            }
+            H.saveState();
+            const pg = H.currentPageName;
+            if (BIZ_PAGES[pg] && H.RM && typeof H.RM._renderPreserved === 'function' && !H.RM._inBgRender) {
+              H.RM._renderPreserved(pg, H.currentPageParams);
+            }
+          } catch(e) { console.warn('businesses RT handler:', e); }
+        })
+        .subscribe(function(status) {
+          if (status === 'CHANNEL_ERROR') console.warn('businesses realtime channel error — polling is the fallback');
+        });
+    } catch(e) { console.warn('_setupRealtimeBusinesses:', e.message); }
   },
 
   async syncApplications() {
