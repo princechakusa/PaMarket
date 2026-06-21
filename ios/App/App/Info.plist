@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CAPACITOR_DEBUG</key>
+	<string>$(CAPACITOR_DEBUG)</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>PaMarket</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+
+	<!-- Deep-link URL scheme for OAuth callbacks (matches Android intent-filter) -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.pamarket.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.pamarket.app</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- App Store compliance: app uses only HTTPS; no proprietary encryption -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+
+	<!-- Camera & photo library — required by @capacitor/camera -->
+	<key>NSCameraUsageDescription</key>
+	<string>PaMarket needs camera access to take photos for your listings and profile.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>PaMarket needs access to your photo library to upload photos for listings and your profile.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>PaMarket needs permission to save photos to your library.</string>
+
+	<!-- Microphone — declared by camera plugin; not used but required by iOS -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>PaMarket may access the microphone when recording video for listings.</string>
+
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+
+	<!-- Require iPhone; armv7 removed — all current devices are arm64 -->
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+
+	<!-- Portrait-only, matching the PWA manifest orientation setting -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+</dict>
+</plist>

@@ -1,6 +1,5 @@
 ﻿node_modules/
 .claude/
-ios/
 
 # Android: track the native project source, ignore generated build artifacts
 android/.gradle/
@@ -49,3 +48,16 @@ website/_*.png
 website/_*.js
 website/_*.css
 website/_*.json
+
+# iOS: track the native project source, ignore generated build artifacts
+ios/App/build/
+ios/App/Pods/
+ios/App/output/
+ios/App/.build/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/App/config.xml
+ios/DerivedData/
+ios/xcuserdata/
+ios/**/*.xcuserstate
+ios/capacitor-cordova-ios-plugins/

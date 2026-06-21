@@ -3,12 +3,20 @@
   "appName": "PaMarket",
   "webDir": "www",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "iosScheme": "https"
   },
   "android": {
     "allowMixedContent": false,
     "captureInput": false,
     "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "contentInset": "always",
+    "allowsLinkPreview": false,
+    "scrollEnabled": false,
+    "backgroundColor": "#1A3A8F",
+    "limitsNavigationsToAppBoundDomains": false
   },
   "plugins": {
     "SplashScreen": {
@@ -18,11 +26,14 @@
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,
       "splashFullScreen": true,
-      "splashImmersive": true
+      "splashImmersive": true,
+      "iosSpinnerStyle": "small",
+      "spinnerColor": "#FFFFFF"
     },
     "StatusBar": {
       "style": "LIGHT",
-      "backgroundColor": "#1A3A8F"
+      "backgroundColor": "#1A3A8F",
+      "overlaysWebView": false
     },
     "Keyboard": {
       "resize": "body",
@@ -35,7 +46,8 @@
     "SocialLogin": {
       "google": {
         "webClientId": "422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com"
-      }
+      },
+      "apple": {}
     }
   }
 }
