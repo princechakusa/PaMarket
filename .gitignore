@@ -43,6 +43,8 @@ keystore.properties
 # Throwaway design mockups / preview screenshots
 preview/
 .pw-browsers/
-website/_mockup_*.html
-website/_mockup_*.png
-website/_shot.js
+# website redesign preview artifacts (underscore-prefixed = throwaway tooling)
+website/_*.html
+website/_*.png
+website/_*.js
+website/_*.css
