@@ -997,6 +997,10 @@ window.H = {
   _initPullToRefresh() {
     const el = document.getElementById('mainArea');
     if (!el) return;
+    // Only set up once — #mainArea persists for the app lifetime so listeners
+    // don't need to be re-registered on every renderPage call.
+    if (el._ptrReady) return;
+    el._ptrReady = true;
     if (el._ptrCleanup) el._ptrCleanup();
 
     // Stop the native browser PTR from firing inside the WebView
