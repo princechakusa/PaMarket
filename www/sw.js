@@ -1,4 +1,4 @@
-const CACHE = 'pamarket-v207';
+const CACHE = 'pamarket-v208';
 
 // Never cache these — auth tokens, API data, realtime
 const NO_CACHE = [
@@ -48,7 +48,33 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Stale-while-revalidate: serve cached version immediately, update cache in background.
+  // Network-first for the app shell (the HTML document). iOS "Add to Home Screen"
+  // PWAs otherwise keep serving a stale cached index.html forever, so new code
+  // (and the JS version bumps it references) never loads and the app looks like
+  // it "doesn't refresh". Always pull a fresh index.html when online; fall back
+  // to the cached copy (then offline.html) only when the network is unavailable.
+  const isDocument = event.request.mode === 'navigate' ||
+    (event.request.destination === 'document') ||
+    url.endsWith('/') || url.endsWith('/index.html');
+
+  if (isDocument) {
+    event.respondWith(
+      fetch(event.request).then(response => {
+        if (response && response.status === 200) {
+          const copy = response.clone();
+          caches.open(CACHE).then(cache => cache.put(event.request, copy));
+        }
+        return response;
+      }).catch(() =>
+        caches.match(event.request).then(cached => cached || caches.match('./index.html') || caches.match('./offline.html'))
+      )
+    );
+    return;
+  }
+
+  // Everything else (versioned JS/CSS, images): stale-while-revalidate. These
+  // carry ?v= cache-busting query strings, so a fresh index.html referencing a
+  // new version is a new URL that misses the cache and is fetched from network.
   event.respondWith(
     caches.open(CACHE).then(cache =>
       cache.match(event.request).then(cached => {
@@ -57,11 +83,7 @@ self.addEventListener('fetch', event => {
             cache.put(event.request, response.clone());
           }
           return response;
-        }).catch(() => cached || (
-          event.request.mode === 'navigate'
-            ? caches.match('./offline.html')
-            : new Response('Offline', { status: 503 })
-        ));
+        }).catch(() => cached || new Response('Offline', { status: 503 }));
         return cached || networkFetch;
       })
     )
