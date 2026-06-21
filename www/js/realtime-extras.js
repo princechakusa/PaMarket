@@ -235,9 +235,9 @@
     var time = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
     if (d.toDateString() === nd.toDateString()) return 'Last seen today at ' + time;
     var y = new Date(now); y.setDate(nd.getDate() - 1);
-    if (d.toDateString() === y.toDateString()) return 'Last seen yesterday';
-    if (diff < 7 * 86400000) return 'Last seen ' + d.toLocaleDateString(undefined, { weekday: 'long' });
-    return 'Last seen ' + d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    if (d.toDateString() === y.toDateString()) return 'Last seen yesterday at ' + time;
+    if (diff < 7 * 86400000) return 'Last seen ' + d.toLocaleDateString(undefined, { weekday: 'long' }) + ' at ' + time;
+    return 'Last seen ' + d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' at ' + time;
   };
 
   // ===================================================================
