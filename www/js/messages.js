@@ -1359,7 +1359,7 @@
 
   H.startChatPolling = function(convId) {
     if (window._chatPoll) clearInterval(window._chatPoll);
-    window._chatPoll = setInterval(async function() {
+    var _chatPollFn = async function() {
       if (H.currentPageName !== 'Chat' || H._activeChat !== convId) {
         clearInterval(window._chatPoll);
         return;
@@ -1404,7 +1404,11 @@
       if (typeof H._refreshReceipts === 'function') H._refreshReceipts(convId);
       H.saveState();
       if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
-    }, 4000);
+    };
+    // Run once immediately so messages that arrived since last sync show right away,
+    // then continue polling every 4s.
+    _chatPollFn();
+    window._chatPoll = setInterval(_chatPollFn, 4000);
   };
 
   H._appendChatMessages = function (convId, msgs) {
