@@ -155,9 +155,9 @@
               }
             }
             return '<div onclick="H.openBusinessShop && H.openBusinessShop(\'' + escHtml(String(b.id)) + '\')" '
-              + 'style="flex-shrink:0;width:calc(100vw - 76px);max-width:305px;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:8px;padding:12px 13px;display:flex;align-items:center;gap:12px;cursor:pointer">'
-              // Square logo
-              + '<div style="width:54px;height:54px;border-radius:6px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#1A3A8F,#2245b8);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;border:1px solid rgba(0,0,0,0.07)">'
+              + 'style="flex-shrink:0;width:calc(100vw - 44px);max-width:340px;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:8px;padding:14px;display:flex;align-items:center;gap:13px;cursor:pointer">'
+              // Circle logo
+              + '<div style="width:56px;height:56px;border-radius:50%;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#1A3A8F,#2245b8);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px rgba(26,58,143,0.18)">'
               + (b.logo ? '<img src="' + escHtml(b.logo) + '" style="width:100%;height:100%;object-fit:cover">' : escHtml(ini))
               + '</div>'
               // Info
