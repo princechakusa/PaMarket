@@ -1990,85 +1990,6 @@ window.H = {
     };
   },
 
-  _registerJobPage() {
-    H.pages.PostJob=function(){
-      const u=H.currentUser();
-      if(!u) return '<div class="page active">'+H.innerTopbar('Post a Job')+H.emptyState('Sign in required','Please sign in to post jobs',null,null)+'</div>';
-      return '<div class="page active">'+H.innerTopbar('Post a Job')
-        +'<div class="form-wrap" style="padding-bottom:40px">'
-        +'<div style="background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:16px;padding:20px;margin-bottom:20px;color:#fff"><div style="font-size:18px;font-weight:800;margin-bottom:4px">Post a Job Opening</div><div style="font-size:13px;opacity:.85">Jobs are reviewed by admin within 24hrs before going live</div></div>'
-        +'<div class="fg"><div class="fl">Company Name <span style="color:red">*</span></div><input class="fi" id="jCompany" placeholder="e.g. TechZim Solutions"></div>'
-        +'<div class="fg"><div class="fl">Job Title <span style="color:red">*</span></div><input class="fi" id="jTitle" placeholder="e.g. Software Developer"></div>'
-        +'<div class="fg"><div class="fl">Job Type <span style="color:red">*</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'
-        +['Full Time','Part Time','Contract','Freelance','Internship','Volunteer'].map(t=>{
-          const tid='jt_'+t.replace(' ','_');
-          return '<button class="filter-opt" id="'+tid+'" onclick="H._selectJobType(this)" data-type="'+t+'" style="padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--card);font-size:13px;font-weight:600;cursor:pointer">'+t+'</button>';
-        }).join('')
-        +'</div></div>'
-        +'<div class="fg"><div class="fl">Industry <span style="color:red">*</span></div><select class="fi" id="jIndustry"><option value="">Select industry...</option>'
-        +['IT & Technology','Finance & Banking','Healthcare','Education','Construction','Hospitality & Tourism','Sales & Marketing','Admin & Office','Agriculture','Transport & Logistics','Manufacturing','Media & Communications','Legal','NGO & Non-profit','Other'].map(i=>'<option>'+i+'</option>').join('')
-        +'</select></div>'
-        +'<div class="fg"><div class="fl">Location <span style="color:red">*</span></div><select class="fi" id="jProv">'+H.PROVINCES.map(p=>'<option>'+p+'</option>').join('')+'</select></div>'
-        +'<div class="fg"><div class="fl">Salary</div><div style="display:flex;gap:8px"><input class="fi" id="jSalaryMin" type="number" placeholder="Min (USD)" style="flex:1"><input class="fi" id="jSalaryMax" type="number" placeholder="Max (USD)" style="flex:1"></div><label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px"><input type="checkbox" id="jNegotiable" onchange="H._toggleNegotiable(this)"> Negotiable</label></div>'
-        +'<div class="fg"><div class="fl">Job Description <span style="color:red">*</span></div><textarea class="fi" rows="5" id="jDesc" placeholder="Describe the role..."></textarea></div>'
-        +'<div class="fg"><div class="fl">Requirements <span style="color:red">*</span></div><textarea class="fi" rows="4" id="jReqs" placeholder="Qualifications required..."></textarea></div>'
-        +'<div class="fg"><div class="fl">Deadline</div><input class="fi" id="jDeadline" type="date"></div>'
-        +'<div class="fg"><div class="fl">How to Apply</div><select class="fi" id="jApplyType" onchange="H._toggleApplyFields()"><option value="email">Via Email</option><option value="whatsapp">Via WhatsApp</option><option value="both">Both</option></select></div>'
-        +'<div class="fg" id="jEmailWrap"><div class="fl">Contact Email</div><input class="fi" id="jEmail" type="email" value="'+H.escHtml(u.email||'')+'"></div>'
-        +'<div class="fg" id="jPhoneWrap" style="display:none"><div class="fl">WhatsApp Number</div><input class="fi" id="jPhone" type="tel" value="'+H.escHtml(u.phone||'')+'"></div>'
-        +'<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:12px;padding:14px;margin:16px 0;font-size:13px;color:#856404;display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Fraudulent job postings will result in a permanent ban.</div>'
-        +'<button onclick="H._submitJob()" style="width:100%;padding:15px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">Submit for Review</button>'
-        +'</div></div>';
-    };
-
-    H._selectedJobType='';
-    H._selectJobType=function(el){
-      const type=el.dataset?el.dataset.type:el; H._selectedJobType=type;
-      document.querySelectorAll('[id^="jt_"]').forEach(b=>{b.style.background='var(--card)';b.style.color='var(--text)';b.style.borderColor='var(--border)';});
-      const btn=typeof el==='string'?document.getElementById('jt_'+type.replace(' ','_')):el;
-      if(btn){btn.style.background='#1A3A8F';btn.style.color='#fff';btn.style.borderColor='#1A3A8F';}
-    };
-    H._toggleNegotiable=function(cb){document.getElementById('jSalaryMin').disabled=cb.checked;document.getElementById('jSalaryMax').disabled=cb.checked;};
-    H._toggleApplyFields=function(){
-      const t=document.getElementById('jApplyType').value;
-      document.getElementById('jEmailWrap').style.display=t==='whatsapp'?'none':'';
-      document.getElementById('jPhoneWrap').style.display=t==='email'?'none':'';
-    };
-    H._submitJob=function(){
-      const u=H.currentUser(); if(!u){H.requireAuth('Sign in to post jobs');return;}
-      const company=(document.getElementById('jCompany').value||'').trim();
-      const title=(document.getElementById('jTitle').value||'').trim();
-      const type=H._selectedJobType;
-      const industry=(document.getElementById('jIndustry').value||'').trim();
-      const prov=(document.getElementById('jProv').value||'').trim();
-      const salMin=(document.getElementById('jSalaryMin').value||'').trim();
-      const salMax=(document.getElementById('jSalaryMax').value||'').trim();
-      const negotiable=document.getElementById('jNegotiable').checked;
-      const desc=(document.getElementById('jDesc').value||'').trim();
-      const reqs=(document.getElementById('jReqs').value||'').trim();
-      const deadline=(document.getElementById('jDeadline').value||'').trim();
-      const applyType=document.getElementById('jApplyType').value;
-      const email=(document.getElementById('jEmail').value||'').trim();
-      const phone=(document.getElementById('jPhone').value||'').trim();
-      if(!company){H.toast('Company name required');return;}
-      if(!title){H.toast('Job title required');return;}
-      if(!type){H.toast('Select job type');return;}
-      if(!industry){H.toast('Select an industry');return;}
-      if(!desc){H.toast('Job description required');return;}
-      if(!reqs){H.toast('Requirements required');return;}
-      if(applyType!=='whatsapp'&&!email){H.toast('Contact email required');return;}
-      if(applyType!=='email'&&!phone){H.toast('WhatsApp number required');return;}
-      const salary=negotiable?'Negotiable':(salMin&&salMax?'USD '+salMin+' - '+salMax:salMin?'From USD '+salMin:'Not disclosed');
-      const fullDesc='COMPANY: '+company+'\nJOB TYPE: '+type+'\nINDUSTRY: '+industry+'\nSALARY: '+salary+(deadline?'\nDEADLINE: '+deadline:'')+'\n\nDESCRIPTION:\n'+desc+'\n\nREQUIREMENTS:\n'+reqs+'\n\nHOW TO APPLY:'+(applyType!=='whatsapp'?'\nEmail: '+email:'')+(applyType!=='email'?'\nWhatsApp: '+phone:'');
-      const job={id:H.uid(),sellerId:u.id,sellerName:company,sellerPhone:phone||u.phone||'',title,desc:fullDesc,price:negotiable?0:(parseInt(salMin)||0),currency:'USD',cat:'jobs',prov,city:prov,suburb:company,photos:[],createdAt:Date.now(),status:'pending',boost:null,views:0};
-      H.state.listings.unshift(job);
-      H.saveState();
-      if(typeof H.saveListingToCloud==='function') H.saveListingToCloud(job);
-      H.toast('Job submitted for review!');
-      H.goBack();
-    };
-  },
-
   showAccountMenu(btn) {
     const u=this.currentUser();
     const sheet=document.getElementById('actionSheet');
@@ -2400,7 +2321,6 @@ window.H = {
       });
     })();
     this._registerCategoryView();
-    this._registerJobPage();
     this._registerExtraPages();
     setTimeout(()=>{},800);
 

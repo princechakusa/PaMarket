@@ -262,14 +262,27 @@
   })();
 
   // Refresh data after the app returns to the foreground.
+  // RM (refresh-manager.js) handles re-fetching and re-rendering all RM-managed
+  // pages (Home, Browse, categories, Notifications, etc.) via its own
+  // appStateChange + visibilitychange listeners. Here we handle:
+  //   • presence / last-seen housekeeping
+  //   • user-specific data (conversations, notifications) that RM doesn't own
+  //   • immediate kick for Messages / Chat, which use their own polls outside RM
   function onForeground() {
     H.initPresence(); H.initReadReceipts();
     H.touchLastSeen(true);
-    // Re-fetch stale data silently; small delay lets the network settle.
-    // Avoid H.renderPage here — a full re-render causes a visible flicker every
-    // time the user switches back to the app. Existing polls handle UI updates.
+    // Small delay so the network re-establishes after an app switch.
     setTimeout(function () {
-      if (typeof H.fetchListingsFromSupabase === 'function') H.fetchListingsFromSupabase().catch(function () {});
+      var pg = H.currentPageName;
+      // Messages page: kick its own poll immediately instead of waiting up to 5 s.
+      if (pg === 'Messages' && typeof H._refreshMessagesPage === 'function') {
+        H._refreshMessagesPage();
+      // Chat page: restart the poll so new messages appear instantly.
+      } else if (pg === 'Chat' && H._activeChat && typeof H.startChatPolling === 'function') {
+        H.startChatPolling(H._activeChat);
+      }
+      // Sync user-specific cloud data (conversations + notifications) for badge
+      // counts and so the next poll cycle starts from a fresh baseline.
       if (me() && typeof H.syncConversations === 'function') H.syncConversations().catch(function () {});
       if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
     }, 800);

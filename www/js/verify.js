@@ -284,11 +284,11 @@
         } catch (e) {
           const m = ((e && e.message) || '').toLowerCase();
           if (m.includes('cancel') || m.includes('denied')) return;
-          openInner('SelfieCam'); // fall back to the in-app camera
+          H.openInner('SelfieCam'); // fall back to the in-app camera
         }
         return;
       }
-      openInner('SelfieCam');
+      H.openInner('SelfieCam');
     },
 
     onIdUpload(e) {
