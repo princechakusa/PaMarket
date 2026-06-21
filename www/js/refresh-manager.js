@@ -82,8 +82,12 @@
         return l ? l.id + '|' + l.status + '|' + l.price : '';
       }
     },
-    Messages:      { interval: 10000,  fetch: function () { return typeof H.syncConversations  === 'function' ? H.syncConversations().catch(function () {})  : Promise.resolve(); }, sig: _sigConvs  },
-    Chat:          { interval: 5000,   fetch: function () { return typeof H.syncConversations  === 'function' ? H.syncConversations().catch(function () {})  : Promise.resolve(); }, sig: _sigConvs  },
+    // NOTE: Messages and Chat are intentionally NOT managed by H.RM. They have
+    // their own realtime subscription (_setupRealtimeMessages) plus a dedicated
+    // poll (_messagesPoll) and incremental appender (_appendChatMessages) that
+    // adds new messages without rebuilding the thread, so the chat stays pinned
+    // to the latest message. A full RM re-render here would reset the scroll
+    // position back to the oldest messages on every poll.
     Notifications: { interval: 20000,  fetch: function () { return typeof H.syncNotifications  === 'function' ? H.syncNotifications().catch(function () {})  : Promise.resolve(); }, sig: _sigNotifs },
     BusinessShop:    { interval: 30000,  fetch: function () { return Promise.all([_fetchListings(), _fetchBiz()]); }, sig: function () { return _sigListings() + '|' + _sigBiz(); } },
     BusinessSearch:  { interval: 60000,  fetch: _fetchBiz, sig: _sigBiz },
