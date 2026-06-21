@@ -1404,11 +1404,12 @@ window.H = {
               const localMsg = {id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,image:msg.image||null,t:new Date(msg.created_at).getTime(),read:false};
               conv.messages.push(localMsg);
               H.saveState();
+              // Update bottom nav badge immediately without waiting for the 5 s interval
+              if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
               if(H.currentPageName==='Chat'&&H.currentPageParams&&H.currentPageParams.id===msg.conversation_id&&typeof H._appendChatMessages==='function')
                 H._appendChatMessages(msg.conversation_id,[localMsg]);
               else if(H.currentPageName==='Messages'&&typeof H._refreshMessagesPage==='function')
                 H._refreshMessagesPage({ skipSync:true });
-              H.pushNotif&&H.pushNotif(H.state.currentUserId,'New message',(H._msgPreview?H._msgPreview({text:msg.text}):msg.text)||'','message',null,'Chat?id='+msg.conversation_id);
             }
           } else {
             // Message for a conversation we don't hold — possibly one the user
