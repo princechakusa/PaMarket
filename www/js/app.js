@@ -881,17 +881,18 @@ window.H = {
     if(!area) return;
     const res=fn(params||{});
     if(res instanceof Promise) {
-      area.style.opacity='0';
+      // Do NOT blank the page while awaiting — keep the current page visible
+      // until the new HTML is ready, then swap instantly. Blanking via opacity:0
+      // here caused a full-screen white flash on every async navigation.
       const html=await res;
       if(this.currentPageName!==name) return;
       area.innerHTML=html;
       area.scrollTop=scrollTo;
-      requestAnimationFrame(()=>{ area.style.opacity='1'; });
     } else {
       area.innerHTML=res;
       area.scrollTop=scrollTo;
-      if(area.style.opacity!=='1') area.style.opacity='1';
     }
+    if(area.style.opacity!=='1') area.style.opacity='1';
     if(this.pages[name+'_after']) this.pages[name+'_after'](params||{});
     this._initPullToRefresh();
   },
