@@ -259,38 +259,26 @@
     }, 300);
   };
 
+  function _refreshHomeData(onlyIfChanged) {
+    const _fetches = [];
+    if (typeof H.fetchAllActiveBusinesses === 'function') _fetches.push(H.fetchAllActiveBusinesses().catch(function(){}));
+    if (typeof H.fetchListingsFromSupabase === 'function') _fetches.push(H.fetchListingsFromSupabase().catch(function(){}));
+    if (!_fetches.length) return;
+    Promise.all(_fetches).then(function () {
+      if (H.currentPageName === 'Home') H.renderPage('Home');
+    });
+  }
+
   H.pages.Home_after = function () {
     if (H._initAdCarousels) H._initAdCarousels();
     if (typeof H.maybeShowNotifBanner === 'function') H.maybeShowNotifBanner();
     if (typeof H.maybeShowRatingPrompt === 'function') H.maybeShowRatingPrompt();
-    if (typeof H.fetchAllActiveBusinesses === 'function') {
-      const bizBefore = (H.state.businesses || []).filter(function(b) { return b.status === 'active'; }).length;
-      H.fetchAllActiveBusinesses().then(function () {
-        if (H.currentPageName !== 'Home') return;
-        const bizAfter = (H.state.businesses || []).filter(function(b) { return b.status === 'active'; }).length;
-        if (bizAfter !== bizBefore) H.renderPage('Home');
-      }).catch(function () {});
-    }
-    if (typeof H.fetchListingsFromSupabase === 'function') {
-      H.fetchListingsFromSupabase().then(function () {
-        if (H.currentPageName !== 'Home') return;
-        H.renderPage('Home');
-      }).catch(function () {});
-    }
+    _refreshHomeData();
     // Auto-refresh when app returns to foreground — no manual pull needed
     if (_homeVisListener) document.removeEventListener('visibilitychange', _homeVisListener);
     _homeVisListener = function () {
       if (document.hidden || H.currentPageName !== 'Home') return;
-      if (typeof H.fetchAllActiveBusinesses === 'function') {
-        H.fetchAllActiveBusinesses().then(function () {
-          if (H.currentPageName === 'Home') H.renderPage('Home');
-        }).catch(function () {});
-      }
-      if (typeof H.fetchListingsFromSupabase === 'function') {
-        H.fetchListingsFromSupabase().then(function () {
-          if (H.currentPageName === 'Home') H.renderPage('Home');
-        }).catch(function () {});
-      }
+      _refreshHomeData();
     };
     document.addEventListener('visibilitychange', _homeVisListener);
   };
