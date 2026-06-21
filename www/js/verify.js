@@ -471,7 +471,7 @@
 
     return `<div class="page active">${innerTopbar(isIndividual ? 'Individual Verification' : 'Company Verification')}
       <div class="inner-content">
-        <button onclick="H._companyVerify.setType(null)" style="background:none;border:none;color:#1A3A8F;font-size:13px;font-weight:600;cursor:pointer;padding:0;margin-bottom:14px">&#8592; Change type</button>
+        <button onclick="H._companyVerify.setType(null)" style="display:inline-flex;align-items:center;gap:6px;background:#EEF2FF;border:1.5px solid #1A3A8F;color:#1A3A8F;font-size:14px;font-weight:700;cursor:pointer;padding:8px 16px;border-radius:8px;margin-bottom:16px">&#8592; Change type</button>
         <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:16px">${subtitle}</div>
         <div class="fg" style="margin-bottom:18px">
           <div class="fl">${nameLabel}</div>

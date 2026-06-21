@@ -510,20 +510,20 @@
       const content = m.image
         ? '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">'
         : (replyQuoteHtml(m) + escHtml(msgText(m)));
-      // In a business-branded chat (buyer view), buyer msgs go LEFT, shop msgs go RIGHT
+      // Business-branded chat: buyer messages go RIGHT (me), shop replies go LEFT (them)
       if (showBizBrand) {
         if (mine) {
-          return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
-            + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
+          return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
+            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
             + content
-            + '<div class="chat-bubble-meta">Sent to ' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
+            + '<div class="chat-bubble-meta" style="text-align:right">Sent to ' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
             + '</div></div>';
         }
-        return sep + '<div class="chat-msg-row" style="justify-content:flex-end" data-msg-id="' + escHtml(m.id) + '">'
+        return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-row-av">' + otherAvatar + '</div>'
-          + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
+          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
           + content
-          + '<div class="chat-bubble-meta" style="text-align:right">' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
+          + '<div class="chat-bubble-meta">' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
           + '</div></div>';
       }
       if (mine) {
