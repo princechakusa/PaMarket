@@ -3,628 +3,127 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>About PaMarket — Built by Zimbabweans, for Zimbabwe</title>
-<meta name="description" content="Learn about PaMarket, founded in 2026 with a mission to make buying and selling in Zimbabwe free and accessible to all.">
-<meta property="og:title" content="About PaMarket — Zimbabwe's Free Marketplace">
-<meta property="og:description" content="Founded in 2026. Our mission: Make commerce accessible to every Zimbabwean, free of charge.">
+<meta name="description" content="About PaMarket, Zimbabwe's free marketplace. Buy, sell, hire and grow your business across all ten provinces. App version 1.5.0.">
+<title>About PaMarket</title>
 <link rel="icon" href="img/icon-192.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --navy:#1A3A8F;--dark:#0f2460;--mid:#2550C0;--light:#EEF2FF;
-  --accent:#F5A623;--accent-dark:#D4891A;
-  --bg:#F5F7FA;--text:#1A1A2E;--sub:#667085;--border:#E4E8F0;
-  --success:#10b981;--danger:#ef4444;
-  --r8:8px;--r12:12px;--r16:16px;--rpill:999px;
-  --s1:0 1px 4px rgba(0,0,0,.06);--s2:0 4px 16px rgba(0,0,0,.08);--s3:0 8px 32px rgba(0,0,0,.12);
-  --f:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-}
-body{font-family:var(--f);background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
-a{text-decoration:none;color:inherit}
-img{display:block;max-width:100%}
-button{cursor:pointer;font-family:var(--f);border:none;background:none}
-.container{max-width:1280px;margin:0 auto;padding:0 24px}
-@media(max-width:768px){.container{padding:0 16px}}
-
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 22px;border-radius:var(--r8);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;border:none;text-decoration:none;white-space:nowrap;line-height:1}
-.btn-primary{background:var(--navy);color:#fff}.btn-primary:hover{background:var(--mid);transform:translateY(-1px)}
-.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:var(--accent-dark);transform:translateY(-1px)}
-.btn-outline{background:#fff;color:var(--navy);border:2px solid var(--navy)}.btn-outline:hover{background:var(--light)}
-.btn-outline-white{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.7)}.btn-outline-white:hover{background:rgba(255,255,255,.12);border-color:#fff}
-.btn-sm{padding:8px 16px;font-size:13px}
-.btn-lg{padding:14px 32px;font-size:16px}
-
-/* HEADER */
-#site-header{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--border);box-shadow:var(--s1)}
-.hdr{display:flex;align-items:center;gap:16px;height:68px;padding:0 24px;max-width:1280px;margin:0 auto}
-.logo{font-size:26px;font-weight:900;color:var(--navy);letter-spacing:-.5px;text-decoration:none}
-.logo span{color:var(--accent)}
-.hdr-nav{display:flex;gap:2px;margin-left:4px}
-.nav-a{padding:8px 13px;font-size:14px;font-weight:600;color:var(--sub);border-radius:var(--r8);transition:all .2s;text-decoration:none;white-space:nowrap}
-.nav-a:hover,.nav-a.active{color:var(--navy);background:var(--light)}
-.hdr-actions{display:flex;gap:10px;flex-shrink:0;margin-left:auto}
-.hamburger{display:none;padding:4px;color:var(--text);align-items:center;justify-content:center}
-.mob-nav{display:none;position:absolute;top:68px;left:0;right:0;background:#fff;border-bottom:1px solid var(--border);padding:12px 20px 16px;box-shadow:var(--s2);z-index:999;flex-direction:column;gap:2px}
-.mob-nav.open{display:flex}
-.mob-nav a{padding:11px 14px;font-size:15px;font-weight:600;color:var(--text);border-radius:var(--r8);display:block}
-.mob-nav a:hover{background:var(--bg)}
-.mob-nav-btns{display:flex;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
-.mob-nav-btns .btn{flex:1;justify-content:center}
-@media(max-width:900px){.hdr-nav{display:none}}
-@media(max-width:600px){.hamburger{display:flex}.hdr-actions{display:none}}
-
-/* REVEAL */
-.reveal{opacity:0;transform:translateY(28px);transition:opacity .6s ease,transform .6s ease}
-.reveal.in{opacity:1;transform:none}
-
-/* HERO */
-.hero{
-  background:linear-gradient(135deg,var(--dark) 0%,var(--navy) 55%,#1e4fd8 100%);
-  padding:88px 24px 100px;
-  text-align:center;
-  position:relative;
-  overflow:hidden;
-}
-.hero::before{
-  content:'';
-  position:absolute;
-  inset:0;
-  background-image:
-    repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,.025) 40px,rgba(255,255,255,.025) 41px),
-    repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(255,255,255,.025) 40px,rgba(255,255,255,.025) 41px);
-  pointer-events:none;
-}
-.hero::after{content:'';position:absolute;top:-80px;right:-80px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,.14) 0%,transparent 70%);pointer-events:none}
-.hero-inner{position:relative;z-index:1;max-width:680px;margin:0 auto}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:var(--rpill);padding:6px 16px;font-size:12px;font-weight:700;color:rgba(255,255,255,.9);letter-spacing:.8px;text-transform:uppercase;backdrop-filter:blur(8px);margin-bottom:20px}
-.hero-badge-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
-.hero h1{font-size:clamp(32px,5vw,58px);font-weight:900;color:#fff;letter-spacing:-1.5px;margin-bottom:16px;line-height:1.08}
-.hero p{font-size:clamp(15px,2vw,19px);color:rgba(255,255,255,.82);line-height:1.7;max-width:560px;margin:0 auto}
-
-/* SECTION */
-.section{padding:80px 0}
-@media(max-width:768px){.section{padding:52px 0}}
-.sec-eyebrow{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
-.sec-title{font-size:clamp(24px,3.5vw,38px);font-weight:900;color:var(--text);letter-spacing:-.5px;margin-bottom:10px}
-.sec-bar{width:48px;height:4px;background:var(--accent);border-radius:2px;margin:0 0 20px}
-.sec-title-c{text-align:center}
-.sec-eyebrow-c{text-align:center}
-.sec-bar-c{margin:0 auto 20px}
-.sec-sub-c{text-align:center;max-width:520px;margin:0 auto 52px;font-size:16px;color:var(--sub);line-height:1.7}
-
-/* STORY */
-.story-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
-@media(max-width:768px){.story-grid{grid-template-columns:1fr;gap:36px}}
-.story-text p{font-size:16px;line-height:1.9;color:#374151;margin-bottom:22px}
-.story-text p:last-child{margin-bottom:0}
-.stats-card{background:var(--navy);border-radius:var(--r16);padding:40px 36px;position:sticky;top:96px}
-@media(max-width:768px){.stats-card{position:static}}
-.stats-card-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.7px;margin-bottom:28px}
-.stats-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.sc-stat{text-align:center;padding:16px;background:rgba(255,255,255,.07);border-radius:var(--r12);border:1px solid rgba(255,255,255,.09)}
-.sc-num{font-size:32px;font-weight:900;color:var(--accent);line-height:1;margin-bottom:6px}
-.sc-lbl{font-size:13px;color:rgba(255,255,255,.7);font-weight:500}
-
-/* MISSION */
-.mission-bg{background:var(--light)}
-.mission-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-@media(max-width:768px){.mission-grid{grid-template-columns:1fr;gap:16px}}
-.mission-card{background:#fff;border-radius:var(--r16);padding:36px 28px;border:1.5px solid var(--border);text-align:center;box-shadow:var(--s1);transition:all .25s}
-.mission-card:hover{transform:translateY(-4px);box-shadow:var(--s3);border-color:var(--navy)}
-.mission-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
-.mission-card h3{font-size:20px;font-weight:900;color:var(--text);margin-bottom:12px}
-.mission-card p{font-size:14px;color:var(--sub);line-height:1.75}
-.mission-tag{display:inline-block;font-size:11px;font-weight:700;color:var(--navy);background:var(--light);border:1px solid rgba(26,58,143,.2);border-radius:var(--rpill);padding:3px 10px;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
-
-/* FOUNDER */
-.founder-bg{background:linear-gradient(135deg,#f8faff 0%,var(--light) 100%);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-.founder-grid{display:grid;grid-template-columns:400px 1fr;gap:72px;align-items:center}
-@media(max-width:900px){.founder-grid{grid-template-columns:1fr;gap:40px;text-align:center}}
-.founder-photo-wrap{position:relative}
-.founder-photo{width:100%;max-width:360px;aspect-ratio:3/4;border-radius:24px;object-fit:cover;object-position:top center;box-shadow:0 24px 72px rgba(26,58,143,.2),0 0 0 6px #fff,0 0 0 10px rgba(26,58,143,.1)}
-@media(max-width:900px){.founder-photo{max-width:260px;aspect-ratio:1/1;border-radius:50%;margin:0 auto}}
-.founder-photo-badge{position:absolute;bottom:20px;right:-20px;background:#fff;border-radius:var(--r12);padding:14px 18px;box-shadow:var(--s3);border:1px solid var(--border)}
-@media(max-width:900px){.founder-photo-badge{position:static;margin:20px auto 0;display:inline-block;border-radius:var(--rpill);padding:10px 20px}}
-.founder-badge-name{font-size:14px;font-weight:800;color:var(--text)}
-.founder-badge-title{font-size:12px;color:var(--sub)}
-.founder-eyebrow{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
-.founder-name{font-size:clamp(28px,4vw,44px);font-weight:900;color:var(--text);letter-spacing:-.5px;margin-bottom:8px}
-.founder-title-lbl{font-size:16px;color:var(--sub);margin-bottom:28px;font-weight:500}
-.founder-bio{font-size:15px;color:var(--sub);line-height:1.8;margin-bottom:24px}
-.founder-quote{font-size:clamp(15px,2vw,18px);color:var(--text);line-height:1.75;font-style:italic;border-left:4px solid var(--accent);padding:4px 0 4px 22px;margin-bottom:28px}
-@media(max-width:900px){.founder-quote{border-left:none;border-top:3px solid var(--accent);padding:16px 0 0;margin-bottom:24px}}
-.founder-socials{display:flex;gap:12px;flex-wrap:wrap}
-@media(max-width:900px){.founder-socials{justify-content:center}}
-.founder-social{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:var(--rpill);font-size:13px;font-weight:700;border:1.5px solid var(--border);color:var(--text);transition:all .2s}
-.founder-social:hover{border-color:var(--navy);color:var(--navy);background:var(--light)}
-
-/* TIMELINE */
-.timeline{position:relative;max-width:760px;margin:0 auto}
-.timeline::before{content:'';position:absolute;top:0;bottom:0;left:24px;width:2px;background:linear-gradient(to bottom,var(--navy),var(--accent));border-radius:2px}
-@media(max-width:600px){.timeline::before{left:18px}}
-.tl-item{display:flex;gap:28px;margin-bottom:36px;position:relative}
-.tl-item:last-child{margin-bottom:0}
-.tl-dot-wrap{flex-shrink:0;width:50px;display:flex;flex-direction:column;align-items:center}
-.tl-dot{width:18px;height:18px;border-radius:50%;background:var(--navy);border:3px solid #fff;box-shadow:0 0 0 3px var(--navy);flex-shrink:0;margin-top:4px;z-index:1}
-.tl-dot.future{background:var(--accent);box-shadow:0 0 0 3px var(--accent)}
-.tl-body{flex:1;background:#fff;border-radius:var(--r12);padding:20px 24px;border:1.5px solid var(--border);box-shadow:var(--s1);transition:all .25s}
-.tl-body:hover{border-color:var(--navy);box-shadow:var(--s2);transform:translateX(4px)}
-.tl-date{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
-.tl-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px}
-.tl-desc{font-size:14px;color:var(--sub);line-height:1.6}
-@media(max-width:600px){.tl-item{gap:16px}.tl-dot-wrap{width:38px}.tl-body{padding:14px 16px}}
-
-/* WHY */
-.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-@media(max-width:900px){.why-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:480px){.why-grid{grid-template-columns:1fr}}
-.why-card{background:#fff;border-radius:var(--r16);padding:32px 24px;border:1.5px solid var(--border);text-align:center;box-shadow:var(--s1);transition:all .25s}
-.why-card:hover{transform:translateY(-4px);box-shadow:var(--s3);border-color:var(--navy)}
-.why-icon{width:64px;height:64px;border-radius:50%;background:var(--light);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--navy);transition:all .25s}
-.why-card:hover .why-icon{background:var(--navy);color:#fff}
-.why-card h3{font-size:17px;font-weight:800;color:var(--text);margin-bottom:10px}
-.why-card p{font-size:14px;color:var(--sub);line-height:1.75}
-
-/* VALUES */
-.values-bg{background:var(--light)}
-.values-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-@media(max-width:768px){.values-grid{grid-template-columns:1fr;gap:16px}}
-.value-card{background:#fff;border-radius:var(--r16);padding:36px 32px;border:1.5px solid var(--border);box-shadow:var(--s1);transition:all .25s;position:relative;overflow:hidden}
-.value-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
-.value-card:nth-child(1)::before{background:var(--navy)}
-.value-card:nth-child(2)::before{background:var(--accent)}
-.value-card:nth-child(3)::before{background:var(--success)}
-.value-card:hover{transform:translateY(-4px);box-shadow:var(--s3)}
-.value-icon{width:56px;height:56px;border-radius:var(--r12);display:flex;align-items:center;justify-content:center;margin-bottom:20px;color:#fff}
-.value-card h3{font-size:22px;font-weight:900;color:var(--text);margin-bottom:14px}
-.value-card p{font-size:15px;color:var(--sub);line-height:1.8}
-
-/* CTA */
-.cta-bg{background:linear-gradient(135deg,var(--dark) 0%,var(--navy) 60%,#1e4fd8 100%);padding:88px 0;text-align:center;position:relative;overflow:hidden}
-.cta-bg::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,.02) 40px,rgba(255,255,255,.02) 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(255,255,255,.02) 40px,rgba(255,255,255,.02) 41px);pointer-events:none}
-.cta-inner{position:relative;z-index:1}
-.cta-inner h2{font-size:clamp(24px,3.5vw,40px);font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:12px}
-.cta-inner p{font-size:17px;color:rgba(255,255,255,.82);margin-bottom:32px;line-height:1.6;max-width:540px;margin-left:auto;margin-right:auto}
-.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-
-/* FOOTER */
-footer{background:var(--dark);color:rgba(255,255,255,.75);padding:56px 0 0}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.08)}
-@media(max-width:900px){.footer-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:500px){.footer-grid{grid-template-columns:1fr}}
-.footer-logo{font-size:26px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:14px;display:block}
-.footer-logo span{color:var(--accent)}
-.footer-brand p{font-size:14px;line-height:1.8;color:rgba(255,255,255,.6);max-width:260px;margin-bottom:22px}
-.social-links{display:flex;gap:10px;flex-wrap:wrap}
-.social-link{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);transition:all .2s}
-.social-link:hover{background:var(--accent);border-color:var(--accent);color:#fff;transform:translateY(-2px)}
-.footer-col h4{font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:18px}
-.footer-col a{display:block;font-size:14px;color:rgba(255,255,255,.6);margin-bottom:11px;transition:color .2s}
-.footer-col a:hover{color:#fff}
-.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding:20px 0;font-size:13px;color:rgba(255,255,255,.45)}
-@media(max-width:600px){.footer-bottom{flex-direction:column;gap:6px;text-align:center}}
-
-/* WHATSAPP */
-.wa-float{position:fixed;bottom:24px;right:24px;z-index:900;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-.wa-tooltip{background:var(--dark);color:#fff;padding:6px 14px;border-radius:var(--rpill);font-size:13px;font-weight:600;white-space:nowrap;opacity:0;transform:translateX(6px);transition:all .2s;pointer-events:none}
-.wa-float:hover .wa-tooltip{opacity:1;transform:translateX(0)}
-.wa-btn{width:56px;height:56px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,.45);transition:all .2s;color:#fff}
-.wa-btn:hover{transform:scale(1.08);box-shadow:0 8px 28px rgba(37,211,102,.55)}
-
-/* TOAST */
-#toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-.toast{background:var(--text);color:#fff;padding:12px 22px;border-radius:var(--rpill);font-size:14px;font-weight:500;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:auto;max-width:320px;text-align:center}
-.toast.show{opacity:1;transform:translateY(0)}
-.toast.success{background:var(--success)}
-.hidden{display:none!important}
+  .story-img{display:flex;justify-content:center}
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:42px;text-align:left}
+  .feat-card .ic{width:42px;height:42px;border-radius:11px;background:var(--navy-tint);color:var(--navy);display:flex;align-items:center;justify-content:center;margin-bottom:13px}
+  .feat-card:nth-child(3n) .ic{background:var(--gold-tint);color:#b27d22}
+  .feat-card h3{font-size:17px}.feat-card p{font-size:14px;color:var(--sub);margin-top:7px}
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:40px}
+  .stat-card{text-align:center}
+  .stat-card .n{font-size:30px;font-weight:680;color:var(--navy)}
+  .stat-card .l{font-size:13.5px;color:var(--sub);margin-top:4px}
+  @media(max-width:860px){.feat-grid{grid-template-columns:1fr}.stat-row{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header id="site-header" role="banner">
+<header id="site-header">
   <div class="hdr">
-    <a href="index.html" class="logo" aria-label="PaMarket Home">Pa<span>Market</span></a>
-    <nav class="hdr-nav" aria-label="Main navigation">
+    <a href="index.html" class="logo">Pa<span>Market</span></a>
+    <nav class="hdr-nav">
       <a href="browse.html" class="nav-a">Browse</a>
-      <a href="jobs.html" class="nav-a">Jobs</a>
-      <a href="services.html" class="nav-a">Services</a>
-      <a href="about.html" class="nav-a active" aria-current="page">About</a>
+      <a href="browse.html?shops=1" class="nav-a">Shops</a>
+      <a href="jobs.html" class="nav-a">Hire Talent</a>
       <a href="advertise.html" class="nav-a">Advertise</a>
+      <a href="about.html" class="nav-a active">About</a>
     </nav>
     <div class="hdr-actions">
-      <div id="headerAuth"></div>
-      <a href="post-ad.html" class="btn btn-accent btn-sm">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        Post Free Ad
-      </a>
+      <a href="post-ad.html" class="btn btn-accent btn-sm">Post Free Ad</a>
     </div>
-    <button class="hamburger" onclick="toggleMob()" aria-label="Toggle menu" aria-expanded="false">
+    <button class="hamburger" onclick="toggleMob()" aria-label="Toggle menu">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
     </button>
   </div>
-  <nav id="mobNav" class="mob-nav" aria-label="Mobile navigation">
-    <a href="index.html">Home</a>
-    <a href="browse.html">Browse All</a>
-    <a href="jobs.html">Jobs</a>
-    <a href="services.html">Services</a>
-    <a href="about.html">About</a>
-    <a href="advertise.html">Advertise</a>
-    <div class="mob-nav-btns">
-      <div id="mobileNavAuth"></div>
-      <a href="post-ad.html" class="btn btn-accent">Post Free Ad</a>
-    </div>
+  <nav id="mobNav" class="mob-nav">
+    <a href="index.html">Home</a><a href="browse.html">Browse All</a><a href="browse.html?shops=1">Shops</a>
+    <a href="jobs.html">Hire Talent</a><a href="advertise.html">Advertise</a><a href="about.html">About</a>
+    <div class="mob-nav-btns"><a href="post-ad.html" class="btn btn-accent">Post Free Ad</a></div>
   </nav>
 </header>
 
 <!-- HERO -->
-<section class="hero" aria-label="About hero">
-  <div class="hero-inner">
-    <div class="hero-badge"><span class="hero-badge-dot"></span>Est. 2026 · Zimbabwe</div>
-    <h1>About PaMarket</h1>
-    <p>Built by Zimbabweans, for Zimbabwe. Our mission is to make commerce accessible to every Zimbabwean, completely free.</p>
+<section class="page-hero">
+  <div class="wrap" style="padding:64px 40px 56px">
+    <div class="pagetag">About PaMarket</div>
+    <h1>A free marketplace built for Zimbabwe, by Zimbabweans.</h1>
+    <p>PaMarket connects buyers, sellers, businesses and job seekers across all ten provinces. No listing fees, no commissions, just a safe place to trade.</p>
+    <div style="font-size:13px;color:#9FB0D4;margin-top:22px">App version 1.5.0</div>
   </div>
 </section>
 
-<main>
+<!-- STORY -->
+<section class="band reveal">
+  <div class="wrap grid-2">
+    <div>
+      <div class="eyebrow">Our Story</div>
+      <h2 class="sec-title">Why we built PaMarket</h2>
+      <div class="rule"></div>
+      <p style="font-size:15.5px;color:var(--sub);margin-top:18px">Buying and selling in Zimbabwe has always relied on word of mouth, scattered groups and the risk of dealing with strangers. We set out to bring it all into one trusted app, where listings go live in minutes and people deal directly without a middleman.</p>
+      <p style="font-size:15.5px;color:var(--sub);margin-top:14px">Today PaMarket is a full marketplace, a business platform for shops, and a hiring network, all completely free to use.</p>
+    </div>
+    <div class="story-img"><div class="phone"><img src="img/screens/home.png" alt="PaMarket app home screen"></div></div>
+  </div>
+</section>
 
-<!-- OUR STORY -->
-<section class="section reveal" aria-labelledby="story-title">
-  <div class="container">
-    <div class="story-grid">
-      <div class="story-text">
-        <div class="sec-eyebrow">Who We Are</div>
-        <h2 class="sec-title" id="story-title">Our Story</h2>
-        <div class="sec-bar"></div>
-        <p>PaMarket was founded in 2026 with a bold and simple mission: to make buying and selling in Zimbabwe accessible to everyone. We saw how hard it was for ordinary Zimbabweans to connect with buyers and sellers without paying listing fees or relying solely on word of mouth.</p>
-        <p>So we built PaMarket, a digital marketplace designed from the ground up for Zimbabwe. Whether you are selling a phone, renting a room, or looking for your next vehicle, PaMarket puts you in front of active buyers and sellers every day, at no charge.</p>
-        <p>Today, PaMarket covers 25 cities and towns across Zimbabwe, with thousands of listings across 12 categories. We are proud to be the platform Zimbabweans trust.</p>
-      </div>
-      <div>
-        <div class="stats-card" aria-label="PaMarket statistics">
-          <div class="stats-card-label">PaMarket by the Numbers</div>
-          <div class="stats-card-grid">
-            <div class="sc-stat"><div class="sc-num">25+</div><div class="sc-lbl">Cities Covered</div></div>
-            <div class="sc-stat"><div class="sc-num">12</div><div class="sc-lbl">Categories</div></div>
-            <div class="sc-stat"><div class="sc-num">2026</div><div class="sc-lbl">Founded</div></div>
-            <div class="sc-stat"><div class="sc-num">100%</div><div class="sc-lbl">Free to Post</div></div>
-          </div>
-        </div>
-      </div>
+<!-- WHATS INSIDE -->
+<section class="band reveal" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap center">
+    <div class="eyebrow">What's Inside</div>
+    <h2 class="sec-title">Everything in version 1.5.0</h2>
+    <div class="rule"></div>
+    <p class="sec-sub">The app has grown well beyond classifieds.</p>
+    <div class="feat-grid">
+      <div class="card feat-card"><div class="ic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></div><h3>Marketplace</h3><p>Twelve categories, photos, offers and saved searches across Zimbabwe.</p></div>
+      <div class="card feat-card"><div class="ic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9h18v11H3zM3 9l2-5h14l2 5"/></svg></div><h3>Business / Shops</h3><p>Verified storefronts, product catalogs, business inbox and leads.</p></div>
+      <div class="card feat-card"><div class="ic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div><h3>Hire Talent</h3><p>Post jobs and browse candidate profiles by province and skill.</p></div>
+      <div class="card feat-card"><div class="ic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Direct Messaging</h3><p>Real-time chat, make-an-offer, image and location sharing.</p></div>
+      <div class="card feat-card"><div class="ic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Verification and Safety</h3><p>ID verification, verified badges, report and block, safety prompts.</p></div>
+      <div class="card feat-card"><div class="ic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Always Free</h3><p>No listing fees, no commissions, no in-app charges.</p></div>
     </div>
   </div>
 </section>
 
-<!-- MISSION / VISION / VALUES -->
-<div class="mission-bg">
-<section class="section reveal" aria-labelledby="mission-title">
-  <div class="container">
-    <div class="sec-eyebrow sec-eyebrow-c">Purpose</div>
-    <h2 class="sec-title sec-title-c" id="mission-title">Mission, Vision and Values</h2>
-    <div class="sec-bar sec-bar-c"></div>
-    <p class="sec-sub-c">Three pillars that guide every decision we make</p>
-    <div class="mission-grid">
-      <div class="mission-card">
-        <div class="mission-icon" style="background:#EEF2FF">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A3A8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-        </div>
-        <div class="mission-tag">Mission</div>
-        <h3>Accessible Commerce</h3>
-        <p>Make commerce accessible to every Zimbabwean, free of charge. From the heart of Harare to smaller towns. No fees, no barriers, no limits.</p>
-      </div>
-      <div class="mission-card">
-        <div class="mission-icon" style="background:#FFF7ED">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-        </div>
-        <div class="mission-tag" style="color:#D97706;background:#FFF7ED;border-color:rgba(217,119,6,.2)">Vision</div>
-        <h3>Africa's Marketplace</h3>
-        <p>Become the most trusted marketplace platform across Africa. Starting in Zimbabwe and expanding to serve people across the continent.</p>
-      </div>
-      <div class="mission-card">
-        <div class="mission-icon" style="background:#F0FDF4">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <div class="mission-tag" style="color:#16A34A;background:#F0FDF4;border-color:rgba(22,163,74,.2)">Values</div>
-        <h3>Integrity and Community</h3>
-        <p>Integrity, innovation and community in everything we do. We hold ourselves to the highest standards and celebrate the Zimbabwean spirit of enterprise.</p>
-      </div>
+<!-- REACH -->
+<section class="band reveal">
+  <div class="wrap center">
+    <div class="eyebrow">Our Reach</div>
+    <h2 class="sec-title">Built for the whole country</h2>
+    <div class="rule"></div>
+    <div class="stat-row">
+      <div class="card stat-card"><div class="n">10</div><div class="l">Provinces covered</div></div>
+      <div class="card stat-card"><div class="n">12</div><div class="l">Categories</div></div>
+      <div class="card stat-card"><div class="n">1.5.0</div><div class="l">Current version</div></div>
+      <div class="card stat-card"><div class="n">$0</div><div class="l">Cost to use</div></div>
     </div>
   </div>
 </section>
-</div>
-
-<!-- MEET THE FOUNDER -->
-<div class="founder-bg">
-<section class="section reveal" aria-labelledby="founder-title">
-  <div class="container">
-    <div class="founder-grid">
-      <div class="founder-photo-wrap">
-        <img
-          src="https://i.postimg.cc/Bv8DS21V/IMG-9759.jpg"
-          alt="Prince Chakusa, Founder and CEO of PaMarket"
-          class="founder-photo"
-          loading="lazy"
-          onerror="this.style.background='linear-gradient(135deg,#EEF2FF,#c7d2fe)';this.removeAttribute('src')"
-        >
-        <div class="founder-photo-badge">
-          <div class="founder-badge-name">Prince Chakusa</div>
-          <div class="founder-badge-title">Founder and CEO, PaMarket</div>
-        </div>
-      </div>
-      <div>
-        <div class="founder-eyebrow">Meet the Founder</div>
-        <h2 class="founder-name" id="founder-title">Prince Chakusa</h2>
-        <p class="founder-title-lbl">Founder and CEO, PaMarket</p>
-        <p class="founder-bio">Prince Chakusa is a Zimbabwean entrepreneur and technologist with a passion for building platforms that solve real problems. He founded PaMarket in 2026 with a clear vision: give every Zimbabwean access to a world-class marketplace, completely free.</p>
-        <blockquote class="founder-quote">
-          "Every Zimbabwean deserves a great marketplace. That is why PaMarket is, and will always be, free."
-        </blockquote>
-        <div class="founder-socials">
-          <a href="#" class="founder-social" aria-label="LinkedIn profile">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
-            LinkedIn
-          </a>
-          <a href="#" class="founder-social" aria-label="X Twitter profile">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            X / Twitter
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-</div>
-
-<!-- TIMELINE -->
-<section class="section reveal" aria-labelledby="timeline-title">
-  <div class="container">
-    <div class="sec-eyebrow sec-eyebrow-c">Journey</div>
-    <h2 class="sec-title sec-title-c" id="timeline-title">Our Journey</h2>
-    <div class="sec-bar sec-bar-c"></div>
-    <p class="sec-sub-c">From a single idea to a growing Zimbabwe marketplace</p>
-    <div class="timeline" role="list">
-      <div class="tl-item" role="listitem">
-        <div class="tl-dot-wrap"><div class="tl-dot"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">January 2026</div>
-          <div class="tl-title">PaMarket Founded</div>
-          <div class="tl-desc">The vision becomes reality. PaMarket is founded with a simple goal: Zimbabwe's first truly free classified marketplace.</div>
-        </div>
-      </div>
-      <div class="tl-item" role="listitem">
-        <div class="tl-dot-wrap"><div class="tl-dot"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">February 2026</div>
-          <div class="tl-title">First Listings Go Live</div>
-          <div class="tl-desc">Early users join the platform. Zimbabweans begin to trust and use PaMarket for property, vehicles and electronics listings.</div>
-        </div>
-      </div>
-      <div class="tl-item" role="listitem">
-        <div class="tl-dot-wrap"><div class="tl-dot"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">March 2026</div>
-          <div class="tl-title">Mobile App Launched</div>
-          <div class="tl-desc">Available on iOS and Android. PaMarket goes mobile, bringing the marketplace to Zimbabwe's mobile-first users.</div>
-        </div>
-      </div>
-      <div class="tl-item" role="listitem">
-        <div class="tl-dot-wrap"><div class="tl-dot"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">April 2026</div>
-          <div class="tl-title">Expanded to 10 Cities</div>
-          <div class="tl-desc">Growing across Zimbabwe. PaMarket expands beyond Harare to serve Bulawayo, Mutare, Gweru, Masvingo and more.</div>
-        </div>
-      </div>
-      <div class="tl-item" role="listitem">
-        <div class="tl-dot-wrap"><div class="tl-dot"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">May 2026</div>
-          <div class="tl-title">Thousands of Listings</div>
-          <div class="tl-desc">The community is thriving. Thousands of listings across 25 cities and all 12 categories. Zimbabwe has spoken.</div>
-        </div>
-      </div>
-      <div class="tl-item" role="listitem">
-        <div class="tl-dot-wrap"><div class="tl-dot future"></div></div>
-        <div class="tl-body" style="border-color:var(--accent);background:linear-gradient(135deg,#fff,#fffbf0)">
-          <div class="tl-date" style="color:var(--accent)">Coming Next</div>
-          <div class="tl-title">More Cities. More Features. More Zimbabwe.</div>
-          <div class="tl-desc">We are expanding coverage, adding new features, and building the infrastructure for Africa's most trusted free marketplace.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- WHY PAMARKET -->
-<div style="background:var(--bg)">
-<section class="section reveal" aria-labelledby="why-title">
-  <div class="container">
-    <div class="sec-eyebrow sec-eyebrow-c">Why Choose Us</div>
-    <h2 class="sec-title sec-title-c" id="why-title">Why PaMarket</h2>
-    <div class="sec-bar sec-bar-c"></div>
-    <p class="sec-sub-c">Everything you need to buy and sell with confidence across Zimbabwe</p>
-    <div class="why-grid">
-      <div class="why-card">
-        <div class="why-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
-        <h3>Always Free</h3>
-        <p>Post as many ads as you want at zero cost. No listing fees, no commissions.</p>
-      </div>
-      <div class="why-card">
-        <div class="why-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-        </div>
-        <h3>Instant Reach</h3>
-        <p>Your ad reaches thousands of active buyers across Zimbabwe the moment it goes live.</p>
-      </div>
-      <div class="why-card">
-        <div class="why-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <h3>Safe and Secure</h3>
-        <p>Verified profiles, built-in messaging and moderation to protect every transaction.</p>
-      </div>
-      <div class="why-card">
-        <div class="why-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>
-        </div>
-        <h3>Built for Zimbabwe</h3>
-        <p>Designed for Zimbabwe's mobile users. Works fast on any connection, in any city.</p>
-      </div>
-    </div>
-  </div>
-</section>
-</div>
-
-<!-- CORE VALUES -->
-<div class="values-bg">
-<section class="section reveal" aria-labelledby="values-title">
-  <div class="container">
-    <div class="sec-eyebrow sec-eyebrow-c">What We Stand For</div>
-    <h2 class="sec-title sec-title-c" id="values-title">Core Values</h2>
-    <div class="sec-bar sec-bar-c"></div>
-    <p class="sec-sub-c">The principles that guide how we build, behave and serve Zimbabwe</p>
-    <div class="values-grid">
-      <div class="value-card">
-        <div class="value-icon" style="background:var(--navy)">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <h3>Integrity</h3>
-        <p>We hold ourselves and our community to the highest standards of honesty. We moderate listings and work hard to ensure every interaction on PaMarket is trustworthy.</p>
-      </div>
-      <div class="value-card">
-        <div class="value-icon" style="background:var(--accent)">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-        </div>
-        <h3>Innovation</h3>
-        <p>Zimbabwe deserves world-class digital tools. We continuously improve our platform to make buying and selling faster, smarter and more reliable.</p>
-      </div>
-      <div class="value-card">
-        <div class="value-icon" style="background:var(--success)">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <h3>Community</h3>
-        <p>PaMarket is more than a marketplace. It is a community of Zimbabwean entrepreneurs, buyers, sellers and dreamers building something together.</p>
-      </div>
-    </div>
-  </div>
-</section>
-</div>
-
-<!-- CTA BANNER -->
-<section class="cta-bg reveal" aria-labelledby="cta-title">
-  <div class="container">
-    <div class="cta-inner">
-      <h2 id="cta-title">Ready to Join PaMarket?</h2>
-      <p>Start posting free ads today and reach buyers across Zimbabwe.</p>
-      <div class="cta-btns">
-        <a href="post-ad.html" class="btn btn-accent btn-lg">Post Free Ad</a>
-        <a href="browse.html" class="btn btn-outline-white btn-lg">Browse Listings</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-</main>
 
 <!-- FOOTER -->
-<footer role="contentinfo">
-  <div class="container">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <a href="index.html" class="footer-logo">Pa<span>Market</span></a>
-        <p>Zimbabwe's free classified marketplace. Buy, sell and hire across the country.</p>
-        <div class="social-links" aria-label="Social media links">
-          <!-- Facebook -->
-          <a href="#" class="social-link" aria-label="Facebook">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047v-2.66c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.874v2.277h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
-          </a>
-          <!-- Instagram -->
-          <a href="#" class="social-link" aria-label="Instagram">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
-          </a>
-          <!-- X / Twitter -->
-          <a href="#" class="social-link" aria-label="X (Twitter)">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          </a>
-          <!-- WhatsApp -->
-          <a href="https://wa.me/971589772645" class="social-link" aria-label="WhatsApp">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-          </a>
-          <!-- TikTok -->
-          <a href="#" class="social-link" aria-label="TikTok">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/></svg>
-          </a>
-        </div>
-      </div>
-      <div class="footer-col">
-        <h4>Marketplace</h4>
-        <a href="browse.html">Browse All Listings</a>
-        <a href="browse.html?cat=Property">Property</a>
-        <a href="browse.html?cat=Vehicles">Vehicles</a>
-        <a href="browse.html?cat=Electronics">Electronics</a>
-        <a href="jobs.html">Jobs</a>
-        <a href="services.html">Services</a>
-      </div>
-      <div class="footer-col">
-        <h4>Company</h4>
-        <a href="about.html">About PaMarket</a>
-        <a href="advertise.html">Advertise With Us</a>
-        <a href="post-ad.html">Post Free Ad</a>
-        <a href="help.html">Help Center</a>
-        <a href="contact.html">Contact Us</a>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <a href="privacy.html">Privacy Policy</a>
-        <a href="terms.html">Terms of Service</a>
-      </div>
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div><a href="index.html" class="logo">Pa<span>Market</span></a><p>Zimbabwe's free marketplace. Buy, sell, hire and grow your business across all ten provinces.</p></div>
+      <div class="foot"><h4>Marketplace</h4><a href="browse.html">Browse</a><a href="post-ad.html">Post a Free Ad</a><a href="browse.html?shops=1">Shops</a><a href="jobs.html">Hire Talent</a></div>
+      <div class="foot"><h4>Company</h4><a href="about.html">About</a><a href="advertise.html">Advertise</a><a href="contact.html">Contact</a><a href="help.html">Help</a></div>
+      <div class="foot"><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="help.html">Safety</a></div>
     </div>
-    <div class="footer-bottom">
-      <span>&copy; 2026 PaMarket. Made in Zimbabwe &#127469;&#127484;. All rights reserved.</span>
-    </div>
+    <div class="footer-bottom">&copy; 2026 PaMarket. App version 1.5.0. Made in Zimbabwe. All rights reserved.</div>
   </div>
 </footer>
 
-<!-- WHATSAPP -->
-<div class="wa-float" role="complementary" aria-label="WhatsApp contact">
-  <div class="wa-tooltip">Chat with us on WhatsApp</div>
-  <a href="https://wa.me/971589772645" class="wa-btn" aria-label="Chat on WhatsApp" target="_blank" rel="noopener noreferrer">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-  </a>
-</div>
-
-<div id="toast-container" role="status" aria-live="polite"></div>
-
 <script>
-function toggleMob(){
-  const n=document.getElementById('mobNav');
-  const btn=document.querySelector('.hamburger');
-  const open=n.classList.toggle('open');
-  btn.setAttribute('aria-expanded',String(open));
-}
-document.addEventListener('click',e=>{
-  const n=document.getElementById('mobNav');
-  if(n.classList.contains('open')&&!document.getElementById('site-header').contains(e.target))n.classList.remove('open');
-});
-
-const revObs=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');revObs.unobserve(e.target)}});
-},{threshold:0.08});
-document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
-
-function showToast(msg,type=''){
-  const c=document.getElementById('toast-container');
-  const t=document.createElement('div');
-  t.className='toast'+(type?' '+type:'');
-  t.textContent=msg;
-  c.appendChild(t);
-  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
-  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3000);
-}
+function toggleMob(){document.getElementById('mobNav').classList.toggle('open')}
+document.addEventListener('click',e=>{const n=document.getElementById('mobNav');if(n.classList.contains('open')&&!document.getElementById('site-header').contains(e.target))n.classList.remove('open')});
+const revealObs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');revealObs.unobserve(e.target)}})},{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
 </script>
-<script src="auth.js"></script>
 </body>
 </html>
