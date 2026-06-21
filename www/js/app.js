@@ -2596,9 +2596,10 @@ H.openAppRating = function() {
     return !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
   }
 
-  // Native (installed app): register for FCM and save push_token.
-  // The Android WebView does not support the Web Push API, so the app
-  // must use the Capacitor PushNotifications plugin (FCM under the hood).
+  // Native (installed app): register for push notifications and save push_token.
+  // Neither Android WebView nor iOS WKWebView supports the Web Push API in the
+  // Capacitor context, so native push is handled by the Capacitor PushNotifications
+  // plugin (FCM on Android, APNs on iOS).
   async function _setupNativePush(c, u) {
     var PN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications;
     if (!PN) return;

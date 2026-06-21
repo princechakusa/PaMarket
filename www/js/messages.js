@@ -1015,8 +1015,8 @@
     // Tear down keyboard/viewport listeners from a PREVIOUS Chat mount before we
     // wire new ones. Without this they accumulate on every chat open, so over a
     // session N handlers fire on each keyboard show/hide — a real source of
-    // Android jank and eventual freezing. The input focus/blur listeners die
-    // with the old DOM (input is re-created each render), so only these leak.
+    // jank and eventual freezing on both iOS and Android. The input focus/blur
+    // listeners die with the old DOM (input is re-created each render), so only these leak.
     if (window.visualViewport && window._chatVPHandler) {
       window.visualViewport.removeEventListener('resize', window._chatVPHandler);
       window.visualViewport.removeEventListener('scroll', window._chatVPHandler);
@@ -1695,9 +1695,11 @@
     overlay.id = 'imgViewer';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:100000;display:flex;flex-direction:column';
 
-    // Top bar with a real back arrow, pushed BELOW the status bar (var(--safe-top)
-    // is set by the native layer; env() alone is 0 on most Android devices, which
-    // is why the old X sat under the status bar and "didn't respond").
+    // Top bar with a real back arrow, pushed BELOW the status bar. var(--safe-top)
+    // is the cross-platform safe-area variable: on iOS it resolves via
+    // env(safe-area-inset-top) (WKWebView honours viewport-fit=cover), while on
+    // Android env() returns 0 (WebView does not report the system UI inset) so
+    // the native layer injects the real value — --safe-top handles both.
     var bar = document.createElement('div');
     bar.style.cssText = 'flex-shrink:0;display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:calc(10px + var(--safe-top,0px));background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0))';
     var back = document.createElement('button');
