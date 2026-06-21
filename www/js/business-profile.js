@@ -95,15 +95,25 @@
       <div class="inner-content" style="padding-bottom:40px">
 
         <!-- Cover + Logo -->
-        <div style="position:relative;border-radius:16px;overflow:hidden;margin-bottom:54px">
-          <div style="height:120px;${coverStyle}"></div>
-          <button type="button" onclick="document.getElementById('bzCoverFile').click()"
-            style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.45);color:#fff;border:none;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Change cover</button>
-          <div style="position:absolute;left:16px;bottom:-40px;width:80px;height:80px;border-radius:18px;border:3px solid var(--card,#fff);background:#EEF2FB;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:26px;font-weight:800;color:#1A3A8F">
-            ${e.logo ? `<img src="${escHtml(e.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(e.name || 'B'))}
+        <div style="position:relative;margin-bottom:58px">
+          <div style="height:120px;border-radius:16px;overflow:hidden;${coverStyle};position:relative">
+            <button type="button" onclick="document.getElementById('bzCoverFile').click()"
+              style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.45);color:#fff;border:none;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Change cover</button>
           </div>
-          <button type="button" onclick="document.getElementById('bzLogoFile').click()"
-            style="position:absolute;left:86px;bottom:-34px;background:#EEF2FB;color:#1A3A8F;border:none;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Change logo</button>
+          <!-- Tappable logo — tap to upload or change -->
+          <div onclick="document.getElementById('bzLogoFile').click()"
+            style="position:absolute;left:16px;bottom:-44px;width:88px;height:88px;border-radius:20px;border:3px solid var(--card,#fff);background:#EEF2FB;overflow:hidden;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.13);display:flex;align-items:center;justify-content:center">
+            ${e.logo
+              ? `<img src="${escHtml(e.logo)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0">
+                 <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.48);padding:5px 0;display:flex;align-items:center;justify-content:center">
+                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                 </div>`
+              : `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;pointer-events:none">
+                   <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#1A3A8F" stroke-width="1.8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                   <span style="font-size:9px;font-weight:800;color:#1A3A8F;letter-spacing:.3px">ADD LOGO</span>
+                 </div>`
+            }
+          </div>
         </div>
         <input type="file" id="bzCoverFile" accept="image/*" style="display:none" onchange="H._bizProfile.onMedia(event,'cover')">
         <input type="file" id="bzLogoFile" accept="image/*" style="display:none" onchange="H._bizProfile.onMedia(event,'logo')">
@@ -135,10 +145,10 @@
               + (sel ? '<div style="position:absolute;top:5px;right:5px;width:18px;height:18px;border-radius:50%;background:#1A3A8F;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>' : '')
               + '</div>';
           }).join('');
-          return '<div class="fg" style="margin-bottom:14px">'
-            + '<div class="fl">Featured Items</div>'
-            + '<div style="font-size:11.5px;color:var(--sub);margin-bottom:10px">Pick up to 2 listings to show as preview images on the Local Shops grid.</div>'
-            + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">' + prodHtml + '</div>'
+          return '<div style="margin-bottom:14px;background:var(--bg,#F3F5FA);border-radius:14px;padding:14px 14px 16px">'
+            + '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:3px">Shop Thumbnails</div>'
+            + '<div style="font-size:11.5px;color:var(--sub);margin-bottom:12px">Tap up to 2 listings to feature as preview images when buyers browse Local Shops.</div>'
+            + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">' + prodHtml + '</div>'
             + '</div>';
         })()}
         <button class="btn-pri" id="epSaveBtn" style="width:100%;margin-top:6px" onclick="H._bizProfile.save()">Save Profile</button>

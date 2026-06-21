@@ -225,16 +225,19 @@
       })
       .subscribe();
 
-    // Capacitor foreground event — re-fetch when app returns from background
+    // Capacitor foreground event — delegate to H.RM which handles all pages
     try {
       var CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
       if (CapApp && typeof CapApp.addListener === 'function') {
         CapApp.addListener('appStateChange', function(state) {
-          if (!state.isActive || !window.H || window.H.currentPageName !== 'Home') return;
-          var _cap = [];
-          if (typeof window.H.fetchListingsFromSupabase === 'function') _cap.push(window.H.fetchListingsFromSupabase().catch(function(){}));
-          if (typeof window.H.fetchAllActiveBusinesses === 'function') _cap.push(window.H.fetchAllActiveBusinesses().catch(function(){}));
-          if (_cap.length) Promise.all(_cap).then(function() { if (window.H.currentPageName === 'Home') window.H.renderPage('Home'); });
+          if (!window.H) return;
+          if (state.isActive) {
+            if (window.H.RM && typeof window.H.RM.resume === 'function') {
+              window.H.RM.resume();
+            }
+          } else {
+            if (window.H.RM) window.H.RM._appActive = false;
+          }
         });
       }
     } catch(e) {}
