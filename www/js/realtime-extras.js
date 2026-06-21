@@ -276,8 +276,19 @@
   H.RT._backoffMs        = 2000;         // current delay; doubles on failure, capped at 30s
   H.RT._backoffAttempt   = 0;
 
+  // Minimal structured logger. No-ops unless H.RT.debug = true.
+  // Log format: [RT:category] message  data
+  H.RT.debug = false;
+  H.RT._log = function (cat, msg, data) {
+    if (!H.RT.debug) return;
+    try { console.log('[RT:' + cat + ']', msg, data !== undefined ? data : ''); } catch (e) {}
+  };
+
   H.RT._setState = function (s) {
-    if (H.RT._state !== s) H.RT._state = s;
+    if (H.RT._state !== s) {
+      H.RT._log('state', H.RT._state + ' -> ' + s);
+      H.RT._state = s;
+    }
   };
 
   // Called by every channel's .subscribe() status callback.
@@ -338,13 +349,14 @@
     H.RT._backoffAttempt++;
     var delay = Math.min(H.RT._backoffMs, 30000);
     H.RT._backoffMs = Math.min(H.RT._backoffMs * 2, 30000);
+    H.RT._log('reconnect', 'scheduled delay=' + delay + 'ms attempt=' + H.RT._backoffAttempt, { reason: reason });
     clearTimeout(H.RT._reconnectTimer);
     H.RT._reconnectTimer = setTimeout(function () {
       H.RT._reconnecting = false;
       if (!document.hidden) {
         H.RT.reconnectAll(reason || 'backoff');
       } else {
-        // App is backgrounded — skip now, onForeground will reconnect when visible.
+        H.RT._log('reconnect', 'deferred:hidden', { reason: reason });
         H.RT._setState('OFFLINE');
       }
     }, delay);
@@ -379,39 +391,85 @@
   // ===================================================================
   // UNIFIED FEED UPDATE PIPELINE  (H.applyFeedUpdate)
   // Single point of truth for all mutations to H.state.listings and
-  // H.state.businesses. Called by:
-  //   • Realtime handlers  (source = 'realtime') — individual INSERT/UPDATE/DELETE
-  //   • fetchListingsFromSupabase / fetchAllActiveBusinesses (source = 'poll')
-  //
-  // Cache conflict rules
-  // ────────────────────
-  // listings_full   Server active listings replace local active listings.
-  //                 Non-active (pending/banned) local items are preserved —
-  //                 they come from the user's own posts not yet approved.
-  //                 Items received via a realtime INSERT within the last 5 s
-  //                 that did not appear in the server response are also kept
-  //                 (query-vs-realtime race guard: the INSERT was committed
-  //                 after the server query window closed but before our
-  //                 realtime event arrived).
-  //
-  // listing_event   INSERT: add to front if not already present (id dedup).
-  //                 UPDATE: merge, server wins — skipped if item has
-  //                         _pendingSync=true (local write in-flight).
-  //                 DELETE: always remove.
-  //
-  // businesses_full Upsert-merge each server item; never overwrite a local
-  //                 logo/cover with null (cloud-write race condition where
-  //                 the image CDN URL was not yet committed on read).
-  //
-  // business_event  Same merge rules as listing_event + null logo/cover guard.
+  // H.state.businesses. All paths — realtime, polling, startup — go through
+  // H.resolveStateConflict before any write, ensuring ordering and safety.
   // ===================================================================
 
-  // Track ids added via realtime INSERT so a concurrent full fetch cannot
-  // silently drop items that arrived after the query window closed.
-  H._rtInsertWindow    = H._rtInsertWindow    || {};
-  H._rtInsertWindowBiz = H._rtInsertWindowBiz || {};
-  var _RT_WIN_MS = 5000;
+  // ── Internal tracking structures ─────────────────────────────────────────────
+  H._rtInsertWindow    = H._rtInsertWindow    || {};   // { id: insertedAtMs } — listing race guard
+  H._rtInsertWindowBiz = H._rtInsertWindowBiz || {};   // same for businesses
+  var _RT_WIN_MS = 5000;                               // 5s race guard window
 
+  // Deleted ID records — prevent stale full-fetch from resurrecting items
+  // removed by a realtime DELETE after the query window closed.
+  // TTL: 30s. Pruned in H._pruneCache. Format: { id: deletedAtMs }
+  H._deletedListingIds = H._deletedListingIds || {};
+  H._deletedBizIds     = H._deletedBizIds     || {};
+
+  // ===================================================================
+  // CONFLICT RESOLUTION ENGINE  (H.resolveStateConflict)
+  // resolveStateConflict(local, server, source, evt)
+  //   local   — current local item, or null for new INSERTs
+  //   server  — incoming server item
+  //   source  — 'realtime' | 'poll'
+  //   evt     — 'INSERT' | 'UPDATE' | 'DELETE' | 'full'
+  //
+  // Returns { action, data }
+  //   action 'reject'  — discard server, keep local as-is
+  //   action 'accept'  — use resolved/merged item (in .data)
+  //
+  // Rules (evaluated in priority order):
+  //   R1 Local write in-flight (_pendingSync) — reject realtime UPDATE/full
+  //   R2 Version ordering — reject if server.updatedAt < local._updatedAt
+  //      (out-of-order realtime delivery)
+  //   R3 Null image guard — never overwrite local logo/cover with null
+  //      (CDN race: image URL not yet committed when event fires)
+  //   R4 Merge — for UPDATE/full, server fields merged over local;
+  //      for INSERT with no local, accept server directly
+  // ===================================================================
+  H.resolveStateConflict = function (local, server, source, evt) {
+    // R1: pending local write — skip realtime overwrites until poll confirms
+    if (local && local._pendingSync && source === 'realtime' &&
+        (evt === 'UPDATE' || evt === 'full')) {
+      H.RT._log('conflict', 'R1:pendingSync reject', { id: local.id });
+      return { action: 'reject' };
+    }
+
+    // R2: version ordering — reject out-of-order realtime UPDATE events
+    if (local && server && source === 'realtime' && (evt === 'UPDATE' || evt === 'full')) {
+      var localTs  = local._updatedAt || 0;
+      var serverTs = server.updatedAt || server.createdAt || 0;
+      if (localTs > 0 && serverTs > 0 && serverTs < localTs) {
+        H.RT._log('conflict', 'R2:staleEvent reject', { id: local.id, localTs: localTs, serverTs: serverTs });
+        return { action: 'reject' };
+      }
+    }
+
+    // R3: null image guard — restore local logo/cover when server sends null
+    var out = server ? Object.assign({}, server) : null;
+    if (local && out) {
+      if (!out.logo  && local.logo)  out.logo  = local.logo;
+      if (!out.cover && local.cover) out.cover = local.cover;
+    }
+
+    // R4: merge for UPDATE/full; accept directly for INSERT / new item
+    if (local && out && (evt === 'UPDATE' || evt === 'full')) {
+      out = Object.assign({}, local, out);
+      H.RT._log('conflict', 'R4:merge', { id: out.id, source: source, evt: evt });
+    } else {
+      H.RT._log('conflict', 'accept', { id: out && out.id, evt: evt, source: source });
+    }
+
+    // Stamp _updatedAt so R2 can detect future out-of-order events
+    if (out) out._updatedAt = (server && (server.updatedAt || server.createdAt)) || Date.now();
+    return { action: 'accept', data: out };
+  };
+
+  // ===================================================================
+  // applyFeedUpdate(payload, source)
+  //   payload.type: 'listing_event' | 'listings_full'
+  //                 'business_event' | 'businesses_full'
+  // ===================================================================
   H.applyFeedUpdate = function (payload, source) {
     if (!payload) return;
     H.state.listings   = H.state.listings   || [];
@@ -422,25 +480,36 @@
     if (type === 'listing_event') {
       var evt    = payload.evt;
       var mapped = payload.data;
-      var delId  = payload.id;
+      var delId  = payload.id || (mapped && mapped.id);
 
       if (evt === 'DELETE') {
-        H.state.listings = H.state.listings.filter(function (l) { return l.id !== delId; });
-        delete H._rtInsertWindow[delId];
+        if (delId) {
+          H.state.listings = H.state.listings.filter(function (l) { return l.id !== delId; });
+          H._deletedListingIds[delId] = Date.now();  // prevent resurrection from stale poll
+          delete H._rtInsertWindow[delId];
+          H.RT._log('feed', 'listing DELETE', { id: delId });
+        }
 
       } else if (evt === 'INSERT' || evt === 'UPDATE') {
         if (!mapped) return;
+        // Fresh INSERT clears any deletion record (seller re-listed under same id)
+        if (evt === 'INSERT') delete H._deletedListingIds[mapped.id];
         if (mapped.status === 'active') {
           var idx = H.state.listings.findIndex(function (l) { return l.id === mapped.id; });
           if (idx >= 0) {
-            if (H.state.listings[idx]._pendingSync && source === 'realtime') return;
-            H.state.listings[idx] = Object.assign({}, H.state.listings[idx], mapped);
+            var res = H.resolveStateConflict(H.state.listings[idx], mapped, source, evt);
+            if (res.action !== 'reject') H.state.listings[idx] = res.data || mapped;
           } else {
-            H.state.listings.unshift(mapped);
-            if (evt === 'INSERT') H._rtInsertWindow[mapped.id] = Date.now();
+            var resNew = H.resolveStateConflict(null, mapped, source, evt);
+            if (resNew.action !== 'reject') {
+              H.state.listings.unshift(resNew.data || mapped);
+              if (evt === 'INSERT') H._rtInsertWindow[mapped.id] = Date.now();
+            }
           }
         } else {
+          // Status changed to non-active — remove and record deletion
           H.state.listings = H.state.listings.filter(function (l) { return l.id !== mapped.id; });
+          H._deletedListingIds[mapped.id] = Date.now();
           delete H._rtInsertWindow[mapped.id];
         }
       }
@@ -448,54 +517,88 @@
 
     // ── Full listings result from server (poll / startup) ───────────────────────
     } else if (type === 'listings_full') {
-      var cloud    = payload.data || [];
-      var now      = Date.now();
-      var cloudIds = {};
-      cloud.forEach(function (l) { cloudIds[l.id] = true; });
+      var cloud = payload.data || [];
+      var now   = Date.now();
 
-      // Non-active local items (user's pending/banned listings).
-      var nonActive = H.state.listings.filter(function (l) { return l.status !== 'active'; });
+      // 1. Dedup server array by id (guards against any DB-level anomaly)
+      var seen = {};
+      cloud = cloud.filter(function (l) {
+        if (seen[l.id]) return false; seen[l.id] = true; return true;
+      });
+      var cloudIds = seen;
 
-      // Realtime-insert race guard: keep items added by a realtime event within
-      // the last 5 s that didn't make it into this server query's result window.
+      // 2. Filter items known to be deleted — stale poll must not resurrect them
+      cloud = cloud.filter(function (l) { return !H._deletedListingIds[l.id]; });
+
+      // 3. Per-item conflict resolution: version check prevents poll from
+      //    overwriting a newer local state (e.g. from a realtime UPDATE)
+      var localById = {};
+      H.state.listings.forEach(function (l) { if (l.status === 'active') localById[l.id] = l; });
+      cloud = cloud.map(function (serverItem) {
+        var local = localById[serverItem.id];
+        if (!local) {
+          serverItem._updatedAt = serverItem.updatedAt || serverItem.createdAt || now;
+          return serverItem;
+        }
+        var res = H.resolveStateConflict(local, serverItem, source, 'full');
+        return (res.action === 'reject') ? local : (res.data || serverItem);
+      });
+
+      // 4. Realtime-insert race guard: preserve items added via realtime INSERT
+      //    within last 5 s that the query snapshot missed
       var rtSafe = H.state.listings.filter(function (l) {
         var ts = H._rtInsertWindow[l.id];
         return ts && (now - ts < _RT_WIN_MS) && !cloudIds[l.id];
       });
 
-      // Purge stale window entries.
+      // 5. Non-active local items (user's pending/banned own posts)
+      var nonActive = H.state.listings.filter(function (l) { return l.status !== 'active'; });
+
+      // 6. Purge stale tracking entries (TTL: 5s for insert window, 30s for deletes)
       Object.keys(H._rtInsertWindow).forEach(function (id) {
         if (now - H._rtInsertWindow[id] >= _RT_WIN_MS) delete H._rtInsertWindow[id];
       });
+      Object.keys(H._deletedListingIds).forEach(function (id) {
+        if (now - H._deletedListingIds[id] > 30000) delete H._deletedListingIds[id];
+      });
 
       H.state.listings = rtSafe.concat(cloud).concat(nonActive);
+      H.RT._log('feed', 'listings_full applied', { server: cloud.length, rtSafe: rtSafe.length, nonActive: nonActive.length });
       H.saveState && H.saveState();
+      if (typeof H._pruneCache === 'function') H._pruneCache('listings');
 
     // ── Single business event from realtime ─────────────────────────────────────
     } else if (type === 'business_event') {
       var bevt    = payload.evt;
       var bmapped = payload.data;
-      var bdelId  = payload.id;
+      var bdelId  = payload.id || (bmapped && bmapped.id);
 
       if (bevt === 'DELETE') {
-        H.state.businesses = H.state.businesses.filter(function (b) { return b.id !== bdelId; });
-        delete H._rtInsertWindowBiz[bdelId];
+        if (bdelId) {
+          H.state.businesses = H.state.businesses.filter(function (b) { return b.id !== bdelId; });
+          H._deletedBizIds[bdelId] = Date.now();
+          delete H._rtInsertWindowBiz[bdelId];
+          H.RT._log('feed', 'business DELETE', { id: bdelId });
+        }
 
       } else if (bevt === 'INSERT' || bevt === 'UPDATE') {
         if (!bmapped) return;
+        if (bevt === 'INSERT') delete H._deletedBizIds[bmapped.id];
         if (bmapped.status === 'active') {
           var bidx = H.state.businesses.findIndex(function (b) { return b.id === bmapped.id; });
           if (bidx >= 0) {
-            var bprev = H.state.businesses[bidx];
-            if (!bmapped.logo  && bprev.logo)  bmapped.logo  = bprev.logo;
-            if (!bmapped.cover && bprev.cover) bmapped.cover = bprev.cover;
-            H.state.businesses[bidx] = Object.assign({}, bprev, bmapped);
+            var bres = H.resolveStateConflict(H.state.businesses[bidx], bmapped, source, bevt);
+            if (bres.action !== 'reject') H.state.businesses[bidx] = bres.data || bmapped;
           } else {
-            H.state.businesses.unshift(bmapped);
-            if (bevt === 'INSERT') H._rtInsertWindowBiz[bmapped.id] = Date.now();
+            var bresNew = H.resolveStateConflict(null, bmapped, source, bevt);
+            if (bresNew.action !== 'reject') {
+              H.state.businesses.unshift(bresNew.data || bmapped);
+              if (bevt === 'INSERT') H._rtInsertWindowBiz[bmapped.id] = Date.now();
+            }
           }
         } else {
           H.state.businesses = H.state.businesses.filter(function (b) { return b.id !== bmapped.id; });
+          H._deletedBizIds[bmapped.id] = Date.now();
           delete H._rtInsertWindowBiz[bmapped.id];
         }
       }
@@ -503,28 +606,41 @@
 
     // ── Full businesses result from server (poll) ────────────────────────────────
     } else if (type === 'businesses_full') {
-      var bcloud  = payload.data || [];
-      var bnow    = Date.now();
-      H.state.businesses = H.state.businesses || [];
+      var bcloud = payload.data || [];
+      var bnow   = Date.now();
 
+      // Dedup server array by id
+      var bseen = {};
+      bcloud = bcloud.filter(function (b) {
+        if (bseen[b.id]) return false; bseen[b.id] = true; return true;
+      });
+
+      // Filter recently-deleted businesses
+      bcloud = bcloud.filter(function (b) { return !H._deletedBizIds[b.id]; });
+
+      // Upsert-merge with conflict resolution
       bcloud.forEach(function (bm) {
         var bi = H.state.businesses.findIndex(function (b) { return b.id === bm.id; });
         if (bi >= 0) {
-          var bp = H.state.businesses[bi];
-          if (!bm.logo  && bp.logo)  bm.logo  = bp.logo;
-          if (!bm.cover && bp.cover) bm.cover = bp.cover;
-          H.state.businesses[bi] = Object.assign({}, bp, bm);
+          var bres2 = H.resolveStateConflict(H.state.businesses[bi], bm, source, 'full');
+          if (bres2.action !== 'reject') H.state.businesses[bi] = bres2.data || bm;
         } else {
+          bm._updatedAt = bm.updatedAt || bm.createdAt || bnow;
           H.state.businesses.push(bm);
         }
       });
 
-      // Purge stale business insert-window entries.
+      // Purge stale tracking entries
       Object.keys(H._rtInsertWindowBiz).forEach(function (id) {
         if (bnow - H._rtInsertWindowBiz[id] >= _RT_WIN_MS) delete H._rtInsertWindowBiz[id];
       });
+      Object.keys(H._deletedBizIds).forEach(function (id) {
+        if (bnow - H._deletedBizIds[id] > 30000) delete H._deletedBizIds[id];
+      });
 
+      H.RT._log('feed', 'businesses_full applied', { count: bcloud.length });
       H.saveState && H.saveState();
+      if (typeof H._pruneCache === 'function') H._pruneCache('businesses');
     }
   };
 
@@ -541,38 +657,118 @@
   // Note: only realtime handlers call this. Poll-driven renders go through
   // RM's own sig-compare path, which already debounces via _renderPreserved.
   // ===================================================================
+  H._navEpoch        = H._navEpoch        || 0;
   H._renderBatchTimer = null;
 
   H._scheduleRender = function () {
     if (!H.RM || typeof H.RM._renderPreserved !== 'function') return;
     var capturedPage   = H.currentPageName;
     var capturedParams = H.currentPageParams;
+    var capturedEpoch  = H._navEpoch;
+
+    H.RT._log('render', 'scheduled', { page: capturedPage, epoch: capturedEpoch });
 
     clearTimeout(H._renderBatchTimer);
     H._renderBatchTimer = setTimeout(function () {
       H._renderBatchTimer = null;
       if (!H.RM || typeof H.RM._renderPreserved !== 'function') return;
-      if (H.currentPageName !== capturedPage) return;   // navigated away — skip
+      // Cancel if navigation occurred since this render was scheduled
+      if (H._navEpoch !== capturedEpoch || H.currentPageName !== capturedPage) {
+        H.RT._log('render', 'cancelled:nav', { page: capturedPage, epoch: capturedEpoch });
+        return;
+      }
       if (H.RM._inBgRender) {
-        // RM is already rendering; re-queue so we run cleanly after it settles.
+        // RM is mid-render; re-queue to run cleanly after it settles
         H._renderBatchTimer = setTimeout(function () {
           H._renderBatchTimer = null;
-          if (H.currentPageName === capturedPage && !H.RM._inBgRender) {
+          if (H._navEpoch === capturedEpoch && H.currentPageName === capturedPage && !H.RM._inBgRender) {
+            H.RT._log('render', 'deferred:fire', { page: capturedPage });
             H.RM._renderPreserved(capturedPage, H.currentPageParams);
           }
         }, 200);
         return;
       }
+      H.RT._log('render', 'fire', { page: capturedPage });
       H.RM._renderPreserved(capturedPage, H.currentPageParams);
     }, 350);
+  };
+
+  // ===================================================================
+  // CACHE MEMORY MANAGER  (H._pruneCache)
+  // Called after every full-fetch. Enforces hard limits on H.state.listings
+  // (500) and H.state.businesses (300). Prunes stale non-active entries
+  // older than 7 days. Also trims the deleted-id tombstone maps.
+  // ===================================================================
+  H._pruneCache = function (which) {
+    var MAX_LISTINGS   = 500;
+    var MAX_BUSINESSES = 300;
+    var PRUNE_AGE_MS   = 7 * 24 * 60 * 60 * 1000;
+    var now            = Date.now();
+
+    if (!which || which === 'listings') {
+      var ls = H.state.listings;
+      if (ls && ls.length > MAX_LISTINGS) {
+        var active = ls.filter(function (l) { return l.status === 'active'; });
+        if (active.length > MAX_LISTINGS) {
+          active.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+          active = active.slice(0, MAX_LISTINGS);
+        }
+        var kept = ls.filter(function (l) {
+          return l.status !== 'active' && (now - (l.createdAt || 0)) <= PRUNE_AGE_MS;
+        });
+        H.state.listings = active.concat(kept);
+        H.RT._log('memory', 'listings pruned', { total: H.state.listings.length });
+      }
+      // Trim tombstone map to 500 entries (oldest first)
+      var dkeys = Object.keys(H._deletedListingIds);
+      if (dkeys.length > 500) {
+        dkeys.sort(function (a, b) { return H._deletedListingIds[a] - H._deletedListingIds[b]; });
+        dkeys.slice(0, dkeys.length - 500).forEach(function (k) { delete H._deletedListingIds[k]; });
+      }
+    }
+
+    if (!which || which === 'businesses') {
+      var bz = H.state.businesses;
+      if (bz && bz.length > MAX_BUSINESSES) {
+        H.state.businesses = bz.filter(function (b) { return b.status === 'active'; })
+                               .slice(0, MAX_BUSINESSES);
+        H.RT._log('memory', 'businesses pruned', { total: H.state.businesses.length });
+      }
+      var bdkeys = Object.keys(H._deletedBizIds);
+      if (bdkeys.length > 200) {
+        bdkeys.sort(function (a, b) { return H._deletedBizIds[a] - H._deletedBizIds[b]; });
+        bdkeys.slice(0, bdkeys.length - 200).forEach(function (k) { delete H._deletedBizIds[k]; });
+      }
+    }
   };
 
   // ===================================================================
   // BOOTSTRAP — wait for supabase + a signed-in user, then wire everything.
   // ===================================================================
   var tries = 0;
+  var _navHooked = false;
+
+  // Wrap navigation functions to increment _navEpoch and cancel any pending
+  // batch render. Installed once; idempotent on repeated calls.
+  function _hookNavigation() {
+    if (_navHooked) return;
+    var _wrap = function (orig) {
+      return function () {
+        H._navEpoch++;
+        clearTimeout(H._renderBatchTimer);
+        H._renderBatchTimer = null;
+        H.RT._log('nav', 'epoch:' + H._navEpoch);
+        return orig.apply(this, arguments);
+      };
+    };
+    if (typeof H.navTo     === 'function') { H.navTo     = _wrap(H.navTo);     _navHooked = true; }
+    if (typeof H.openInner === 'function') { H.openInner = _wrap(H.openInner); _navHooked = true; }
+    if (typeof H.goBack    === 'function') { H.goBack    = _wrap(H.goBack);    _navHooked = true; }
+  }
+
   (function boot() {
     tries++;
+    _hookNavigation();   // install nav epoch hooks as soon as H.navTo etc. are available
     if (canRealtime() && me()) {
       H.initPresence();
       H.initReadReceipts();
