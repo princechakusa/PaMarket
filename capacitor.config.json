@@ -12,7 +12,7 @@
     "webContentsDebuggingEnabled": false
   },
   "ios": {
-    "contentInset": "always",
+    "contentInset": "never",
     "allowsLinkPreview": false,
     "scrollEnabled": false,
     "backgroundColor": "#1A3A8F",
