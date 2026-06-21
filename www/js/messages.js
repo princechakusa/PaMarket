@@ -41,6 +41,7 @@
     convs.forEach(function (c) {
       if (!c || !Array.isArray(c.members) || c.members.length < 2) return;
       if (String(c.id).indexOf('job_') === 0) return;                 // keep job chats separate
+      if (String(c.id).indexOf('biz_') === 0) return;                 // keep business chats separate
       if (c.members.map(String).indexOf(String(u.id)) === -1) return;
       const key = c.members.map(String).sort().join('|');
       (groups[key] = groups[key] || []).push(c);
@@ -255,71 +256,159 @@
     }
     if (typeof H.initPresence === 'function') H.initPresence();
     H._mergeDuplicateConversations();
-    const convos = conversations()
+
+    const tab = H._msgTab || 'personal';
+    const myBizIds = new Set((H.state.businesses || []).filter(function (b) { return b.ownerUserId === u.id; }).map(function (b) { return b.id; }));
+
+    const allConvs = conversations()
       .filter(c => Array.isArray(c.members) && c.members.includes(u.id) && Array.isArray(c.messages) && c.messages.length)
       .sort((a, b) => {
-        const am = (a.messages || [])[( a.messages || []).length - 1] || {};
+        const am = (a.messages || [])[(a.messages || []).length - 1] || {};
         const bm = (b.messages || [])[(b.messages || []).length - 1] || {};
         return (bm.t || 0) - (am.t || 0);
       });
 
-    const totalUnread = convos.reduce((sum, c) => sum + (c.messages || []).filter(m => m.from !== u.id && !m.read).length, 0);
-    const summary = convos.length
-      ? `${convos.length} chat${convos.length === 1 ? '' : 's'}${totalUnread > 0 ? ` · ${totalUnread} unread` : ''}`
+    const personalConvs = allConvs.filter(function (c) { return !c.businessId; });
+    const bizConvs      = allConvs.filter(function (c) { return !!c.businessId; });
+    const personalUnread = personalConvs.reduce((s, c) => s + (c.messages || []).filter(m => m.from !== u.id && !m.read).length, 0);
+    const bizUnread      = bizConvs.reduce((s, c) => s + (c.messages || []).filter(m => m.from !== u.id && !m.read).length, 0);
+    const hasBizTab      = bizConvs.length > 0 || myBizIds.size > 0;
+
+    function _tabBadge(unread, count) {
+      return unread > 0
+        ? ' <span style="background:#EF4444;color:#fff;border-radius:99px;padding:1px 7px;font-size:11px;font-weight:700;vertical-align:middle">' + unread + '</span>'
+        : (count ? ' (' + count + ')' : '');
+    }
+    const tabBar = hasBizTab
+      ? '<div style="display:flex;border-bottom:2px solid var(--border,#E8ECF4)">'
+        + '<button onclick="H._switchMsgTab(\'personal\')" style="flex:1;padding:13px 8px;background:none;border:none;border-bottom:3px solid ' + (tab === 'personal' ? '#1A3A8F' : 'transparent') + ';margin-bottom:-2px;font-size:14px;font-weight:' + (tab === 'personal' ? '700' : '500') + ';color:' + (tab === 'personal' ? '#1A3A8F' : 'var(--sub)') + ';cursor:pointer;font-family:inherit">Personal' + _tabBadge(personalUnread, personalConvs.length) + '</button>'
+        + '<button onclick="H._switchMsgTab(\'business\')" style="flex:1;padding:13px 8px;background:none;border:none;border-bottom:3px solid ' + (tab === 'business' ? '#1A3A8F' : 'transparent') + ';margin-bottom:-2px;font-size:14px;font-weight:' + (tab === 'business' ? '700' : '500') + ';color:' + (tab === 'business' ? '#1A3A8F' : 'var(--sub)') + ';cursor:pointer;font-family:inherit">Business' + _tabBadge(bizUnread, bizConvs.length) + '</button>'
+        + '</div>'
       : '';
-    return `<div class="page active">${H.innerTopbar('Messages')}
-      <div id="notifEnableBanner"></div>
-      ${convos.length ? `<div class="msg-search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
-        <input id="msgSearch" type="text" placeholder="Search conversations" autocomplete="off" oninput="H._filterMsgList(this.value)">
-      </div>` : ''}
-      ${convos.length ? `<div class="msg-summary"><b>${summary}</b>${totalUnread > 0 ? '<button onclick="H._markAllRead()" class="msg-markall">Mark all read</button>' : ''}</div>` : ''}
-      <div id="msgList">
-        ${convos.length ? convos.map(c => {
+
+    // ── PERSONAL TAB ─────────────────────────────────────────
+    function renderPersonalTab() {
+      const convos = personalConvs;
+      if (!convos.length) return H.emptyState('No messages yet', 'When buyers message you about a listing, it will show up here.', null, null);
+      const totalUnread = convos.reduce((sum, c) => sum + (c.messages || []).filter(m => m.from !== u.id && !m.read).length, 0);
+      const summary = `${convos.length} chat${convos.length === 1 ? '' : 's'}${totalUnread > 0 ? ` · ${totalUnread} unread` : ''}`;
+      return `<div class="msg-search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+          <input id="msgSearch" type="text" placeholder="Search conversations" autocomplete="off" oninput="H._filterMsgList(this.value)">
+        </div>
+        <div class="msg-summary"><b>${summary}</b>${totalUnread > 0 ? '<button onclick="H._markAllRead()" class="msg-markall">Mark all read</button>' : ''}</div>
+        ${convos.map(c => {
           const otherId = c.members.find(m => m !== u.id);
-          // Backfill c.otherName from any message senderName we have
           if (!c.otherName) {
-            const sn = ((c.messages || []).find(function(m){ return m.from===otherId && m.senderName; })||{}).senderName;
+            const sn = ((c.messages || []).find(function (m) { return m.from === otherId && m.senderName; }) || {}).senderName;
             if (sn) { c.otherName = sn; H.saveState(); }
           }
-          const other   = otherId ? users().find(x => x.id === otherId) : null;
-          // If name is still blank, trigger async profile fetch which will re-render when resolved
+          const other = otherId ? users().find(x => x.id === otherId) : null;
           if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
           else if (!other && otherId && !(c.otherName)) { H._resolveOtherName(otherId, c); }
-          // Only show "Deleted User" when the account is genuinely gone; while a
-          // name is still loading, a neutral placeholder avoids a false alarm.
           const otherDisplayName = (other && other.name) || c.otherName || (c.otherDeleted ? 'Deleted User' : 'PaMarket User');
-          const _mBiz = c.businessId ? ((H.state.businesses||[]).find(function(b){ return b.id === c.businessId; }) || null) : null;
-          const _mShowBiz = !!(_mBiz && _mBiz.ownerUserId !== u.id);
-          const listName = _mShowBiz ? _mBiz.name : otherDisplayName;
-          const listOther = _mShowBiz ? { avatar: _mBiz.logo || null } : other;
-          const msgs   = c.messages || [];
-          const last   = msgs[msgs.length - 1];
+          const msgs = c.messages || [];
+          const last = msgs[msgs.length - 1];
           if (!last) return '';
           const unreadCount = msgs.filter(m => m.from !== u.id && !m.read).length;
           const unread = unreadCount > 0;
-          const mine   = last.from === u.id;
-          const color  = H.avatarColorFor(_mShowBiz ? (_mBiz.id || listName) : (otherId || otherDisplayName));
-          const online = !_mShowBiz && typeof H.isUserOnline === 'function' && H.isUserOnline(otherId);
-          const verified = !_mShowBiz && other && other.verified;
+          const mine = last.from === u.id;
+          const color = H.avatarColorFor(otherId || otherDisplayName);
+          const online = typeof H.isUserOnline === 'function' && H.isUserOnline(otherId);
+          const verified = other && other.verified;
           const _lastOffer = parseOffer(last.text);
           const previewBody = _lastOffer
             ? MIC.offer + (_lastOffer.k === 'accept' ? 'Offer accepted' : _lastOffer.k === 'decline' ? 'Offer declined' : (_lastOffer.k === 'counter' ? 'Counter: $' : 'Offer: $') + Number(_lastOffer.price || 0).toLocaleString())
             : (last.image ? MIC.photo + 'Photo' : escHtml(msgPreview(last)));
           const preview = (mine ? previewTick(!!last.read) + ' ' : '') + previewBody;
           return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item${unread ? ' unread' : ''}" data-cid="${escHtml(c.id)}" data-oid="${escHtml(otherId || '')}" onclick="H.openChat('${c.id}')">
-            <div class="p-av-wrap">${listAvatarHtml(listOther, listName, color, 'p-av')}${online ? '<span class="p-on"></span>' : ''}</div>
-            <div class="msg-body">
-              <div class="msg-name-row">
-                <div class="msg-name">${escHtml(listName)}${verified ? ' ' + H.verifiedBadge(13) : ''}</div>
-                <div class="msg-time${unread ? ' u' : ''}">${timeAgo(last.t)}</div>
+              <div class="p-av-wrap">${listAvatarHtml({ avatar: other && other.avatar }, otherDisplayName, color, 'p-av')}${online ? '<span class="p-on"></span>' : ''}</div>
+              <div class="msg-body">
+                <div class="msg-name-row">
+                  <div class="msg-name">${escHtml(otherDisplayName)}${verified ? ' ' + H.verifiedBadge(13) : ''}</div>
+                  <div class="msg-time${unread ? ' u' : ''}">${timeAgo(last.t)}</div>
+                </div>
+                <div class="msg-preview${unread ? ' unread' : ''}">${preview}</div>
               </div>
-              <div class="msg-preview${unread ? ' unread' : ''}">${preview}</div>
+              ${unread ? `<div class="msg-badge">${unreadCount > 99 ? '99+' : unreadCount}</div>` : ''}
+            </div></div>`;
+        }).join('')}`;
+    }
+
+    // ── BUSINESS TAB ─────────────────────────────────────────
+    function renderBizTab() {
+      // Owner-side: one grouped entry per shop I own
+      const ownerBizConvs = bizConvs.filter(function (c) { return myBizIds.has(c.businessId); });
+      const ownerGroups = {};
+      ownerBizConvs.forEach(function (c) { (ownerGroups[c.businessId] = ownerGroups[c.businessId] || []).push(c); });
+
+      const ownerEntries = Object.keys(ownerGroups).map(function (bizId) {
+        const convs = ownerGroups[bizId];
+        const biz = (H.state.businesses || []).find(function (b) { return b.id === bizId; });
+        if (!biz) return '';
+        const latestMsg = convs.reduce(function (latest, c) {
+          const msgs = c.messages || []; const last = msgs[msgs.length - 1];
+          return (!latest || (last && last.t > (latest.t || 0))) ? last : latest;
+        }, null);
+        const totalUnread = convs.reduce(function (s, c) { return s + (c.messages || []).filter(function (m) { return m.from !== u.id && !m.read; }).length; }, 0);
+        const color = H.avatarColorFor(biz.id || biz.name);
+        const listOther = { avatar: biz.logo || null };
+        const unread = totalUnread > 0;
+        return `<div class="msg-item${unread ? ' unread' : ''}" onclick="H.openInner('BusinessShopInbox',{id:'${escHtml(biz.id)}'})">
+          <div class="p-av-wrap">${listAvatarHtml(listOther, biz.name, color, 'p-av')}</div>
+          <div class="msg-body">
+            <div class="msg-name-row">
+              <div class="msg-name">${escHtml(biz.name)}</div>
+              <div class="msg-time${unread ? ' u' : ''}">${latestMsg ? timeAgo(latestMsg.t) : ''}</div>
             </div>
-            ${unread ? `<div class="msg-badge">${unreadCount > 99 ? '99+' : unreadCount}</div>` : ''}
-          </div></div>`;
-        }).join('') : H.emptyState('No messages yet', 'When buyers message you about a listing, it will show up here.', null, null)}
-      </div>
+            <div class="msg-preview${unread ? ' unread' : ''}">Shop inbox · ${convs.length} inquiry${convs.length === 1 ? '' : 'ies'}${totalUnread > 0 ? ' · ' + totalUnread + ' unread' : ''}</div>
+          </div>
+          ${unread ? `<div class="msg-badge">${totalUnread > 99 ? '99+' : totalUnread}</div>` : ''}
+        </div>`;
+      }).join('');
+
+      // Buyer-side: my conversations with shops
+      const buyerBizConvs = bizConvs.filter(function (c) { return !myBizIds.has(c.businessId); });
+      const buyerEntries = buyerBizConvs.map(function (c) {
+        const _mBiz = (H.state.businesses || []).find(function (b) { return b.id === c.businessId; }) || null;
+        const listName = _mBiz ? _mBiz.name : (c.otherName || 'Shop');
+        const listOther = _mBiz ? { avatar: _mBiz.logo || null } : null;
+        const msgs = c.messages || [];
+        const last = msgs[msgs.length - 1];
+        if (!last) return '';
+        const unreadCount = msgs.filter(function (m) { return m.from !== u.id && !m.read; }).length;
+        const unread = unreadCount > 0;
+        const mine = last.from === u.id;
+        const color = H.avatarColorFor(_mBiz ? (_mBiz.id || listName) : listName);
+        const _lastOffer = parseOffer(last.text);
+        const previewBody = _lastOffer
+          ? MIC.offer + (_lastOffer.k === 'accept' ? 'Offer accepted' : _lastOffer.k === 'decline' ? 'Offer declined' : (_lastOffer.k === 'counter' ? 'Counter: $' : 'Offer: $') + Number(_lastOffer.price || 0).toLocaleString())
+          : (last.image ? MIC.photo + 'Photo' : escHtml(msgPreview(last)));
+        const preview = (mine ? previewTick(!!last.read) + ' ' : '') + previewBody;
+        return `<div class="msg-item${unread ? ' unread' : ''}" onclick="H.openChat('${escHtml(c.id)}')">
+          <div class="p-av-wrap">${listAvatarHtml(listOther, listName, color, 'p-av')}</div>
+          <div class="msg-body">
+            <div class="msg-name-row">
+              <div class="msg-name">${escHtml(listName)}</div>
+              <div class="msg-time${unread ? ' u' : ''}">${timeAgo(last.t)}</div>
+            </div>
+            <div class="msg-preview${unread ? ' unread' : ''}">${preview}</div>
+          </div>
+          ${unread ? `<div class="msg-badge">${unreadCount > 99 ? '99+' : unreadCount}</div>` : ''}
+        </div>`;
+      }).join('');
+
+      const hasContent = ownerEntries || buyerEntries;
+      return hasContent
+        ? (ownerEntries + buyerEntries)
+        : H.emptyState('No business messages', 'Tap Message on any shop to start chatting.', null, null);
+    }
+
+    const content = tab === 'business' ? renderBizTab() : renderPersonalTab();
+    return `<div class="page active">${H.innerTopbar('Messages')}
+      <div id="notifEnableBanner"></div>
+      ${tabBar}
+      <div id="msgList">${content}</div>
     </div>`;
   };
 
@@ -444,20 +533,21 @@
       + '<div class="chat-hdr-av" onclick="' + (showBizBrand ? 'H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')' : 'H._chat.showProfile(\'' + otherIdSafe + '\')') + '">' + otherAvatar + '</div>'
       + '<div class="chat-hdr-info" onclick="' + (showBizBrand ? 'H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')' : 'H._chat.showProfile(\'' + otherIdSafe + '\')') + '">'
       + '<div class="chat-hdr-name">' + escHtml(chatDisplayName) + '</div>'
-      + '<div class="chat-hdr-sub" id="chatHdrSub">' + (showBizBrand ? '<span style="color:#9baec8">Shop</span>' : chatHdrSubHtml(other, onlineNow)) + '</div></div>'
+      + '<div class="chat-hdr-sub" id="chatHdrSub">' + (showBizBrand ? '<span style="color:#9baec8">' + escHtml((_bizChat && _bizChat.category) ? _bizChat.category + ' · Official Shop' : 'Official Shop') + '</span>' : chatHdrSubHtml(other, onlineNow)) + '</div></div>'
       + '<button class="chat-hdr-menu" onclick="H._chat.openMenu(\'' + otherIdSafe + '\')"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
       + '</div>'
       + (listing ? chatContextCard(listing) : '')
       + '<div class="chat-thread" id="chatThread"><div class="chat-thread-spacer"></div>'
-      + (c.messages.length < 6 ? '<div class="chat-safety"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div><b>Stay safe.</b> Meet in a public place, inspect the item before you pay, and never send a deposit to someone you don\'t know.</div></div>' : '')
-      + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">No messages yet. Say hello!</div>')
+      + (showBizBrand ? '<div style="text-align:center;font-size:12px;color:var(--sub);margin:10px 16px 4px;padding:9px 14px;background:var(--bg,#F9FAFB);border:1px solid var(--border,#E8ECF4);border-radius:12px;line-height:1.55">Replies come from <b>' + escHtml(chatDisplayName) + '</b>, a business on PaMarket. Keep transactions on-platform for safety.</div>' : '')
+      + (!showBizBrand && c.messages.length < 6 ? '<div class="chat-safety"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div><b>Stay safe.</b> Meet in a public place, inspect the item before you pay, and never send a deposit to someone you don\'t know.</div></div>' : '')
+      + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">' + (showBizBrand ? 'Send a message to ' + escHtml(chatDisplayName) + '.' : 'No messages yet. Say hello!') + '</div>')
       + '<div class="chat-typing" id="chatTyping" style="display:none"><div class="chat-row-av">' + otherAvatar + '</div><div class="chat-bubble them chat-typing-bubble"><span></span><span></span><span></span></div></div>'
       + '</div>'
       + ((typeof H._bizMsg !== 'undefined' && H._bizMsg.chipRow) ? H._bizMsg.chipRow(c) : '')
       + '<div class="chat-input-bar">'
       + '<button class="chat-attach-btn" onmousedown="event.preventDefault()" onclick="H._chat.openAttach()" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
       + '<button class="chat-offer-btn" onmousedown="event.preventDefault()" onclick="H._chat.makeOffer()" aria-label="Make an offer"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1.5" x2="12" y2="22.5"/><path d="M17 5.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></button>'
-      + '<textarea id="chatIn" rows="1" inputmode="text" enterkeyhint="enter" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Message…" oninput="H.notifyTyping&&H.notifyTyping();H._autoGrowChat&&H._autoGrowChat(this)" onblur="H.stopTyping&&H.stopTyping()"></textarea>'
+      + '<textarea id="chatIn" rows="1" inputmode="text" enterkeyhint="enter" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="' + (showBizBrand ? 'Message ' + escHtml(chatDisplayName) + '…' : 'Message…') + '" oninput="H.notifyTyping&&H.notifyTyping();H._autoGrowChat&&H._autoGrowChat(this)" onblur="H.stopTyping&&H.stopTyping()"></textarea>'
       + '<button class="chat-send chat-send-grad" onmousedown="event.preventDefault()" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
       + '</div>'
       + '<input type="file" id="chatImgGallery" accept="image/*" style="display:none" onchange="H._chat.handleImageFile(this,false)">'
@@ -1018,6 +1108,76 @@
   };
 
 
+  H._switchMsgTab = function (t) { H._msgTab = t; H.renderPage('Messages'); };
+
+  // ── SHOP INBOX (owner view) ──────────────────────────────
+  pages.BusinessShopInbox = function (params) {
+    const bizId = params && params.id;
+    const b = (H.state.businesses || []).find(function (b) { return b.id === bizId; });
+    const u = currentUser();
+    if (!b || !u || String(b.ownerUserId) !== String(u.id)) {
+      return '<div class="page active">' + innerTopbar('Shop Inbox') + H.emptyState('Not found', '', null, null) + '</div>';
+    }
+    const tab = H._shopInboxTab || 'all';
+    const bizConvs = (H.state.conversations || [])
+      .filter(function (c) {
+        return c.businessId === bizId && !c.otherDeleted
+          && Array.isArray(c.messages) && c.messages.some(function (m) { return m.from !== u.id; });
+      })
+      .sort(function (a, b) {
+        const am = (a.messages || [])[(a.messages || []).length - 1] || {};
+        const bm = (b.messages || [])[(b.messages || []).length - 1] || {};
+        return (bm.t || 0) - (am.t || 0);
+      });
+
+    const unreadConvs = bizConvs.filter(function (c) { return (c.messages || []).some(function (m) { return m.from !== u.id && !m.read; }); });
+    const leadConvs   = bizConvs.filter(function (c) {
+      return c.isLead || (c.messages || []).filter(function (m) { return m.from !== u.id; }).length >= 2;
+    });
+    const tabConvs = tab === 'unread' ? unreadConvs : (tab === 'leads' ? leadConvs : bizConvs);
+
+    const tabBar = ['all', 'unread', 'leads'].map(function (t) {
+      const cnt = t === 'all' ? bizConvs.length : t === 'unread' ? unreadConvs.length : leadConvs.length;
+      const lbl = t === 'all' ? 'All' : t === 'unread' ? 'Unread' : 'Leads';
+      const active = tab === t;
+      return '<button onclick="H._shopInboxTab=\'' + t + '\';H.renderPage(\'BusinessShopInbox\',{id:\'' + escHtml(bizId) + '\'})" style="flex:1;padding:12px 4px;background:none;border:none;border-bottom:3px solid ' + (active ? '#1A3A8F' : 'transparent') + ';margin-bottom:-2px;font-size:13px;font-weight:' + (active ? '700' : '500') + ';color:' + (active ? '#1A3A8F' : 'var(--sub)') + ';cursor:pointer;font-family:inherit">' + lbl + ' (' + cnt + ')</button>';
+    }).join('');
+
+    const rows = tabConvs.map(function (c) {
+      const otherId = (c.members || []).find(function (m) { return m !== u.id; });
+      const other = otherId ? (H.state.users || []).find(function (x) { return x.id === otherId; }) : null;
+      if (!other && otherId) H._resolveOtherName(otherId, c);
+      const buyerName = (other && other.name) || c.otherName || 'Unknown Buyer';
+      const msgs = c.messages || [];
+      const last = msgs[msgs.length - 1];
+      const unreadCount = msgs.filter(function (m) { return m.from !== u.id && !m.read; }).length;
+      const unread = unreadCount > 0;
+      const color = H.avatarColorFor(otherId || buyerName);
+      const isLead = c.isLead || msgs.filter(function (m) { return m.from !== u.id; }).length >= 2;
+      const preview = last ? ((last.from === u.id ? 'You: ' : '') + escHtml(String(msgPreview(last)).slice(0, 60))) : 'No messages';
+      return `<div class="msg-item${unread ? ' unread' : ''}" onclick="H.openChat('${escHtml(c.id)}')">
+        <div class="p-av-wrap">${listAvatarHtml(other, buyerName, color, 'p-av')}</div>
+        <div class="msg-body">
+          <div class="msg-name-row">
+            <div class="msg-name">${escHtml(buyerName)}${isLead ? '<span style="background:#FFF3E0;color:#E65100;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;margin-left:6px;vertical-align:middle">Lead</span>' : ''}</div>
+            <div class="msg-time${unread ? ' u' : ''}">${last ? timeAgo(last.t) : ''}</div>
+          </div>
+          <div class="msg-preview${unread ? ' unread' : ''}">${preview}</div>
+        </div>
+        ${unread ? `<div class="msg-badge">${unreadCount > 99 ? '99+' : unreadCount}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    return `<div class="page active">
+      ${innerTopbar(escHtml(b.name) + ' Inbox')}
+      <div style="display:flex;border-bottom:2px solid var(--border,#E8ECF4)">${tabBar}</div>
+      <div id="shopInboxList">
+        ${rows || H.emptyState(tab === 'leads' ? 'No leads yet' : tab === 'unread' ? 'All caught up' : 'No conversations yet', tab === 'leads' ? 'Buyers with 2+ messages count as leads.' : '', null, null)}
+      </div>
+      <div style="text-align:center;font-size:11.5px;color:var(--sub);padding:16px 20px;line-height:1.55;border-top:1px solid var(--border,#E8ECF4);margin-top:8px">Shop messages are separate from personal DMs. Buyers see your business identity, not your personal name or profile picture.</div>
+    </div>`;
+  };
+
   H.openChat = function (id) { H.openInner('Chat', { id }); };
 
   H.startChatWith = function (otherId, listingId) {
@@ -1056,6 +1216,7 @@
     // fresh empty chat while the real history stayed under the old id.
     const _pairCandidates = conversations().filter(function (x) {
       if (!x || String(x.id).indexOf('job_') === 0) return false;
+      if (String(x.id).indexOf('biz_') === 0) return false;           // keep business chats separate
       const mem = Array.isArray(x.members) ? x.members.map(String) : [];
       const byMembers = mem.indexOf(myId) !== -1 && mem.indexOf(otherId) !== -1;
       const byId = String(x.id) === pairKey || String(x.id).indexOf(pairKey + '_') === 0;
