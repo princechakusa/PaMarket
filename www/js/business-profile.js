@@ -293,8 +293,11 @@
   H.openBusinessProfile = function (id) { H.openInner('BusinessProfile', { id }); };
 
   // ── PAGE: BusinessShop — SHEIN-style full storefront ─────────
-  let _shopCat = 'all';
-  let _shopQ   = '';
+  let _shopCat      = 'all';
+  let _shopQ        = '';
+  let _shopSort     = 'default';
+  let _shopMinPrice = '';
+  let _shopMaxPrice = '';
 
   function shopProducts(b) {
     return (H.state.listings || []).filter(function (l) {
@@ -418,10 +421,21 @@
     }).filter(Boolean);
 
     const q = (_shopQ || '').toLowerCase();
-    let shown = _shopCat === 'new'
-      ? allProds.slice().sort(function(a,b){ return (b.createdAt||b.created_at||'') > (a.createdAt||a.created_at||'') ? 1 : -1; }).slice(0,12)
-      : (_shopCat === 'all' ? allProds : allProds.filter(function (l) { return l.cat === _shopCat; }));
+    let shown = _shopCat === 'all' ? allProds : allProds.filter(function (l) { return l.cat === _shopCat; });
     if (q) shown = shown.filter(function (l) { return (l.title || '').toLowerCase().indexOf(q) !== -1; });
+    // Price range filter
+    const _minP = parseFloat(_shopMinPrice); const _maxP = parseFloat(_shopMaxPrice);
+    if (!isNaN(_minP) && _minP >= 0) shown = shown.filter(function (l) { return (Number(l.price) || 0) >= _minP; });
+    if (!isNaN(_maxP) && _maxP > 0)  shown = shown.filter(function (l) { return (Number(l.price) || 0) <= _maxP; });
+    // Sort
+    if (_shopSort === 'newest' || _shopCat === 'new') {
+      shown = shown.slice().sort(function (a, b) { return ((b.createdAt||b.created_at||0)) - ((a.createdAt||a.created_at||0)); });
+      if (_shopCat === 'new') shown = shown.slice(0, 12);
+    } else if (_shopSort === 'price_asc') {
+      shown = shown.slice().sort(function (a, b) { return (Number(a.price) || 0) - (Number(b.price) || 0); });
+    } else if (_shopSort === 'price_desc') {
+      shown = shown.slice().sort(function (a, b) { return (Number(b.price) || 0) - (Number(a.price) || 0); });
+    }
 
     const coverStyle = b.cover
       ? `background-image:url('${escHtml(b.cover)}');background-size:cover;background-position:center`
@@ -531,11 +545,21 @@
         </div>
       </div>
 
-      <!-- Search -->
-      <div style="margin:10px 12px 6px;background:var(--card,#fff);border:1.5px solid var(--border,#E8ECF4);border-radius:14px;display:flex;align-items:center;gap:8px;padding:10px 13px">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2.3"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
-        <input id="shopSearchIn" value="${escHtml(_shopQ)}" oninput="H._bizShop.onSearch('${escHtml(String(b.id))}',this.value)" placeholder="Search in ${escHtml(b.name)}..." style="flex:1;border:none;outline:none;background:transparent;font-size:13.5px;color:var(--text);font-family:inherit">
+      <!-- Search + Filter -->
+      <div style="margin:10px 12px 6px;display:flex;align-items:center;gap:8px">
+        <div style="flex:1;background:var(--card,#fff);border:1.5px solid var(--border,#E8ECF4);border-radius:14px;display:flex;align-items:center;gap:8px;padding:10px 13px">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2.3"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+          <input id="shopSearchIn" value="${escHtml(_shopQ)}" oninput="H._bizShop.onSearch('${escHtml(String(b.id))}',this.value)" placeholder="Search in ${escHtml(b.name)}..." style="flex:1;border:none;outline:none;background:transparent;font-size:13.5px;color:var(--text);font-family:inherit">
+          ${_shopQ ? `<button onclick="H._bizShop.onSearch('${escHtml(String(b.id))}','');document.getElementById('shopSearchIn')&&(document.getElementById('shopSearchIn').value='')" style="background:none;border:none;color:var(--sub);cursor:pointer;padding:0;font-size:16px;line-height:1;flex-shrink:0">&times;</button>` : ''}
+        </div>
+        <button onclick="H._bizShop.openFilterSheet('${escHtml(String(b.id))}')" title="Sort &amp; Filter" style="flex-shrink:0;width:44px;height:44px;border-radius:12px;background:${(_shopSort !== 'default' || _shopMinPrice || _shopMaxPrice) ? '#1A3A8F' : 'var(--card,#fff)'};border:1.5px solid ${(_shopSort !== 'default' || _shopMinPrice || _shopMaxPrice) ? '#1A3A8F' : 'var(--border,#E8ECF4)'};display:flex;align-items:center;justify-content:center;cursor:pointer">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="${(_shopSort !== 'default' || _shopMinPrice || _shopMaxPrice) ? '#fff' : '#1A3A8F'}" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+        </button>
       </div>
+      ${(_shopSort !== 'default' || _shopMinPrice || _shopMaxPrice) ? `<div style="display:flex;align-items:center;gap:6px;padding:0 12px 6px;flex-wrap:wrap">
+        ${_shopSort !== 'default' ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#EEF2FB;color:#1A3A8F;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px">${_shopSort === 'newest' ? 'Newest' : _shopSort === 'price_asc' ? 'Price: Low' : 'Price: High'} <button onclick="H._bizShop._setSort('${escHtml(String(b.id))}','default')" style="background:none;border:none;color:#1A3A8F;cursor:pointer;padding:0;font-size:13px;line-height:1;margin-left:2px">&times;</button></span>` : ''}
+        ${(_shopMinPrice || _shopMaxPrice) ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#EEF2FB;color:#1A3A8F;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px">${_shopMinPrice ? '$'+_shopMinPrice : ''}${_shopMinPrice && _shopMaxPrice ? ' - ' : ''}${_shopMaxPrice ? '$'+_shopMaxPrice : ''} <button onclick="H._bizShop._clearPrice('${escHtml(String(b.id))}')" style="background:none;border:none;color:#1A3A8F;cursor:pointer;padding:0;font-size:13px;line-height:1;margin-left:2px">&times;</button></span>` : ''}
+      </div>` : ''}
 
       <!-- Category chips -->
       <div style="display:flex;gap:8px;overflow-x:auto;padding:4px 12px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
@@ -632,38 +656,68 @@
     },
     onSearch: function (id, v) {
       _shopQ = v || '';
-      const b = getBiz(id); if (!b) return;
-      const allProds = shopProducts(b);
-      const q = _shopQ.toLowerCase();
-      let shown = _shopCat === 'new'
-        ? allProds.slice().sort(function(a,b){ return (b.createdAt||b.created_at||'') > (a.createdAt||a.created_at||'') ? 1 : -1; }).slice(0,12)
-        : (_shopCat === 'all' ? allProds : allProds.filter(function (l) { return l.cat === _shopCat; }));
-      if (q) shown = shown.filter(function (l) { return (l.title || '').toLowerCase().indexOf(q) !== -1; });
-      const fmtP = function (l) { return H.fmtPrice ? H.fmtPrice(l.price, l.currency) : ('$' + (l.price || 0)); };
-      const loc = [b.city, b.province].filter(Boolean).join(', ') || 'Zimbabwe';
-      const icon = function (cat) { return typeof H.categoryIcon === 'function' ? H.categoryIcon(cat) : ''; };
-      const html = shown.length ? shown.map(function (l) {
-        const hasPhoto = l.photos && l.photos[0];
-        const sizesArr = Array.isArray(l.sizes) ? l.sizes : (l.size ? [l.size] : []);
-        const colorsArr = Array.isArray(l.colors) ? l.colors : (l.color ? [l.color] : []);
-        const sizePills = sizesArr.slice(0,4).map(function(s){ return '<span style="display:inline-block;padding:2px 6px;border:1px solid var(--border,#E8ECF4);border-radius:3px;font-size:9px;font-weight:700;color:var(--sub)">' + escHtml(String(s)) + '</span>'; }).join('');
-        const colorDots = colorsArr.slice(0,5).map(function(c){ return '<span style="display:inline-block;width:13px;height:13px;border-radius:50%;background:' + escHtml(String(c)) + ';border:1px solid rgba(0,0,0,0.12)"></span>'; }).join('');
-        const hasVariants = sizesArr.length > 0 || colorsArr.length > 0;
-        return `<div onclick="H.openListing&&H.openListing('${escHtml(String(l.id))}')" style="background:var(--card,#fff);border-radius:8px;overflow:hidden;border:1px solid var(--border,#E8ECF4);cursor:pointer;position:relative">
-          <div style="aspect-ratio:1/1;background:#F4F6FB;position:relative;overflow:hidden">
-            ${hasPhoto ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover" loading="lazy">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px">${icon(l.cat)}</div>`}
-            <div onclick="event.stopPropagation()" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.95);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.12)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1A3A8F" stroke-width="2.2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
-            ${l.negotiable ? `<span style="position:absolute;top:8px;left:8px;background:#F59E0B;color:#fff;font-size:8px;font-weight:800;padding:2px 6px;border-radius:3px;letter-spacing:.4px">NEG</span>` : ''}
-          </div>
-          <div style="padding:10px 10px 13px">
-            <div style="font-size:15px;font-weight:900;color:#1A3A8F;margin-bottom:3px;letter-spacing:-.3px">${escHtml(fmtP(l))}</div>
-            <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px">${escHtml(l.title || 'Untitled')}</div>
-            ${hasVariants ? `<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${sizePills}${colorDots}</div>` : `<div style="font-size:10.5px;color:var(--sub)">${escHtml(loc)}</div>`}
-          </div>
-        </div>`;
-      }).join('') : `<div style="grid-column:1/-1;text-align:center;color:var(--sub);font-size:13px;padding:40px 16px">No results.</div>`;
-      const grid = document.querySelector('.page.active [style*="grid-template-columns:1fr 1fr"]');
-      if (grid) grid.innerHTML = html;
+      H.renderPage('BusinessShop', { id: id });
+    },
+
+    openFilterSheet: function (bizId) {
+      const sheet = document.getElementById('actionSheet');
+      const bg    = document.getElementById('sheetBg');
+      if (!sheet || !bg) return;
+      const sortOpts = [
+        { id: 'default',    label: 'Default' },
+        { id: 'newest',     label: 'Newest First' },
+        { id: 'price_asc',  label: 'Price: Low to High' },
+        { id: 'price_desc', label: 'Price: High to Low' }
+      ];
+      sheet.innerHTML = '<div class="sheet-header">Sort &amp; Filter</div>'
+        + '<div style="padding:0 16px 8px">'
+        + '<div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Sort by</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">'
+        + sortOpts.map(function (s) {
+            const active = _shopSort === s.id;
+            return '<button onclick="H._bizShop._setSort(\'' + escHtml(bizId) + '\',\'' + s.id + '\')" style="padding:8px 14px;border-radius:8px;border:1.5px solid ' + (active ? '#1A3A8F' : 'var(--border,#E8ECF4)') + ';background:' + (active ? '#EEF2FB' : 'var(--card,#fff)') + ';color:' + (active ? '#1A3A8F' : 'var(--text)') + ';font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">' + s.label + '</button>';
+          }).join('')
+        + '</div>'
+        + '<div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Price range (USD)</div>'
+        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">'
+        + '<div style="flex:1;display:flex;align-items:center;gap:5px;background:var(--bg,#F3F5FA);border-radius:10px;padding:9px 12px"><span style="font-size:13px;font-weight:800;color:var(--sub)">$</span><input id="shopMinPrice" type="number" inputmode="decimal" min="0" placeholder="Min" value="' + escHtml(_shopMinPrice || '') + '" style="flex:1;border:none;outline:none;background:transparent;font-size:13px;font-family:inherit;width:100%;min-width:0"></div>'
+        + '<span style="font-size:13px;color:var(--sub);flex-shrink:0">to</span>'
+        + '<div style="flex:1;display:flex;align-items:center;gap:5px;background:var(--bg,#F3F5FA);border-radius:10px;padding:9px 12px"><span style="font-size:13px;font-weight:800;color:var(--sub)">$</span><input id="shopMaxPrice" type="number" inputmode="decimal" min="0" placeholder="Max" value="' + escHtml(_shopMaxPrice || '') + '" style="flex:1;border:none;outline:none;background:transparent;font-size:13px;font-family:inherit;width:100%;min-width:0"></div>'
+        + '</div>'
+        + '<div style="display:flex;gap:10px">'
+        + '<button onclick="H._bizShop._clearFilters(\'' + escHtml(bizId) + '\')" style="flex:1;padding:13px;border-radius:10px;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Clear all</button>'
+        + '<button onclick="H._bizShop._applyFilters(\'' + escHtml(bizId) + '\')" style="flex:2;padding:13px;border-radius:10px;border:none;background:#1A3A8F;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Apply</button>'
+        + '</div>'
+        + '</div>'
+        + '<button class="sheet-close" onclick="H.closeSheet()">Cancel</button>';
+      sheet.classList.add('open');
+      bg.classList.add('open');
+    },
+
+    _setSort: function (bizId, sort) {
+      _shopSort = sort;
+      H.closeSheet();
+      H.renderPage('BusinessShop', { id: bizId });
+    },
+
+    _applyFilters: function (bizId) {
+      var minEl = document.getElementById('shopMinPrice');
+      var maxEl = document.getElementById('shopMaxPrice');
+      _shopMinPrice = minEl ? (minEl.value.trim() || '') : '';
+      _shopMaxPrice = maxEl ? (maxEl.value.trim() || '') : '';
+      H.closeSheet();
+      H.renderPage('BusinessShop', { id: bizId });
+    },
+
+    _clearFilters: function (bizId) {
+      _shopSort = 'default'; _shopMinPrice = ''; _shopMaxPrice = '';
+      H.closeSheet();
+      H.renderPage('BusinessShop', { id: bizId });
+    },
+
+    _clearPrice: function (bizId) {
+      _shopMinPrice = ''; _shopMaxPrice = '';
+      H.renderPage('BusinessShop', { id: bizId });
     }
   };
 

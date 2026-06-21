@@ -88,6 +88,30 @@
   // Prevents repeated network calls using a per-session pending map.
   H._pendingProfileFetch = H._pendingProfileFetch || {};
   H._resolvedProfileFetch = H._resolvedProfileFetch || {};
+
+  // ── Chat draft persistence ────────────────────────────────────
+  H._chatDrafts = H._chatDrafts || {};
+  H._saveChatDraft = function (convId, text) {
+    if (!convId) return;
+    H._chatDrafts[convId] = text || '';
+    if (H._saveDraftTimer) clearTimeout(H._saveDraftTimer);
+    H._saveDraftTimer = setTimeout(function () {
+      H.state._chatDrafts = H.state._chatDrafts || {};
+      H.state._chatDrafts[convId] = text || '';
+      H.saveState();
+      H._saveDraftTimer = null;
+    }, 800);
+  };
+  H._clearChatDraft = function (convId) {
+    if (!convId) return;
+    delete H._chatDrafts[convId];
+    if (H.state._chatDrafts) delete H.state._chatDrafts[convId];
+  };
+  H._getChatDraft = function (convId) {
+    if (!convId) return '';
+    return (H._chatDrafts && H._chatDrafts[convId]) ||
+      (H.state._chatDrafts && H.state._chatDrafts[convId]) || '';
+  };
   H._resolveOtherName = function(otherId, conv) {
     // Skip if a fetch is already in-flight OR if we've already resolved a non-empty name
     // Fetch a given profile at most once per session — prevents a render→fetch
@@ -552,7 +576,7 @@
       + '<div class="chat-hdr-sub" id="chatHdrSub">' + (showBizBrand ? '<span style="color:#9baec8">Official Shop' + ((_bizChat && _bizChat.category) ? ' | ' + escHtml(_bizChat.category) : '') + '</span>' : chatHdrSubHtml(other, onlineNow)) + '</div>'
       + (showBizBrand ? '<div onclick="H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')" style="font-size:11px;color:#4A90E2;cursor:pointer;margin-top:1px">View Shop &gt;</div>' : '')
       + '</div>'
-      + '<button class="chat-hdr-menu" onclick="H._chat.openMenu(\'' + otherIdSafe + '\')"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
+      + '<button class="chat-hdr-menu" onclick="H._chat.openMenu(\'' + otherIdSafe + '\'' + (showBizBrand ? ',\'' + escHtml(_bizChatId || '') + '\'' : '') + ')"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
       + '</div>'
       + (listing ? chatContextCard(listing) : '')
       + '<div class="chat-thread" id="chatThread"><div class="chat-thread-spacer"></div>'
@@ -564,12 +588,12 @@
       + ((typeof H._bizMsg !== 'undefined' && H._bizMsg.chipRow) ? H._bizMsg.chipRow(c) : '')
       + '<div class="chat-input-bar">'
       + '<button class="chat-attach-btn" onmousedown="event.preventDefault()" onclick="H._chat.openAttach()" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
-      + '<button class="chat-offer-btn" onmousedown="event.preventDefault()" onclick="H._chat.makeOffer()" aria-label="Make an offer"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1.5" x2="12" y2="22.5"/><path d="M17 5.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></button>'
-      + '<textarea id="chatIn" rows="1" inputmode="text" enterkeyhint="enter" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="' + (showBizBrand ? 'Message ' + escHtml(chatDisplayName) + '…' : 'Message…') + '" oninput="H.notifyTyping&&H.notifyTyping();H._autoGrowChat&&H._autoGrowChat(this)" onblur="H.stopTyping&&H.stopTyping()"></textarea>'
+      + (!showBizBrand ? '<button class="chat-offer-btn" onmousedown="event.preventDefault()" onclick="H._chat.makeOffer()" aria-label="Make an offer"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1.5" x2="12" y2="22.5"/><path d="M17 5.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></button>' : '')
+      + '<textarea id="chatIn" rows="1" inputmode="text" enterkeyhint="enter" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="' + (showBizBrand ? 'Message ' + escHtml(chatDisplayName) + '…' : 'Message…') + '" oninput="H.notifyTyping&&H.notifyTyping();H._autoGrowChat&&H._autoGrowChat(this);H._saveChatDraft&&H._saveChatDraft(\'' + escHtml(id) + '\',this.value)" onblur="H.stopTyping&&H.stopTyping()"></textarea>'
       + '<button class="chat-send chat-send-grad" onmousedown="event.preventDefault()" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
       + '</div>'
-      + '<input type="file" id="chatImgGallery" accept="image/*" style="display:none" onchange="H._chat.handleImageFile(this,false)">'
-      + '<input type="file" id="chatImgCamera" accept="image/*" capture="environment" style="display:none" onchange="H._chat.handleImageFile(this,true)">'
+      + '<input type="file" id="chatImgGallery" accept="image/*" multiple style="display:none" onchange="H._chat.handleImageFile(this)">'
+      + '<input type="file" id="chatImgCamera" accept="image/*" capture="environment" style="display:none" onchange="H._chat.handleImageFile(this)">'
       + '</div>';
   };
 
@@ -736,6 +760,7 @@
   }
 
   H._chat = H._chat || {};
+  H._pendingChatImages = H._pendingChatImages || [];
 
   // ----- Swipe-to-reply -----
   H._chat.startReply = function (msgId) {
@@ -1102,6 +1127,10 @@
     }
     if (H.currentPageParams && H.currentPageParams.id) {
       const cid = H.currentPageParams.id;
+      // Restore any saved draft
+      var _draft = typeof H._getChatDraft === 'function' ? H._getChatDraft(cid) : '';
+      var _draftEl = document.getElementById('chatIn');
+      if (_draftEl && _draft) { _draftEl.value = _draft; if (typeof H._autoGrowChat === 'function') H._autoGrowChat(_draftEl); }
       H.startChatPolling(cid);
       // Real-time: presence, typing channel, and push read-receipts to the cloud.
       if (typeof H.initPresence === 'function') H.initPresence();
@@ -1468,7 +1497,9 @@
           width: 900
         });
         if (photo && photo.dataUrl) {
-          await H._chat._sendPickedImage(photo.dataUrl);
+          H._pendingChatImages = H._pendingChatImages || [];
+          H._pendingChatImages.push({ dataUrl: photo.dataUrl, id: H.uid() });
+          H._chat._openStagingTray();
         }
       } catch(e) {
         if (e && e.message && (e.message.toLowerCase().includes('cancel') || e.message.toLowerCase().includes('denied'))) return;
@@ -1486,12 +1517,12 @@
     if (el) el.click();
   };
 
-  H._chat._sendPickedImage = async function(dataUrl) {
+  H._chat._sendPickedImage = async function(dataUrl, silent) {
     const c = conversations().find(function(x){ return x.id === H._activeChat; });
     if (!c) return;
     const u = H.currentUser();
     if (!u) { H.requireAuth('Sign in to send photos'); return; }
-    H.toast('Sending photo…');
+    if (!silent) H.toast('Sending photo…');
     try {
       let imageUrl = dataUrl;
       try {
@@ -1515,17 +1546,100 @@
   };
 
   H._chat.handleImageFile = async function(input) {
-    const file = input.files && input.files[0];
+    const files = input.files ? Array.from(input.files) : [];
     input.value = '';
-    if (!file) return;
+    if (!files.length) return;
     const u = H.currentUser();
     if (!u) { H.requireAuth('Sign in to send photos'); return; }
-    try {
-      const dataUrl = await H.compressImage(file, 900, 0.75);
-      await H._chat._sendPickedImage(dataUrl);
-    } catch(e) {
-      console.warn('Image send error:', e);
-      H.toast('Could not send photo. Please try again.');
+    H._pendingChatImages = H._pendingChatImages || [];
+    for (var fi = 0; fi < files.length; fi++) {
+      try {
+        const dataUrl = await H.compressImage(files[fi], 900, 0.75);
+        H._pendingChatImages.push({ dataUrl: dataUrl, id: H.uid() });
+      } catch (e) { console.warn('compress error:', e); }
+    }
+    H._chat._openStagingTray();
+  };
+
+  // ── Image staging tray (multi-select) ────────────────────────
+  H._chat._openStagingTray = function () {
+    var old = document.getElementById('chatImgStage');
+    if (old) old.remove();
+    if (!H._pendingChatImages || !H._pendingChatImages.length) return;
+
+    var tray = document.createElement('div');
+    tray.id = 'chatImgStage';
+    tray.style.cssText = 'background:var(--card,#fff);border-top:1.5px solid var(--border,#E8ECF4);padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 -2px 12px rgba(0,0,0,0.06)';
+
+    var thumbRow = document.createElement('div');
+    thumbRow.style.cssText = 'display:flex;gap:8px;flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none';
+
+    H._pendingChatImages.forEach(function (img, i) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;flex-shrink:0;width:56px;height:56px';
+      var thumb = document.createElement('img');
+      thumb.src = img.dataUrl;
+      thumb.style.cssText = 'width:56px;height:56px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border,#E8ECF4)';
+      var del = document.createElement('button');
+      del.innerHTML = '&times;';
+      del.setAttribute('aria-label', 'Remove');
+      del.style.cssText = 'position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#EF4444;color:#fff;border:none;font-size:13px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;touch-action:manipulation';
+      (function (idx) {
+        del.onclick = function (e) {
+          e.stopPropagation();
+          H._pendingChatImages.splice(idx, 1);
+          H._chat._openStagingTray();
+        };
+      })(i);
+      wrap.appendChild(thumb);
+      wrap.appendChild(del);
+      thumbRow.appendChild(wrap);
+    });
+
+    // Add more button
+    var addBtn = document.createElement('button');
+    addBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+    addBtn.title = 'Add more photos';
+    addBtn.style.cssText = 'width:56px;height:56px;border-radius:8px;background:#EEF2FB;border:1.5px dashed #1A3A8F;color:#1A3A8F;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation';
+    addBtn.onclick = function () {
+      var g = document.getElementById('chatImgGallery');
+      if (g) g.click();
+    };
+    thumbRow.appendChild(addBtn);
+    tray.appendChild(thumbRow);
+
+    var sendBtn = document.createElement('button');
+    var cnt = H._pendingChatImages.length;
+    sendBtn.textContent = 'Send ' + cnt;
+    sendBtn.style.cssText = 'flex-shrink:0;padding:10px 14px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;touch-action:manipulation';
+    sendBtn.onclick = function () { H._chat.sendAllPendingImages(); };
+    tray.appendChild(sendBtn);
+
+    var cancelBtn = document.createElement('button');
+    cancelBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    cancelBtn.title = 'Cancel';
+    cancelBtn.style.cssText = 'width:32px;height:32px;flex-shrink:0;background:none;border:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;touch-action:manipulation';
+    cancelBtn.onclick = function () {
+      H._pendingChatImages = [];
+      var t = document.getElementById('chatImgStage');
+      if (t) t.remove();
+    };
+    tray.appendChild(cancelBtn);
+
+    var inputBar = document.querySelector('.chat-input-bar');
+    if (inputBar && inputBar.parentNode) inputBar.parentNode.insertBefore(tray, inputBar);
+  };
+
+  H._chat.sendAllPendingImages = async function () {
+    var images = H._pendingChatImages ? H._pendingChatImages.slice() : [];
+    if (!images.length) return;
+    H._pendingChatImages = [];
+    var tray = document.getElementById('chatImgStage');
+    if (tray) tray.remove();
+    var cnt = images.length;
+    H.toast('Sending ' + cnt + (cnt === 1 ? ' photo' : ' photos') + '...');
+    for (var i = 0; i < images.length; i++) {
+      await H._chat._sendPickedImage(images[i].dataUrl, true);
     }
   };
 
@@ -1647,6 +1761,7 @@
     c.messages.push({ id: msgId, from: u.id, senderName: u.name||'', text: storeText, t: msgT, read: false });
     H.saveState();
     inp.value = '';
+    if (typeof H._clearChatDraft === 'function') H._clearChatDraft(c.id);
     if (typeof H._autoGrowChat === 'function') H._autoGrowChat(inp);   // collapse back to one line
     // Keep the keyboard open and the cursor in the field so the user can keep
     // typing. The send button uses onmousedown preventDefault so it never stole
@@ -1768,7 +1883,27 @@
   // pickImage, …) are defined above; reassigning with `H._chat = {…}` would wipe
   // them out and break the "+" attach button.
   Object.assign(H._chat, {
-    openMenu(userId) {
+    openMenu(userId, bizId) {
+      // Business chat menu — actions target the shop, not the owner's personal account
+      if (bizId) {
+        const biz = (H.state.businesses || []).find(function (b) { return b.id === bizId; });
+        const shopName = biz ? escHtml(biz.name) : 'Shop';
+        H.modal({
+          title: shopName,
+          body: '<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">'
+            + '<button onclick="H.closeModal();setTimeout(function(){H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(bizId) + '\')},80)" style="width:100%;padding:13px;background:var(--bg);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">'
+            + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:7px"><path d="M3 9l1.5-6h15L21 9M3 9h18v11a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm6 0v2a3 3 0 006 0V9"/></svg>View Shop</button>'
+            + '<button onclick="H.closeModal();setTimeout(function(){H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(bizId) + '\')},80)" style="width:100%;padding:13px;background:var(--bg);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">'
+            + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:7px"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>View Listings</button>'
+            + '<button onclick="H.closeModal();setTimeout(function(){H._chat.reportShop(\'' + escHtml(bizId) + '\')},80)" style="width:100%;padding:13px;background:var(--bg);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">'
+            + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:7px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Report Shop</button>'
+            + '</div>',
+          confirmText: null,
+          cancelText: 'Close',
+        });
+        return;
+      }
+      // Personal chat menu
       const u = H.currentUser();
       const other = (H.state.users || []).find(x => x.id === userId);
       const name = other ? escHtml(other.name || 'User') : 'User';
@@ -1872,6 +2007,21 @@
       if (window.supabase && typeof window.supabase.from === 'function') {
         window.supabase.from('reports').insert({ id: rep.id, reporter_id: rep.reporterId,
           target_type: 'user', target_id: userId, reason: rep.reason,
+          created_at: new Date(rep.t).toISOString(), status: 'open' }).catch(() => {});
+      }
+    },
+
+    reportShop(bizId) {
+      if (!Array.isArray(H.state.reports)) H.state.reports = [];
+      const u = H.currentUser(); if (!u) return;
+      const rep = { id: H.uid(), reporterId: u.id, targetType: 'business', targetId: bizId,
+        reason: 'Reported from business chat', t: Date.now(), status: 'open' };
+      H.state.reports.push(rep);
+      H.saveState();
+      H.toast('Report submitted — our team will review within 24 hours');
+      if (window.supabase && typeof window.supabase.from === 'function') {
+        window.supabase.from('reports').insert({ id: rep.id, reporter_id: u.id,
+          target_type: 'business', target_id: bizId, reason: rep.reason,
           created_at: new Date(rep.t).toISOString(), status: 'open' }).catch(() => {});
       }
     },
