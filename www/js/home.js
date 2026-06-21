@@ -137,7 +137,8 @@
               return l.status === 'active' && (String(l.sellerId) === String(b.ownerUserId) || String(l.businessId) === String(b.id));
             });
             const lCount = bProds.length;
-            const catName = (H.CATEGORIES && H.CATEGORIES.find(function(c){ return c.id === b.category; }) || {}).name || '';
+            const _hCats = b.categories && b.categories.length ? b.categories : (b.category ? [b.category] : []);
+            const catName = _hCats.map(function(id){ return (H.CATEGORIES && H.CATEGORIES.find(function(c){ return c.id === id; }) || {}).name || ''; }).filter(Boolean).join(' / ');
             const niche = catName || 'Local Shop';
             const featuredIds = b.featuredListingIds || [];
             const featuredProds = featuredIds.length
