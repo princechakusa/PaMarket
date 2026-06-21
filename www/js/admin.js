@@ -67,7 +67,7 @@
       ['listings',      `Listings (${(H.state.listings||[]).length})`],
       ['reports',       `Reports (${(H.state.reports||[]).filter(r=>r.status==='open').length})`],
       ['analytics',     'Analytics'],
-      ['verifications',  `Verify (${(H.state.users||[]).filter(u=>u.verificationPending&&!u.verified).length})`],
+      ['verifications',  `Verify (${(H.state.users||[]).filter(u=>u.verificationPending&&!u.verified).length + Object.keys(H.state._companyVerifications||{}).length})`],
       ['settings',      'Settings'],
       ['ads',           `Ads (${((H.state.paidAds||[]).filter(a=>a.active&&a.endsAt>Date.now())).length} live)`],
       ['notifications', 'Notify'],
@@ -100,8 +100,8 @@
     if (!sb || typeof sb.from !== 'function') return Promise.resolve();
 
     const p1 = sb.from('profiles')
-      .select('id,name,email,phone,verification_pending,id_type,verified,verified_at,avatar_url,role')
-      .or('verification_pending.eq.true,verified.eq.true')
+      .select('id,name,email,phone,verification_pending,id_type,verified,verified_at,avatar_url,role,company_verification_pending,company')
+      .or('verification_pending.eq.true,verified.eq.true,company_verification_pending.eq.true')
       .limit(1000)
       .then(function (res) {
         const data = res && res.data;
@@ -114,6 +114,8 @@
             if (p.id_type) u.verificationIdType = p.id_type;
             if (p.verified !== undefined) u.verified = p.verified;
             if (p.verified_at) u.verifiedAt = new Date(p.verified_at).getTime();
+            if (p.company_verification_pending !== undefined) u.companyVerificationPending = p.company_verification_pending;
+            if (p.company) u.company = p.company;
             if (p.name)  u.name  = p.name;
             if (p.email) u.email = p.email;
             if (p.phone) u.phone = p.phone;
@@ -129,6 +131,8 @@
               verificationIdType:  p.id_type || '',
               verified:   p.verified   || false,
               verifiedAt: p.verified_at ? new Date(p.verified_at).getTime() : null,
+              companyVerificationPending: p.company_verification_pending || false,
+              company: p.company || '',
               joinedAt:   Date.now()
             });
           }
@@ -137,7 +141,7 @@
       .catch(function () {});
 
     const p2 = sb.from('verifications')
-      .select('user_id,id_doc,selfie,status,submitted_at')
+      .select('user_id,id_doc,selfie,id_doc_path,selfie_path,status,submitted_at')
       .order('submitted_at', { ascending: false })
       .limit(500)
       .then(function (res) {
@@ -148,7 +152,21 @@
       })
       .catch(function () {});
 
-    return Promise.all([p1, p2]);
+    // Company / sole-trader verifications — entirely separate table and flow.
+    const p3 = sb.from('company_verifications')
+      .select('user_id,company_name,status,submitted_at,reg_cert_path,tax_cert_path,premises_path,owner_id_path')
+      .eq('status', 'pending')
+      .order('submitted_at', { ascending: false })
+      .limit(200)
+      .then(function (res) {
+        const data = res && res.data;
+        if (!data) return;
+        H.state._companyVerifications = {};
+        data.forEach(function (v) { H.state._companyVerifications[v.user_id] = v; });
+      })
+      .catch(function () {});
+
+    return Promise.all([p1, p2, p3]);
   }
 
   function renderBody() {
@@ -171,23 +189,27 @@
   }
 
   function renderVerifications() {
-    const pending = (H.state.users||[]).filter(u=>u.verificationPending && !u.verified);
+    const pending  = (H.state.users||[]).filter(u=>u.verificationPending && !u.verified);
     const verified = (H.state.users||[]).filter(u=>u.verified);
-    const vdocs = H.state._verifications || {};
+    const vdocs    = H.state._verifications || {};
+    const coPending = Object.values(H.state._companyVerifications || {});
     return `
       <div class="stats" style="margin:0 0 14px">
-        <div class="stat"><div class="stat-n">${pending.length}</div><div class="stat-l">Pending</div></div>
+        <div class="stat"><div class="stat-n">${pending.length}</div><div class="stat-l">ID Pending</div></div>
+        <div class="stat"><div class="stat-n">${coPending.length}</div><div class="stat-l">Co. Pending</div></div>
         <div class="stat"><div class="stat-n">${verified.length}</div><div class="stat-l">Verified</div></div>
         <div class="stat"><div class="stat-n">${(H.state.users||[]).length}</div><div class="stat-l">Total Users</div></div>
       </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Pending Verification Requests</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Pending Identity Verification</div>
       ${pending.length ? `
       <div class="section-card" style="margin-bottom:16px">
         ${pending.map(u => {
           const vd = vdocs[u.id];
-          const idDocHtml  = vd && vd.id_doc  ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">ID Document</div><img src="${vd.id_doc}" style="width:140px;border-radius:8px;border:1px solid var(--n3);display:block"></div>` : '';
-          const selfieHtml = vd && vd.selfie   ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">Selfie</div><img src="${vd.selfie}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--n3);display:block"></div>` : '';
-          const noPhotos   = !vd ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">No photos received — verifications table may be missing</div>` : (!vd.id_doc && !vd.selfie) ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">No photos in submission</div>` : '';
+          const idDocHtml     = vd && vd.id_doc    ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">ID Document</div><img src="${vd.id_doc}" style="width:140px;border-radius:8px;border:1px solid var(--n3);display:block"></div>` : '';
+          const selfieHtml    = vd && vd.selfie    ? `<div><div style="font-size:11px;color:var(--sub);margin-bottom:4px">Selfie</div><img src="${vd.selfie}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--n3);display:block"></div>` : '';
+          const noPhotos      = !vd ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">No photos received</div>` : (!vd.id_doc && !vd.selfie && !vd.id_doc_path && !vd.selfie_path) ? `<div style="font-size:12px;color:#ef4444;margin:8px 0">No photos in submission</div>` : '';
+          const idPathBtn     = vd && vd.id_doc_path  && !vd.id_doc  ? `<button class="ml-act-btn" onclick="H._admin.viewCoDoc('${vd.id_doc_path}')">${S.eye} View ID Doc</button>`  : '';
+          const selfiePathBtn = vd && vd.selfie_path  && !vd.selfie  ? `<button class="ml-act-btn" onclick="H._admin.viewCoDoc('${vd.selfie_path}')">${S.eye} View Selfie</button>` : '';
           return `
           <div class="admin-row" style="padding:14px">
             <div class="admin-row-head">
@@ -203,19 +225,55 @@
             <div style="font-size:12px;color:var(--sub);margin:8px 0">${u.verificationIdType ? `ID Type: ${escHtml(u.verificationIdType)}` : 'Standard verification request'}</div>
             ${noPhotos}
             ${(idDocHtml || selfieHtml) ? `<div style="display:flex;gap:12px;margin:10px 0;flex-wrap:wrap;align-items:flex-start">${idDocHtml}${selfieHtml}</div>` : ''}
+            ${(idPathBtn || selfiePathBtn) ? `<div class="admin-actions" style="margin:6px 0">${idPathBtn}${selfiePathBtn}</div>` : ''}
             <div class="admin-actions">
               <button class="ml-act-btn" onclick="H._admin.approveVerification('${u.id}')">${S.verify} Approve &amp; Verify</button>
               <button class="ml-act-btn red" onclick="H._admin.rejectVerification('${u.id}')">${S.reject} Reject</button>
             </div>
           </div>`;
         }).join('')}
-      </div>` : `<div style="text-align:center;padding:32px 20px;color:var(--sub);font-size:14px">No pending verification requests</div>`}
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Verified Users</div>
+      </div>` : `<div style="text-align:center;padding:24px 20px;color:var(--sub);font-size:14px">No pending identity requests</div>`}
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin:16px 0 8px">Pending Company / Sole Trader Verification</div>
+      ${coPending.length ? `
+      <div class="section-card" style="margin-bottom:16px">
+        ${coPending.map(cv => {
+          const u = (H.state.users||[]).find(x=>x.id===cv.user_id) || {};
+          const isSoleTrader = (cv.company_name||'').startsWith('SOLE TRADER:');
+          const displayName  = isSoleTrader ? escHtml((cv.company_name||'').replace(/^SOLE TRADER:\s*/,'')) + ' <span style="font-size:11px;color:#7c3aed;font-weight:600;background:#ede9fe;padding:1px 6px;border-radius:4px">Sole Trader</span>' : escHtml(cv.company_name||'Unknown') + ' <span style="font-size:11px;color:#1A3A8F;font-weight:600;background:#dbeafe;padding:1px 6px;border-radius:4px">Company</span>';
+          const submitted    = cv.submitted_at ? new Date(cv.submitted_at).toLocaleDateString() : 'Unknown date';
+          const docBtns      = [
+            cv.reg_cert_path ? `<button class="ml-act-btn" onclick="H._admin.viewCoDoc('${cv.reg_cert_path}')">${S.eye} Reg. Cert</button>`  : '',
+            cv.tax_cert_path ? `<button class="ml-act-btn" onclick="H._admin.viewCoDoc('${cv.tax_cert_path}')">${S.eye} Tax Cert</button>`   : '',
+            cv.premises_path ? `<button class="ml-act-btn" onclick="H._admin.viewCoDoc('${cv.premises_path}')">${S.eye} Premises</button>`   : '',
+            cv.owner_id_path ? `<button class="ml-act-btn" onclick="H._admin.viewCoDoc('${cv.owner_id_path}')">${S.eye} Owner ID</button>`   : ''
+          ].filter(Boolean).join('');
+          return `
+          <div class="admin-row" style="padding:14px">
+            <div class="admin-row-head">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:40px;height:40px;border-radius:50%;background:#1A3A8F20;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#1A3A8F;flex-shrink:0">${H.initials(u.name||'U')}</div>
+                <div>
+                  <div class="admin-row-name" style="font-size:14px;font-weight:700">${escHtml(u.name||'Unknown')}</div>
+                  <div class="admin-row-meta">${escHtml(u.email||'')}${u.phone ? ' · ' + escHtml(u.phone) : ''}</div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size:13px;font-weight:600;margin:8px 0 4px">${displayName}</div>
+            <div style="font-size:11px;color:var(--sub);margin-bottom:8px">Submitted: ${submitted}</div>
+            ${docBtns ? `<div class="admin-actions" style="flex-wrap:wrap;margin-bottom:8px">${docBtns}</div>` : `<div style="font-size:12px;color:#ef4444;margin:4px 0 8px">No documents submitted</div>`}
+            <div class="admin-actions">
+              <button class="ml-act-btn" onclick="H._admin.approveCompanyVerification('${cv.user_id}')">${S.verify} Approve</button>
+              <button class="ml-act-btn red" onclick="H._admin.rejectCompanyVerification('${cv.user_id}')">${S.reject} Reject</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>` : `<div style="text-align:center;padding:24px 20px;color:var(--sub);font-size:14px">No pending company verification requests</div>`}
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.6px;margin:16px 0 8px">Verified Users</div>
       <div class="section-card">
         ${verified.length ? verified.slice(0,20).map(u => `
           <div class="admin-row">
             <div class="admin-row-head">
-              <div class="admin-row-name">${escHtml(u.name||'Unknown')} <span style="color:#059669;font-size:11px">✓ Verified</span></div>
+              <div class="admin-row-name">${escHtml(u.name||'Unknown')} <span style="color:#059669;font-size:11px">Verified</span></div>
               <span style="font-size:11px;color:var(--sub)">${new Date(u.verifiedAt||u.joinedAt||Date.now()).toLocaleDateString()}</span>
             </div>
             <div class="admin-row-meta">${escHtml(u.email||u.phone||'')}</div>
@@ -873,7 +931,11 @@
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       u.companyVerified = true; u.companyVerifiedAt = Date.now();
       alog(`Company verified: ${u.name}`);
-      pushNotif(uid_,'Company Verified ✓','Your company account has been verified on PaMarket.','verify');
+      pushNotif(uid_, 'Company Verified', 'Your company account has been verified on PaMarket.', 'verify');
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ company_verified: true }).eq('id', uid_).catch(()=>{});
+      }
       saveState(); toast(`${u.name||'User'} company verified`); this.setTab('users');
     },
 
@@ -882,7 +944,51 @@
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
       u.companyVerified = false;
       alog(`Company verification revoked: ${u.name}`);
-      saveState(); toast(`Company verification revoked`); this.setTab('users');
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ company_verified: false }).eq('id', uid_).catch(()=>{});
+      }
+      saveState(); toast('Company verification revoked'); this.setTab('users');
+    },
+
+    viewCoDoc(path) {
+      if (!path) return;
+      if (typeof H.signedVerificationUrl === 'function') {
+        H.signedVerificationUrl(path, 3600).then(function (url) {
+          if (url) window.open(url, '_blank');
+          else toast('Could not load document');
+        });
+      }
+    },
+
+    approveCompanyVerification(uid_) {
+      if (!adminGuard()) return;
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.companyVerified = true; u.companyVerifiedAt = Date.now(); u.companyVerificationPending = false;
+      if (H.state._companyVerifications) delete H.state._companyVerifications[uid_];
+      alog(`Company verification approved: ${u.name}`);
+      pushNotif(uid_, 'Company Account Verified', 'Your company / sole trader account has been verified. You can now post jobs on PaMarket.', 'verify');
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ company_verified: true, company_verification_pending: false }).eq('id', uid_).catch(()=>{});
+        sb.from('company_verifications').update({ status: 'approved' }).eq('user_id', uid_).catch(()=>{});
+      }
+      saveState(); toast(`${u.name||'User'} company verified`); this.setTab('verifications');
+    },
+
+    rejectCompanyVerification(uid_) {
+      if (!adminGuard()) return;
+      const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
+      u.companyVerificationPending = false;
+      if (H.state._companyVerifications) delete H.state._companyVerifications[uid_];
+      alog(`Company verification rejected: ${u.name}`);
+      pushNotif(uid_, 'Company Verification Unsuccessful', 'Your company verification could not be approved. Please contact support for assistance.', 'warn');
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ company_verification_pending: false }).eq('id', uid_).catch(()=>{});
+        sb.from('company_verifications').update({ status: 'rejected' }).eq('user_id', uid_).catch(()=>{});
+      }
+      saveState(); toast(`Company verification rejected for ${u.name||'User'}`); this.setTab('verifications');
     },
 
     approveListing(lid) {
