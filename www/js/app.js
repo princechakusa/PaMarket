@@ -1930,19 +1930,24 @@ window.H = {
     H.pages.About=function(){
       return '<div class="page active">'+H.innerTopbar('About PaMarket')
         +'<div class="about-wrap">'
-        +'<div class="about-hero"><div class="about-brand">Pa<em>Market</em></div><div class="about-tag">Free Zimbabwean Online Marketplace</div></div>'
-        +'<div class="about-card"><div class="about-sec-title">What is PaMarket?</div><div class="about-body">PaMarket is a free Zimbabwean online marketplace connecting buyers and sellers. Whether you are looking for goods, services, vehicles, property, or jobs, PaMarket makes it easy to post, browse, and connect with people in your province and across Zimbabwe.</div></div>'
-        +'<div class="about-card"><div class="about-sec-title">Who is it for?</div><div class="about-body">PaMarket is for anyone in Zimbabwe — individuals selling personal items, small businesses promoting services, employers posting vacancies, and buyers searching for the best local deals. The app is free to download and free to use.</div></div>'
-        +'<div class="about-card"><div class="about-sec-title">Key Features</div><div class="about-grid">'
-        +['Free Listings','Secure Messaging','WhatsApp Connect','All Categories','Province Filters','Verified Sellers','Job Board','Photo Uploads'].map(f=>'<div class="about-feat">'+f+'</div>').join('')
+        +'<div class="about-hero"><div class="about-brand">Pa<em>Market</em></div><div class="about-tag">Zimbabwe\'s Free Marketplace</div><div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:6px">Version 1.5.0</div></div>'
+        +'<div class="about-card"><div class="about-sec-title">What is PaMarket?</div><div class="about-body">PaMarket is a free Zimbabwean marketplace connecting buyers, sellers, businesses, and job seekers across all ten provinces. Post a listing in minutes, browse thousands of ads, or open your own verified shop - all completely free.</div></div>'
+        +'<div class="about-card"><div class="about-sec-title">What\'s Inside</div><div class="about-grid">'
+        +['Marketplace','Business Shops','Hire Talent','Direct Messaging','Verified Sellers','Province Filters','12 Categories','Always Free'].map(f=>'<div class="about-feat">'+f+'</div>').join('')
         +'</div></div>'
-        +'<div class="about-card"><div class="about-sec-title">Legal &amp; Compliance</div><div class="about-body">PaMarket operates as a platform for user-generated listings. We do not own, sell, or warrant any items listed. Users are responsible for ensuring their listings comply with applicable Zimbabwean law. Prohibited content (counterfeit goods, illegal services, misleading listings) will be removed and accounts suspended. By using PaMarket you agree to our Terms of Service and Privacy Policy.</div></div>'
+        +'<div class="about-card"><div class="about-sec-title">Legal</div>'
+        +'<div class="about-body" style="margin-bottom:12px">PaMarket is a platform only. We do not own or warrant any listed item. Users must ensure listings comply with Zimbabwean law.</div>'
+        +'<div style="display:flex;flex-direction:column;gap:10px">'
+        +'<button onclick="H.authShowDoc(\'terms\')" style="width:100%;padding:12px;background:var(--bg,#f5f7fb);border:1px solid var(--border,#e5e7eb);border-radius:10px;font-size:14px;font-weight:600;color:var(--text,#1a1a1a);cursor:pointer;text-align:left">Terms &amp; Conditions</button>'
+        +'<button onclick="H.authShowDoc(\'privacy\')" style="width:100%;padding:12px;background:var(--bg,#f5f7fb);border:1px solid var(--border,#e5e7eb);border-radius:10px;font-size:14px;font-weight:600;color:var(--text,#1a1a1a);cursor:pointer;text-align:left">Privacy Policy</button>'
+        +'<button onclick="H.authShowDoc(\'guidelines\')" style="width:100%;padding:12px;background:var(--bg,#f5f7fb);border:1px solid var(--border,#e5e7eb);border-radius:10px;font-size:14px;font-weight:600;color:var(--text,#1a1a1a);cursor:pointer;text-align:left">Community Guidelines</button>'
+        +'</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Contact Us</div>'
         +'<div class="about-contact-row" onclick="window.location.href=\'mailto:chakusaprince@gmail.com\'"><div class="about-contact-ic email-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><div><div class="about-contact-label">Support Email</div><div class="about-contact-val">chakusaprince@gmail.com</div></div></div>'
         +'<div class="about-contact-row" onclick="window.open(\'https://wa.me/971589772645\')"><div class="about-contact-ic wa-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg></div><div><div class="about-contact-label">WhatsApp Support</div><div class="about-contact-val">+971 589 772 645</div></div></div>'
         +'</div>'
         +'<div class="about-ads-banner"><div class="about-ads-title">Advertise with PaMarket</div><div class="about-ads-sub">Reach active buyers across all provinces of Zimbabwe</div><button class="about-ads-btn" onclick="H.openInner(\'Ads\')">Get in Touch</button></div>'
-        +'<div style="text-align:center;font-size:12px;color:var(--text-muted,#999);padding:16px 0 4px">PaMarket © 2026 · Made in Zimbabwe</div>'
+        +'<div style="text-align:center;font-size:12px;color:var(--text-muted,#999);padding:16px 0 4px">PaMarket v1.5.0 &copy; 2026 · Made in Zimbabwe</div>'
         +'</div></div>';
     };
 
@@ -2170,9 +2175,10 @@ window.H = {
       <div class="auth-card" id="authCard"></div>
       <div class="login-modal-foot">
         By continuing you agree to our
-        <span onclick="H.authShowDoc('terms')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Terms &amp; Conditions</span>
-        and
+        <span onclick="H.authShowDoc('terms')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Terms &amp; Conditions</span>,
         <span onclick="H.authShowDoc('privacy')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Privacy Policy</span>
+        and
+        <span onclick="H.authShowDoc('guidelines')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Community Guidelines</span>
       </div>`;
     bg.classList.add('open');
     bg.scrollTop = 0;
