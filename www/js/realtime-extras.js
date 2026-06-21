@@ -253,6 +253,12 @@
   //   • the browser 'online' event (network came back)
   //   • a channel reporting CHANNEL_ERROR / TIMED_OUT (scheduleReconnect)
   //   • the 30s health monitor when the socket is found disconnected
+  //
+  // State machine:
+  //   OFFLINE     — no active subscription, not attempting
+  //   CONNECTING  — reconnect cycle in progress
+  //   CONNECTED   — at least one channel SUBSCRIBED successfully
+  //   DEGRADED    — one or more channels errored; others may still be live
   // ===================================================================
   function realtimeConnected() {
     try {
@@ -263,16 +269,42 @@
   H._realtimeConnected = realtimeConnected;
 
   H.RT = H.RT || {};
-  H.RT._lastReconnect  = 0;
-  H.RT._reconnectTimer = null;
+  H.RT._lastReconnect    = 0;
+  H.RT._reconnectTimer   = null;
+  H.RT._state            = 'OFFLINE';   // OFFLINE | CONNECTING | CONNECTED | DEGRADED
+  H.RT._reconnecting     = false;        // mutex: at most one reconnect cycle in flight
+  H.RT._backoffMs        = 2000;         // current delay; doubles on failure, capped at 30s
+  H.RT._backoffAttempt   = 0;
 
-  // Re-subscribe every realtime channel. Debounced so simultaneous triggers
-  // (e.g. 'online' + foreground firing together) only reconnect once.
+  H.RT._setState = function (s) {
+    if (H.RT._state !== s) H.RT._state = s;
+  };
+
+  // Called by every channel's .subscribe() status callback.
+  // SUBSCRIBED  → reset backoff, mark CONNECTED.
+  // CHANNEL_ERROR / TIMED_OUT → move to DEGRADED and schedule a backoff reconnect.
+  H.RT._onChannelStatus = function (name, status) {
+    if (status === 'SUBSCRIBED') {
+      H.RT._backoffMs      = 2000;    // reset exponential backoff on first success
+      H.RT._backoffAttempt = 0;
+      if (H.RT._state === 'CONNECTING' || H.RT._state === 'DEGRADED' || H.RT._state === 'OFFLINE') {
+        H.RT._setState('CONNECTED');
+      }
+    } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      H.RT._setState('DEGRADED');
+      H.RT.scheduleReconnect(name + ':' + status);
+    }
+  };
+
+  // Re-subscribe every realtime channel. Guarded by a 4s storm-collapse and
+  // the _reconnecting mutex so multiple simultaneous triggers (e.g. 'online' +
+  // foreground + health monitor) only produce one reconnect cycle.
   H.RT.reconnectAll = function (reason) {
     if (!canRealtime()) return;
     var now = Date.now();
-    if (now - H.RT._lastReconnect < 4000) return;     // collapse storms
+    if (now - H.RT._lastReconnect < 4000) return;     // collapse event storms
     H.RT._lastReconnect = now;
+    H.RT._setState('CONNECTING');
     try {
       // Public content — no auth required.
       if (typeof H._setupRealtimeListings   === 'function') H._setupRealtimeListings();
@@ -296,12 +328,26 @@
     } catch (e) { console.warn('RT.reconnectAll:', e && e.message); }
   };
 
-  // Single debounced reconnect after a channel reports an error.
+  // Schedule a reconnect with exponential backoff. At most ONE pending reconnect
+  // can be queued at a time (mutex). Backoff sequence: 2s, 4s, 8s, 16s, 30s (cap).
+  // The backoff resets to 2s the first time any channel reports SUBSCRIBED.
   H.RT.scheduleReconnect = function (reason) {
+    if (H.RT._reconnecting) return;    // mutex: ignore if a cycle is already queued
+    H.RT._reconnecting = true;
+    H.RT._setState('CONNECTING');
+    H.RT._backoffAttempt++;
+    var delay = Math.min(H.RT._backoffMs, 30000);
+    H.RT._backoffMs = Math.min(H.RT._backoffMs * 2, 30000);
     clearTimeout(H.RT._reconnectTimer);
     H.RT._reconnectTimer = setTimeout(function () {
-      if (!document.hidden) H.RT.reconnectAll(reason || 'scheduled');
-    }, 2000);
+      H.RT._reconnecting = false;
+      if (!document.hidden) {
+        H.RT.reconnectAll(reason || 'backoff');
+      } else {
+        // App is backgrounded — skip now, onForeground will reconnect when visible.
+        H.RT._setState('OFFLINE');
+      }
+    }, delay);
   };
 
   // ── Realtime for shop reviews (live ratings / new reviews) ───────
@@ -328,6 +374,197 @@
           if (status === 'CHANNEL_ERROR') console.warn('reviews realtime unavailable (business_reviews not in publication?) — poll fallback active');
         });
     } catch (e) { H._reviewsChannel = null; }
+  };
+
+  // ===================================================================
+  // UNIFIED FEED UPDATE PIPELINE  (H.applyFeedUpdate)
+  // Single point of truth for all mutations to H.state.listings and
+  // H.state.businesses. Called by:
+  //   • Realtime handlers  (source = 'realtime') — individual INSERT/UPDATE/DELETE
+  //   • fetchListingsFromSupabase / fetchAllActiveBusinesses (source = 'poll')
+  //
+  // Cache conflict rules
+  // ────────────────────
+  // listings_full   Server active listings replace local active listings.
+  //                 Non-active (pending/banned) local items are preserved —
+  //                 they come from the user's own posts not yet approved.
+  //                 Items received via a realtime INSERT within the last 5 s
+  //                 that did not appear in the server response are also kept
+  //                 (query-vs-realtime race guard: the INSERT was committed
+  //                 after the server query window closed but before our
+  //                 realtime event arrived).
+  //
+  // listing_event   INSERT: add to front if not already present (id dedup).
+  //                 UPDATE: merge, server wins — skipped if item has
+  //                         _pendingSync=true (local write in-flight).
+  //                 DELETE: always remove.
+  //
+  // businesses_full Upsert-merge each server item; never overwrite a local
+  //                 logo/cover with null (cloud-write race condition where
+  //                 the image CDN URL was not yet committed on read).
+  //
+  // business_event  Same merge rules as listing_event + null logo/cover guard.
+  // ===================================================================
+
+  // Track ids added via realtime INSERT so a concurrent full fetch cannot
+  // silently drop items that arrived after the query window closed.
+  H._rtInsertWindow    = H._rtInsertWindow    || {};
+  H._rtInsertWindowBiz = H._rtInsertWindowBiz || {};
+  var _RT_WIN_MS = 5000;
+
+  H.applyFeedUpdate = function (payload, source) {
+    if (!payload) return;
+    H.state.listings   = H.state.listings   || [];
+    H.state.businesses = H.state.businesses || [];
+    var type = payload.type;
+
+    // ── Single listing event from realtime ──────────────────────────────────────
+    if (type === 'listing_event') {
+      var evt    = payload.evt;
+      var mapped = payload.data;
+      var delId  = payload.id;
+
+      if (evt === 'DELETE') {
+        H.state.listings = H.state.listings.filter(function (l) { return l.id !== delId; });
+        delete H._rtInsertWindow[delId];
+
+      } else if (evt === 'INSERT' || evt === 'UPDATE') {
+        if (!mapped) return;
+        if (mapped.status === 'active') {
+          var idx = H.state.listings.findIndex(function (l) { return l.id === mapped.id; });
+          if (idx >= 0) {
+            if (H.state.listings[idx]._pendingSync && source === 'realtime') return;
+            H.state.listings[idx] = Object.assign({}, H.state.listings[idx], mapped);
+          } else {
+            H.state.listings.unshift(mapped);
+            if (evt === 'INSERT') H._rtInsertWindow[mapped.id] = Date.now();
+          }
+        } else {
+          H.state.listings = H.state.listings.filter(function (l) { return l.id !== mapped.id; });
+          delete H._rtInsertWindow[mapped.id];
+        }
+      }
+      H.saveState && H.saveState();
+
+    // ── Full listings result from server (poll / startup) ───────────────────────
+    } else if (type === 'listings_full') {
+      var cloud    = payload.data || [];
+      var now      = Date.now();
+      var cloudIds = {};
+      cloud.forEach(function (l) { cloudIds[l.id] = true; });
+
+      // Non-active local items (user's pending/banned listings).
+      var nonActive = H.state.listings.filter(function (l) { return l.status !== 'active'; });
+
+      // Realtime-insert race guard: keep items added by a realtime event within
+      // the last 5 s that didn't make it into this server query's result window.
+      var rtSafe = H.state.listings.filter(function (l) {
+        var ts = H._rtInsertWindow[l.id];
+        return ts && (now - ts < _RT_WIN_MS) && !cloudIds[l.id];
+      });
+
+      // Purge stale window entries.
+      Object.keys(H._rtInsertWindow).forEach(function (id) {
+        if (now - H._rtInsertWindow[id] >= _RT_WIN_MS) delete H._rtInsertWindow[id];
+      });
+
+      H.state.listings = rtSafe.concat(cloud).concat(nonActive);
+      H.saveState && H.saveState();
+
+    // ── Single business event from realtime ─────────────────────────────────────
+    } else if (type === 'business_event') {
+      var bevt    = payload.evt;
+      var bmapped = payload.data;
+      var bdelId  = payload.id;
+
+      if (bevt === 'DELETE') {
+        H.state.businesses = H.state.businesses.filter(function (b) { return b.id !== bdelId; });
+        delete H._rtInsertWindowBiz[bdelId];
+
+      } else if (bevt === 'INSERT' || bevt === 'UPDATE') {
+        if (!bmapped) return;
+        if (bmapped.status === 'active') {
+          var bidx = H.state.businesses.findIndex(function (b) { return b.id === bmapped.id; });
+          if (bidx >= 0) {
+            var bprev = H.state.businesses[bidx];
+            if (!bmapped.logo  && bprev.logo)  bmapped.logo  = bprev.logo;
+            if (!bmapped.cover && bprev.cover) bmapped.cover = bprev.cover;
+            H.state.businesses[bidx] = Object.assign({}, bprev, bmapped);
+          } else {
+            H.state.businesses.unshift(bmapped);
+            if (bevt === 'INSERT') H._rtInsertWindowBiz[bmapped.id] = Date.now();
+          }
+        } else {
+          H.state.businesses = H.state.businesses.filter(function (b) { return b.id !== bmapped.id; });
+          delete H._rtInsertWindowBiz[bmapped.id];
+        }
+      }
+      H.saveState && H.saveState();
+
+    // ── Full businesses result from server (poll) ────────────────────────────────
+    } else if (type === 'businesses_full') {
+      var bcloud  = payload.data || [];
+      var bnow    = Date.now();
+      H.state.businesses = H.state.businesses || [];
+
+      bcloud.forEach(function (bm) {
+        var bi = H.state.businesses.findIndex(function (b) { return b.id === bm.id; });
+        if (bi >= 0) {
+          var bp = H.state.businesses[bi];
+          if (!bm.logo  && bp.logo)  bm.logo  = bp.logo;
+          if (!bm.cover && bp.cover) bm.cover = bp.cover;
+          H.state.businesses[bi] = Object.assign({}, bp, bm);
+        } else {
+          H.state.businesses.push(bm);
+        }
+      });
+
+      // Purge stale business insert-window entries.
+      Object.keys(H._rtInsertWindowBiz).forEach(function (id) {
+        if (bnow - H._rtInsertWindowBiz[id] >= _RT_WIN_MS) delete H._rtInsertWindowBiz[id];
+      });
+
+      H.saveState && H.saveState();
+    }
+  };
+
+  // ===================================================================
+  // BATCHED RENDER SCHEDULER  (H._scheduleRender)
+  // Groups rapid realtime events (e.g. a burst of inserts) into a single
+  // re-render 350 ms after the last update. Prevents scroll jumps and
+  // redundant layout recalculations from per-event re-renders.
+  //
+  // Cancelled / deferred if:
+  //   • RM is already mid-render (_inBgRender) — re-queued for 200 ms after
+  //   • The visible page changed since scheduling — stale render is skipped
+  //
+  // Note: only realtime handlers call this. Poll-driven renders go through
+  // RM's own sig-compare path, which already debounces via _renderPreserved.
+  // ===================================================================
+  H._renderBatchTimer = null;
+
+  H._scheduleRender = function () {
+    if (!H.RM || typeof H.RM._renderPreserved !== 'function') return;
+    var capturedPage   = H.currentPageName;
+    var capturedParams = H.currentPageParams;
+
+    clearTimeout(H._renderBatchTimer);
+    H._renderBatchTimer = setTimeout(function () {
+      H._renderBatchTimer = null;
+      if (!H.RM || typeof H.RM._renderPreserved !== 'function') return;
+      if (H.currentPageName !== capturedPage) return;   // navigated away — skip
+      if (H.RM._inBgRender) {
+        // RM is already rendering; re-queue so we run cleanly after it settles.
+        H._renderBatchTimer = setTimeout(function () {
+          H._renderBatchTimer = null;
+          if (H.currentPageName === capturedPage && !H.RM._inBgRender) {
+            H.RM._renderPreserved(capturedPage, H.currentPageParams);
+          }
+        }, 200);
+        return;
+      }
+      H.RM._renderPreserved(capturedPage, H.currentPageParams);
+    }, 350);
   };
 
   // ===================================================================
