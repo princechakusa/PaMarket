@@ -844,6 +844,30 @@
     });
   };
 
+  // Reliably pin the chat thread to the most recent message. Repeats over a few
+  // frames/delays (layout + late images shift the height) and re-pins as each
+  // thread image loads, so the chat never opens stuck on middle messages.
+  function forceChatScrollBottom() {
+    var th = document.getElementById('chatThread');
+    if (!th) return;
+    var jump = function () {
+      var el = document.getElementById('chatThread');
+      if (el) el.scrollTop = el.scrollHeight;
+    };
+    jump();
+    requestAnimationFrame(jump);
+    [40, 120, 250, 450, 750].forEach(function (d) { setTimeout(jump, d); });
+    // Re-pin when images that were still loading at mount finish and grow the thread.
+    var imgs = th.querySelectorAll('img');
+    for (var i = 0; i < imgs.length; i++) {
+      if (!imgs[i].complete) {
+        imgs[i].addEventListener('load',  jump, { once: true });
+        imgs[i].addEventListener('error', jump, { once: true });
+      }
+    }
+  }
+  H._forceChatScrollBottom = forceChatScrollBottom;
+
   pages.Chat_after = function () {
     if (window._messagesPoll) { clearInterval(window._messagesPoll); window._messagesPoll = null; }
     // Tear down keyboard/viewport listeners from a PREVIOUS Chat mount before we
@@ -862,8 +886,11 @@
     }
     if (window._chatKBShow && typeof window._chatKBShow.remove === 'function') { try { window._chatKBShow.remove(); } catch (e) {} window._chatKBShow = null; }
     if (window._chatKBHide && typeof window._chatKBHide.remove === 'function') { try { window._chatKBHide.remove(); } catch (e) {} window._chatKBHide = null; }
-    const t = document.getElementById('chatThread');
-    if (t) t.scrollTop = t.scrollHeight;
+    // Pin to the latest message. A single synchronous scroll lands short because
+    // message images/avatars haven't loaded yet — once they do, the thread grows
+    // and leaves the user stranded mid-list. So we scroll now, on the next few
+    // frames/delays, and again each time a thread image finishes loading.
+    forceChatScrollBottom();
     attachReplySwipe();
     const ma  = document.getElementById('mainArea');
     const wrap = document.getElementById('chatPageWrap');
