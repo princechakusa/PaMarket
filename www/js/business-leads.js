@@ -45,6 +45,18 @@
     if (b && typeof H.pushNotif === 'function') { try { H.pushNotif(b.ownerUserId, 'New lead', (row.userName) + ' is interested in "' + (l.title || 'your listing') + '"', 'lead'); } catch (e) {} }
   };
 
+  H.recordShopLead = function (bizId, type) {
+    const b = (H.state.businesses || []).find(function(x){ return x.id === bizId; });
+    if (!b) return;
+    const u = currentUser();
+    const row = { id: H.uid(), businessId: bizId, listingId: null, userId: u ? u.id : null, userName: u ? (u.name || u.phone || 'User') : 'Guest', type: type, status: 'new', createdAt: Date.now() };
+    leadsMap()[bizId] = [row].concat(leadsOf(bizId));
+    saveState();
+    const sb = window.supabase;
+    if (sb) { try { sb.from('business_leads').insert({ id: row.id, business_id: bizId, listing_id: null, user_id: row.userId, user_name: row.userName, type: type, status: 'new' }).then(function(){}, function(){}); } catch(e) {} }
+    if (typeof H.pushNotif === 'function') { try { H.pushNotif(b.ownerUserId, 'New contact', (row.userName) + ' contacted your shop via ' + (type === 'whatsapp' ? 'WhatsApp' : type === 'call' ? 'Call' : 'Chat'), 'lead'); } catch(e) {} }
+  };
+
   H.fetchBusinessLeads = async function (businessId) {
     const sb = window.supabase; if (!sb || !businessId) return leadsOf(businessId);
     try {
