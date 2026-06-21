@@ -9,14 +9,43 @@
  * Consumers:
  *   H.RM.resume()  / H.RM.pause()    — refresh-manager.js poll loops
  *   H._rtOnForeground / _rtOnBackground / _rtOnOnline — realtime-extras.js
+ *
+ * iOS + Android lifecycle event ordering
+ * ───────────────────────────────────────
+ * Both platforms fire two signals on every foreground/background transition:
+ * visibilitychange (from WKWebView / WebView) and appStateChange (Capacitor).
+ *
+ * iOS backgrounding :  visibilitychange(hidden) fires first, then appStateChange.
+ * iOS foregrounding :  visibilitychange(visible) fires first, then appStateChange.
+ *                      appStateChange also fires alone for transient interruptions
+ *                      (phone call overlays, notification centre) that do not
+ *                      affect document visibility.
+ *
+ * Android backgrounding: appStateChange fires first; visibilitychange follows.
+ * Android foregrounding: appStateChange fires first and is authoritative;
+ *                        visibilitychange can be delayed or skipped on app-switch.
+ *
+ * The 2-second foreground debounce absorbs the duplicate regardless of order.
+ * Background has no debounce because RM.pause() and touchLastSeen are idempotent
+ * or self-throttled, so duplicate background signals are harmless.
+ *
+ * WebSocket behaviour after iOS suspension
+ * ─────────────────────────────────────────
+ * iOS suspends the JS process after ~3-10 s in background, killing all WebSocket
+ * connections. On return to foreground, _rtOnForeground calls RT.reconnectAll
+ * which re-subscribes every Supabase channel. If the network is not yet ready,
+ * each channel emits CHANNEL_ERROR which triggers scheduleReconnect (exponential
+ * backoff: 2 s, 4 s, 8 s … 30 s cap). The 30 s health monitor in realtime-extras
+ * catches any connections that were not restored by the foreground handler.
  */
 'use strict';
 (function (H) {
 
   // ── Debounce guard ───────────────────────────────────────────────────────────
-  // visibilitychange and appStateChange both fire when the app returns to the
-  // foreground on Android (Capacitor). The 2-second gate ensures the combined
-  // trigger executes exactly once, no matter how many OS signals arrive.
+  // Both visibilitychange and appStateChange fire on the same foreground transition
+  // on iOS and Android, so two _onAppStateChange('foreground') calls arrive within
+  // milliseconds of each other. The 2-second gate ensures exactly one execution
+  // regardless of which signal arrives first or whether both arrive.
   var _lastFgMs = 0;
   var _FG_DEBOUNCE_MS = 2000;
 
@@ -32,31 +61,38 @@
       if (typeof H._rtOnForeground === 'function') H._rtOnForeground();
 
     } else if (state === 'background') {
-      // Suspend poll loops; update last-seen timestamp
+      // Suspend poll loops; update last-seen timestamp.
+      // No debounce needed: RM.pause() is idempotent, touchLastSeen is 60 s
+      // throttled, so duplicate background signals (iOS transient interruptions
+      // fire appStateChange without a matching visibilitychange) are harmless.
       if (H.RM && typeof H.RM.pause === 'function') H.RM.pause();
       if (typeof H._rtOnBackground === 'function') H._rtOnBackground();
 
     } else if (state === 'online') {
-      // Network returned: reconnect realtime and force an immediate poll
+      // Network returned: reconnect realtime and force an immediate poll.
+      // Runs independently of the foreground debounce — network recovery can
+      // occur while the app is already foregrounded (Wi-Fi handoff, tunnel up).
       if (typeof H._rtOnOnline === 'function') H._rtOnOnline();
-      // online does NOT go through the foreground debounce — it is independent
-      // and may fire while the app is already in the foreground
 
     }
-    // 'offline' — no action; polls and realtime degrade gracefully on their own
+    // 'offline' — no action; polls and realtime degrade gracefully on their own.
   };
 
   // ── OS event listeners ───────────────────────────────────────────────────────
 
-  // Web / PWA — fires reliably on tab focus and on Android in most browser contexts
+  // visibilitychange — fires on both iOS (WKWebView) and Android (WebView).
+  // On iOS this is the first signal to arrive on foreground/background transitions,
+  // so document.hidden is already in its new state when the handler runs.
   document.addEventListener('visibilitychange', function () {
     H._onAppStateChange(document.hidden ? 'background' : 'foreground');
   });
 
-  // Capacitor native (Android) — authoritative foreground/background trigger.
-  // visibilitychange can be delayed or skipped on Android app-switch; this fills
-  // that gap. The 2-second debounce above absorbs any duplicate that arrives when
-  // both events fire for the same transition.
+  // Capacitor App plugin (iOS + Android) — fires appStateChange on every
+  // active/inactive transition. On Android this is the authoritative signal
+  // because visibilitychange can be delayed or skipped on app-switch. On iOS
+  // this additionally covers transient interruptions (phone call overlays,
+  // notification centre) where visibilitychange is not raised. The 2-second
+  // foreground debounce absorbs any duplicate that arrives for the same transition.
   try {
     var _CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
     if (_CapApp && typeof _CapApp.addListener === 'function') {
