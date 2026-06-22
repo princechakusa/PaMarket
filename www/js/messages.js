@@ -95,9 +95,17 @@
     if (!convId) return;
     H._chatDrafts[convId] = text || '';
     if (H._saveDraftTimer) clearTimeout(H._saveDraftTimer);
+    if (!text) {
+      // Immediately persist the clear so _getChatDraft doesn't return stale text
+      H.state._chatDrafts = H.state._chatDrafts || {};
+      H.state._chatDrafts[convId] = '';
+      H.saveState();
+      H._saveDraftTimer = null;
+      return;
+    }
     H._saveDraftTimer = setTimeout(function () {
       H.state._chatDrafts = H.state._chatDrafts || {};
-      H.state._chatDrafts[convId] = text || '';
+      H.state._chatDrafts[convId] = text;
       H.saveState();
       H._saveDraftTimer = null;
     }, 800);
@@ -110,8 +118,9 @@
   };
   H._getChatDraft = function (convId) {
     if (!convId) return '';
-    return (H._chatDrafts && H._chatDrafts[convId]) ||
-      (H.state._chatDrafts && H.state._chatDrafts[convId]) || '';
+    // Use `in` so an explicitly saved '' (cleared) overrides a stale persisted value
+    if (H._chatDrafts && convId in H._chatDrafts) return H._chatDrafts[convId];
+    return (H.state._chatDrafts && H.state._chatDrafts[convId]) || '';
   };
   H._resolveOtherName = function(otherId, conv) {
     // Skip if a fetch is already in-flight OR if we've already resolved a non-empty name
@@ -345,7 +354,10 @@
           const previewBody = _lastOffer
             ? MIC.offer + (_lastOffer.k === 'accept' ? 'Offer accepted' : _lastOffer.k === 'decline' ? 'Offer declined' : (_lastOffer.k === 'counter' ? 'Counter: $' : 'Offer: $') + Number(_lastOffer.price || 0).toLocaleString())
             : (last.image ? MIC.photo + 'Photo' : escHtml(msgPreview(last)));
-          const preview = (mine ? previewTick(!!last.read) + ' ' : '') + previewBody;
+          const _convDraft = typeof H._getChatDraft === 'function' ? H._getChatDraft(c.id) : '';
+          const preview = _convDraft
+            ? '<span style="color:#F5A623;font-weight:700">Draft: </span>' + escHtml(_convDraft.slice(0, 50))
+            : (mine ? previewTick(!!last.read) + ' ' : '') + previewBody;
           return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item${unread ? ' unread' : ''}" data-cid="${escHtml(c.id)}" data-oid="${escHtml(otherId || '')}" onclick="H.openChat('${c.id}')">
               <div class="p-av-wrap">${listAvatarHtml({ avatar: other && other.avatar }, otherDisplayName, color, 'p-av')}${online ? '<span class="p-on"></span>' : ''}</div>
               <div class="msg-body">
@@ -545,14 +557,14 @@
       if (showBizBrand) {
         if (mine) {
           return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
-            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
+            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',true)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
             + content
             + '<div class="chat-bubble-meta" style="text-align:right">Sent to ' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
             + '</div></div>';
         }
         return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-row-av">' + otherAvatar + '</div>'
-          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
+          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',false)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
           + content
           + '<div class="chat-bubble-meta">' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
           + '</div></div>';
@@ -564,29 +576,31 @@
         const _buyerLabel = escHtml(otherDisplayName);
         if (mine) {
           return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
-            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
+            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',true)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
             + content
             + '<div class="chat-bubble-meta" style="text-align:right">' + _shopLabel + ' · ' + timeAgo(m.t) + ' ' + chatTick(!!m.read) + '</div>'
             + '</div></div>';
         }
         return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-row-av">' + otherAvatar + '</div>'
-          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
+          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',false)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
           + content
           + '<div class="chat-bubble-meta">' + _buyerLabel + ' · ' + timeAgo(m.t) + '</div>'
           + '</div></div>';
       }
       if (mine) {
         return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
-          + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
+          + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',true)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
           + content
+          + (m.edited ? '<span style="font-size:10px;opacity:.55"> · edited</span>' : '')
           + '<div class="chat-bubble-meta" style="text-align:right">' + timeAgo(m.t) + ' ' + chatTick(!!m.read) + '</div>'
           + '</div></div>';
       }
       return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
         + '<div class="chat-row-av">' + otherAvatar + '</div>'
-        + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
+        + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',false)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
         + content
+        + (m.edited ? '<span style="font-size:10px;opacity:.55"> · edited</span>' : '')
         + '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>'
         + '</div></div>';
     }).join('');
@@ -1807,6 +1821,8 @@
     const inp = document.getElementById('chatIn');
     const text = inp ? inp.value.trim() : '';
     if (!text) return;
+    // Edit mode: update existing message instead of sending a new one
+    if (H._chat && H._chat._editingMsgId) { await H._chat._doEditMsg(text); return; }
     const c = conversations().find(function(x){ return x.id === H._activeChat; });
     if (!c) return;
     const u = H.currentUser();
@@ -1946,6 +1962,134 @@
   // Merge onto the existing H._chat — the attach/image methods (openAttach,
   // pickImage, …) are defined above; reassigning with `H._chat = {…}` would wipe
   // them out and break the "+" attach button.
+  // ── Long-press → message actions ──────────────────────────────
+  H._chat._lpTimer = null;
+  H._chat._lpStart = function (e, msgId, isMine) {
+    clearTimeout(H._chat._lpTimer);
+    H._chat._lpTimer = setTimeout(function () {
+      if (e && e.cancelable) try { e.preventDefault(); } catch(_) {}
+      H._chat.showMsgActions(msgId, isMine);
+    }, 600);
+  };
+  H._chat._lpEnd = function () { clearTimeout(H._chat._lpTimer); };
+
+  H._chat.showMsgActions = function (msgId, isMine) {
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function (x) { return x.id === msgId; });
+    if (!m) return;
+    const sheet = document.getElementById('actionSheet');
+    const bg    = document.getElementById('sheetBg');
+    if (!sheet || !bg) return;
+    const _ico = function (path) { return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">' + path + '</svg>'; };
+    const mid = escHtml(msgId);
+    sheet.innerHTML = '<div class="sheet-header">Message</div>'
+      + '<button class="sheet-item" onclick="H.closeSheet();H._chat.startReply(\'' + mid + '\')">'
+      + _ico('<polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>')
+      + '<span class="sheet-label">Reply</span></button>'
+      + (isMine && !m.deleted ? '<button class="sheet-item" onclick="H.closeSheet();setTimeout(function(){H._chat.startEdit(\'' + mid + '\')},80)">'
+      + _ico('<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>')
+      + '<span class="sheet-label">Edit</span></button>' : '')
+      + (!m.image && !m.deleted ? '<button class="sheet-item" onclick="H.closeSheet();H._chat.copyMsg(\'' + mid + '\')">'
+      + _ico('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>')
+      + '<span class="sheet-label">Copy</span></button>' : '')
+      + (isMine && !m.deleted ? '<button class="sheet-item danger" onclick="H.closeSheet();H._chat.deleteMsg(\'' + mid + '\')">'
+      + _ico('<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>')
+      + '<span class="sheet-label">Delete</span></button>' : '')
+      + '<button class="sheet-close" onclick="H.closeSheet()">Cancel</button>';
+    sheet.classList.add('open');
+    bg.classList.add('open');
+  };
+
+  H._chat.startEdit = function (msgId) {
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function (x) { return x.id === msgId; });
+    if (!m || m.deleted) return;
+    H._chat._editingMsgId   = msgId;
+    H._chat._editingOrigText = msgText(m);
+    const old = document.getElementById('chatEditBar'); if (old) old.remove();
+    const inputBar = document.querySelector('.chat-input-bar');
+    if (!inputBar || !inputBar.parentNode) return;
+    const bar = document.createElement('div');
+    bar.id = 'chatEditBar';
+    bar.className = 'chat-reply-bar';
+    bar.innerHTML = '<div class="crb-accent" style="background:#F5A623"></div>'
+      + '<div class="crb-body"><span class="crb-name" style="color:#F5A623">Editing message</span>'
+      + '<span class="crb-text">' + escHtml(H._chat._editingOrigText.slice(0, 80)) + '</span></div>'
+      + '<button class="crb-x" onclick="H._chat.cancelEdit()" aria-label="Cancel edit"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+    inputBar.parentNode.insertBefore(bar, inputBar);
+    const inp = document.getElementById('chatIn');
+    if (inp) { inp.value = H._chat._editingOrigText; inp.focus(); if (typeof H._autoGrowChat === 'function') H._autoGrowChat(inp); }
+  };
+
+  H._chat.cancelEdit = function () {
+    H._chat._editingMsgId   = null;
+    H._chat._editingOrigText = null;
+    const bar = document.getElementById('chatEditBar'); if (bar) bar.remove();
+    const inp = document.getElementById('chatIn');
+    if (inp) { inp.value = ''; if (typeof H._autoGrowChat === 'function') H._autoGrowChat(inp); }
+  };
+
+  H._chat._doEditMsg = async function (newText) {
+    const msgId = H._chat._editingMsgId;
+    H._chat.cancelEdit();
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function (x) { return x.id === msgId; });
+    if (!m) return;
+    m.text = newText; m.edited = true;
+    H.saveState();
+    // Update bubble in DOM without re-render
+    const row = document.querySelector('[data-msg-id="' + msgId + '"]');
+    if (row) {
+      const bubble = row.querySelector('.chat-bubble');
+      if (bubble) {
+        const meta = bubble.querySelector('.chat-bubble-meta');
+        const metaHtml = meta ? meta.outerHTML : '';
+        bubble.innerHTML = escHtml(newText) + '<span style="font-size:10px;opacity:.55"> · edited</span>' + metaHtml;
+      }
+    }
+    try {
+      if (window.supabase) await window.supabase.from('messages').update({ text: newText, edited: true }).eq('id', msgId);
+    } catch (e) { console.warn('edit msg sync:', e); }
+  };
+
+  H._chat.copyMsg = function (msgId) {
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function (x) { return x.id === msgId; });
+    if (!m) return;
+    var txt = msgText(m);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(txt).then(function () { H.toast('Copied'); }).catch(function () { H.toast('Could not copy'); });
+    } else { H.toast('Copy not supported'); }
+  };
+
+  H._chat.deleteMsg = function (msgId) {
+    H.modal({
+      title: 'Delete Message',
+      body: 'Delete this message for everyone?',
+      confirmText: 'Delete', danger: true,
+      onConfirm: async function () {
+        const c = conversations().find(function (x) { return x.id === H._activeChat; });
+        if (!c) return;
+        const m = (c.messages || []).find(function (x) { return x.id === msgId; });
+        if (!m) return;
+        m.text = ''; m.deleted = true;
+        H.saveState();
+        const row = document.querySelector('[data-msg-id="' + msgId + '"]');
+        if (row) {
+          const bubble = row.querySelector('.chat-bubble');
+          if (bubble) bubble.innerHTML = '<span style="font-style:italic;opacity:.5;font-size:13px">This message was deleted</span>';
+        }
+        try {
+          if (window.supabase) await window.supabase.from('messages').update({ text: '', deleted: true }).eq('id', msgId);
+        } catch (e) { console.warn('delete msg sync:', e); }
+      }
+    });
+  };
+
   Object.assign(H._chat, {
     openMenu(userId, bizId) {
       // Business chat menu — actions target the shop, not the owner's personal account
