@@ -2948,4 +2948,42 @@ H._checkEngagementAlerts = function () {
   }
 };
 
+// ── Cloudflare R2 helpers ────────────────────────────────────────────────────
+H.uploadToR2 = async function (blob, key, contentType) {
+  var session = await window.supabase.auth.getSession();
+  var token = session && session.data && session.data.session && session.data.session.access_token;
+  if (!token) throw new Error('Not authenticated');
+  var res = await fetch(window.SUPABASE_URL + '/functions/v1/get-r2-upload-url', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: key, contentType: contentType }),
+  });
+  if (!res.ok) {
+    var errText = '';
+    try { errText = (await res.json()).error || ''; } catch(e) {}
+    throw new Error('R2 upload-url error: ' + (errText || res.status));
+  }
+  var payload = await res.json();
+  var up = await fetch(payload.signedUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: blob });
+  if (!up.ok) throw new Error('R2 PUT failed: ' + up.status);
+  return payload.publicUrl;
+};
+
+H.r2SignedGetUrl = async function (key, expiresIn) {
+  if (!key) return null;
+  try {
+    var session = await window.supabase.auth.getSession();
+    var token = session && session.data && session.data.session && session.data.session.access_token;
+    if (!token) return null;
+    var res = await fetch(window.SUPABASE_URL + '/functions/v1/get-r2-upload-url', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: key, verb: 'GET', expiresIn: expiresIn || 300 }),
+    });
+    if (!res.ok) return null;
+    var data = await res.json();
+    return data.signedUrl || null;
+  } catch (e) { return null; }
+};
+
 H.init();
