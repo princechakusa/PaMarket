@@ -321,6 +321,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
           <span class="nav-badge" id="badge-biz-upgrades" style="display:none">0</span>
         </button>
         <div class="nav-section">Config</div>
+        <button class="nav-item" data-tab="maintenance" onclick="showTab('maintenance')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+          Maintenance
+        </button>
         <button class="nav-item" data-tab="settings" onclick="showTab('settings')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Settings
@@ -496,7 +500,7 @@ var TAB_TITLES = {
   overview:'Overview', listings:'Listings', users:'Users', verifications:'Verifications',
   notifications:'Send Notification', reports:'Reports', contacts:'Contact Requests',
   ads:'Ads & Boosts', chats:'User Chats', analytics:'Analytics', settings:'Settings',
-  businesses:'Business Platform'
+  businesses:'Business Platform', maintenance:'Maintenance'
 };
 function showTab(name) {
   currentTab = name;
@@ -513,7 +517,7 @@ function renderTab() {
     verifications: renderVerifications, notifications: renderNotifications,
     reports: renderReports, contacts: renderContactRequests, ads: renderAds,
     chats: renderChats, analytics: renderAnalytics, settings: renderSettings,
-    businesses: renderBusinesses
+    businesses: renderBusinesses, maintenance: renderMaintenance
   }[currentTab];
   if(fn) fn();
 }
@@ -2228,6 +2232,229 @@ async function saveSupportWa() {
     toast(raw ? 'Support number saved' : 'Support number cleared');
     renderSettings();
   } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── MAINTENANCE ───────────────────────────────────────────
+var _maintStats = null;
+
+async function loadMaintenanceStats() {
+  _maintStats = { errorLogs: '...', oldNotifs: '...', convTombs: '...' };
+  try {
+    var r1 = await sb.from('error_logs').select('id', { count: 'exact', head: true });
+    _maintStats.errorLogs = r1.error ? '?' : (r1.count || 0);
+  } catch(e) { _maintStats.errorLogs = '?'; }
+  try {
+    var cutoff30 = new Date(Date.now() - 30 * 86400000).toISOString();
+    var r2 = await sb.from('notifications').select('id', { count: 'exact', head: true }).lt('created_at', cutoff30);
+    _maintStats.oldNotifs = r2.error ? '?' : (r2.count || 0);
+  } catch(e) { _maintStats.oldNotifs = '?'; }
+  try {
+    var r3 = await sb.from('conversation_deletions').select('user_id', { count: 'exact', head: true });
+    _maintStats.convTombs = r3.error ? '?' : (r3.count || 0);
+  } catch(e) { _maintStats.convTombs = '?'; }
+}
+
+async function renderMaintenance() {
+  document.getElementById('mainContent').innerHTML = '<div class="loading-msg">Loading stats...</div>';
+  await loadMaintenanceStats();
+  _doRenderMaintenance();
+}
+
+function _maintCard(title, iconSvg, descHtml, btnLabel, btnFn, accent) {
+  var colors = { red:'rgba(239,68,68,.15)', amber:'rgba(245,158,11,.15)', green:'rgba(16,185,129,.15)', blue:'rgba(99,102,241,.15)' };
+  var textc  = { red:'var(--red)', amber:'var(--amber)', green:'var(--green)', blue:'var(--accent)' };
+  var borderc= { red:'rgba(239,68,68,.3)', amber:'rgba(245,158,11,.3)', green:'rgba(16,185,129,.3)', blue:'rgba(99,102,241,.3)' };
+  var ac = accent || 'blue';
+  return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">'
+    + '<div style="display:flex;align-items:flex-start;gap:12px;flex:1;min-width:0">'
+    + '<div style="width:36px;height:36px;border-radius:10px;background:'+colors[ac]+';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:'+textc[ac]+'">'+iconSvg+'</div>'
+    + '<div><div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">'+title+'</div>'
+    + '<div style="font-size:13px;color:var(--sub);line-height:1.5">'+descHtml+'</div></div>'
+    + '</div>'
+    + '<button onclick="'+btnFn+'" style="padding:8px 16px;background:'+colors[ac]+';color:'+textc[ac]+';border:1px solid '+borderc[ac]+';border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0;margin-top:2px">'+btnLabel+'</button>'
+    + '</div>';
+}
+
+function _maintLog(msg) {
+  var el = document.getElementById('maintLog');
+  if (!el) return;
+  if (el.dataset.fresh === '1') { el.textContent = ''; el.dataset.fresh = '0'; }
+  el.textContent += msg + '\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+function _doRenderMaintenance() {
+  var s = _maintStats || {};
+  var html = '<div class="sec-head"><div class="sec-title">Maintenance &amp; Cleanup</div>'
+    + '<button class="btn-refresh" onclick="renderMaintenance()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh Stats</button>'
+    + '</div>';
+  html += '<div style="font-size:13px;color:var(--sub);margin-bottom:20px">Free up Supabase database rows and Storage. Stats are approximate counts loaded on page open.</div>';
+
+  html += _maintCard(
+    'Error Logs',
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    '<b style="color:var(--text)">' + s.errorLogs + ' rows</b> in <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px">error_logs</code>. Client-side errors logged automatically. Safe to clear at any time.',
+    'Clear All Error Logs',
+    'runClearErrorLogs()',
+    'red'
+  );
+
+  html += _maintCard(
+    'Old Notifications',
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>',
+    '<b style="color:var(--text)">' + s.oldNotifs + ' notifications</b> older than 30 days. Users will not notice. Active recent notifications are not touched.',
+    'Delete 30d+ Notifications',
+    'runClearOldNotifs()',
+    'amber'
+  );
+
+  html += _maintCard(
+    'Conversation Tombstones',
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+    '<b style="color:var(--text)">' + s.convTombs + ' rows</b> in <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px">conversation_deletions</code>. Soft-delete markers for conversations users have hidden. Safe to clear.',
+    'Clear Tombstones',
+    'runClearConvTombstones()',
+    'blue'
+  );
+
+  html += _maintCard(
+    'Orphaned Listing Photos',
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+    'Scans the <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px">listings-photos</code> Storage bucket and deletes files not referenced by any listing row. Biggest potential storage win.',
+    'Scan &amp; Purge',
+    'runPurgeOrphanedPhotos()',
+    'green'
+  );
+
+  html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:6px">'
+    + '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Activity Log</div>'
+    + '<div id="maintLog" data-fresh="1" style="font-size:12.5px;font-family:monospace;color:var(--sub);min-height:48px;white-space:pre-wrap;line-height:1.8">Run a cleanup above to see results here.</div>'
+    + '</div>';
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+async function runClearErrorLogs() {
+  var ok = await confirm2('Clear Error Logs', 'Delete all rows from error_logs? This cannot be undone.', 'Clear All', 'confirm-ok red');
+  if (!ok) return;
+  _maintLog('Clearing error_logs...');
+  try {
+    var r = await sb.from('error_logs').delete().lt('created_at', new Date().toISOString());
+    if (r.error) throw r.error;
+    _maintStats.errorLogs = 0;
+    _maintLog('Done. error_logs cleared.');
+    toast('Error logs cleared');
+  } catch(e) {
+    _maintLog('Failed: ' + e.message);
+    toast('Failed: ' + e.message, 'error');
+  }
+}
+
+async function runClearOldNotifs() {
+  var cutoff = new Date(Date.now() - 30 * 86400000).toISOString();
+  var ok = await confirm2('Delete Old Notifications', 'Delete all notifications older than 30 days?', 'Delete', 'confirm-ok');
+  if (!ok) return;
+  _maintLog('Deleting notifications older than 30 days...');
+  try {
+    var r = await sb.from('notifications').delete().lt('created_at', cutoff);
+    if (r.error) throw r.error;
+    _maintStats.oldNotifs = 0;
+    _maintLog('Done. Old notifications deleted.');
+    toast('Old notifications cleared');
+  } catch(e) {
+    _maintLog('Failed: ' + e.message);
+    toast('Failed: ' + e.message, 'error');
+  }
+}
+
+async function runClearConvTombstones() {
+  var ok = await confirm2('Clear Conversation Tombstones', 'Delete all rows from conversation_deletions? Users who hid conversations may see them reappear temporarily.', 'Clear', 'confirm-ok');
+  if (!ok) return;
+  _maintLog('Clearing conversation_deletions...');
+  try {
+    var r = await sb.from('conversation_deletions').delete().neq('user_id', '00000000-0000-0000-0000-000000000000');
+    if (r.error) throw r.error;
+    _maintStats.convTombs = 0;
+    _maintLog('Done. Conversation tombstones cleared.');
+    toast('Tombstones cleared');
+  } catch(e) {
+    _maintLog('Failed: ' + e.message);
+    toast('Failed: ' + e.message, 'error');
+  }
+}
+
+async function runPurgeOrphanedPhotos() {
+  var ok = await confirm2(
+    'Purge Orphaned Photos',
+    'Scan the listings-photos bucket and delete files not referenced by any listing. This may take a moment.',
+    'Scan & Purge', 'confirm-ok'
+  );
+  if (!ok) return;
+
+  var PHOTO_BASE = 'https://gxgytumhknmnwspxjzxw.supabase.co/storage/v1/object/public/listings-photos/';
+  _maintLog('Step 1: Fetching all listing photo URLs from database...');
+
+  var activeUrls = new Set();
+  try {
+    var page = 0, PAGE = 1000;
+    while (true) {
+      var r = await sb.from('listings').select('photos').range(page * PAGE, (page + 1) * PAGE - 1);
+      if (r.error) throw r.error;
+      if (!r.data || !r.data.length) break;
+      r.data.forEach(function(row) {
+        (row.photos || []).forEach(function(url) {
+          if (typeof url === 'string' && url.startsWith(PHOTO_BASE)) {
+            activeUrls.add(url.split('?')[0]);
+          }
+        });
+      });
+      if (r.data.length < PAGE) break;
+      page++;
+    }
+    _maintLog('Found ' + activeUrls.size + ' referenced photos across all listings.');
+  } catch(e) {
+    _maintLog('Error fetching listings: ' + e.message);
+    toast('Scan failed', 'error'); return;
+  }
+
+  _maintLog('Step 2: Listing files in storage bucket...');
+  var toDelete = [];
+  try {
+    var rootList = await sb.storage.from('listings-photos').list('', { limit: 1000 });
+    if (rootList.error) throw rootList.error;
+    var folders = (rootList.data || []).filter(function(item) { return item.id == null; });
+    _maintLog('Found ' + folders.length + ' user folder(s) in bucket.');
+    for (var fi = 0; fi < folders.length; fi++) {
+      var fname = folders[fi].name;
+      var flist = await sb.storage.from('listings-photos').list(fname, { limit: 1000 });
+      if (flist.error) { _maintLog('Skipping ' + fname + ': ' + flist.error.message); continue; }
+      (flist.data || []).forEach(function(file) {
+        if (!file.name) return;
+        var url = PHOTO_BASE + fname + '/' + file.name;
+        if (!activeUrls.has(url)) toDelete.push(fname + '/' + file.name);
+      });
+    }
+    _maintLog('Found ' + toDelete.length + ' orphaned file(s) to delete.');
+  } catch(e) {
+    _maintLog('Error listing bucket: ' + e.message);
+    toast('Scan failed', 'error'); return;
+  }
+
+  if (!toDelete.length) {
+    _maintLog('Bucket is clean — no orphaned files.');
+    toast('Bucket is clean'); return;
+  }
+
+  _maintLog('Step 3: Deleting ' + toDelete.length + ' orphaned file(s)...');
+  var deleted = 0, BATCH = 100;
+  for (var i = 0; i < toDelete.length; i += BATCH) {
+    var batch = toDelete.slice(i, i + BATCH);
+    var dr = await sb.storage.from('listings-photos').remove(batch);
+    if (dr.error) { _maintLog('Batch error: ' + dr.error.message); }
+    else { deleted += batch.length; _maintLog('Deleted ' + deleted + ' / ' + toDelete.length + '...'); }
+  }
+  _maintLog('Done. Deleted ' + deleted + ' orphaned photo(s).');
+  toast('Purged ' + deleted + ' orphaned photos');
 }
 
 // ── Session init ──────────────────────────────────────────
