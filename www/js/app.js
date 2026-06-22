@@ -1635,7 +1635,7 @@ window.H = {
       const sb = window.supabase;
       if (!sb || typeof sb.channel !== 'function') return;
       if (window._bizRtChannel) { try { sb.removeChannel(window._bizRtChannel); } catch(e){} }
-      const BIZ_PAGES = { Home:1, BusinessSearch:1, BusinessShop:1, BusinessProfile:1 };
+      const BIZ_PAGES = { Home:1, BusinessSearch:1, BusinessShop:1, BusinessProfile:1, BusinessView:1 };
       window._bizRtChannel = sb.channel('businesses-live')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'businesses' }, function(payload) {
           try {

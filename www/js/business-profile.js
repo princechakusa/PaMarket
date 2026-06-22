@@ -237,7 +237,7 @@
       <div style="position:relative;margin-bottom:48px">
         <div style="height:140px;${coverStyle}"></div>
         <div style="position:absolute;left:16px;bottom:-38px;width:78px;height:78px;border-radius:18px;border:3px solid var(--card,#fff);background:#EEF2FB;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:26px;font-weight:800;color:#1A3A8F">
-          ${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : _shopIconBlue}
+          ${b.logo ? `<img src="${escHtml(b.logo)}?v=${b._updatedAt||b.updatedAt||''}" style="width:100%;height:100%;object-fit:cover">` : _shopIconBlue}
         </div>
       </div>
       <div class="inner-content" style="padding-bottom:40px">
@@ -506,7 +506,7 @@
       <div style="background:var(--card,#fff);padding:0 16px 16px">
         <div style="display:flex;align-items:flex-end;gap:14px;margin-top:-32px;margin-bottom:12px">
           <div style="width:64px;height:64px;border-radius:50%;border:3px solid var(--card,#fff);overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#1A3A8F,#2245b8);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;box-shadow:0 3px 12px rgba(0,0,0,0.18)">
-            ${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : _shopIcon}
+            ${b.logo ? `<img src="${escHtml(b.logo)}?v=${b._updatedAt||b.updatedAt||''}" style="width:100%;height:100%;object-fit:cover">` : _shopIcon}
           </div>
           <div style="flex:1;min-width:0;padding-bottom:2px">
             <div style="font-size:17px;font-weight:900;color:var(--text);line-height:1.1">${escHtml(b.name)}</div>
@@ -790,7 +790,7 @@
       const prods = (H.state.listings || []).filter(l => l.businessId === b.id && l.status === 'active').length;
       const verified = (b.verificationLevel || 0) >= 2;
       return `<div onclick="H.openBusinessShop('${b.id}')" style="display:flex;gap:12px;align-items:center;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:8px;padding:12px;margin:0 16px 10px;cursor:pointer">
-        <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2245b8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px rgba(26,58,143,0.15)">${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : _shopIcon}</div>
+        <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2245b8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px rgba(26,58,143,0.15)">${b.logo ? `<img src="${escHtml(b.logo)}?v=${b._updatedAt||b.updatedAt||''}" style="width:100%;height:100%;object-fit:cover">` : _shopIcon}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:5px"><span style="font-size:14.5px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}</span>${verified ? H.verifiedBadge(14) : ''}</div>
           <div style="font-size:12px;color:var(--sub);margin-top:2px">${catLabel ? escHtml(catLabel) : ''}${loc ? ' · ' + escHtml(loc) : ''}</div>

@@ -37,7 +37,16 @@
   }
   function _sigBiz() {
     var bz = (H.state && H.state.businesses) || [];
-    return bz.length + (bz[0] ? '|' + bz[0].id + bz[0].status : '');
+    if (!bz.length) return '0';
+    // Track the most-recently-modified timestamp so that ANY field change
+    // (logo, name, status, etc.) causes a different signature and triggers
+    // a re-render — not just count or first-business status.
+    var maxTs = 0;
+    for (var i = 0; i < bz.length; i++) {
+      var t = bz[i]._updatedAt || bz[i].updatedAt || 0;
+      if (t > maxTs) maxTs = t;
+    }
+    return bz.length + '|' + maxTs;
   }
   function _sigNotifs() {
     var u = H.currentUser && H.currentUser();
