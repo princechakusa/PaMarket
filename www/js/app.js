@@ -1480,9 +1480,12 @@ window.H = {
         .from('listings').select('*')
         .eq('status','active')
         .order('created_at',{ascending:false})
-        .limit(20);
+        .limit(100);
       if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
       const cloud=(data||[]).map(r=>H._mapCloudListing(r));
+      // Reset pagination cursor — this is always a fresh fetch from newest
+      H._listingsCursor    = (data.length === 100) ? data[data.length - 1].created_at : null;
+      H._listingsAllLoaded = data.length < 100;
       if (typeof H.applyFeedUpdate === 'function') {
         H.applyFeedUpdate({ type: 'listings_full', data: cloud }, 'poll');
       } else {
@@ -1526,6 +1529,45 @@ window.H = {
           }).catch(function() {});
       }
     } catch(e){ console.warn('fetchListingsFromSupabase:',e.message); }
+  },
+
+  async loadMoreListings() {
+    if (H._listingsAllLoaded || H._loadingMoreListings) return;
+    if (!window.supabase || typeof window.supabase.from !== 'function') return;
+    if (!H._listingsCursor) return;
+    H._loadingMoreListings = true;
+    var sentinel = document.getElementById('homeLoadMore');
+    if (sentinel) sentinel.textContent = 'Loading more listings...';
+    try {
+      var res = await window.supabase.from('listings').select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .lt('created_at', H._listingsCursor)
+        .limit(100);
+      if (res.error || !Array.isArray(res.data)) return;
+      var batch = res.data;
+      var cloud = batch.map(function(r) { return H._mapCloudListing(r); });
+      if (batch.length < 100) H._listingsAllLoaded = true;
+      if (batch.length === 100) H._listingsCursor = batch[batch.length - 1].created_at;
+      if (cloud.length > 0) {
+        var existing = new Set((H.state.listings || []).map(function(l) { return l.id; }));
+        var toAdd = cloud.filter(function(l) { return !existing.has(l.id); });
+        if (toAdd.length) {
+          var nonActive = (H.state.listings || []).filter(function(l) { return l.status !== 'active'; });
+          var active    = (H.state.listings || []).filter(function(l) { return l.status === 'active'; });
+          H.state.listings = active.concat(toAdd).concat(nonActive);
+          H.saveState();
+          if (typeof H._renderHomeCatSections === 'function' && H.currentPageName === 'Home') {
+            H._renderHomeCatSections();
+          }
+        }
+      }
+    } catch(e) { console.warn('loadMoreListings:', e.message); }
+    finally {
+      H._loadingMoreListings = false;
+      var _s = document.getElementById('homeLoadMore');
+      if (_s) _s.textContent = H._listingsAllLoaded ? 'All listings loaded' : '';
+    }
   },
 
   // Admin-only: pull EVERY listing (all statuses) so the moderation queue is

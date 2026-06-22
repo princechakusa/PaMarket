@@ -14,6 +14,39 @@
     searchTimer = setTimeout(fn, delay);
   }
 
+  function buildCatSectionsHTML(filtered) {
+    const sections = CATEGORIES.map(c => ({
+      ...c, items: filtered.filter(l => l.cat === c.id).slice(0, 8)
+    })).filter(s => s.items.length > 0);
+    if (!sections.length) {
+      return `<div style="padding:32px 16px">${H.emptyState('No listings yet', 'Be the first to post in your area!', 'Post your first ad', "H.navTo('Post',null)")}</div>`;
+    }
+    return sections.map(s => `
+      <div style="padding:20px 0 0">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:20px">${s.icon}</span>
+            <span style="font-size:16px;font-weight:800;color:var(--text)">Latest in ${s.name}</span>
+          </div>
+          <span onclick="H.filterByCat('${s.id}')" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>
+        </div>
+        <div style="display:flex;gap:10px;padding:0 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">
+          ${s.items.map(l => `<div style="flex:0 0 156px;min-width:156px">${renderHCard(l)}</div>`).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  H._renderHomeCatSections = function () {
+    const el = document.getElementById('catSections');
+    if (!el) return;
+    const active   = (H.state.listings || []).filter(l => l.status === 'active');
+    const filtered = filterListings(active);
+    el.innerHTML   = buildCatSectionsHTML(filtered);
+    const s = document.getElementById('homeLoadMore');
+    if (s) s.textContent = H._listingsAllLoaded ? 'All listings loaded' : '';
+  };
+
   const CAT_COLORS = {
     vehicles:'#e53935',property:'#1E88E5',electronics:'#8E24AA',
     fashion:'#F06292',furniture:'#6D4C41',services:'#00897B',
@@ -49,10 +82,6 @@
       Array.isArray(cv.members) && cv.members.includes(u.id) && (cv.messages || []).some(m => m.from !== u.id && !m.read)).length : 0;
     const activeListings = (H.state.listings || []).filter(l => l.status === 'active');
     const filtered       = filterListings(activeListings);
-
-    const catSections = CATEGORIES.map(c => ({
-      ...c, items: filtered.filter(l => l.cat === c.id).slice(0, 8)
-    })).filter(s => s.items.length > 0);
 
     return `<div class="page active" style="background:var(--bg)">
 
@@ -204,21 +233,11 @@
 
         <!-- CATEGORY SECTIONS (Dubizzle style, shown by default) -->
         <div id="catSections">
-          ${catSections.length ? catSections.map(s => `
-            <div style="padding:20px 0 0">
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">
-                <div style="display:flex;align-items:center;gap:8px">
-                  <span style="font-size:20px">${s.icon}</span>
-                  <span style="font-size:16px;font-weight:800;color:var(--text)">Latest in ${s.name}</span>
-                </div>
-                <span onclick="H.filterByCat('${s.id}')" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>
-              </div>
-              <div style="display:flex;gap:10px;padding:0 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">
-                ${s.items.map(l => `<div style="flex:0 0 156px;min-width:156px">${renderHCard(l)}</div>`).join('')}
-              </div>
-            </div>
-          `).join('') : `<div style="padding:32px 16px">${H.emptyState('No listings yet', 'Be the first to post in your area!', 'Post your first ad', "H.navTo('Post',null)")}</div>`}
+          ${buildCatSectionsHTML(filtered)}
         </div>
+
+        <!-- INFINITE SCROLL SENTINEL -->
+        <div id="homeLoadMore" style="text-align:center;padding:20px 16px;color:var(--sub);font-size:13px;font-weight:500"></div>
 
       </div>
     </div>`;
@@ -250,6 +269,21 @@
     if (H._initAdCarousels) H._initAdCarousels();
     if (typeof H.maybeShowNotifBanner === 'function') H.maybeShowNotifBanner();
     if (typeof H.maybeShowRatingPrompt === 'function') H.maybeShowRatingPrompt();
+
+    // Attach infinite-scroll listener — remove previous to avoid stacking
+    const _mainArea = document.getElementById('mainArea');
+    if (_mainArea) {
+      if (_mainArea._homeScrollHandler) {
+        _mainArea.removeEventListener('scroll', _mainArea._homeScrollHandler);
+      }
+      _mainArea._homeScrollHandler = function () {
+        if (_mainArea.scrollHeight - _mainArea.scrollTop - _mainArea.clientHeight < 400) {
+          if (typeof H.loadMoreListings === 'function') H.loadMoreListings();
+        }
+      };
+      _mainArea.addEventListener('scroll', _mainArea._homeScrollHandler, { passive: true });
+    }
+
     // Always pull fresh listings + shops when Home renders. This guarantees the
     // grid fills even if the one-time boot fetch was slow or failed (cold start /
     // flaky mobile). Background polling on top is handled by H.RM.
