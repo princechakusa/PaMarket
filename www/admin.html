@@ -1802,7 +1802,7 @@ async function decideContact(id, status) {
           body: status==='approved'
             ? ('You can now view '+candName+'’s contact details in Hire Talent.')
             : ('Your request to contact '+candName+' was not approved.'),
-          created_at: new Date().toISOString()
+          created_at: Date.now()
         });
       } catch(e){}
     }
@@ -2339,7 +2339,10 @@ async function runClearErrorLogs() {
   if (!ok) return;
   _maintLog('Clearing error_logs...');
   try {
-    var r = await sb.from('error_logs').delete().lt('created_at', new Date().toISOString());
+    // Delete every row via a type-agnostic filter on the uuid primary key.
+    // (created_at is stored as bigint epoch-ms in the deployed DB, so an
+    //  ISO-string cutoff on created_at fails with an invalid-bigint error.)
+    var r = await sb.from('error_logs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     if (r.error) throw r.error;
     _maintStats.errorLogs = 0;
     _maintLog('Done. error_logs cleared.');
