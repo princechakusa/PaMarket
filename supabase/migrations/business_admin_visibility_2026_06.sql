@@ -33,9 +33,18 @@ drop policy if exists "biz_subs: admin all" on public.business_subscriptions;
 create policy "biz_subs: admin all" on public.business_subscriptions for all
   using (public.is_admin()) with check (public.is_admin());
 
-drop policy if exists "biz_verif: admin all" on public.business_verifications;
-create policy "biz_verif: admin all" on public.business_verifications for all
-  using (public.is_admin()) with check (public.is_admin());
+-- business_verifications may not exist in all deployments; skip gracefully.
+do $$
+begin
+  if exists (
+    select from pg_tables
+    where schemaname = 'public' and tablename = 'business_verifications'
+  ) then
+    execute $p$drop policy if exists "biz_verif: admin all" on public.business_verifications$p$;
+    execute $p$create policy "biz_verif: admin all" on public.business_verifications for all
+      using (public.is_admin()) with check (public.is_admin())$p$;
+  end if;
+end $$;
 
 -- Realtime: once an admin approves a business, the UPDATE event must reach
 -- every open app instantly so it appears in Home "Local Shops" without a
