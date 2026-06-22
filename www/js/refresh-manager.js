@@ -148,7 +148,7 @@
       RM._appActive    = true;
       _lastListingsFetch = 0; // bypass throttle so we get fresh data immediately
       _lastBizFetch      = 0;
-      var name   = RM._current;
+      var name   = RM._current || H.currentPageName;
       var params = RM._params;
       if (!name || document.hidden) return;
       RM.stop(name);
@@ -227,7 +227,11 @@
     }
   });
 
-  // ── Navigation hooks + _after auto-install (runs after all scripts load) ────
+  // ── _after auto-install ──────────────────────────────────────────────────────
+  // Each page's _after hook starts that page's polling loop. RM.start() calls
+  // stopAll() first, so navigating between pages always swaps loops cleanly — no
+  // need to override navTo/openInner/goBack (which risks breaking awaited
+  // navigation). Loops also self-stop when RM._current no longer matches.
   function _autoHook(name) {
     var orig = H.pages && H.pages[name + '_after'];
     H.pages[name + '_after'] = function (params) {
@@ -236,33 +240,24 @@
     };
   }
 
-  function _installNavHooks() {
-    if (H._rmNavHooked) return;
-    H._rmNavHooked = true;
-
-    var _origNavTo = H.navTo;
-    if (typeof _origNavTo === 'function') {
-      H.navTo = function (page, params) { RM.stopAll(); _origNavTo.call(H, page, params); };
-    }
-    var _origOpenInner = H.openInner;
-    if (typeof _origOpenInner === 'function') {
-      H.openInner = function (page, params) { RM.stopAll(); _origOpenInner.call(H, page, params); };
-    }
-    var _origGoBack = H.goBack;
-    if (typeof _origGoBack === 'function') {
-      H.goBack = function () { RM.stopAll(); _origGoBack.call(H); };
-    }
-  }
-
-  window.addEventListener('load', function () {
+  function _install() {
+    if (RM._installed) return;
+    RM._installed = true;
     H.pages = H.pages || {};
-    _installNavHooks();
     Object.keys(_cfg).forEach(function (name) { _autoHook(name); });
-    // If the app already rendered a page before load fired, start its loop now
+    // If the app already rendered a page before this ran, start its loop now
     if (H.currentPageName && _cfg[H.currentPageName]) {
       RM._current = H.currentPageName;
       RM.start(H.currentPageName, null);
     }
-  });
+  }
+
+  // Run on load, but if the page already finished loading, install immediately
+  // (otherwise the load listener would never fire and RM would stay dormant).
+  if (document.readyState === 'complete') {
+    setTimeout(_install, 0);
+  } else {
+    window.addEventListener('load', _install);
+  }
 
 })(window.H = window.H || {});
