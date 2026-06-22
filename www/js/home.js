@@ -127,9 +127,6 @@
           </div>
         </div>
 
-        <!-- SPONSORED — swipeable banner carousel (all active ads), right under categories -->
-        ${(H.adCarousel && H.activeAds) ? H.adCarousel(H.activeAds(), { title: 'Featured Partners' }) : ''}
-
         <!-- LOCAL SHOPS — 3-column grid, logo left + thumbnails right -->
         ${(() => {
           const activeShops = (H.state.businesses || []).filter(function(b) { return b.status === 'active'; });
@@ -184,19 +181,9 @@
             + '</div></div>';
         })()}
 
-        <!-- BANNER -->
-        <div style="margin:0 12px 8px;background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:18px;padding:20px;display:flex;align-items:center;justify-content:space-between;overflow:hidden;position:relative">
-          <div style="position:absolute;right:-24px;top:-24px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.07)"></div>
-          <div style="position:absolute;right:50px;bottom:-35px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,0.05)"></div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Zimbabwe's Free Marketplace</div>
-            <div style="font-size:21px;font-weight:900;color:#fff;line-height:1.1;margin-bottom:4px">Buy. Sell. Hire.</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.7)">Real people. Real deals.</div>
-          </div>
-          <div style="text-align:center;flex-shrink:0;margin-left:16px">
-            <div style="font-size:30px;font-weight:900;color:#F5A623;line-height:1">${activeListings.length}</div>
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.75);text-transform:uppercase;margin-top:3px">Active Ads</div>
-          </div>
+        <!-- SPONSORED ADS — paid/sponsored advertising slot (replaces the old marketing banner) -->
+        <div style="padding:0 0 4px">
+          ${(H.adCarousel && H.activeAds) ? H.adCarousel(H.activeAds(), { title: 'Sponsored' }) : ''}
         </div>
 
         <!-- POST AD BUTTON -->
