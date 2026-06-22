@@ -106,4 +106,33 @@
     }
   };
 
+  // Open a business-branded chat with a shop. Creates a conversation tagged with
+  // businessId so the Chat page shows the shop logo/name instead of the owner's
+  // personal profile. The owner sees the customer's name normally on their side.
+  H.startBizChat = function (bizId) {
+    const u = currentUser();
+    if (!u) { if (H.requireAuth) H.requireAuth('Sign in to message this shop'); return; }
+    const b = getBiz(bizId);
+    if (!b || !b.ownerUserId) { toast('Shop not available right now'); return; }
+    const ownerId = String(b.ownerUserId);
+    const myId    = String(u.id);
+    if (myId === ownerId) { toast('This is your own shop'); return; }
+    // Deterministic conv ID per user+business pair — distinct from personal conv_ IDs
+    const convId = 'biz_' + String(bizId).slice(-8) + '_' + myId.slice(-6);
+    H.state.conversations = H.state.conversations || [];
+    let c = H.state.conversations.find(function (x) { return x.id === convId; });
+    if (!c) {
+      c = { id: convId, members: [myId, ownerId], messages: [], businessId: bizId, otherName: b.name, listingId: null };
+      H.state.conversations.unshift(c);
+      H.saveState();
+      if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c).catch(function () {});
+    } else {
+      let dirty = false;
+      if (!c.businessId) { c.businessId = bizId; dirty = true; }
+      if (!Array.isArray(c.members) || c.members.indexOf(ownerId) === -1) { c.members = [myId, ownerId]; dirty = true; }
+      if (dirty) H.saveState();
+    }
+    if (typeof H.openInner === 'function') H.openInner('Chat', { id: convId });
+  };
+
 })(window.H = window.H || {});

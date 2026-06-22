@@ -289,25 +289,29 @@
           // Only show "Deleted User" when the account is genuinely gone; while a
           // name is still loading, a neutral placeholder avoids a false alarm.
           const otherDisplayName = (other && other.name) || c.otherName || (c.otherDeleted ? 'Deleted User' : 'PaMarket User');
+          const _mBiz = c.businessId ? ((H.state.businesses||[]).find(function(b){ return b.id === c.businessId; }) || null) : null;
+          const _mShowBiz = !!(_mBiz && _mBiz.ownerUserId !== u.id);
+          const listName = _mShowBiz ? _mBiz.name : otherDisplayName;
+          const listOther = _mShowBiz ? { avatar: _mBiz.logo || null } : other;
           const msgs   = c.messages || [];
           const last   = msgs[msgs.length - 1];
           if (!last) return '';
           const unreadCount = msgs.filter(m => m.from !== u.id && !m.read).length;
           const unread = unreadCount > 0;
           const mine   = last.from === u.id;
-          const color  = H.avatarColorFor(otherId || otherDisplayName);
-          const online = typeof H.isUserOnline === 'function' && H.isUserOnline(otherId);
-          const verified = other && other.verified;
+          const color  = H.avatarColorFor(_mShowBiz ? (_mBiz.id || listName) : (otherId || otherDisplayName));
+          const online = !_mShowBiz && typeof H.isUserOnline === 'function' && H.isUserOnline(otherId);
+          const verified = !_mShowBiz && other && other.verified;
           const _lastOffer = parseOffer(last.text);
           const previewBody = _lastOffer
             ? MIC.offer + (_lastOffer.k === 'accept' ? 'Offer accepted' : _lastOffer.k === 'decline' ? 'Offer declined' : (_lastOffer.k === 'counter' ? 'Counter: $' : 'Offer: $') + Number(_lastOffer.price || 0).toLocaleString())
             : (last.image ? MIC.photo + 'Photo' : escHtml(msgPreview(last)));
           const preview = (mine ? previewTick(!!last.read) + ' ' : '') + previewBody;
           return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item${unread ? ' unread' : ''}" data-cid="${escHtml(c.id)}" data-oid="${escHtml(otherId || '')}" onclick="H.openChat('${c.id}')">
-            <div class="p-av-wrap">${listAvatarHtml(other, otherDisplayName, color, 'p-av')}${online ? '<span class="p-on"></span>' : ''}</div>
+            <div class="p-av-wrap">${listAvatarHtml(listOther, listName, color, 'p-av')}${online ? '<span class="p-on"></span>' : ''}</div>
             <div class="msg-body">
               <div class="msg-name-row">
-                <div class="msg-name">${escHtml(otherDisplayName)}${verified ? ' ' + H.verifiedBadge(13) : ''}</div>
+                <div class="msg-name">${escHtml(listName)}${verified ? ' ' + H.verifiedBadge(13) : ''}</div>
                 <div class="msg-time${unread ? ' u' : ''}">${timeAgo(last.t)}</div>
               </div>
               <div class="msg-preview${unread ? ' unread' : ''}">${preview}</div>
@@ -380,15 +384,20 @@
     H._activeChat = id;
     if (H._chat) H._chat.replyTarget = null;   // no carried-over reply target
 
-    const otherIni = initials(otherDisplayName);
-    const otherAvatarUrl = other && other.avatar;
+    // Business-branded chat: customer sees shop name/logo; owner sees the customer as normal
+    const _bizChatId = c.businessId || null;
+    const _bizChat = _bizChatId ? ((H.state.businesses||[]).find(function(b){ return b.id === _bizChatId; }) || null) : null;
+    const showBizBrand = !!(_bizChat && _bizChat.ownerUserId !== u.id);
+    const chatDisplayName = showBizBrand ? _bizChat.name : otherDisplayName;
+    const otherIni = initials(chatDisplayName);
+    const otherAvatarUrl = showBizBrand ? (_bizChat.logo || null) : (other && other.avatar);
     const otherAvatar = otherAvatarUrl
       ? '<img src="' + escHtml(otherAvatarUrl) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
         + '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>'
       : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>';
     H._chatOtherAvatar = otherAvatar;
     H._activeOtherId = otherId || '';
-    H._activeOtherName = otherDisplayName;
+    H._activeOtherName = chatDisplayName;
 
     // Date separators between calendar days + ✓/✓✓ receipts on the user's own messages.
     let lastDay = '';
@@ -432,10 +441,10 @@
     return '<div id="chatPageWrap" class="page active" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;overflow:hidden;">'
       + '<div class="chat-header">'
       + '<button class="chat-hdr-back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
-      + '<div class="chat-hdr-av" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">' + otherAvatar + '</div>'
-      + '<div class="chat-hdr-info" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">'
-      + '<div class="chat-hdr-name">' + escHtml(otherDisplayName) + '</div>'
-      + '<div class="chat-hdr-sub" id="chatHdrSub">' + chatHdrSubHtml(other, onlineNow) + '</div></div>'
+      + '<div class="chat-hdr-av" onclick="' + (showBizBrand ? 'H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')' : 'H._chat.showProfile(\'' + otherIdSafe + '\')') + '">' + otherAvatar + '</div>'
+      + '<div class="chat-hdr-info" onclick="' + (showBizBrand ? 'H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')' : 'H._chat.showProfile(\'' + otherIdSafe + '\')') + '">'
+      + '<div class="chat-hdr-name">' + escHtml(chatDisplayName) + '</div>'
+      + '<div class="chat-hdr-sub" id="chatHdrSub">' + (showBizBrand ? '<span style="color:#9baec8">Shop</span>' : chatHdrSubHtml(other, onlineNow)) + '</div></div>'
       + '<button class="chat-hdr-menu" onclick="H._chat.openMenu(\'' + otherIdSafe + '\')"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
       + '</div>'
       + (listing ? chatContextCard(listing) : '')
