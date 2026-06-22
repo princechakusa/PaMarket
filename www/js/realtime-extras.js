@@ -814,9 +814,8 @@
           if (!realtimeConnected()) {
             H._lastRtEvent = _now;
             H.RT.reconnectAll('health');
-            if (me() && typeof H.syncConversations === 'function') H.syncConversations().catch(function () {});
-            if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
-            // Throttle-respecting poll — does NOT reset _lastListingsFetch/_lastBizFetch
+            // RM._poll respects per-page throttle — do NOT call syncConversations here,
+            // it is a multi-phase 10+ query operation and must never run on a 30 s timer.
             var _pg = H.currentPageName; var _pr = H.currentPageParams;
             if (_pg && H.RM && typeof H.RM._poll === 'function') H.RM._poll(_pg, _pr, false);
           } else if (_now - (H._lastRtEvent || 0) > 60000) {
@@ -825,7 +824,6 @@
             var _pg = H.currentPageName;
             var _pr = H.currentPageParams;
             if (_pg && H.RM && typeof H.RM._poll === 'function') H.RM._poll(_pg, _pr, false);
-            if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
           }
         }, 30000);
       }
@@ -845,8 +843,6 @@
   H._rtOnForeground = function () {
     H.touchLastSeen(true);
     H.RT.reconnectAll('foreground');
-    // Short delay lets the network re-establish before syncing history
-    // the realtime stream cannot backfill (messages, notifications).
     setTimeout(function () {
       var pg = H.currentPageName;
       if (pg === 'Messages' && typeof H._refreshMessagesPage === 'function') {
@@ -854,7 +850,15 @@
       } else if (pg === 'Chat' && H._activeChat && typeof H.startChatPolling === 'function') {
         H.startChatPolling(H._activeChat);
       }
-      if (me() && typeof H.syncConversations === 'function') H.syncConversations().catch(function () {});
+      // Only sync conversations on foreground if backgrounded for 3+ minutes,
+      // and use skipMessageFetch — realtime delivers individual messages; this
+      // call is only for conversation discovery, not full message re-fetch.
+      var _now = Date.now();
+      if (me() && typeof H.syncConversations === 'function' &&
+          _now - (H._lastConvSyncAt || 0) > 180000) {
+        H._lastConvSyncAt = _now;
+        H.syncConversations({ skipMessageFetch: true }).catch(function () {});
+      }
       if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
     }, 600);
   };

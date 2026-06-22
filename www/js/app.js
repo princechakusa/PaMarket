@@ -1391,7 +1391,7 @@ window.H = {
       // back to the minimal columns (title/image_url/link_url) that always exist.
       const {data,error} = await window.supabase
         .from('paid_ads')
-        .select('*')
+        .select('id,type,business_name,headline,tagline,image_url,bg_color,link_url,target_cat,starts_at,ends_at,active,priority,impressions,clicks,listing_id')
         .eq('active',true)
         .limit(20);
       if(error||!data) return;
@@ -1856,7 +1856,7 @@ window.H = {
 
       // Load server-persisted conversation deletions so they stay hidden across logins.
       try {
-        const { data: dels } = await sb.from('conversation_deletions').select('conversation_id').eq('user_id', u.id);
+        const { data: dels } = await sb.from('conversation_deletions').select('conversation_id').eq('user_id', u.id).limit(100);
         if (dels && dels.length) {
           if (!Array.isArray(H.state.deletedConvIds)) H.state.deletedConvIds = [];
           for (const d of dels) {

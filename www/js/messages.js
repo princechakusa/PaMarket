@@ -1196,7 +1196,7 @@
     const b = (H.state.businesses || []).find(function (b) { return b.id === bizId; });
     const u = currentUser();
     if (!b || !u || String(b.ownerUserId) !== String(u.id)) {
-      return '<div class="page active">' + innerTopbar('Shop Inbox') + H.emptyState('Not found', '', null, null) + '</div>';
+      return '<div class="page active">' + H.innerTopbar('Shop Inbox') + H.emptyState('Not found', '', null, null) + '</div>';
     }
     const tab = H._shopInboxTab || 'all';
     const bizConvs = conversations()
@@ -1249,7 +1249,7 @@
     }).join('');
 
     return `<div class="page active">
-      ${innerTopbar(escHtml(b.name) + ' Inbox')}
+      ${H.innerTopbar(H.escHtml(b.name) + ' Inbox')}
       <div style="display:flex;border-bottom:2px solid var(--border,#E8ECF4)">${tabBar}</div>
       <div id="shopInboxList">
         ${rows || H.emptyState(tab === 'leads' ? 'No leads yet' : tab === 'unread' ? 'All caught up' : 'No conversations yet', tab === 'leads' ? 'Buyers with 2+ messages count as leads.' : '', null, null)}
@@ -1258,7 +1258,7 @@
     </div>`;
     } catch (e) {
       console.error('BusinessShopInbox render error:', e);
-      return '<div class="page active">' + innerTopbar('Shop Inbox') + '<div style="padding:32px 20px;text-align:center"><div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px">Could not load inbox</div><div style="font-size:13px;color:var(--sub);margin-bottom:20px">Please go back and try again.</div><button onclick="H.goBack()" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:11px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Go Back</button></div></div>';
+      return '<div class="page active">' + H.innerTopbar('Shop Inbox') + '<div style="padding:32px 20px;text-align:center"><div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px">Could not load inbox</div><div style="font-size:13px;color:var(--sub);margin-bottom:20px">Please go back and try again.</div><button onclick="H.goBack()" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:11px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Go Back</button></div></div>';
     }
   };
 

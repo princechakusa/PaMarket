@@ -102,7 +102,6 @@
         if (typeof H.syncVerificationsFromSupabase === 'function') ps.push(H.syncVerificationsFromSupabase().catch(function () {}));
         if (typeof H.fetchAllListingsForAdmin === 'function') ps.push(H.fetchAllListingsForAdmin().catch(function () {}));
         if (typeof H.syncReports      === 'function') ps.push(H.syncReports().catch(function () {}));
-        if (typeof H.syncConversations === 'function') ps.push(H.syncConversations().catch(function () {}));
         return ps.length ? Promise.all(ps) : Promise.resolve();
       },
       sig: function () {
