@@ -1248,7 +1248,7 @@ window.H = {
             }).catch(function(){});
           }
           if (H.currentUser()) {
-            if (typeof H.syncConversations === 'function') H.syncConversations().catch(function(){});
+            if (typeof H.syncConversations === 'function') H.syncConversations({ skipMessageFetch: true }).catch(function(){});
             if (typeof H.syncNotifications === 'function') H.syncNotifications();
             if (typeof H.syncApplications  === 'function') H.syncApplications();
           }
@@ -1391,7 +1391,8 @@ window.H = {
       const {data,error} = await window.supabase
         .from('paid_ads')
         .select('*')
-        .eq('active',true);
+        .eq('active',true)
+        .limit(20);
       if(error||!data) return;
       H.state.paidAds = data.map(r=>({
         id:r.id, type:r.type||'banner',
@@ -1652,7 +1653,9 @@ window.H = {
               if (_du) window.supabase.from('conversation_deletions').delete().eq('user_id', _du.id).eq('conversation_id', msg.conversation_id).then(()=>{});
             }
             if (typeof H.syncConversations === 'function') {
-              H.syncConversations().then(function(){
+              // skipMessageFetch: realtime already delivered this message via appendChatMessages;
+              // we only need conversation discovery here, not a full per-conv message re-fetch.
+              H.syncConversations({ skipMessageFetch: true }).then(function(){
                 if (H.currentPageName === 'Messages' && typeof H._refreshMessagesPage === 'function') H._refreshMessagesPage({ skipSync:true });
               });
             }
@@ -1747,9 +1750,10 @@ window.H = {
       if (!sb || typeof sb.from !== 'function') return;
       const u = H.currentUser(); if (!u) return;
       const { data, error } = await sb.from('applications')
-        .select('*')
+        .select('id, job_id, job_title, company, applicant_id, applicant_name, applicant_phone, applicant_email, message, answers, status, employer_id, applied_at')
         .or(`applicant_id.eq.${u.id},employer_id.eq.${u.id}`)
-        .order('applied_at', { ascending: false });
+        .order('applied_at', { ascending: false })
+        .limit(50);
       if (error || !data) return;
       const remote = data.map(r => ({
         id: r.id, jobId: r.job_id, jobTitle: r.job_title,
@@ -1840,7 +1844,8 @@ window.H = {
     } catch(e) { console.warn('updateApplicationStatusCloud:', e.message); }
   },
 
-  async syncConversations() {
+  async syncConversations(opts) {
+    opts = opts || {};
     try {
       const sb = window.supabase;
       if (!sb || typeof sb.from !== 'function') return false;
@@ -1995,43 +2000,55 @@ window.H = {
       // are loaded first — this ensures we have all sender_id values needed to populate
       // members arrays and collect the full set of other-user IDs for the profile fetch.
 
-      // Phase 4: sync messages for EVERY known conversation — in parallel, so
-      // refresh time stays flat instead of growing with each conversation.
-      await Promise.all(H.state.conversations.map(async (local) => {
-        if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
-        const { data: msgs, error: msgErr } = await sb.from('messages')
-          .select('id, sender_id, sender_name, text, image, read, created_at')
-          .eq('conversation_id', local.id)
-          .order('created_at', { ascending: true })
-          .limit(20);
-        if (msgErr || !msgs) return;
-        const existing = new Map(local.messages.map(m => [m.id, m]));
-        msgs.forEach(m => {
-          const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
-          const found = existing.get(m.id);
-          const read = found && found.read ? true : !!m.read;
-          if (!found) {
-            local.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, image: m.image||null, t, read });
-            changed = true;
-          } else if (found.read !== read || found.from !== m.sender_id || found.senderName !== (m.sender_name||'') || (m.image && !found.image)) {
-            found.from = m.sender_id;
-            found.senderName = m.sender_name || found.senderName || '';
-            if (m.image && !found.image) found.image = m.image;
-            found.read = read;
-            changed = true;
-          }
-        });
-        local.messages.sort((a,b) => (a.t||0) - (b.t||0));
-        // Backfill missing other-member into the members array from message sender IDs
-        if (!Array.isArray(local.members)) local.members = [u.id];
-        if (!local.members.includes(u.id)) local.members.unshift(u.id);
-        (msgs||[]).forEach(function(m) {
-          if (m.sender_id && m.sender_id !== u.id && !local.members.includes(m.sender_id)) {
-            local.members.push(m.sender_id);
-            changed = true;
-          }
-        });
-      }));
+      // Phase 4: sync messages. Background polls (skipMessageFetch) skip this entirely
+      // to avoid N parallel queries per poll cycle — the realtime subscription delivers
+      // new messages in real-time; this is only needed on explicit open or first load.
+      // When convId is provided (Chat open), only fetch that one conversation.
+      if (!opts.skipMessageFetch) {
+        const _convId = opts.convId || null;
+        const toSync = _convId
+          ? H.state.conversations.filter(function(c){ return c.id === _convId; })
+          : H.state.conversations.slice().sort(function(a,b){
+              // Most recently active first; cap at 10 to bound egress on boot
+              const ta = a.messages && a.messages.length ? a.messages[a.messages.length-1].t||0 : 0;
+              const tb = b.messages && b.messages.length ? b.messages[b.messages.length-1].t||0 : 0;
+              return tb - ta;
+            }).slice(0, 10);
+        await Promise.all(toSync.map(async (local) => {
+          if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
+          const { data: msgs, error: msgErr } = await sb.from('messages')
+            .select('id, sender_id, sender_name, text, image, read, created_at')
+            .eq('conversation_id', local.id)
+            .order('created_at', { ascending: false })
+            .limit(20);
+          if (msgErr || !msgs) return;
+          const existing = new Map(local.messages.map(m => [m.id, m]));
+          msgs.forEach(m => {
+            const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
+            const found = existing.get(m.id);
+            const read = found && found.read ? true : !!m.read;
+            if (!found) {
+              local.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, image: m.image||null, t, read });
+              changed = true;
+            } else if (found.read !== read || found.from !== m.sender_id || found.senderName !== (m.sender_name||'') || (m.image && !found.image)) {
+              found.from = m.sender_id;
+              found.senderName = m.sender_name || found.senderName || '';
+              if (m.image && !found.image) found.image = m.image;
+              found.read = read;
+              changed = true;
+            }
+          });
+          local.messages.sort((a,b) => (a.t||0) - (b.t||0));
+          if (!Array.isArray(local.members)) local.members = [u.id];
+          if (!local.members.includes(u.id)) local.members.unshift(u.id);
+          (msgs||[]).forEach(function(m) {
+            if (m.sender_id && m.sender_id !== u.id && !local.members.includes(m.sender_id)) {
+              local.members.push(m.sender_id);
+              changed = true;
+            }
+          });
+        }));
+      }
 
       // Phase 4.5: backfill profile names from message sender_name where name is still empty
       // This covers cases where the profiles table is unavailable or the entry has no name

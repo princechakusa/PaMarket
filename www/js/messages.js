@@ -1386,8 +1386,10 @@
         window._messagesPoll = null;
         return;
       }
-      H._refreshMessagesPage();
-    }, 5000);
+      // skipMessageFetch: only discover new conversations; realtime delivers messages live.
+      // Interval is 30s because realtime is the primary delivery path; poll is a fallback.
+      H._refreshMessagesPage({ skipMessageFetch: true });
+    }, 30000);
     H._setupMsgSwipe();
   };
 
@@ -1401,7 +1403,8 @@
     if (typeof H.syncConversations !== 'function') return Promise.resolve(false);
     H._syncingMessagesPage = true;
     const before = conversationSignature();
-    return H.syncConversations().then(function () {
+    const syncOpts = opts.skipMessageFetch ? { skipMessageFetch: true } : {};
+    return H.syncConversations(syncOpts).then(function () {
       const after = conversationSignature();
       if (H.currentPageName === 'Messages' && after !== before) H.renderPage('Messages');
       return after !== before;
@@ -1415,25 +1418,54 @@
     var _chatPollFn = async function() {
       if (H.currentPageName !== 'Chat' || H._activeChat !== convId) {
         clearInterval(window._chatPoll);
+        window._chatPoll = null;
         return;
       }
-      const conv = conversations().find(c => c.id === convId);
-      const idsBefore = new Set(((conv && conv.messages) || []).map(m => m.id));
-      if (typeof H.syncConversations === 'function') {
-        await H.syncConversations();
-      }
-      const convAfter = conversations().find(c => c.id === convId);
-      if (!convAfter) return;
-      // Append only the new messages without a full page re-render
-      const thread = document.getElementById('chatThread');
-      if (!thread) return;
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') return;
       const u = H.currentUser();
       if (!u) return;
-      const ava2 = otherAvatarFor(convAfter, u);
-      const newMsgs = (convAfter.messages || []).filter(m => !idsBefore.has(m.id));
+      const conv = conversations().find(c => c.id === convId);
+      const idsBefore = new Set(((conv && conv.messages) || []).map(m => m.id));
+
+      // Targeted incremental fetch: only messages for THIS conversation that are
+      // newer than what we already have. Returns 0 rows (near-zero egress) when
+      // nothing new has arrived — vastly cheaper than a full syncConversations().
+      const latestTs = conv && conv.messages && conv.messages.length
+        ? new Date(Math.max.apply(null, conv.messages.map(function(m){ return m.t || 0; }))).toISOString()
+        : null;
+      var query = sb.from('messages')
+        .select('id, sender_id, sender_name, text, image, read, created_at')
+        .eq('conversation_id', convId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (latestTs) query = query.gt('created_at', latestTs);
+
+      const { data: msgs, error } = await query;
+      if (error || !msgs || !msgs.length) return;
+
+      // Merge new messages into state
+      if (!conv) return;
+      if (!Array.isArray(conv.messages)) conv.messages = [];
+      msgs.forEach(function(m) {
+        const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
+        if (!conv.messages.find(function(x){ return x.id === m.id; })) {
+          conv.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, image: m.image||null, t, read: !!m.read });
+        }
+        if (m.sender_id && m.sender_id !== u.id && !(conv.members||[]).includes(m.sender_id)) {
+          conv.members = conv.members || [];
+          conv.members.push(m.sender_id);
+        }
+      });
+      conv.messages.sort(function(a,b){ return (a.t||0)-(b.t||0); });
+
+      // Append to DOM — only incoming messages the thread doesn't already show
+      const thread = document.getElementById('chatThread');
+      if (!thread) { H.saveState(); return; }
+      const ava2 = otherAvatarFor(conv, u);
+      const newMsgs = conv.messages.filter(function(m){ return !idsBefore.has(m.id) && m.from !== u.id; });
       let gotIncoming = false;
       newMsgs.forEach(function(m) {
-        if (m.from === u.id) return;
         m.read = true;
         gotIncoming = true;
         appendThemMessage(thread, ava2, m);
@@ -1448,20 +1480,19 @@
       });
       if (gotIncoming) {
         thread.scrollTop = thread.scrollHeight;
-        // We just saw their new messages — clear typing and mark them read in the cloud.
         if (typeof H._renderTyping === 'function') H._renderTyping(false);
-        const oid = (convAfter.members || []).find(x => x !== u.id);
+        const oid = (conv.members || []).find(function(x){ return x !== u.id; });
         if (oid && typeof H.markConversationReadInCloud === 'function') H.markConversationReadInCloud(convId, oid);
       }
-      // Refresh our own ✓/✓✓ ticks in case the cloud now reflects them as read.
       if (typeof H._refreshReceipts === 'function') H._refreshReceipts(convId);
       H.saveState();
       if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
     };
-    // Run once immediately so messages that arrived since last sync show right away,
-    // then continue polling every 4s.
+    // Run once immediately, then poll every 15 seconds as a realtime fallback.
+    // Realtime (postgres_changes) is the primary delivery path; this poll only
+    // catches messages when the WebSocket drops — so a 15s interval is sufficient.
     _chatPollFn();
-    window._chatPoll = setInterval(_chatPollFn, 4000);
+    window._chatPoll = setInterval(_chatPollFn, 15000);
   };
 
   H._appendChatMessages = function (convId, msgs) {
