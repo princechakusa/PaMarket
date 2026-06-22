@@ -154,6 +154,11 @@
       Object.keys(RM._loops).forEach(function (name) { RM.stop(name); });
     },
 
+    // Called by H._onAppStateChange('background') — suspends poll loops.
+    pause: function () {
+      RM._appActive = false;
+    },
+
     // Called when app returns to foreground — force fresh fetch then resume loop
     resume: function () {
       RM._appActive    = true;
@@ -249,32 +254,9 @@
     }
   };
 
-  // ── Visibility & foreground detection ────────────────────────────────────────
-  document.addEventListener('visibilitychange', function () {
-    if (document.hidden) {
-      RM._appActive = false;
-    } else {
-      RM.resume();
-    }
-  });
-
-  // Native Capacitor foreground/background — on Android, visibilitychange is
-  // unreliable when the user app-switches. This listener is the authoritative
-  // foreground trigger for the Capacitor build.
-  // realtime-extras.js has its own appStateChange listener for presence/last-seen;
-  // this one is solely responsible for RM poll re-synchronisation.
-  try {
-    var _CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
-    if (_CapApp && typeof _CapApp.addListener === 'function') {
-      _CapApp.addListener('appStateChange', function (st) {
-        if (st && st.isActive) {
-          RM.resume();
-        } else {
-          RM._appActive = false;
-        }
-      });
-    }
-  } catch (e) {}
+  // Lifecycle events (visibilitychange, appStateChange, online/offline) are
+  // handled exclusively by lifecycle.js which calls H.RM.resume() / H.RM.pause()
+  // through the single H._onAppStateChange() entry point.
 
   // ── _after auto-install ──────────────────────────────────────────────────────
   // Each page's _after hook starts that page's polling loop. RM.start() calls
