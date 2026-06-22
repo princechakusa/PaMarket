@@ -21,7 +21,7 @@
   H.fetchAllBusinesses = async function () {
     const sb = window.supabase; if (!sb) return adminList();
     try {
-      const { data, error } = await sb.from('businesses').select('*').order('created_at', { ascending: false }).limit(200);
+      const { data, error } = await sb.from('businesses').select('*').order('created_at', { ascending: false }).limit(20);
       if (error || !Array.isArray(data)) return adminList();
       H.state.adminBusinesses = data.map(r => ({
         id: r.id, ownerUserId: r.owner_user_id, name: r.name, bizType: r.biz_type,
@@ -37,7 +37,7 @@
   H.fetchPendingInvoices = async function () {
     const sb = window.supabase; if (!sb) return H.state.adminInvoices || [];
     try {
-      const { data, error } = await sb.from('business_payments').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(200);
+      const { data, error } = await sb.from('business_payments').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(20);
       if (error || !Array.isArray(data)) return H.state.adminInvoices || [];
       H.state.adminInvoices = data.map(r => ({ id: r.id, businessId: r.business_id, type: r.type, amount: Number(r.amount) || 0, description: r.description, createdAt: new Date(r.created_at || Date.now()).getTime() }));
       saveState(); return H.state.adminInvoices;
@@ -47,7 +47,7 @@
   H.fetchPendingBizVerifs = async function () {
     const sb = window.supabase; if (!sb) return H.state.adminVerifs || [];
     try {
-      const { data, error } = await sb.from('business_verifications').select('*').eq('status', 'pending').order('submitted_at', { ascending: false }).limit(200);
+      const { data, error } = await sb.from('business_verifications').select('*').eq('status', 'pending').order('submitted_at', { ascending: false }).limit(20);
       if (error || !Array.isArray(data)) return H.state.adminVerifs || [];
       H.state.adminVerifs = data.map(r => ({ id: r.id, businessId: r.business_id, level: r.level_requested || 1, idDoc: r.id_doc_path, regDoc: r.reg_doc_path, submittedAt: new Date(r.submitted_at || Date.now()).getTime() }));
       saveState(); return H.state.adminVerifs;

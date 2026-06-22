@@ -82,7 +82,7 @@
     try {
       const res = await c.from('notifications')
         .select('*').eq('user_id', u.id)
-        .order('created_at', { ascending: false }).limit(100);
+        .order('created_at', { ascending: false }).limit(20);
       if (res.error || !res.data) return;
       H.state.notifs = H.state.notifs || {};
       const local = H.state.notifs[u.id] || [];

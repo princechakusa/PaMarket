@@ -457,7 +457,7 @@
     _sb.from('profiles')
       .select('id,name,phone,email,avatar,verified,job_title,skills,sector,exp,city,open_to_work,cv')
       .or('open_to_work.eq.true,cv->visible.eq.true')
-      .limit(200)
+      .limit(20)
       .then(function (res) {
         if (res.error || !res.data || !res.data.length) return;
         res.data.forEach(function (p) {

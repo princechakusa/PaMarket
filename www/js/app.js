@@ -1480,7 +1480,7 @@ window.H = {
         .from('listings').select('*')
         .eq('status','active')
         .order('created_at',{ascending:false})
-        .limit(100);
+        .limit(20);
       if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
       const cloud=(data||[]).map(r=>H._mapCloudListing(r));
       if (typeof H.applyFeedUpdate === 'function') {
@@ -1540,7 +1540,7 @@ window.H = {
       const {data,error}=await window.supabase
         .from('listings').select('*')
         .order('created_at',{ascending:false})
-        .limit(200);
+        .limit(20);
       if(error||!Array.isArray(data)) return;
       const cloud=data.map(r=>H._mapCloudListing(r));
       const cloudIds=new Set(cloud.map(l=>l.id));
@@ -1728,7 +1728,7 @@ window.H = {
       const { data, error } = await sb.from('reports')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(20);
       if (error || !data) return;
 
       H.state.reports = H.state.reports || [];
@@ -1827,7 +1827,7 @@ window.H = {
         const { data: convs, error } = await sb.from('conversations')
           .select('id, members, listing_id')
           .contains('members', [u.id])
-          .limit(100);
+          .limit(20);
         if (!error && convs) {
           for (const c of convs) {
             // Deleted convs stay OUT of knownIds so Phase 2 can still revive them
@@ -1867,8 +1867,8 @@ window.H = {
       try {
         const uidSuffix = u.id.slice(-6);
         const [sentRes, recvRes] = await Promise.all([
-          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(100),
-          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(100)
+          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(20),
+          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(20)
         ]);
         // Build a map: convId -> first other-user sender_id found across both result sets
         const convOtherMap = {};
@@ -1917,7 +1917,7 @@ window.H = {
               .like('conversation_id', 'biz_' + suffix + '_%')
               .neq('sender_id', u.id)
               .order('created_at', {ascending: false})
-              .limit(100)
+              .limit(20)
               .catch(function() { return { data: [] }; });
           }));
           for (const res of bizResults) {
@@ -1952,7 +1952,7 @@ window.H = {
           .select('id, sender_id, sender_name, text, image, read, created_at')
           .eq('conversation_id', local.id)
           .order('created_at', { ascending: true })
-          .limit(200);
+          .limit(20);
         if (msgErr || !msgs) return;
         const existing = new Map(local.messages.map(m => [m.id, m]));
         msgs.forEach(m => {

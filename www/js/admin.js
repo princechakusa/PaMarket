@@ -102,7 +102,7 @@
     const p1 = sb.from('profiles')
       .select('id,name,email,phone,verification_pending,id_type,verified,verified_at,avatar_url,role,company_verification_pending,company')
       .or('verification_pending.eq.true,verified.eq.true,company_verification_pending.eq.true')
-      .limit(200)
+      .limit(20)
       .then(function (res) {
         const data = res && res.data;
         if (!data || !data.length) return;
@@ -143,7 +143,7 @@
     const p2 = sb.from('verifications')
       .select('user_id,id_doc,selfie,id_doc_path,selfie_path,status,submitted_at')
       .order('submitted_at', { ascending: false })
-      .limit(200)
+      .limit(20)
       .then(function (res) {
         const data = res && res.data;
         if (!data) return;
@@ -157,7 +157,7 @@
       .select('user_id,company_name,status,submitted_at,reg_cert_path,tax_cert_path,premises_path,owner_id_path')
       .eq('status', 'pending')
       .order('submitted_at', { ascending: false })
-      .limit(200)
+      .limit(20)
       .then(function (res) {
         const data = res && res.data;
         if (!data) return;
@@ -1101,12 +1101,12 @@
           let q = c.from('profiles').select('id');
           if (target === 'verified')   q = q.eq('verified', true);
           if (target === 'unverified') q = q.eq('verified', false);
-          const res = await q.limit(250);
+          const res = await q.limit(20);
           if (res.data) userIds = res.data.map(p => p.id).filter(Boolean);
         } else if (c) {
           const [uRes, lRes] = await Promise.all([
-            c.from('profiles').select('id').limit(250),
-            c.from('listings').select('seller_id').neq('status','banned').limit(250)
+            c.from('profiles').select('id').limit(20),
+            c.from('listings').select('seller_id').neq('status','banned').limit(20)
           ]);
           const sellerSet = new Set((lRes.data||[]).map(l => l.seller_id).filter(Boolean));
           const allIds    = (uRes.data||[]).map(p => p.id).filter(Boolean);
@@ -1326,8 +1326,8 @@
       try {
         // Fetch messages and conversations in parallel
         const [msgsRes, convosRes] = await Promise.all([
-          sb.from('messages').select('*').order('created_at', { ascending: false }).limit(200),
-          sb.from('conversations').select('*').limit(200)
+          sb.from('messages').select('*').order('created_at', { ascending: false }).limit(20),
+          sb.from('conversations').select('*').limit(20)
         ]);
 
         const msgs   = (msgsRes  && msgsRes.data)  || [];

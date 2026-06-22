@@ -461,7 +461,7 @@
   H.fetchShopReviews = async function (bizId) {
     const sb = window.supabase; if (!sb || !bizId) return;
     try {
-      const { data, error } = await sb.from('business_reviews').select('*').eq('business_id', bizId).order('created_at', { ascending: false }).limit(50);
+      const { data, error } = await sb.from('business_reviews').select('*').eq('business_id', bizId).order('created_at', { ascending: false }).limit(20);
       if (error || !Array.isArray(data)) return;
       H.state.businessReviews = H.state.businessReviews || {};
       H.state.businessReviews[bizId] = data.map(function(r){
@@ -858,7 +858,7 @@
   H.fetchAllActiveBusinesses = async function () {
     const sb = window.supabase; if (!sb) return H.state.businesses || [];
     try {
-      const { data, error } = await sb.from('businesses').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(100);
+      const { data, error } = await sb.from('businesses').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(20);
       if (error || !Array.isArray(data)) return H.state.businesses || [];
       const serverList = data.map(row => {
         const _cats = (row.category || '').split('|').filter(Boolean);
