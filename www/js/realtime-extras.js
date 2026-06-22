@@ -395,77 +395,67 @@
   // ===================================================================
   // UNIFIED FEED UPDATE PIPELINE  (H.applyFeedUpdate)
   // Single point of truth for all mutations to H.state.listings and
-  // H.state.businesses. All paths — realtime, polling, startup — go through
-  // H.resolveStateConflict before any write, ensuring ordering and safety.
+  // H.state.businesses.
+  //
+  // ARCHITECTURE CONTRACT (server is the source of truth):
+  //   • The server snapshot ALWAYS wins. Local state is a cache/projection of
+  //     server data and never overrides it.
+  //   • NO persistent tombstones or deletion caches. The only client-side
+  //     reconciliation state is two SHORT-LIVED in-memory structures, both
+  //     keyed by row id and never persisted to storage:
+  //       _rtInsertWindow(Biz) — an item just INSERTed via realtime that a
+  //         poll snapshot taken microseconds earlier may not contain yet.
+  //       _pendingDeletes      — an item the user just deleted/deactivated,
+  //         so an already-in-flight poll cannot momentarily resurrect it.
+  //     Both expire on a few-second TTL; after that, the server snapshot is
+  //     taken verbatim.
   // ===================================================================
 
-  // ── Internal tracking structures ─────────────────────────────────────────────
-  H._rtInsertWindow    = H._rtInsertWindow    || {};   // { id: insertedAtMs } — listing race guard
+  // ── Short-lived in-memory reconciliation structures (never persisted) ────────
+  H._rtInsertWindow    = H._rtInsertWindow    || {};   // { id: insertedAtMs }
   H._rtInsertWindowBiz = H._rtInsertWindowBiz || {};   // same for businesses
-  var _RT_WIN_MS = 5000;                               // 5s race guard window
+  var _RT_WIN_MS = 5000;                               // 5s insert-race window
 
-  // Deleted ID records — prevent stale full-fetch from resurrecting items
-  // removed by a realtime DELETE after the query window closed.
-  // TTL: 30s. Pruned in H._pruneCache. Format: { id: deletedAtMs }
-  H._deletedListingIds = H._deletedListingIds || {};
-  H._deletedBizIds     = H._deletedBizIds     || {};
+  // Pending optimistic deletes: { id: expiresAtMs }. Lets an in-flight poll
+  // that started BEFORE a user delete avoid re-adding the row for a brief
+  // window. Strictly temporary — NOT a tombstone: it self-expires and is never
+  // written to localStorage, so the server snapshot wins as soon as it lands.
+  H._pendingDeletes = H._pendingDeletes || {};
+  var _PENDING_DELETE_MS = 10000;                      // 10s reconciliation window
+
+  H.markPendingDelete = function (id) {
+    if (id != null) H._pendingDeletes[id] = Date.now() + _PENDING_DELETE_MS;
+  };
+  function _isPendingDelete(id) {
+    var exp = H._pendingDeletes[id];
+    if (!exp) return false;
+    if (Date.now() > exp) { delete H._pendingDeletes[id]; return false; }
+    return true;
+  }
+  function _prunePendingDeletes() {
+    var now = Date.now();
+    Object.keys(H._pendingDeletes).forEach(function (id) {
+      if (now > H._pendingDeletes[id]) delete H._pendingDeletes[id];
+    });
+  }
 
   // ===================================================================
-  // CONFLICT RESOLUTION ENGINE  (H.resolveStateConflict)
-  // resolveStateConflict(local, server, source, evt)
-  //   local   — current local item, or null for new INSERTs
-  //   server  — incoming server item
-  //   source  — 'realtime' | 'poll'
-  //   evt     — 'INSERT' | 'UPDATE' | 'DELETE' | 'full'
-  //
-  // Returns { action, data }
-  //   action 'reject'  — discard server, keep local as-is
-  //   action 'accept'  — use resolved/merged item (in .data)
-  //
-  // Rules (evaluated in priority order):
-  //   R1 Local write in-flight (_pendingSync) — reject realtime UPDATE/full
-  //   R2 Version ordering — reject if server.updatedAt < local._updatedAt
-  //      (out-of-order realtime delivery)
-  //   R3 Null image guard — never overwrite local logo/cover with null
-  //      (CDN race: image URL not yet committed when event fires)
-  //   R4 Merge — for UPDATE/full, server fields merged over local;
-  //      for INSERT with no local, accept server directly
+  // STATE MERGE  (H.resolveStateConflict) — SERVER ALWAYS WINS
+  // resolveStateConflict(local, server)
+  //   Returns { action: 'accept', data } where data is the server row with
+  //   any purely local-only fields (UI-derived props the server does not send)
+  //   preserved. Server-provided fields ALWAYS take precedence — local values
+  //   never override the server, and this function never rejects an update.
+  //   The legacy (source, evt) args are accepted but ignored for callsite
+  //   compatibility.
   // ===================================================================
-  H.resolveStateConflict = function (local, server, source, evt) {
-    // R1: pending local write — skip realtime overwrites until poll confirms
-    if (local && local._pendingSync && source === 'realtime' &&
-        (evt === 'UPDATE' || evt === 'full')) {
-      H.RT._log('conflict', 'R1:pendingSync reject', { id: local.id });
-      return { action: 'reject' };
-    }
-
-    // R2: version ordering — reject out-of-order realtime UPDATE events
-    if (local && server && source === 'realtime' && (evt === 'UPDATE' || evt === 'full')) {
-      var localTs  = local._updatedAt || 0;
-      var serverTs = server.updatedAt || server.createdAt || 0;
-      if (localTs > 0 && serverTs > 0 && serverTs < localTs) {
-        H.RT._log('conflict', 'R2:staleEvent reject', { id: local.id, localTs: localTs, serverTs: serverTs });
-        return { action: 'reject' };
-      }
-    }
-
-    // R3: null image guard — restore local logo/cover when server sends null
-    var out = server ? Object.assign({}, server) : null;
-    if (local && out) {
-      if (!out.logo  && local.logo)  out.logo  = local.logo;
-      if (!out.cover && local.cover) out.cover = local.cover;
-    }
-
-    // R4: merge for UPDATE/full; accept directly for INSERT / new item
-    if (local && out && (evt === 'UPDATE' || evt === 'full')) {
-      out = Object.assign({}, local, out);
-      H.RT._log('conflict', 'R4:merge', { id: out.id, source: source, evt: evt });
-    } else {
-      H.RT._log('conflict', 'accept', { id: out && out.id, evt: evt, source: source });
-    }
-
-    // Stamp _updatedAt so R2 can detect future out-of-order events
-    if (out) out._updatedAt = (server && (server.updatedAt || server.createdAt)) || Date.now();
+  H.resolveStateConflict = function (local, server /*, source, evt */) {
+    if (!server) return { action: 'accept', data: local || null };
+    // Merge server OVER local: server keys win; local-only keys (not present on
+    // the server row) are retained. This is a projection refresh, not a merge
+    // that could let a stale local value mask server truth.
+    var out = local ? Object.assign({}, local, server) : Object.assign({}, server);
+    out._updatedAt = server.updatedAt || server.createdAt || Date.now();
     return { action: 'accept', data: out };
   };
 
@@ -490,31 +480,27 @@
       if (evt === 'DELETE') {
         if (delId) {
           H.state.listings = H.state.listings.filter(function (l) { return l.id !== delId; });
-          H._deletedListingIds[delId] = Date.now();  // prevent resurrection from stale poll
+          H.markPendingDelete(delId);   // brief in-flight-poll guard, self-expiring
           delete H._rtInsertWindow[delId];
           H.RT._log('feed', 'listing DELETE', { id: delId });
         }
 
       } else if (evt === 'INSERT' || evt === 'UPDATE') {
         if (!mapped) return;
-        // Fresh INSERT clears any deletion record (seller re-listed under same id)
-        if (evt === 'INSERT') delete H._deletedListingIds[mapped.id];
+        // A fresh server event is authoritative — clear any pending-delete guard.
+        delete H._pendingDeletes[mapped.id];
         if (mapped.status === 'active') {
           var idx = H.state.listings.findIndex(function (l) { return l.id === mapped.id; });
           if (idx >= 0) {
-            var res = H.resolveStateConflict(H.state.listings[idx], mapped, source, evt);
-            if (res.action !== 'reject') H.state.listings[idx] = res.data || mapped;
+            H.state.listings[idx] = H.resolveStateConflict(H.state.listings[idx], mapped).data;
           } else {
-            var resNew = H.resolveStateConflict(null, mapped, source, evt);
-            if (resNew.action !== 'reject') {
-              H.state.listings.unshift(resNew.data || mapped);
-              if (evt === 'INSERT') H._rtInsertWindow[mapped.id] = Date.now();
-            }
+            H.state.listings.unshift(H.resolveStateConflict(null, mapped).data);
+            if (evt === 'INSERT') H._rtInsertWindow[mapped.id] = Date.now();
           }
         } else {
-          // Status changed to non-active — remove and record deletion
+          // Status changed to non-active (sold/deleted/pending) — drop from feed.
           H.state.listings = H.state.listings.filter(function (l) { return l.id !== mapped.id; });
-          H._deletedListingIds[mapped.id] = Date.now();
+          H.markPendingDelete(mapped.id);
           delete H._rtInsertWindow[mapped.id];
         }
       }
@@ -533,40 +519,34 @@
       });
       var cloudIds = seen;
 
-      // 2. Filter items known to be deleted — stale poll must not resurrect them
-      cloud = cloud.filter(function (l) { return !H._deletedListingIds[l.id]; });
+      // 2. Drop rows the user just deleted/deactivated locally if this snapshot
+      //    was already in flight when they did so (brief, self-expiring guard).
+      cloud = cloud.filter(function (l) { return !_isPendingDelete(l.id); });
 
-      // 3. Per-item conflict resolution: version check prevents poll from
-      //    overwriting a newer local state (e.g. from a realtime UPDATE)
+      // 3. Server wins: take each server row verbatim, preserving only local-only
+      //    UI fields. No version checks, no local overrides.
       var localById = {};
       H.state.listings.forEach(function (l) { if (l.status === 'active') localById[l.id] = l; });
       cloud = cloud.map(function (serverItem) {
-        var local = localById[serverItem.id];
-        if (!local) {
-          serverItem._updatedAt = serverItem.updatedAt || serverItem.createdAt || now;
-          return serverItem;
-        }
-        var res = H.resolveStateConflict(local, serverItem, source, 'full');
-        return (res.action === 'reject') ? local : (res.data || serverItem);
+        return H.resolveStateConflict(localById[serverItem.id] || null, serverItem).data;
       });
 
-      // 4. Realtime-insert race guard: preserve items added via realtime INSERT
-      //    within last 5 s that the query snapshot missed
+      // 4. Realtime-insert race guard: keep items INSERTed via realtime in the
+      //    last 5 s that this (slightly stale) snapshot did not include yet.
       var rtSafe = H.state.listings.filter(function (l) {
         var ts = H._rtInsertWindow[l.id];
         return ts && (now - ts < _RT_WIN_MS) && !cloudIds[l.id];
       });
 
-      // 5. Non-active local items (user's pending/banned own posts)
+      // 5. Non-active local items (the user's own pending/sold posts) — these
+      //    come from a different query and are not contradicted by this snapshot.
       var nonActive = H.state.listings.filter(function (l) { return l.status !== 'active'; });
 
-      // 6. Purge stale tracking entries (TTL: 5s for insert window, 30s for deletes)
+      // 6. Expire the short-lived reconciliation structures.
       Object.keys(H._rtInsertWindow).forEach(function (id) {
         if (now - H._rtInsertWindow[id] >= _RT_WIN_MS) delete H._rtInsertWindow[id];
       });
-      Object.keys(H._deletedListingIds).forEach(function (id) {
-        if (now - H._deletedListingIds[id] > 30000) delete H._deletedListingIds[id];
-      });
+      _prunePendingDeletes();
 
       H.state.listings = rtSafe.concat(cloud).concat(nonActive);
       H.RT._log('feed', 'listings_full applied', { server: cloud.length, rtSafe: rtSafe.length, nonActive: nonActive.length });
@@ -583,37 +563,38 @@
       if (bevt === 'DELETE') {
         if (bdelId) {
           H.state.businesses = H.state.businesses.filter(function (b) { return b.id !== bdelId; });
-          H._deletedBizIds[bdelId] = Date.now();
+          H.markPendingDelete(bdelId);   // brief in-flight-poll guard, self-expiring
           delete H._rtInsertWindowBiz[bdelId];
           H.RT._log('feed', 'business DELETE', { id: bdelId });
         }
 
       } else if (bevt === 'INSERT' || bevt === 'UPDATE') {
         if (!bmapped) return;
-        // Clear tombstone on INSERT, or on any UPDATE that promotes status to active.
-        // Only real DELETE events should tombstone; draft INSERT/UPDATE should not,
-        // otherwise businesses_full (which only queries status='active') can never
-        // add a business that went through draft→active on the same device.
-        if (bevt === 'INSERT' || bmapped.status === 'active') delete H._deletedBizIds[bmapped.id];
+        // A fresh server event is authoritative — clear any pending-delete guard.
+        delete H._pendingDeletes[bmapped.id];
+        // Only ACTIVE (admin-approved) businesses are public. Pending/draft/
+        // suspended ones must not appear in the shared feed.
         if (bmapped.status === 'active') {
           var bidx = H.state.businesses.findIndex(function (b) { return b.id === bmapped.id; });
           if (bidx >= 0) {
-            var bres = H.resolveStateConflict(H.state.businesses[bidx], bmapped, source, bevt);
-            if (bres.action !== 'reject') H.state.businesses[bidx] = bres.data || bmapped;
+            H.state.businesses[bidx] = H.resolveStateConflict(H.state.businesses[bidx], bmapped).data;
           } else {
-            var bresNew = H.resolveStateConflict(null, bmapped, source, bevt);
-            if (bresNew.action !== 'reject') {
-              H.state.businesses.unshift(bresNew.data || bmapped);
-              if (bevt === 'INSERT') H._rtInsertWindowBiz[bmapped.id] = Date.now();
-            }
+            H.state.businesses.unshift(H.resolveStateConflict(null, bmapped).data);
+            if (bevt === 'INSERT') H._rtInsertWindowBiz[bmapped.id] = Date.now();
           }
         } else {
-          // Non-active status (draft, suspended, etc.) — remove from visible feed.
-          // Do NOT tombstone in _deletedBizIds: that sentinel is only for real DELETEs.
-          // Tombstoning draft businesses would permanently block businesses_full from
-          // adding them after activation, since businesses_full only queries active rows
-          // and cannot know to un-tombstone the id.
-          H.state.businesses = H.state.businesses.filter(function (b) { return b.id !== bmapped.id; });
+          var _meId = (H.currentUser && H.currentUser() || {}).id;
+          if (bmapped.ownerUserId && _meId && String(bmapped.ownerUserId) === String(_meId)) {
+            // The owner's OWN non-active business stays in state so their
+            // management view keeps it; the public feed hides it via the
+            // status==='active' filter on Home / Local Shops.
+            var _oidx = H.state.businesses.findIndex(function (b) { return b.id === bmapped.id; });
+            if (_oidx >= 0) H.state.businesses[_oidx] = H.resolveStateConflict(H.state.businesses[_oidx], bmapped).data;
+            else H.state.businesses.push(H.resolveStateConflict(null, bmapped).data);
+          } else {
+            H.state.businesses = H.state.businesses.filter(function (b) { return b.id !== bmapped.id; });
+            H.markPendingDelete(bmapped.id);
+          }
           delete H._rtInsertWindowBiz[bmapped.id];
         }
       }
@@ -624,34 +605,48 @@
       var bcloud = payload.data || [];
       var bnow   = Date.now();
 
-      // Dedup server array by id
+      // 1. Dedup server array by id
       var bseen = {};
       bcloud = bcloud.filter(function (b) {
         if (bseen[b.id]) return false; bseen[b.id] = true; return true;
       });
+      var bcloudIds = bseen;
 
-      // Filter recently-deleted businesses
-      bcloud = bcloud.filter(function (b) { return !H._deletedBizIds[b.id]; });
+      // 2. Drop rows the user just deleted/deactivated if this snapshot raced.
+      bcloud = bcloud.filter(function (b) { return !_isPendingDelete(b.id); });
 
-      // Upsert-merge with conflict resolution
-      bcloud.forEach(function (bm) {
-        var bi = H.state.businesses.findIndex(function (b) { return b.id === bm.id; });
-        if (bi >= 0) {
-          var bres2 = H.resolveStateConflict(H.state.businesses[bi], bm, source, 'full');
-          if (bres2.action !== 'reject') H.state.businesses[bi] = bres2.data || bm;
-        } else {
-          bm._updatedAt = bm.updatedAt || bm.createdAt || bnow;
-          H.state.businesses.push(bm);
-        }
+      // 3. Server wins: this snapshot IS the authoritative set of active
+      //    businesses. Take each server row verbatim (preserving local-only UI
+      //    fields). Active businesses NOT in the snapshot have been
+      //    suspended/removed server-side and must drop out of the public feed.
+      var bLocalById = {};
+      H.state.businesses.forEach(function (b) { if (b.status === 'active') bLocalById[b.id] = b; });
+      var bMerged = bcloud.map(function (bm) {
+        return H.resolveStateConflict(bLocalById[bm.id] || null, bm).data;
       });
 
-      // Purge stale tracking entries
+      // 4. Keep the current user's OWN non-active businesses (draft/pending/
+      //    suspended) — these come from fetchMyBusinesses, not this active-only
+      //    snapshot, and the owner's management view needs them.
+      var _meIdB = (H.currentUser && H.currentUser() || {}).id;
+      var ownNonActive = H.state.businesses.filter(function (b) {
+        return b.status !== 'active' && _meIdB && String(b.ownerUserId) === String(_meIdB);
+      });
+
+      // 5. Preserve businesses INSERTed via realtime in the last 5 s that this
+      //    (slightly stale) snapshot did not include yet.
+      var bRtSafe = H.state.businesses.filter(function (b) {
+        var ts = H._rtInsertWindowBiz[b.id];
+        return ts && (bnow - ts < _RT_WIN_MS) && !bcloudIds[b.id];
+      });
+
+      H.state.businesses = bRtSafe.concat(bMerged).concat(ownNonActive);
+
+      // 6. Expire the short-lived reconciliation structures.
       Object.keys(H._rtInsertWindowBiz).forEach(function (id) {
         if (bnow - H._rtInsertWindowBiz[id] >= _RT_WIN_MS) delete H._rtInsertWindowBiz[id];
       });
-      Object.keys(H._deletedBizIds).forEach(function (id) {
-        if (bnow - H._deletedBizIds[id] > 30000) delete H._deletedBizIds[id];
-      });
+      _prunePendingDeletes();
 
       H.RT._log('feed', 'businesses_full applied', { count: bcloud.length });
       H.RT._log('pipeline', '[2] data merged', { type: 'businesses_full', total: H.state.businesses.length });
@@ -724,7 +719,7 @@
   // CACHE MEMORY MANAGER  (H._pruneCache)
   // Called after every full-fetch. Enforces hard limits on H.state.listings
   // (500) and H.state.businesses (300). Prunes stale non-active entries
-  // older than 7 days. Also trims the deleted-id tombstone maps.
+  // older than 7 days, and expires the short-lived reconciliation structures.
   // ===================================================================
   H._pruneCache = function (which) {
     var MAX_LISTINGS   = 500;
@@ -746,12 +741,6 @@
         H.state.listings = active.concat(kept);
         H.RT._log('memory', 'listings pruned', { total: H.state.listings.length });
       }
-      // Trim tombstone map to 500 entries (oldest first)
-      var dkeys = Object.keys(H._deletedListingIds);
-      if (dkeys.length > 500) {
-        dkeys.sort(function (a, b) { return H._deletedListingIds[a] - H._deletedListingIds[b]; });
-        dkeys.slice(0, dkeys.length - 500).forEach(function (k) { delete H._deletedListingIds[k]; });
-      }
     }
 
     if (!which || which === 'businesses') {
@@ -761,12 +750,9 @@
                                .slice(0, MAX_BUSINESSES);
         H.RT._log('memory', 'businesses pruned', { total: H.state.businesses.length });
       }
-      var bdkeys = Object.keys(H._deletedBizIds);
-      if (bdkeys.length > 200) {
-        bdkeys.sort(function (a, b) { return H._deletedBizIds[a] - H._deletedBizIds[b]; });
-        bdkeys.slice(0, bdkeys.length - 200).forEach(function (k) { delete H._deletedBizIds[k]; });
-      }
     }
+
+    _prunePendingDeletes();
   };
 
   // ===================================================================

@@ -375,8 +375,7 @@
     // Tombstone every deleted listing/biz so any realtime INSERT that races the
     // 900ms reload window cannot resurrect them in H.state.
     try {
-      var _now = Date.now();
-      (H.state.listings || []).forEach(function (l) { if (l.sellerId === uid && H._deletedListingIds) H._deletedListingIds[l.id] = _now; });
+      (H.state.listings || []).forEach(function (l) { if (l.sellerId === uid && typeof H.markPendingDelete === 'function') H.markPendingDelete(l.id); });
       H.state.listings = (H.state.listings || []).filter(function (l) { return l.sellerId !== uid; });
       H.state.conversations = (H.state.conversations || []).filter(function (c) { return !((c.members || []).includes(uid)); });
       H.state.users = (H.state.users || []).filter(function (x) { return x.id !== uid; });
