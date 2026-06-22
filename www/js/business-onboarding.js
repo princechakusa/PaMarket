@@ -634,6 +634,13 @@
       if (typeof H.saveBusinessToCloud === 'function') await H.saveBusinessToCloud(JSON.parse(JSON.stringify(d)));
       if (typeof H.saveBusinessSubscriptionToCloud === 'function') await H.saveBusinessSubscriptionToCloud(d);
 
+      // Force-refresh the marketplace business list so the new shop appears
+      // immediately in Local Shops on Home for this device (others get it via
+      // realtime or the next poll cycle).
+      if (typeof H.fetchAllActiveBusinesses === 'function') {
+        H.fetchAllActiveBusinesses().catch(function () {});
+      }
+
       if (wasEdit) {
         _mode = 'create';
         toast('Business updated');

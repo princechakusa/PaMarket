@@ -590,7 +590,11 @@
 
       } else if (bevt === 'INSERT' || bevt === 'UPDATE') {
         if (!bmapped) return;
-        if (bevt === 'INSERT') delete H._deletedBizIds[bmapped.id];
+        // Clear tombstone on INSERT, or on any UPDATE that promotes status to active.
+        // Only real DELETE events should tombstone; draft INSERT/UPDATE should not,
+        // otherwise businesses_full (which only queries status='active') can never
+        // add a business that went through draft→active on the same device.
+        if (bevt === 'INSERT' || bmapped.status === 'active') delete H._deletedBizIds[bmapped.id];
         if (bmapped.status === 'active') {
           var bidx = H.state.businesses.findIndex(function (b) { return b.id === bmapped.id; });
           if (bidx >= 0) {
@@ -604,8 +608,12 @@
             }
           }
         } else {
+          // Non-active status (draft, suspended, etc.) — remove from visible feed.
+          // Do NOT tombstone in _deletedBizIds: that sentinel is only for real DELETEs.
+          // Tombstoning draft businesses would permanently block businesses_full from
+          // adding them after activation, since businesses_full only queries active rows
+          // and cannot know to un-tombstone the id.
           H.state.businesses = H.state.businesses.filter(function (b) { return b.id !== bmapped.id; });
-          H._deletedBizIds[bmapped.id] = Date.now();
           delete H._rtInsertWindowBiz[bmapped.id];
         }
       }
