@@ -1441,7 +1441,8 @@ window.H = {
       photos:Array.isArray(r.photos)?r.photos:(r.photos?[r.photos]:[]),
       status:r.status, boost:r.boost, views:r.views||0,
       businessId:r.business_id||null,
-      createdAt:r.created_at?new Date(r.created_at).getTime():Date.now()
+      createdAt:r.created_at?new Date(r.created_at).getTime():Date.now(),
+      updatedAt:r.updated_at?new Date(r.updated_at).getTime():0
     };
     if(r.attributes && typeof r.attributes==='object'){
       if(typeof H.applyAttrs==='function') H.applyAttrs(o, r.attributes);
@@ -1648,7 +1649,8 @@ window.H = {
                 phone: row.phone, whatsapp: row.whatsapp, email: row.email,
                 province: row.province, city: row.city, suburb: row.suburb,
                 status: row.status, verificationLevel: row.verification_level || 0,
-                featuredListingIds: Array.isArray(row.featured_listing_ids) ? row.featured_listing_ids : [] };
+                featuredListingIds: Array.isArray(row.featured_listing_ids) ? row.featured_listing_ids : [],
+                updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : 0 };
             }
             if (typeof H.applyFeedUpdate === 'function') {
               H.applyFeedUpdate({
