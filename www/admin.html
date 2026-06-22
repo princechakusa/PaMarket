@@ -820,7 +820,7 @@ function bizListingCount(id){ return DATA.listings.filter(function(l){return l.b
 function ownerName(uid){ var u=DATA.users.find(function(x){return x.id===uid;}); return u?(u.name||u.email||'—'):'—'; }
 
 function renderBusinesses() {
-  var list = DATA.businesses.filter(function(b){ return _bizFilter==='all' || b.status===_bizFilter; });
+  var list = DATA.businesses.filter(function(b){ return _bizFilter==='all' || (_bizFilter==='draft' ? (b.status==='draft'||b.status==='pending_activation') : b.status===_bizFilter); });
   var counts = {
     all: DATA.businesses.length,
     active: DATA.businesses.filter(function(b){return b.status==='active';}).length,
@@ -854,8 +854,8 @@ function renderBusinesses() {
     html += '<td><span class="badge badge-'+stClass+'">'+esc(st)+'</span></td>';
     html += '<td><div style="display:flex;gap:4px;flex-wrap:wrap">';
     html += '<button class="ab ab-view" onclick="viewBusiness(\''+b.id+'\')">View</button>';
-    if(st==='suspended') html += '<button class="ab ab-approve" onclick="bizSetStatus(\''+b.id+'\',\'active\')">Activate</button>';
-    else html += '<button class="ab ab-reject" onclick="bizSetStatus(\''+b.id+'\',\'suspended\')">Suspend</button>';
+    if(st==='suspended'||st==='pending_activation') html += '<button class="ab ab-approve" onclick="bizSetStatus(\''+b.id+'\',\'active\')">'+(st==='pending_activation'?'Approve':'Activate')+'</button>';
+    if(st!=='pending_activation') html += '<button class="ab ab-reject" onclick="bizSetStatus(\''+b.id+'\',\'suspended\')">Suspend</button>';
     html += '<button class="ab ab-view" onclick="bizSetPlan(\''+b.id+'\')">Plan</button>';
     html += '<button class="ab ab-view" onclick="bizSetVerify(\''+b.id+'\')">Verify</button>';
     html += '</div></td></tr>';
@@ -2244,7 +2244,7 @@ async function loadMaintenanceStats() {
     _maintStats.errorLogs = r1.error ? '?' : (r1.count || 0);
   } catch(e) { _maintStats.errorLogs = '?'; }
   try {
-    var cutoff30 = new Date(Date.now() - 30 * 86400000).toISOString();
+    var cutoff30 = Date.now() - 30 * 86400000;
     var r2 = await sb.from('notifications').select('id', { count: 'exact', head: true }).lt('created_at', cutoff30);
     _maintStats.oldNotifs = r2.error ? '?' : (r2.count || 0);
   } catch(e) { _maintStats.oldNotifs = '?'; }
@@ -2351,7 +2351,7 @@ async function runClearErrorLogs() {
 }
 
 async function runClearOldNotifs() {
-  var cutoff = new Date(Date.now() - 30 * 86400000).toISOString();
+  var cutoff = Date.now() - 30 * 86400000;
   var ok = await confirm2('Delete Old Notifications', 'Delete all notifications older than 30 days?', 'Delete', 'confirm-ok');
   if (!ok) return;
   _maintLog('Deleting notifications older than 30 days...');

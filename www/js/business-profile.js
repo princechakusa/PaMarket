@@ -298,11 +298,108 @@
   let _shopSort     = 'default';
   let _shopMinPrice = '';
   let _shopMaxPrice = '';
+  let _shopFilters  = {};
 
   function shopProducts(b) {
     return (H.state.listings || []).filter(function (l) {
       return l.status === 'active' && String(l.businessId) === String(b.id);
     });
+  }
+
+  function _shopDominantCat(b) {
+    if (_shopCat !== 'all' && _shopCat !== 'new') return _shopCat;
+    var prods = shopProducts(b);
+    if (!prods.length) return null;
+    var counts = {};
+    prods.forEach(function(l) { if (l.cat) counts[l.cat] = (counts[l.cat] || 0) + 1; });
+    var best = null, bestCnt = 0;
+    Object.keys(counts).forEach(function(c) { if (counts[c] > bestCnt) { bestCnt = counts[c]; best = c; } });
+    return best;
+  }
+
+  function _shopFilterAttrHtml(domCat) {
+    if (!domCat) return '';
+    var sf = _shopFilters;
+    var sH = function(id, key, label, opts) {
+      var cur = (sf[key] || '').toLowerCase();
+      var h = '<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">' + escHtml(label) + '</div>'
+        + '<select id="' + id + '" style="width:100%;padding:10px 12px;border:1.5px solid var(--border,#E8ECF4);border-radius:10px;font-size:13px;font-family:inherit;background:var(--bg,#F3F5FA);color:var(--text);outline:none">'
+        + '<option value="">Any</option>';
+      opts.forEach(function(o) {
+        var v = Array.isArray(o) ? o[0] : o.toLowerCase(), t = Array.isArray(o) ? o[1] : o;
+        h += '<option value="' + escHtml(v) + '"' + (cur === v ? ' selected' : '') + '>' + escHtml(t) + '</option>';
+      });
+      return h + '</select></div>';
+    };
+    var tH = function(id, key, label, ph) {
+      return '<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">' + escHtml(label) + '</div>'
+        + '<input id="' + id + '" type="text" placeholder="' + escHtml(ph) + '" value="' + escHtml(sf[key] || '') + '" style="width:100%;padding:10px 12px;border:1.5px solid var(--border,#E8ECF4);border-radius:10px;font-size:13px;font-family:inherit;background:var(--bg,#F3F5FA);color:var(--text);outline:none;box-sizing:border-box">'
+        + '</div>';
+    };
+    var condOpts = [['brand new','Brand New'],['used','Used']];
+    if (domCat === 'fashion') {
+      return '<div style="border-top:1px solid var(--border,#E8ECF4);margin-bottom:16px;padding-top:16px"><div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Fashion Filters</div>'
+        + sH('shopFCondition','condition','Condition',condOpts)
+        + sH('shopFGender','gender','For',[['women','Women'],['men','Men'],['unisex','Unisex'],['kids','Kids']])
+        + tH('shopFSize','size','Size','e.g. M, UK 8, 38')
+        + tH('shopFBrand','brand','Brand','e.g. Zara, Nike, Edgars')
+        + '</div>';
+    }
+    if (domCat === 'kids') {
+      return '<div style="border-top:1px solid var(--border,#E8ECF4);margin-bottom:16px;padding-top:16px"><div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Kids Filters</div>'
+        + sH('shopFCondition','condition','Condition',condOpts)
+        + sH('shopFGender','gender','Gender',[['male','Boys'],['female','Girls']])
+        + tH('shopFSize','size','Age / Size','e.g. 3-5 yrs, size 10')
+        + '</div>';
+    }
+    if (domCat === 'vehicles') {
+      return '<div style="border-top:1px solid var(--border,#E8ECF4);margin-bottom:16px;padding-top:16px"><div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Vehicle Filters</div>'
+        + '<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Year Range</div>'
+        + '<div style="display:flex;align-items:center;gap:10px">'
+        + '<input id="shopFYearMin" type="number" min="1960" max="2030" placeholder="From" value="' + escHtml(sf.yearMin || '') + '" style="flex:1;padding:10px 12px;border:1.5px solid var(--border,#E8ECF4);border-radius:10px;font-size:13px;font-family:inherit;background:var(--bg,#F3F5FA);color:var(--text);outline:none">'
+        + '<span style="color:var(--sub);flex-shrink:0">to</span>'
+        + '<input id="shopFYearMax" type="number" min="1960" max="2030" placeholder="To" value="' + escHtml(sf.yearMax || '') + '" style="flex:1;padding:10px 12px;border:1.5px solid var(--border,#E8ECF4);border-radius:10px;font-size:13px;font-family:inherit;background:var(--bg,#F3F5FA);color:var(--text);outline:none">'
+        + '</div></div>'
+        + sH('shopFFuel','fuel','Fuel Type',[['petrol','Petrol'],['diesel','Diesel'],['hybrid','Hybrid'],['electric','Electric']])
+        + sH('shopFCondition','condition','Condition',[['brand new','Brand New'],['used','Used'],['for parts','For Parts']])
+        + tH('shopFBrand','brand','Make / Brand','e.g. Toyota, Honda')
+        + '</div>';
+    }
+    if (domCat === 'electronics') {
+      return '<div style="border-top:1px solid var(--border,#E8ECF4);margin-bottom:16px;padding-top:16px"><div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Electronics Filters</div>'
+        + sH('shopFCondition','condition','Condition',[['brand new','Brand New'],['used','Used'],['refurbished','Refurbished']])
+        + tH('shopFBrand','brand','Brand','e.g. Samsung, Apple')
+        + '</div>';
+    }
+    if (domCat === 'furniture') {
+      return '<div style="border-top:1px solid var(--border,#E8ECF4);margin-bottom:16px;padding-top:16px"><div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Furniture Filters</div>'
+        + sH('shopFCondition','condition','Condition',condOpts)
+        + '</div>';
+    }
+    if (domCat === 'agriculture') {
+      return '<div style="border-top:1px solid var(--border,#E8ECF4);margin-bottom:16px;padding-top:16px"><div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Agriculture Filters</div>'
+        + sH('shopFCondition','condition','Condition',[['new','New'],['used','Used'],['live','Live']])
+        + '</div>';
+    }
+    return '<div style="border-top:1px solid var(--border,#E8ECF4);margin-bottom:16px;padding-top:16px">'
+      + sH('shopFCondition','condition','Condition',condOpts)
+      + '</div>';
+  }
+
+  function _shopAttrPillsHtml(bizId) {
+    var sf = _shopFilters; if (!sf) return '';
+    var bId = escHtml(String(bizId));
+    var cap = function(s) { return s ? s.replace(/\b\w/g, function(c){ return c.toUpperCase(); }) : ''; };
+    var xB  = function(fn) { return '<button onclick="' + fn + '" style="background:none;border:none;color:#1A3A8F;cursor:pointer;padding:0;font-size:13px;line-height:1;margin-left:2px">&times;</button>'; };
+    var pl  = function(txt, fn) { return '<span style="display:inline-flex;align-items:center;gap:4px;background:#EEF2FB;color:#1A3A8F;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px">' + txt + xB(fn) + '</span>'; };
+    var out = [];
+    if (sf.condition) out.push(pl(escHtml(cap(sf.condition)), "H._bizShop._clearAttr('" + bId + "','condition')"));
+    if (sf.gender)    out.push(pl(escHtml(cap(sf.gender)),    "H._bizShop._clearAttr('" + bId + "','gender')"));
+    if (sf.size)      out.push(pl('Size: ' + escHtml(sf.size),  "H._bizShop._clearAttr('" + bId + "','size')"));
+    if (sf.brand)     out.push(pl('Brand: ' + escHtml(sf.brand), "H._bizShop._clearAttr('" + bId + "','brand')"));
+    if (sf.fuel)      out.push(pl(escHtml(cap(sf.fuel)) + ' fuel', "H._bizShop._clearAttr('" + bId + "','fuel')"));
+    if (sf.yearMin || sf.yearMax) out.push(pl('Year: ' + escHtml(sf.yearMin || 'any') + '-' + escHtml(sf.yearMax || 'any'), "H._bizShop._clearAttr('" + bId + "','year')"));
+    return out.join('');
   }
 
   var _shopIcon = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-6h15L21 9M3 9h18v11a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm6 0v2a3 3 0 006 0V9"/></svg>';
@@ -427,6 +524,18 @@
     const _minP = parseFloat(_shopMinPrice); const _maxP = parseFloat(_shopMaxPrice);
     if (!isNaN(_minP) && _minP >= 0) shown = shown.filter(function (l) { return (Number(l.price) || 0) >= _minP; });
     if (!isNaN(_maxP) && _maxP > 0)  shown = shown.filter(function (l) { return (Number(l.price) || 0) <= _maxP; });
+    // Category attribute filters
+    var _sf = _shopFilters || {};
+    if (_sf.condition) shown = shown.filter(function(l) { return (l.condition || '').toLowerCase() === _sf.condition; });
+    if (_sf.brand)     shown = shown.filter(function(l) { return (l.brand || l.make || '').toLowerCase().indexOf(_sf.brand) !== -1; });
+    if (_sf.gender)    shown = shown.filter(function(l) { return (l.gender || '').toLowerCase() === _sf.gender; });
+    if (_sf.size)      shown = shown.filter(function(l) {
+      if (Array.isArray(l.sizes)) return l.sizes.some(function(s){ return String(s).toLowerCase() === _sf.size; });
+      return (l.size || '').toLowerCase() === _sf.size;
+    });
+    if (_sf.fuel)      shown = shown.filter(function(l) { return (l.fuel || l.fuelType || '').toLowerCase() === _sf.fuel; });
+    if (_sf.yearMin)   shown = shown.filter(function(l) { return +(l.year||0) >= +_sf.yearMin; });
+    if (_sf.yearMax)   shown = shown.filter(function(l) { return +(l.year||9999) <= +_sf.yearMax; });
     // Sort
     if (_shopSort === 'newest' || _shopCat === 'new') {
       shown = shown.slice().sort(function (a, b) { return ((b.createdAt||b.created_at||0)) - ((a.createdAt||a.created_at||0)); });
@@ -484,6 +593,8 @@
         ? 'flex-shrink:0;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #1A3A8F;background:#1A3A8F;color:#fff'
         : 'flex-shrink:0;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text)';
     };
+    const _hasAttrs = Object.keys(_shopFilters).some(function(k) { var v = _shopFilters[k]; return !!(v && v !== ''); });
+    const _filterActive = _shopSort !== 'default' || !!_shopMinPrice || !!_shopMaxPrice || _hasAttrs;
 
     return `<div class="page active">
 
@@ -552,13 +663,14 @@
           <input id="shopSearchIn" value="${escHtml(_shopQ)}" oninput="H._bizShop.onSearch('${escHtml(String(b.id))}',this.value)" placeholder="Search in ${escHtml(b.name)}..." style="flex:1;border:none;outline:none;background:transparent;font-size:13.5px;color:var(--text);font-family:inherit">
           ${_shopQ ? `<button onclick="H._bizShop.onSearch('${escHtml(String(b.id))}','');document.getElementById('shopSearchIn')&&(document.getElementById('shopSearchIn').value='')" style="background:none;border:none;color:var(--sub);cursor:pointer;padding:0;font-size:16px;line-height:1;flex-shrink:0">&times;</button>` : ''}
         </div>
-        <button onclick="H._bizShop.openFilterSheet('${escHtml(String(b.id))}')" title="Sort &amp; Filter" style="flex-shrink:0;width:44px;height:44px;border-radius:12px;background:${(_shopSort !== 'default' || _shopMinPrice || _shopMaxPrice) ? '#1A3A8F' : 'var(--card,#fff)'};border:1.5px solid ${(_shopSort !== 'default' || _shopMinPrice || _shopMaxPrice) ? '#1A3A8F' : 'var(--border,#E8ECF4)'};display:flex;align-items:center;justify-content:center;cursor:pointer">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="${(_shopSort !== 'default' || _shopMinPrice || _shopMaxPrice) ? '#fff' : '#1A3A8F'}" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+        <button onclick="H._bizShop.openFilterSheet('${escHtml(String(b.id))}')" title="Sort &amp; Filter" style="flex-shrink:0;width:44px;height:44px;border-radius:12px;background:${_filterActive ? '#1A3A8F' : 'var(--card,#fff)'};border:1.5px solid ${_filterActive ? '#1A3A8F' : 'var(--border,#E8ECF4)'};display:flex;align-items:center;justify-content:center;cursor:pointer">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="${_filterActive ? '#fff' : '#1A3A8F'}" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
         </button>
       </div>
-      ${(_shopSort !== 'default' || _shopMinPrice || _shopMaxPrice) ? `<div style="display:flex;align-items:center;gap:6px;padding:0 12px 6px;flex-wrap:wrap">
+      ${_filterActive ? `<div style="display:flex;align-items:center;gap:6px;padding:0 12px 6px;flex-wrap:wrap">
         ${_shopSort !== 'default' ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#EEF2FB;color:#1A3A8F;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px">${_shopSort === 'newest' ? 'Newest' : _shopSort === 'price_asc' ? 'Price: Low' : 'Price: High'} <button onclick="H._bizShop._setSort('${escHtml(String(b.id))}','default')" style="background:none;border:none;color:#1A3A8F;cursor:pointer;padding:0;font-size:13px;line-height:1;margin-left:2px">&times;</button></span>` : ''}
         ${(_shopMinPrice || _shopMaxPrice) ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#EEF2FB;color:#1A3A8F;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px">${_shopMinPrice ? '$'+_shopMinPrice : ''}${_shopMinPrice && _shopMaxPrice ? ' - ' : ''}${_shopMaxPrice ? '$'+_shopMaxPrice : ''} <button onclick="H._bizShop._clearPrice('${escHtml(String(b.id))}')" style="background:none;border:none;color:#1A3A8F;cursor:pointer;padding:0;font-size:13px;line-height:1;margin-left:2px">&times;</button></span>` : ''}
+        ${_shopAttrPillsHtml(b.id)}
       </div>` : ''}
 
       <!-- Category chips -->
@@ -623,7 +735,7 @@
   H.openBusinessShop = function (id) { H.openInner('BusinessShop', { id }); };
 
   H._bizShop = {
-    setCat: function (id, cat) { _shopCat = cat; _shopQ = ''; H.renderPage('BusinessShop', { id: id }); },
+    setCat: function (id, cat) { _shopCat = cat; _shopQ = ''; _shopFilters = {}; H.renderPage('BusinessShop', { id: id }); },
     _reviewStar: 0,
     setReviewStar: function (n) {
       H._bizShop._reviewStar = n;
@@ -663,6 +775,8 @@
       const sheet = document.getElementById('actionSheet');
       const bg    = document.getElementById('sheetBg');
       if (!sheet || !bg) return;
+      const b = getBiz(bizId);
+      const domCat = b ? _shopDominantCat(b) : null;
       const sortOpts = [
         { id: 'default',    label: 'Default' },
         { id: 'newest',     label: 'Newest First' },
@@ -670,7 +784,7 @@
         { id: 'price_desc', label: 'Price: High to Low' }
       ];
       sheet.innerHTML = '<div class="sheet-header">Sort &amp; Filter</div>'
-        + '<div style="padding:0 16px 8px">'
+        + '<div style="padding:0 16px 8px;max-height:70vh;overflow-y:auto">'
         + '<div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Sort by</div>'
         + '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">'
         + sortOpts.map(function (s) {
@@ -684,7 +798,8 @@
         + '<span style="font-size:13px;color:var(--sub);flex-shrink:0">to</span>'
         + '<div style="flex:1;display:flex;align-items:center;gap:5px;background:var(--bg,#F3F5FA);border-radius:10px;padding:9px 12px"><span style="font-size:13px;font-weight:800;color:var(--sub)">$</span><input id="shopMaxPrice" type="number" inputmode="decimal" min="0" placeholder="Max" value="' + escHtml(_shopMaxPrice || '') + '" style="flex:1;border:none;outline:none;background:transparent;font-size:13px;font-family:inherit;width:100%;min-width:0"></div>'
         + '</div>'
-        + '<div style="display:flex;gap:10px">'
+        + _shopFilterAttrHtml(domCat)
+        + '<div style="display:flex;gap:10px;padding-top:4px">'
         + '<button onclick="H._bizShop._clearFilters(\'' + escHtml(bizId) + '\')" style="flex:1;padding:13px;border-radius:10px;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Clear all</button>'
         + '<button onclick="H._bizShop._applyFilters(\'' + escHtml(bizId) + '\')" style="flex:2;padding:13px;border-radius:10px;border:none;background:#1A3A8F;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Apply</button>'
         + '</div>'
@@ -705,18 +820,34 @@
       var maxEl = document.getElementById('shopMaxPrice');
       _shopMinPrice = minEl ? (minEl.value.trim() || '') : '';
       _shopMaxPrice = maxEl ? (maxEl.value.trim() || '') : '';
+      var f = {};
+      var condEl   = document.getElementById('shopFCondition'); if (condEl  && condEl.value)        f.condition = condEl.value;
+      var genderEl = document.getElementById('shopFGender');    if (genderEl && genderEl.value)      f.gender    = genderEl.value;
+      var sizeEl   = document.getElementById('shopFSize');      if (sizeEl  && sizeEl.value.trim())  f.size      = sizeEl.value.trim().toLowerCase();
+      var brandEl  = document.getElementById('shopFBrand');     if (brandEl && brandEl.value.trim()) f.brand     = brandEl.value.trim().toLowerCase();
+      var fuelEl   = document.getElementById('shopFFuel');      if (fuelEl  && fuelEl.value)         f.fuel      = fuelEl.value;
+      var ymEl     = document.getElementById('shopFYearMin');   if (ymEl    && ymEl.value.trim())    f.yearMin   = ymEl.value.trim();
+      var yxEl     = document.getElementById('shopFYearMax');   if (yxEl    && yxEl.value.trim())    f.yearMax   = yxEl.value.trim();
+      _shopFilters = f;
       H.closeSheet();
       H.renderPage('BusinessShop', { id: bizId });
     },
 
     _clearFilters: function (bizId) {
-      _shopSort = 'default'; _shopMinPrice = ''; _shopMaxPrice = '';
+      _shopSort = 'default'; _shopMinPrice = ''; _shopMaxPrice = ''; _shopFilters = {};
       H.closeSheet();
       H.renderPage('BusinessShop', { id: bizId });
     },
 
     _clearPrice: function (bizId) {
       _shopMinPrice = ''; _shopMaxPrice = '';
+      H.renderPage('BusinessShop', { id: bizId });
+    },
+
+    _clearAttr: function (bizId, key) {
+      _shopFilters = Object.assign({}, _shopFilters);
+      if (key === 'year') { delete _shopFilters.yearMin; delete _shopFilters.yearMax; }
+      else delete _shopFilters[key];
       H.renderPage('BusinessShop', { id: bizId });
     }
   };

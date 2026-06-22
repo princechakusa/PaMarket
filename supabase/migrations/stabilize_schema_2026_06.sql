@@ -45,6 +45,20 @@ alter table public.paid_ads add column if not exists target_cat    text;
 alter table public.paid_ads add column if not exists priority      integer not null default 0;
 alter table public.paid_ads add column if not exists listing_id    uuid;
 
+-- ── business_subscriptions.current_period_end ───────────────
+-- Stores when the active subscription period ends (timestamptz, not bigint).
+-- Without this column every admin plan-approval and subscription read fails
+-- with "column current_period_end does not exist".
+alter table public.business_subscriptions
+  add column if not exists current_period_end timestamptz;
+
+-- ── listings performance index ────────────────────────────────
+-- The /listings?status=eq.active&order=created_at.desc&limit=200 query
+-- times out without a composite index. Covers both the equality filter
+-- and the descending sort in one pass.
+create index if not exists idx_listings_status_created
+  on public.listings (status, created_at desc);
+
 -- Force PostgREST to reload its schema cache so the new columns are
 -- visible immediately (otherwise the API may keep returning the cache
 -- miss for a minute).

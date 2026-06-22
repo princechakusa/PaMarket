@@ -550,6 +550,25 @@
           + '<div class="chat-bubble-meta">' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
           + '</div></div>';
       }
+      // Owner's view of a business inbox chat: label bubbles by shop name vs buyer name
+      const _isOwnerBizChat = !!(_bizChat && _bizChatId);
+      if (_isOwnerBizChat) {
+        const _shopLabel = escHtml(_bizChat.name || 'Shop');
+        const _buyerLabel = escHtml(otherDisplayName);
+        if (mine) {
+          return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
+            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
+            + content
+            + '<div class="chat-bubble-meta" style="text-align:right">' + _shopLabel + ' · ' + timeAgo(m.t) + ' ' + chatTick(!!m.read) + '</div>'
+            + '</div></div>';
+        }
+        return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
+          + '<div class="chat-row-av">' + otherAvatar + '</div>'
+          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
+          + content
+          + '<div class="chat-bubble-meta">' + _buyerLabel + ' · ' + timeAgo(m.t) + '</div>'
+          + '</div></div>';
+      }
       if (mine) {
         return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
