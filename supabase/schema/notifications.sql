@@ -11,7 +11,10 @@ create table if not exists public.notifications (
   body        text default '',
   type        text default 'info',
   read        boolean not null default false,
-  created_at  timestamptz not null default now(),
+  -- created_at is epoch milliseconds (bigint), NOT timestamptz. The client
+  -- writes Date.now() and reads it back with new Date(ms). Every insert across
+  -- the app and admin portal uses a numeric millisecond value.
+  created_at  bigint not null default (extract(epoch from now()) * 1000)::bigint,
   meta        jsonb default '{}'::jsonb
 );
 

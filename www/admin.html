@@ -2339,9 +2339,9 @@ async function runClearErrorLogs() {
   if (!ok) return;
   _maintLog('Clearing error_logs...');
   try {
-    // Delete every row via a type-agnostic filter on the uuid primary key.
-    // (created_at is stored as bigint epoch-ms in the deployed DB, so an
-    //  ISO-string cutoff on created_at fails with an invalid-bigint error.)
+    // Delete every row via the uuid primary key — a type-agnostic filter that
+    // never trips an "invalid input syntax" cast error, regardless of how the
+    // created_at column is typed.
     var r = await sb.from('error_logs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     if (r.error) throw r.error;
     _maintStats.errorLogs = 0;
