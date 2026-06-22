@@ -1339,14 +1339,15 @@
 
     if (!u.companyVerified) {
       var pendingBanner = u.company_verification_pending
-        ? '<div style="background:#F5A62318;border:1px solid #F5A62340;border-radius:12px;padding:14px 16px;margin-bottom:20px"><div style="font-size:14px;font-weight:700;color:#c07800">Verification Pending</div><div style="font-size:13px;color:var(--sub);margin-top:4px">Your company request is under review. We\'ll notify you once approved.</div></div>'
-        : '<button onclick="H.openInner(\'CompanyVerify\')" style="padding:14px 32px;background:linear-gradient(135deg,#1A3A8F,#0f2460);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:inline-block">Verify My Company →</button>';
+        ? '<div style="background:#F5A62318;border:1px solid #F5A62340;border-radius:12px;padding:14px 16px;margin-bottom:20px"><div style="font-size:14px;font-weight:700;color:#c07800">Verification Pending</div><div style="font-size:13px;color:var(--sub);margin-top:4px">Your documents are under review. We\'ll notify you once approved.</div></div>'
+        : '<button onclick="H.openInner(\'CompanyVerify\')" style="padding:14px 32px;background:linear-gradient(135deg,#1A3A8F,#0f2460);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:inline-block">Get Verified to Post Jobs</button>';
       return '<div class="page active">'
         + '<div class="det-topbar"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Post a Job</div></div>'
         + '<div style="padding:48px 24px;text-align:center">'
         + '<div style="margin-bottom:16px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>'
-        + '<div style="font-size:19px;font-weight:800;color:var(--text);margin-bottom:8px">Company Verification Required</div>'
-        + '<div style="font-size:14px;color:var(--sub);line-height:1.7;margin-bottom:24px">To post a job, your company must be verified by PaMarket. This protects job seekers from fraudulent listings.</div>'
+        + '<div style="font-size:19px;font-weight:800;color:var(--text);margin-bottom:8px">Verification Required</div>'
+        + '<div style="font-size:14px;color:var(--sub);line-height:1.7;margin-bottom:8px">To post a job you need to be verified. This protects job seekers from fraudulent listings.</div>'
+        + '<div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">Registered companies and sole traders / individuals are both welcome. Sole traders only need a National ID or Passport.</div>'
         + pendingBanner
         + '</div></div>';
     }

@@ -408,47 +408,76 @@
   // ---------------------------------------------------
   // COMPANY VERIFICATION (in-app, native camera + private storage)
   // ---------------------------------------------------
-  var _pendingCompany = {};   // { reg, ownerId, tax, premises } -> dataURL (memory only)
+  var _pendingCompany = {};   // keyed by doc id -> dataURL (memory only)
   var _companyName    = '';
+  var _verifyType     = null; // 'company' | 'individual' | null (shows chooser)
   var COMPANY_DOCS = [
     ['reg',      'Certificate of Incorporation', 'CIPC business registration certificate'],
-    ['ownerId',  'Owner / Director ID',          'National ID or passport of the owner/director'],
     ['tax',      'Tax Clearance Certificate',    'Valid certificate from ZIMRA'],
     ['premises', 'Business Premises Photo',       'Outside of your premises showing any signage']
+  ];
+  var INDIVIDUAL_DOCS = [
+    ['nationalId', 'National ID or Passport', 'A clear photo of your national ID or passport']
   ];
 
   pages.CompanyVerify = function () {
     const u = currentUser();
-    if (!u) return `<div class="page active">${innerTopbar('Company Verification')}${H.emptyState('Sign in required', 'Sign in to verify your company')}</div>`;
+    if (!u) return `<div class="page active">${innerTopbar('Verify to Post Jobs')}${H.emptyState('Sign in required', 'Sign in to verify your account')}</div>`;
 
     if (u.companyVerified) {
-      return `<div class="page active">${innerTopbar('Company Verification')}
+      return `<div class="page active">${innerTopbar('Verify to Post Jobs')}
         <div class="inner-content" style="text-align:center;padding:40px 24px">
           <div style="width:72px;height:72px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">Company Verified</div>
-          <div style="font-size:13px;color:var(--sub)">Your blue Verified Business badge is active on your job listings.</div>
+          <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">Verified</div>
+          <div style="font-size:13px;color:var(--sub)">Your blue Verified badge is active. You can post jobs.</div>
         </div></div>`;
     }
     if (u.company_verification_pending) {
-      return `<div class="page active">${innerTopbar('Company Verification')}
+      return `<div class="page active">${innerTopbar('Verify to Post Jobs')}
         <div class="inner-content" style="text-align:center;padding:40px 24px">
-          <div style="font-size:42px;margin-bottom:10px">🕓</div>
+          <div style="font-size:42px;margin-bottom:10px">&#128339;</div>
           <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">Under Review</div>
-          <div style="font-size:13px;color:var(--sub);line-height:1.6">Your company documents were submitted. Our team reviews within 2 business days.</div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6">Your documents were submitted. Our team reviews within 2 business days.</div>
           <button class="ml-act-btn" style="width:100%;padding:12px;margin-top:20px" onclick="H._companyVerify.cancelPending()">Cancel Request</button>
         </div></div>`;
     }
 
-    const allDone = COMPANY_DOCS.every(d => _pendingCompany[d[0]]);
-    const nameVal = escHtml(_companyName || u.company || u.name || '');
-    return `<div class="page active">${innerTopbar('Company Verification')}
+    // Type chooser - shown when user hasn't picked company or individual yet
+    if (!_verifyType) {
+      return `<div class="page active">${innerTopbar('Verify to Post Jobs')}
+        <div class="inner-content">
+          <div style="font-size:14px;color:var(--sub);line-height:1.6;margin-bottom:24px">Choose the option that applies to you. Both allow you to post jobs on PaMarket.</div>
+          <div onclick="H._companyVerify.setType('company')" style="background:var(--card);border:2px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px;cursor:pointer">
+            <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">Registered Company</div>
+            <div style="font-size:13px;color:var(--sub);line-height:1.6">You have a registered business with a Certificate of Incorporation from CIPC. Requires 3 documents.</div>
+          </div>
+          <div onclick="H._companyVerify.setType('individual')" style="background:var(--card);border:2px solid var(--border);border-radius:16px;padding:20px;cursor:pointer">
+            <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">Sole Trader / Individual</div>
+            <div style="font-size:13px;color:var(--sub);line-height:1.6">You are a sole trader, freelancer, or individual employer without a registered company. Requires your National ID or Passport only.</div>
+          </div>
+        </div></div>`;
+    }
+
+    const isIndividual = _verifyType === 'individual';
+    const activeDocs   = isIndividual ? INDIVIDUAL_DOCS : COMPANY_DOCS;
+    const allDone      = activeDocs.every(d => _pendingCompany[d[0]]);
+    const nameVal      = escHtml(_companyName || u.company || u.name || '');
+    const nameLabel    = isIndividual ? 'Your Full Name' : 'Company / Business Name';
+    const namePlaceholder = isIndividual ? 'Your full legal name' : 'Registered business name';
+    const docCount     = activeDocs.length;
+    const subtitle     = isIndividual
+      ? 'Submit your National ID or Passport to earn your Verified badge and post jobs. Reviewed within 2 business days.'
+      : `Submit the ${docCount} documents below to earn your blue <b>Verified Business</b> badge and post jobs. Reviewed within 2 business days.`;
+
+    return `<div class="page active">${innerTopbar(isIndividual ? 'Individual Verification' : 'Company Verification')}
       <div class="inner-content">
-        <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:16px">Submit the four documents below to earn your blue <b>Verified Business</b> badge and post jobs. Reviewed within 2 business days.</div>
+        <button onclick="H._companyVerify.setType(null)" style="background:none;border:none;color:#1A3A8F;font-size:13px;font-weight:600;cursor:pointer;padding:0;margin-bottom:14px">&#8592; Change type</button>
+        <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:16px">${subtitle}</div>
         <div class="fg" style="margin-bottom:18px">
-          <div class="fl">Company / Business Name</div>
-          <input class="fi" id="cvCompanyName" placeholder="Registered business name" value="${nameVal}" oninput="H._companyVerify.syncName(this.value)">
+          <div class="fl">${nameLabel}</div>
+          <input class="fi" id="cvCompanyName" placeholder="${namePlaceholder}" value="${nameVal}" oninput="H._companyVerify.syncName(this.value)">
         </div>
-        ${COMPANY_DOCS.map((d, i) => {
+        ${activeDocs.map((d, i) => {
           const done = !!_pendingCompany[d[0]];
           return `<div class="verify-step">
             <div class="verify-num ${done ? 'done' : ''}">${done ? I.check : `<span style="font-size:15px;font-weight:600">${i + 1}</span>`}</div>
@@ -462,12 +491,13 @@
         }).join('')}
         <button class="btn-pri" id="cvSubmitBtn" ${allDone ? '' : 'disabled'} onclick="H._companyVerify.submit()" style="margin-top:8px">Submit for Review</button>
         <input type="file" id="cvDocFile" accept="image/*" capture="environment" style="display:none" onchange="H._companyVerify.onFile(event)">
-        <div class="tip-box" style="margin-top:14px"><div class="tip-title">${I.lock} Secure</div><div class="tip-body">Your documents are stored privately and used only to verify your business. Never sold or shared.</div></div>
+        <div class="tip-box" style="margin-top:14px"><div class="tip-title">${I.lock} Secure</div><div class="tip-body">Your documents are stored privately and used only to verify your identity. Never sold or shared.</div></div>
       </div></div>`;
   };
 
   H._companyVerify = {
     _activeKey: null,
+    setType(t) { _verifyType = t; _pendingCompany = {}; _companyName = ''; renderPage('CompanyVerify'); },
     syncName(v) { _companyName = v; var b = document.getElementById('cvSubmitBtn'); if (b) {/* keep state */} },
     async capture(key) {
       this._activeKey = key;
@@ -498,27 +528,34 @@
       const u = currentUser();
       var nmEl = document.getElementById('cvCompanyName');
       const name = ((nmEl && nmEl.value) || _companyName || u.company || '').trim();
-      if (!name) { toast('Enter your company name'); return; }
-      if (!COMPANY_DOCS.every(d => _pendingCompany[d[0]])) { toast('Add all four documents'); return; }
+      const isIndividual = _verifyType === 'individual';
+      const activeDocs   = isIndividual ? INDIVIDUAL_DOCS : COMPANY_DOCS;
+      if (!name) { toast(isIndividual ? 'Enter your full name' : 'Enter your company name'); return; }
+      if (!activeDocs.every(d => _pendingCompany[d[0]])) { toast('Add all required documents'); return; }
       const btn = document.getElementById('cvSubmitBtn');
       if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
       try {
         if (!window.supabase) throw new Error('Not connected');
         const paths = {};
-        for (const d of COMPANY_DOCS) {
+        for (const d of activeDocs) {
           paths[d[0]] = await H.uploadVerificationDoc(u.id, _pendingCompany[d[0]], 'co_' + d[0]);
         }
         if (Object.keys(paths).some(k => !paths[k])) throw new Error('Document storage is not set up yet');
+        // Use 'SOLE TRADER: ' prefix so admin can identify the type without a new DB column.
+        const storedName = isIndividual ? ('SOLE TRADER: ' + name) : name;
         const rec = {
-          user_id: u.id, company_name: name, status: 'pending', submitted_at: new Date().toISOString(),
-          reg_cert_path: paths.reg, owner_id_path: paths.ownerId, tax_cert_path: paths.tax, premises_path: paths.premises
+          user_id: u.id, company_name: storedName, status: 'pending', submitted_at: new Date().toISOString(),
+          reg_cert_path: paths.reg || null,
+          owner_id_path: paths.nationalId || null,
+          tax_cert_path: paths.tax || null,
+          premises_path: paths.premises || null
         };
         const { error } = await window.supabase.from('company_verifications').upsert(rec, { onConflict: 'user_id' });
         if (error) throw error;
         await window.supabase.from('profiles').update({ company_verification_pending: true, company: name }).eq('id', u.id);
-        _pendingCompany = {}; _companyName = '';
+        _pendingCompany = {}; _companyName = ''; _verifyType = null;
         u.company = name; u.company_verification_pending = true; saveState();
-        toast('Company documents submitted! Reviewed within 2 business days.', 5000);
+        toast('Documents submitted! Reviewed within 2 business days.', 5000);
         renderPage('CompanyVerify');
       } catch (e) {
         if (btn) { btn.disabled = false; btn.textContent = 'Submit for Review'; }
