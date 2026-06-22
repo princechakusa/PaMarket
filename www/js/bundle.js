@@ -1,4 +1,4 @@
-/* PaMarket bundle — built 2026-06-01T07:59:58Z */
+/* PaMarket bundle — built 2026-06-20T06:20:10Z */
 
 ;/* === www/js/app.js === */
 /*!
@@ -43,21 +43,22 @@ window.H = {
   },
 
   CATEGORIES: [
-    {id:'property',    name:'Property',    icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},
-    {id:'vehicles',    name:'Vehicles',    icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>'},
-    {id:'rooms',       name:'Rooms',       icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4h20v16H2z"/><path d="M2 12h20"/></svg>'},
-    {id:'electronics', name:'Electronics', icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'},
-    {id:'jobs',        name:'Jobs',        icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>'},
-    {id:'furniture',   name:'Furniture',   icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="10" rx="2"/><path d="M4 12h16v8H4z"/><line x1="8" y1="20" x2="16" y2="20"/></svg>'},
-    {id:'fashion',     name:'Fashion',     icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3l5 5 5-5"/><path d="M7 21l5-5 5 5"/><line x1="12" y1="8" x2="12" y2="16"/></svg>'},
-    {id:'services',    name:'Services',    icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'},
-    {id:'agriculture', name:'Agriculture', icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4"/><path d="M12 10v4"/><path d="M4.93 10.93l3.54 3.54"/><path d="M15.07 10.93l-3.54 3.54"/></svg>'},
-    {id:'pets',        name:'Pets',        icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2c-2 0-3 2-3 4 0 2 2 4 4 5s2 2 2 4-1 4-3 4"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="6" r="2"/></svg>'},
-    {id:'kids',        name:'Baby & Kids', icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M3 21v-2a7 7 0 0 1 4-6.33"/><path d="M21 21v-2a7 7 0 0 0-4-6.33"/></svg>'},
-    {id:'other',       name:'Other',       icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="12" x2="15" y2="12"/></svg>'}
+    {id:'property',    name:'Property',    icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>'},
+    {id:'vehicles',    name:'Vehicles',    icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5 11l1.5-4A2 2 0 0 1 8.4 6h7.2a2 2 0 0 1 1.9 1.3L19 11h.5a2 2 0 0 1 2 2v3a1 1 0 0 1-1 1H20a2 2 0 0 1-4 0H8a2 2 0 0 1-4 0H3.5a1 1 0 0 1-1-1v-3a2 2 0 0 1 2-2z"/><circle cx="6.5" cy="16.5" r="1.6" fill="#fff"/><circle cx="17.5" cy="16.5" r="1.6" fill="#fff"/></svg>'},
+    {id:'rooms',       name:'Rooms',       icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2 16h20v3h-1.6v-1.4H3.6V19H2z"/><path d="M3 15v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3z"/><rect x="4.6" y="11" width="5.2" height="3" rx="1.3" fill="#fff" opacity=".75"/></svg>'},
+    {id:'electronics', name:'Electronics', icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><rect x="5" y="6.3" width="14" height="7.9" rx="1" fill="#fff" opacity=".9"/><path d="M8 20h8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'},
+    {id:'jobs',        name:'Jobs',        icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="3" y="7.5" width="18" height="12" rx="2.2"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5" fill="none" stroke="currentColor" stroke-width="2.2"/><rect x="3" y="11" width="18" height="2.4" fill="#fff" opacity=".55"/></svg>'},
+    {id:'furniture',   name:'Furniture',   icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4 10a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v3H4z"/><path d="M3 12h18a1 1 0 0 1 1 1v4h-2v-2H4v2H2v-4a1 1 0 0 1 1-1z"/></svg>'},
+    {id:'fashion',     name:'Fashion',     icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M9 3l3 2.5L15 3l5 3.5-2.5 3.5L16 9v11a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V9l-1.5.999L4 6.5z"/></svg>'},
+    {id:'services',    name:'Services',    icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M14.7 6.3a4 4 0 0 0-5.2 5.2l-6 6a1.5 1.5 0 0 0 2.1 2.1l6-6a4 4 0 0 0 5.2-5.2l-2.3 2.3-2-2z"/></svg>'},
+    {id:'agriculture', name:'Agriculture', icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 22c0-5 0-8 0-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 13c0-3-2-5-5-5-1 0-2 0-2 0s0 4 2.5 5.5S12 13 12 13z"/><path d="M12 11c0-3 2-5 5-5 1 0 2 0 2 0s0 4-2.5 5.5S12 11 12 11z"/></svg>'},
+    {id:'pets',        name:'Pets',        icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="6" cy="9" r="2"/><circle cx="10.5" cy="6" r="2"/><circle cx="13.5" cy="6" r="2"/><circle cx="18" cy="9" r="2"/><path d="M12 11c-2.5 0-4.5 2-5 4-.4 1.6.8 3 2.4 3 .9 0 1.7-.4 2.6-.4s1.7.4 2.6.4c1.6 0 2.8-1.4 2.4-3-.5-2-2.5-4-5-4z"/></svg>'},
+    {id:'kids',        name:'Baby & Kids', icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="7" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0 1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z"/></svg>'},
+    {id:'other',       name:'Other',       icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="6" cy="6" r="2.4"/><circle cx="12" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="12" cy="12" r="2.4"/><circle cx="18" cy="12" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="12" cy="18" r="2.4"/><circle cx="18" cy="18" r="2.4"/></svg>'}
   ],
 
   state:            {},
+  APP_VERSION:      '1.0.8',
   pageStack:        [],
   currentPageName:  'Home',
   currentPageParams:{},
@@ -70,7 +71,10 @@ window.H = {
     users:[], listings:[], conversations:[], reports:[], txns:[],
     saves:{}, notifs:{}, currentUserId:null, cityFilter:'All Zimbabwe',
     _sortMode:'newest', _priceMin:'', _priceMax:'',
-    adminLogs:[], supportTickets:[], paidAds:[], deletedConvIds:[]
+    adminLogs:[], supportTickets:[], paidAds:[], deletedConvIds:[],
+    deletedConvMeta:{},
+    applications:[], contactRequests:[], savedCandidates:[], savedSearches:[],
+    businesses:[]
   },
 
   loadState() {
@@ -79,59 +83,121 @@ window.H = {
       if (!raw) return JSON.parse(JSON.stringify(this.defaultState));
       const loaded = JSON.parse(raw);
       const base   = JSON.parse(JSON.stringify(this.defaultState));
-      if (loaded._v !== this.STATE_VERSION) {
-        console.warn(
-          '[PaMarket] State schema mismatch (stored _v=' + loaded._v +
-          ', expected ' + this.STATE_VERSION + '). Migrating — preserving listings, users, conversations.'
-        );
-        // Preserve critical user-generated data; reset ephemeral/structural fields.
-        const migrated = Object.assign(base, {
-          users:           Array.isArray(loaded.users)           ? loaded.users           : base.users,
-          listings:        Array.isArray(loaded.listings)        ? loaded.listings        : base.listings,
-          conversations:   Array.isArray(loaded.conversations)   ? loaded.conversations   : base.conversations,
-          saves:           loaded.saves  && typeof loaded.saves  === 'object' ? loaded.saves  : base.saves,
-          notifs:          loaded.notifs && typeof loaded.notifs === 'object' ? loaded.notifs : base.notifs,
-          currentUserId:   loaded.currentUserId || base.currentUserId,
-          cityFilter:      loaded.cityFilter    || base.cityFilter,
-          txns:            Array.isArray(loaded.txns)            ? loaded.txns            : base.txns,
-          deletedConvIds:  Array.isArray(loaded.deletedConvIds)  ? loaded.deletedConvIds  : base.deletedConvIds,
-        });
-        migrated._v = this.STATE_VERSION;
-        return migrated;
-      }
-      return Object.assign(base, loaded);
-    } catch { return JSON.parse(JSON.stringify(this.defaultState)); }
+      // Merge loaded fields onto defaults. Fields absent from the lean snapshot
+      // (listings from other sellers, paidAds, etc.) fall back to empty arrays
+      // from base and will be populated by the first cloud fetch.
+      const merged = Object.assign(base, {
+        currentUserId:   loaded.currentUserId || base.currentUserId,
+        cityFilter:      loaded.cityFilter    || base.cityFilter,
+        _sortMode:       loaded._sortMode     || base._sortMode,
+        _priceMin:       loaded._priceMin     !== undefined ? loaded._priceMin : base._priceMin,
+        _priceMax:       loaded._priceMax     !== undefined ? loaded._priceMax : base._priceMax,
+        users:           Array.isArray(loaded.users)           ? loaded.users           : base.users,
+        listings:        Array.isArray(loaded.listings)        ? loaded.listings        : base.listings,
+        conversations:   Array.isArray(loaded.conversations)   ? loaded.conversations   : base.conversations,
+        saves:           loaded.saves  && typeof loaded.saves  === 'object' ? loaded.saves  : base.saves,
+        notifs:          loaded.notifs && typeof loaded.notifs === 'object' ? loaded.notifs : base.notifs,
+        deletedConvIds:  Array.isArray(loaded.deletedConvIds)  ? loaded.deletedConvIds  : base.deletedConvIds,
+        deletedConvMeta: loaded.deletedConvMeta && typeof loaded.deletedConvMeta === 'object' ? loaded.deletedConvMeta : {},
+        applications:    Array.isArray(loaded.applications)    ? loaded.applications    : base.applications,
+        contactRequests: Array.isArray(loaded.contactRequests) ? loaded.contactRequests : base.contactRequests,
+        savedCandidates: Array.isArray(loaded.savedCandidates) ? loaded.savedCandidates : base.savedCandidates,
+        savedSearches:   Array.isArray(loaded.savedSearches)   ? loaded.savedSearches   : base.savedSearches,
+        businesses:      Array.isArray(loaded.businesses)      ? loaded.businesses      : base.businesses,
+      });
+      merged._v = this.STATE_VERSION;
+      return merged;
+    } catch(e) { return JSON.parse(JSON.stringify(this.defaultState)); }
   },
 
   saveState() {
-    const safe = JSON.parse(JSON.stringify(this.state));
-    if (safe.users) safe.users.forEach(u => { delete u._localPassword; });
-    safe._v = this.STATE_VERSION;
-    const payload = JSON.stringify(safe);
     try {
-      localStorage.setItem(this.KEY, payload);
-    } catch(e) {
-      if (e.name !== 'QuotaExceededError') return;
-      this.toast('Storage full — clearing old data to free space');
-      // Remove non-critical cached keys to reclaim space.
-      const evictKeys = ['pamarket_rv', 'pamarket_search_cache', 'pamarket_img_cache'];
-      evictKeys.forEach(k => { try { localStorage.removeItem(k); } catch(_) {} });
-      // Also evict any unknown keys that are not our primary state key.
-      try {
-        const allKeys = Object.keys(localStorage);
-        allKeys.forEach(k => {
-          if (k !== this.KEY && k.startsWith('pamarket_')) {
-            try { localStorage.removeItem(k); } catch(_) {}
-          }
-        });
-      } catch(_) {}
-      // Retry once after freeing space.
-      try {
-        localStorage.setItem(this.KEY, payload);
-      } catch(e2) {
-        this.toast('Could not save — please clear some browser storage');
+      const uid = this.state.currentUserId || null;
+
+      // ── Lean snapshot: only what cannot be re-fetched from Supabase on boot ──
+      // Excluded (always re-fetched): users (except self), listings (except own),
+      // paidAds, adminLogs, supportTickets, reports, txns.
+      const snap = {
+        _v: this.STATE_VERSION,
+        currentUserId: uid,
+        cityFilter:  this.state.cityFilter  || 'All Zimbabwe',
+        _sortMode:   this.state._sortMode   || 'newest',
+        _priceMin:   this.state._priceMin   || '',
+        _priceMax:   this.state._priceMax   || '',
+        saves:              this.state.saves              || {},
+        businesses:         this.state.businesses         || [],
+        applications:       this.state.applications       || [],
+        contactRequests:    this.state.contactRequests    || [],
+        savedCandidates:    this.state.savedCandidates    || [],
+        savedSearches:      this.state.savedSearches      || [],
+        deletedConvIds:    (this.state.deletedConvIds    || []).slice(0, 300),
+        deletedConvMeta:    this.state.deletedConvMeta   || {},
+      };
+
+      // Current user's profile only (needed for instant Account page render).
+      const selfProfile = uid && (this.state.users || []).find(u => u.id === uid);
+      if (selfProfile) {
+        const su = Object.assign({}, selfProfile);
+        delete su._localPassword;
+        snap.users = [su];
+      } else {
+        snap.users = [];
       }
-    }
+
+      // Current user's own listings only (all statuses: active, pending, sold, rejected).
+      // Other users' listings are always re-fetched from Supabase on boot.
+      if (uid && Array.isArray(this.state.listings)) {
+        snap.listings = this.state.listings
+          .filter(l => l.sellerId === uid)
+          .map(l => {
+            const lc = Object.assign({}, l);
+            if (Array.isArray(lc.photos)) lc.photos = lc.photos.filter(p => typeof p === 'string' && !p.startsWith('data:'));
+            return lc;
+          });
+      } else {
+        snap.listings = [];
+      }
+
+      // Conversations: 50 most-recent, 30 messages each, no base64 images.
+      if (Array.isArray(this.state.conversations)) {
+        const sorted = this.state.conversations.slice().sort((a, b) => {
+          const at = ((a.messages || []).slice(-1)[0] || {}).t || 0;
+          const bt = ((b.messages || []).slice(-1)[0] || {}).t || 0;
+          return bt - at;
+        });
+        snap.conversations = sorted.slice(0, 50).map(c => {
+          const msgs = (c.messages || []).slice(-30).map(m => {
+            if (m.image && typeof m.image === 'string' && m.image.startsWith('data:')) {
+              const mc = Object.assign({}, m); delete mc.image; return mc;
+            }
+            return m;
+          });
+          return Object.assign({}, c, { messages: msgs });
+        });
+      } else {
+        snap.conversations = [];
+      }
+
+      // Notifications: current user's only, latest 30.
+      snap.notifs = {};
+      if (uid && this.state.notifs && Array.isArray(this.state.notifs[uid])) {
+        snap.notifs[uid] = this.state.notifs[uid].slice(0, 30);
+      }
+
+      // ── Write ──
+      const _write = (obj) => localStorage.setItem(this.KEY, JSON.stringify(obj));
+      try {
+        _write(snap);
+      } catch (e) {
+        if (e.name !== 'QuotaExceededError') return;
+        // Drop conversations and retry — they are fully re-synced from cloud.
+        snap.conversations = [];
+        snap.notifs = {};
+        try { _write(snap); return; } catch(e2) { /* fall through */ }
+        // Nuclear: bare preferences only.
+        try { _write({ _v: this.STATE_VERSION, currentUserId: uid, cityFilter: snap.cityFilter, saves: snap.saves, users: snap.users }); } catch(e3) {}
+      }
+    } catch(e) { /* saveState must never propagate */ }
   },
 
   uid() {
@@ -166,6 +232,11 @@ window.H = {
     const cat = this.CATEGORIES.find(c=>c.id===cid);
     return cat ? cat.icon : `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`;
   },
+  // Scalloped azure verified seal with a bold white check (Instagram/Meta style)
+  verifiedBadge(size) {
+    const s = size || 14;
+    return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" style="vertical-align:middle;flex-shrink:0" aria-label="Verified"><path fill="#00A0E9" d="M23 12l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2L12 2.96 8.6 1.5 6.71 4.69 3.1 5.5l.34 3.7L1 12l2.44 2.78-.34 3.7 3.61.82L8.6 22.5l3.4-1.47 3.4 1.46 1.89-3.19 3.61-.82-.34-3.69L23 12z"/><path d="M9.6 12.3l1.9 1.9 4.1-5.1" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  },
   timeAgo(t) {
     const s = Math.floor((Date.now()-t)/1000);
     if (s<60)     return 'just now';
@@ -174,38 +245,91 @@ window.H = {
     if (s<604800) return Math.floor(s/86400)+'d ago';
     return new Date(t).toLocaleDateString();
   },
+  // Canonical USD rate (admin-set, loaded from app_settings into state.fxRate).
+  fxRate() { const r = Number((this.state && this.state.fxRate) || 36); return r > 0 ? r : 36; },
+
+  // Convert any stored amount to its canonical USD value. USD is the source of
+  // truth; a ZiG amount is divided by the central rate. Legacy listings stored in
+  // ZiG therefore display/compare correctly without a destructive migration.
+  toUSD(p, c) {
+    const n = Number(p) || 0;
+    if (c === 'ZiG' || c === 'ZIG' || c === 'ZWG' || c === 'zig') return n / this.fxRate();
+    return n; // USD (or unspecified) is already canonical
+  },
+
   fmtPrice(p,c) {
-    if (!p && p!==0) return c==='USD'?'$0':'0 ZiG';
-    const n = Number(p).toLocaleString();
-    return c==='USD' ? '$'+n : n+' ZiG';
+    if (!p && p!==0) return '$0';
+    const usd  = this.toUSD(p, c);
+    const base = '$' + usd.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    // Optionally show the approximate ZiG value alongside (user preference).
+    try {
+      const u  = this.currentUser && this.currentUser();
+      const ps = u && u.privacySettings;
+      if (ps && ps.showZig && usd > 0) {
+        return base + ' ≈ ' + Math.round(usd * this.fxRate()).toLocaleString() + ' ZiG';
+      }
+    } catch(e){}
+    return base;
+  },
+  // Data-light mode: load category-icon placeholders instead of photos to save data.
+  dataLight() {
+    try { const u = this.currentUser && this.currentUser(); return !!(u && u.privacySettings && u.privacySettings.dataLight); } catch(e){ return false; }
   },
 
   filterListings(list, q) {
-    const _s   = window.H ? window.H.state : {};
+    const _H   = window.H;
+    const _s   = _H ? _H.state : {};
     const qry  = (q!==undefined ? q : (document.getElementById('searchIn')?.value||'')).toLowerCase().trim();
     const pMin = parseFloat(_s._priceMin)||0;
     const pMax = parseFloat(_s._priceMax)||Infinity;
     const sort = _s._sortMode||'newest';
-    return list.filter(l => {
+    const cats = (_H && _H.CATEGORIES) || [];
+    const catName = (id) => { const c = cats.find(c => c.id === id); return c ? (c.name||'') : ''; };
+    // Split the query into words so "hilux toyota" matches "Toyota Hilux" (each word
+    // must appear somewhere), and search across title, description, location AND category.
+    const tokens = qry ? qry.split(/\s+/).filter(Boolean) : [];
+    const esc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const scored = [];
+    for (const l of list) {
       if (_s.cityFilter && _s.cityFilter!=='All Zimbabwe') {
-        if (!(l.city+' '+l.prov).toLowerCase().includes(_s.cityFilter.toLowerCase())) return false;
+        if (!((l.city||'')+' '+(l.prov||'')).toLowerCase().includes(_s.cityFilter.toLowerCase())) continue;
       }
-      if (qry && !(l.title+' '+(l.desc||'')+' '+l.city+' '+(l.suburb||'')).toLowerCase().includes(qry)) return false;
-      if ((l.price||0)<pMin || (l.price||0)>pMax) return false;
-      return true;
-    }).sort((a,b) => {
-      if (sort==='newest')     return b.createdAt-a.createdAt;
-      if (sort==='oldest')     return a.createdAt-b.createdAt;
-      if (sort==='price_asc')  return (a.price||0)-(b.price||0);
-      if (sort==='price_desc') return (b.price||0)-(a.price||0);
-      if (sort==='views')      return (b.views||0)-(a.views||0);
-      return b.createdAt-a.createdAt;
+      if ((l.price||0)<pMin || (l.price||0)>pMax) continue;
+
+      let score = 0;
+      if (tokens.length) {
+        const title = (l.title||'').toLowerCase();
+        const hay = (title + ' ' + (l.desc||'') + ' ' + (l.city||'') + ' ' + (l.suburb||'') + ' '
+                     + (l.prov||'') + ' ' + catName(l.cat) + ' ' + (l.condition||'')).toLowerCase();
+        let ok = true;
+        for (const t of tokens) {
+          if (hay.indexOf(t) === -1) { ok = false; break; }       // every word must appear (AND)
+          score += (title.indexOf(t) !== -1) ? 10 : 3;            // title hit > body hit
+          if (new RegExp('\\b' + esc(t) + '\\b').test(title)) score += 5; // whole-word bonus
+        }
+        if (!ok) continue;
+        if (title.indexOf(qry) !== -1) score += 25;               // exact phrase in title ranks top
+      }
+      scored.push({ l, score });
+    }
+
+    scored.sort((a, b) => {
+      if (tokens.length && b.score !== a.score) return b.score - a.score; // relevance first when searching
+      const x = a.l, y = b.l;
+      if (sort==='oldest')     return x.createdAt-y.createdAt;
+      if (sort==='price_asc')  return (x.price||0)-(y.price||0);
+      if (sort==='price_desc') return (y.price||0)-(x.price||0);
+      if (sort==='views')      return (y.views||0)-(x.views||0);
+      return y.createdAt-x.createdAt;
     });
+    return scored.map(s => s.l);
   },
 
   toast(msg, duration=4000, isError=false) {
     const el = document.getElementById('toastEl'); if(!el) return;
     el.setAttribute('aria-live', isError ? 'assertive' : 'polite');
+    el.classList.toggle('toast-err', !!isError);
     el.textContent=msg; el.classList.add('show');
     clearTimeout(window._toastTimer);
     window._toastTimer = setTimeout(()=>el.classList.remove('show'), duration);
@@ -276,10 +400,11 @@ window.H = {
   },
 
   emptyState(title, sub, btn, onclick) {
+    var H = window.H;
     return `<div class="empty-state">
-      <div class="empty-icon">${this.ICONS.search}</div>
-      <div class="empty-title">${this.escHtml(title)}</div>
-      <div class="empty-sub">${this.escHtml(sub)}</div>
+      <div class="empty-icon">${H.ICONS.search}</div>
+      <div class="empty-title">${H.escHtml(title)}</div>
+      <div class="empty-sub">${H.escHtml(sub)}</div>
       ${btn?`<button class="btn-pri" style="max-width:240px" onclick="${onclick}">${btn}</button>`:''}
     </div>`;
   },
@@ -309,7 +434,7 @@ window.H = {
   renderListCard(l) {
     const H      = window.H;
     const seller = (H.state.users||[]).find(u=>u.id===l.sellerId);
-    const photo  = (l.photos&&l.photos[0])
+    const photo  = (l.photos&&l.photos[0] && !H.dataLight())
       ? `<img src="${l.photos[0]}" alt="${H.escHtml(l.title)}" loading="lazy">`
       : `<div class="ph">${H.categoryIcon(l.cat)}</div>`;
     return `<div class="list-card-wrap" onclick="H.openListing('${l.id}')">
@@ -323,7 +448,7 @@ window.H = {
             <span class="tag">${H.ICONS.location} ${H.escHtml(l.city||l.prov||'')}</span>
             <span class="tag">&middot; ${H.timeAgo(l.createdAt)}</span>
             <span class="tag">&middot; ${H.ICONS.eye} ${l.views||0}</span>
-            ${seller&&seller.verified?`<span class="blue-check" title="ID Verified"><svg viewBox="0 0 24 24" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg></span>`:''}
+            ${seller&&seller.verified?`<span class="blue-check" title="ID Verified">${H.verifiedBadge(15)}</span>`:''}
           </div>
         </div>
       </div>
@@ -332,9 +457,9 @@ window.H = {
 
   renderFeatCard(l) {
     const H     = window.H;
-    const photo = (l.photos&&l.photos[0])
+    const photo = (l.photos&&l.photos[0] && !H.dataLight())
       ? `<img src="${l.photos[0]}" alt="${H.escHtml(l.title)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`
-      : `<div style="font-size:36px;display:flex;align-items:center;justify-content:center;height:100%">${H.categoryIcon(l.cat)}</div>`;
+      : `<div style="color:var(--blue);display:flex;align-items:center;justify-content:center;height:100%">${H.categoryIcon(l.cat)}</div>`;
     return `<div class="feat-card" onclick="H.openListing('${l.id}')">
       <div class="feat-img">${photo}<div class="feat-badge">Featured</div></div>
       <div class="feat-body">
@@ -436,6 +561,34 @@ window.H = {
     H.navTo      = H.navTo.bind(H);
     this.applyTheme();
     this.applyLanguage();
+    // Android hardware back button / gesture: close whatever overlay is open
+    // (photo viewer, modal, sheet), then walk back through the page stack, so a
+    // user is never trapped — e.g. inside the fullscreen listing photo viewer.
+    try {
+      const _AppPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+      if (_AppPlugin && _AppPlugin.addListener && !H._backBtnBound) {
+        H._backBtnBound = true;
+        _AppPlugin.addListener('backButton', function () {
+          if (typeof H._imgViewerClose === 'function') { try { H._imgViewerClose(); } catch (e) {} return; }
+          if (document.getElementById('notifDetailModal')) { try { H._closeNotifDetail(); } catch (e) {} return; }
+          if (document.getElementById('bizSwitcher')) { try { H._closeBizSwitcher(); } catch (e) {} return; }
+          if (document.getElementById('rateAppModal')) { try { H._dismissRating(); } catch (e) {} return; }
+          if (document.getElementById('pvOverlay')) { try { H.closePhotoViewer(); } catch (e) {} return; }
+          var _mb = document.getElementById('modalBg');
+          if (_mb && _mb.classList.contains('open')) { H.closeModal(); return; }
+          var _sb = document.getElementById('sheetBg');
+          if (_sb && _sb.classList.contains('open')) { H.closeSheet(); return; }
+          // Post page: back button must follow the step-aware logic, not bypass it.
+          if (H.currentPageName === 'Post' && H._post && typeof H._post.headerBack === 'function') {
+            H._post.headerBack(); return;
+          }
+          if (H.pageStack && H.pageStack.length) { H.goBack(); return; }
+          if (H.currentPageName && H.currentPageName !== 'Home') { H.navTo('Home'); return; }
+          if (_AppPlugin.minimizeApp) _AppPlugin.minimizeApp();
+          else if (_AppPlugin.exitApp) _AppPlugin.exitApp();
+        });
+      }
+    } catch (e) {}
     // Handle OAuth deep-link callback (com.pamarket.app://login-callback?code=xxx).
     // Check via App.getLaunchUrl() for cold-start and via appUrlOpen for warm-start.
     try {
@@ -484,6 +637,58 @@ window.H = {
         }
       }
     } catch(e) {}
+    // Reconcile the cached user id with the live Supabase session so every read and
+    // write targets the SAME profile. getSession() USUALLY reads the locally stored
+    // session, but supabase-js refreshes over the network when the stored token has
+    // expired — and on a flaky/offline cold start that refresh can hang with no
+    // timeout, blocking startup (and the splash) forever. Race it against a short
+    // timeout: if it doesn't answer fast, treat it as "no live session" and carry on.
+    // The local login is preserved by the else-branch below (silent background
+    // refresh), so a slow network never traps the user on the splash screen.
+    try {
+      const _sb = window.supabase;
+      if (_sb && _sb.auth && typeof _sb.auth.getSession === 'function') {
+        const _sr = await Promise.race([
+          _sb.auth.getSession(),
+          new Promise(res => setTimeout(() => res({ data: { session: null }, _timedOut: true }), 4000))
+        ]);
+        if (_sr && _sr._timedOut) console.warn('[PaMarket] getSession() timed out on boot — continuing with local session.');
+        const _sid = _sr && _sr.data && _sr.data.session && _sr.data.session.user && _sr.data.session.user.id;
+        if (_sid) {
+          if (this.state.currentUserId !== _sid) { this.state.currentUserId = _sid; this.saveState(); }
+          // Backfill the login email from the auth session (Google sign-ins
+          // never wrote it to the profile, so the Edit Profile email was blank).
+          try {
+            const _semail = (_sr.data.session.user && _sr.data.session.user.email) || '';
+            const _cu = (typeof H.currentUser === 'function') ? H.currentUser() : (this.state.users || []).find(x => x.id === _sid);
+            if (_cu && _semail && _cu.email !== _semail) {
+              _cu.email = _semail;
+              this.saveState();
+              _sb.from('profiles').update({ email: _semail }).eq('id', _sid).then(function(){}, function(){});
+            }
+          } catch (e) {}
+          if (typeof H.loadProfile === 'function') {
+            H.loadProfile(_sid).then(() => {
+              if (this.state.currentUserId && this.checkBan()) return;
+              // Re-render only the Account page (which actually shows profile
+              // name/avatar). Home is listings-driven, so re-rendering it here
+              // just causes a startup flicker for no visible change.
+              if (this.currentPageName === 'Account' && !this.pageStack.length && !H._userIsTyping()) {
+                try { this.renderPage(this.currentPageName, this.currentPageParams); } catch(e) {}
+              }
+            }).catch(()=>{});
+          }
+        } else if (this.state.currentUserId) {
+          // No live Supabase session but we hold a local login. DON'T force a
+          // logout here — getSession() can momentarily return empty (storage
+          // hiccup, token still rehydrating, brief offline), and wiping the
+          // login on boot logged people out unexpectedly. Try a silent refresh;
+          // keep them signed in locally either way. A genuinely revoked session
+          // simply means cloud writes will fail until they re-auth.
+          try { if (_sb.auth.refreshSession) _sb.auth.refreshSession().catch(function(){}); } catch(e) {}
+        }
+      }
+    } catch(e) {}
     if(this.state.currentUserId&&this.checkBan()) return;
     const _nav = document.getElementById('bottomNav');
     if (_nav) _nav.style.display='flex';
@@ -503,29 +708,51 @@ window.H = {
       }
     })();
     await this.navTo('Home');
+    // First paint is done — drop the splash now. Home renders instantly from the
+    // cached state, and the cloud fetches below re-render when they land, so a slow
+    // connection never holds the whole app hostage on the splash screen.
+    if (typeof window._hideSplash === 'function') window._hideSplash();
     // Handle deep links: ?listing=ID  or  ?action=post|browse  or  ?deeplink=route
     const _qs = new URLSearchParams(window.location.search);
-    const _lid = _qs.get('listing'), _act = _qs.get('action'), _dl = _qs.get('deeplink');
+    const _lid = _qs.get('listing'), _act = _qs.get('action'), _dl = _qs.get('deeplink'), _cat = _qs.get('cat');
     if (_dl) { setTimeout(()=>H._handleDeepLink(decodeURIComponent(_dl)), 300); }
     else if (_lid) { setTimeout(()=>this.openListing(_lid), 200); }
+    else if (_cat) { setTimeout(()=>{ try { this.filterByCat(_cat); } catch(e){} }, 250); }
     else if (_act === 'post')   { if(this.currentUser()) setTimeout(()=>this.navTo('Post',null), 200); }
     else if (_act === 'browse') { setTimeout(()=>this.navTo('Browse',null), 200); }
     try {
+      const _sigBefore = (this.state.listings || []).filter(l => l.status === 'active').map(l => l.id).join(',');
       await this.fetchListingsFromSupabase();
       H._checkEngagementAlerts();
       await Promise.all([this.fetchAdsFromSupabase(), this.fetchAppSettings()]);
-      await this.renderPage(this.currentPageName, this.currentPageParams);
+      // Re-render Home only if the listings actually changed AND the user is still
+      // on Home — re-rendering identical content just reloads images and flickers
+      // (the common case on a warm start where cache already matches the cloud).
+      const _sigAfter = (this.state.listings || []).filter(l => l.status === 'active').map(l => l.id).join(',');
+      if (_sigBefore !== _sigAfter && this.currentPageName === 'Home' && !this.pageStack.length && !H._userIsTyping()) {
+        await this.renderPage('Home', this.currentPageParams);
+      }
     } catch(e) { console.warn('Boot fetch failed:', e); }
     if(typeof H._setupRealtimeMessages==='function') H._setupRealtimeMessages();
     if(typeof H.syncReports==='function') H.syncReports();
     if(typeof H.syncConversations==='function') H.syncConversations();
     if(typeof H.syncApplications==='function') H.syncApplications();
+    if(typeof H.fetchMyBusinesses==='function') H.fetchMyBusinesses();
+    if(typeof H.processSubscriptionExpiry==='function') H.processSubscriptionExpiry();
+    if(typeof H.processFeaturedExpiry==='function') H.processFeaturedExpiry();
     if(typeof H.syncNotifications==='function') H.syncNotifications();
     if(typeof H._setupRealtimeNotifs==='function') H._setupRealtimeNotifs();
     if(typeof H.startRealtime==='function') H.startRealtime();
     if(typeof H.setupPush==='function') H.setupPush();
     this._initPullToRefresh();
     if(typeof window._hideSplash==='function') window._hideSplash();
+  },
+
+  // True while the user has a text field focused — background refreshes must
+  // never re-render the page out from under someone who is typing.
+  _userIsTyping() {
+    var ae = document.activeElement;
+    return !!(ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable));
   },
 
   authPage() {
@@ -573,7 +800,7 @@ window.H = {
 
   async openInner(name, params) {
     const H=window.H;
-    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob'];
+    const gated=['Messages','Chat','MyListings','Favorites','Profile','EditProfile','Settings','Ads','AdsCreate','AdsContact','MyAds','Security','SecuritySettings','DeleteAccount','JobSeekerProfile','CandidateProfile','AppliedJobs','JobApplications','PostJob','MyContactRequests','BusinessOnboarding','BusinessActivated','BusinessView','BusinessEditProfile','BusinessStaff','BusinessSubscription','BusinessVerify','BusinessListings','BusinessAssignListing','BusinessAddProduct','BusinessLeads','BusinessQuickReplies','BusinessFeatured','BusinessAnalytics','BusinessBilling','BusinessAdmin'];
     if(gated.includes(name)&&!H.currentUser()){H.requireAuth('Sign in to continue');return;}
     if(H.isAdminPage(name)&&(!H.isAdmin()||!H.state.adminSession)){H.toast('Admin login required');return;}
     try {
@@ -623,6 +850,8 @@ window.H = {
     const _mb = document.getElementById('modalBg');
     if (_mb && _mb.classList.contains('open')) _mb.classList.remove('open');
     this.closeSheet();
+    // Tear down Hire Talent floating UI when navigating to any page (re-created by HireTalent_after)
+    ['talentFloatBar','talentFilterPanel','sheet_tsort'].forEach(function(id){ var e=document.getElementById(id); if(e) e.remove(); });
     // Remove chat keyboard listeners when navigating away from Chat
     if (window._chatKBShow) { try { window._chatKBShow.remove(); } catch(e){} window._chatKBShow = null; }
     if (window._chatKBHide) { try { window._chatKBHide.remove(); } catch(e){} window._chatKBHide = null; }
@@ -639,6 +868,8 @@ window.H = {
       window.visualViewport.removeEventListener('scroll', window._chatVPHandler);
       window._chatVPHandler = null;
     }
+    // Leave the per-conversation typing/broadcast channel when exiting Chat
+    if (typeof this.leaveChatChannel === 'function') this.leaveChatChannel();
     // Restore mainArea styles that Chat overrides
     if(area) { area.style.overflowY='auto'; area.style.position=''; }
     const scrollTo=(opts&&opts.scrollTo)||0;
@@ -673,8 +904,10 @@ window.H = {
     l.views=(l.views||0)+1;
     const rv=JSON.parse(localStorage.getItem('pamarket_rv')||'[]');
     const filtered=[...new Set([id,...rv.filter(x=>x!==id)])].slice(0,10);
-    localStorage.setItem('pamarket_rv',JSON.stringify(filtered));
+    try{localStorage.setItem('pamarket_rv',JSON.stringify(filtered));}catch(_){}
     this.saveState();
+    // Business listings open the shop/store page, not a plain listing detail.
+    if(l.businessId){this.openInner('BusinessProfile',{id:l.businessId,highlightListing:id});return;}
     this.openInner('Detail',{id});
   },
 
@@ -868,26 +1101,51 @@ window.H = {
       showRefreshing();
       try {
         var pageName = H.currentPageName;
-        if (typeof H.fetchListingsFromSupabase === 'function') await H.fetchListingsFromSupabase();
-        if (H.currentUser()) {
+        // Refresh only what THIS page shows, render immediately, and let the rest
+        // sync in the background — the spinner lasts one fetch, not five.
+        if ((pageName === 'Messages' || pageName === 'Chat') && H.currentUser()) {
           if (typeof H.syncConversations === 'function') await H.syncConversations();
-          if (typeof H.syncNotifications === 'function') await H.syncNotifications();
-          if (typeof H.syncApplications  === 'function') H.syncApplications();
+        } else if (typeof H.fetchListingsFromSupabase === 'function') {
+          await H.fetchListingsFromSupabase();
         }
         await H.renderPage(pageName, H.currentPageParams);
-      } catch(e) { console.warn('PTR:', e); }
-      setTimeout(function() { hideIndicator(); refreshing = false; }, 500);
+        if (H.currentUser()) {
+          if (pageName !== 'Messages' && pageName !== 'Chat' && typeof H.syncConversations === 'function') H.syncConversations();
+          if (typeof H.syncNotifications === 'function') H.syncNotifications();
+          if (typeof H.syncApplications  === 'function') H.syncApplications();
+        }
+        if (typeof H.toast === 'function') H.toast('Feed updated', 1800, true);
+      } catch(e) {
+        console.warn('PTR:', e);
+        if (typeof H.toast === 'function') H.toast('Could not refresh - check your connection', 3000, true);
+      }
+      setTimeout(function() { hideIndicator(); refreshing = false; }, 300);
     }
 
     // ── Touch handlers ─────────────────────────────────────────────
-    var startY = 0, curY = 0, pulling = false;
+    var startY = 0, curY = 0, pulling = false, committed = false;
+
+    // True if any scrollable ancestor of the touch target is scrolled down —
+    // in that case the user is scrolling content, not pulling to refresh.
+    function innerScrolled(node) {
+      while (node && node !== el && node.nodeType === 1) {
+        if (node.scrollHeight > node.clientHeight + 1) {
+          var oy = (getComputedStyle(node).overflowY || '');
+          if ((oy === 'auto' || oy === 'scroll') && node.scrollTop > 0) return true;
+        }
+        node = node.parentNode;
+      }
+      return false;
+    }
 
     function onStart(e) {
       if (refreshing || el.scrollTop > 0) return;
+      if (H.currentPageName === 'ReportProblem') return;
       // Never start PTR from the bottom input/control area
       if (e.target && e.target.closest && e.target.closest('.chat-input-bar, .chat-attach-btn, .chat-send, input, button, textarea')) return;
-      // In Chat, mainArea has overflow:hidden so scrollTop is always 0.
-      // Check the actual chat thread scroll position instead.
+      // Don't hijack a gesture that's scrolling an inner scroller (chat thread,
+      // bot chat, any overflow container) that isn't at its top.
+      if (innerScrolled(e.target)) return;
       if (H.currentPageName === 'Chat') {
         const thread = document.getElementById('chatThread');
         if (thread && thread.scrollTop > 0) return;
@@ -895,14 +1153,22 @@ window.H = {
       startY = e.touches[0].clientY;
       curY   = startY;
       pulling = true;
+      committed = false;
     }
 
     function onMove(e) {
       if (!pulling) return;
       curY = e.touches[0].clientY;
       var dist = curY - startY;
-      if (dist <= 0) { if (dist < -10) { pulling = false; snapBack(); hideIndicator(); } return; }
-      e.preventDefault(); // block native overscroll while we handle the pull
+      // Decide phase: don't touch the gesture until it's clearly a downward pull
+      // past a small deadzone. An upward/short move releases it to native scroll.
+      if (!committed) {
+        if (dist > 12) { committed = true; }
+        else if (dist < 0) { pulling = false; return; }
+        else return;
+      }
+      if (dist <= 0) { pulling = false; committed = false; snapBack(); hideIndicator(); return; }
+      e.preventDefault(); // block native overscroll only once we own the pull
       var visual = Math.min(damp(dist), MAX_VIS);
       moveContent(visual);
       moveIndicator(visual);
@@ -913,12 +1179,13 @@ window.H = {
     function onEnd() {
       if (!pulling) return;
       pulling = false;
+      var wasCommitted = committed; committed = false;
       var dist = curY - startY;
-      if (dist >= THRESHOLD) { doRefresh(); }
+      if (wasCommitted && dist >= THRESHOLD) { doRefresh(); }
       else { snapBack(); hideIndicator(); }
     }
 
-    function onCancel() { pulling = false; snapBack(); hideIndicator(); }
+    function onCancel() { pulling = false; committed = false; snapBack(); hideIndicator(); }
 
     el.addEventListener('touchstart',  onStart,  { passive: true  });
     el.addEventListener('touchmove',   onMove,   { passive: false });
@@ -937,7 +1204,7 @@ window.H = {
   async saveListingToCloud(listing) {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
-      const {error}=await window.supabase.from('listings').upsert({
+      const base = {
         id:listing.id, seller_id:listing.sellerId,
         seller_name:listing.sellerName||'', seller_phone:listing.sellerPhone||'',
         title:listing.title, description:listing.desc||'',
@@ -946,9 +1213,19 @@ window.H = {
         city:listing.city||'', suburb:listing.suburb||'',
         photos:listing.photos||[], status:listing.status||'active',
         boost:listing.boost||null, views:listing.views||0,
+        business_id:listing.businessId||null,
         created_at:listing.createdAt?new Date(listing.createdAt).toISOString():new Date().toISOString()
-      });
-      if(error) console.warn('Cloud save failed:',error.message);
+      };
+      const attrs = (typeof H.collectAttrs==='function') ? H.collectAttrs(listing) : (listing.attrs||{});
+      const {error}=await window.supabase.from('listings').upsert(Object.assign({attributes:attrs}, base));
+      // If the attributes column hasn't been added yet, retry without it so
+      // posting never breaks before the migration is run.
+      if(error){
+        if(/attributes|column|schema cache|PGRST204/i.test(error.message||'')){
+          const {error:e2}=await window.supabase.from('listings').upsert(base);
+          if(e2) console.warn('Cloud save failed:',e2.message);
+        } else console.warn('Cloud save failed:',error.message);
+      }
     } catch(e){ console.warn('saveListingToCloud:',e.message); }
   },
 
@@ -996,21 +1273,63 @@ window.H = {
 
   trackAdImpression(id) {
     if(!id||!window.supabase||typeof window.supabase.from!=='function') return;
-    const a = (H.state.paidAds||[]).find(x=>x.id===id); if(!a) return;
+    const a = (H.state.paidAds||[]).find(x=>String(x.id)===String(id)); if(!a) return;
     a.impressions = (a.impressions||0)+1;
     window.supabase.from('paid_ads').update({impressions:a.impressions}).eq('id',id).then(()=>{});
   },
 
-  trackAdClick(id, url) {
-    if(id&&window.supabase&&typeof window.supabase.from==='function'){
-      const a = (H.state.paidAds||[]).find(x=>x.id===id);
-      if(a){ a.clicks=(a.clicks||0)+1; window.supabase.from('paid_ads').update({clicks:a.clicks}).eq('id',id).then(()=>{}); }
+  trackAdClick(id) {
+    // Use String comparison — DB ids may be numeric but onclick passes a string.
+    const a = (H.state.paidAds||[]).find(x=>String(x.id)===String(id));
+    if(a&&window.supabase&&typeof window.supabase.from==='function'){
+      a.clicks=(a.clicks||0)+1;
+      window.supabase.from('paid_ads').update({clicks:a.clicks}).eq('id',id).then(()=>{});
     }
-    const a = (H.state.paidAds||[]).find(x=>x.id===id);
-    // Listing link takes priority over external URL
-    if(a && a.listingId) { H.openListing(a.listingId); return; }
-    if(url) { window.open(url,'_blank','noopener'); return; }
+    // Listing link takes priority over external URL; open Detail directly (not business routing)
+    if(a && a.listingId) { H.openInner('Detail', {id: a.listingId}); return; }
+    const url = a && a.linkUrl;
+    if(url) {
+      try {
+        var _native=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+        window.open(url,_native?'_system':'_blank',_native?'':' noopener');
+      } catch(e){ try{window.open(url,'_blank');}catch(e2){} }
+      return;
+    }
     if(a) H.toast((a.businessName||'Sponsored') + (a.tagline ? ' · ' + a.tagline : ''), 3000);
+  },
+
+  // Map a raw cloud `listings` row to the app's local listing shape.
+  _mapCloudListing(r) {
+    const o={
+      id:r.id, sellerId:r.seller_id, sellerName:r.seller_name||'',
+      sellerPhone:r.seller_phone||'', title:r.title, desc:r.description,
+      price:r.price, currency:r.currency, cat:r.category,
+      prov:r.province, city:r.city, suburb:r.suburb,
+      photos:Array.isArray(r.photos)?r.photos:(r.photos?[r.photos]:[]),
+      status:r.status, boost:r.boost, views:r.views||0,
+      businessId:r.business_id||null,
+      createdAt:r.created_at?new Date(r.created_at).getTime():Date.now()
+    };
+    if(r.attributes && typeof r.attributes==='object'){
+      if(typeof H.applyAttrs==='function') H.applyAttrs(o, r.attributes);
+      else o.attrs=r.attributes;
+    }
+    return o;
+  },
+
+  // Fetch a single listing by id when it isn't in the local cache (e.g. after the
+  // app has been idle and the cache was refreshed/pruned, or the listing is older
+  // than the cached set). Returns the listing, or null if genuinely unavailable.
+  async _fetchListingById(id) {
+    try {
+      if(!window.supabase||typeof window.supabase.from!=='function') return null;
+      const { data, error } = await window.supabase.from('listings').select('*').eq('id', id).maybeSingle();
+      if (error || !data) return null;
+      const o = H._mapCloudListing(data);
+      H.state.listings = H.state.listings || [];
+      if (!H.state.listings.find(x => x.id === o.id)) { H.state.listings.push(o); H.saveState(); }
+      return o;
+    } catch(e) { return null; }
   },
 
   async fetchListingsFromSupabase() {
@@ -1022,20 +1341,57 @@ window.H = {
         .order('created_at',{ascending:false})
         .limit(200);
       if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
-      const cloud=(data||[]).map(r=>({
-        id:r.id, sellerId:r.seller_id, sellerName:r.seller_name||'',
-        sellerPhone:r.seller_phone||'', title:r.title, desc:r.description,
-        price:r.price, currency:r.currency, cat:r.category,
-        prov:r.province, city:r.city, suburb:r.suburb,
-        photos:Array.isArray(r.photos)?r.photos:(r.photos?[r.photos]:[]),
-        status:r.status, boost:r.boost, views:r.views||0,
-        createdAt:r.created_at?new Date(r.created_at).getTime():Date.now()
-      }));
+      const cloud=(data||[]).map(r=>H._mapCloudListing(r));
       // Replace active listings entirely from cloud so deleted ones disappear.
       // Keep local non-active listings (pending, draft) that haven't synced yet.
       const nonActive=(H.state.listings||[]).filter(l=>l.status!=='active');
       H.state.listings=[...cloud,...nonActive];
+
+      // Backfill seller verified status for EVERY listing seller so the blue
+      // verified badge shows consistently — not just for sellers we've chatted
+      // with. The listings table doesn't carry the seller's verified flag, so we
+      // resolve it from profiles in one batched query and set it authoritatively
+      // (covers both newly-verified and revoked accounts). Only re-render the
+      // current listing page when something actually changed, so it converges
+      // (the next fetch finds nothing changed → no re-render, no loop).
+      let verifiedChanged = false;
+      try {
+        const sellerIds = [...new Set(cloud.map(l => l.sellerId).filter(Boolean))];
+        if (sellerIds.length) {
+          const { data: sps } = await window.supabase
+            .from('profiles').select('id,name,avatar,verified').in('id', sellerIds);
+          if (Array.isArray(sps) && sps.length) {
+            H.state.users = H.state.users || [];
+            sps.forEach(p => {
+              const su = H.state.users.find(x => x.id === p.id);
+              if (su) {
+                if (su.verified !== !!p.verified) { su.verified = !!p.verified; verifiedChanged = true; }
+                if (p.name && !su.name)     su.name = p.name;
+                if (p.avatar && !su.avatar) su.avatar = p.avatar;
+              } else {
+                H.state.users.push({ id: p.id, name: p.name || '', phone: '', email: '',
+                  avatar: p.avatar || null, verified: !!p.verified, role: 'user',
+                  status: 'active', joinedAt: Date.now() });
+                if (p.verified) verifiedChanged = true;
+              }
+            });
+          }
+        }
+      } catch(e) { /* verified backfill is best-effort */ }
+
       H.saveState();
+      // Notify on new listings matching the user's saved searches.
+      if (typeof H._checkSavedSearchAlerts === 'function') { try { H._checkSavedSearchAlerts(); } catch(e){} }
+
+      // Refresh the visible page so freshly-resolved badges appear. Guarded by
+      // verifiedChanged so it can't loop (a re-render re-runs this fetch, but the
+      // second pass finds verified already correct → verifiedChanged=false).
+      if (verifiedChanged) {
+        const p = H.currentPageName;
+        if (p === 'Home' || p === 'Browse' || p === 'Detail' || p === 'CategoryView') {
+          try { H.renderPage(p, H.currentPageParams); } catch(e){}
+        }
+      }
     } catch(e){ console.warn('fetchListingsFromSupabase:',e.message); }
   },
 
@@ -1052,19 +1408,33 @@ window.H = {
             if (!Array.isArray(conv.messages)) conv.messages = [];
             const ex=conv.messages.find(m=>m.id===msg.id);
             if(!ex){
-              const localMsg = {id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,t:new Date(msg.created_at).getTime(),read:false};
+              const localMsg = {id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,image:msg.image||null,t:new Date(msg.created_at).getTime(),read:false};
               conv.messages.push(localMsg);
               H.saveState();
+              // Update bottom nav badge immediately without waiting for the 5 s interval
+              if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
               if(H.currentPageName==='Chat'&&H.currentPageParams&&H.currentPageParams.id===msg.conversation_id&&typeof H._appendChatMessages==='function')
                 H._appendChatMessages(msg.conversation_id,[localMsg]);
               else if(H.currentPageName==='Messages'&&typeof H._refreshMessagesPage==='function')
                 H._refreshMessagesPage({ skipSync:true });
-              H.pushNotif&&H.pushNotif(H.state.currentUserId,'New message',msg.text||'');
             }
-          } else if (typeof H.syncConversations === 'function') {
-            H.syncConversations().then(function(){
-              if (H.currentPageName === 'Messages' && typeof H._refreshMessagesPage === 'function') H._refreshMessagesPage({ skipSync:true });
-            });
+          } else {
+            // Message for a conversation we don't hold — possibly one the user
+            // deleted. An incoming reply revives it so messages are never lost
+            // behind a "conversation/profile not found" dead end.
+            if (msg.sender_id !== H.state.currentUserId &&
+                Array.isArray(H.state.deletedConvIds) && H.state.deletedConvIds.includes(msg.conversation_id)) {
+              H.state.deletedConvIds = H.state.deletedConvIds.filter(id => id !== msg.conversation_id);
+              if (H.state.deletedConvMeta) delete H.state.deletedConvMeta[msg.conversation_id];
+              H.saveState();
+              const _du = H.currentUser();
+              if (_du) window.supabase.from('conversation_deletions').delete().eq('user_id', _du.id).eq('conversation_id', msg.conversation_id).then(()=>{});
+            }
+            if (typeof H.syncConversations === 'function') {
+              H.syncConversations().then(function(){
+                if (H.currentPageName === 'Messages' && typeof H._refreshMessagesPage === 'function') H._refreshMessagesPage({ skipSync:true });
+              });
+            }
           }
         }).subscribe();
     } catch(e){ console.warn('Realtime setup failed:',e.message); }
@@ -1177,8 +1547,31 @@ window.H = {
       if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
       let changed = false;
 
+      // Load server-persisted conversation deletions so they stay hidden across logins.
+      try {
+        const { data: dels } = await sb.from('conversation_deletions').select('conversation_id').eq('user_id', u.id);
+        if (dels && dels.length) {
+          if (!Array.isArray(H.state.deletedConvIds)) H.state.deletedConvIds = [];
+          for (const d of dels) {
+            if (!H.state.deletedConvIds.includes(d.conversation_id)) { H.state.deletedConvIds.push(d.conversation_id); changed = true; }
+          }
+        }
+      } catch (e) { /* conversation_deletions table may not exist yet */ }
+
+      // Deletion timestamps let a LATER reply revive the thread. Deletions made
+      // before this app version lack one — start their clock now so only messages
+      // arriving from here on bring those threads back.
+      if (!H.state.deletedConvMeta || typeof H.state.deletedConvMeta !== 'object') H.state.deletedConvMeta = {};
+      for (const _did of (H.state.deletedConvIds || [])) {
+        if (!H.state.deletedConvMeta[_did]) { H.state.deletedConvMeta[_did] = Date.now(); changed = true; }
+      }
+
       // Phase 1: discover from conversations table (may not exist — silent fail)
       const deletedIds = new Set(Array.isArray(H.state.deletedConvIds) ? H.state.deletedConvIds : []);
+      // Drop any already-loaded conversations the user has deleted.
+      const _before = H.state.conversations.length;
+      H.state.conversations = H.state.conversations.filter(c => !deletedIds.has(c.id));
+      if (H.state.conversations.length !== _before) changed = true;
       const knownIds = new Set(H.state.conversations.map(c => c.id));
       try {
         const { data: convs, error } = await sb.from('conversations')
@@ -1187,9 +1580,10 @@ window.H = {
           .limit(100);
         if (!error && convs) {
           for (const c of convs) {
-            knownIds.add(c.id);
-            // Skip conversations the user has locally deleted — don't re-add them during sync
+            // Deleted convs stay OUT of knownIds so Phase 2 can still revive them
+            // when it finds a reply newer than the deletion.
             if (deletedIds.has(c.id)) continue;
+            knownIds.add(c.id);
             let local = H.state.conversations.find(x => x.id === c.id);
             if (!local) {
               local = { id: c.id, members: c.members || [], listingId: c.listing_id || null, messages: [] };
@@ -1210,8 +1604,8 @@ window.H = {
       try {
         const uidSuffix = u.id.slice(-6);
         const [sentRes, recvRes] = await Promise.all([
-          sb.from('messages').select('conversation_id,sender_id,sender_name').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(300),
-          sb.from('messages').select('conversation_id,sender_id,sender_name').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(300)
+          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(300),
+          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(300)
         ]);
         // Build a map: convId -> first other-user sender_id found across both result sets
         const convOtherMap = {};
@@ -1224,8 +1618,18 @@ window.H = {
         const allRows = [...(sentRes.data||[]), ...(recvRes.data||[])];
         for (const row of allRows) {
           if (!row.conversation_id || knownIds.has(row.conversation_id)) continue;
-          // Skip conversations the user has locally deleted — don't re-add them during sync
-          if (deletedIds.has(row.conversation_id)) continue;
+          if (deletedIds.has(row.conversation_id)) {
+            // Deleting a chat hides it, but it isn't a black hole: a reply from
+            // the OTHER person sent AFTER the deletion revives the thread.
+            const _rowT = row.created_at ? new Date(row.created_at).getTime() : 0;
+            const _delT = (H.state.deletedConvMeta || {})[row.conversation_id] || Infinity;
+            if (row.sender_id === u.id || _rowT <= _delT) continue;
+            deletedIds.delete(row.conversation_id);
+            H.state.deletedConvIds = (H.state.deletedConvIds || []).filter(id => id !== row.conversation_id);
+            delete H.state.deletedConvMeta[row.conversation_id];
+            changed = true;
+            sb.from('conversation_deletions').delete().eq('user_id', u.id).eq('conversation_id', row.conversation_id).then(()=>{});
+          }
           knownIds.add(row.conversation_id);
           const otherId = convOtherMap[row.conversation_id] || null;
           const members = otherId ? [u.id, otherId] : [u.id];
@@ -1238,26 +1642,28 @@ window.H = {
       // are loaded first — this ensures we have all sender_id values needed to populate
       // members arrays and collect the full set of other-user IDs for the profile fetch.
 
-      // Phase 4: sync messages for EVERY known conversation
-      for (const local of H.state.conversations) {
+      // Phase 4: sync messages for EVERY known conversation — in parallel, so
+      // refresh time stays flat instead of growing with each conversation.
+      await Promise.all(H.state.conversations.map(async (local) => {
         if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
         const { data: msgs, error: msgErr } = await sb.from('messages')
-          .select('id, sender_id, sender_name, text, read, created_at')
+          .select('id, sender_id, sender_name, text, image, read, created_at')
           .eq('conversation_id', local.id)
           .order('created_at', { ascending: true })
           .limit(200);
-        if (msgErr || !msgs) continue;
+        if (msgErr || !msgs) return;
         const existing = new Map(local.messages.map(m => [m.id, m]));
         msgs.forEach(m => {
           const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
           const found = existing.get(m.id);
           const read = found && found.read ? true : !!m.read;
           if (!found) {
-            local.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, t, read });
+            local.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, image: m.image||null, t, read });
             changed = true;
-          } else if (found.read !== read || found.from !== m.sender_id || found.senderName !== (m.sender_name||'')) {
+          } else if (found.read !== read || found.from !== m.sender_id || found.senderName !== (m.sender_name||'') || (m.image && !found.image)) {
             found.from = m.sender_id;
             found.senderName = m.sender_name || found.senderName || '';
+            if (m.image && !found.image) found.image = m.image;
             found.read = read;
             changed = true;
           }
@@ -1272,7 +1678,7 @@ window.H = {
             changed = true;
           }
         });
-      }
+      }));
 
       // Phase 4.5: backfill profile names from message sender_name where name is still empty
       // This covers cases where the profiles table is unavailable or the entry has no name
@@ -1320,7 +1726,7 @@ window.H = {
               // Update entry — especially fill in the name if we now have one
               if (p.name && !existing.name) { existing.name = p.name; changed = true; }
               if (p.avatar && !existing.avatar) { existing.avatar = p.avatar; changed = true; }
-              if (p.verified && !existing.verified) { existing.verified = true; changed = true; }
+              if (existing.verified !== !!p.verified) { existing.verified = !!p.verified; changed = true; }
             } else {
               (H.state.users = H.state.users||[]).push({
                 id: p.id, name: p.name||'', phone: p.phone||'',
@@ -1343,6 +1749,10 @@ window.H = {
         } catch(e) {}
       }
 
+      // Collapse any duplicate per-person threads the sync just pulled (legacy
+      // listing-keyed + new per-person ids for the same pair) into one.
+      if (typeof H._mergeDuplicateConversations === 'function' && H._mergeDuplicateConversations()) changed = true;
+
       if (changed) H.saveState();
       return changed;
     } catch(e) { console.warn('syncConversations:', e.message); }
@@ -1357,7 +1767,7 @@ window.H = {
       const { error } = await sb.from('messages').upsert({
         id: msg.id, conversation_id: convId,
         sender_id: msg.from, sender_name: msg.senderName || '',
-        text: msg.text, read: msg.read || false,
+        text: msg.text, image: msg.image || null, read: msg.read || false,
         created_at: new Date(msg.t || Date.now()).toISOString()
       });
       if (error) { console.warn('saveMessageToCloud:', error.message); return { ok:false, error:error.message }; }
@@ -1431,7 +1841,7 @@ window.H = {
         +'<div class="about-card" style="text-align:center">'
         +'<div class="about-sec-title">Prefer WhatsApp?</div>'
         +'<div class="about-body" style="margin-bottom:12px">Chat with us directly on WhatsApp and we\'ll get back to you quickly.</div>'
-        +'<button onclick="window.open(\'https://wa.me/971589772645?text=Hi%2C%20I\'m%20interested%20in%20advertising%20on%20PaMarket\')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>Chat on WhatsApp</button>'
+        +'<button onclick="window.open(\'https://wa.me/971589772645?text=Hi%2C%20I%27m%20interested%20in%20advertising%20on%20PaMarket\',\'_blank\')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>Chat on WhatsApp</button>'
         +'</div>'
         +'</div></div>';
     };
@@ -1568,7 +1978,7 @@ window.H = {
       return;
     }
 
-    const activeAds=(this.state.listings||[]).filter(l=>l.sellerId===u.id&&l.status==='active').length;
+    const activeAds=(this.state.listings||[]).filter(l=>l.sellerId===u.id&&l.status==='active'&&!l.businessId).length;
     const savedAds=((this.state.saves||{})[u.id]||[]).length;
     if (!Array.isArray(this.state.conversations)) this.state.conversations = [];
     const unread=this.state.conversations.reduce((n,c)=>Array.isArray(c.members)&&c.members.includes(u.id)?n+(c.messages||[]).filter(m=>m.from!==u.id&&!m.read).length:n,0);
@@ -1599,14 +2009,15 @@ window.H = {
       ${item('My Listings',I.doc,'MyListings',activeAds||'')}
       ${item('Saved & Favorites',I.heart,'Favorites',savedAds||'')}
       ${item('Advertisements',I.ads,'Ads','')}
+      ${item('About PaMarket','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>','About','')}
       ${item('Settings',I.settings,'Settings','')}
       ${item('Security & Password','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>','SecuritySettings','')}
       ${item('Help & Support',I.help,'Help','')}
-      ${item('About PaMarket','<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>','About','')}
       <button class="sheet-item danger" onclick="H.closeSheet();setTimeout(()=>H.logout(),50)">
         <span class="sheet-icon">${I.logout}</span>
         <span class="sheet-label">Sign Out</span>
       </button>
+      <div style="text-align:center;font-size:11px;color:var(--sub);padding:6px 0 2px">PaMarket v${H.APP_VERSION}</div>
       <button class="sheet-close" onclick="H.closeSheet()">${I.close} Close</button>`;
     sheet.classList.add('open'); bg.classList.add('open');
   },
@@ -1730,14 +2141,132 @@ window.H = {
     this.state.listings=(this.state.listings||[]).filter(l=>!String(l.id).startsWith('demo'));
     this.state.users=(this.state.users||[]).filter(u=>!String(u.id).startsWith('demo'));
     if (hadDemo) this.saveState();
-    window.onerror = function(msg, src, line, col, err) {
+    // One-time cleanup: evict other localStorage keys that may hold stale large data
+    // from previous app versions (search cache, image cache, etc.).
+    try {
+      ['pamarket_search_cache','pamarket_img_cache'].forEach(function(k){
+        try { localStorage.removeItem(k); } catch(_){}
+      });
+    } catch(_) {}
+    // Reusable error logger — console + error_logs table. Use H.logError(context, err)
+    // in catch blocks instead of swallowing failures silently.
+    window.H.logError = function(context, err, code) {
       try {
+        console.warn('[PaMarket]', code ? '['+code+']' : '', context, err || '');
+        var stack = (err && err.stack) ? String(err.stack).slice(0,600) : (err ? String(err).slice(0,600) : '');
         var sb = window.supabase;
         if (sb && typeof sb.from === 'function') {
-          sb.from('error_logs').insert({ message: String(msg), source: src+':'+line, stack: err ? String(err.stack||'').slice(0,500) : null, created_at: new Date().toISOString() }).then(function(){});
+          sb.from('error_logs').insert({ type: 'app', message: (code ? code+' — ' : '') + String(context).slice(0,300), source: 'pamarket', stack: stack, user_agent: (navigator && navigator.userAgent) ? String(navigator.userAgent).slice(0,300) : '', created_at: new Date().toISOString() }).then(function(){}, function(){});
         }
       } catch(e) {}
     };
+
+    // Generate a short, shareable error code (e.g. PM-K3F9). The same code is
+    // shown to the user AND written to error_logs, so a reported code can be
+    // traced back to the exact failure.
+    window.H.errCode = function() {
+      var c = '';
+      var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      for (var i=0;i<4;i++) c += chars[Math.floor(Math.random()*chars.length)];
+      return 'PM-' + c;
+    };
+
+    // Surface a failure to the user with a traceable code, and log it.
+    // Throttled so a burst of errors shows just one banner. Pass userMsg=null
+    // for the default "Something didn't respond" wording.
+    window.H.showError = function(userMsg, err, context) {
+      var code = window.H.errCode();
+      window.H.logError(context || userMsg || 'showError', err, code);
+      var now = Date.now();
+      if (window.H._lastErrAt && (now - window.H._lastErrAt) < 4000) return code; // throttle visible banners
+      window.H._lastErrAt = now;
+      var msg = (userMsg || 'Something didn’t respond. Please try again.') + ' (Code: ' + code + ')';
+      try { window.H.toast(msg, 6000, true); } catch(e) {}
+      return code;
+    };
+
+    // Wrap a promise with a timeout so a request that never responds surfaces a
+    // visible error code instead of spinning forever.
+    window.H.withTimeout = function(promise, ms, label) {
+      return new Promise(function(resolve, reject) {
+        var done = false;
+        var t = setTimeout(function() {
+          if (done) return; done = true;
+          var e = new Error('Timed out: ' + (label || 'request'));
+          e._timeout = true;
+          reject(e);
+        }, ms || 20000);
+        Promise.resolve(promise).then(function(v){ if(done) return; done=true; clearTimeout(t); resolve(v); },
+          function(err){ if(done) return; done=true; clearTimeout(t); reject(err); });
+      });
+    };
+
+    // Benign rejections we never want to nag the user about. These are still
+    // logged to error_logs (for diagnosis) — we just don't slam a red toast over
+    // an unrelated screen. They're background noise the user can't act on:
+    // network flaps on mobile, realtime reconnects, image loads, browser quirks,
+    // and the conversations.id uuid mismatch we resolve at the DB layer.
+    function isBenignError(err) {
+      if (!err) return true;
+      var name = err.name || '';
+      var msg  = String(err.message || err);
+      if (name === 'AbortError') return true;
+      // Network blips — on mobile the radio drops constantly; navigator.onLine
+      // is unreliable, so treat these as benign regardless of its value.
+      if (/Load failed|NetworkError|Failed to fetch|network ?error|ERR_NETWORK|ERR_INTERNET|fetch failed/i.test(msg)) return true;
+      // Supabase/Postgres transient sync errors (e.g. the conversations.id
+      // uuid↔text mismatch) — fixed at the DB, never actionable by the user.
+      if (/invalid input syntax for type uuid|JWT expired|PGRST|supabase|realtime/i.test(msg)) return true;
+      // Browser/runtime noise that never reflects a real app failure.
+      if (/ResizeObserver loop|Script error\.?$|^Object$|^undefined$|^null$/i.test(msg)) return true;
+      return false;
+    }
+
+    window.onerror = function(msg, src, line, col, err) {
+      var code = window.H && window.H.errCode ? window.H.errCode() : '';
+      if (window.H && window.H.logError) window.H.logError('onerror ' + (src ? src + ':' + line : '') + ' — ' + msg, err, code);
+      if (window.H && window.H.showError && err && !isBenignError(err)) {
+        var now = Date.now();
+        if (!(window.H._lastErrAt && (now - window.H._lastErrAt) < 4000)) {
+          window.H._lastErrAt = now;
+          try { window.H.toast('Something went wrong. Please try again. (Code: ' + code + ')', 6000, true); } catch(e) {}
+        }
+      }
+    };
+    // Catch unhandled promise rejections (most async failures land here).
+    window.addEventListener('unhandledrejection', function(ev) {
+      var err = ev && ev.reason;
+      var code = window.H && window.H.errCode ? window.H.errCode() : '';
+      if (window.H && window.H.logError) window.H.logError('unhandledrejection', err, code);
+      if (window.H && window.H.showError && !isBenignError(err)) {
+        var now = Date.now();
+        if (!(window.H._lastErrAt && (now - window.H._lastErrAt) < 4000)) {
+          window.H._lastErrAt = now;
+          var note = (err && err._timeout) ? 'Something didn’t respond. Please try again.' : 'Something went wrong. Please try again.';
+          try { window.H.toast(note + ' (Code: ' + code + ')', 6000, true); } catch(e) {}
+        }
+      }
+    });
+
+    // Hide the bottom tab bar while a text field is focused, so the on-screen
+    // keyboard doesn't shove the nav up into the middle of the screen.
+    (function() {
+      var TEXTY = { text:1, search:1, email:1, tel:1, url:1, number:1, password:1, '':1 };
+      function isTextField(el) {
+        if (!el) return false;
+        if (el.tagName === 'TEXTAREA') return true;
+        if (el.tagName === 'INPUT') return !!TEXTY[(el.getAttribute('type') || 'text').toLowerCase()];
+        return false;
+      }
+      document.addEventListener('focusin', function(e) {
+        if (isTextField(e.target)) document.body.classList.add('kb-open');
+      });
+      document.addEventListener('focusout', function() {
+        setTimeout(function() {
+          if (!isTextField(document.activeElement)) document.body.classList.remove('kb-open');
+        }, 120);
+      });
+    })();
     this._registerCategoryView();
     this._registerJobPage();
     this._registerExtraPages();
@@ -1745,13 +2274,21 @@ window.H = {
 
     document.addEventListener('DOMContentLoaded',()=>{
       window._hideSplash = function() {
-        var splash = document.getElementById('pamarketSplash');
-        if (splash) {
-          splash.classList.add('hiding');
-          setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 450);
-        }
-        var SS = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen;
-        if (SS) { SS.hide({ fadeOutDuration: 300 }); }
+        // Hold the PaMarket brand on screen for a brief, deliberate moment, then
+        // fade out — even though the app is ready almost instantly. Gives the
+        // polished "show brand, then glide in" feel instead of a jarring flash.
+        var MIN_SPLASH_MS = 1000;
+        var elapsed = Date.now() - (window._splashStart || Date.now());
+        var wait = Math.max(0, MIN_SPLASH_MS - elapsed);
+        setTimeout(function() {
+          var splash = document.getElementById('pamarketSplash');
+          if (splash && !splash.classList.contains('hiding')) {
+            splash.classList.add('hiding');
+            setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 450);
+          }
+          var SS = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen;
+          if (SS) { try { SS.hide({ fadeOutDuration: 300 }); } catch(e){} }
+        }, wait);
       };
       const nav=document.getElementById('bottomNav');
       if(nav){
@@ -1779,6 +2316,46 @@ window.pushNotif=(uid,title,body)=>H.pushNotif&&H.pushNotif(uid,title,body);
 window.openListing=id=>H.openListing(id);
 
 // Deep link router — called when user taps a push notification
+// Route a deep link, but wait until the app is booted (cold start from a
+// notification tap can fire before navTo/state exist).
+H._routeDeepLinkWhenReady = function(route, attempts) {
+  attempts = attempts || 0;
+  if (route && typeof H.navTo === 'function' && H.state && typeof H.openInner === 'function') {
+    H._handleDeepLink(route);
+  } else if (attempts < 40) {
+    setTimeout(function(){ H._routeDeepLinkWhenReady(route, attempts + 1); }, 250);
+  }
+};
+
+// Route a notification-tray tap from the full push payload. Waits for the app to
+// boot (cold start) before acting.
+H._routeNotifTapWhenReady = function(data, attempts) {
+  attempts = attempts || 0;
+  if (typeof H.navTo === 'function' && H.state && typeof H.openInner === 'function') {
+    H._handleNotifTap(data || {});
+  } else if (attempts < 40) {
+    setTimeout(function(){ H._routeNotifTapWhenReady(data, attempts + 1); }, 250);
+  }
+};
+
+H._handleNotifTap = function(data) {
+  data = data || {};
+  var type = data.type || '';
+  var link = data.deepLink || data.deep_link || '';
+  var NAV  = { message:1, sale:1, boost:1, verify:1, review:1, ban:1, report:1 };
+  // Broadcast / info / announcement → open the detail (full message + image)
+  // straight from the payload. Land on Notifications so Close returns there.
+  if (type && !NAV[type] && (data.title || data.body || data.image || data.imageUrl)) {
+    if (typeof H._openNotifDetailFromData === 'function') {
+      H.navTo('Notifications');
+      setTimeout(function(){ H._openNotifDetailFromData(data); }, 220);
+      return;
+    }
+  }
+  // Otherwise use the deep link (chat/listing/named page), or fall back to the list.
+  H._handleDeepLink(link || 'Notifications');
+};
+
 H._handleDeepLink = function(route) {
   if (!route) return;
   if (route.startsWith('listing:')) {
@@ -1790,6 +2367,61 @@ H._handleDeepLink = function(route) {
     var allowed = ['Home','Browse','Post','Account','Messages','Notifications'];
     if (allowed.indexOf(route) !== -1) H.navTo(route);
   }
+};
+
+// ── In-app "Rate Our App" prompt ──────────────────────────
+// Shown to users who haven't rated yet, after they've used the app a few times.
+// "Rate Now" opens the Play Store listing (rating). "Later" snoozes ~5 days.
+// State is kept in localStorage (survives logout / state resets).
+H.maybeShowRatingPrompt = function() {
+  try {
+    if (H._rateChecked) return;            // once per app session
+    H._rateChecked = true;
+    var LS = window.localStorage; if (!LS) return;
+    if (LS.getItem('pm_rate_done') === '1') return;     // already rated
+    var opens = (parseInt(LS.getItem('pm_rate_opens') || '0', 10) || 0) + 1;
+    LS.setItem('pm_rate_opens', String(opens));
+    if (opens < 3) return;                  // let them use the app a bit first
+    var snooze = parseInt(LS.getItem('pm_rate_snooze') || '0', 10) || 0;
+    if (snooze && Date.now() - snooze < 5 * 86400000) return;   // "Later" = wait 5 days
+    setTimeout(function(){ H._showRatingPrompt(); }, 1800);     // let the screen settle
+  } catch(e) {}
+};
+
+H._showRatingPrompt = function() {
+  if (document.getElementById('rateAppModal')) return;
+  // Don't stack on top of another sheet/modal.
+  if (document.querySelector('.action-sheet.open') || document.querySelector('.sheet-bg.open')) return;
+  var ov = document.createElement('div');
+  ov.id = 'rateAppModal';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(16,24,40,.5);z-index:9600;display:flex;align-items:center;justify-content:center;padding:24px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)';
+  ov.innerHTML =
+    '<div style="background:var(--card);border-radius:20px;max-width:340px;width:100%;padding:26px 22px 18px;text-align:center;box-shadow:0 20px 60px rgba(16,24,40,.32);font-family:Inter,sans-serif">'
+    + '<div style="font-size:36px;line-height:1;margin-bottom:8px">⭐</div>'
+    + '<div style="font-size:19px;font-weight:800;color:var(--text);margin-bottom:8px">Rate Our App</div>'
+    + '<div style="font-size:14px;color:var(--sub);line-height:1.55;margin-bottom:22px">Enjoying the app? Your rating helps us improve and reach more users.</div>'
+    + '<button onclick="H.openAppRating()" style="width:100%;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px">Rate Now</button>'
+    + '<button onclick="H._dismissRating()" style="width:100%;padding:11px;background:transparent;color:var(--sub);border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Later</button>'
+    + '</div>';
+  ov.addEventListener('click', function(e){ if (e.target === ov) H._dismissRating(); });
+  document.body.appendChild(ov);
+};
+
+H._dismissRating = function() {
+  var ov = document.getElementById('rateAppModal'); if (ov) ov.remove();
+  try { window.localStorage.setItem('pm_rate_snooze', String(Date.now())); } catch(e) {}
+};
+
+H.openAppRating = function() {
+  try { window.localStorage.setItem('pm_rate_done', '1'); } catch(e) {}
+  var ov = document.getElementById('rateAppModal'); if (ov) ov.remove();
+  var url = 'https://play.google.com/store/apps/details?id=com.pamarket.app';
+  try {
+    var native = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    // On Android the https Play link opens the Play Store app straight on the
+    // listing (where the rating stars are). '_system' routes it out of the WebView.
+    window.open(url, native ? '_system' : '_blank');
+  } catch(e) { try { window.open(url, '_blank'); } catch(e2){} }
 };
 
 // ── Web Push subscription ─────────────────────────────────
@@ -1834,11 +2466,28 @@ H._handleDeepLink = function(route) {
         console.warn('FCM registration error:', err && err.error);
       });
 
-      // User tapped a notification — route to the deep link if present
+      // Android 8+ only shows pushes on a registered channel. Create the one
+      // the server targets (channel_id: 'pamarket_default') so message
+      // notifications reliably appear on the lock screen / tray.
+      if (typeof PN.createChannel === 'function') {
+        PN.createChannel({
+          id: 'pamarket_default',
+          name: 'Messages & Alerts',
+          description: 'New messages and account activity',
+          importance: 5,   // HIGH — heads-up banner + sound
+          visibility: 1,   // show on lock screen
+          sound: 'default',
+          vibration: true,
+          lights: true
+        }).catch(function(){ /* best-effort */ });
+      }
+
+      // User tapped a notification — open broadcasts straight to their detail
+      // (full message + image) from the payload, else follow the deep link, else
+      // open the Notifications list. Wrapped so a cold start waits until ready.
       PN.addListener('pushNotificationActionPerformed', function(action) {
-        var data = action && action.notification && action.notification.data;
-        var link = data && (data.deepLink || data.deep_link);
-        if (link) H._handleDeepLink(link);
+        var data = (action && action.notification && action.notification.data) || {};
+        H._routeNotifTapWhenReady(data);
       });
     }
 
@@ -1883,10 +2532,74 @@ H._handleDeepLink = function(route) {
     }
   };
 
+  // Current notification permission: 'granted' | 'denied' | 'prompt' | 'unsupported'
+  H.notifStatus = async function() {
+    try {
+      if (_isNative()) {
+        var PN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications;
+        if (!PN) return 'unsupported';
+        var p = await PN.checkPermissions();
+        var r = p && p.receive;
+        return (r === 'prompt-with-rationale') ? 'prompt' : (r || 'prompt');
+      }
+      if (!('Notification' in window)) return 'unsupported';
+      return Notification.permission === 'default' ? 'prompt' : Notification.permission;
+    } catch (e) { return 'unsupported'; }
+  };
+
+  // Ask the user to enable notifications (from the in-app banner / button).
+  H.promptEnableNotifications = async function() {
+    var status = await H.notifStatus();
+    if (status === 'granted') { H.toast('Notifications are already on'); H._refreshNotifBanner(); return; }
+    if (status === 'unsupported') { H.toast('Notifications are not supported on this device'); return; }
+    if (status === 'denied') {
+      // Permanently blocked — the OS won't show the prompt again; guide to settings.
+      if (typeof H.modal === 'function') {
+        H.modal({
+          title: 'Turn on notifications',
+          body: '<div style="font-size:13.5px;color:var(--sub);line-height:1.7">Notifications are turned off for PaMarket. To get message alerts:<br><br><b style="color:var(--text)">Phone Settings → Apps → PaMarket → Notifications → Allow</b></div>',
+          confirmText: 'Got it', cancelText: null
+        });
+      } else {
+        H.toast('Enable notifications in Settings → Apps → PaMarket', 4000);
+      }
+      return;
+    }
+    // 'prompt' → trigger the system permission request + token registration
+    await H.setupPush();
+    var after = await H.notifStatus();
+    if (after === 'granted') H.toast('Notifications enabled');
+    H._refreshNotifBanner();
+  };
+
+  // Fill #notifEnableBanner with a nudge card when notifications aren't on.
+  H.maybeShowNotifBanner = async function() {
+    var el = document.getElementById('notifEnableBanner');
+    if (!el) return;
+    if (H._notifBannerDismissed) { el.innerHTML = ''; return; }
+    if (!H.currentUser()) { el.innerHTML = ''; return; }
+    var status = await H.notifStatus();
+    if (status === 'granted' || status === 'unsupported') { el.innerHTML = ''; return; }
+    el.innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px;background:var(--blue-light);border:1px solid rgba(26,58,143,.18);border-radius:14px;padding:13px 14px;margin:12px 14px">'
+      + '<div style="width:38px;height:38px;border-radius:11px;background:rgba(26,58,143,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+      + '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#1A3A8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--text)">Turn on notifications</div>'
+      + '<div style="font-size:12px;color:var(--sub);line-height:1.4;margin-top:1px">Get alerted the moment someone messages you.</div></div>'
+      + '<button onclick="H.promptEnableNotifications()" style="flex-shrink:0;background:#1A3A8F;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">Enable</button>'
+      + '<button onclick="H._dismissNotifBanner()" aria-label="Dismiss" style="flex-shrink:0;background:none;border:none;color:var(--sub);cursor:pointer;padding:4px;display:flex"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      + '</div>';
+  };
+  H._dismissNotifBanner = function() { H._notifBannerDismissed = true; var el = document.getElementById('notifEnableBanner'); if (el) el.innerHTML = ''; };
+  H._refreshNotifBanner = function() { try { H.maybeShowNotifBanner(); } catch (e) {} };
+
   // Handle deeplink sent from the service worker when user taps a notification
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', function(event) {
-      if (event.data && event.data.type === 'deeplink' && event.data.route) {
+      if (!event.data) return;
+      if (event.data.type === 'notif-tap') {
+        H._routeNotifTapWhenReady(event.data.data || {});
+      } else if (event.data.type === 'deeplink' && event.data.route) {
         H._handleDeepLink(event.data.route);
       }
     });
@@ -1949,11 +2662,49 @@ H.init();
 (function(H) {
   let authBusy = false;
 
-  // Rate limiting — max 5 failed attempts then 30s lockout
-  var _failCount  = 0;
-  var _lockUntil  = 0;
-
+  // Rate limiting — escalating lockout, persisted across reloads so it can't be
+  // bypassed by refreshing the page. (Server-side Supabase rate limits are the
+  // real backstop; this is defense-in-depth + instant user feedback.)
   function sb() { return (window.supabase && window.supabase.auth) ? window.supabase : null; }
+
+  // ── Cloudflare Turnstile CAPTCHA ───────────────────────────
+  // Paste your Turnstile SITE key here (the public one). Leave '' to disable
+  // CAPTCHA entirely (logins work as before). When set, you MUST also enable
+  // CAPTCHA in Supabase → Authentication → Attack Protection and paste the
+  // matching SECRET key there.
+  H.TURNSTILE_SITE_KEY = '';
+
+  // Resolve a fresh CAPTCHA token, or null if CAPTCHA is disabled/unavailable.
+  // Uses an invisible widget rendered on demand; never hangs the login — a
+  // missing widget or timeout resolves null and Supabase decides what to do.
+  H._captcha = function() {
+    return new Promise(function(resolve) {
+      var key = H.TURNSTILE_SITE_KEY;
+      if (!key || !window.turnstile) { resolve(null); return; }
+      var holder = document.getElementById('cfTurnstileHolder');
+      if (!holder) {
+        holder = document.createElement('div');
+        holder.id = 'cfTurnstileHolder';
+        holder.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden';
+        document.body.appendChild(holder);
+      }
+      var settled = false;
+      var done = function(v){ if (settled) return; settled = true; resolve(v); };
+      // Safety net: never block the user more than 12s on the CAPTCHA.
+      var timer = setTimeout(function(){ done(null); }, 12000);
+      try {
+        holder.innerHTML = '';
+        var wid = window.turnstile.render(holder, {
+          sitekey: key,
+          size: 'invisible',
+          callback: function(token){ clearTimeout(timer); done(token); },
+          'error-callback':   function(){ clearTimeout(timer); done(null); },
+          'timeout-callback': function(){ clearTimeout(timer); done(null); }
+        });
+        if (window.turnstile.execute) window.turnstile.execute(wid);
+      } catch(e) { clearTimeout(timer); done(null); }
+    });
+  };
 
   function setAuthBusy(v) {
     authBusy = v;
@@ -1961,27 +2712,41 @@ H.init();
     if (r) r.querySelectorAll('button').forEach(function(b){ b.disabled = v; });
   }
 
+  var _LOCK_KEY = 'pamarket_auth_lock';
+  function _loadLock() {
+    try { return JSON.parse(localStorage.getItem(_LOCK_KEY)) || { fails:0, until:0 }; }
+    catch(e) { return { fails:0, until:0 }; }
+  }
+  function _saveLock(v) { try { localStorage.setItem(_LOCK_KEY, JSON.stringify(v)); } catch(e) {} }
+
   function isLocked() {
-    if (Date.now() < _lockUntil) {
-      var secs = Math.ceil((_lockUntil - Date.now()) / 1000);
-      H.toast('Too many attempts. Try again in ' + secs + 's');
+    var L = _loadLock();
+    if (Date.now() < L.until) {
+      var secs = Math.ceil((L.until - Date.now()) / 1000);
+      H.toast('Too many attempts. Try again in ' + secs + 's', 4000, true);
       return true;
     }
     return false;
   }
 
   function recordFailure() {
-    _failCount++;
-    if (_failCount >= 5) {
-      _lockUntil  = Date.now() + 30000;
-      _failCount  = 0;
-      H.toast('Too many failed attempts. Locked for 30 seconds.');
+    var L = _loadLock();
+    L.fails = (L.fails || 0) + 1;
+    // Escalate: 5→30s, 10→2m, 15→10m, 20+→30m
+    if (L.fails >= 20)      L.until = Date.now() + 30 * 60000;
+    else if (L.fails >= 15) L.until = Date.now() + 10 * 60000;
+    else if (L.fails >= 10) L.until = Date.now() + 2  * 60000;
+    else if (L.fails >= 5)  L.until = Date.now() + 30000;
+    if (L.fails >= 5) {
+      var mins = Math.round((L.until - Date.now()) / 60000);
+      var secs = Math.round((L.until - Date.now()) / 1000);
+      H.toast('Too many failed attempts. Locked for ' + (secs < 90 ? secs + ' seconds' : mins + ' minutes') + '.', 5000, true);
     }
+    _saveLock(L);
   }
 
   function recordSuccess() {
-    _failCount = 0;
-    _lockUntil = 0;
+    _saveLock({ fails:0, until:0 });
   }
 
   function validateEmail(e) {
@@ -2154,7 +2919,8 @@ H.init();
     H._otpResendTimes.push(now);
     var c = sb();
     if (!c) { H.toast('Connection error', 4000, true); return; }
-    var res = await c.auth.resend({ type: 'signup', email: H._otpEmail });
+    var capTok = await H._captcha();
+    var res = await c.auth.resend({ type: 'signup', email: H._otpEmail, options: capTok ? {captchaToken: capTok} : {} });
     H.toast(res.error ? res.error.message : 'Code resent — check your inbox');
   };
 
@@ -2172,17 +2938,31 @@ H.init();
   H.authSendReset = async function() {
     var email = ((document.getElementById('resetEmail')||{}).value||'').trim();
     if (!validateEmail(email)) { H.toast('Enter a valid email address'); return; }
+    // Throttle reset requests: max 3 per 10 minutes, and 60s between sends, to
+    // stop someone spamming a victim's inbox with reset emails.
+    var now = Date.now();
+    H._resetTimes = (H._resetTimes || []).filter(function(t){ return now - t < 10 * 60 * 1000; });
+    if (H._resetTimes.length && now - H._resetTimes[H._resetTimes.length - 1] < 60000) {
+      var waitS = Math.ceil((60000 - (now - H._resetTimes[H._resetTimes.length - 1])) / 1000);
+      H.toast('Please wait ' + waitS + 's before requesting another reset', 4000, true); return;
+    }
+    if (H._resetTimes.length >= 3) {
+      var waitM = Math.ceil((10 * 60 * 1000 - (now - H._resetTimes[0])) / 60000);
+      H.toast('Too many reset requests — try again in ' + waitM + ' min', 4000, true); return;
+    }
+    H._resetTimes.push(now);
     var c = sb();
     if (!c) { H.toast('Connection error — try again'); return; }
     setAuthBusy(true);
-    var res = await c.auth.resetPasswordForEmail(email);
+    var capTok = await H._captcha();
+    var res = await c.auth.resetPasswordForEmail(email, capTok ? {captchaToken: capTok} : {});
     setAuthBusy(false);
     if (res.error) { H.toast(res.error.message); return; }
     var card = document.getElementById('authCard');
     if (!card) return;
     card.innerHTML = ''
       + '<div style="text-align:center;padding:24px 0">'
-      + '<div style="font-size:42px;margin-bottom:12px">✉️</div>'
+      + '<div style="margin-bottom:14px;color:#1A3A8F"><svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></div>'
       + '<div style="font-size:18px;font-weight:700;color:var(--text)">Check Your Email</div>'
       + '<div style="font-size:14px;color:var(--sub);margin-top:10px;line-height:1.6">A reset link was sent to<br><strong style="color:var(--text)">' + H.escHtml(email) + '</strong><br><br>Click the link in the email to set a new password. Check your spam folder if you don\'t see it.</div>'
       + '</div>'
@@ -2199,7 +2979,8 @@ H.init();
     setAuthBusy(true);
     var c = sb();
     if (c) {
-      var res = await c.auth.signInWithPassword({email:email, password:password});
+      var capTok = await H._captcha();
+      var res = await c.auth.signInWithPassword({email:email, password:password, options: capTok ? {captchaToken: capTok} : {}});
       if (res.error) {
         var msg = res.error.message;
         if (msg==='Invalid login credentials') msg = 'Wrong email or password';
@@ -2267,13 +3048,21 @@ H.init();
     setAuthBusy(true);
     var c = sb();
     if (c) {
-      var res = await c.auth.signUp({email:email, password:password, options:{data:{full_name:name}}});
+      var capTok = await H._captcha();
+      var res = await c.auth.signUp({email:email, password:password, options: Object.assign({data:{full_name:name}}, capTok ? {captchaToken: capTok} : {})});
       if (res.error) {
         var msg = res.error.message;
         if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('unique constraint')) {
           msg = 'Email already registered. Sign in instead.';
         }
         H.toast(msg); setAuthBusy(false); return;
+      }
+      // When "Confirm email" is enabled, Supabase does NOT error on a duplicate
+      // email (to avoid leaking who's registered) — instead it returns a user
+      // with an empty identities array. Treat that as already-registered so a
+      // second signup can't silently shadow an existing account.
+      if (res.data && res.data.user && Array.isArray(res.data.user.identities) && res.data.user.identities.length === 0) {
+        H.toast('Email already registered. Sign in instead.'); setAuthBusy(false); return;
       }
       var userId = res.data.user.id;
       await c.from('profiles').upsert({id:userId, name:name, phone:phone||null, verified:false});
@@ -2322,7 +3111,8 @@ H.init();
     var c = sb();
     if (!c) { H.toast('Connection error - refresh page'); return; }
     H.toast('Signing in...');
-    var res = await c.auth.signInWithPassword({email:email, password:pass});
+    var capTok = await H._captcha();
+    var res = await c.auth.signInWithPassword({email:email, password:pass, options: capTok ? {captchaToken: capTok} : {}});
     if (res.error) { recordFailure(); H.toast('Invalid credentials'); return; }
     H.state.currentUserId = res.data.user.id;
     await H.loadProfile(res.data.user.id);
@@ -2353,10 +3143,15 @@ H.init();
     var profile = res.data;
     var u = (H.state.users||[]).find(function(x){return x.id===userId;});
     if (!u) {
-      u = {id:userId,email:'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
+      u = {id:userId,email:profile.email||'',name:profile.name||'User',phone:profile.phone||'',avatar:profile.avatar||null,verified:profile.verified||false,verificationPending:!!profile.verification_pending,verification_pending:!!profile.verification_pending,language:profile.language||'English',joinedAt:new Date(profile.created_at||Date.now()).getTime(),role:profile.role||'user',status:'active',banReason:null,banUntil:null,blocked:[]};
       (H.state.users = H.state.users || []).push(u);
     } else {
       u.name=profile.name||u.name; u.phone=profile.phone||u.phone; u.avatar=profile.avatar||u.avatar; u.verified=profile.verified||false; u.role=profile.role||u.role||'user';
+      if (profile.email) u.email = profile.email;
+      // Keep verification status in sync so an admin approval/rejection reflects in the app
+      u.verificationPending = !!profile.verification_pending; u.verification_pending = !!profile.verification_pending;
+      if (profile.company_verified != null) { u.companyVerified = profile.company_verified; u.company_verified = profile.company_verified; }
+      if (profile.company_verification_pending != null) { u.companyVerificationPending = profile.company_verification_pending; u.company_verification_pending = profile.company_verification_pending; }
       // Merge job profile fields from Supabase if they exist (after migrations are run)
       if (profile.job_title    != null) u.jobTitle       = profile.job_title;
       if (profile.job_types    != null) u.jobTypes        = profile.job_types;
@@ -2417,79 +3212,93 @@ H.init();
     const meta   = user.user_metadata || {};
     const name   = meta.full_name || meta.name || user.email || 'User';
     const avatar = meta.avatar_url || meta.picture || null;
+    const email  = user.email || '';
     try {
       const { data: existing } = await c.from('profiles').select('id').eq('id', userId).single();
-      if (!existing) { await c.from('profiles').upsert({ id: userId, name: name, avatar: avatar }); }
+      if (!existing) { await c.from('profiles').upsert({ id: userId, name: name, avatar: avatar, email: email || null }); }
+      else if (email) { c.from('profiles').update({ email: email }).eq('id', userId).then(function(){}, function(){}); }
     } catch(pe) {}
     try { await H.loadProfile(userId); } catch(pe) {}
+    // Ensure the login email is on the local user (Google sign-ins).
+    try { const _u = (H.state.users||[]).find(function(x){return x.id===userId;}); if (_u && email && !_u.email) _u.email = email; } catch(pe) {}
     H.state.currentUserId = userId;
     H.saveState();
     if (H.closeLoginModal) H.closeLoginModal();
     H.boot();
   }
 
-  async function _oauthInCap(c, provider) {
-    // Native Google account picker via @capgo/capacitor-social-login (Capacitor 8)
-    if (provider === 'google') {
-      const SocialLogin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SocialLogin;
-      if (SocialLogin) {
-        try {
-          await SocialLogin.initialize({
-            google: { webClientId: '422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com' }
-          });
-          const res = await SocialLogin.login({ provider: 'google', options: {} });
-          const idToken = res && res.result && res.result.idToken;
-          if (!idToken) { H.toast('Sign-in failed — no token received'); return; }
-          const { data, error } = await c.auth.signInWithIdToken({ provider: 'google', token: idToken });
-          if (error) { H.toast(error.message || 'Sign-in failed'); return; }
-          if (data && data.session) { await _finishOAuthLogin(c, data.session); }
-          return;
-        } catch(e) {
-          var errMsg = (e && e.message) ? e.message : '';
-          var lower  = errMsg.toLowerCase();
-          if (lower.includes('cancel') || lower.includes('closed') || lower.includes('dismiss')) return;
-          H.toast('Google sign-in failed: ' + (errMsg || 'Please try again'));
-          return;
-        }
-      }
-    }
+  // Canonical nonce helpers for native Google sign-in with Supabase:
+  // a random raw nonce is hashed (SHA-256) and given to Google; Supabase is given
+  // the raw nonce and re-hashes it to match the token's nonce claim.
+  function _randNonce() {
+    var a = new Uint8Array(16);
+    (window.crypto || {}).getRandomValues && window.crypto.getRandomValues(a);
+    return Array.prototype.map.call(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+  }
+  async function _sha256Hex(str) {
+    var buf = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+  }
 
-    // Fallback: Chrome Custom Tab OAuth — used for Apple or if SocialLogin plugin unavailable
+  async function _oauthInCap(c, provider) {
+    // Reliable mobile OAuth: open the provider's sign-in in an in-app browser tab,
+    // then return to the app via the com.pamarket.app://login-callback deep link.
+    // Uses the provider configured in the Supabase dashboard — no native SDK or
+    // SHA-1 dependency, so it can't hang the way the native token flow did.
     const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
     const App     = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
 
     if (Browser && App) {
+      // Force Google to show its account picker every time, so a user who signed
+      // out can choose a different account instead of being put straight back into
+      // the one they last used.
+      const _capOpts = { redirectTo: 'com.pamarket.app://login-callback', skipBrowserRedirect: true };
+      if (provider === 'google') _capOpts.queryParams = { prompt: 'select_account', access_type: 'offline' };
       const { data, error } = await c.auth.signInWithOAuth({
         provider: provider,
-        options: { redirectTo: 'com.pamarket.app://login-callback', skipBrowserRedirect: true }
+        options: _capOpts
       });
-      if (error) { H.toast(error.message || 'Sign-in failed'); return; }
-      if (!data || !data.url) { H.toast('Could not start sign-in'); return; }
+      if (error) { H.toast(error.message || 'Sign-in failed', 6000, true); return; }
+      if (!data || !data.url) { H.toast('Could not start sign-in', 5000, true); return; }
+
       let urlListener;
-      urlListener = await App.addListener('appUrlOpen', async function(event) {
-        try { await urlListener.remove(); } catch(e) {}
-        try { if (Browser.close) await Browser.close(); } catch(e) {}
-        if (!event.url || !event.url.includes('login-callback')) return;
+      const onUrl = async function (event) {
+        if (!event || !event.url || event.url.indexOf('login-callback') === -1) return;
+        try { await urlListener.remove(); } catch (e) {}
+        try { if (Browser.close) await Browser.close(); } catch (e) {}
         try {
-          const code = new URL(event.url).searchParams.get('code');
+          const url = new URL(event.url);
+          const errDesc = url.searchParams.get('error_description') || url.searchParams.get('error');
+          if (errDesc) { H.toast('Google: ' + errDesc, 7000, true); return; }
+          const code = url.searchParams.get('code');
+          const finish = async (session) => {
+            try { await _finishOAuthLogin(c, session); }
+            catch (fe) { H.toast('Signed in, but loading profile failed: ' + ((fe && fe.message) || ''), 6000, true); try { window.location.reload(); } catch (e2) {} }
+          };
           if (code) {
-            const { error: ex } = await c.auth.exchangeCodeForSession(code);
-            if (!ex) { window.location.reload(); return; }
+            const { data: exData, error: ex } = await c.auth.exchangeCodeForSession(code);
+            if (ex) { H.toast('Google: ' + ex.message, 7000, true); return; }
+            if (exData && exData.session) { await finish(exData.session); return; }
           }
+          // No code (or implicit flow): fall back to whatever session is now stored.
           const { data: sd } = await c.auth.getSession();
-          if (sd && sd.session) { window.location.reload(); return; }
-          H.toast('Sign-in failed. Please try again.');
-        } catch(e) { H.toast('Sign-in failed. Please try again.'); }
-      });
+          if (sd && sd.session) { await finish(sd.session); return; }
+          H.toast('Sign-in did not complete. Please try again.', 5000, true);
+        } catch (e) { H.toast('Sign-in error: ' + (e.message || ''), 6000, true); }
+      };
+      urlListener = await App.addListener('appUrlOpen', onUrl);
       await Browser.open({ url: data.url });
-    } else {
-      // Plugins not yet synced — standard OAuth (opens Chrome, user signs in there)
-      const { error } = await c.auth.signInWithOAuth({
-        provider: provider,
-        options: { redirectTo: window.location.origin + window.location.pathname }
-      });
-      if (error) H.toast(error.message || 'Sign-in failed');
+      return;
     }
+
+    // Last resort if the Browser/App plugins are unavailable: standard web OAuth.
+    const _webOpts = { redirectTo: window.location.origin + window.location.pathname };
+    if (provider === 'google') _webOpts.queryParams = { prompt: 'select_account' };
+    const { error } = await c.auth.signInWithOAuth({
+      provider: provider,
+      options: _webOpts
+    });
+    if (error) H.toast(error.message || 'Sign-in failed', 6000, true);
   }
 
   H.authGoogle = async function() {
@@ -2499,7 +3308,10 @@ H.init();
     if (inCap) { await _oauthInCap(c, 'google'); return; }
     const { error } = await c.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + window.location.pathname }
+      options: {
+        redirectTo: window.location.origin + window.location.pathname,
+        queryParams: { prompt: 'select_account' }
+      }
     });
     if (error) H.toast(error.message || 'Google sign-in failed');
   };
@@ -2707,7 +3519,7 @@ H.init();
     const filtered       = filterListings(activeListings);
 
     const catSections = CATEGORIES.map(c => ({
-      ...c, items: filtered.filter(l => l.cat === c.id).slice(0, 4)
+      ...c, items: filtered.filter(l => l.cat === c.id).slice(0, 8)
     })).filter(s => s.items.length > 0);
 
     return `<div class="page active" style="background:var(--bg)">
@@ -2715,7 +3527,7 @@ H.init();
       <!-- HEADER -->
       <div style="background:#1A3A8F;padding-bottom:16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(26,58,143,0.3)">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0">
-          <div onclick="H.logoTap()" style="cursor:pointer">
+          <div onclick="H.logoTap&&H.logoTap()" style="cursor:pointer">
             <span style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-1px;font-family:Inter,sans-serif">Pa<em style="font-style:normal;color:#F5A623">Market</em></span>
           </div>
           <div style="display:flex;gap:6px">
@@ -2763,6 +3575,8 @@ H.init();
 
       <div style="padding-bottom:88px">
 
+        <div id="notifEnableBanner"></div>
+
         <!-- CATEGORIES GRID -->
         <div style="background:var(--card);padding:18px 16px 20px;margin-bottom:8px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -2773,7 +3587,7 @@ H.init();
             ${CATEGORIES.map(c => {
               const color = CAT_COLORS[c.id] || '#546E7A';
               return `<div onclick="H.filterByCat('${c.id}')" style="display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer">
-                <div style="width:56px;height:56px;border-radius:16px;background:${color}18;display:flex;align-items:center;justify-content:center;font-size:26px;border:1.5px solid ${color}22;transition:transform 0.15s"
+                <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,${color}22,${color}0f);color:${color};display:flex;align-items:center;justify-content:center;border:1.5px solid ${color}22;box-shadow:0 4px 10px -4px ${color}55;transition:transform 0.15s"
                   onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">${c.icon}</div>
                 <span style="font-size:11px;font-weight:600;color:var(--text);text-align:center;line-height:1.2">${c.name}</span>
               </div>`;
@@ -2781,63 +3595,65 @@ H.init();
           </div>
         </div>
 
-        <!-- BANNER -->
-        <div style="margin:0 12px 8px;background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:18px;padding:20px;display:flex;align-items:center;justify-content:space-between;overflow:hidden;position:relative">
-          <div style="position:absolute;right:-24px;top:-24px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.07)"></div>
-          <div style="position:absolute;right:50px;bottom:-35px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,0.05)"></div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Zimbabwe's Free Marketplace</div>
-            <div style="font-size:21px;font-weight:900;color:#fff;line-height:1.1;margin-bottom:4px">Buy. Sell. Hire.</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.7)">Real people. Real deals.</div>
-          </div>
-          <div style="text-align:center;flex-shrink:0;margin-left:16px">
-            <div style="font-size:30px;font-weight:900;color:#F5A623;line-height:1">${activeListings.length}</div>
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.75);text-transform:uppercase;margin-top:3px">Active Ads</div>
-          </div>
-        </div>
-
-        <!-- HOT ON PAMARKET (paid ads horizontal scroll) -->
-        ${(function(){
-          var now = Date.now();
-          var ads = (H.state.paidAds||[]).filter(function(a){ return a.active && a.endsAt > now; });
-          if (!ads.length) return '';
-          ads.forEach(function(a){ if(H.trackAdImpression) H.trackAdImpression(a.id); });
-          return '<div style="padding:20px 0 0">'
-            + '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">'
-            + '<div>'
-            + '<div style="font-size:10px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Sponsored</div>'
-            + '<span style="font-size:17px;font-weight:800;color:var(--text)">Hot on PaMarket</span>'
-            + '</div>'
-            + '</div>'
-            + '<div style="display:flex;gap:12px;padding:0 16px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">'
-            + ads.map(function(a){
-                var clickFn = 'H.trackAdClick(' + JSON.stringify(a.id) + ',' + JSON.stringify(a.linkUrl||'') + ')';
-                var title    = escHtml(a.headline || a.businessName || 'Sponsored');
-                var sub      = escHtml(a.tagline || '');
-                var bg       = escHtml(a.bgColor || '#1A3A8F');
-                var initials = (a.businessName||'AD').split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase();
-                /* Image is positioned absolute over the initials fallback.
-                   If it fails to load, onerror removes it and the initials show through. */
-                return '<div onclick="' + escHtml(clickFn) + '" style="width:170px;flex-shrink:0;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.12);background:var(--card)">'
-                  + '<div style="height:130px;background:' + bg + ';position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center">'
-                  /* initials always rendered as the base layer */
-                  + '<span style="font-size:38px;font-weight:900;color:rgba(255,255,255,0.35);letter-spacing:-1px;position:relative;z-index:1">' + escHtml(initials) + '</span>'
-                  /* image sits on top via absolute — removed on error so initials show */
-                  + (a.imageUrl ? '<img src="' + escHtml(a.imageUrl) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2" loading="lazy" onerror="this.parentNode.removeChild(this)">' : '')
-                  /* AD badge always on top */
-                  + '<span style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);color:#fff;font-size:8px;font-weight:700;padding:2px 7px;border-radius:6px;letter-spacing:.5px;z-index:3">AD</span>'
-                  /* gradient overlay at bottom for text legibility when image is shown */
-                  + (a.imageUrl ? '<div style="position:absolute;bottom:0;left:0;right:0;height:56px;background:linear-gradient(to top,rgba(0,0,0,0.55),transparent);z-index:2"></div>' : '')
-                  + '</div>'
-                  + '<div style="padding:10px 12px 13px">'
-                  + '<div style="font-size:13px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">' + title + '</div>'
-                  + (sub ? '<div style="font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + sub + '</div>' : '')
-                  + '</div>'
+        <!-- LOCAL SHOPS — 3-column grid, logo left + thumbnails right -->
+        ${(() => {
+          const activeShops = (H.state.businesses || []).filter(function(b) { return b.status === 'active'; });
+          if (!activeShops.length) return '';
+          const cards = activeShops.slice(0, 12).map(function(b) {
+            const ini = H.initials ? H.initials(b.name || 'Shop') : (b.name || 'S').charAt(0).toUpperCase();
+            const bProds = (H.state.listings || []).filter(function(l) {
+              return l.status === 'active' && (String(l.sellerId) === String(b.ownerUserId) || String(l.businessId) === String(b.id));
+            });
+            const lCount = bProds.length;
+            const _hCats = b.categories && b.categories.length ? b.categories : (b.category ? [b.category] : []);
+            const catName = _hCats.map(function(id){ return (H.CATEGORIES && H.CATEGORIES.find(function(c){ return c.id === id; }) || {}).name || ''; }).filter(Boolean).join(' / ');
+            const niche = catName || 'Local Shop';
+            const featuredIds = b.featuredListingIds || [];
+            const featuredProds = featuredIds.length
+              ? featuredIds.map(function(id){ return bProds.find(function(l){ return l.id === id; }); }).filter(Boolean)
+              : [];
+            const thumbProds = (featuredProds.length ? featuredProds : bProds.filter(function(l){ return l.photos && l.photos[0]; })).slice(0, 2);
+            const logoHtml = b.logo
+              ? '<img src="' + escHtml(b.logo) + '" style="width:100%;height:100%;object-fit:cover">'
+              : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-6h15L21 9M3 9h18v11a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm6 0v2a3 3 0 006 0V9"/></svg>';
+            var thumbsHtml = '';
+            for (var ti = 0; ti < 2; ti++) {
+              if (thumbProds[ti]) {
+                thumbsHtml += '<div style="flex:1;border-radius:5px;overflow:hidden;background:#EEF2FB">'
+                  + '<img src="' + escHtml(thumbProds[ti].photos[0]) + '" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
                   + '</div>';
-              }).join('')
+              } else {
+                thumbsHtml += '<div style="flex:1;border-radius:5px;background:#EEF2FB"></div>';
+              }
+            }
+            return '<div onclick="H.openBusinessShop && H.openBusinessShop(\'' + escHtml(String(b.id)) + '\')" '
+              + 'style="flex:0 0 150px;width:150px;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:8px;cursor:pointer">'
+              + '<div style="display:flex;gap:4px;height:62px;margin-bottom:7px">'
+              + '<div style="width:56px;height:62px;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2245b8);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+              + logoHtml
+              + '</div>'
+              + '<div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0;overflow:hidden">'
+              + thumbsHtml
+              + '</div>'
+              + '</div>'
+              + '<div style="font-size:11px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">' + escHtml(b.name) + '</div>'
+              + '<div style="font-size:10px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(niche) + ' (' + lCount + (lCount === 1 ? ' item' : ' items') + ')</div>'
+              + '</div>';
+          }).join('');
+          return '<div style="background:var(--card,#fff);padding:18px 0 20px;margin-bottom:8px">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">'
+            + '<span style="font-size:15px;font-weight:800;color:var(--text)">Local Shops</span>'
+            + '<span onclick="H._bizSearch&&H._bizSearch.open()" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>'
             + '</div>'
-            + '</div>';
+            + '<div style="display:flex;gap:10px;overflow-x:auto;padding:0 16px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">'
+            + cards
+            + '</div></div>';
         })()}
+
+        <!-- SPONSORED ADS — paid/sponsored advertising slot (replaces the old marketing banner) -->
+        <div style="padding:0 0 4px">
+          ${(H.adCarousel && H.activeAds) ? H.adCarousel(H.activeAds(), { title: 'Sponsored' }) : ''}
+        </div>
 
         <!-- POST AD BUTTON -->
         <div style="padding:12px 12px 0">
@@ -2865,8 +3681,8 @@ H.init();
                 </div>
                 <span onclick="H.filterByCat('${s.id}')" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px">
-                ${s.items.map(l => renderHCard(l)).join('')}
+              <div style="display:flex;gap:10px;padding:0 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">
+                ${s.items.map(l => `<div style="flex:0 0 156px;min-width:156px">${renderHCard(l)}</div>`).join('')}
               </div>
             </div>
           `).join('') : `<div style="padding:32px 16px">${H.emptyState('No listings yet', 'Be the first to post in your area!', 'Post your first ad', "H.navTo('Post',null)")}</div>`}
@@ -2899,13 +3715,25 @@ H.init();
   };
 
   H.pages.Home_after = function () {
-    if (typeof H.fetchListingsFromSupabase !== 'function') return;
-    const countBefore = (H.state.listings || []).filter(l => l.status === 'active').length;
-    H.fetchListingsFromSupabase().then(() => {
+    if (H._initAdCarousels) H._initAdCarousels();
+    if (typeof H.maybeShowNotifBanner === 'function') H.maybeShowNotifBanner();
+    if (typeof H.maybeShowRatingPrompt === 'function') H.maybeShowRatingPrompt();
+    // Always pull fresh listings + shops when Home renders. This guarantees the
+    // grid fills even if the one-time boot fetch was slow or failed (cold start /
+    // flaky mobile). Background polling on top is handled by H.RM.
+    if (H.RM && H.RM._inBgRender) return; // skip during a background re-render
+    const _fetches = [];
+    if (typeof H.fetchListingsFromSupabase === 'function') _fetches.push(H.fetchListingsFromSupabase().catch(function(){}));
+    if (typeof H.fetchAllActiveBusinesses === 'function') _fetches.push(H.fetchAllActiveBusinesses().catch(function(){}));
+    if (!_fetches.length) return;
+    const _sigBefore = (H.state.listings || []).filter(l => l.status === 'active').length
+      + '|' + (H.state.businesses || []).filter(b => b.status === 'active').length;
+    Promise.all(_fetches).then(function () {
       if (H.currentPageName !== 'Home') return;
-      const countAfter = (H.state.listings || []).filter(l => l.status === 'active').length;
-      if (countAfter > countBefore) H.toast('New listings loaded — pull down to refresh');
-    }).catch(() => {});
+      const _sigAfter = (H.state.listings || []).filter(l => l.status === 'active').length
+        + '|' + (H.state.businesses || []).filter(b => b.status === 'active').length;
+      if (_sigAfter !== _sigBefore) H.renderPage('Home');
+    });
   };
 
   H.toggleCityPicker = function () {
@@ -2954,12 +3782,56 @@ H.init();
     condition: 'all',
     sortBy: 'recent',
     currency: 'all',
+    location: 'all',
     lastSearch: ''
   };
 
   function renderListingsWithSponsored(filteredList) {
     if (!filteredList.length) return '';
     return filteredList.map(renderListCard).join('');
+  }
+
+  // Apply every Browse control — price range, condition, currency, verified-only and the
+  // sort dropdown — on top of the shared text-relevance engine. The global filterListings
+  // only reads H.state, which the Browse page never sets, so we drive the filters here.
+  function applyBrowseFilters(list, q) {
+    const pMinEl = document.getElementById('priceMin');
+    const pMaxEl = document.getElementById('priceMax');
+    const pMin = (pMinEl && pMinEl.value !== '') ? (parseFloat(pMinEl.value) || 0) : 0;
+    const pMax = (pMaxEl && pMaxEl.value !== '') ? (parseFloat(pMaxEl.value) || Infinity) : Infinity;
+    const condEl = document.querySelector('input[name="condition"]:checked');
+    const cond = condEl ? condEl.value : 'all';
+    const verifiedOnly = !!((document.getElementById('verifiedOnly') || {}).checked);
+    const cur = browseState.currency || 'all';
+    const locEl = document.getElementById('locationFilter');
+    const loc = locEl ? locEl.value : (browseState.location || 'all');
+
+    const pool = (list || []).filter(function (l) {
+      // Compare in canonical USD so the price range works for any listing
+      // (including legacy ones still stored in ZiG).
+      const price = (typeof H.toUSD === 'function') ? H.toUSD(l.price, l.currency) : (l.price || 0);
+      if (price < pMin || price > pMax) return false;
+      if (cond !== 'all' && (l.condition || '') !== cond) return false;
+      if (cur !== 'all' && (l.currency || 'USD') !== cur) return false;
+      if (loc && loc !== 'all' && (l.city || l.prov || '') !== loc) return false;
+      if (verifiedOnly) {
+        const seller = (state.users || []).find(function (x) { return x.id === l.sellerId; });
+        if (!(seller && seller.verified)) return false;
+      }
+      return true;
+    });
+
+    // Multi-word AND matching + relevance ranking
+    const matched = filterListings(pool, q);
+
+    // Honour the sort dropdown. 'recent' keeps relevance/newest order from filterListings.
+    const sortBy = browseState.sortBy || 'recent';
+    const _usd = function (l) { return (typeof H.toUSD === 'function') ? H.toUSD(l.price, l.currency) : (l.price || 0); };
+    if (sortBy === 'price_asc')       matched.sort(function (a, b) { return _usd(a) - _usd(b); });
+    else if (sortBy === 'price_desc') matched.sort(function (a, b) { return _usd(b) - _usd(a); });
+    else if (sortBy === 'oldest')     matched.sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
+    else if (sortBy === 'views')      matched.sort(function (a, b) { return (b.views || 0) - (a.views || 0); });
+    return matched;
   }
 
   pages.Browse = function () {
@@ -2978,8 +3850,15 @@ H.init();
         <div class="search-box">
           <span aria-hidden="true">${S.search}</span>
           <input id="searchIn" placeholder="Search all listings…" oninput="H._browse.onSearch()">
+          <button class="voice-btn" onclick="H._browse.saveSearch()" title="Save this search"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
           <button class="voice-btn" onclick="H._browse.voiceSearch()" title="Voice search">${S.microphone}</button>
         </div>
+      </div>
+
+      <div onclick="H._bizSearch && H._bizSearch.open()" style="margin:14px 16px 4px;display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border-radius:14px;padding:13px 15px;cursor:pointer">
+        <span style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M9 20v-6h6v6"/></svg></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:800">Browse Stores</span><span style="font-size:12px;color:rgba(255,255,255,.85)">Find shops, dealers, pharmacies and more</span></span>
+        <span style="font-size:18px;opacity:.8">›</span>
       </div>
 
       <div class="browse-controls">
@@ -3036,6 +3915,14 @@ H.init();
         </div>
 
         <div class="filter-section">
+          <div class="filter-title">Location</div>
+          <select id="locationFilter" class="sort-sel" style="width:100%" onchange="H._browse.onFilterChange()">
+            <option value="all">All locations</option>
+            ${[...new Set((state.listings || []).filter(l => l.status === 'active').map(l => l.city || l.prov).filter(Boolean))].sort().map(loc => `<option value="${escHtml(loc)}" ${browseState.location === loc ? 'selected' : ''}>${escHtml(loc)}</option>`).join('')}
+          </select>
+        </div>
+
+        <div class="filter-section">
           <div class="filter-title">Condition</div>
           <div class="filter-options">
             <label class="filter-radio"><input type="radio" name="condition" value="all" onchange="H._browse.onFilterChange()" checked><span>Any</span></label>
@@ -3060,7 +3947,7 @@ H.init();
       <div class="sec-head"><div class="sec-title">Results</div></div>
       <div class="listing-list" id="listingList">
         ${activeListings.length
-          ? renderListingsWithSponsored(filterListings(activeListings, ''))
+          ? renderListingsWithSponsored(applyBrowseFilters(activeListings, ''))
           : H.skeletonCards(6)}
       </div>
     </div>`;
@@ -3074,7 +3961,7 @@ H.init();
         const q = document.getElementById('searchIn')?.value || '';
         const active = (state.listings || []).filter(l => l.status === 'active');
         el.innerHTML = active.length
-          ? renderListingsWithSponsored(filterListings(active, q))
+          ? renderListingsWithSponsored(applyBrowseFilters(active, q))
           : H.emptyState('No listings yet', 'Listings will appear here once people start posting', null, null);
       }).catch(() => {
         const el = document.getElementById('listingList');
@@ -3095,7 +3982,7 @@ H.init();
           const q = document.getElementById('searchIn')?.value || '';
           browseState.lastSearch = q;
           const activeListings = (state.listings || []).filter(l => l.status === 'active');
-          const filtered = filterListings(activeListings, q);
+          const filtered = applyBrowseFilters(activeListings, q);
           const el = document.getElementById('listingList');
           if (el) el.innerHTML = filtered.length
             ? renderListingsWithSponsored(filtered)
@@ -3152,7 +4039,28 @@ H.init();
         H.saveState();
         H.renderPage('Browse');
       },
-      onFilterChange: () => {},
+      runSavedSearch: (id) => {
+        const u = H.currentUser(); if (!u) return;
+        const s = ((state.savedSearches || {})[u.id] || []).find(x => x.id === id);
+        if (!s) return;
+        H.navTo('Browse');
+        setTimeout(() => {
+          try {
+            browseState.selectedCategory = s.cat || '';
+            const inp = document.getElementById('searchIn');
+            if (inp) inp.value = s.query || '';
+            if (typeof H._browse.onSearch === 'function') H._browse.onSearch();
+          } catch (e) {}
+        }, 260);
+      },
+      deleteSavedSearch: (id) => {
+        const u = H.currentUser(); if (!u) return;
+        state.savedSearches = state.savedSearches || {};
+        state.savedSearches[u.id] = (state.savedSearches[u.id] || []).filter(s => s.id !== id);
+        H.saveState();
+        H.renderPage('SavedSearches');
+      },
+      onFilterChange: () => { H._browse.onSearch(); },
       onSortChange: () => {
         const sortVal = document.getElementById('sortBy')?.value;
         browseState.sortBy = sortVal;
@@ -3167,9 +4075,10 @@ H.init();
       },
       applyFilters: () => { H._browse.toggleFilters(); H._browse.onSearch(); },
       resetFilters: () => {
-        browseState = { showFilters:false, priceMin:0, priceMax:1000000, selectedCategory:null, condition:'all', sortBy:'recent', currency:'all', lastSearch:'' };
+        browseState = { showFilters:false, priceMin:0, priceMax:1000000, selectedCategory:null, condition:'all', sortBy:'recent', currency:'all', location:'all', lastSearch:'' };
         document.querySelectorAll('.filter-checkbox input, .filter-radio input').forEach(input => { input.checked = false; });
         document.querySelectorAll('input[name="condition"]').forEach(input => { if (input.value === 'all') input.checked = true; });
+        const _loc = document.getElementById('locationFilter'); if (_loc) _loc.value = 'all';
         document.querySelectorAll('.cur-opt').forEach(b => b.classList.remove('active'));
         const defaultCurBtn = document.querySelector('.cur-opt.all') || document.querySelector('[onclick*="\'all\'"]');
         if (defaultCurBtn) defaultCurBtn.classList.add('active');
@@ -3181,6 +4090,59 @@ H.init();
       const inp = document.getElementById('searchIn');
       if (inp) { inp.value = browseState.lastSearch; H._browse.onSearch(); }
     }
+  };
+
+  // Notify the user when newly-synced listings match any of their saved searches.
+  // Called after each listings fetch. First run just sets a baseline (no spam).
+  H._checkSavedSearchAlerts = function () {
+    const u = H.currentUser();
+    if (!u) return;
+    const searches = (state.savedSearches && state.savedSearches[u.id]) || [];
+    if (!searches.length) return;
+    const last = state.savedSearchSeen || 0;
+    const now = Date.now();
+    if (!last) { state.savedSearchSeen = now; H.saveState(); return; }
+    const fresh = (state.listings || []).filter(function (l) {
+      return l && l.status === 'active' && (l.createdAt || 0) > last && l.sellerId !== u.id;
+    });
+    if (fresh.length) {
+      searches.forEach(function (s) {
+        const words = (s.query || '').toLowerCase().split(/\s+/).filter(Boolean);
+        const matches = fresh.filter(function (l) {
+          if (s.cat && l.cat !== s.cat) return false;
+          if (!words.length) return !!s.cat;
+          const hay = ((l.title || '') + ' ' + (l.desc || l.description || '') + ' ' + (l.city || '')).toLowerCase();
+          return words.every(function (w) { return hay.indexOf(w) !== -1; });
+        });
+        if (matches.length && typeof H.pushNotif === 'function') {
+          const term = s.query || s.cat || 'your search';
+          H.pushNotif(u.id, 'New matches', matches.length + ' new listing' + (matches.length === 1 ? '' : 's') + ' for "' + term + '"');
+        }
+      });
+    }
+    state.savedSearchSeen = now;
+    H.saveState();
+  };
+
+  pages.SavedSearches = function () {
+    const u = H.currentUser();
+    if (!u) return '<div class="page active">' + H.innerTopbar('Saved Searches') + H.emptyState('Sign in required', 'Sign in to view your saved searches') + '</div>';
+    const list = (state.savedSearches && state.savedSearches[u.id]) || [];
+    const when = (t) => { try { return H.timeAgo ? H.timeAgo(t) : new Date(t).toLocaleDateString(); } catch (e) { return ''; } };
+    return `<div class="page active">${H.innerTopbar('Saved Searches')}
+      <div style="padding:14px 14px 90px">
+        ${list.length ? list.map(s => `
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px">
+            <div style="width:40px;height:40px;border-radius:11px;background:rgba(26,58,143,.08);color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+            <div style="flex:1;min-width:0;cursor:pointer" onclick="H._browse.runSavedSearch('${s.id}')">
+              <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${H.escHtml(s.query || s.cat || 'All listings')}</div>
+              <div style="font-size:12px;color:var(--sub);margin-top:1px">${s.cat ? H.escHtml(s.cat) + ' · ' : ''}Saved ${when(s.savedAt)}</div>
+            </div>
+            <button onclick="H._browse.runSavedSearch('${s.id}')" style="background:#1A3A8F;color:#fff;border:none;border-radius:9px;padding:8px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">Search</button>
+            <button onclick="H._browse.deleteSavedSearch('${s.id}')" aria-label="Delete saved search" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:6px;flex-shrink:0"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+          </div>`).join('')
+          : H.emptyState('No saved searches yet', 'On the Browse screen, search for something and tap the bookmark to save it here for quick access.', 'Browse Listings', "H.navTo('Browse')")}
+      </div></div>`;
   };
 
 })(window.H);
@@ -3207,16 +4169,19 @@ H.init();
     postState = {
       step: 1, cat: null, title: '', desc: '', price: '',
       currency: 'USD', prov: PROVINCES[0],
-      city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: []
+      city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: [], attrs: {}, variations: [],
+      businessId: H._postBizTarget || null   // set by "Create new business product"
     };
+    H._postBizTarget = null;                  // consume once
     return renderPostShell();
   };
 
   function renderPostShell() {
     return `<div class="page active">
-      <div class="post-header">
-        <div class="post-h">Post a Free Ad</div>
-        <div class="post-sub-txt">Reach buyers across Zimbabwe in minutes</div>
+      <div class="post-header" style="position:relative">
+        <button onclick="H._post.headerBack()" aria-label="Back" style="position:absolute;left:12px;top:12px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.16);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="post-h" style="padding-left:46px">${postState.businessId ? 'Add Business Product' : 'Post a Free Ad'}</div>
+        <div class="post-sub-txt" style="padding-left:46px">${postState.businessId ? 'Publishing to your business store' : 'Reach buyers across Zimbabwe in minutes'}</div>
       </div>
       <div class="steps-bar" id="stepsBar">
         ${[1, 2, 3, 4].map(n => `<div class="sdot ${n < postState.step ? 'done' : n === postState.step ? 'cur' : ''}"></div>`).join('')}
@@ -3225,26 +4190,76 @@ H.init();
     </div>`;
   }
 
+  const TITLE_PH = {
+    property: 'e.g. 3 Bedroom House in Borrowdale',
+    vehicles: 'e.g. 2015 Toyota Hilux D4D',
+    rooms: 'e.g. Single room to rent in Avondale',
+    electronics: 'e.g. iPhone 13 Pro 128GB',
+    furniture: 'e.g. 3-Seater Leather Sofa',
+    fashion: "e.g. Men's Nike Air Max UK 9",
+    services: 'e.g. Professional Plumbing Services',
+    agriculture: 'e.g. 50 Bales of Quality Hay',
+    pets: 'e.g. Boerboel Puppies for Sale',
+    kids: 'e.g. Baby Stroller / Pram',
+    other: 'e.g. What are you selling?'
+  };
+  function titlePlaceholder(cat) { return TITLE_PH[cat] || 'e.g. What are you selling?'; }
+
+  // Optional variants editor (colour / size / stock). Stored on the listing's
+  // attrs so it syncs without a new column and shows on the detail page.
+  function renderVariantRows() {
+    const vs = postState.variations || [];
+    if (!vs.length) return '<div style="font-size:12.5px;color:var(--sub2,#98A2B3);padding:6px 0">No variants added.</div>';
+    return vs.map((v, i) => `<div class="pv-row" style="display:flex;gap:6px;margin-bottom:7px;align-items:center">
+      <input class="fi pv-color" style="flex:1;padding:9px" placeholder="Colour" value="${H.escHtml(v.color || '')}">
+      <input class="fi pv-size" style="flex:1;padding:9px" placeholder="Size" value="${H.escHtml(v.size || '')}">
+      <input class="fi pv-stock" style="width:62px;padding:9px" type="number" min="0" placeholder="Qty" value="${v.stock != null ? v.stock : ''}">
+      <button type="button" onclick="H._post.removeVariation(${i})" aria-label="Remove" style="width:34px;height:34px;flex-shrink:0;border:none;background:#FFF1F0;color:#EF4444;border-radius:8px;cursor:pointer;font-size:17px;font-weight:700">×</button>
+    </div>`).join('');
+  }
+  function renderVariantsSection() {
+    return `<div class="fg" style="margin-top:6px">
+      <div class="fl">Variants &amp; stock <span style="font-weight:400;color:var(--sub);text-transform:none">(optional)</span></div>
+      <div style="font-size:12px;color:var(--sub);margin:-2px 0 8px;line-height:1.45">Add colours, sizes and stock for each option. Leave empty if not needed.</div>
+      <div id="postVariants">${renderVariantRows()}</div>
+      <button type="button" onclick="H._post.addVariation()" style="width:100%;padding:11px;border:1.5px dashed var(--border,#E4E8F0);border-radius:10px;background:var(--card,#fff);color:#1A3A8F;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px">+ Add variation</button>
+    </div>`;
+  }
+
   function renderPostStep() {
     const s = postState;
-    if (s.step === 1) return `
-      <div class="fg">
-        <div class="fl">Category</div>
-        <div class="cat-3">
-          ${CATEGORIES.map(c => `
-            <div class="cat-opt ${s.cat === c.id ? 'sel' : ''}" onclick="H._post.setCat('${c.id}')">
-              <div style="font-size:22px">${c.icon}</div>
-              <div class="cat-opt-label">${c.name}</div>
-            </div>`).join('')}
+    if (s.step === 1) {
+      // Screen 1a — pick a category. Selecting one opens that category's own form.
+      if (!s.cat) {
+        return `
+        <div class="fg">
+          <div class="fl">What are you posting?</div>
+          <div class="cat-3">
+            ${CATEGORIES.map(c => `
+              <div class="cat-opt" onclick="H._post.setCat('${c.id}')">
+                <div style="font-size:22px">${c.icon}</div>
+                <div class="cat-opt-label">${c.name}</div>
+              </div>`).join('')}
+          </div>
+        </div>`;
+      }
+      // Screen 1b — the chosen category's own form (title, description, details).
+      const cat = CATEGORIES.find(c => c.id === s.cat) || { name: 'Listing', icon: '' };
+      return `
+        <div class="post-cat-bar">
+          <div class="post-cat-bar-l"><span class="post-cat-ic">${cat.icon}</span><span>${H.escHtml(cat.name)}</span></div>
+          <button class="post-cat-change" onclick="H._post.changeCat()">Change</button>
         </div>
-      </div>
-      <div class="fg"><div class="fl">Title</div>
-        <input class="fi" id="postTitle" value="${H.escHtml(s.title)}" placeholder="e.g. 3 Bedroom Flat in Avondale" maxlength="80">
-      </div>
-      <div class="fg"><div class="fl">Description</div>
-        <textarea class="fi" rows="4" id="postDesc" placeholder="Describe what you're selling · condition, features, why you're selling..." maxlength="2000">${H.escHtml(s.desc)}</textarea>
-      </div>
-      <div class="step-btns"><button class="btn-next" onclick="H._post.next()">Continue →</button></div>`;
+        <div class="fg"><div class="fl">Title</div>
+          <input class="fi" id="postTitle" value="${H.escHtml(s.title)}" placeholder="${H.escHtml(titlePlaceholder(s.cat))}" maxlength="80">
+        </div>
+        <div class="fg"><div class="fl">Description</div>
+          <textarea class="fi" rows="4" id="postDesc" placeholder="Describe what you're selling · condition, features, why you're selling..." maxlength="2000">${H.escHtml(s.desc)}</textarea>
+        </div>
+        ${H.renderAttrFields ? H.renderAttrFields(s.cat, s.attrs) : ''}
+        ${renderVariantsSection()}
+        <div class="step-btns"><button class="btn-next" onclick="H._post.next()">Continue →</button></div>`;
+    }
 
     if (s.step === 2) return `
       <div class="fg"><div class="fl">Price</div>
@@ -3282,12 +4297,20 @@ H.init();
         <div class="fl">Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--sub2)">(up to 8 · first is the cover)</span></div>
         ${H.state.allowImageUploads === false
           ? `<div style="padding:18px;background:var(--bg2);border-radius:12px;text-align:center;color:var(--sub);font-size:13px;border:1px dashed var(--border)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Photo uploads are currently disabled by the admin.</div>`
-          : `<label class="img-upload-zone" for="photoFile">
-              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <div class="img-upload-title">Tap to add photos</div>
-              <div class="img-upload-sub">JPG, PNG · Max 8 photos · auto-compressed</div>
-            </label>
-            <input type="file" id="photoFile" accept="image/*" multiple capture="environment" style="display:none" onchange="H._post.onPhotos(event)">
+          : `<div style="display:flex;gap:10px;margin-bottom:10px" id="photoActions">
+              <button type="button" onclick="H._post.pick('upload')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;padding:18px 10px;background:var(--card);border:1.5px dashed var(--border-mid);border-radius:14px;color:var(--blue);cursor:pointer;font-size:13px;font-weight:700">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload
+              </button>
+              <button type="button" onclick="H._post.pick('camera')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;padding:18px 10px;background:var(--card);border:1.5px dashed var(--border-mid);border-radius:14px;color:var(--blue);cursor:pointer;font-size:13px;font-weight:700">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Camera
+              </button>
+            </div>
+            <div style="text-align:center;font-size:12px;color:var(--sub);margin-bottom:10px">JPG or PNG · up to 8 photos · auto-compressed</div>
+            <input type="file" id="photoFileUpload" accept="image/*" multiple style="display:none" onchange="H._post.onPhotos(event)">
+            <input type="file" id="photoFileCamera" accept="image/*" capture="environment" style="display:none" onchange="H._post.onPhotos(event)">
+            <div id="photoProgress" style="display:none;text-align:center;font-size:13px;color:var(--blue);font-weight:600;padding:10px 0"></div>
             <div class="photo-grid" id="photoGrid">${renderPhotoGrid()}</div>`
         }
       </div>
@@ -3319,7 +4342,13 @@ H.init();
 
   function renderPhotoGrid() {
     return postState.photos.map((p, i) =>
-      `<div class="photo-thumb"><img src="${p}"><button class="rm" onclick="H._post.removePhoto(${i})">×</button></div>`
+      `<div class="photo-thumb" style="position:relative">
+        <img src="${p}">
+        <button class="rm" onclick="H._post.removePhoto(${i})" aria-label="Remove">x</button>
+        ${i === 0
+          ? '<span style="position:absolute;bottom:4px;left:4px;font-size:9px;font-weight:800;background:#1A3A8F;color:#fff;border-radius:6px;padding:2px 6px;pointer-events:none">Cover</span>'
+          : `<button onclick="H._post.setCover(${i})" style="position:absolute;bottom:4px;left:4px;font-size:9px;font-weight:800;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:6px;padding:2px 6px;cursor:pointer;-webkit-tap-highlight-color:transparent">Set cover</button>`}
+      </div>`
     ).join('');
   }
 
@@ -3335,43 +4364,118 @@ H.init();
 
   // Namespace for onclick calls
   H._post = {
-    setCat(c)    { if(c==='jobs'){H.openInner('PostJob');return;} postState.cat = c; refreshBody(); },
+    // Smart back from the Post flow: step -> previous step; category form -> the
+    // category picker; category picker -> out of Post (back to the business store
+    // when creating a business product, else the previous screen).
+    headerBack() {
+      const s = postState;
+      if (s.step > 1) { this.prev(); return; }
+      if (s.cat) { this.changeCat(); return; }
+      if (typeof H.goBack === 'function') H.goBack(); else H.navTo('Home');
+    },
+    readVariations() {
+      const out = [];
+      document.querySelectorAll('#postVariants .pv-row').forEach(function (r) {
+        const color = ((r.querySelector('.pv-color') || {}).value || '').trim();
+        const size = ((r.querySelector('.pv-size') || {}).value || '').trim();
+        const stockRaw = (r.querySelector('.pv-stock') || {}).value || '';
+        if (color || size || stockRaw !== '') out.push({ color: color, size: size, stock: stockRaw === '' ? null : Number(stockRaw) });
+      });
+      postState.variations = out;
+      return out;
+    },
+    addVariation() {
+      this.readVariations();
+      postState.variations = postState.variations || [];
+      postState.variations.push({ color: '', size: '', stock: null });
+      const el = document.getElementById('postVariants'); if (el) el.innerHTML = renderVariantRows();
+    },
+    removeVariation(i) {
+      this.readVariations();
+      postState.variations.splice(i, 1);
+      const el = document.getElementById('postVariants'); if (el) el.innerHTML = renderVariantRows();
+    },
+    setCat(c)    {
+      if(c==='jobs'){H.openInner('JobIntent');return;}
+      // Preserve anything already typed before the step re-renders.
+      const t = document.getElementById('postTitle'); if (t) postState.title = t.value;
+      const d = document.getElementById('postDesc');  if (d) postState.desc  = d.value;
+      if (H.readAttrFields) postState.attrs = Object.assign({}, postState.attrs, H.readAttrFields(document.getElementById('postBody')));
+      postState.cat = c; refreshBody();
+    },
+    changeCat() {
+      // Back to the category picker. Keep title/desc; drop the old category's attrs.
+      const t = document.getElementById('postTitle'); if (t) postState.title = t.value;
+      const d = document.getElementById('postDesc');  if (d) postState.desc  = d.value;
+      postState.cat = null; postState.attrs = {};
+      refreshBody();
+    },
+    toggleChip(btn) { if (btn) btn.classList.toggle('on'); },
     setCur(c)    { postState.currency = c; refreshBody(); },
     onProv(p)    { postState.prov = p; postState.city = CITIES_BY_PROV[p][0]; refreshBody(); },
     removePhoto(i) { postState.photos.splice(i, 1); document.getElementById('photoGrid').innerHTML = renderPhotoGrid(); },
-    onPhotos(e)  {
+    setCover(i) {
+      if (i > 0 && i < postState.photos.length) {
+        const cover = postState.photos.splice(i, 1)[0];
+        postState.photos.unshift(cover);
+        const g = document.getElementById('photoGrid');
+        if (g) g.innerHTML = renderPhotoGrid();
+      }
+    },
+    pick(mode) {
+      if (H._post._compressing) { H.toast('Still processing the last photos…', 2500); return; }
+      const el = document.getElementById(mode === 'camera' ? 'photoFileCamera' : 'photoFileUpload');
+      if (el) el.click();
+    },
+    async onPhotos(e)  {
       if (H._post._compressing) return;
-      const ALLOWED = ['image/jpeg','image/png','image/gif','image/webp'];
-      const MAX_BYTES = 5 * 1024 * 1024;
+      const ALLOWED = ['image/jpeg','image/png','image/gif','image/webp','image/heic','image/heif',''];
+      const MAX_BYTES = 25 * 1024 * 1024; // originals can be large; we compress them right down
       const files = Array.from(e.target.files || []);
       const remaining = 8 - postState.photos.length;
       let rejected = 0;
       const valid = [];
       files.slice(0, remaining).forEach(f => {
-        if (!ALLOWED.includes(f.type)) { rejected++; return; }
+        if (f.type && ALLOWED.indexOf(f.type) === -1) { rejected++; return; }
         if (f.size > MAX_BYTES) { rejected++; return; }
         valid.push(f);
       });
-      if (rejected) H.toast(rejected + ' photo(s) skipped — use JPG/PNG under 5 MB', 4000, true);
+      if (files.length > remaining) H.toast('You can add up to 8 photos', 3000, true);
+      if (rejected) H.toast(rejected + ' photo(s) skipped — use a JPG or PNG image', 4000, true);
       e.target.value = '';
       if (!valid.length) return;
 
-      // Show loading state
+      // Compress one at a time. Decoding several full-size phone photos at once
+      // thrashes memory on the device and is what made it hang on "Processing".
       H._post._compressing = true;
-      const zone = document.querySelector('.img-upload-zone');
-      const zoneTitle = zone && zone.querySelector('.img-upload-title');
-      const origTitle = zoneTitle ? zoneTitle.textContent : null;
-      if (zone) zone.style.pointerEvents = 'none';
-      if (zoneTitle) zoneTitle.textContent = 'Processing…';
+      const actions = document.getElementById('photoActions');
+      const prog    = document.getElementById('photoProgress');
+      if (actions) { actions.style.opacity = '.5'; actions.style.pointerEvents = 'none'; }
 
-      Promise.all(valid.map(f => H.compressImage(f, 1200, 0.78))).then(results => {
-        results.forEach(d => postState.photos.push(d));
-        document.getElementById('photoGrid').innerHTML = renderPhotoGrid();
-      }).finally(() => {
-        H._post._compressing = false;
-        if (zone) zone.style.pointerEvents = '';
-        if (zoneTitle && origTitle !== null) zoneTitle.textContent = origTitle;
-      });
+      let done = 0;
+      for (const f of valid) {
+        if (prog) {
+          prog.style.display = 'block';
+          prog.textContent = valid.length > 1
+            ? 'Processing photo ' + (done + 1) + ' of ' + valid.length + '…'
+            : 'Processing photo…';
+        }
+        try {
+          // 1024px / q0.72 keeps marketplace photos sharp at roughly half the bytes
+          // of the old 1200px setting — listings load faster and cost less data.
+          const d = await H.compressImage(f, 1024, 0.72);
+          if (d) {
+            postState.photos.push(d);
+            const g = document.getElementById('photoGrid');
+            if (g) g.innerHTML = renderPhotoGrid(); // show each photo as it finishes
+          }
+        } catch (err) { /* skip a photo that fails to decode */ }
+        done++;
+      }
+
+      if (prog) prog.style.display = 'none';
+      if (actions) { actions.style.opacity = ''; actions.style.pointerEvents = ''; }
+      H._post._compressing = false;
     },
     next() {
       const s = postState;
@@ -3381,6 +4485,8 @@ H.init();
         if (!s.cat)               { H.toast('Pick a category'); return; }
         if (s.title.length < 5)   { H.toast('Title needs at least 5 characters'); return; }
         if (s.desc.length < 10)   { H.toast('Description needs at least 10 characters'); return; }
+        if (H.readAttrFields)     s.attrs = Object.assign({}, s.attrs, H.readAttrFields(document.getElementById('postBody')));
+        this.readVariations();
       } else if (s.step === 2) {
         s.price  = document.getElementById('priceInput').value;
         s.prov   = document.getElementById('provinceSel').value;
@@ -3398,7 +4504,8 @@ H.init();
     prev() {
       if (postState.step > 1) { postState.step--; refreshSteps(); refreshBody(); }
     },
-    submit() {
+    async submit() {
+      if (H._post._posting) return;            // guard against double-tap → duplicate listings
       if (H.checkBan && H.checkBan()) return;
       const s = postState;
 
@@ -3410,20 +4517,85 @@ H.init();
       if (H.state.allowImageUploads !== false && !s.photos.length) { H.toast('Please add at least one photo'); return; }
 
       const u = H.currentUser();
+      const listingId = H.uid();
+
+      // Content moderation + anti-spam: banned terms, duplicate titles, and a
+      // 5-posts-per-24h flood guard (see moderation.js). Runs before the photo
+      // upload so a rejected ad never wastes bandwidth.
+      let mod = { status: 'active', reason: null };
+      if (typeof H.moderateListing === 'function') {
+        try { mod = H.moderateListing({ id: listingId, title: s.title, desc: s.desc, cat: s.cat }, u) || mod; }
+        catch (e) { mod = { status: 'active', reason: null }; }
+        if (mod.status === 'rejected') { H.toast(mod.reason || 'Listing could not be posted', 5000, true); return; }
+      }
       const needsApproval = !!(H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified));
+      // Pending if the admin forces review OR moderation flagged it for review.
+      const finalStatus = (needsApproval || mod.status === 'pending') ? 'pending' : 'active';
+
+      H._post._posting = true;
+      const btn = document.querySelector('.btn-submit');
+      if (btn) { btn.disabled = true; btn.textContent = 'Posting…'; }
+
+      // Upload photos to cloud storage and keep only URLs. Storing base64 in
+      // localStorage overflows the 5MB quota (the old crash) and bloats both
+      // the cloud row and every listing fetch (the old slowness).
+      let photos = s.photos;
+      try {
+        if (btn && s.photos.length) btn.textContent = 'Uploading photos…';
+        // Cap the upload so a stalled network surfaces a code instead of hanging.
+        photos = H.withTimeout
+          ? await H.withTimeout(H.uploadListingPhotos(s.photos, u.id), 45000, 'photo upload')
+          : await H.uploadListingPhotos(s.photos, u.id);
+      } catch (e) {
+        if (e && e._timeout && H.showError) H.showError('Photos took too long to upload — posting without waiting.', e, 'post.upload.timeout');
+        /* fall back to whatever we have */
+      }
+
+      // USD is the canonical currency. If the seller entered ZiG, convert to USD
+      // now using the central rate and store it as USD, so every price across the
+      // app uses one source of truth.
+      let _priceUSD = Number(s.price) || 0;
+      if (s.currency === 'ZiG' && typeof H.toUSD === 'function') {
+        _priceUSD = Math.round(H.toUSD(s.price, 'ZiG') * 100) / 100;
+      }
+
       const l = {
-        id: H.uid(), sellerId: u.id, sellerName: u.name || '', sellerPhone: u.phone || '', title: s.title, desc: s.desc,
-        price: s.price, currency: s.currency, cat: s.cat,
+        id: listingId, sellerId: u.id, sellerName: u.name || '', sellerPhone: u.phone || '', title: s.title, desc: s.desc,
+        price: _priceUSD, currency: 'USD', cat: s.cat,
         prov: s.prov, city: s.city, suburb: s.suburb,
-        photos: s.photos, createdAt: Date.now(),
-        status: needsApproval ? 'pending' : 'active',
+        photos: photos, createdAt: Date.now(),
+        status: finalStatus,
+        businessId: s.businessId || null,   // business product (kept out of personal listings)
         views: 0
       };
+      // Attach category-specific attributes (top-level too, so Browse filters see them).
+      if (H.applyAttrs) H.applyAttrs(l, s.attrs || {});
+      else l.attrs = s.attrs || {};
+      // Variants (colour / size / stock) — stored in attrs so they sync + restore.
+      this.readVariations();
+      const vars = (s.variations || []).filter(v => v.color || v.size || (v.stock != null && v.stock !== ''));
+      if (vars.length) { l.attrs = l.attrs || {}; l.attrs.variations = vars; l.variations = vars; }
       H.state.listings.unshift(l);
       H.saveState();
-      if (typeof H.saveListingToCloud === "function") H.saveListingToCloud(l);
-      if (needsApproval) {
-        H.toast('Ad submitted! It will go live after admin review.', 5000);
+      if (typeof H.saveListingToCloud === "function") {
+        try {
+          await (H.withTimeout ? H.withTimeout(H.saveListingToCloud(l), 20000, 'save listing') : H.saveListingToCloud(l));
+        } catch (e) {
+          if (e && e._timeout && H.showError) H.showError('Saved on your device but the cloud didn’t respond — it will sync later.', e, 'post.cloud.timeout');
+        }
+      }
+
+      H._post._posting = false;
+      // Business product: return to the store catalog, not the personal listings.
+      if (s.businessId && typeof H._bizListings === 'object' && H._bizListings.open) {
+        H.toast('Product added to your store!');
+        H._bizListings.open(s.businessId);
+        return;
+      }
+      if (finalStatus === 'pending') {
+        H.toast(mod.status === 'pending' && !needsApproval
+          ? (mod.reason || 'Ad submitted for review before going live.')
+          : 'Ad submitted! It will go live after admin review.', 5000);
         H.openInner('MyListings');
       } else {
         H.toast('Your ad is live!');
@@ -3432,23 +4604,74 @@ H.init();
     }
   };
 
+  // Upload base64 photos to Supabase Storage; return an array of public URLs.
+  // Anything already an http(s) URL is passed through untouched. If storage is
+  // unavailable or an upload fails, that photo keeps its original value so the
+  // listing still posts (best-effort, never blocks the user).
+  H.uploadListingPhotos = async function uploadListingPhotos(photos, userId) {
+    const list = Array.isArray(photos) ? photos : [];
+    const sb = window.supabase;
+    if (!sb || typeof sb.storage !== 'object') return list;
+    const out = [];
+    for (const p of list) {
+      if (typeof p !== 'string' || p.indexOf('data:') !== 0) { out.push(p); continue; }
+      try {
+        // Path must match the storage RLS policy: listings/{user_id}/file.jpg
+        const path = 'listings/' + userId + '/' + H.uid() + '.jpg';
+        const blob = await (await fetch(p)).blob();
+        const { data: up, error } = await sb.storage.from('listings-photos')
+          .upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+        if (!error && up) {
+          const { data: urlData } = sb.storage.from('listings-photos').getPublicUrl(path);
+          out.push(urlData && urlData.publicUrl ? urlData.publicUrl : p);
+        } else {
+          out.push(p);
+        }
+      } catch (e) { out.push(p); }
+    }
+    return out;
+  };
+
   H.compressImage = function compressImage(file, maxDim = 1200, q = 0.8) {
     return new Promise(res => {
-      const r = new FileReader();
-      r.onload = ev => {
-        const img = new Image();
-        img.onload = () => {
-          let w = img.width, h = img.height;
-          if (w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
-          else if (h > maxDim)     { w = Math.round(w * maxDim / h); h = maxDim; }
-          const c = document.createElement('canvas');
-          c.width = w; c.height = h;
-          c.getContext('2d').drawImage(img, 0, 0, w, h);
-          res(c.toDataURL('image/jpeg', q));
+      // Draw a decoded source (ImageBitmap or <img>) to a scaled canvas and return a JPEG data URL.
+      function finish(src, sw, sh) {
+        let w = sw, h = sh;
+        if (w > maxDim || h > maxDim) {
+          if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else        { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(src, 0, 0, w, h);
+        try { if (src.close) src.close(); } catch (e) {} // free the ImageBitmap right away
+        let out = '';
+        try { out = c.toDataURL('image/jpeg', q); } catch (e) {}
+        c.width = c.height = 0; // release canvas memory
+        res(out);
+      }
+
+      // Fallback path for engines without createImageBitmap (older iOS).
+      function viaReader() {
+        const r = new FileReader();
+        r.onload = ev => {
+          const img = new Image();
+          img.onload  = () => finish(img, img.width, img.height);
+          img.onerror = () => res('');
+          img.src = ev.target.result;
         };
-        img.src = ev.target.result;
-      };
-      r.readAsDataURL(file);
+        r.onerror = () => res('');
+        r.readAsDataURL(file);
+      }
+
+      if (window.createImageBitmap) {
+        createImageBitmap(file)
+          .then(bmp => finish(bmp, bmp.width, bmp.height))
+          .catch(viaReader); // HEIC or odd formats fall back to the <img> decoder
+      } else {
+        viaReader();
+      }
     });
   }
 
@@ -3492,9 +4715,36 @@ H.init();
     };
   }
 
+  // Render the variants table (colour / size / stock) if the listing has any.
+  H._variationsHtml = function (l) {
+    var vars = (l && (l.variations || (l.attrs && l.attrs.variations))) || [];
+    if (!Array.isArray(vars) || !vars.length) return '';
+    var row = function (v) {
+      var parts = [];
+      if (v.color) parts.push(H.escHtml(v.color));
+      if (v.size) parts.push(H.escHtml(v.size));
+      var label = parts.join(' · ') || 'Option';
+      var out = (v.stock != null && v.stock !== '') ? Number(v.stock) : null;
+      var stockTxt = out === null ? '' : (out > 0
+        ? '<span style="font-size:11.5px;font-weight:700;color:#0f7a3d;background:#EAF7EF;border-radius:20px;padding:2px 9px">' + out + ' in stock</span>'
+        : '<span style="font-size:11.5px;font-weight:700;color:#B42318;background:#FEE4E2;border-radius:20px;padding:2px 9px">Out of stock</span>');
+      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border,#E8ECF4)">'
+        + '<span style="font-size:13.5px;font-weight:600;color:var(--text)">' + label + '</span>' + stockTxt + '</div>';
+    };
+    return '<div class="det-section"><div class="det-sec-title">Available options</div>'
+      + '<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:2px 14px">'
+      + vars.map(row).join('') + '</div></div>';
+  };
+
   pages.Detail = function ({ id }) {
     const l = (H.state.listings||[]).find(x => x.id === id);
-    if (!l) return `<div class="page active">${H.innerTopbar('Listing')}<div class="empty-state"><div class="empty-icon">${S.crossCircle}</div><div class="empty-title">Listing not found</div></div></div>`;
+    if (!l) {
+      // Genuinely gone after an on-demand fetch attempt → show not-found.
+      if (H._detailFetchFailed === id)
+        return `<div class="page active">${H.innerTopbar('Listing')}<div class="empty-state"><div class="empty-icon">${S.crossCircle}</div><div class="empty-title">Listing not found</div><div class="empty-sub">This listing may have been removed or is no longer available.</div></div></div>`;
+      // Not in the local cache yet — show a loader; Detail_after fetches it by id.
+      return `<div class="page active">${H.innerTopbar('Listing')}<div class="empty-state" id="detailLoading"><div class="empty-title">Loading…</div></div></div>`;
+    }
 
     const seller      = getSeller(l);
     const u           = H.currentUser();
@@ -3541,7 +4791,18 @@ H.init();
           ${l.negotiable ? '<div class="nego-pill">Negotiable</div>' : ''}
         </div>
         <div class="det-listing-title">${H.escHtml(l.title)}</div>
+        ${H.attrQuickFactsHtml ? H.attrQuickFactsHtml(l) : ''}
         <div class="det-loc-row">${S.location} ${H.escHtml((l.suburb||l.city||'')+(l.prov?', '+l.prov:''))} · ${H.timeAgo(l.createdAt)} · ${S.eye} ${l.views||0} views</div>
+
+        ${H.attrOverviewHtml ? H.attrOverviewHtml(l) : ''}
+        ${H._variationsHtml ? H._variationsHtml(l) : ''}
+
+        <div class="det-section">
+          <div class="det-sec-title">Description</div>
+          <div class="desc-text" style="white-space:pre-line">${H.escHtml(l.desc||'No description provided.')}</div>
+        </div>
+
+        ${H.attrAmenitiesHtml ? H.attrAmenitiesHtml(l) : ''}
 
         <div class="seller-card" onclick="H.openUserProfile('${seller.id}')">
           <div style="position:relative;flex-shrink:0">
@@ -3555,17 +4816,13 @@ H.init();
           <div class="seller-info">
             <div class="seller-name-row">
               <div class="seller-name">${H.escHtml(sellerName)}</div>
-              ${seller.verified ? `<div class="blue-check" style="width:16px;height:16px"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>` : ''}
+              ${seller.verified ? `<div class="blue-check" style="width:16px;height:16px">${H.verifiedBadge(16)}</div>` : ''}
             </div>
             <div class="seller-phone" style="color:var(--sub);font-size:13px">${H.escHtml(sellerPhone)||'No phone listed'}</div>
             <div class="seller-meta">Member since ${new Date(seller.joinedAt||Date.now()).toLocaleDateString()}${seller.verified?' · ID Verified':''}</div>
           </div>
           <div style="color:var(--sub);font-size:20px">›</div>
         </div>
-
-        <div class="desc-text" style="white-space:pre-line">${H.escHtml(l.desc||'No description provided.')}</div>
-
-        <div id="similarListingsPlaceholder" class="similar-loading" style="height:120px;background:var(--card);border-radius:14px;margin:16px 0;opacity:.5;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--sub)">Loading similar listings...</div>
 
         ${isMine ? `
           <button style="width:100%;padding:13px;background:#fee2e2;color:#dc2626;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" onclick="if(!confirm('Are you sure you want to delete this listing?')) return; H.deleteListing('${l.id}')">Delete Listing</button>
@@ -3606,6 +4863,8 @@ H.init();
           else buttons = chatBtn + waBtn + callBtn + rptBtn;
           return buttons + shareWaBtn + rateSection;
         })()}
+
+        <div id="similarListingsPlaceholder" class="similar-loading" style="height:120px;background:var(--card);border-radius:14px;margin:16px 0;opacity:.5;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--sub)">Loading similar listings...</div>
       </div>
     </div>`;
   };
@@ -3627,11 +4886,43 @@ H.init();
 
     const l = H.state.listings.find(x => x.id === params.id);
     const placeholder = document.getElementById('similarListingsPlaceholder');
-    if (!l) { if (placeholder) placeholder.remove(); return; }
+    if (!l) {
+      if (placeholder) placeholder.remove();
+      // Listing isn't in the local cache (stale after idle, deleted-from-cache,
+      // or older than the cached set). Fetch it by id once before giving up, so
+      // tapping a listing never dead-ends on "Listing not found".
+      if (H._detailFetchFailed === params.id) return;   // already tried — not-found shown
+      if (H._detailFetchTrying === params.id) return;   // fetch in flight
+      if (typeof H._fetchListingById !== 'function') { H._detailFetchFailed = params.id; return; }
+      H._detailFetchTrying = params.id;
+      H._fetchListingById(params.id).then(function (found) {
+        H._detailFetchTrying = null;
+        if (found) H._detailFetchFailed = null; else H._detailFetchFailed = params.id;
+        // Only act if the user is still looking at this listing.
+        if (H.currentPageName !== 'Detail' || !H.currentPageParams || H.currentPageParams.id !== params.id) return;
+        if (found && found.cat === 'jobs') { H.openInner('JobDetail', { id: params.id }); return; }
+        H.renderPage('Detail', params);
+      });
+      return;
+    }
+    // Reaching a valid listing clears any stale not-found marker.
+    if (H._detailFetchFailed === params.id) H._detailFetchFailed = null;
     const similar = (H.state.listings||[]).filter(x => x.id!==l.id && x.cat===l.cat && x.status==='active').slice(0,4);
-    if (!similar.length) { if (placeholder) placeholder.remove(); return; }
+    // Recently viewed (tracked in localStorage by openListing) — skip the current
+    // listing and anything already shown under "Similar".
+    let rv = [];
+    try { rv = JSON.parse(localStorage.getItem('pamarket_rv') || '[]'); } catch (e) {}
+    const simIds = similar.map(function(s){ return s.id; });
+    const recent = rv.filter(function(id){ return id !== l.id && simIds.indexOf(id) === -1; })
+      .map(function(id){ return (H.state.listings||[]).find(function(x){ return x.id === id; }); })
+      .filter(function(x){ return x && x.status === 'active'; })
+      .slice(0, 4);
+    let html = '';
+    if (similar.length) html += '<div class="sec-head" style="margin-top:24px"><div class="sec-title">Similar Listings</div></div><div class="listing-list">' + similar.map(H.renderListCard).join('') + '</div>';
+    if (recent.length) html += '<div class="sec-head" style="margin-top:24px"><div class="sec-title">Recently Viewed</div></div><div class="listing-list">' + recent.map(H.renderListCard).join('') + '</div>';
+    if (!html) { if (placeholder) placeholder.remove(); return; }
     const sec = document.createElement('div');
-    sec.innerHTML = '<div class="sec-head" style="margin-top:24px"><div class="sec-title">Similar Listings</div></div><div class="listing-list">'+similar.map(H.renderListCard).join('')+'</div>';
+    sec.innerHTML = html;
     if (placeholder) {
       placeholder.replaceWith(sec);
     } else {
@@ -3670,7 +4961,7 @@ H.init();
     const l = H.state.listings.find(x => x.id === id); if (!l) return;
     const text = l.title+' · '+H.fmtPrice(l.price, l.currency)+' on PaMarket Zimbabwe';
     if (navigator.share) navigator.share({title:l.title, text, url:location.href}).catch(()=>{});
-    else { if (navigator.clipboard) navigator.clipboard.writeText(text+' '+location.href); H.toast('Link copied'); }
+    else { if (navigator.clipboard) navigator.clipboard.writeText(text+' '+location.href).catch(()=>{}); H.toast('Link copied'); }
   };
 
   H.toggleSave = function(id) {
@@ -3707,7 +4998,9 @@ H.init();
       title:'Delete this listing?', body:'This cannot be undone.', confirmText:'Delete', danger:true,
       onConfirm: async () => {
         var sc = window.supabase;
-        if (sc && typeof sc.from === 'function') {
+        // Only attempt a cloud delete when a real Supabase client is available
+        // (the mock fallback has no .auth). Otherwise just remove it locally.
+        if (sc && sc.auth && typeof sc.from === 'function') {
           try {
             var res = await sc.from('listings').delete().eq('id', id).select();
             if (res && res.error) {
@@ -3715,8 +5008,8 @@ H.init();
               return;
             }
             if (!res.data || res.data.length === 0) {
-              H.toast('Could not delete — please try again');
-              return;
+              // Nothing deleted in the cloud — likely a local-only listing that
+              // never synced. Fall through and remove it locally.
             }
           } catch (e) {
             H.toast('Network error — try again');
@@ -3737,6 +5030,7 @@ H.init();
     const phone  = (seller.phone||l.sellerPhone||'').replace(/[^\d+]/g,'');
     if (!phone) { H.toast('No WhatsApp number available'); return; }
     const txt = encodeURIComponent('Hi! I saw your "'+l.title+'" listing on PaMarket Zimbabwe. Is it still available?');
+    if (typeof H.recordLead === 'function') H.recordLead(id, 'whatsapp');
     window.open('https://wa.me/'+phone.replace('+','')+'?text='+txt, '_blank');
   };
 
@@ -3746,7 +5040,7 @@ H.init();
     if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
       location.href = 'tel:'+clean;
     } else {
-      if (navigator.clipboard) navigator.clipboard.writeText(clean);
+      if (navigator.clipboard) navigator.clipboard.writeText(clean).catch(()=>{});
       H.toast('Number copied: '+clean);
     }
   };
@@ -3755,9 +5049,20 @@ H.init();
     if (!H.currentUser()) { H.requireAuth('Sign in to message sellers'); return; }
     const u = H.currentUser();
     if (!sellerId || sellerId === u.id) { H.toast('You cannot message yourself'); return; }
+    if (listingId && typeof H.recordLead === 'function') H.recordLead(listingId, 'chat');
     if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
     const ids = [u.id, sellerId].sort();
-    const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId || '').slice(-6);
+    // One conversation per person (listing kept as context, not in the id) and
+    // reuse any existing thread with this seller so profile and listing entry
+    // points never fork into separate threads.
+    let convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    const _pair = H.state.conversations.find(function (c) {
+      return c && Array.isArray(c.members) && c.members.length === 2 &&
+             c.members.map(String).indexOf(String(u.id)) !== -1 &&
+             c.members.map(String).indexOf(String(sellerId)) !== -1 &&
+             String(c.id).indexOf('job_') !== 0;
+    });
+    if (_pair) convId = _pair.id;
     let conv = H.state.conversations.find(c => c.id === convId);
     if (!conv) {
       conv = { id: convId, members: [u.id, sellerId], listingId: listingId || null, messages: [] };
@@ -3821,10 +5126,10 @@ H.init();
       }
       dots += '</div>';
     }
-    return '<div style="position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px)+14px) 16px 14px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(rgba(0,0,0,.65),transparent);z-index:2">'
+    return '<div id="pvHeader" style="position:absolute;top:0;left:0;right:0;padding:calc(max(env(safe-area-inset-top,0px), 24px) + 20px) 14px 18px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(rgba(0,0,0,.7),transparent);z-index:10">'
       + '<span id="pvCounter" style="color:#fff;font-size:14px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.6)">'+(idx+1)+' / '+photos.length+'</span>'
-      + '<button ontouchstart="event.stopPropagation()" ontouchend="event.stopPropagation();H.closePhotoViewer()" onclick="H.closePhotoViewer()" style="background:rgba(0,0,0,.45);border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      + '<button id="pvClose" onclick="H.closePhotoViewer()" ontouchend="event.preventDefault();H.closePhotoViewer()" style="background:rgba(0,0,0,.55);border:none;border-radius:50%;width:46px;height:46px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" width="22" height="22"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
       + '</button></div>'
       + '<img id="pvImg" src="'+photos[idx]+'" style="position:absolute;top:50%;left:50%;max-width:100%;max-height:100%;object-fit:contain;will-change:transform;pointer-events:none;-webkit-user-drag:none;user-select:none" draggable="false">'
       + dots;
@@ -3852,8 +5157,12 @@ H.init();
   }
 
   function pvTS(e) {
-    e.preventDefault();
     var pv = H._pv; if (!pv) return;
+    // Touches on the top bar (close button / counter) must not be hijacked by
+    // the pan/zoom handler — let the native button tap fire normally.
+    if (e.target && e.target.closest && e.target.closest('#pvHeader')) { pv.skipGesture = true; return; }
+    pv.skipGesture = false;
+    e.preventDefault();
     var ts = e.touches;
     pv.moved = false;
     if (ts.length === 1) {
@@ -3874,8 +5183,8 @@ H.init();
   }
 
   function pvTM(e) {
+    var pv = H._pv; if (!pv || pv.skipGesture) return;
     e.preventDefault();
-    var pv = H._pv; if (!pv) return;
     var ts = e.touches;
     if (ts.length === 1 && !pv.pinch) {
       var dx = ts[0].clientX - pv.x0;
@@ -3900,6 +5209,7 @@ H.init();
 
   function pvTE(e) {
     var pv = H._pv; if (!pv) return;
+    if (pv.skipGesture) { if (e.touches.length === 0) pv.skipGesture = false; return; }
     if (e.touches.length === 0) {
       if (!pv.pinch && pv.scale <= 1 && pv.moved) {
         var dx = e.changedTouches[0].clientX - pv.x0;
@@ -4006,8 +5316,15 @@ H.init();
   };
 
   H.openListing = window.openListing = function(id) {
-    const l = (H.state.listings||[]).find(x => x.id === id); if (!l) return;
-    if (l.cat === 'jobs') { l.views=(l.views||0)+1; H.saveState(); H.openInner('JobDetail',{id}); return; }
+    const l = (H.state.listings||[]).find(x => x.id === id);
+    if (l) {
+      if (l.cat === 'jobs') { l.views=(l.views||0)+1; H.saveState(); H.openInner('JobDetail',{id}); return; }
+      H.openInner('Detail', {id});
+      return;
+    }
+    // Not in the local cache (e.g. dropped after the app sat idle, or older than
+    // the cached set). Open Detail anyway — it fetches the listing by id on demand
+    // instead of dead-ending on "Listing not found".
     H.openInner('Detail', {id});
   };
 
@@ -4080,14 +5397,24 @@ H.init();
         <div class="prof-name">${H.escHtml(u.name)}</div>
         ${showDot ? `<div style="font-size:11px;color:#86efac;font-weight:600;display:flex;align-items:center;gap:4px;justify-content:center;margin-top:4px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e"></span>Online</div>` : ''}
         ${u.phone ? `<div style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:4px">${H.escHtml(u.phone)}</div>` : ''}
-        ${u.verified ? `<div class="prof-badges"><span class="pbadge pbadge-verified">ID Verified</span></div>` : ''}
+        ${u.verified ? `<div class="prof-badges"><span class="pbadge pbadge-verified">${H.verifiedBadge(13)} ID Verified</span></div>` : ''}
         <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:8px">Member since ${new Date(u.joinedAt||Date.now()).toLocaleDateString()}</div>
-        ${!isMe && me ? `<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+        ${!isMe && me ? `<div class="prof-actions">
           ${(uPrivacy.allowMessages === false)
-            ? `<button disabled style="flex:1;min-width:90px;padding:10px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:Inter,sans-serif">Messaging turned off</button>`
-            : `<button onclick="H.startChatWith('${u.id}','')" style="flex:1;min-width:90px;padding:10px;background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Message</button>`}
-          ${u.phone ? `<button onclick="H.callSeller('${H.escHtml(u.phone)}')" style="flex:1;min-width:80px;padding:10px;background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Call</button>` : ''}
-          <button onclick="H.leaveReview('${u.id}')" style="flex:1;min-width:100px;padding:10px;background:rgba(245,166,35,0.25);color:#F5A623;border:1.5px solid rgba(245,166,35,0.4);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">★ Review</button>
+            ? `<button class="pa-btn pa-disabled" disabled>
+                 <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                 Messaging off</button>`
+            : `<button class="pa-btn pa-primary" onclick="H.startChatWith('${u.id}','')">
+                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                 Message ${H.escHtml((u.name||'').split(' ')[0] || '')}</button>`}
+          <div class="prof-actions-row">
+            ${u.phone ? `<button class="pa-btn pa-glass" onclick="H.callSeller('${H.escHtml(u.phone)}')">
+                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                 Call</button>` : ''}
+            <button class="pa-btn pa-gold" onclick="H.leaveReview('${u.id}')">
+                 <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg>
+                 Review</button>
+          </div>
         </div>` : ''}
       </div>
 
@@ -4136,12 +5463,70 @@ H.init();
     return H.state.users;
   }
 
+  // Collapse duplicate 1-to-1 conversations that share the same two members
+  // (e.g. a legacy listing-keyed thread + the new per-person thread both pulled
+  // from the cloud). Messages are merged (de-duped) into one canonical thread so
+  // each person appears once. Returns true if anything changed.
+  H._mergeDuplicateConversations = function () {
+    const u = currentUser();
+    if (!u) return false;
+    const convs = H.state.conversations;
+    if (!Array.isArray(convs) || convs.length < 2) return false;
+    const groups = {};
+    convs.forEach(function (c) {
+      if (!c || !Array.isArray(c.members) || c.members.length < 2) return;
+      if (String(c.id).indexOf('job_') === 0) return;                 // keep job chats separate
+      if (c.members.map(String).indexOf(String(u.id)) === -1) return;
+      const key = c.members.map(String).sort().join('|');
+      (groups[key] = groups[key] || []).push(c);
+    });
+    let changed = false;
+    const removeIds = [];
+    Object.keys(groups).forEach(function (key) {
+      const group = groups[key];
+      if (group.length < 2) return;
+      const sorted = key.split('|').sort();
+      const pairKey = 'conv_' + sorted[0].slice(-6) + '_' + sorted[1].slice(-6);
+      // Canonical: the open chat (don't pull the rug out) > deterministic pairKey > most messages.
+      let canonical = group.find(function (c) { return c.id === H._activeChat; })
+        || group.find(function (c) { return c.id === pairKey; })
+        || group.slice().sort(function (a, b) { return (b.messages || []).length - (a.messages || []).length; })[0];
+      // Merge every thread's messages into the canonical one, de-duped.
+      const seen = {};
+      const merged = [];
+      group.forEach(function (c) {
+        (c.messages || []).forEach(function (m) {
+          const k = m.id || (m.from + '|' + m.t + '|' + (m.text || m.image || ''));
+          if (seen[k]) { if (m.read) seen[k].read = true; return; }
+          seen[k] = m; merged.push(m);
+        });
+      });
+      merged.sort(function (a, b) { return (a.t || 0) - (b.t || 0); });
+      canonical.messages = merged;
+      group.forEach(function (c) {
+        if (c === canonical) return;
+        if (!canonical.listingId && c.listingId) canonical.listingId = c.listingId;
+        if (!canonical.otherName && c.otherName) canonical.otherName = c.otherName;
+        removeIds.push(c.id);
+      });
+      changed = true;
+    });
+    if (changed) {
+      H.state.conversations = convs.filter(function (c) { return removeIds.indexOf(c.id) === -1; });
+      H.saveState();
+    }
+    return changed;
+  };
+
   // Fetch a single user profile from Supabase and cache it, then re-render the current page.
   // Prevents repeated network calls using a per-session pending map.
   H._pendingProfileFetch = H._pendingProfileFetch || {};
   H._resolvedProfileFetch = H._resolvedProfileFetch || {};
   H._resolveOtherName = function(otherId, conv) {
     // Skip if a fetch is already in-flight OR if we've already resolved a non-empty name
+    // Fetch a given profile at most once per session — prevents a render→fetch
+    // →render loop (which caused the Messages list to flicker for contacts who
+    // have no avatar). The avatar is still applied on that one fetch below.
     if (!otherId || H._pendingProfileFetch[otherId] || H._resolvedProfileFetch[otherId]) return;
     H._pendingProfileFetch[otherId] = true;
     var sb = window.supabase;
@@ -4149,7 +5534,7 @@ H.init();
     sb.from('profiles')
       .select('id,name,phone,email,avatar,verified,role,status,created_at')
       .eq('id', otherId)
-      .single()
+      .maybeSingle()
       .then(function(res) {
         var p = res && res.data;
         var nameResolved = '';
@@ -4157,7 +5542,7 @@ H.init();
           var existing = (H.state.users||[]).find(function(x){ return x.id === p.id; });
           if (existing) {
             if (p.name) { existing.name = p.name; }
-            if (p.avatar && !existing.avatar) { existing.avatar = p.avatar; }
+            if (p.avatar) { existing.avatar = p.avatar; }
             nameResolved = existing.name;
           } else {
             var entry = {
@@ -4184,10 +5569,19 @@ H.init();
         if (nameResolved) {
           H._resolvedProfileFetch[otherId] = true;
           H.saveState();
+          // Re-render WITH the current params (renderPage(page) alone dropped the
+          // chat id and dumped the user on "Conversation not found"), and never
+          // while they're typing a message.
           var page = H.currentPageName;
-          if (page === 'Messages' || page === 'Chat') { H.renderPage(page); }
-        } else if (!nameResolved && res && !res.data && res.error && res.error.code === 'PGRST116') {
-          // Profile definitively not found (user deleted their account) — hide this conversation
+          if ((page === 'Messages' || page === 'Chat') && !(H._userIsTyping && H._userIsTyping())) {
+            H.renderPage(page, H.currentPageParams);
+          }
+        } else if (res && res.data) {
+          // Row exists but no usable name (rare) — stop retrying to avoid churn.
+          H._resolvedProfileFetch[otherId] = true;
+        } else if (res && !res.data && !res.error) {
+          // No profile row at all (maybeSingle → null, no error) = deleted account.
+          // Mark resolved so we don't retry forever (which showed "PaMarket User").
           H._resolvedProfileFetch[otherId] = true;
           if (conv && !conv.otherDeleted) {
             conv.otherDeleted = true;
@@ -4222,7 +5616,7 @@ H.init();
   function otherAvatarFor(c, u) {
     const otherId = c && Array.isArray(c.members) ? c.members.find(m => m !== u.id) : null;
     const other = otherId ? users().find(x => x.id === otherId) : null;
-    const ini = other ? initials(other.name || 'Deleted User') : '?';
+    const ini = other ? initials(other.name || 'PaMarket User') : '?';
     const initialsDiv = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + ini + '</div>';
     return (other && other.avatar)
       ? '<img src="' + escHtml(other.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
@@ -4238,18 +5632,51 @@ H.init();
     const avaEl = document.createElement('div');
     avaEl.className = 'chat-row-av';
     avaEl.innerHTML = avatarHtml;
-    const bubble = document.createElement('div');
-    bubble.className = 'chat-bubble them' + (m.image ? ' chat-bubble-img' : '');
-    if (m.image) {
-      bubble.innerHTML = '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">';
-    } else {
-      bubble.innerHTML = escHtml(m.text);
-    }
-    bubble.innerHTML += '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>';
     row.appendChild(avaEl);
-    row.appendChild(bubble);
-    thread.appendChild(row);
+    const _of = parseOffer(m.text);
+    if (_of) {
+      const holder = document.createElement('div');
+      holder.innerHTML = offerCardHtml(_of, false, m.id, H._activeOtherName || '');
+      if (holder.firstChild) row.appendChild(holder.firstChild);
+    } else {
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble them' + (m.image ? ' chat-bubble-img' : '');
+      if (m.image) {
+        bubble.innerHTML = '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">';
+      } else {
+        bubble.innerHTML = replyQuoteHtml(m) + escHtml(msgText(m));
+      }
+      bubble.innerHTML += '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>';
+      row.appendChild(bubble);
+    }
+    const typing = thread.querySelector('#chatTyping');
+    if (typing) thread.insertBefore(row, typing); else thread.appendChild(row);
   }
+
+  // ---------------------------------------------------
+  // SHARED AVATAR / RECEIPT HELPERS  (used by list + chat)
+  // ---------------------------------------------------
+  const AV_PALETTE = ['#1E88E5','#00897B','#8E24AA','#F4511E','#3949AB','#00838F','#C2185B','#43A047','#6D4C41','#5E35B1','#0277BD','#AD1457'];
+  H.avatarColorFor = function (seed) {
+    let h = 0; const s = String(seed || 'x');
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return AV_PALETTE[h % AV_PALETTE.length];
+  };
+  // Coloured circular avatar (image if present, else gradient initials).
+  function listAvatarHtml(other, name, color, cls) {
+    const ini = initials(name || '?');
+    const grad = 'background:linear-gradient(135deg,' + color + ',' + color + 'bb)';
+    if (other && other.avatar) {
+      return '<img src="' + escHtml(other.avatar) + '" class="' + cls + '" style="object-fit:cover" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        + '<span class="' + cls + '" style="display:none;' + grad + '">' + ini + '</span>';
+    }
+    return '<span class="' + cls + '" style="' + grad + '">' + ini + '</span>';
+  }
+  // ✓ sent / ✓✓ read tick for the current user's own last message.
+  function previewTick(read) {
+    return '<span class="msg-rr' + (read ? ' read' : '') + '">' + (read ? '✓✓' : '✓') + '</span>';
+  }
+  H._previewTick = previewTick;
 
   // ---------------------------------------------------
   // MESSAGES LIST
@@ -4261,6 +5688,8 @@ H.init();
         <div style="padding:20px">${H.emptyState('Sign in required', 'Sign in to view and send messages.', 'Sign In', "H.requireAuth('Sign in to view messages')")}</div>
       </div>`;
     }
+    if (typeof H.initPresence === 'function') H.initPresence();
+    H._mergeDuplicateConversations();
     const convos = conversations()
       .filter(c => Array.isArray(c.members) && c.members.includes(u.id) && Array.isArray(c.messages) && c.messages.length)
       .sort((a, b) => {
@@ -4270,9 +5699,17 @@ H.init();
       });
 
     const totalUnread = convos.reduce((sum, c) => sum + (c.messages || []).filter(m => m.from !== u.id && !m.read).length, 0);
+    const summary = convos.length
+      ? `${convos.length} chat${convos.length === 1 ? '' : 's'}${totalUnread > 0 ? ` · ${totalUnread} unread` : ''}`
+      : '';
     return `<div class="page active">${H.innerTopbar('Messages')}
-      <div style="padding:10px 14px;font-size:12px;color:var(--sub);display:flex;align-items:center;justify-content:space-between">${convos.length} conversation${convos.length === 1 ? '' : 's'}${totalUnread > 0 ? '<button onclick="H._markAllRead()" style="background:none;border:none;font-size:12px;font-weight:600;color:#1A3A8F;cursor:pointer;padding:4px 8px;font-family:Inter,sans-serif">Mark all read</button>' : ''}</div>
-      <div>
+      <div id="notifEnableBanner"></div>
+      ${convos.length ? `<div class="msg-search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input id="msgSearch" type="text" placeholder="Search conversations" autocomplete="off" oninput="H._filterMsgList(this.value)">
+      </div>` : ''}
+      ${convos.length ? `<div class="msg-summary"><b>${summary}</b>${totalUnread > 0 ? '<button onclick="H._markAllRead()" class="msg-markall">Mark all read</button>' : ''}</div>` : ''}
+      <div id="msgList">
         ${convos.length ? convos.map(c => {
           const otherId = c.members.find(m => m !== u.id);
           // Backfill c.otherName from any message senderName we have
@@ -4284,25 +5721,49 @@ H.init();
           // If name is still blank, trigger async profile fetch which will re-render when resolved
           if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
           else if (!other && otherId && !(c.otherName)) { H._resolveOtherName(otherId, c); }
-          const otherDisplayName = (other && other.name) || c.otherName || 'Deleted User';
+          // Only show "Deleted User" when the account is genuinely gone; while a
+          // name is still loading, a neutral placeholder avoids a false alarm.
+          const otherDisplayName = (other && other.name) || c.otherName || (c.otherDeleted ? 'Deleted User' : 'PaMarket User');
           const msgs   = c.messages || [];
           const last   = msgs[msgs.length - 1];
           if (!last) return '';
-          const unread  = msgs.some(m => m.from !== u.id && !m.read);
-          return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item" data-cid="${escHtml(c.id)}" onclick="H.openChat('${c.id}')">
-            <div class="msg-av">${initials(otherDisplayName)}</div>
+          const unreadCount = msgs.filter(m => m.from !== u.id && !m.read).length;
+          const unread = unreadCount > 0;
+          const mine   = last.from === u.id;
+          const color  = H.avatarColorFor(otherId || otherDisplayName);
+          const online = typeof H.isUserOnline === 'function' && H.isUserOnline(otherId);
+          const verified = other && other.verified;
+          const _lastOffer = parseOffer(last.text);
+          const previewBody = _lastOffer
+            ? MIC.offer + (_lastOffer.k === 'accept' ? 'Offer accepted' : _lastOffer.k === 'decline' ? 'Offer declined' : (_lastOffer.k === 'counter' ? 'Counter: $' : 'Offer: $') + Number(_lastOffer.price || 0).toLocaleString())
+            : (last.image ? MIC.photo + 'Photo' : escHtml(msgPreview(last)));
+          const preview = (mine ? previewTick(!!last.read) + ' ' : '') + previewBody;
+          return `<div class="swipe-del-row" style="position:relative;overflow:hidden;background:#ef4444"><div style="position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span style="font-size:10px;font-weight:700;color:#fff">Delete</span></div><div class="msg-item${unread ? ' unread' : ''}" data-cid="${escHtml(c.id)}" data-oid="${escHtml(otherId || '')}" onclick="H.openChat('${c.id}')">
+            <div class="p-av-wrap">${listAvatarHtml(other, otherDisplayName, color, 'p-av')}${online ? '<span class="p-on"></span>' : ''}</div>
             <div class="msg-body">
               <div class="msg-name-row">
-                <div class="msg-name">${escHtml(otherDisplayName)}</div>
-                <div class="msg-time">${timeAgo(last.t)}</div>
+                <div class="msg-name">${escHtml(otherDisplayName)}${verified ? ' ' + H.verifiedBadge(13) : ''}</div>
+                <div class="msg-time${unread ? ' u' : ''}">${timeAgo(last.t)}</div>
               </div>
-              <div class="msg-preview">${last.from === u.id ? 'You: ' : ''}${escHtml(last.text || '')}</div>
+              <div class="msg-preview${unread ? ' unread' : ''}">${preview}</div>
             </div>
-            ${unread ? '<div class="msg-unread-dot"></div>' : ''}
+            ${unread ? `<div class="msg-badge">${unreadCount > 99 ? '99+' : unreadCount}</div>` : ''}
           </div></div>`;
         }).join('') : H.emptyState('No messages yet', 'When buyers message you about a listing, it will show up here.', null, null)}
       </div>
     </div>`;
+  };
+
+  // Client-side filter for the conversation search box.
+  H._filterMsgList = function (q) {
+    q = (q || '').trim().toLowerCase();
+    const rows = document.querySelectorAll('#msgList .swipe-del-row');
+    rows.forEach(function (row) {
+      const item = row.querySelector('.msg-item');
+      const name = (item && item.querySelector('.msg-name') ? item.querySelector('.msg-name').textContent : '').toLowerCase();
+      const prev = (item && item.querySelector('.msg-preview') ? item.querySelector('.msg-preview').textContent : '').toLowerCase();
+      row.style.display = (!q || name.indexOf(q) !== -1 || prev.indexOf(q) !== -1) ? '' : 'none';
+    });
   };
 
   
@@ -4327,12 +5788,32 @@ H.init();
     // If name is still blank, trigger async profile fetch — will re-render when resolved
     if (other && !other.name && otherId) { H._resolveOtherName(otherId, c); }
     else if (!other && otherId && !c.otherName) { H._resolveOtherName(otherId, c); }
-    const otherDisplayName = (other && other.name) || c.otherName || 'Deleted User';
+    // One-time avatar fetch for the chat header (only if we have the name but no
+    // photo). The guard is set BEFORE the fetch so it can never re-fire — no loop.
+    H._chatAvatarTried = H._chatAvatarTried || {};
+    if (otherId && other && other.name && !other.avatar && !H._chatAvatarTried[otherId]) {
+      H._chatAvatarTried[otherId] = true;
+      var _sbAv = window.supabase;
+      if (_sbAv && typeof _sbAv.from === 'function') {
+        _sbAv.from('profiles').select('avatar').eq('id', otherId).maybeSingle().then(function (res) {
+          var p = res && res.data;
+          if (!p || !p.avatar) return;
+          var ex = (H.state.users || []).find(function (x) { return x.id === otherId; });
+          if (ex && ex.avatar !== p.avatar) {
+            ex.avatar = p.avatar;
+            H.saveState();
+            if (H.currentPageName === 'Chat' && !(H._userIsTyping && H._userIsTyping())) H.renderPage('Chat', H.currentPageParams);
+          }
+        }).catch(function () {});
+      }
+    }
+    const otherDisplayName = (other && other.name) || c.otherName || (c.otherDeleted ? 'Deleted User' : 'PaMarket User');
     const listing = (state.listings || []).find(l => l.id === c.listingId);
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
     H.saveState();
     if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
     H._activeChat = id;
+    if (H._chat) H._chat.replyTarget = null;   // no carried-over reply target
 
     const otherIni = initials(otherDisplayName);
     const otherAvatarUrl = other && other.avatar;
@@ -4340,20 +5821,40 @@ H.init();
       ? '<img src="' + escHtml(otherAvatarUrl) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
         + '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>'
       : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>';
+    H._chatOtherAvatar = otherAvatar;
+    H._activeOtherId = otherId || '';
+    H._activeOtherName = otherDisplayName;
 
-    const msgs = c.messages.map(function(m) {
+    // Date separators between calendar days + ✓/✓✓ receipts on the user's own messages.
+    let lastDay = '';
+    const msgs = c.messages.map(function(m, idx) {
+      let sep = '';
+      const dl = chatDayLabel(m.t);
+      if (dl !== lastDay) { lastDay = dl; sep = '<div class="chat-datesep"><span>' + escHtml(dl) + '</span></div>'; }
       const mine = m.from === u.id;
+      const _of = parseOffer(m.text);
+      if (_of) {
+        const resolved = (_of.k === 'offer' || _of.k === 'counter') &&
+          c.messages.slice(idx + 1).some(function(later) {
+            const lof = parseOffer(later.text);
+            return lof && (lof.k === 'accept' || lof.k === 'decline' || lof.k === 'counter');
+          });
+        return sep + '<div class="chat-msg-row ' + (mine ? 'me' : 'them') + '" data-msg-id="' + escHtml(m.id) + '">'
+          + (mine ? '' : '<div class="chat-row-av">' + otherAvatar + '</div>')
+          + offerCardHtml(_of, mine, m.id, otherDisplayName, resolved)
+          + '</div>';
+      }
       const content = m.image
         ? '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">'
-        : escHtml(m.text);
+        : (replyQuoteHtml(m) + escHtml(msgText(m)));
       if (mine) {
-        return '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
+        return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
           + content
-          + '<div class="chat-bubble-meta" style="text-align:right">' + timeAgo(m.t) + '</div>'
+          + '<div class="chat-bubble-meta" style="text-align:right">' + timeAgo(m.t) + ' ' + chatTick(!!m.read) + '</div>'
           + '</div></div>';
       }
-      return '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
+      return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
         + '<div class="chat-row-av">' + otherAvatar + '</div>'
         + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
         + content
@@ -4362,38 +5863,470 @@ H.init();
     }).join('');
 
     const otherIdSafe = escHtml(otherId || '');
-    const hdrSub = (other && other.verified)
-      ? '<div class="chat-hdr-sub"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="color:#4ade80">Verified</span></div>'
-      : ((other && other.privacySettings && other.privacySettings.showActivity)
-         ? '<div class="chat-hdr-sub"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4ade80;flex-shrink:0"></span><span style="color:#4ade80">Online</span></div>'
-         : '<div class="chat-hdr-sub">Tap to view profile</div>');
+    const onlineNow = typeof H.isUserOnline === 'function' && H.isUserOnline(otherId);
     return '<div id="chatPageWrap" class="page active" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;overflow:hidden;">'
       + '<div class="chat-header">'
       + '<button class="chat-hdr-back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
       + '<div class="chat-hdr-av" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">' + otherAvatar + '</div>'
       + '<div class="chat-hdr-info" onclick="H._chat.showProfile(\'' + otherIdSafe + '\')">'
       + '<div class="chat-hdr-name">' + escHtml(otherDisplayName) + '</div>'
-      + hdrSub + '</div>'
+      + '<div class="chat-hdr-sub" id="chatHdrSub">' + chatHdrSubHtml(other, onlineNow) + '</div></div>'
       + '<button class="chat-hdr-menu" onclick="H._chat.openMenu(\'' + otherIdSafe + '\')"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
       + '</div>'
-      + (listing ? '<div class="chat-context-strip"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>' + escHtml(listing.title) + '</div>' : '')
+      + (listing ? chatContextCard(listing) : '')
       + '<div class="chat-thread" id="chatThread"><div class="chat-thread-spacer"></div>'
+      + (c.messages.length < 6 ? '<div class="chat-safety"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div><b>Stay safe.</b> Meet in a public place, inspect the item before you pay, and never send a deposit to someone you don\'t know.</div></div>' : '')
       + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">No messages yet. Say hello!</div>')
+      + '<div class="chat-typing" id="chatTyping" style="display:none"><div class="chat-row-av">' + otherAvatar + '</div><div class="chat-bubble them chat-typing-bubble"><span></span><span></span><span></span></div></div>'
       + '</div>'
+      + ((typeof H._bizMsg !== 'undefined' && H._bizMsg.chipRow) ? H._bizMsg.chipRow(c) : '')
       + '<div class="chat-input-bar">'
-      + '<button class="chat-attach-btn" onclick="H._chat.openAttach()" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
-      + '<input id="chatIn" type="text" inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Type a message…" onkeydown="if(event.keyCode===13&&!event.shiftKey){event.preventDefault();H.sendChat();}">'
-      + '<button class="chat-send" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
+      + '<button class="chat-attach-btn" onmousedown="event.preventDefault()" onclick="H._chat.openAttach()" aria-label="Attach"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
+      + '<button class="chat-offer-btn" onmousedown="event.preventDefault()" onclick="H._chat.makeOffer()" aria-label="Make an offer"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1.5" x2="12" y2="22.5"/><path d="M17 5.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></button>'
+      + '<textarea id="chatIn" rows="1" inputmode="text" enterkeyhint="enter" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Message…" oninput="H.notifyTyping&&H.notifyTyping();H._autoGrowChat&&H._autoGrowChat(this)" onblur="H.stopTyping&&H.stopTyping()"></textarea>'
+      + '<button class="chat-send chat-send-grad" onmousedown="event.preventDefault()" onclick="H.sendChat()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
       + '</div>'
       + '<input type="file" id="chatImgGallery" accept="image/*" style="display:none" onchange="H._chat.handleImageFile(this,false)">'
       + '<input type="file" id="chatImgCamera" accept="image/*" capture="environment" style="display:none" onchange="H._chat.handleImageFile(this,true)">'
       + '</div>';
   };
 
+  // ----- Chat render helpers -----
+  function chatDayLabel(t) {
+    const d = new Date(t), now = new Date();
+    const same = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    if (same(d, now)) return 'Today';
+    const y = new Date(now); y.setDate(now.getDate() - 1);
+    if (same(d, y)) return 'Yesterday';
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: d.getFullYear() === now.getFullYear() ? undefined : 'numeric' });
+  }
+  function chatTick(read) { return '<span class="chat-rr' + (read ? ' read' : '') + '">' + (read ? '✓✓' : '✓') + '</span>'; }
+  H._chatTick = chatTick;
+  function chatHdrSubHtml(other, online) {
+    // Use other.id when available, fall back to the active chat partner id.
+    var oid = (other && other.id) || H._activeOtherId;
+    var sharing = !(other && other.privacySettings && other.privacySettings.showActivity === false);
+    if (sharing && H._otherTyping) return '<span style="color:#FFD27A">Typing...</span>';
+    if (sharing && online) return '<span class="chat-presence-dot"></span><span style="color:#7CF6B0">Online now</span>';
+    if (sharing && oid && H._lastSeen) {
+      var ts = H._lastSeen[oid];
+      if (ts > 0 && typeof H.formatLastSeen === 'function') {
+        var ls = H.formatLastSeen(ts);
+        if (ls) return '<span style="color:#cfe0ff">' + ls + '</span>';
+      }
+      // ts === 0 means fetched but no data at all — show a generic indicator
+      if (ts === 0) return '<span style="color:#9baec8">Seen a while ago</span>';
+    }
+    if (sharing) return '<span style="color:#9baec8">Offline</span>';
+    return 'Tap to view profile';
+  }
+  H._chatHdrSubHtml = chatHdrSubHtml;
+  function chatContextCard(l) {
+    const photo = (l.photos && l.photos[0]) || '';
+    const price = l.price ? ('$' + Number(l.price).toLocaleString()) : 'Free';
+    const open = "H.openInner('Detail',{id:'" + escHtml(l.id) + "'})";
+    const thumb = photo
+      ? '<img class="cc-thumb" src="' + escHtml(photo) + '" onerror="this.style.display=\'none\'">'
+      : '<div class="cc-thumb cc-ph" style="background:' + H.avatarColorFor(l.cat || l.id) + ';color:#fff">' + (H.categoryIcon ? H.categoryIcon(l.cat) : '') + '</div>';
+    return '<div class="chat-ctx-card" onclick="' + open + '">' + thumb
+      + '<div class="cc-info"><div class="cc-title">' + escHtml(l.title || '') + '</div><div class="cc-price">' + price + '</div></div>'
+      + '<svg class="cc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg></div>';
+  }
+
+  // ---------------------------------------------------
+  // MAKE AN OFFER  (encoded as JSON in the message text — no schema change.
+  // No money moves in-app: buyer & seller just agree a price, then deal offline.)
+  // ---------------------------------------------------
+  function parseOffer(text) {
+    if (typeof text !== 'string' || text.charAt(0) !== '{' || text.indexOf('"_offer"') === -1) return null;
+    try { const o = JSON.parse(text); return (o && o._offer) ? o._offer : null; } catch (e) { return null; }
+  }
+  H._parseOffer = parseOffer;
+
+  // ----- Reply / quote support (WhatsApp-style swipe-to-reply) -----
+  // A reply is encoded in the message text as JSON, like offers, so it needs no
+  // schema change and syncs to every device:  {"_reply":{i,n,t}, "t":"<reply>"}
+  function parseReply(text) {
+    if (typeof text !== 'string' || text.charAt(0) !== '{' || text.indexOf('"_reply"') === -1) return null;
+    try { const o = JSON.parse(text); return (o && o._reply) ? { ref: o._reply, text: (o.t || '') } : null; } catch (e) { return null; }
+  }
+  H._parseReply = parseReply;
+  // Tiny inline icons for previews (replace emojis with crisp SVGs).
+  var MIC = {
+    photo: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:3px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+    offer: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:3px"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>'
+  };
+  H._msgIcons = MIC;
+  // The text a message actually shows (unwraps a reply envelope).
+  function msgText(m) { const r = parseReply(m && m.text); return r ? r.text : ((m && m.text) || ''); }
+  H._msgText = msgText;
+  // The quoted block rendered above a reply's own text.
+  function replyQuoteHtml(m) {
+    const r = parseReply(m && m.text);
+    if (!r || !r.ref) return '';
+    const nm = escHtml(r.ref.n || 'Message');
+    const tx = escHtml(String(r.ref.t || '').slice(0, 100));
+    return '<div class="chat-reply-quote" onclick="H._chat.jumpTo(\'' + escHtml(r.ref.i || '') + '\')"><span class="crq-name">' + nm + '</span><span class="crq-text">' + tx + '</span></div>';
+  }
+  H._replyQuoteHtml = replyQuoteHtml;
+  // One-line preview for lists / notifications (image, offer or reply-aware).
+  function msgPreview(m) {
+    if (!m) return '';
+    if (m.image) return 'Photo';
+    if (parseOffer(m.text)) return 'Offer';
+    return msgText(m);
+  }
+  H._msgPreview = msgPreview;
+
+  // Drag a message bubble to the right to reply to it (like WhatsApp). Delegated
+  // on the thread so it covers messages added live without re-binding each one.
+  function attachReplySwipe() {
+    const thread = document.getElementById('chatThread');
+    if (!thread || thread._replyBound) return;
+    thread._replyBound = true;
+    let row = null, sx = 0, sy = 0, dx = 0, active = false, decided = false, isReply = false;
+    thread.addEventListener('touchstart', function (e) {
+      const r = e.target.closest && e.target.closest('.chat-msg-row');
+      if (!r || !e.touches || !e.touches[0]) { row = null; active = false; return; }
+      row = r; sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+      dx = 0; active = true; decided = false; isReply = false;
+    }, { passive: true });
+    thread.addEventListener('touchmove', function (e) {
+      if (!active || !row || !e.touches || !e.touches[0]) return;
+      dx = e.touches[0].clientX - sx;
+      const dy = e.touches[0].clientY - sy;
+      if (!decided) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        decided = true;
+        // Only a clear rightward drag becomes a reply; otherwise let it scroll.
+        isReply = dx > 0 && Math.abs(dx) > Math.abs(dy);
+        if (!isReply) { active = false; row = null; return; }
+      }
+      if (isReply && dx > 0) {
+        e.preventDefault();
+        const d = Math.min(dx, 72);
+        row.style.transition = 'none';
+        row.style.transform = 'translateX(' + d + 'px)';
+        row.style.opacity = (1 - Math.min(d / 240, 0.25)).toFixed(2);
+      }
+    }, { passive: false });
+    function end() {
+      if (!row) { active = false; return; }
+      const r = row, fire = isReply && dx > 48;
+      row = null; active = false;
+      r.style.transition = 'transform .18s ease, opacity .18s ease';
+      r.style.transform = ''; r.style.opacity = '';
+      if (fire) {
+        const id = r.getAttribute('data-msg-id');
+        if (id) H._chat.startReply(id);
+      }
+    }
+    thread.addEventListener('touchend', end, { passive: true });
+    thread.addEventListener('touchcancel', end, { passive: true });
+  }
+
+  function fmtMoney(n) { return '$' + Number(n || 0).toLocaleString(); }
+  function offerCardHtml(of, mine, msgId, otherName, resolved) {
+    const price = fmtMoney(of.price);
+    var icOk  = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>';
+    var icNo  = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    if (of.k === 'accept') return '<div class="offer-status accept">' + icOk + 'Offer accepted at ' + price + ' — arrange your deal</div>';
+    if (of.k === 'decline') return '<div class="offer-status decline">' + icNo + 'Offer declined</div>';
+    const isCounter = of.k === 'counter';
+    const label = isCounter ? (mine ? 'YOUR COUNTER-OFFER' : 'COUNTER-OFFER') : (mine ? 'YOUR OFFER' : 'OFFER');
+    const listingLine = of.listingTitle
+      ? '<div style="font-size:11px;color:var(--sub);margin:-1px 0 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">for ' + escHtml(String(of.listingTitle).slice(0, 50)) + '</div>'
+      : '';
+    let html = '<div class="offer-card' + (mine ? ' mine' : '') + '">'
+      + '<div class="offer-card-top">' + label + '</div>'
+      + listingLine
+      + '<div class="offer-card-price">' + price + '</div>';
+    if (!mine && !resolved) {
+      html += '<div class="offer-card-actions">'
+        + '<button class="offer-btn accept" onclick="H._chat.respondOffer(\'' + escHtml(msgId) + '\',\'accept\')">Accept</button>'
+        + '<button class="offer-btn counter" onclick="H._chat.respondOffer(\'' + escHtml(msgId) + '\',\'counter\')">Counter</button>'
+        + '<button class="offer-btn decline" onclick="H._chat.respondOffer(\'' + escHtml(msgId) + '\',\'decline\')">Decline</button>'
+        + '</div>';
+    } else {
+      html += '<div class="offer-card-foot">' + (resolved ? 'Offer closed' : 'Sent · waiting for a reply') + '</div>';
+    }
+    return html + '</div>';
+  }
+
+  H._chat = H._chat || {};
+
+  // ----- Swipe-to-reply -----
+  H._chat.startReply = function (msgId) {
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function (x) { return x.id === msgId; });
+    if (!m) return;
+    const u = H.currentUser();
+    const who = (u && m.from === u.id) ? 'You' : (H._activeOtherName || 'Them');
+    H._chat.replyTarget = { id: msgId, name: who, text: String(msgPreview(m)).slice(0, 120) };
+    H._chat.renderReplyBar();
+    const inp = document.getElementById('chatIn'); if (inp) inp.focus();
+  };
+  H._chat.cancelReply = function () {
+    H._chat.replyTarget = null;
+    const bar = document.getElementById('chatReplyBar'); if (bar) bar.remove();
+  };
+  H._chat.renderReplyBar = function () {
+    const rt = H._chat.replyTarget; if (!rt) return;
+    const old = document.getElementById('chatReplyBar'); if (old) old.remove();
+    const inputBar = document.querySelector('.chat-input-bar');
+    if (!inputBar || !inputBar.parentNode) return;
+    const bar = document.createElement('div');
+    bar.id = 'chatReplyBar';
+    bar.className = 'chat-reply-bar';
+    bar.innerHTML = '<div class="crb-accent"></div><div class="crb-body"><span class="crb-name">Replying to ' + escHtml(rt.name) + '</span><span class="crb-text">' + escHtml(rt.text) + '</span></div>'
+      + '<button class="crb-x" onclick="H._chat.cancelReply()" aria-label="Cancel reply"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+    inputBar.parentNode.insertBefore(bar, inputBar);
+  };
+  H._chat.jumpTo = function (msgId) {
+    const sel = '[data-msg-id="' + (window.CSS && CSS.escape ? CSS.escape(msgId) : msgId) + '"]';
+    const row = document.querySelector(sel);
+    if (!row) return;
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    row.classList.add('chat-row-flash');
+    setTimeout(function () { row.classList.remove('chat-row-flash'); }, 1300);
+  };
+
+  H._chat.makeOffer = function () {
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    if (!H.currentUser()) { H.requireAuth('Sign in to make an offer'); return; }
+    const otherId = H._activeOtherId;
+    const sellerListings = (H.state.listings || []).filter(function (l) {
+      return (String(l.sellerId) === String(otherId) || String(l.userId) === String(otherId)) && l.status !== 'deleted';
+    });
+    H._chat._offerListings = sellerListings;
+    if (sellerListings.length <= 1) {
+      const l = sellerListings[0] || (state.listings || []).find(function (l) { return l.id === c.listingId; });
+      H._chat._openOfferAmount(l && l.id, l && l.title, l && l.price);
+      return;
+    }
+    const rows = sellerListings.slice(0, 8).map(function (l, i) {
+      const ph = (l.photos && l.photos[0])
+        ? '<img src="' + escHtml(l.photos[0]) + '" style="width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'">'
+        : '<div style="width:44px;height:44px;border-radius:8px;background:var(--bg);flex-shrink:0"></div>';
+      return '<button onclick="H._chat._pickOfferListing(' + i + ')" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:8px">'
+        + ph
+        + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(l.title || 'Untitled') + '</div>'
+        + '<div style="font-size:12px;color:var(--blue);font-weight:700">' + (l.price ? ('$' + Number(l.price).toLocaleString()) : 'No price') + '</div></div>'
+        + '</button>';
+    }).join('');
+    H.modal({
+      title: 'Which listing?',
+      body: '<div style="font-size:13px;color:var(--sub);margin-bottom:12px">Choose a listing to make an offer on.</div>'
+        + '<div style="max-height:55vh;overflow-y:auto">' + rows + '</div>',
+      confirmText: null,
+      cancelText: 'Cancel',
+    });
+  };
+  H._chat._openOfferAmount = function (listingId, listingTitle, suggestedPrice) {
+    H.modal({
+      title: 'Make an offer',
+      body: '<div style="font-size:12.5px;color:var(--sub);margin-bottom:10px">Propose a price. No money is sent in the app - you agree a price here, then arrange the deal in person.</div>'
+        + (listingTitle ? '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px;padding:8px 10px;background:var(--bg);border-radius:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">For: ' + escHtml(String(listingTitle).slice(0, 50)) + '</div>' : '')
+        + '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px;font-weight:900;color:var(--blue)">$</span>'
+        + '<input class="fi" id="offerAmt" type="number" inputmode="decimal" min="1" placeholder="Amount" value="' + (suggestedPrice || '') + '" style="flex:1;font-size:18px;font-weight:700"></div>',
+      confirmText: 'Send offer',
+      onConfirm: function () {
+        const v = parseFloat((document.getElementById('offerAmt') || {}).value);
+        if (!v || v <= 0) { H.toast('Enter a valid amount'); return; }
+        const offerObj = { k: 'offer', price: v };
+        if (listingId) offerObj.listingId = listingId;
+        if (listingTitle) offerObj.listingTitle = String(listingTitle).slice(0, 50);
+        H._chat.sendOfferMessage(offerObj);
+      }
+    });
+  };
+  H._chat._pickOfferListing = function (idx) {
+    const l = H._chat._offerListings && H._chat._offerListings[idx];
+    if (!l) return;
+    H.closeModal();
+    setTimeout(function () { H._chat._openOfferAmount(l.id, l.title, l.price); }, 120);
+  };
+  H._chat._closeOfferCard = function (msgId) {
+    var sel = '[data-msg-id="' + (window.CSS && CSS.escape ? CSS.escape(msgId) : msgId) + '"]';
+    var row = document.querySelector(sel);
+    if (!row) return;
+    var actions = row.querySelector('.offer-card-actions');
+    if (!actions) return;
+    var foot = document.createElement('div');
+    foot.className = 'offer-card-foot';
+    foot.style.color = 'var(--sub)';
+    foot.textContent = 'Offer closed';
+    actions.parentNode.replaceChild(foot, actions);
+  };
+  H._chat.respondOffer = function (msgId, action) {
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    const msg = (c.messages || []).find(function (m) { return m.id === msgId; });
+    const of = msg && parseOffer(msg.text);
+    if (!of) return;
+    if (action === 'accept') {
+      H._chat._closeOfferCard(msgId);
+      H._chat.sendOfferMessage({ k: 'accept', price: of.price });
+    } else if (action === 'decline') {
+      H._chat._closeOfferCard(msgId);
+      H._chat.sendOfferMessage({ k: 'decline', price: of.price });
+    } else if (action === 'counter') {
+      H.modal({
+        title: 'Counter-offer',
+        body: '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px;font-weight:900;color:var(--blue)">$</span>'
+          + '<input class="fi" id="offerAmt" type="number" inputmode="decimal" min="1" value="' + of.price + '" style="flex:1;font-size:18px;font-weight:700"></div>',
+        confirmText: 'Send counter',
+        onConfirm: function () {
+          const v = parseFloat((document.getElementById('offerAmt') || {}).value);
+          if (!v || v <= 0) { H.toast('Enter a valid amount'); return; }
+          H._chat._closeOfferCard(msgId);
+          H._chat.sendOfferMessage({ k: 'counter', price: v });
+        }
+      });
+    }
+  };
+  H._chat.sendOfferMessage = async function (of) {
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    const u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in'); return; }
+    of.by = u.id; if (!of.cur) of.cur = 'USD';
+    const msgId = H.uid(), msgT = Date.now();
+    const text = JSON.stringify({ _offer: of });
+    c.messages.push({ id: msgId, from: u.id, senderName: u.name || '', text: text, t: msgT, read: false });
+    H.saveState();
+    if (typeof H.stopTyping === 'function') H.stopTyping();
+    if (H.currentPageName === 'Chat') {
+      H.renderPage('Chat', { id: c.id });
+      const th = document.getElementById('chatThread'); if (th) th.scrollTop = th.scrollHeight;
+    }
+    try {
+      if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c).catch(function () {});
+      // Persist the offer reliably (same path + fallback as normal messages) so
+      // the other person actually receives it.
+      var saved = false;
+      if (typeof H.saveMessageToCloud === 'function') {
+        var r = await H.saveMessageToCloud(c.id, c.messages[c.messages.length - 1]);
+        saved = !(r && r.ok === false);
+      }
+      if (!saved && window.supabase && typeof window.supabase.from === 'function') {
+        var ins = await window.supabase.from('messages').insert({
+          id: msgId, conversation_id: c.id, sender_id: u.id, sender_name: u.name || '',
+          text: text, created_at: new Date(msgT).toISOString(), read: false
+        });
+        if (ins && ins.error) throw new Error(ins.error.message);
+        saved = true;
+      }
+      if (!saved) { H.toast('Offer saved on your device — will send when you’re online', 4000, true); return; }
+      const otherId = c.members.find(function (m) { return m !== u.id; });
+      if (otherId && typeof H.pushNotif === 'function') {
+        const verb = of.k === 'accept' ? 'accepted your offer' : of.k === 'decline' ? 'declined your offer' : of.k === 'counter' ? 'sent a counter-offer' : 'made an offer';
+        H.pushNotif(otherId, 'New offer', (u.name || 'Someone') + ' ' + verb + ' (' + fmtMoney(of.price) + ')', 'message', null, 'Chat?id=' + c.id);
+      }
+    } catch (e) {
+      console.warn('offer send:', e.message);
+      H.toast('Could not send the offer — please check your connection and try again', 4000, true);
+    }
+  };
+
+  // Show/hide the typing bubble (kept as the last child of the thread).
+  H._renderTyping = function (show) {
+    const t = document.getElementById('chatTyping');
+    const thread = document.getElementById('chatThread');
+    if (!t || !thread) return;
+    if (show) {
+      if (H._chatOtherAvatar) { const av = t.querySelector('.chat-row-av'); if (av) av.innerHTML = H._chatOtherAvatar; }
+      thread.appendChild(t);            // keep it at the bottom
+      t.style.display = '';
+      const near = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 120;
+      if (near) thread.scrollTop = thread.scrollHeight;
+    } else {
+      t.style.display = 'none';
+    }
+  };
+  // Update the header presence line for the open chat.
+  H._refreshChatPresence = function () {
+    if (H.currentPageName !== 'Chat') return;
+    const el = document.getElementById('chatHdrSub');
+    if (!el) return;
+    const oid = H._activeOtherId;
+    const other = (H.state.users || []).find(x => x.id === oid) || null;
+    const online = typeof H.isUserOnline === 'function' && H.isUserOnline(oid);
+    // When the partner's profile is not yet in state.users, check last_seen directly
+    if (!other && oid && H._lastSeen) {
+      var ts = H._lastSeen[oid];
+      if (ts > 0 && typeof H.formatLastSeen === 'function') {
+        var ls = H.formatLastSeen(ts);
+        if (ls) { el.innerHTML = '<span style="color:#cfe0ff">' + ls + '</span>'; return; }
+      }
+      if (ts === 0) { el.innerHTML = '<span style="color:#9baec8">Seen a while ago</span>'; return; }
+    }
+    el.innerHTML = chatHdrSubHtml(other, online);
+  };
+  // Refresh ✓/✓✓ receipts on the user's own messages in the open chat.
+  H._refreshReceipts = function (convId) {
+    if (H.currentPageName !== 'Chat' || H._activeChat !== convId) return;
+    const u = currentUser(); if (!u) return;
+    const c = conversations().find(x => x.id === convId); if (!c) return;
+    (c.messages || []).forEach(function (m) {
+      if (m.from !== u.id) return;
+      const row = document.querySelector('.chat-msg-row.me[data-msg-id="' + (window.CSS && CSS.escape ? CSS.escape(m.id) : m.id) + '"]');
+      if (!row) return;
+      const rr = row.querySelector('.chat-rr');
+      if (rr) { rr.textContent = m.read ? '✓✓' : '✓'; rr.className = 'chat-rr' + (m.read ? ' read' : ''); }
+    });
+  };
+
+  // Reliably pin the chat thread to the most recent message. Repeats over a few
+  // frames/delays (layout + late images shift the height) and re-pins as each
+  // thread image loads, so the chat never opens stuck on middle messages.
+  function forceChatScrollBottom() {
+    var th = document.getElementById('chatThread');
+    if (!th) return;
+    var jump = function () {
+      var el = document.getElementById('chatThread');
+      if (el) el.scrollTop = el.scrollHeight;
+    };
+    jump();
+    requestAnimationFrame(jump);
+    [40, 120, 250, 450, 750].forEach(function (d) { setTimeout(jump, d); });
+    // Re-pin when images that were still loading at mount finish and grow the thread.
+    var imgs = th.querySelectorAll('img');
+    for (var i = 0; i < imgs.length; i++) {
+      if (!imgs[i].complete) {
+        imgs[i].addEventListener('load',  jump, { once: true });
+        imgs[i].addEventListener('error', jump, { once: true });
+      }
+    }
+  }
+  H._forceChatScrollBottom = forceChatScrollBottom;
+
   pages.Chat_after = function () {
     if (window._messagesPoll) { clearInterval(window._messagesPoll); window._messagesPoll = null; }
-    const t = document.getElementById('chatThread');
-    if (t) t.scrollTop = t.scrollHeight;
+    // Tear down keyboard/viewport listeners from a PREVIOUS Chat mount before we
+    // wire new ones. Without this they accumulate on every chat open, so over a
+    // session N handlers fire on each keyboard show/hide — a real source of
+    // Android jank and eventual freezing. The input focus/blur listeners die
+    // with the old DOM (input is re-created each render), so only these leak.
+    if (window.visualViewport && window._chatVPHandler) {
+      window.visualViewport.removeEventListener('resize', window._chatVPHandler);
+      window.visualViewport.removeEventListener('scroll', window._chatVPHandler);
+      window._chatVPHandler = null;
+    }
+    if (window._chatKBResizeHandler) {
+      window.removeEventListener('resize', window._chatKBResizeHandler);
+      window._chatKBResizeHandler = null;
+    }
+    if (window._chatKBShow && typeof window._chatKBShow.remove === 'function') { try { window._chatKBShow.remove(); } catch (e) {} window._chatKBShow = null; }
+    if (window._chatKBHide && typeof window._chatKBHide.remove === 'function') { try { window._chatKBHide.remove(); } catch (e) {} window._chatKBHide = null; }
+    // Pin to the latest message. A single synchronous scroll lands short because
+    // message images/avatars haven't loaded yet — once they do, the thread grows
+    // and leaves the user stranded mid-list. So we scroll now, on the next few
+    // frames/delays, and again each time a thread image finishes loading.
+    forceChatScrollBottom();
+    attachReplySwipe();
     const ma  = document.getElementById('mainArea');
     const wrap = document.getElementById('chatPageWrap');
 
@@ -4434,16 +6367,34 @@ H.init();
         window._chatKBResizeHandler = _onCapKBResize;
       }
     } else {
-      // Browser: position:fixed + visualViewport keeps the wrap inside the visible area
-      if (wrap) { wrap.style.position = 'fixed'; wrap.style.zIndex = '50'; }
+      // Browser / iOS standalone PWA: pin the chat to the visual viewport so the
+      // input bar always rides above the on-screen keyboard. We size to
+      // visualViewport.height and translate by offsetTop (more reliable on iOS
+      // than juggling top/bottom), and only auto-scroll to the latest message
+      // when the keyboard actually opens — never while the user reads history.
+      if (wrap) { wrap.style.position = 'fixed'; wrap.style.left = '0'; wrap.style.right = '0'; wrap.style.top = '0'; wrap.style.bottom = 'auto'; wrap.style.transform = ''; wrap.style.zIndex = '50'; }
       if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
+      let _prevVPH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
       function _syncToViewport() {
         const w = document.getElementById('chatPageWrap');
         const vp = window.visualViewport;
         if (!w || !vp) return;
-        w.style.top    = vp.offsetTop + 'px';
+        // Size the chat to the area above the keyboard.
         w.style.height = vp.height + 'px';
-        w.style.bottom = 'auto';
+        // iOS scrolls the layout viewport up to reveal the focused input, which
+        // slides our fixed header (and the whole chat) off the top. Force the
+        // page back to the top so the header stays pinned under the status bar.
+        // The guard avoids a scroll<->handler feedback loop.
+        const se = document.scrollingElement || document.documentElement;
+        if (window.pageYOffset !== 0 || (se && se.scrollTop !== 0)) {
+          window.scrollTo(0, 0);
+          if (se) se.scrollTop = 0;
+        }
+        if (vp.height < _prevVPH - 60) {               // keyboard just opened
+          const th = document.getElementById('chatThread');
+          if (th) th.scrollTop = th.scrollHeight;
+        }
+        _prevVPH = vp.height;
       }
       window._chatVPHandler = _syncToViewport;
       if (window.visualViewport) {
@@ -4451,30 +6402,123 @@ H.init();
         window.visualViewport.addEventListener('scroll', _syncToViewport);
         _syncToViewport();
       }
+      // iOS often fires the viewport resize late (or not at all on first focus),
+      // so re-sync a few times after the field gains focus and scroll to bottom.
+      const _inp = document.getElementById('chatIn');
+      if (_inp) {
+        _inp.addEventListener('focus', function () {
+          [60, 200, 350, 550, 800].forEach(function (d) {
+            setTimeout(function () {
+              _syncToViewport();
+              const th = document.getElementById('chatThread');
+              if (th) th.scrollTop = th.scrollHeight;
+            }, d);
+          });
+        });
+        _inp.addEventListener('blur', function () { setTimeout(_syncToViewport, 100); });
+      }
     }
-    if (H.currentPageParams && H.currentPageParams.id) H.startChatPolling(H.currentPageParams.id);
+    if (H.currentPageParams && H.currentPageParams.id) {
+      const cid = H.currentPageParams.id;
+      H.startChatPolling(cid);
+      // Real-time: presence, typing channel, and push read-receipts to the cloud.
+      if (typeof H.initPresence === 'function') H.initPresence();
+      if (typeof H.joinChatChannel === 'function') H.joinChatChannel(cid);
+      if (typeof H.markConversationReadInCloud === 'function' && H._activeOtherId) {
+        H.markConversationReadInCloud(cid, H._activeOtherId);
+      }
+      // Last-seen: fetch the partner's last_seen + privacy, then refresh the header.
+      if (typeof H.fetchLastSeen === 'function' && H._activeOtherId) {
+        H.fetchLastSeen(H._activeOtherId).then(function () {
+          if (typeof H._refreshChatPresence === 'function') H._refreshChatPresence();
+        });
+      }
+      // Keep the "last seen X ago" label current while the chat is open. Cleared
+      // at the top of Chat_after on the next mount so it never accumulates.
+      if (window._lastSeenTick) { clearInterval(window._lastSeenTick); }
+      window._lastSeenTick = setInterval(function () {
+        if (H.currentPageName !== 'Chat') { clearInterval(window._lastSeenTick); window._lastSeenTick = null; return; }
+        if (typeof H._refreshChatPresence === 'function') H._refreshChatPresence();
+      }, 60000);
+    }
   };
 
 
   H.openChat = function (id) { H.openInner('Chat', { id }); };
 
   H.startChatWith = function (otherId, listingId) {
+   try {
     const u = currentUser();
     if (!u) { H.requireAuth('Sign in to message sellers'); return; }
-    if (!otherId) { H.toast('Seller profile is not available yet'); return; }
-    if (otherId === u.id) { H.toast('You cannot message yourself'); return; }
+    // Normalise inputs — guard against undefined/null so we never throw silently on .slice
+    const myId = u.id != null ? String(u.id) : '';
+    otherId = otherId != null ? String(otherId) : '';
+    listingId = listingId != null ? String(listingId) : '';
+    if (!myId) { H.toast('Please sign out and sign back in, then try again.'); return; }
+    if (!otherId || otherId === 'undefined' || otherId === 'null') { H.toast('Seller profile is not available yet'); return; }
+    if (otherId === myId) { H.toast('You cannot message yourself'); return; }
     // Check if the target user has turned off direct messages
     const targetUser = (H.state.users || []).find(function(x) { return x.id === otherId; });
     if (targetUser && targetUser.privacySettings && targetUser.privacySettings.allowMessages === false) {
       H.toast('This seller has turned off direct messages');
       return;
     }
-    // Use deterministic ID so both users get same conversation
-    const ids = [u.id, otherId].sort();
-    const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6) + '_' + (listingId||'').slice(-6);
-    // If this conv was previously deleted, un-delete it so new messages from this person show
-    if (Array.isArray(H.state.deletedConvIds) && H.state.deletedConvIds.includes(convId)) {
-      H.state.deletedConvIds = H.state.deletedConvIds.filter(function(id){ return id !== convId; });
+    // Deterministic per-person ID so both users — and every entry point (the
+    // profile "Message" button and the listing "Message in App" button) — share
+    // ONE conversation. The listing is kept as context but is NOT part of the id;
+    // otherwise messaging the same seller from a listing vs their profile forks
+    // into two separate threads (the reported bug).
+    const ids = [myId, otherId].sort();
+    const pairKey = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    let convId = pairKey;
+    // Adopt any existing 1-to-1 thread with this same person — including older
+    // threads that were keyed by listing id — so we never create a duplicate.
+    // Match on EITHER the members array OR the conversation id prefix: cloud sync
+    // often stores a thread with an incomplete members list (just [myId]) when the
+    // other party's messages weren't paired during the scan — e.g. a thread whose
+    // last message is "You: …". Those still carry the per-person id prefix
+    // (conv_AAAAAA_BBBBBB[_listing]), so prefix matching adopts them even when the
+    // members array can't. Without this, opening from a profile/listing forked a
+    // fresh empty chat while the real history stayed under the old id.
+    const _pairCandidates = conversations().filter(function (x) {
+      if (!x || String(x.id).indexOf('job_') === 0) return false;
+      const mem = Array.isArray(x.members) ? x.members.map(String) : [];
+      const byMembers = mem.indexOf(myId) !== -1 && mem.indexOf(otherId) !== -1;
+      const byId = String(x.id) === pairKey || String(x.id).indexOf(pairKey + '_') === 0;
+      return byMembers || byId;
+    }).sort(function (a, b) {
+      // Prefer the thread with the most recent message so we land on real history.
+      const am = (a.messages || [])[(a.messages || []).length - 1] || {};
+      const bm = (b.messages || [])[(b.messages || []).length - 1] || {};
+      return (bm.t || 0) - (am.t || 0);
+    });
+    const _existingPair = _pairCandidates[0];
+    if (_existingPair) convId = _existingPair.id;
+    // If a thread with this person was deleted, REVIVE it (old listing-keyed ids
+    // included): clear the deletion locally and server-side and reuse the old id,
+    // so the history comes back and the person never shows as "Deleted User".
+    if (Array.isArray(H.state.deletedConvIds)) {
+      const revived = H.state.deletedConvIds.filter(function (id) {
+        return id === pairKey || String(id).indexOf(pairKey + '_') === 0;
+      });
+      if (revived.length) {
+        if (!_existingPair) convId = revived[0];
+        H.state.deletedConvIds = H.state.deletedConvIds.filter(function (id) { return revived.indexOf(id) === -1; });
+        if (H.state.deletedConvMeta) revived.forEach(function (id) { delete H.state.deletedConvMeta[id]; });
+        H.saveState();
+        var _sbU = window.supabase;
+        if (_sbU && typeof _sbU.from === 'function') {
+          revived.forEach(function (id) {
+            _sbU.from('conversation_deletions').delete().eq('user_id', myId).eq('conversation_id', id).then(function () {});
+          });
+        }
+        // Pull the old thread + history back from the cloud, then refresh the open chat.
+        if (typeof H.syncConversations === 'function') {
+          H.syncConversations().then(function () {
+            if (H.currentPageName === 'Chat' && H.currentPageParams && H.currentPageParams.id === convId) H.renderPage('Chat', { id: convId });
+          });
+        }
+      }
     }
     // Resolve the other user's name for display before they reply
     const otherUser = (H.state.users||[]).find(function(x){ return x.id === otherId; });
@@ -4498,10 +6542,22 @@ H.init();
       if (!c.otherName && otherName) { c.otherName = otherName; dirty = true; }
       if (dirty) H.saveState();
     }
+    // We're actively messaging this person, so any stale "profile not found"
+    // marks from a failed fetch are wrong — clear them and re-resolve the name.
+    var _known = (H.state.users || []).find(function (x) { return x.id === otherId; });
+    if (c.otherDeleted) { delete c.otherDeleted; H.saveState(); }
+    if ((!_known || !_known.name) && H._resolvedProfileFetch) { try { delete H._resolvedProfileFetch[otherId]; } catch (e) {} }
+    if (!c.otherName && typeof H._resolveOtherName === 'function') H._resolveOtherName(otherId, c);
     H.openInner('Chat', { id: convId });
+   } catch (e) {
+    console.error('startChatWith failed:', e);
+    H.toast('Could not open chat: ' + ((e && e.message) ? e.message : 'unknown error'));
+   }
   };
 
   pages.Messages_after = function () {
+    // Nudge to enable phone notifications if they're off
+    if (typeof H.maybeShowNotifBanner === 'function') H.maybeShowNotifBanner();
     // Mark all received messages as read when the inbox is opened
     const _u = H.currentUser();
     if (_u) {
@@ -4569,12 +6625,30 @@ H.init();
       if (!u) return;
       const ava2 = otherAvatarFor(convAfter, u);
       const newMsgs = (convAfter.messages || []).filter(m => !idsBefore.has(m.id));
+      let gotIncoming = false;
       newMsgs.forEach(function(m) {
         if (m.from === u.id) return;
         m.read = true;
+        gotIncoming = true;
         appendThemMessage(thread, ava2, m);
+        var _inOf = parseOffer(m.text);
+        if (_inOf && (_inOf.k === 'accept' || _inOf.k === 'decline' || _inOf.k === 'counter')) {
+          document.querySelectorAll('.offer-card-actions').forEach(function (el) {
+            var r2 = el.closest('[data-msg-id]');
+            var mid2 = r2 && r2.getAttribute('data-msg-id');
+            if (mid2 && typeof H._chat._closeOfferCard === 'function') H._chat._closeOfferCard(mid2);
+          });
+        }
       });
-      thread.scrollTop = thread.scrollHeight;
+      if (gotIncoming) {
+        thread.scrollTop = thread.scrollHeight;
+        // We just saw their new messages — clear typing and mark them read in the cloud.
+        if (typeof H._renderTyping === 'function') H._renderTyping(false);
+        const oid = (convAfter.members || []).find(x => x !== u.id);
+        if (oid && typeof H.markConversationReadInCloud === 'function') H.markConversationReadInCloud(convId, oid);
+      }
+      // Refresh our own ✓/✓✓ ticks in case the cloud now reflects them as read.
+      if (typeof H._refreshReceipts === 'function') H._refreshReceipts(convId);
       H.saveState();
       if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
     }, 4000);
@@ -4720,10 +6794,11 @@ H.init();
       const meta = document.createElement('div');
       meta.className = 'chat-bubble-meta';
       meta.style.textAlign = 'right';
-      meta.textContent = 'just now';
+      meta.innerHTML = 'just now ' + chatTick(false);
       bubble.appendChild(meta);
       row.appendChild(bubble);
-      thread.appendChild(row);
+      const typingEl = thread.querySelector('#chatTyping');
+      if (typingEl) thread.insertBefore(row, typingEl); else thread.appendChild(row);
       thread.scrollTop = thread.scrollHeight;
     }
     // Persist to cloud
@@ -4732,32 +6807,64 @@ H.init();
         await window.supabase.from('messages').insert({
           id: msgId, conversation_id: c.id,
           sender_id: u.id, sender_name: u.name || '',
-          text: '[Photo]', image_url: imageUrl,
+          text: '[Photo]', image: imageUrl,
           created_at: new Date(msgT).toISOString(), read: false
         });
       }
       var otherId = c.members.find(function(m){ return m !== u.id; });
-      if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Photo', (u.name || 'Someone') + ' sent you a photo', 'message');
+      if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Photo', (u.name || 'Someone') + ' sent you a photo', 'message', null, 'Chat?id=' + c.id);
     } catch(e) { console.warn('Image cloud sync:', e.message); }
   };
 
-  H._chat.viewImg = function(url) {
-    // Full-screen image viewer
+  // Global full-screen image viewer (chat photos, profile pictures, etc.)
+  H.viewImage = function(url) {
+    if (!url) return;
+    if (document.getElementById('imgViewer')) return;   // guard double-open
     var overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:16px';
+    overlay.id = 'imgViewer';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:100000;display:flex;flex-direction:column';
+
+    // Top bar with a real back arrow, pushed BELOW the status bar (var(--safe-top)
+    // is set by the native layer; env() alone is 0 on most Android devices, which
+    // is why the old X sat under the status bar and "didn't respond").
+    var bar = document.createElement('div');
+    bar.style.cssText = 'flex-shrink:0;display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:calc(10px + var(--safe-top,0px));background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0))';
+    var back = document.createElement('button');
+    back.setAttribute('aria-label', 'Back');
+    back.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+    back.style.cssText = 'width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.18);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;flex-shrink:0';
+    bar.appendChild(back);
+
+    var imgWrap = document.createElement('div');
+    imgWrap.style.cssText = 'flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 12px 16px;cursor:zoom-out';
     var img = document.createElement('img');
     img.src = url;
     img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:8px';
-    var close = document.createElement('button');
-    close.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-    close.style.cssText = 'position:absolute;top:env(safe-area-inset-top,16px);right:16px;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation';
-    var dismiss = function() { document.body.removeChild(overlay); };
-    overlay.onclick = dismiss;
-    close.onclick   = dismiss;
-    close.addEventListener('click', function(e){ e.stopPropagation(); dismiss(); });
-    overlay.appendChild(img);
-    overlay.appendChild(close);
+    imgWrap.appendChild(img);
+
+    overlay.appendChild(bar);
+    overlay.appendChild(imgWrap);
+
+    var dismiss = function() {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      document.removeEventListener('keydown', onKey);
+      H._imgViewerClose = null;
+    };
+    H._imgViewerClose = dismiss;   // lets the Android hardware-back button close it
+    function onKey(e){ if (e.key === 'Escape') dismiss(); }
+    back.addEventListener('click', function(e){ e.stopPropagation(); dismiss(); });
+    imgWrap.addEventListener('click', dismiss);   // tapping the photo area also closes
+    document.addEventListener('keydown', onKey);
     document.body.appendChild(overlay);
+  };
+  H._chat.viewImg = H.viewImage;   // alias kept for existing chat-image taps
+
+  // Auto-grow the message textarea from 1 line up to its CSS max-height, then
+  // let it scroll. Keeps the composer compact but supports multi-line messages.
+  H._autoGrowChat = function (el) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   };
 
   H.sendChat = async function () {
@@ -4769,11 +6876,27 @@ H.init();
     if (!c) return;
     const u = H.currentUser();
     if (!u) { H.requireAuth('Sign in to send messages'); return; }
+    // Flood guard: block more than 5 messages in 10s to the same chat (spam/bots).
+    if (typeof H.isChatSpam === 'function' && H.isChatSpam(c.id, u.id)) {
+      H.toast('You’re sending messages too fast. Please slow down.', 3000, true);
+      return;
+    }
     var msgId = H.uid();
     var msgT = Date.now();
-    c.messages.push({ id: msgId, from: u.id, senderName: u.name||'', text: text, t: msgT, read: false });
+    // If replying, wrap the typed text in a reply envelope so the quote rides
+    // along to every device with no schema change.
+    const rt = H._chat && H._chat.replyTarget;
+    const storeText = rt ? JSON.stringify({ _reply: { i: rt.id, n: rt.name, t: rt.text }, t: text }) : text;
+    c.messages.push({ id: msgId, from: u.id, senderName: u.name||'', text: storeText, t: msgT, read: false });
     H.saveState();
     inp.value = '';
+    if (typeof H._autoGrowChat === 'function') H._autoGrowChat(inp);   // collapse back to one line
+    // Keep the keyboard open and the cursor in the field so the user can keep
+    // typing. The send button uses onmousedown preventDefault so it never stole
+    // focus; this refocus is a belt-and-braces guarantee across platforms.
+    try { inp.focus({ preventScroll: true }); } catch (e) { try { inp.focus(); } catch (e2) {} }
+    if (H._chat && H._chat.cancelReply) H._chat.cancelReply();
+    if (typeof H.stopTyping === 'function') H.stopTyping();
     // Append to DOM directly — no full page re-render to avoid flicker
     const thread = document.getElementById('chatThread');
     if (thread) {
@@ -4782,9 +6905,10 @@ H.init();
       row.setAttribute('data-msg-id', msgId);
       const bubble = document.createElement('div');
       bubble.className = 'chat-bubble me';
-      bubble.innerHTML = escHtml(text) + '<div class="chat-bubble-meta" style="text-align:right">just now</div>';
+      bubble.innerHTML = (rt ? replyQuoteHtml({ text: storeText }) : '') + escHtml(text) + '<div class="chat-bubble-meta" style="text-align:right">just now ' + chatTick(false) + '</div>';
       row.appendChild(bubble);
-      thread.appendChild(row);
+      const typing = thread.querySelector('#chatTyping');
+      if (typing) thread.insertBefore(row, typing); else thread.appendChild(row);
       thread.scrollTop = thread.scrollHeight;
     }
     try {
@@ -4803,12 +6927,12 @@ H.init();
         var r = await window.supabase.from('messages').insert({
           id: msgId, conversation_id: c.id,
           sender_id: u.id, sender_name: u.name || '',
-          text: text, created_at: new Date(msgT).toISOString(), read: false
+          text: storeText, created_at: new Date(msgT).toISOString(), read: false
         });
         if (r && r.error) throw new Error(r.error.message);
       }
       var otherId = c.members.find(function(m){ return m !== u.id; });
-      if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Message', (u.name || 'Someone') + ': ' + text.slice(0, 80), 'message');
+      if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Message', (u.name || 'Someone') + ': ' + text.slice(0, 80), 'message', null, 'Chat?id=' + c.id);
     } catch(e) {
       console.warn('Msg cloud error:', e.message);
       H.toast('Message could not be sent. Check your connection and try again.', 5000, true);
@@ -4867,13 +6991,26 @@ H.init();
     // Mark as deleted locally — do NOT delete from Supabase so the other party keeps their messages
     if (!Array.isArray(H.state.deletedConvIds)) H.state.deletedConvIds = [];
     if (!H.state.deletedConvIds.includes(convId)) H.state.deletedConvIds.push(convId);
+    // Record WHEN it was deleted so a reply that arrives later can revive the thread.
+    if (!H.state.deletedConvMeta || typeof H.state.deletedConvMeta !== 'object') H.state.deletedConvMeta = {};
+    H.state.deletedConvMeta[convId] = Date.now();
     H.state.conversations = (H.state.conversations || []).filter(function (c) { return c.id !== convId; });
     H.saveState();
+    // Persist the deletion server-side so it stays hidden after logout/login.
+    var sb = window.supabase, u = H.currentUser();
+    if (sb && u && typeof sb.from === 'function') {
+      sb.from('conversation_deletions')
+        .upsert({ user_id: u.id, conversation_id: convId }, { onConflict: 'user_id,conversation_id' })
+        .then(function (r) { if (r && r.error) console.warn('conversation deletion persist failed:', r.error.message); });
+    }
     if (H.currentPageName === 'Messages') H.renderPage('Messages');
   };
 
   // ── Chat menu: block, view profile, report ───────────────
-  H._chat = {
+  // Merge onto the existing H._chat — the attach/image methods (openAttach,
+  // pickImage, …) are defined above; reassigning with `H._chat = {…}` would wipe
+  // them out and break the "+" attach button.
+  Object.assign(H._chat, {
     openMenu(userId) {
       const u = H.currentUser();
       const other = (H.state.users || []).find(x => x.id === userId);
@@ -4903,7 +7040,7 @@ H.init();
       const listings = (H.state.listings || []).filter(l => l.sellerId === userId && l.status === 'active');
       const ini = H.initials(other.name || 'U');
       const avatar = other.avatar
-        ? `<img src="${escHtml(other.avatar)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='flex')"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">${ini}</div>`
+        ? `<img src="${escHtml(other.avatar)}" onclick="H.viewImage('${(other.avatar||'').replace(/'/g, "\\'")}')" style="width:64px;height:64px;border-radius:50%;object-fit:cover;cursor:zoom-in" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='flex')"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">${ini}</div>`
         : `<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">${ini}</div>`;
       const listingCards = listings.slice(0, 4).map(l => {
         const ph = (l.photos && l.photos[0])
@@ -4925,10 +7062,10 @@ H.init();
           <div style="text-align:center;padding:16px 0 20px">
             <div style="display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px">
               ${other.avatar
-                ? `<img src="${escHtml(other.avatar)}" style="width:80px;height:80px;border-radius:50%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;font-family:'Inter',-apple-system,sans-serif">${ini}</div>`
+                ? `<img src="${escHtml(other.avatar)}" onclick="H.viewImage('${(other.avatar||'').replace(/'/g, "\\'")}')" style="width:80px;height:80px;border-radius:50%;object-fit:cover;cursor:zoom-in" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:none;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;font-family:'Inter',-apple-system,sans-serif">${ini}</div>`
                 : `<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;font-family:'Inter',-apple-system,sans-serif">${ini}</div>`}
             </div>
-            <div style="font-size:18px;font-weight:800;color:var(--text);font-family:'Inter',-apple-system,sans-serif">${escHtml(other.name || 'User')}${other.verified ? '&nbsp;<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#22c55e" stroke-width="2.5" style="vertical-align:middle;margin-bottom:2px"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
+            <div style="font-size:18px;font-weight:800;color:var(--text);font-family:'Inter',-apple-system,sans-serif">${escHtml(other.name || 'User')}${other.verified ? '&nbsp;' + H.verifiedBadge(15) + '' : ''}</div>
             ${other.joinedAt ? `<div style="font-size:12px;color:var(--sub);margin-top:5px;font-family:'Inter',-apple-system,sans-serif">Member since ${new Date(other.joinedAt).toLocaleDateString()}</div>` : ''}
             ${other.phone ? `<div style="font-size:12px;color:var(--sub);margin-top:3px;font-family:'Inter',-apple-system,sans-serif">${phone}</div>` : ''}
           </div>
@@ -4981,7 +7118,7 @@ H.init();
           created_at: new Date(rep.t).toISOString(), status: 'open' }).catch(() => {});
       }
     },
-  };
+  });
 
   H._markAllRead = function() {
     const u = H.currentUser();
@@ -5293,17 +7430,67 @@ H.init();
   }
 
   // ── Notification tap navigation ───────────────────────────
-  H._notifNavigate = function (link, type) {
-    // If there's a deep link, follow it
+  const _openChat = (id) => { if (typeof H.openChat === 'function') H.openChat(id); else H.openInner('Chat', { id }); };
+
+  function _findNotif(id) {
+    var u = H.currentUser && H.currentUser(); if (!u) return null;
+    var list = (H.state.notifs && H.state.notifs[u.id]) || [];
+    return list.find(function (x) { return x.id === id; }) || null;
+  }
+
+  // Navigational notification types jump straight to a screen. Everything else
+  // (admin broadcasts / info / announcements) opens a detail view so the user can
+  // read the full message and see the shared image.
+  var _NAV_TYPES = { message: 1, sale: 1, boost: 1, verify: 1, review: 1, ban: 1, report: 1 };
+
+  H._closeNotifDetail = function () { var m = document.getElementById('notifDetailModal'); if (m) m.remove(); };
+
+  // Render the broadcast/info detail overlay from a plain object. Used both by an
+  // in-app tap (looked up by id) and by a notification-tray tap (built straight
+  // from the push payload, so it works even on a cold start).
+  function _renderNotifDetail(d) {
+    if (!d) return;
+    if (document.getElementById('notifDetailModal')) return;
+    var image = d.image || d.imageUrl || '';
+    var imgSafe = image.replace(/'/g, "\\'");
+    var img = image
+      ? '<img src="' + escHtml(image) + '" onclick="H.viewImage&&H.viewImage(\'' + imgSafe + '\')" style="width:100%;max-height:260px;object-fit:cover;border-radius:14px;margin-bottom:14px;cursor:zoom-in" onerror="this.style.display=\'none\'">'
+      : '';
+    var openBtn = d.deepLink
+      ? '<button onclick="H._closeNotifDetail();H._notifNavigate(\'' + escHtml(d.deepLink) + '\',\'' + escHtml(d.type || '') + '\')" style="width:100%;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px">Open</button>'
+      : '';
+    var timeLine = d.t ? '<div style="font-size:11px;color:var(--sub);margin-bottom:16px">' + timeAgo(d.t) + '</div>' : '<div style="margin-bottom:8px"></div>';
+    var ov = document.createElement('div');
+    ov.id = 'notifDetailModal';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(16,24,40,.55);z-index:9600;display:flex;align-items:center;justify-content:center;padding:22px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)';
+    ov.innerHTML =
+      '<div style="background:var(--card);border-radius:18px;max-width:380px;width:100%;max-height:86vh;overflow-y:auto;padding:18px;font-family:Inter,sans-serif;box-shadow:0 20px 60px rgba(16,24,40,.32)">'
+      + img
+      + '<div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px;line-height:1.3">' + escHtml(d.title || '') + '</div>'
+      + '<div style="font-size:14px;color:var(--text);line-height:1.6;white-space:pre-wrap;margin-bottom:8px">' + escHtml(d.body || '') + '</div>'
+      + timeLine
+      + openBtn
+      + '<button onclick="H._closeNotifDetail()" style="width:100%;padding:12px;background:' + (d.deepLink ? 'transparent' : '#1A3A8F') + ';color:' + (d.deepLink ? 'var(--sub)' : '#fff') + ';border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Close</button>'
+      + '</div>';
+    ov.addEventListener('click', function (e) { if (e.target === ov) H._closeNotifDetail(); });
+    document.body.appendChild(ov);
+  }
+
+  H._openNotifDetail = function (id) {
+    var n = _findNotif(id); if (!n) return;
+    _renderNotifDetail({ title: n.title, body: n.body, image: n.imageUrl, deepLink: n.deepLink, type: n.type, t: n.t });
+  };
+
+  // Open the detail straight from a push payload (tray tap / cold start).
+  H._openNotifDetailFromData = function (d) { _renderNotifDetail(d || {}); };
+
+  H._notifNavigate = function (link, type, id) {
+    // Admin broadcasts / info / announcements → open the detail view (full text +
+    // shared image) instead of bouncing to Home.
+    if (id && !_NAV_TYPES[type]) { H._openNotifDetail(id); return; }
     if (link) {
-      // In-app listing detail: URL contains ?id=xxx or &id=xxx
-      const listingMatch = link.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-      if (listingMatch) {
-        H.openInner('Detail', { id: listingMatch[1] });
-        return;
-      }
       // External URL — open in system browser
-      if (link.startsWith('http')) {
+      if (/^https?:\/\//i.test(link)) {
         try {
           if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
             window.Capacitor.Plugins.Browser.open({ url: link });
@@ -5313,24 +7500,30 @@ H.init();
         } catch (e) { window.open(link, '_blank', 'noopener,noreferrer'); }
         return;
       }
-      // In-app named route like "Messages" or "detail?id=xxx"
-      const routeMatch = link.match(/^(\w+)(?:\?(.*))?$/);
+      // "chat:convId" shorthand (used by push notifications)
+      const chatShort = link.match(/^chat:(.+)$/i);
+      if (chatShort) { _openChat(chatShort[1]); return; }
+      // Named in-app route: "Chat?id=xxx", "Detail?id=xxx", "Messages", …
+      const routeMatch = link.match(/^([A-Za-z][\w-]*)(?:\?(.*))?$/);
       if (routeMatch) {
         const page = routeMatch[1];
         const params = {};
-        if (routeMatch[2]) new URLSearchParams(routeMatch[2]).forEach((v, k) => { params[k] = v; });
-        if (Object.keys(params).length) H.openInner(page, params);
-        else H.navTo(page);
+        if (routeMatch[2]) { try { new URLSearchParams(routeMatch[2]).forEach((v, k) => { params[k] = v; }); } catch (e) {} }
+        if ((page === 'Chat' || page === 'chat') && params.id) { _openChat(params.id); return; }
+        const _rootPages = ['Home','Browse','Messages','Post','Account','Notifications'];
+        if (Object.keys(params).length) { H.openInner(page, params); return; }
+        if (_rootPages.indexOf(page) !== -1) H.navTo(page);
+        else H.openInner(page);
         return;
       }
+      // Legacy listing deep link containing id=xxx
+      const idMatch = link.match(/(?:[?&]|^)id=([a-zA-Z0-9_-]+)/);
+      if (idMatch) { H.openInner('Detail', { id: idMatch[1] }); return; }
     }
-    // No deep link — navigate based on notification type
+    // No usable deep link — navigate based on notification type
     const t = type || '';
-    if (t === 'message')                    { H.navTo('Messages'); return; }
-    if (t === 'sale')                        { H.navTo('Account'); return; }
-    if (t === 'boost' || t === 'verify' || t === 'review' || t === 'ban' || t === 'report') {
-      H.navTo('Account'); return;
-    }
+    if (t === 'message')                                                       { H.navTo('Messages'); return; }
+    if (t === 'sale' || t === 'boost' || t === 'verify' || t === 'review' || t === 'ban' || t === 'report') { H.navTo('Account'); return; }
     // info / system / unknown — go to Home so something always happens
     H.navTo('Home');
   };
@@ -5366,7 +7559,7 @@ H.init();
           const type = n.type || _inferType(n.title);
           const color = _notifColor(type);
           const safeLink = n.deepLink ? escHtml(n.deepLink) : '';
-          const tapAction = `H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)';H._notifNavigate(${safeLink ? `'${safeLink}'` : 'null'},'${type}');`;
+          const tapAction = `H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)';H._notifNavigate(${safeLink ? `'${safeLink}'` : 'null'},'${type}','${n.id}');`;
           const navHint = type === 'message' ? 'Open Messages ›'
             : type === 'sale' ? 'Open Account ›'
             : n.deepLink ? 'Tap to open ›'
@@ -5423,6 +7616,13 @@ H.init();
       saveState();
       H._updateNotifBadge();
       if (H.updateNotifBadge) H.updateNotifBadge();
+      // Persist read state to the server so viewed notifications don't come
+      // back as "new" after a refresh, on another device, or after a cache clear.
+      const c = sb();
+      if (c) {
+        c.from('notifications').update({ read: true }).eq('user_id', u.id).eq('read', false)
+          .then(r => { if (r && r.error) console.warn('notif read-sync failed:', r.error.message); });
+      }
     }
     // Sync from Supabase whenever the page is opened
     if (typeof H.syncNotifications === 'function') H.syncNotifications();
@@ -5462,20 +7662,25 @@ H.init();
     };
 
     return `<div class="page active">${H.innerTopbar('Notification Preferences')}
-      <div style="padding:12px 12px 100px">
-        <div style="font-size:13px;color:var(--sub);padding:4px 2px 12px;line-height:1.5">
-          Choose which notifications you receive. Push notifications require app permissions.
+      <div style="padding:0 14px 100px">
+
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:20px;padding:20px;margin:14px 0 16px;color:#fff;box-shadow:0 8px 24px rgba(26,58,143,.25);display:flex;align-items:center;gap:13px">
+          <div style="width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#F5A623" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+          <div><div style="font-size:17px;font-weight:800">Notifications</div><div style="font-size:12.5px;color:rgba(255,255,255,.82);margin-top:1px">Choose what you hear about. Push needs app permission.</div></div>
         </div>
-        <div class="section-card">
-          ${rows.map(([k, t, s, iconName]) => {
+
+        <div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:18px;overflow:hidden;box-shadow:0 2px 10px rgba(16,24,40,.04)">
+          ${rows.map(([k, t, s, iconName], idx) => {
             const on = u.settings[k] !== false;
-            const trackBg = on ? '#34C759' : 'rgba(120,120,128,0.3)';
+            const trackBg = on ? '#16a34a' : 'rgba(120,120,128,0.3)';
             const knobLeft = on ? '22px' : '3px';
+            const border = idx < rows.length - 1 ? 'border-bottom:1px solid var(--border,#EEF1F6);' : '';
             return `
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)">
-              <div style="flex:1;min-width:0;padding-right:12px">
-                <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px">${settingsIcon(iconName)} ${t}</div>
-                <div style="font-size:12px;color:var(--sub);line-height:1.4">${s}</div>
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;${border}">
+              <div style="width:38px;height:38px;border-radius:11px;background:rgba(26,58,143,.08);color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0">${settingsIcon(iconName)}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:14.5px;font-weight:700;color:var(--text)">${t}</div>
+                <div style="font-size:12px;color:var(--sub);line-height:1.45;margin-top:1px">${s}</div>
               </div>
               <button
                 onclick="H.toggleSetting('${k}',this)"
@@ -5489,15 +7694,9 @@ H.init();
           }).join('')}
         </div>
 
-        <div style="background:var(--n4);border-radius:14px;padding:14px;margin-top:14px;border:1px solid var(--n5)">
-          <div style="font-size:13px;font-weight:700;color:var(--n2);margin-bottom:4px">
-            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:middle;margin-right:6px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            Privacy Note
-          </div>
-          <div style="font-size:12px;color:var(--sub);line-height:1.6">
-            PaMarket never sells your notification preferences or contact details to third parties.
-            You can turn off all notifications at any time from your device settings.
-          </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#EEF2FB;border-radius:14px;padding:14px;margin-top:16px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Privacy:</b> PaMarket never sells your notification preferences or contact details. You can also turn off all notifications from your device settings.</div>
         </div>
       </div>
     </div>`;
@@ -5822,6 +8021,7 @@ H.init();
       <div class="empty-state"><div class="empty-icon">${S.deny}</div><div class="empty-title">Access Denied</div></div>
     </div>`;
 
+    const pendingUpgrades = (H.state.txns||[]).filter(t=>t.type==='subscription'&&t.status==='pending').length;
     const tabs = [
       ['overview',      'Overview'],
       ['users',         `Users (${(H.state.users||[]).length})`],
@@ -5834,7 +8034,8 @@ H.init();
       ['notifications', 'Notify'],
       ['support',       `Support (${(H.state.supportTickets||[]).filter(t=>t.status!=='closed').length})`],
       ['logs',          `Logs (${(H.state.adminLogs||[]).length})`],
-      ['messages',      `Messages (${(H.state.conversations||[]).length})`]
+      ['messages',      `Messages (${(H.state.conversations||[]).length})`],
+      ['business',      `Business${pendingUpgrades ? ' (' + pendingUpgrades + ')' : ''}`]
     ];
 
     return `<div class="page active">${innerTopbar('Admin Panel')}
@@ -5861,6 +8062,7 @@ H.init();
     const p1 = sb.from('profiles')
       .select('id,name,email,phone,verification_pending,id_type,verified,verified_at,avatar_url,role')
       .or('verification_pending.eq.true,verified.eq.true')
+      .limit(1000)
       .then(function (res) {
         const data = res && res.data;
         if (!data || !data.length) return;
@@ -5896,6 +8098,8 @@ H.init();
 
     const p2 = sb.from('verifications')
       .select('user_id,id_doc,selfie,status,submitted_at')
+      .order('submitted_at', { ascending: false })
+      .limit(500)
       .then(function (res) {
         const data = res && res.data;
         if (!data) return;
@@ -5921,6 +8125,7 @@ H.init();
       case 'support':        return renderSupport();
       case 'logs':           return renderLogs();
       case 'messages':       return renderMessages();
+      case 'business':       return renderBusinessTools();
       default: return '';
     }
   }
@@ -6906,22 +9111,21 @@ H.init();
       const ad = id ? (H.state.paidAds||[]).find(a=>a.id===id) : null;
       const today = new Date().toISOString().slice(0,10);
       const inAMonth = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
-      const catOptions = CATS.map(c=>`<option value="${c}" ${ad&&ad.targetCat===c?'selected':''}>${c}</option>`).join('');
+      const catOptions = `<option value="" ${!ad||!ad.targetCat?'selected':''}>All / Home only</option>`
+        + CATS.map(c=>`<option value="${c}" ${ad&&ad.targetCat===c?'selected':''}>${c}</option>`).join('');
       H.modal({
         title: ad ? 'Edit Ad' : 'Create Paid Ad',
         body: `
-          <div class="fg" style="margin-top:8px"><div class="fl">Ad Type</div>
-            <select class="fi" id="_adType" onchange="document.getElementById('_spotlightRow').style.display=this.value==='spotlight'?'':'none'">
-              <option value="banner" ${!ad||ad.type==='banner'?'selected':''}>🖼 Home Banner</option>
-              <option value="spotlight" ${ad&&ad.type==='spotlight'?'selected':''}>⭐ Category Spotlight</option>
-            </select></div>
+          <input type="hidden" id="_adType" value="banner">
+          <div class="fg" style="margin-top:8px"><div class="fl">Show On</div>
+            <select class="fi" id="_adCat">${catOptions}</select>
+            <div style="font-size:11px;color:var(--sub);margin-top:4px">"All / Home only" shows it in the Home carousel. Pick a category to also show it on that category's page.</div></div>
           <div class="fg"><div class="fl">Business Name</div><input class="fi" id="_adBiz" value="${escHtml(ad?ad.businessName:'')}" placeholder="e.g. Mega Furniture Harare"></div>
           <div class="fg"><div class="fl">Headline / Tagline</div><input class="fi" id="_adHead" value="${escHtml(ad?ad.headline||'':'')}" placeholder="e.g. Best prices in Harare!"></div>
           <div class="fg"><div class="fl">Sub-tagline (optional)</div><input class="fi" id="_adTag" value="${escHtml(ad?ad.tagline||'':'')}" placeholder="e.g. Free delivery on orders over $50"></div>
           <div class="fg"><div class="fl">Image URL (optional)</div><input class="fi" id="_adImg" value="${escHtml(ad?ad.imageUrl||'':'')}" placeholder="https://... or leave blank for colour card"></div>
           <div class="fg"><div class="fl">Background Colour</div><div style="display:flex;align-items:center;gap:8px"><input type="color" id="_adColor" value="${ad?ad.bgColor||'#1A3A8F':'#1A3A8F'}" style="width:44px;height:36px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><span id="_adColorHex" style="font-size:13px;color:var(--sub)">${ad?ad.bgColor||'#1A3A8F':'#1A3A8F'}</span></div></div>
           <div class="fg"><div class="fl">Tap Destination URL (optional)</div><input class="fi" id="_adLink" value="${escHtml(ad?ad.linkUrl||'':'')}" placeholder="https://wa.me/2637... or leave blank"></div>
-          <div class="fg" id="_spotlightRow" style="display:${ad&&ad.type==='spotlight'?'':'none'}"><div class="fl">Target Category</div><select class="fi" id="_adCat">${catOptions}</select></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <div class="fg"><div class="fl">Start Date</div><input class="fi" type="date" id="_adStart" value="${ad?new Date(ad.startsAt).toISOString().slice(0,10):today}"></div>
             <div class="fg"><div class="fl">End Date</div><input class="fi" type="date" id="_adEnd" value="${ad?new Date(ad.endsAt).toISOString().slice(0,10):inAMonth}"></div>
@@ -7083,8 +9287,124 @@ H.init();
           saveState(); toast('Ad deleted'); this.setTab('ads');
         }
       });
+    },
+
+    approveBusiness(id) {
+      const b = (H.state.businesses||[]).find(x=>x.id===id); if (!b) return;
+      b.status = 'active'; b.approvedAt = Date.now();
+      saveState();
+      if (window.supabase) { try { window.supabase.from('businesses').update({status:'active',approved_at:new Date().toISOString()}).eq('id',id).then(()=>{}); } catch(e){} }
+      if (typeof H.pushNotif === 'function') { try { H.pushNotif(b.ownerUserId,'Business approved',`${b.name} is now live on PaMarket!`,'business'); } catch(e){} }
+      alog('Approved business: ' + b.name);
+      toast('Business approved'); renderBody_update();
+    },
+
+    rejectBusiness(id) {
+      const b = (H.state.businesses||[]).find(x=>x.id===id); if (!b) return;
+      modal({
+        title: 'Reject Business',
+        body: `Reject <strong>${escHtml(b.name)}</strong>? The owner will be notified.`,
+        confirmText: 'Reject', danger: true,
+        onConfirm: () => {
+          b.status = 'rejected'; saveState();
+          if (window.supabase) { try { window.supabase.from('businesses').update({status:'rejected'}).eq('id',id).then(()=>{}); } catch(e){} }
+          if (typeof H.pushNotif === 'function') { try { H.pushNotif(b.ownerUserId,'Business not approved',`${b.name} was not approved. Contact support for details.`,'business'); } catch(e){} }
+          alog('Rejected business: ' + b.name); toast('Rejected'); renderBody_update();
+        }
+      });
+    },
+
+    approveUpgrade(txnId) {
+      const txn = (H.state.txns||[]).find(t=>t.id===txnId); if (!txn) return;
+      const match = (txn.note||'').match(/\[([a-z]+)\]/);
+      const planId = match ? match[1] : null;
+      if (planId && typeof H._bizSub !== 'undefined' && H._bizSub.upgrade) {
+        const b = (H.state.businesses||[]).find(x=>x.id===txn.businessId);
+        if (b && typeof H.planEntitlements === 'function') {
+          const cycle = b.billingCycle || 'monthly';
+          const rows = ((H.state.businessSubscriptions||{})[b.id]||[]);
+          rows.forEach(s=>{ if(s.status==='active') s.status='downgraded'; });
+          const newSub = { id: H.uid ? H.uid() : Date.now().toString(36), businessId: b.id, planId, billingCycle: cycle,
+            status:'active', autoRenew:true, currentPeriodEnd: null, createdAt: Date.now() };
+          if (!H.state.businessSubscriptions) H.state.businessSubscriptions = {};
+          H.state.businessSubscriptions[b.id] = rows.concat(newSub);
+          b.planId = planId; b.updatedAt = Date.now();
+          if (window.supabase) { try { window.supabase.from('business_subscriptions').upsert({id:newSub.id,business_id:b.id,plan_id:planId,billing_cycle:cycle,status:'active',created_at:new Date().toISOString()}).then(()=>{}); } catch(e){} }
+        }
+      }
+      txn.status = 'paid'; txn.paidAt = Date.now();
+      saveState();
+      if (window.supabase) { try { window.supabase.from('transactions').update({status:'paid',paid_at:new Date().toISOString()}).eq('id',txnId).then(()=>{}); } catch(e){} }
+      if (typeof H.pushNotif === 'function' && txn.userId) { try { H.pushNotif(txn.userId,'Upgrade approved','Your plan has been upgraded. Enjoy the new features!','business'); } catch(e){} }
+      alog('Approved upgrade txn: ' + txnId); toast('Upgrade approved'); renderBody_update();
     }
   };
+
+  function renderBody_update() {
+    const body = document.getElementById('adminBody');
+    if (body) body.innerHTML = renderBody();
+  }
+
+  function renderBusinessTools() {
+    const businesses = H.state.businesses || [];
+    const pending = businesses.filter(b => b.status === 'pending' || !b.status);
+    const active  = businesses.filter(b => b.status === 'active');
+    const upgrades = (H.state.txns||[]).filter(t=>t.type==='subscription'&&t.status==='pending');
+
+    function bizRow(b) {
+      const owner = (H.state.users||[]).find(u=>u.id===b.ownerUserId);
+      const ownerName = owner ? escHtml(owner.name||owner.email||b.ownerUserId) : escHtml(b.ownerUserId||'Unknown');
+      const statusColor = b.status==='active' ? '#16a34a' : b.status==='rejected' ? '#dc2626' : '#F5A623';
+      return `<div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:40px;height:40px;border-radius:10px;background:#EEF2FB;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;font-weight:800;color:#1A3A8F;overflow:hidden">
+            ${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml((b.name||'B').slice(0,1))}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">${escHtml(b.name||'Unnamed')}</div>
+            <div style="font-size:11.5px;color:var(--sub)">Owner: ${ownerName} · ${escHtml(b.bizType||'')} · Plan: ${escHtml(b.planId||'free')}</div>
+            <span style="font-size:10.5px;font-weight:700;background:${statusColor}22;color:${statusColor};border-radius:6px;padding:1px 6px">${escHtml(b.status||'pending')}</span>
+          </div>
+        </div>
+        ${b.status !== 'active' ? `<div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="H._admin.approveBusiness('${escHtml(b.id)}')" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Approve</button>
+          <button onclick="H._admin.rejectBusiness('${escHtml(b.id)}')" style="flex:1;padding:8px;background:#FFF1F0;color:#dc2626;border:1px solid #FECACA;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Reject</button>
+        </div>` : `<div style="margin-top:8px"><button onclick="H.openBusinessProfile&&H.openBusinessProfile('${escHtml(b.id)}')" style="padding:8px 16px;background:#EEF2FB;color:#1A3A8F;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">View Shop</button></div>`}
+      </div>`;
+    }
+
+    function upgradeRow(t) {
+      const b = (H.state.businesses||[]).find(x=>x.id===t.businessId);
+      const bName = b ? escHtml(b.name) : escHtml(t.businessId||'Unknown');
+      return `<div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px">${bName}</div>
+        <div style="font-size:12px;color:var(--sub);margin-bottom:8px">${escHtml(t.note||'')} · $${t.amount||0}</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="H._admin.approveUpgrade('${escHtml(t.id)}')" style="flex:1;padding:8px;background:#1A3A8F;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Mark Paid / Approve</button>
+        </div>
+      </div>`;
+    }
+
+    return `
+      <div class="section-card" style="padding:0;margin-bottom:16px">
+        <div style="padding:14px 16px;font-size:14px;font-weight:800;color:var(--text);border-bottom:1px solid var(--border)">
+          Pending Upgrade Requests (${upgrades.length})
+        </div>
+        ${upgrades.length ? upgrades.map(upgradeRow).join('') : '<div style="padding:20px 16px;text-align:center;color:var(--sub);font-size:13px">No pending upgrade requests.</div>'}
+      </div>
+      <div class="section-card" style="padding:0;margin-bottom:16px">
+        <div style="padding:14px 16px;font-size:14px;font-weight:800;color:var(--text);border-bottom:1px solid var(--border)">
+          Pending Business Approvals (${pending.length})
+        </div>
+        ${pending.length ? pending.map(bizRow).join('') : '<div style="padding:20px 16px;text-align:center;color:var(--sub);font-size:13px">No businesses awaiting approval.</div>'}
+      </div>
+      <div class="section-card" style="padding:0">
+        <div style="padding:14px 16px;font-size:14px;font-weight:800;color:var(--text);border-bottom:1px solid var(--border)">
+          Active Businesses (${active.length})
+        </div>
+        ${active.length ? active.map(bizRow).join('') : '<div style="padding:20px 16px;text-align:center;color:var(--sub);font-size:13px">No active businesses yet.</div>'}
+      </div>`;
+  }
 
 })(window.H = window.H || {});
 
@@ -7125,32 +9445,70 @@ H.init();
   let camStream   = null;
   let livenessTimer = null;
 
+  // Captured images are held in memory only (never written to localStorage) and
+  // uploaded to private Storage on submit — so sensitive PII isn't persisted on device.
+  let _pendingId     = null;
+  let _pendingSelfie = null;
+
   function stopCam() {
     if (livenessTimer) { clearInterval(livenessTimer); livenessTimer = null; }
     if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
   }
+
+  // ── Verification document storage helpers (shared with admin & company flow) ──
+  function _dataUrlToBlob(dataUrl) {
+    var parts = dataUrl.split(',');
+    var mime = (parts[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
+    var bin = atob(parts[1]); var n = bin.length; var arr = new Uint8Array(n);
+    while (n--) arr[n] = bin.charCodeAt(n);
+    return new Blob([arr], { type: mime });
+  }
+
+  // Upload a captured image (data URL) to the private verification-docs bucket.
+  // Returns the storage path, or null if unavailable (caller falls back to base64).
+  H.uploadVerificationDoc = async function (userId, dataUrl, label) {
+    var sb = window.supabase;
+    if (!sb || !sb.storage || !dataUrl || dataUrl.indexOf('data:') !== 0) return null;
+    try {
+      var blob = _dataUrlToBlob(dataUrl);
+      var path = userId + '/' + label + '_' + Date.now() + '.jpg';
+      var up = await sb.storage.from('verification-docs').upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+      if (up.error) { console.warn('verification upload failed:', up.error.message); return null; }
+      return path;
+    } catch (e) { console.warn('verification upload error:', e); return null; }
+  };
+
+  // Admin: turn a stored path into a short-lived signed URL for review.
+  H.signedVerificationUrl = async function (path, secs) {
+    var sb = window.supabase;
+    if (!sb || !sb.storage || !path) return null;
+    try {
+      var r = await sb.storage.from('verification-docs').createSignedUrl(path, secs || 3600);
+      return (r && r.data && r.data.signedUrl) || null;
+    } catch (e) { return null; }
+  };
 
   // ---------------------------------------------------
   // VERIFY PAGE
   // ---------------------------------------------------
   pages.Verify = function () {
     const u         = currentUser();
-    const hasId     = !!u.idDocs;
-    const hasSelfie = !!u.selfie;
+    const idImg     = _pendingId || u.idDocs || null;
+    const selfieImg = _pendingSelfie || u.selfie || null;
+    const hasId     = !!idImg;
+    const hasSelfie = !!selfieImg;
     const isPending = !!u.verification_pending;
 
     if (u.verified) {
       return `<div class="page active">${innerTopbar('Identity Verified')}
         <div class="inner-content">
-          <div class="verify-badge-preview">
-            <div class="vbp-icon" style="color:#22c55e">${I.check}</div>
-            <div>
-              <div style="font-size:15px;font-weight:700;color:#22c55e">You are verified <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#22c55e" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg></div>
-              <div style="font-size:12px;color:var(--sub);margin-top:2px">Buyers trust verified sellers more.</div>
-            </div>
+          <div style="background:linear-gradient(135deg,#16a34a,#15803d);border-radius:20px;padding:26px 20px;text-align:center;color:#fff;margin-bottom:16px;box-shadow:0 8px 24px rgba(21,128,61,.25)">
+            <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div style="font-size:19px;font-weight:800">You're Verified</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:4px">Your blue badge is live across your listings and profile.</div>
           </div>
           <div class="tip-box"><div class="tip-title">${I.lock} Blue badge active</div>
-            <div class="tip-body">Your blue verified badge is now showing on all your listings and profile.</div>
+            <div class="tip-body">Verified sellers earn more buyer trust and more enquiries.</div>
           </div>
         </div>
       </div>`;
@@ -7159,73 +9517,85 @@ H.init();
     if (isPending) {
       return `<div class="page active">${innerTopbar('Verify Identity')}
         <div class="inner-content">
-          <div style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.4);border-radius:16px;padding:20px;text-align:center;margin-bottom:18px">
-            <div style="margin-bottom:8px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <div style="font-size:15px;font-weight:700;color:#fbbf24">Verification Pending</div>
-            <div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.5">
-              Your ID and selfie have been submitted.<br>An admin will review your documents and approve your badge — usually within 24 hours.
-            </div>
+          <div style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:20px;padding:26px 20px;text-align:center;color:#fff;margin-bottom:16px;box-shadow:0 8px 24px rgba(26,58,143,.25)">
+            <div style="width:64px;height:64px;border-radius:50%;background:rgba(245,166,35,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#F5A623" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div style="font-size:19px;font-weight:800">Under Review</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:6px;line-height:1.55">Your ID and selfie were submitted. Our team reviews within 24 hours and you'll be notified once approved.</div>
           </div>
           <div class="tip-box">
             <div class="tip-title">${I.lock} What happens next?</div>
-            <div class="tip-body">Once approved you will get a notification and your blue <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg> badge will appear on all your listings automatically.</div>
+            <div class="tip-body">Once approved, your blue <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg> badge appears automatically on all your listings.</div>
           </div>
           <button class="ml-act-btn" style="width:100%;padding:12px;margin-top:12px" onclick="H._verify.cancelPending()">Cancel request</button>
         </div>
       </div>`;
     }
 
+    // ── Premium step card helper ──
+    const doneCount = 1 + (hasId ? 1 : 0) + (hasSelfie ? 1 : 0);
+    const pct = Math.round((doneCount / 3) * 100);
+    const ready = hasId && hasSelfie;
+    const checkSvg = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+
+    const badge = (state, n) => {
+      if (state === 'done') return `<div style="width:38px;height:38px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(22,163,74,.35)">${checkSvg}</div>`;
+      const bg = state === 'active' ? '#1A3A8F' : '#EEF2FB';
+      const col = state === 'active' ? '#fff' : '#94a3b8';
+      return `<div style="width:38px;height:38px;border-radius:50%;background:${bg};color:${col};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:800">${n}</div>`;
+    };
+
+    const card = (state, n, title, sub, inner) => `
+      <div style="background:var(--card,#fff);border:1px solid ${state === 'active' ? '#C7D6F5' : 'var(--border,#E8ECF4)'};border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(16,24,40,.04)">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          ${badge(state, n)}
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <div style="font-size:15px;font-weight:800;color:var(--text)">${title}</div>
+              ${state === 'done' ? '<span style="font-size:10.5px;font-weight:800;color:#16a34a;background:#dcfce7;border-radius:20px;padding:2px 9px;letter-spacing:.3px">ADDED</span>' : ''}
+            </div>
+            <div style="font-size:12.5px;color:var(--sub);margin-top:3px;line-height:1.55">${sub}</div>
+            ${inner || ''}
+          </div>
+        </div>
+      </div>`;
+
+    const actBtn = (label, onclick, accent) => `<button onclick="${onclick}" style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:12px;border:none;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:700;background:${accent ? '#EEF2FB' : 'linear-gradient(135deg,#1A3A8F,#2952cc)'};color:${accent ? '#1A3A8F' : '#fff'}">${I.camera} ${label}</button>`;
+
     return `<div class="page active">${innerTopbar('Verify Identity')}
-      <div class="inner-content">
-        <div class="verify-badge-preview">
-          <div class="vbp-icon">${I.shield || I.check}</div>
-          <div>
-            <div style="font-size:14px;font-weight:700">Get your Blue Verified Badge</div>
-            <div style="font-size:12px;color:var(--sub);margin-top:1px">Verified sellers get 4× more enquiries</div>
+      <div class="inner-content" style="padding-bottom:40px">
+
+        <!-- Hero + progress -->
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:22px;padding:22px 20px;margin-bottom:18px;color:#fff;box-shadow:0 10px 28px rgba(26,58,143,.28)">
+          <div style="display:flex;align-items:center;gap:13px;margin-bottom:16px">
+            <div style="width:50px;height:50px;border-radius:15px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#F5A623" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+            <div style="flex:1">
+              <div style="font-size:18px;font-weight:800;letter-spacing:-.3px">Get Verified</div>
+              <div style="font-size:12.5px;color:rgba(255,255,255,.82);margin-top:1px">Verified sellers get up to 4× more enquiries</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex:1;height:8px;background:rgba(255,255,255,.18);border-radius:5px;overflow:hidden"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#F5A623,#ffc55c);border-radius:5px;transition:width .35s"></div></div>
+            <div style="font-size:12px;font-weight:800;color:#F5A623;white-space:nowrap">${doneCount} of 3</div>
           </div>
         </div>
 
-        <div class="verify-step">
-          <div class="verify-num done">${I.check}</div>
-          <div>
-            <div class="verify-step-title">Phone verified</div>
-            <div class="verify-step-sub">${escHtml(u.phone)}</div>
-          </div>
-        </div>
+        ${card('done', 1, 'Phone Verified', escHtml(u.phone || 'Your phone number is confirmed'), '')}
 
-        <div class="verify-step">
-          <div class="verify-num ${hasId ? 'done' : ''}">${hasId ? I.check : `<span style="font-size:15px;font-weight:600">2</span>`}</div>
-          <div style="flex:1">
-            <div class="verify-step-title">Upload ID document</div>
-            <div class="verify-step-sub">National ID, passport or driver's licence. Both sides if applicable.</div>
-            <input type="file" id="idFile" accept="image/*" capture="environment" style="display:none" onchange="H._verify.onIdUpload(event)">
-            <button class="verify-step-btn" onclick="document.getElementById('idFile').click()">
-              ${I.camera} ${hasId ? 'Replace ID' : 'Upload ID'}
-            </button>
-            ${hasId ? `<img src="${u.idDocs}" style="width:100%;max-width:240px;border-radius:12px;margin-top:10px">` : ''}
-          </div>
-        </div>
+        ${card(hasId ? 'done' : 'active', 2, 'Upload ID Document', "National ID, passport or driver's licence. Capture both sides if applicable.",
+          `<input type="file" id="idFile" accept="image/*" capture="environment" style="display:none" onchange="H._verify.onIdUpload(event)">
+           ${actBtn(hasId ? 'Replace ID' : 'Upload ID', "document.getElementById('idFile').click()", hasId)}
+           ${hasId ? `<div style="margin-top:12px;border-radius:14px;overflow:hidden;border:1px solid var(--border,#E8ECF4);max-width:240px"><img src="${idImg}" style="width:100%;display:block"></div>` : ''}`)}
 
-        <div class="verify-step">
-          <div class="verify-num ${hasSelfie ? 'done' : ''}">${hasSelfie ? I.check : `<span style="font-size:15px;font-weight:600">3</span>`}</div>
-          <div style="flex:1">
-            <div class="verify-step-title">Face Selfie</div>
-            <div class="verify-step-sub">Take a clear photo of your face. An admin will review it alongside your ID.</div>
-            <button class="verify-step-btn" onclick="H.openInner('SelfieCam')">
-              ${I.camera} ${hasSelfie ? 'Re-take Selfie' : 'Take Selfie'}
-            </button>
-            ${hasSelfie ? `<img src="${u.selfie}" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin-top:10px;border:3px solid var(--n4)">` : ''}
-          </div>
-        </div>
+        ${card(hasSelfie ? 'done' : (hasId ? 'active' : 'todo'), 3, 'Face Selfie', 'Take a clear photo of your face. Reviewed alongside your ID.',
+          `${actBtn(hasSelfie ? 'Re-take Selfie' : 'Take Selfie', 'H._verify.takeSelfie()', hasSelfie)}
+           ${hasSelfie ? `<div style="margin-top:12px"><img src="${selfieImg}" style="width:104px;height:104px;border-radius:50%;object-fit:cover;border:3px solid #16a34a"></div>` : ''}`)}
 
-        ${hasId && hasSelfie ? `
-          <button class="btn-pri" id="submitVerifyBtn" onclick="H._verify.submitForReview()">Submit for Admin Review</button>
-          <div style="font-size:12px;color:var(--sub);text-align:center;margin-top:8px">Reviewed by our team within 24 hours.</div>
-        ` : ''}
+        <button class="btn-pri" id="submitVerifyBtn" ${ready ? '' : 'disabled'} onclick="H._verify.submitForReview()" style="width:100%;margin-top:6px;${ready ? '' : 'opacity:.5;cursor:not-allowed'}">${ready ? 'Submit for Review' : 'Add ID & selfie to continue'}</button>
+        <div style="font-size:12px;color:var(--sub);text-align:center;margin-top:8px">Reviewed by our team within 24 hours.</div>
 
-        <div class="tip-box" style="margin-top:14px">
-          <div class="tip-title">${I.lock} Your data is secure</div>
-          <div class="tip-body">Your ID and selfie are sent securely and used solely for identity verification. Never sold or shared.</div>
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#EEF2FB;border-radius:14px;padding:14px;margin-top:16px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Your data is secure.</b> Your ID and selfie are stored privately and used only to confirm your identity. They are never sold or shared.</div>
         </div>
       </div>
     </div>`;
@@ -7301,10 +9671,44 @@ H.init();
   H._verify = {
     cancel() { stopCam(); goBack(); },
 
+    // Selfie capture — use the reliable native front camera on device; fall back to
+    // the in-app getUserMedia camera only on the web or if the plugin is unavailable.
+    async takeSelfie() {
+      const Camera   = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+      const isNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+      if (isNative && Camera) {
+        try {
+          const photo = await Camera.getPhoto({
+            quality: 85,
+            allowEditing: false,
+            resultType: 'dataUrl',
+            source: 'CAMERA',
+            direction: 'FRONT',
+            width: 600,
+            height: 600,
+            correctOrientation: true,
+            promptLabelHeader: 'Take a Selfie'
+          });
+          const dataUrl = photo && (photo.dataUrl || (photo.base64String ? 'data:image/jpeg;base64,' + photo.base64String : null));
+          if (dataUrl) {
+            _pendingSelfie = dataUrl;   // held in memory only, uploaded on submit
+            toast('Selfie saved'); renderPage('Verify');
+          }
+        } catch (e) {
+          const m = ((e && e.message) || '').toLowerCase();
+          if (m.includes('cancel') || m.includes('denied')) return;
+          openInner('SelfieCam'); // fall back to the in-app camera
+        }
+        return;
+      }
+      openInner('SelfieCam');
+    },
+
     onIdUpload(e) {
       const f = e.target.files[0]; if (!f) return;
       compressImage(f, 1400, 0.82).then(d => {
-        const u = currentUser(); u.idDocs = d; saveState(); renderPage('Verify'); toast('ID uploaded');
+        _pendingId = d;            // held in memory only, uploaded on submit
+        renderPage('Verify'); toast('ID added');
       });
     },
 
@@ -7321,25 +9725,38 @@ H.init();
 
     async submitForReview() {
       const u = currentUser();
-      if (!u.idDocs || !u.selfie) { toast('Complete both steps first'); return; }
+      const idData     = _pendingId     || u.idDocs || null;
+      const selfieData = _pendingSelfie || u.selfie || null;
+      if (!idData || !selfieData) { toast('Complete both steps first'); return; }
       const btn = document.getElementById('submitVerifyBtn');
       if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
       try {
         if (!window.supabase) throw new Error('Not connected');
-        // Save verification record with photos for admin review
-        const { error: vErr } = await window.supabase.from('verifications').upsert({
-          user_id: u.id,
-          id_doc: u.idDocs,
-          selfie: u.selfie,
-          status: 'pending',
-          submitted_at: new Date().toISOString()
-        }, { onConflict: 'user_id' });
+        // Use the live authenticated user id so it matches the database security rule.
+        let authId = u.id;
+        try { const ar = await window.supabase.auth.getUser(); if (ar && ar.data && ar.data.user && ar.data.user.id) authId = ar.data.user.id; } catch (e) {}
+        if (!authId) throw new Error('Your session expired. Please sign out and sign in again, then retry.');
+        // Upload images to the private bucket; keep base64 only as a fallback if
+        // Storage isn't set up yet (migration not run) so nothing breaks.
+        const idPath     = await H.uploadVerificationDoc(authId, idData, 'id');
+        const selfiePath = await H.uploadVerificationDoc(authId, selfieData, 'selfie');
+        const rec = { user_id: authId, status: 'pending', submitted_at: new Date().toISOString() };
+        if (idPath && selfiePath) {
+          rec.id_doc_path = idPath; rec.selfie_path = selfiePath;
+          rec.id_doc = null; rec.selfie = null;
+        } else {
+          rec.id_doc = idData; rec.selfie = selfieData; // legacy fallback
+        }
+        const { error: vErr } = await window.supabase.from('verifications').upsert(rec, { onConflict: 'user_id' });
         if (vErr) throw vErr;
         // Mark profile as pending
         const { error: pErr } = await window.supabase.from('profiles')
           .update({ verification_pending: true })
-          .eq('id', u.id);
+          .eq('id', authId);
         if (pErr) throw pErr;
+        // Clear sensitive images from device once submitted.
+        _pendingId = null; _pendingSelfie = null;
+        u.idDocs = null; u.selfie = null;
         u.verification_pending = true;
         saveState();
         toast('Documents submitted! Admin will review within 24 hours.', 5000);
@@ -7375,7 +9792,7 @@ H.init();
       document.getElementById('camInstr').textContent = 'Saving selfie…';
       await new Promise(r => setTimeout(r, 600));
 
-      const u = currentUser(); u.selfie = dataUrl; saveState();
+      _pendingSelfie = dataUrl;   // held in memory only, uploaded on submit
       toast('Selfie saved');
       stopCam();
       renderPage('Verify');
@@ -7401,12 +9818,155 @@ H.init();
     });
   }
 
+  // ---------------------------------------------------
+  // COMPANY VERIFICATION (in-app, native camera + private storage)
+  // ---------------------------------------------------
+  var _pendingCompany = {};   // { reg, ownerId, tax, premises } -> dataURL (memory only)
+  var _companyName    = '';
+  var COMPANY_DOCS = [
+    ['reg',      'Certificate of Incorporation', 'CIPC business registration certificate'],
+    ['ownerId',  'Owner / Director ID',          'National ID or passport of the owner/director'],
+    ['tax',      'Tax Clearance Certificate',    'Valid certificate from ZIMRA'],
+    ['premises', 'Business Premises Photo',       'Outside of your premises showing any signage']
+  ];
+
+  pages.CompanyVerify = function () {
+    const u = currentUser();
+    if (!u) return `<div class="page active">${innerTopbar('Company Verification')}${H.emptyState('Sign in required', 'Sign in to verify your company')}</div>`;
+
+    if (u.companyVerified) {
+      return `<div class="page active">${innerTopbar('Company Verification')}
+        <div class="inner-content" style="text-align:center;padding:40px 24px">
+          <div style="width:72px;height:72px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">Company Verified</div>
+          <div style="font-size:13px;color:var(--sub)">Your blue Verified Business badge is active on your job listings.</div>
+        </div></div>`;
+    }
+    if (u.company_verification_pending) {
+      return `<div class="page active">${innerTopbar('Company Verification')}
+        <div class="inner-content" style="text-align:center;padding:40px 24px">
+          <div style="font-size:42px;margin-bottom:10px">🕓</div>
+          <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">Under Review</div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6">Your company documents were submitted. Our team reviews within 2 business days.</div>
+          <button class="ml-act-btn" style="width:100%;padding:12px;margin-top:20px" onclick="H._companyVerify.cancelPending()">Cancel Request</button>
+        </div></div>`;
+    }
+
+    const allDone = COMPANY_DOCS.every(d => _pendingCompany[d[0]]);
+    const nameVal = escHtml(_companyName || u.company || u.name || '');
+    return `<div class="page active">${innerTopbar('Company Verification')}
+      <div class="inner-content">
+        <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:16px">Submit the four documents below to earn your blue <b>Verified Business</b> badge and post jobs. Reviewed within 2 business days.</div>
+        <div class="fg" style="margin-bottom:18px">
+          <div class="fl">Company / Business Name</div>
+          <input class="fi" id="cvCompanyName" placeholder="Registered business name" value="${nameVal}" oninput="H._companyVerify.syncName(this.value)">
+        </div>
+        ${COMPANY_DOCS.map((d, i) => {
+          const done = !!_pendingCompany[d[0]];
+          return `<div class="verify-step">
+            <div class="verify-num ${done ? 'done' : ''}">${done ? I.check : `<span style="font-size:15px;font-weight:600">${i + 1}</span>`}</div>
+            <div style="flex:1">
+              <div class="verify-step-title">${d[1]}</div>
+              <div class="verify-step-sub">${d[2]}</div>
+              <button class="verify-step-btn" onclick="H._companyVerify.capture('${d[0]}')">${I.camera} ${done ? 'Replace Photo' : 'Add Photo'}</button>
+              ${done ? `<img src="${_pendingCompany[d[0]]}" style="width:100%;max-width:240px;border-radius:12px;margin-top:10px">` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+        <button class="btn-pri" id="cvSubmitBtn" ${allDone ? '' : 'disabled'} onclick="H._companyVerify.submit()" style="margin-top:8px">Submit for Review</button>
+        <input type="file" id="cvDocFile" accept="image/*" capture="environment" style="display:none" onchange="H._companyVerify.onFile(event)">
+        <div class="tip-box" style="margin-top:14px"><div class="tip-title">${I.lock} Secure</div><div class="tip-body">Your documents are stored privately and used only to verify your business. Never sold or shared.</div></div>
+      </div></div>`;
+  };
+
+  H._companyVerify = {
+    _activeKey: null,
+    syncName(v) { _companyName = v; var b = document.getElementById('cvSubmitBtn'); if (b) {/* keep state */} },
+    async capture(key) {
+      this._activeKey = key;
+      const Camera   = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+      const isNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+      var nm = document.getElementById('cvCompanyName'); if (nm) _companyName = nm.value;
+      if (isNative && Camera) {
+        try {
+          const photo = await Camera.getPhoto({ quality: 80, allowEditing: false, resultType: 'dataUrl', source: 'PROMPT', width: 1400, correctOrientation: true });
+          const d = photo && photo.dataUrl;
+          if (d) { _pendingCompany[key] = d; renderPage('CompanyVerify'); }
+        } catch (e) {
+          const m = ((e && e.message) || '').toLowerCase();
+          if (m.includes('cancel') || m.includes('denied')) return;
+          var fi = document.getElementById('cvDocFile'); if (fi) fi.click();
+        }
+        return;
+      }
+      var fi2 = document.getElementById('cvDocFile'); if (fi2) fi2.click();
+    },
+    onFile(e) {
+      const f = e.target.files[0]; if (!f || !this._activeKey) return;
+      var nm = document.getElementById('cvCompanyName'); if (nm) _companyName = nm.value;
+      const key = this._activeKey;
+      compressImage(f, 1400, 0.82).then(d => { _pendingCompany[key] = d; renderPage('CompanyVerify'); });
+    },
+    async submit() {
+      const u = currentUser();
+      var nmEl = document.getElementById('cvCompanyName');
+      const name = ((nmEl && nmEl.value) || _companyName || u.company || '').trim();
+      if (!name) { toast('Enter your company name'); return; }
+      if (!COMPANY_DOCS.every(d => _pendingCompany[d[0]])) { toast('Add all four documents'); return; }
+      const btn = document.getElementById('cvSubmitBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+      try {
+        if (!window.supabase) throw new Error('Not connected');
+        const paths = {};
+        for (const d of COMPANY_DOCS) {
+          paths[d[0]] = await H.uploadVerificationDoc(u.id, _pendingCompany[d[0]], 'co_' + d[0]);
+        }
+        if (Object.keys(paths).some(k => !paths[k])) throw new Error('Document storage is not set up yet');
+        const rec = {
+          user_id: u.id, company_name: name, status: 'pending', submitted_at: new Date().toISOString(),
+          reg_cert_path: paths.reg, owner_id_path: paths.ownerId, tax_cert_path: paths.tax, premises_path: paths.premises
+        };
+        const { error } = await window.supabase.from('company_verifications').upsert(rec, { onConflict: 'user_id' });
+        if (error) throw error;
+        await window.supabase.from('profiles').update({ company_verification_pending: true, company: name }).eq('id', u.id);
+        _pendingCompany = {}; _companyName = '';
+        u.company = name; u.company_verification_pending = true; saveState();
+        toast('Company documents submitted! Reviewed within 2 business days.', 5000);
+        renderPage('CompanyVerify');
+      } catch (e) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit for Review'; }
+        toast('Failed to submit: ' + (e.message || 'Check your connection'), 4000, true);
+      }
+    },
+    async cancelPending() {
+      const u = currentUser();
+      u.company_verification_pending = false; saveState();
+      if (window.supabase) await window.supabase.from('profiles').update({ company_verification_pending: false }).eq('id', u.id);
+      toast('Request cancelled'); renderPage('CompanyVerify');
+    }
+  };
+
 })(window.H);
 ;/* === www/js/jobs.js === */
 'use strict';
 (function (H) {
 
   var JOB_CATS = ['Accounting & Finance', 'Sales & Marketing', 'IT & Technology', 'Construction', 'Healthcare', 'Education', 'Hospitality', 'Administration', 'Engineering', 'Driving & Logistics'];
+
+  // Granular profession list (Zim-flavoured) used by the Get Hired wizard.
+  var JOB_PROFESSIONS = [
+    'Accounting / Finance', 'Administration / Office', 'Agriculture / Farming',
+    'Automobile / Mechanic', 'Beauty / Salon / Spa', 'Cleaning / Housekeeping',
+    'Construction / Building', 'Cook / Chef / Catering', 'Customer Service / Call Centre',
+    'Data / IT / Software', 'Design / Creative', 'Driver / Delivery',
+    'Education / Teaching', 'Engineering', 'Events / Hospitality',
+    'General Worker / Labour', 'Healthcare / Medical', 'Human Resources',
+    'Legal', 'Logistics / Warehouse', 'Marketing / Sales', 'Media / Journalism',
+    'NGO / Development', 'Retail / Shop Assistant', 'Security / Guard',
+    'Tailoring / Textiles', 'Tourism / Travel', 'Trades (Plumber, Electrician, Welder)',
+    'Other'
+  ];
+  H.JOB_PROFESSIONS = JOB_PROFESSIONS;
 
   function parseLine(lines, key) {
     var found = lines.find(function (ln) { return ln.startsWith(key + ':'); });
@@ -7421,7 +9981,7 @@ H.init();
     var industry = parseLine(lines, 'INDUSTRY') || '';
     var seller   = (H.state.users || []).find(function(u){ return u.id === l.sellerId; });
     var coVerified = seller && (seller.companyVerified || seller.verified);
-    var verBadge = coVerified ? '<span style="background:#059669;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>' : '';
+    var verBadge = coVerified ? '<span style="margin-left:4px;display:inline-flex;vertical-align:middle">' + H.verifiedBadge(14) + '</span>' : '';
     var logoHtml = (l.photos && l.photos[0])
       ? '<img src="' + l.photos[0] + '" style="width:46px;height:46px;border-radius:12px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)">'
       : '<div style="width:46px;height:46px;border-radius:12px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;font-weight:800;color:#1A3A8F">' + (company.slice(0,2).toUpperCase()) + '</div>';
@@ -7440,6 +10000,96 @@ H.init();
       + '</div></div></div></div>';
   }
 
+  // Entry chooser shown when you tap "Jobs" — two doors, each with its own
+  // sub-actions (matches the Get Hired / I'm Hiring tree).
+  H.pages.JobIntent = function () {
+    var briefcase = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>';
+    var seeker = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+    var arrow = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+    function chip(label, onclick) {
+      return '<button onclick="event.stopPropagation();' + onclick + '" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:12px;font-weight:700;padding:7px 12px;border-radius:20px;cursor:pointer;font-family:inherit">' + label + '</button>';
+    }
+    return '<div class="page active">'
+      + '<div class="det-topbar" style="background:#F5A623">'
+      + '<button class="back" onclick="H.goBack()" style="color:#1A3A8F"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      + '<div class="det-topbar-title" style="color:#1A3A8F">Jobs</div>'
+      + '<div style="width:40px"></div></div>'
+      + '<div style="padding:22px 16px 32px">'
+      + '<div style="font-size:23px;font-weight:900;color:var(--text);margin-bottom:4px;letter-spacing:-.4px">What brings you here?</div>'
+      + '<div style="font-size:13.5px;color:var(--sub);margin-bottom:22px">Choose how you want to use PaMarket Jobs.</div>'
+
+      // ── Get Hired (job seeker) ──
+      + '<div onclick="H.openInner(\'FindJobs\')" style="background:linear-gradient(135deg,#22c55e,#15803d);border-radius:20px;padding:20px;margin-bottom:16px;cursor:pointer;box-shadow:0 6px 20px rgba(21,128,61,.25)">'
+      + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
+      + '<div style="width:52px;height:52px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">' + seeker + '</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;color:#fff">Get Hired</div><div style="font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.4">Browse jobs across Zimbabwe and apply in seconds.</div></div>'
+      + '<div style="color:#fff">' + arrow + '</div></div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
+      + chip('Browse Jobs', "H.openInner('FindJobs')")
+      + chip('My Applications', "H.openInner('AppliedJobs')")
+      + chip('My Profile', "H._getHired()")
+      + '</div></div>'
+
+      // ── I'm Hiring (employer) ──
+      + '<div onclick="H.openInner(\'HireTalent\')" style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 6px 20px rgba(26,58,143,.25)">'
+      + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
+      + '<div style="width:52px;height:52px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">' + briefcase + '</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;color:#fff">I’m Hiring</div><div style="font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.4">Browse available candidates and find the right person.</div></div>'
+      + '<div style="color:#fff">' + arrow + '</div></div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
+      + chip('Browse Candidates', "H.openInner('HireTalent')")
+      + chip('My Requests', "H.openInner('MyContactRequests')")
+      + chip('Post a Job', "H.openInner('PostJob')")
+      + '</div></div>'
+      + '</div></div>';
+  };
+
+  // Entry for the Get Hired wizard.
+  H._getHired = function () {
+    if (!H.currentUser()) { H.requireAuth('Sign in to create your job profile'); return; }
+    H.openInner('JobSeekerLocation');
+  };
+
+  // Get Hired step 1 — where do you want to work / be found?
+  H.pages.JobSeekerLocation = function () {
+    var ZW = H._ZW_CITIES || ['Harare', 'Bulawayo', 'Mutare', 'Gweru', 'Kwekwe', 'Masvingo', 'Chinhoyi', 'Marondera'];
+    var u = H.currentUser();
+    var cur = (u && u.city) || '';
+    var chev = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+    var check = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#15803d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var opts = ['Anywhere in Zimbabwe'].concat(ZW).concat(['Remote / Online']);
+    var rows = opts.map(function (c) {
+      var val = c === 'Anywhere in Zimbabwe' ? 'Any' : c;
+      var on = cur === val || (c === 'Anywhere in Zimbabwe' && !cur);
+      return '<button class="subcat-row" onclick="H.openInner(\'JobSeekerProfession\',{city:\'' + H.escHtml(val) + '\'})">'
+        + '<span>' + H.escHtml(c) + '</span>' + (on ? check : chev) + '</button>';
+    }).join('');
+    return '<div class="page active">'
+      + H.innerTopbar('Get Hired')
+      + '<div class="picker-intro"><div class="picker-step">Step 1 of 2</div><div class="picker-title">Where do you want to work?</div><div class="picker-sub">Pick the location where you want employers to find you.</div></div>'
+      + '<div class="subcat-list">' + rows + '</div></div>';
+  };
+
+  // Get Hired step 2 — choose your profession.
+  H.pages.JobSeekerProfession = function (params) {
+    var city = (params && params.city) || 'Any';
+    var cityLabel = city === 'Any' ? 'Anywhere in Zimbabwe' : city;
+    var u = H.currentUser();
+    var cur = (u && u.sector) || '';
+    var chev = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+    var check = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#15803d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var rows = JOB_PROFESSIONS.map(function (p) {
+      var on = cur === p;
+      return '<button class="subcat-row" onclick="H.openInner(\'CandidateProfile\',{city:\'' + H.escHtml(city) + '\',sector:\'' + H.escHtml(p).replace(/'/g, "\\'") + '\'})">'
+        + '<span>' + H.escHtml(p) + '</span>' + (on ? check : chev) + '</button>';
+    }).join('');
+    return '<div class="page active">'
+      + H.innerTopbar('Get Hired')
+      + '<div class="picker-intro"><div class="picker-step">Step 2 of 2</div><div class="picker-title">Choose your profession</div>'
+      + '<div class="picker-crumb"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + H.escHtml(cityLabel) + '</div></div>'
+      + '<div class="subcat-list">' + rows + '</div></div>';
+  };
+
   H.pages.Jobs = function () {
     var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat||'').toLowerCase() === 'jobs'; });
     var candidates = (H.state.users || []).filter(function (u) { return u.openToWork; });
@@ -7456,7 +10106,7 @@ H.init();
       + '<div style="font-size:13px;color:rgba(26,58,143,.75);margin-bottom:16px">' + jobs.length + ' opening' + (jobs.length !== 1 ? 's' : '') + ' across Zimbabwe</div>'
       + '<div style="background:rgba(255,255,255,.95);border-radius:14px;display:flex;align-items:center;padding:0 14px;gap:8px">'
       + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
-      + '<input placeholder="Search job title, company, skills…" autocomplete="off" oninput="H.openInner(\'FindJobs\',{q:this.value})" style="flex:1;border:none;outline:none;padding:14px 0;font-size:14px;background:transparent;color:#1A3A8F;font-family:Inter,sans-serif"></div>'
+      + '<input placeholder="Search job title, company, skills…" autocomplete="off" oninput="H.openInner(\'JobResults\',{q:this.value})" style="flex:1;border:none;outline:none;padding:14px 0;font-size:14px;background:transparent;color:#1A3A8F;font-family:Inter,sans-serif"></div>'
       + '</div>'
       + '<div style="padding:16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">'
       + '<div onclick="H.openInner(\'FindJobs\')" style="background:#1A3A8F;border-radius:16px;padding:20px 14px;cursor:pointer;box-shadow:0 4px 16px rgba(26,58,143,.25)">'
@@ -7476,13 +10126,13 @@ H.init();
       + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
       + JOB_CATS.map(function (cat) {
         var cnt = jobs.filter(function (j) { return (j.title + ' ' + (j.desc || '')).toLowerCase().includes(cat.split(' ')[0].toLowerCase()); }).length;
-        return '<div onclick="H.openInner(\'FindJobs\',{cat:\'' + cat + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:8px 14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text)">' + H.escHtml(cat) + '<span style="color:var(--sub);margin-left:4px">(' + cnt + ')</span></div>';
+        return '<div onclick="H.openInner(\'JobResults\',{cat:\'' + cat + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:8px 14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text)">' + H.escHtml(cat) + '<span style="color:var(--sub);margin-left:4px">(' + cnt + ')</span></div>';
       }).join('')
       + '</div></div>'
       + (recent.length ? '<div style="padding:0 14px 16px">'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
         + '<div style="font-size:15px;font-weight:800;color:var(--text)">Recent Openings</div>'
-        + '<button onclick="H.openInner(\'FindJobs\')" style="background:none;border:none;color:#1A3A8F;font-size:12px;font-weight:700;cursor:pointer;padding:0">View All →</button>'
+        + '<button onclick="H.openInner(\'JobResults\')" style="background:none;border:none;color:#1A3A8F;font-size:12px;font-weight:700;cursor:pointer;padding:0">View All →</button>'
         + '</div>' + recent.map(jobCard).join('') + '</div>' : '')
       + '<div style="margin:0 14px 88px;background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:16px;padding:20px">'
       + '<div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:6px">Hiring? Post a Job Free</div>'
@@ -7491,48 +10141,185 @@ H.init();
       + '</div></div>';
   };
 
-  H.pages.FindJobs = function (params) {
+  // ── Job taxonomy used across the discovery page ───────────────
+  var JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];
+  var JOB_QUALS = [
+    { key: 'none',        label: 'No formal qualification', match: ['no formal', 'no qualification', 'general worker'] },
+    { key: 'certificate', label: 'Certificate / Diploma',   match: ['certificate', 'diploma'] },
+    { key: 'degree',      label: 'Degree',                  match: ['degree', 'bachelor', 'bsc', 'ba '] },
+    { key: 'postgrad',    label: 'Postgraduate',            match: ['postgrad', 'masters', 'msc', 'mba', 'phd'] }
+  ];
+
+  // Compact line icon per job category.
+  var JOB_CAT_ICON = {
+    'Accounting & Finance': '<path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>',
+    'Sales & Marketing':    '<path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-5"/>',
+    'IT & Technology':      '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    'Construction':         '<path d="M2 20h20M4 20V8l8-5 8 5v12M9 20v-6h6v6"/>',
+    'Healthcare':           '<path d="M19 14a7 7 0 11-14 0 7 7 0 0114 0z"/><path d="M12 8v4M10 10h4"/>',
+    'Education':            '<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2 6 2s6-1 6-2v-5"/>',
+    'Hospitality':         '<path d="M3 11h18M5 11V7a7 7 0 0114 0v4M4 11v3a8 8 0 0016 0v-3"/>',
+    'Administration':       '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/>',
+    'Engineering':          '<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.1-.4-.4-2.1z"/>',
+    'Driving & Logistics':  '<path d="M1 3h15v13H1zM16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="18.5" cy="18.5" r="2"/>'
+  };
+
+  function _activeJobs() {
+    return (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat || '').toLowerCase() === 'jobs'; });
+  }
+  function _jobIndustry(l) { return parseLine((l.desc || '').split('\n'), 'INDUSTRY') || l.subcat || ''; }
+  function _jobTypeOf(l)   { return parseLine((l.desc || '').split('\n'), 'JOB TYPE') || ''; }
+  // A job belongs to a category when its stored INDUSTRY matches exactly, or
+  // (for distinctive category words ≥3 chars) the title/desc mentions it as a
+  // whole word. Short tokens like "IT" rely on the exact industry to avoid
+  // matching substrings such as "site" or "with".
+  function _jobInCat(l, cat) {
+    if (_jobIndustry(l) === cat) return true;
+    var tok = cat.split(/\s*&\s*|\s+/)[0].toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '');
+    if (tok.length < 3) return false;
+    return new RegExp('\\b' + tok + '\\b').test((l.title + ' ' + (l.desc || '')).toLowerCase());
+  }
+  function _catCount(jobs, cat) {
+    return jobs.filter(function (l) { return _jobInCat(l, cat); }).length;
+  }
+
+  // ── Find Jobs: professional discovery landing ─────────────────
+  H.pages.FindJobs = function () {
+    var jobs = _activeJobs().sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var popular = jobs.slice(0, 8);
+
+    var catCards = JOB_CATS.map(function (cat) {
+      var cnt = _catCount(jobs, cat);
+      var icon = JOB_CAT_ICON[cat] || '<rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>';
+      return '<div onclick="H.openInner(\'JobResults\',{cat:\'' + cat + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 12px;cursor:pointer;display:flex;align-items:center;gap:11px">'
+        + '<div style="width:40px;height:40px;border-radius:11px;background:#1A3A8F12;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#1A3A8F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + icon + '</svg></div>'
+        + '<div style="min-width:0"><div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.25;overflow:hidden;text-overflow:ellipsis">' + H.escHtml(cat) + '</div>'
+        + '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + cnt + ' job' + (cnt !== 1 ? 's' : '') + '</div></div></div>';
+    }).join('');
+
+    var typeCards = JOB_TYPES.map(function (t) {
+      var cnt = jobs.filter(function (l) { return _jobTypeOf(l).toLowerCase() === t.toLowerCase(); }).length;
+      return '<div onclick="H.openInner(\'JobResults\',{type:\'' + t + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">'
+        + '<span style="font-size:13px;font-weight:700;color:var(--text)">' + t + '</span>'
+        + '<span style="font-size:11px;font-weight:700;color:#1A3A8F;background:#1A3A8F12;padding:2px 8px;border-radius:10px">' + cnt + '</span></div>';
+    }).join('');
+
+    var qualCards = JOB_QUALS.map(function (q) {
+      return '<div onclick="H.openInner(\'JobResults\',{qual:\'' + q.key + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center">'
+        + '<div style="display:flex;justify-content:center;margin-bottom:8px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1A3A8F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2 6 2s6-1 6-2v-5"/></svg></div>'
+        + '<div style="font-size:12.5px;font-weight:700;color:var(--text);line-height:1.3">' + H.escHtml(q.label) + '</div></div>';
+    }).join('');
+
+    var sectionHead = function (title, action, onclick) {
+      return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+        + '<div style="font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.3px">' + title + '</div>'
+        + (action ? '<button onclick="' + onclick + '" style="background:none;border:none;color:#1A3A8F;font-size:12.5px;font-weight:700;cursor:pointer;padding:0;font-family:inherit">' + action + ' →</button>' : '')
+        + '</div>';
+    };
+
+    return '<div class="page active">'
+      + '<div class="det-topbar" style="background:#1A3A8F">'
+      + '<button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      + '<div class="det-topbar-title">Find Jobs</div>'
+      + '<button onclick="H.openInner(\'AppliedJobs\')" title="My Applications" style="background:rgba(255,255,255,.18);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:7px 11px;border-radius:9px">Applied</button></div>'
+      // Hero
+      + '<div style="background:linear-gradient(135deg,#1A3A8F 0%,#16307a 100%);padding:22px 16px 26px">'
+      + '<div style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:6px">Job hunting made easy</div>'
+      + '<div style="font-size:13px;color:rgba(255,255,255,.8);margin-bottom:16px">Discover thousands of openings across Zimbabwe.</div>'
+      + '<div onclick="H.openInner(\'JobResults\')" style="background:#fff;border-radius:14px;display:flex;align-items:center;padding:0 14px;gap:9px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.18)">'
+      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+      + '<span style="flex:1;padding:14px 0;font-size:14px;color:#999">Search job title, company, skills…</span></div>'
+      + '</div>'
+      + '<div style="padding:18px 14px 100px">'
+      // Popular jobs
+      + (popular.length
+        ? sectionHead('Popular Jobs', 'View all', "H.openInner('JobResults')")
+          + '<div style="display:flex;gap:12px;overflow-x:auto;margin:0 -14px 24px;padding:2px 14px;scrollbar-width:none">'
+          + popular.map(_popularJobCard).join('')
+          + '</div>'
+        : '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center;margin-bottom:24px"><div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No openings yet</div><div style="font-size:12.5px;color:var(--sub)">New jobs will appear here as employers post them.</div></div>')
+      // Jobs by category
+      + sectionHead('Jobs by Category', 'View all', "H.openInner('JobResults')")
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">' + catCards + '</div>'
+      // Jobs by type
+      + sectionHead('Jobs by Type', '', '')
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">' + typeCards + '</div>'
+      // Jobs by qualification
+      + sectionHead('Jobs by Qualification', '', '')
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">' + qualCards + '</div>'
+      // Update CV banner
+      + '<div onclick="H._getHired()" style="background:linear-gradient(135deg,#22c55e,#15803d);border-radius:18px;padding:20px;cursor:pointer;display:flex;align-items:center;gap:14px">'
+      + '<div style="width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:15.5px;font-weight:800;color:#fff;margin-bottom:3px">Update your CV</div><div style="font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.4">Build your profile so employers can find you.</div></div>'
+      + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
+      + '</div></div></div>';
+  };
+
+  function _popularJobCard(l) {
+    var lines = (l.desc || '').split('\n');
+    var company = l.company || l.sellerName || parseLine(lines, 'COMPANY') || 'Company';
+    var jobType = parseLine(lines, 'JOB TYPE') || '';
+    var salary  = parseLine(lines, 'SALARY') || 'Negotiable';
+    var logo = (l.photos && l.photos[0])
+      ? '<img src="' + l.photos[0] + '" style="width:38px;height:38px;border-radius:10px;object-fit:cover;border:1px solid var(--border)">'
+      : '<div style="width:38px;height:38px;border-radius:10px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#1A3A8F">' + company.slice(0, 2).toUpperCase() + '</div>';
+    return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + l.id + '\'})" style="flex:0 0 224px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">' + logo
+      + '<div style="min-width:0"><div style="font-size:12px;font-weight:700;color:#1A3A8F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(company) + '</div>'
+      + '<div style="font-size:10.5px;color:var(--sub)">' + H.timeAgo(l.createdAt) + '</div></div></div>'
+      + '<div style="font-size:14px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:10px;height:36px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">' + H.escHtml(l.title) + '</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:5px">'
+      + (jobType ? '<span style="background:#1A3A8F14;color:#1A3A8F;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px">' + H.escHtml(jobType) + '</span>' : '')
+      + (l.city ? '<span style="background:var(--bg);color:var(--sub);font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px">' + H.escHtml(l.city) + '</span>' : '')
+      + '</div>'
+      + '<div style="font-size:12.5px;font-weight:800;color:#c07800;margin-top:10px">' + H.escHtml(salary) + '</div>'
+      + '</div>';
+  }
+
+  // ── Job Results: filtered list ────────────────────────────────
+  H.pages.JobResults = function (params) {
     params = params || {};
-    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat||'').toLowerCase() === 'jobs'; })
-      .sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var jobs = _activeJobs().sort(function (a, b) { return b.createdAt - a.createdAt; });
 
     var filterHtml = H._sel('findjobs', 'subcat', 'Job Category', [['all', 'All Categories']].concat(JOB_CATS.map(function (c) { return [c, c]; })).concat([['Other', 'Other']]))
       + H._sel('findjobs', 'fuelType', 'Job Type', [['all', 'All'], ['full-time', 'Full-time'], ['part-time', 'Part-time'], ['contract', 'Contract'], ['freelance', 'Freelance'], ['internship', 'Internship']])
-      + H._sel('findjobs', 'propType', 'Qualification', [['all', 'All'], ['none', 'No formal qualification'], ['certificate', 'Certificate / Diploma'], ['degree', 'Degree'], ['postgrad', 'Postgraduate']])
+      + H._sel('findjobs', 'propType', 'Qualification', [['all', 'All']].concat(JOB_QUALS.map(function (q) { return [q.key, q.label]; })))
       + H._citysel('findjobs') + H._priceRange('findjobs') + H._sortsel('findjobs');
 
     return '<div class="page active">'
-      + '<div class="det-topbar" style="background:#F5A623">'
-      + '<button class="back" onclick="H.goBack()" style="color:#1A3A8F"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
-      + '<div class="det-topbar-title" style="color:#1A3A8F">Find Jobs</div>'
-      + '<button onclick="H.openInner(\'PostJob\')" style="background:#1A3A8F;border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:6px 12px;border-radius:8px">+ Post</button>'
+      + '<div class="det-topbar" style="background:#1A3A8F">'
+      + '<button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      + '<div class="det-topbar-title">All Jobs</div>'
+      + '<button onclick="H.openInner(\'AppliedJobs\')" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:6px 12px;border-radius:8px">Applied</button>'
       + '</div>'
-      + '<div style="background:#F5A623;padding:0 12px 12px">'
+      + '<div style="background:#1A3A8F;padding:0 12px 12px">'
       + '<div style="display:flex;gap:8px;align-items:center">'
-      + '<div style="background:rgba(255,255,255,.9);border-radius:12px;display:flex;align-items:center;padding:0 12px;gap:8px;flex:1">'
+      + '<div style="background:#fff;border-radius:12px;display:flex;align-items:center;padding:0 12px;gap:8px;flex:1">'
       + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
       + '<input id="cs_findjobs" placeholder="Search jobs…" autocomplete="off" value="' + H.escHtml(params.q || '') + '" oninput="H._applyJobFilters()" style="flex:1;border:none;outline:none;padding:12px 0;font-size:14px;background:transparent;color:#1A3A8F;font-family:Inter,sans-serif"></div>'
-      + '<button onclick="H._toggleFilters(\'findjobs\')" style="background:rgba(255,255,255,.25);border:none;color:#1A3A8F;padding:10px 12px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700">'
+      + '<button onclick="H._toggleFilters(\'findjobs\')" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:10px 12px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700">'
       + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/></svg>Filter'
-      + '<span id="fb_findjobs" style="display:none;background:#1A3A8F;color:#fff;font-size:10px;font-weight:800;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 4px"></span></button>'
+      + '<span id="fb_findjobs" style="display:none;background:#F5A623;color:#1A3A8F;font-size:10px;font-weight:800;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 4px"></span></button>'
       + '</div>'
-      + '<div style="color:rgba(26,58,143,.75);font-size:12px;font-weight:600;margin-top:8px"><span id="cc_findjobs">' + jobs.length + ' jobs</span></div>'
+      + '<div style="color:rgba(255,255,255,.75);font-size:12px;font-weight:600;margin-top:8px"><span id="cc_findjobs">' + jobs.length + ' jobs</span></div>'
       + '</div>'
-      + '<div id="fp_findjobs" style="display:none;background:var(--card);border-bottom:2px solid #F5A623;padding:16px 14px">'
+      + '<div id="fp_findjobs" style="display:none;background:var(--card);border-bottom:2px solid #1A3A8F;padding:16px 14px">'
       + filterHtml
       + '<div style="display:flex;gap:8px;margin-top:4px">'
       + '<button onclick="H._clearFilters(\'findjobs\')" style="flex:1;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">Clear</button>'
-      + '<button onclick="H._toggleFilters(\'findjobs\')" style="flex:2;padding:10px;background:#F5A623;border:none;border-radius:10px;font-size:13px;font-weight:700;color:#1A3A8F;cursor:pointer">Apply Filters</button>'
+      + '<button onclick="H._toggleFilters(\'findjobs\')" style="flex:2;padding:10px;background:#1A3A8F;border:none;border-radius:10px;font-size:13px;font-weight:700;color:#fff;cursor:pointer">Apply Filters</button>'
       + '</div></div>'
       + '<div id="cl_findjobs" style="padding:12px 12px 88px">'
       + (jobs.length ? jobs.map(jobCard).join('') : H.emptyState('No jobs yet', 'Check back soon!', 'Post a Job', "H.openInner('PostJob')"))
       + '</div></div>';
   };
 
-  H.pages.FindJobs_after = function (params) {
+  H.pages.JobResults_after = function (params) {
     params = params || {};
     H._filters['findjobs'] = {};
-    if (params.cat) H._filters['findjobs'].subcat = params.cat;
+    if (params.cat)  H._filters['findjobs'].subcat   = params.cat;
+    if (params.type) H._filters['findjobs'].fuelType = params.type.toLowerCase();
+    if (params.qual) H._filters['findjobs'].propType = params.qual;
     H._applyJobFilters();
   };
 
@@ -7540,15 +10327,19 @@ H.init();
     var el = document.getElementById('cl_findjobs');
     if (!el) return;
     var f = H._filters['findjobs'] || {};
-    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat||'').toLowerCase() === 'jobs'; });
+    var jobs = _activeJobs();
     var q = ((document.getElementById('cs_findjobs') || {}).value || '').toLowerCase().trim();
     if (q) jobs = jobs.filter(function (l) { return (l.title + ' ' + (l.desc || '') + ' ' + (l.city || '') + ' ' + (l.sellerName || '')).toLowerCase().includes(q); });
     if (f.city && f.city !== 'all') jobs = jobs.filter(function (l) { return (l.city + ' ' + (l.prov || '')).toLowerCase().includes(f.city.toLowerCase()); });
-    if (f.subcat && f.subcat !== 'all') jobs = jobs.filter(function (l) { return (l.title + ' ' + (l.desc || '')).toLowerCase().includes(f.subcat.split(' ')[0].toLowerCase()); });
-    if (f.fuelType && f.fuelType !== 'all') jobs = jobs.filter(function (l) { return (l.desc || '').toLowerCase().includes(f.fuelType.replace('-', ' ')); });
+    if (f.subcat && f.subcat !== 'all') jobs = jobs.filter(function (l) { return _jobInCat(l, f.subcat); });
+    if (f.fuelType && f.fuelType !== 'all') jobs = jobs.filter(function (l) { return _jobTypeOf(l).toLowerCase().includes(f.fuelType.replace('-', ' ')); });
+    if (f.propType && f.propType !== 'all') {
+      var ql = (JOB_QUALS.find(function (x) { return x.key === f.propType; }) || {}).match || [];
+      jobs = jobs.filter(function (l) { var t = (l.desc || '').toLowerCase(); return ql.some(function (m) { return t.includes(m); }); });
+    }
     if (f.priceMin) jobs = jobs.filter(function (l) { return (l.price || 0) >= +f.priceMin; });
     if (f.priceMax) jobs = jobs.filter(function (l) { return (l.price || 0) <= +f.priceMax; });
-    jobs.sort(function (a, b) { return b.createdAt - a.createdAt; });
+    jobs.sort(function (a, b) { return f.sort === 'salary' ? (b.price || 0) - (a.price || 0) : b.createdAt - a.createdAt; });
     el.innerHTML = jobs.length ? jobs.map(jobCard).join('') : H.emptyState('No jobs match', 'Try adjusting your filters', null, null);
     var cnt = document.getElementById('cc_findjobs');
     if (cnt) cnt.textContent = jobs.length + ' job' + (jobs.length !== 1 ? 's' : '');
@@ -7561,37 +10352,49 @@ H.init();
     var candidates = (H.state.users || []).filter(function (u) {
       return u.openToWork || (u.cv && u.cv.visible !== false && (u.cv.headline || u.cv.summary || (u.cv.experience && u.cv.experience.length)));
     });
-    var sectors = ['All'].concat(JOB_CATS);
     var ZW = H._ZW_CITIES || [];
 
     return '<div class="page active">'
-      + '<div class="det-topbar" style="background:#1A3A8F"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Hire Talent</div></div>'
+      + '<div class="det-topbar" style="background:#1A3A8F"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Hire Talent</div>'
+      + '<div style="display:flex;gap:6px">'
+      + '<button onclick="H.openInner(\'MyContactRequests\')" title="My Requests" style="background:rgba(255,255,255,.18);border:none;color:#fff;cursor:pointer;padding:7px;border-radius:9px;display:flex"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></button>'
+      + '<button onclick="H.openInner(\'PostJob\')" style="background:rgba(255,255,255,.18);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:7px 11px;border-radius:9px">+ Post Job</button>'
+      + '</div></div>'
       + '<div style="background:#1A3A8F;padding:0 12px 14px">'
       + '<div style="background:rgba(255,255,255,.13);border-radius:12px;display:flex;align-items:center;padding:0 12px;gap:8px">'
       + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
       + '<input id="talentQ" placeholder="Search by name, skill, title…" autocomplete="off" oninput="H._filterTalent()" style="flex:1;border:none;outline:none;padding:12px 0;font-size:14px;background:transparent;color:#fff;font-family:Inter,sans-serif"></div>'
       + '<div style="color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-top:8px"><span id="talentCount">' + candidates.length + ' candidate' + (candidates.length !== 1 ? 's' : '') + '</span></div>'
       + '</div>'
-      + '<div id="sectorTabs" style="background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;white-space:nowrap;padding:10px 14px;display:flex;gap:8px">'
-      + sectors.map(function (s, i) {
-        return '<button onclick="H._talentSector(\'' + s + '\')" style="flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid ' + (i === 0 ? '#1A3A8F' : 'var(--border)') + ';background:' + (i === 0 ? '#1A3A8F' : 'var(--bg)') + ';color:' + (i === 0 ? '#fff' : 'var(--text)') + ';font-size:12px;font-weight:700;cursor:pointer">' + H.escHtml(s) + '</button>';
-      }).join('')
+      // Quick filter row — Filters button + City / Category / Experience
+      + '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;background:var(--card)">'
+      + '<button onclick="H._openTalentFilters()" style="flex-shrink:0;display:flex;align-items:center;gap:6px;padding:9px 14px;background:#1A3A8F;border:none;border-radius:11px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">'
+      + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/></svg>Filters'
+      + '<span id="talentFilterBadge" style="display:none;background:#fff;color:#1A3A8F;font-size:11px;font-weight:800;min-width:18px;height:18px;border-radius:9px;align-items:center;justify-content:center;padding:0 5px"></span></button>'
+      + _quickSel('city', [['all', 'City']].concat(ZW.map(function (c) { return [c, c]; })))
+      + _quickSel('sector', [['all', 'Category']].concat(JOB_PROFESSIONS.map(function (p) { return [p, p]; })))
+      + _quickSel('exp', [['all', 'Experience'], ['0-1', '0-1 Years'], ['1-2', '1-2 Years'], ['2-5', '2-5 Years'], ['5-10', '5-10 Years'], ['10+', '10+ Years']])
       + '</div>'
-      + '<div style="padding:10px 14px;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid var(--border)">'
-      + '<div style="flex-shrink:0"><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">City</div>'
-      + '<select onchange="H._setFilter(\'talent\',\'city\',this.value);H._filterTalent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none">'
-      + '<option value="all">All Cities</option>' + ZW.map(function (c) { return '<option value="' + c + '">' + c + '</option>'; }).join('') + '</select></div>'
-      + '<div style="flex-shrink:0;margin-left:8px"><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Experience</div>'
-      + '<select onchange="H._setFilter(\'talent\',\'exp\',this.value);H._filterTalent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none">'
-      + '<option value="all">Any</option><option value="entry">Entry Level</option><option value="mid">3-5 Years</option><option value="senior">5+ Years</option><option value="expert">10+ Years</option></select></div>'
-      + '</div>'
-      + '<div id="talentList" style="padding:12px 14px 88px">'
+      + '<div id="talentList" style="padding:12px 14px 120px">'
       + (candidates.length ? candidates.map(_candidateCard).join('') : _emptyTalent())
       + '</div></div>';
   };
 
+  H._mountTalentFloatBar = function () {
+    var ex = document.getElementById('talentFloatBar'); if (ex) ex.remove();
+    var bar = document.createElement('div');
+    bar.id = 'talentFloatBar';
+    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));z-index:160;display:flex;background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:0 6px 22px rgba(0,0,0,.22);overflow:hidden';
+    bar.innerHTML = '<button onclick="H._talentSortSheet()" style="display:flex;align-items:center;gap:6px;padding:11px 24px;background:none;border:none;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>Sort</button>'
+      + '<div style="width:1px;background:var(--border)"></div>'
+      + '<button onclick="H._saveTalentSearch()" style="display:flex;align-items:center;gap:6px;padding:11px 24px;background:none;border:none;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>Save</button>';
+    document.body.appendChild(bar);
+  };
+
   H.pages.HireTalent_after = function () {
-    H._currentTalentSector = 'All';
+    H._tSyncBadge();
+    H._filterTalent();
+    H._mountTalentFloatBar();
     var _sb = window.supabase;
     if (!_sb || typeof _sb.from !== 'function') return;
     // Load profiles that are open to work OR have a CV set to visible
@@ -7628,97 +10431,526 @@ H.init();
       });
   };
 
-  H._talentSector = function (sector) {
-    H._currentTalentSector = sector;
-    document.querySelectorAll('#sectorTabs button').forEach(function (btn) {
-      var active = btn.textContent.trim() === sector;
-      btn.style.background = active ? '#1A3A8F' : 'var(--bg)';
-      btn.style.color = active ? '#fff' : 'var(--text)';
-      btn.style.borderColor = active ? '#1A3A8F' : 'var(--border)';
-    });
-    H._filterTalent();
-  };
+  // ── Candidate attribute derivation (for filters & cards) ──────
+  // Highest education level from a candidate's CV.
+  function _candEduLevel(u) {
+    var edu = (u.cv && u.cv.education) || [];
+    var text = edu.map(function (e) { return (e.degree || e.qualification || ''); }).join(' ').toLowerCase();
+    if (/\b(master|msc|m\.sc|mba|phd|doctorate|postgrad|post-grad)\b/.test(text)) return 'postgrad';
+    if (/\b(degree|bachelor|bsc|b\.sc|beng|honours|hons)\b/.test(text)) return 'degree';
+    if (/\b(o.level|a.level|high school|high-school|secondary|zjc|matric)\b/.test(text)) return 'secondary';
+    if (/\b(certificate|diploma|hexco|cert)\b/.test(text)) return 'certificate';
+    return '';
+  }
+  // Years-of-experience range [min,max] for a candidate.
+  function _candExpRange(u) {
+    switch (u.exp) {
+      case 'entry':  return [0, 2];
+      case 'mid':    return [3, 5];
+      case 'senior': return [5, 10];
+      case 'expert': return [10, 99];
+    }
+    var y = ((u.cv && u.cv.experience) || []).length * 2;
+    return [y, y];
+  }
+  function _candExpYears(u) { return _candExpRange(u)[1]; }
+  function _candExpLevel(u) {
+    if (u.exp) return u.exp;
+    var y = _candExpYears(u);
+    if (y >= 10) return 'expert';
+    if (y >= 5)  return 'senior';
+    if (y >= 3)  return 'mid';
+    return 'entry';
+  }
+  function _candSalary(u) {
+    var n = (u.cv && parseFloat(u.cv.expectedSalary)) || 0;
+    if (!n) { var s = (u.expectedSalary || '').replace(/[^\d.]/g, ''); n = parseFloat(s) || 0; }
+    return n || 0;
+  }
+  function _candCommitment(u) { return ((u.jobTypes || '') + ' ' + ((u.cv && u.cv.jobTypes) || '')).toLowerCase(); }
+  function _candPostedTs(u) { return u.profileUpdatedAt || u.createdAt || 0; }
 
-  H._filterTalent = function () {
-    var el = document.getElementById('talentList');
-    var cnt = document.getElementById('talentCount');
-    if (!el) return;
-    var q = ((document.getElementById('talentQ') || {}).value || '').toLowerCase();
-    var sector = H._currentTalentSector || 'All';
+  // Quick dropdown in the filter row (label shown when value === 'all').
+  function _quickSel(key, opts) {
+    var f = H._filters['talent'] || {}; var cur = f[key] || 'all';
+    return '<select onchange="H._setFilter(\'talent\',\'' + key + '\',this.value);H._filterTalent()" style="flex-shrink:0;padding:9px 12px;border:1.5px solid ' + (cur !== 'all' ? '#1A3A8F' : 'var(--border)') + ';border-radius:11px;font-size:13px;font-weight:600;background:' + (cur !== 'all' ? '#1A3A8F0d' : 'var(--bg)') + ';color:' + (cur !== 'all' ? '#1A3A8F' : 'var(--text)') + ';outline:none;font-family:inherit;max-width:150px">'
+      + opts.map(function (o) { return '<option value="' + H.escHtml(o[0]) + '"' + (cur === o[0] ? ' selected' : '') + '>' + H.escHtml(o[1]) + '</option>'; }).join('')
+      + '</select>';
+  }
+
+  var _EXP_BUCKET = { '0-1': [0, 1], '1-2': [1, 2], '2-5': [2, 5], '5-10': [5, 10], '10+': [10, 99] };
+
+  // Apply every active filter and return the sorted candidate list.
+  function _talentList() {
     var f = H._filters['talent'] || {};
+    var q = (((document.getElementById('talentQ') || {}).value || '') + ' ' + (f.kw || '')).toLowerCase().trim();
     var list = (H.state.users || []).filter(function (u) {
       return u.openToWork || (u.cv && u.cv.visible !== false && (u.cv.headline || u.cv.summary || (u.cv.experience && u.cv.experience.length)));
     });
     if (q) list = list.filter(function (u) {
       var cv = u.cv || {};
-      var searchText = [u.name||'', u.jobTitle||'', cv.headline||'', cv.summary||'',
+      var t = [u.name||'', u.jobTitle||'', u.sector||'', cv.headline||'', cv.summary||'',
         (cv.skills||[]).join(' '), (cv.experience||[]).map(function(e){return (e.title||'')+(e.company||'');}).join(' '),
         u.city||'', cv.location||''].join(' ').toLowerCase();
-      return searchText.includes(q);
+      return t.includes(q);
     });
-    if (sector && sector !== 'All') list = list.filter(function (u) {
+    if (f.sector && f.sector !== 'all') list = list.filter(function (u) {
+      if ((u.sector || '') === f.sector) return true;
+      var tok = f.sector.split(/[\/(,\s]/)[0].toLowerCase();
       var cv = u.cv || {};
       var text = [(u.sector||''), (u.jobTitle||''), (cv.headline||''), (cv.skills||[]).join(' ')].join(' ').toLowerCase();
-      return text.includes(sector.split(' ')[0].toLowerCase());
+      return tok.length > 2 && text.indexOf(tok) > -1;
     });
     if (f.city && f.city !== 'all') list = list.filter(function (u) {
       return ((u.cv && u.cv.location || u.city) || '').toLowerCase().includes(f.city.toLowerCase());
     });
+    if (f.exp && f.exp !== 'all') {
+      var b = _EXP_BUCKET[f.exp];
+      if (b) list = list.filter(function (u) { var r = _candExpRange(u); return r[0] <= b[1] && r[1] >= b[0]; });
+    }
+    if (f.edu && f.edu !== 'all') list = list.filter(function (u) {
+      var lvl = _candEduLevel(u); return f.edu === 'na' ? !lvl : lvl === f.edu;
+    });
+    if (f.salary && f.salary !== 'all') list = list.filter(function (u) {
+      var n = _candSalary(u);
+      switch (f.salary) {
+        case 'negotiable': return !n;
+        case '0-500':      return n > 0 && n < 500;
+        case '500-999':    return n >= 500 && n < 1000;
+        case '1000-1999':  return n >= 1000 && n < 2000;
+        case '2000+':      return n >= 2000;
+      }
+      return true;
+    });
+    if (f.commitment && f.commitment !== 'all') list = list.filter(function (u) {
+      var c = _candCommitment(u); if (!c.trim()) return false;
+      switch (f.commitment) {
+        case 'full':      return c.includes('full');
+        case 'part':      return c.includes('part');
+        case 'contract':  return c.includes('contract');
+        case 'temporary': return c.includes('temp');
+        case 'other':     return !/full|part|contract|temp/.test(c);
+      }
+      return true;
+    });
+    if (f.posted && f.posted !== 'all') {
+      var DAY = 86400000, now = Date.now();
+      var lim = { today: 1, '3d': 3, '1w': 7, '2w': 14 }[f.posted];
+      if (lim) list = list.filter(function (u) { var t = _candPostedTs(u); return t && (now - t) <= lim * DAY; });
+    }
+    if (f.verified === '1') list = list.filter(function (u) { return u.verified; });
+    if (f.sort === 'experience') list.sort(function (a, b) { return _candExpYears(b) - _candExpYears(a); });
+    else if (f.sort === 'name') list.sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); });
+    else if (f.sort === 'salary') list.sort(function (a, b) { return _candSalary(b) - _candSalary(a); });
+    else list.sort(function (a, b) { return (b.profileUpdatedAt || b.createdAt || 0) - (a.profileUpdatedAt || a.createdAt || 0); });
+    return list;
+  }
+
+  H._filterTalent = function () {
+    var el = document.getElementById('talentList');
+    var cnt = document.getElementById('talentCount');
+    if (!el) return;
+    var list = _talentList();
     if (cnt) cnt.textContent = list.length + ' candidate' + (list.length !== 1 ? 's' : '');
     el.innerHTML = list.length ? list.map(_candidateCard).join('') : _emptyTalent();
+    H._tSyncBadge();
   };
+
+  H._tSyncBadge = function () {
+    var f = H._filters['talent'] || {};
+    var keys = ['city', 'sector', 'salary', 'exp', 'edu', 'commitment', 'posted'];
+    var n = keys.filter(function (k) { return f[k] && f[k] !== 'all'; }).length;
+    if (f.kw) n++;
+    if (f.verified === '1') n++;
+    var b = document.getElementById('talentFilterBadge');
+    if (b) { b.textContent = n || ''; b.style.display = n ? 'inline-flex' : 'none'; }
+  };
+
+  // ── Sort sheet (floating Sort button) ─────────────────────────
+  H._talentSortSheet = function () {
+    var f = H._filters['talent'] || {};
+    var cur = f.sort || 'recent';
+    var opts = [['recent', 'Most Recent'], ['experience', 'Most Experienced'], ['salary', 'Highest Salary'], ['name', 'Name (A–Z)']];
+    var check = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var rows = opts.map(function (o) {
+      var on = cur === o[0];
+      return '<button onclick="H._setFilter(\'talent\',\'sort\',\'' + o[0] + '\');H._closeSheet(\'tsort\');H._filterTalent()" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:15px 18px;background:none;border:none;border-bottom:1px solid var(--border);font-size:14.5px;font-weight:' + (on ? '700' : '500') + ';color:' + (on ? '#1A3A8F' : 'var(--text)') + ';cursor:pointer;font-family:inherit">' + o[1] + (on ? check : '') + '</button>';
+    }).join('');
+    H._showSheet('tsort', 'Sort by', rows);
+  };
+
+  H._saveTalentSearch = function () {
+    var f = H._filters['talent'] || {};
+    var active = Object.keys(f).filter(function (k) { return k !== 'sort' && f[k] && f[k] !== 'all'; });
+    if (!active.length) { H.toast('Set some filters first, then Save'); return; }
+    H.state.savedSearches = H.state.savedSearches || [];
+    H.state.savedSearches.push({ id: H.uid(), type: 'talent', filters: JSON.parse(JSON.stringify(f)), createdAt: Date.now() });
+    H.saveState();
+    H.toast('Search saved');
+  };
+
+  // ── Generic bottom sheet helper (used by sort) ────────────────
+  H._showSheet = function (id, title, bodyHtml) {
+    H._closeSheet(id);
+    var d = document.createElement('div');
+    d.id = 'sheet_' + id;
+    d.style.cssText = 'position:fixed;inset:0;z-index:3200;background:rgba(0,0,0,.45);display:flex;align-items:flex-end';
+    d.onclick = function (e) { if (e.target === d) H._closeSheet(id); };
+    d.innerHTML = '<div style="width:100%;background:var(--card);border-radius:20px 20px 0 0;overflow:hidden;animation:sheetUp .2s ease">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)">'
+      + '<span style="font-size:16px;font-weight:800;color:var(--text)">' + H.escHtml(title) + '</span>'
+      + '<button onclick="H._closeSheet(\'' + id + '\')" style="background:none;border:none;cursor:pointer;color:var(--sub);padding:2px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>'
+      + '<div style="padding-bottom:calc(8px + env(safe-area-inset-bottom))">' + bodyHtml + '</div></div>';
+    document.body.appendChild(d);
+  };
+  H._closeSheet = function (id) { var el = document.getElementById('sheet_' + id); if (el) el.remove(); };
+
+  // ── Full "All Filters" sheet ──────────────────────────────────
+  function _tcStyle(on) {
+    return 'padding:9px 15px;border-radius:22px;border:1.5px solid ' + (on ? '#1A3A8F' : 'var(--border)') + ';background:' + (on ? '#1A3A8F' : 'var(--card)') + ';color:' + (on ? '#fff' : 'var(--text)') + ';font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;margin:0 8px 8px 0';
+  }
+  function _tChips(key, opts) {
+    var f = H._filters['talent'] || {}; var cur = f[key] || 'all';
+    return opts.map(function (o) {
+      return '<button data-tchip data-key="' + key + '" data-val="' + H.escHtml(o[0]) + '" onclick="H._tChip(this)" style="' + _tcStyle(cur === o[0]) + '">' + H.escHtml(o[1]) + '</button>';
+    }).join('');
+  }
+  function _fg(title, inner, scroll) {
+    return '<div style="padding:18px 16px;border-bottom:1px solid var(--border)">'
+      + '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">' + title + '</div>'
+      + (scroll
+        ? '<div style="display:flex;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px">' + inner + '</div>'
+        : '<div style="display:flex;flex-wrap:wrap">' + inner + '</div>')
+      + '</div>';
+  }
+  function _talentFilterGroups() {
+    var f = H._filters['talent'] || {};
+    var ZW = H._ZW_CITIES || [];
+    var von = f.verified === '1';
+    var kwField = '<div style="padding:18px 16px;border-bottom:1px solid var(--border)">'
+      + '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">Keyword</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;border:1.5px solid var(--border);border-radius:12px;padding:0 12px;background:var(--card)">'
+      + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+      + '<input id="tfKw" value="' + H.escHtml(f.kw || '') + '" oninput="(H._filters.talent=H._filters.talent||{}).kw=this.value;H._tUpdateResults()" placeholder="Search keywords" style="flex:1;border:none;outline:none;padding:12px 0;font-size:14px;background:transparent;color:var(--text);font-family:inherit"></div></div>';
+    var catField = '<div style="padding:18px 16px;border-bottom:1px solid var(--border)">'
+      + '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">Category</div>'
+      + '<select onchange="(H._filters.talent=H._filters.talent||{}).sector=this.value;H._tUpdateResults()" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;font-family:inherit">'
+      + '<option value="all">All Categories</option>'
+      + JOB_PROFESSIONS.map(function (p) { return '<option' + ((f.sector || 'all') === p ? ' selected' : '') + '>' + H.escHtml(p) + '</option>'; }).join('')
+      + '</select></div>';
+    var moreField = '<div style="padding:18px 16px">'
+      + '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">More Filters</div>'
+      + '<div onclick="H._tToggleVerified(this)" data-on="' + (von ? '1' : '0') + '" style="display:flex;align-items:center;gap:12px;border:1.5px solid ' + (von ? '#1A3A8F' : 'var(--border)') + ';border-radius:14px;padding:14px;cursor:pointer;background:' + (von ? '#1A3A8F0d' : 'var(--card)') + '">'
+      + '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0"><path d="M12 2l2.4 2.4 3.3-.6.6 3.3L21 12l-2.7 1.9.6 3.3-3.3.6L12 22l-2.4-2.4-3.3.6-.6-3.3L3 12l2.7-1.9-.6-3.3 3.3.6z"/><polyline points="9 12 11 14 15 10"/></svg>'
+      + '<div style="flex:1"><div style="font-size:13.5px;font-weight:700;color:var(--text)">Verified users only</div><div style="font-size:12px;color:var(--sub)">Show candidates with a verified badge</div></div>'
+      + '<div style="width:44px;height:25px;border-radius:13px;background:' + (von ? '#1A3A8F' : 'var(--border)') + ';position:relative;flex-shrink:0;transition:background .2s"><div style="position:absolute;top:3px;left:' + (von ? '22px' : '3px') + ';width:19px;height:19px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)"></div></div>'
+      + '</div></div>';
+    return _fg('City', _tChips('city', [['all', 'All Cities']].concat(ZW.map(function (c) { return [c, c]; }))), true)
+      + kwField
+      + catField
+      + _fg('Desired Salary', _tChips('salary', [['all', 'Any'], ['negotiable', 'Negotiable'], ['0-500', 'Less than $500'], ['500-999', '$500 – $999'], ['1000-1999', '$1,000 – $1,999'], ['2000+', '$2,000+']]))
+      + _fg('Experience', _tChips('exp', [['all', 'Any'], ['0-1', '0-1 Years'], ['1-2', '1-2 Years'], ['2-5', '2-5 Years'], ['5-10', '5-10 Years'], ['10+', '10+ Years']]))
+      + _fg('Education', _tChips('edu', [['all', 'Any'], ['na', 'N/A'], ['secondary', 'High School / Secondary'], ['certificate', 'Certificate / Diploma'], ['degree', 'Degree'], ['postgrad', 'Postgraduate']]))
+      + _fg('Commitment', _tChips('commitment', [['all', 'Any'], ['full', 'Full Time'], ['part', 'Part Time'], ['contract', 'Contract'], ['temporary', 'Temporary'], ['other', 'Other']]))
+      + _fg('Posted', _tChips('posted', [['all', 'Any time'], ['today', 'Today'], ['3d', 'Within 3 days'], ['1w', 'Within 1 week'], ['2w', 'Within 2 weeks']]))
+      + moreField;
+  }
+
+  H._openTalentFilters = function () {
+    H._closeTalentFilters();
+    var n = _talentList().length;
+    var html = '<div id="talentFilterPanel" style="position:fixed;inset:0;z-index:3100;background:var(--bg);display:flex;flex-direction:column;overflow:hidden">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;border-bottom:1px solid var(--border);flex-shrink:0">'
+      + '<button onclick="H._closeTalentFilters()" style="background:none;border:none;cursor:pointer;color:var(--text);padding:6px;margin:-6px"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      + '<span style="font-size:16px;font-weight:800;color:var(--text)">Filters</span>'
+      + '<button onclick="H._tResetFilters()" style="background:none;border:none;cursor:pointer;color:#1A3A8F;font-size:14px;font-weight:700;font-family:inherit">Reset</button></div>'
+      + '<div id="talentFilterBody" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch">' + _talentFilterGroups() + '</div>'
+      + '<div style="padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);flex-shrink:0">'
+      + '<button id="talentResultsBtn" onclick="H._tApplyFilters()" style="width:100%;padding:15px;background:#1A3A8F;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Show ' + n + ' Result' + (n !== 1 ? 's' : '') + '</button></div>'
+      + '</div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+  };
+  H._closeTalentFilters = function () { var p = document.getElementById('talentFilterPanel'); if (p) p.remove(); };
+  H._tApplyFilters = function () { H._closeTalentFilters(); H._filterTalent(); };
+  H._tResetFilters = function () {
+    H._filters['talent'] = {};
+    var b = document.getElementById('talentFilterBody');
+    if (b) b.innerHTML = _talentFilterGroups();
+    H._tUpdateResults();
+  };
+  H._tChip = function (el) {
+    var key = el.getAttribute('data-key'), val = el.getAttribute('data-val');
+    (H._filters.talent = H._filters.talent || {})[key] = val;
+    document.querySelectorAll('[data-tchip][data-key="' + key + '"]').forEach(function (c) {
+      c.style.cssText = _tcStyle(c.getAttribute('data-val') === val);
+    });
+    H._tUpdateResults();
+  };
+  H._tToggleVerified = function (el) {
+    var f = H._filters.talent = H._filters.talent || {};
+    f.verified = f.verified === '1' ? '' : '1';
+    var b = document.getElementById('talentFilterBody');
+    if (b) b.innerHTML = _talentFilterGroups();
+    H._tUpdateResults();
+  };
+  H._tUpdateResults = function () {
+    var n = _talentList().length;
+    var btn = document.getElementById('talentResultsBtn');
+    if (btn) btn.textContent = 'Show ' + n + ' Result' + (n !== 1 ? 's' : '');
+  };
+
+  var _EXP_LABEL = { entry: 'Entry level', mid: '3–5 yrs exp', senior: '5–10 yrs exp', expert: '10+ yrs exp' };
+  var _EDU_LABEL = { certificate: 'Certificate / Diploma', degree: 'Degree', postgrad: 'Postgraduate' };
 
   function _candidateCard(u) {
     var ini = H.initials(u.name || 'U');
     var cv  = u.cv || {};
+    var req = H._contactReqFor(u.id);
+    var unlocked = !!(req && req.status === 'approved');
+    var pending  = !!(req && req.status === 'pending');
     var verBadge = u.verified
-      ? '<span style="background:#059669;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;margin-left:6px;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>'
+      ? '<span style="display:inline-flex;align-items:center;gap:3px;background:#1A3A8F12;color:#1A3A8F;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">' + H.verifiedBadge(11) + 'Verified</span>'
       : '';
-    var headline = cv.headline || u.jobTitle || 'Open to Work';
+    var position = (cv.experience && cv.experience[0] && cv.experience[0].title) || cv.headline || u.jobTitle || '';
+    var headline = cv.headline || position || 'Candidate';
     var location = cv.location || u.city || '';
-    var expCount = (cv.experience || []).length;
-    var rawSkills = cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean);
-    var skills = rawSkills.slice(0, 4).map(function(s){ return s.trim(); }).filter(Boolean);
-    var latestExp = cv.experience && cv.experience[0];
+    var expLabel = _EXP_LABEL[_candExpLevel(u)] || '';
+    var eduLabel = _EDU_LABEL[_candEduLevel(u)] || '';
     var expectedSal = u.expectedSalary || (cv.expectedSalary ? '$' + cv.expectedSalary + '/mo' : '');
+    var availability = cv.availability || cv.noticePeriod || (u.openToWork ? 'Available now' : '');
+    var posted = u.profileUpdatedAt || u.createdAt;
+    var saved = (H.state.savedCandidates || []).indexOf(u.id) > -1;
+    var skills = (cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',')).map(function (s) { return (s || '').trim(); }).filter(Boolean).slice(0, 4);
 
-    // Contact logic
+    // Contact details — revealed only after an approved request.
     var waFull  = u.whatsappFull || '';
     var callNum = u.phoneForCalls || waFull;
     var canWa   = !!waFull   && (u.contactMethod !== 'call');
     var canCall = !!callNum  && (u.contactMethod !== 'whatsapp');
     var waUrl   = 'https://wa.me/' + waFull + '?text=' + encodeURIComponent('Hi ' + (u.name || '') + ', I saw your profile on PaMarket and I have a job opportunity for you.');
-    var hasDirectContact = canWa || canCall;
-    var msgStyle = hasDirectContact
-      ? 'flex:1;padding:9px;background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit'
-      : 'flex:1;padding:9px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit';
 
-    return '<div style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.05)">'
-      + '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">'
-      + '<div style="width:50px;height:50px;border-radius:50%;overflow:hidden;flex-shrink:0">'
-      + (u.avatar ? '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#3a6fd8);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff">' + ini + '</div>')
+    function metaRow(icon, label, val) {
+      if (!val) return '';
+      return '<div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text)">'
+        + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--sub)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">' + icon + '</svg>'
+        + '<span style="color:var(--sub)">' + label + '</span>'
+        + '<span style="font-weight:600;margin-left:auto;text-align:right">' + H.escHtml(val) + '</span></div>';
+    }
+
+    var userIcon = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+
+    // Bottom action depends on unlock state.
+    var actions;
+    if (unlocked) {
+      actions = (canWa
+        ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" onclick="event.stopPropagation()" style="flex:1;padding:11px;background:#25D366;color:#fff;border-radius:11px;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>'
+        : (canCall
+          ? '<a href="tel:+' + H.escHtml(callNum) + '" onclick="event.stopPropagation()" style="flex:1;padding:11px;background:#1A3A8F;color:#fff;border-radius:11px;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>'
+          : '<button onclick="event.stopPropagation();H.startChatWith(\'' + u.id + '\')" style="flex:1;padding:11px;background:#1A3A8F;color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'));
+    } else if (pending) {
+      actions = '<div style="flex:1;padding:11px;background:#F5A62318;color:#c07800;border-radius:11px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Pending review</div>';
+    } else {
+      actions = '<button onclick="event.stopPropagation();H._requestContact(\'' + u.id + '\')" style="flex:1;padding:11px;background:#1A3A8F;color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Request to contact</button>';
+    }
+
+    return '<div onclick="H.openInner(\'ViewCandidateCV\',{id:\'' + u.id + '\'})" style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer">'
+      + '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">'
+      + '<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;flex-shrink:0">'
+      + (u.avatar ? '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#3a6fd8);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:#fff">' + (unlocked ? ini : userIcon) + '</div>')
       + '</div>'
       + '<div style="flex:1;min-width:0">'
-      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:2px"><div style="font-size:15px;font-weight:700;color:var(--text)">' + H.escHtml(u.name || 'Anonymous') + '</div>' + verBadge + '</div>'
-      + '<div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-bottom:2px">' + H.escHtml(headline) + '</div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--sub)">'
-      + (location ? '<span style="display:inline-flex;align-items:center;gap:3px">' + H.ICONS.location + H.escHtml(location) + '</span>' : '')
-      + (expCount ? '<span style="display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>' + expCount + ' position' + (expCount!==1?'s':'') + '</span>' : '')
-      + (expectedSal ? '<span style="display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' + H.escHtml(expectedSal) + '</span>' : '')
-      + '</div></div></div>'
-      + (latestExp ? '<div style="background:var(--bg);border-radius:10px;padding:8px 10px;margin-bottom:8px;border-left:3px solid #1A3A8F">'
-          + '<div style="font-size:12px;font-weight:700;color:var(--text)">' + H.escHtml(latestExp.title) + '</div>'
-          + '<div style="font-size:11px;color:var(--sub);margin-top:1px">' + H.escHtml(latestExp.company) + (latestExp.duration ? ' · ' + H.escHtml(latestExp.duration) : '') + '</div>'
-          + '</div>' : '')
-      + (skills.length ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">' + skills.map(function (s) { return '<span style="background:#1A3A8F12;border:1px solid #1A3A8F22;font-size:11px;padding:2px 8px;border-radius:6px;color:#1A3A8F;font-weight:600">' + H.escHtml(s) + '</span>'; }).join('') + '</div>' : '')
-      + (cv.summary ? '<div style="font-size:12px;color:var(--sub);line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + H.escHtml(cv.summary) + '</div>' : '')
-      + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
-      + '<button onclick="H.startChatWith(\'' + u.id + '\')" style="' + msgStyle + ';display:inline-flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'
-      + (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;padding:9px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
-      + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;padding:9px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
-      + '<button onclick="H.openInner(\'ViewCandidateCV\',{id:\'' + u.id + '\'})" style="flex:1;padding:9px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + (hasDirectContact ? 'CV' : 'View CV') + '</button>'
+      + '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(unlocked ? (u.name || 'Candidate') : headline) + '</div>'
+      + (unlocked
+        ? '<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#1A3A8F;font-weight:700">' + (u.verified ? H.verifiedBadge(12) : '') + H.escHtml(headline) + '</div>'
+        : '<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#15803d;font-weight:700"><span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block"></span>Looking for a job</div>')
+      + '</div>'
+      + '<button onclick="event.stopPropagation();H._toggleSaveCandidate(\'' + u.id + '\')" style="background:none;border:none;cursor:pointer;padding:2px;flex-shrink:0;color:' + (saved ? '#F5A623' : 'var(--sub)') + '"><svg viewBox="0 0 24 24" width="20" height="20" fill="' + (saved ? '#F5A623' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;gap:8px;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:12px">'
+      + metaRow('<rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>', 'Current position', position)
+      + metaRow('<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>', 'Desired salary', expectedSal)
+      + metaRow('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', 'Experience', expLabel)
+      + metaRow('<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2 6 2s6-1 6-2v-5"/>', 'Education', eduLabel)
+      + metaRow('<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>', 'Availability', availability)
+      + metaRow('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>', 'Location', location)
+      + '</div>'
+      + (skills.length ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">' + skills.map(function (s) { return '<span style="background:#1A3A8F12;color:#1A3A8F;font-size:11px;font-weight:600;padding:3px 9px;border-radius:7px">' + H.escHtml(s) + '</span>'; }).join('') + '</div>' : '')
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+      + (verBadge || '<span></span>')
+      + (posted ? '<span style="font-size:11px;color:var(--sub)">' + H.timeAgo(posted) + '</span>' : '')
+      + '</div>'
+      + '<div style="display:flex;gap:8px">'
+      + actions
+      + '<button onclick="event.stopPropagation();H.openInner(\'ViewCandidateCV\',{id:\'' + u.id + '\'})" style="flex:1;padding:11px;background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">View Profile</button>'
       + '</div></div>';
   }
+
+  // Find the current user's request for a candidate (any status), or null.
+  H._contactReqFor = function (candidateId) {
+    var me = H.currentUser(); if (!me) return null;
+    return (H.state.contactRequests || []).find(function (r) {
+      return r.candidateId === candidateId && r.requesterId === me.id;
+    }) || null;
+  };
+
+  // Open the "Request to contact" form for a candidate.
+  H._requestContact = function (candidateId) {
+    var me = H.currentUser();
+    if (!me) { H.requireAuth('Sign in to request candidate contact'); return; }
+    if (me.id === candidateId) { H.toast('This is your own profile'); return; }
+    var req = H._contactReqFor(candidateId);
+    if (req && req.status === 'approved') { H.toast('Contact already unlocked'); return; }
+    if (req && req.status === 'pending') { H.toast('Your request is already under review'); return; }
+    var inStyle = 'width:100%;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit;margin-top:4px';
+    H.modal({
+      title: 'Request to contact',
+      body: '<div style="font-size:12.5px;color:var(--sub);line-height:1.6;margin-bottom:14px">Tell us a little about the role. Our team reviews each request and unlocks this candidate’s name and contact details once approved.</div>'
+        + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text)">Your company / organisation *</label><input id="crCompany" placeholder="e.g. Acme Logistics" value="' + H.escHtml(me.company || '') + '" style="' + inStyle + '"></div>'
+        + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text)">Role you’re hiring for *</label><input id="crRole" placeholder="e.g. Delivery Driver" style="' + inStyle + '"></div>'
+        + '<div><label style="font-size:12px;font-weight:700;color:var(--text)">Message (optional)</label><textarea id="crNote" rows="3" placeholder="Anything you’d like us to know…" style="' + inStyle + ';resize:vertical"></textarea></div>',
+      confirmText: 'Send request',
+      onConfirm: function () {
+        var company = ((document.getElementById('crCompany') || {}).value || '').trim();
+        var role    = ((document.getElementById('crRole') || {}).value || '').trim();
+        var note    = ((document.getElementById('crNote') || {}).value || '').trim();
+        if (!company || !role) { H.toast('Please add your company and the role'); return false; }
+        H._submitContactRequest(candidateId, company, role, note);
+      }
+    });
+  };
+
+  H._submitContactRequest = function (candidateId, company, role, note) {
+    var me = H.currentUser(); if (!me) return;
+    var cand = (H.state.users || []).find(function (x) { return x.id === candidateId; }) || {};
+    var existing = H._contactReqFor(candidateId);
+    var rec = {
+      id: existing ? existing.id : H.uid(),
+      requesterId: me.id, candidateId: candidateId,
+      requesterName: me.name || '', candidateName: cand.name || '',
+      candidateLocation: (cand.cv && cand.cv.location) || cand.city || '',
+      company: company, role: role, note: note || '',
+      status: 'pending', createdAt: Date.now()
+    };
+    H.state.contactRequests = H.state.contactRequests || [];
+    if (existing) Object.assign(existing, rec); else H.state.contactRequests.push(rec);
+    H.saveState();
+
+    var _sb = window.supabase;
+    if (_sb && typeof _sb.from === 'function') {
+      var row = {
+        requester_id: me.id, candidate_id: candidateId,
+        requester_name: me.name || '', candidate_name: cand.name || '',
+        company: company, role: role, note: note || '', status: 'pending'
+      };
+      // Clear any prior row for this pair (RLS forbids declined→pending updates),
+      // then insert a fresh pending request.
+      _sb.from('contact_requests').delete().eq('requester_id', me.id).eq('candidate_id', candidateId).then(function () {
+        _sb.from('contact_requests').insert(row).select().then(function (r) {
+          if (r && !r.error && r.data && r.data[0]) {
+            var local = H._contactReqFor(candidateId);
+            if (local) { local.id = r.data[0].id; H.saveState(); }
+          } else if (r && r.error) { console.warn('contact request error:', r.error.message); }
+        });
+      });
+    }
+    H.toast('Request sent — we’ll review and notify you');
+    if (H.currentPageName === 'ViewCandidateCV') H.renderPage('ViewCandidateCV', { id: candidateId });
+    else if (typeof H._filterTalent === 'function') H._filterTalent();
+  };
+
+  H._toggleSaveCandidate = function (id) {
+    H.state.savedCandidates = H.state.savedCandidates || [];
+    var i = H.state.savedCandidates.indexOf(id);
+    if (i > -1) { H.state.savedCandidates.splice(i, 1); H.toast('Removed from saved'); }
+    else { H.state.savedCandidates.push(id); H.toast('Candidate saved'); }
+    H.saveState();
+    H._filterTalent();
+  };
+
+  // ── Track Requests — the employer's own contact-unlock requests ──
+  // Helper: has the current user been approved to see this candidate?
+  H.isContactUnlocked = function (candidateId) {
+    var me = H.currentUser(); if (!me) return false;
+    return (H.state.contactRequests || []).some(function (r) {
+      return r.candidateId === candidateId && r.requesterId === me.id && r.status === 'approved';
+    });
+  };
+
+  H.pages.MyContactRequests = function () {
+    var u = H.currentUser();
+    if (!u) return '<div class="page active">' + H.innerTopbar('My Requests') + H.emptyState('Sign in required', 'Sign in to track your contact requests', null, null) + '</div>';
+    var reqs = (H.state.contactRequests || []).filter(function (r) { return r.requesterId === u.id; })
+      .sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+    var statusMeta = {
+      pending:  { c: '#F5A623', bg: '#F5A62318', label: 'Pending review' },
+      approved: { c: '#15803d', bg: '#22c55e1a', label: 'Approved' },
+      declined: { c: '#ef4444', bg: '#ef444418', label: 'Declined' }
+    };
+    var body;
+    if (!reqs.length) {
+      body = H.emptyState('No requests yet', 'When you request a candidate’s contact in Hire Talent, it shows here with its status.', 'Browse Candidates', "H.openInner('HireTalent')");
+    } else {
+      body = '<div style="padding:12px 14px 88px">' + reqs.map(function (r) {
+        var m = statusMeta[r.status] || statusMeta.pending;
+        var cand = (H.state.users || []).find(function (x) { return x.id === r.candidateId; }) || {};
+        var approved = r.status === 'approved';
+        var name = approved ? (cand.name || r.candidateName || 'Candidate') : ('Candidate · ' + (r.candidateLocation || cand.city || 'Zimbabwe'));
+        var phone = cand.whatsappFull || cand.phoneForCalls || cand.phone || '';
+        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
+          + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">'
+          + '<div style="min-width:0"><div style="font-size:15px;font-weight:800;color:var(--text)">' + H.escHtml(name) + '</div>'
+          + (r.role ? '<div style="font-size:12px;color:var(--sub);margin-top:1px">' + H.escHtml(r.role) + (r.company ? ' · ' + H.escHtml(r.company) : '') + '</div>' : '')
+          + '</div>'
+          + '<span style="flex-shrink:0;background:' + m.bg + ';color:' + m.c + ';font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px">' + m.label + '</span></div>'
+          + (approved
+            ? '<div style="background:var(--bg);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px">'
+              + '<div style="font-size:12px;color:var(--sub)">Contact unlocked — you can now reach this candidate:</div>'
+              + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+              + (phone ? '<a href="tel:+' + H.escHtml(phone) + '" style="display:inline-flex;align-items:center;gap:5px;background:#1A3A8F;color:#fff;text-decoration:none;font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg>Call</a>' : '')
+              + '<button onclick="H.openInner(\'ViewCandidateCV\',{id:\'' + H.escHtml(r.candidateId) + '\'})" style="display:inline-flex;align-items:center;gap:5px;background:var(--card);color:#1A3A8F;border:1.5px solid #1A3A8F;font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;font-family:inherit">View Profile</button>'
+              + '</div></div>'
+            : (r.status === 'declined'
+              ? '<div style="font-size:12px;color:var(--sub);line-height:1.5">This request was not approved. You can try another candidate.</div>'
+              : '<div style="font-size:12px;color:var(--sub);line-height:1.5">We’re reviewing your request. You’ll be notified once it’s approved and the contact details unlock here.</div>'))
+          + '<div style="font-size:11px;color:var(--sub2);margin-top:8px">Requested ' + H.timeAgo(r.createdAt) + '</div>'
+          + '</div>';
+      }).join('') + '</div>';
+    }
+    return '<div class="page active">' + H.innerTopbar('My Requests') + body + '</div>';
+  };
+
+  // Pull the latest status of my requests from the cloud.
+  H.pages.MyContactRequests_after = function () {
+    // The re-render below re-invokes this hook; skip the refetch that one time
+    // so we never spin in a render→fetch→render loop (which caused flickering).
+    if (H._mcrSkipFetch) { H._mcrSkipFetch = false; return; }
+    var u = H.currentUser(); if (!u) return;
+    var _sb = window.supabase;
+    if (!_sb || typeof _sb.from !== 'function') return;
+    _sb.from('contact_requests').select('*').eq('requester_id', u.id).then(function (res) {
+      // Nothing returned (incl. empty list) → never re-render.
+      if (res.error || !Array.isArray(res.data) || !res.data.length) return;
+      H.state.contactRequests = H.state.contactRequests || [];
+      var sig = function () { return (H.state.contactRequests || []).map(function (r) { return r.id + ':' + r.status; }).sort().join('|'); };
+      var before = sig();
+      res.data.forEach(function (row) {
+        var ex = H.state.contactRequests.find(function (x) { return x.id === row.id; });
+        var mapped = {
+          id: row.id, requesterId: row.requester_id, candidateId: row.candidate_id,
+          candidateName: row.candidate_name || (ex && ex.candidateName) || '',
+          company: row.company || '', role: row.role || '', note: row.note || '',
+          status: row.status || 'pending', createdAt: ex && ex.createdAt ? ex.createdAt : (row.created_at ? new Date(row.created_at).getTime() : Date.now())
+        };
+        if (ex) Object.assign(ex, mapped); else H.state.contactRequests.push(mapped);
+      });
+      H.saveState();
+      // Only re-render when something actually changed, and guard the refetch.
+      if (before !== sig() && H.currentPageName === 'MyContactRequests') {
+        H._mcrSkipFetch = true;
+        H.renderPage('MyContactRequests');
+      }
+    });
+  };
 
   function _cvSection(title, body) {
     return '<div style="margin-bottom:20px">'
@@ -7733,9 +10965,13 @@ H.init();
     if (!u) return '<div class="page active">' + H.innerTopbar('Candidate CV') + H.emptyState('Not found', 'Candidate profile unavailable', null, null) + '</div>';
     var me = H.currentUser();
     var isMine = !!(me && me.id === uid);
+    var req = H._contactReqFor(uid);
+    var unlocked = !!(req && req.status === 'approved');
+    var pending  = !!(req && req.status === 'pending');
+    var reveal = isMine || unlocked;   // may we show name + contact?
     var cv  = u.cv || {};
     var ini = H.initials(u.name || 'U');
-    var verBadge = u.verified ? '<span style="background:#059669;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>' : '';
+    var verBadge = u.verified ? '<span style="display:inline-flex;vertical-align:middle">' + H.verifiedBadge(14) + '</span>' : '';
     var expLvl = { entry: 'Entry Level (0–2 yrs)', mid: '3–5 Years', senior: '5–10 Years', expert: '10+ Years' }[u.exp || ''] || '';
     var skills = cv.skills && cv.skills.length ? cv.skills : (u.skills || '').split(',').filter(Boolean).map(function (s) { return s.trim(); }).filter(Boolean);
     var exp   = cv.experience     || [];
@@ -7747,22 +10983,44 @@ H.init();
     var expectedSal = cv.expectedSalary ? '$' + cv.expectedSalary + '/mo' : (u.expectedSalary || '');
     var waFull  = u.whatsappFull || '';
     var callNum = u.phoneForCalls || waFull;
-    var canWa   = !!waFull   && (u.contactMethod !== 'call');
-    var canCall = !!callNum  && (u.contactMethod !== 'whatsapp');
+    var canWa   = reveal && !!waFull  && (u.contactMethod !== 'call');
+    var canCall = reveal && !!callNum && (u.contactMethod !== 'whatsapp');
     var waUrl   = 'https://wa.me/' + waFull + '?text=' + encodeURIComponent('Hi ' + (u.name || '') + ', I saw your profile on PaMarket and I have a job opportunity for you.');
     var jobTypes = (u.jobTypes || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    // Action used in the header + bottom bar when contact is still locked.
+    var reqBtnHeader = pending
+      ? '<div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Request pending</div>'
+      : '<div onclick="H._requestContact(\'' + H.escHtml(u.id) + '\')" style="display:flex;align-items:center;gap:5px;background:#F5A623;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;color:#1A3A8F;cursor:pointer"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Request to contact</div>';
+
+    var coverLetter = cv.coverLetter || '';
+    var eduLevel = cv.educationLevel || u.educationLevel
+      || ({ secondary: 'High School / Secondary', certificate: 'Certificate / Diploma', degree: "Bachelor's Degree", postgrad: 'Postgraduate' }[_candEduLevel(u)] || '');
+    var commitment = jobTypes.join(', ');
+    var postedTs = u.profileUpdatedAt || u.createdAt;
+    var postedOn = postedTs ? new Date(postedTs).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    // Clean, left-aligned section (matches the reference; no flanking rules)
+    var sec = function (title, body) {
+      return '<div style="padding:20px 0;border-top:1px solid var(--border)">'
+        + '<div style="font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.015em;margin-bottom:13px">' + title + '</div>' + body + '</div>';
+    };
+    var drow = function (k, v) {
+      return v ? '<div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0"><span style="font-size:13.5px;color:var(--sub);font-weight:500">' + k + '</span><span style="font-size:13.5px;color:var(--text);font-weight:600;text-align:right">' + H.escHtml(v) + '</span></div>' : '';
+    };
+    var longDesc = coverLetter.length > 260;
+    var descHtml = '<div id="cvDescBox" style="font-size:13.5px;color:var(--text);line-height:1.75;white-space:pre-wrap;' + (longDesc ? 'max-height:118px;overflow:hidden;' : '') + '">' + H.escHtml(coverLetter) + '</div>'
+      + (longDesc ? '<button onclick="var d=document.getElementById(\'cvDescBox\');d.style.maxHeight=\'none\';this.style.display=\'none\'" style="background:none;border:none;color:#1A3A8F;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px;padding:0">Show full description</button>' : '');
 
     return '<div class="page active">'
       + H.innerTopbar('Candidate CV')
-      + '<div style="padding-bottom:100px">'
+      + '<div>'
       // ── header ──
       + '<div style="background:linear-gradient(135deg,#1A3A8F 0%,#2952c8 100%);padding:22px 18px 20px">'
       + '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px">'
       + '<div style="width:64px;height:64px;border-radius:50%;overflow:hidden;flex-shrink:0;border:3px solid rgba(255,255,255,.3)">'
-      + (u.avatar ? '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">' + ini + '</div>')
+      + (u.avatar ? '<img src="' + u.avatar + '" onclick="H.viewImage(\'' + (u.avatar || '').replace(/'/g, "\\'") + '\')" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in">' : '<div style="width:100%;height:100%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">' + (reveal ? ini : '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>') + '</div>')
       + '</div>'
       + '<div style="flex:1;min-width:0">'
-      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px"><div style="font-size:19px;font-weight:800;color:#fff">' + H.escHtml(u.name || 'Anonymous') + '</div>' + verBadge + '</div>'
+      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px"><div style="font-size:19px;font-weight:800;color:#fff">' + H.escHtml(reveal ? (u.name || 'Anonymous') : 'Candidate') + '</div>' + (reveal ? verBadge : '') + '</div>'
       + '<div style="font-size:13px;color:rgba(255,255,255,.9);font-weight:600;margin-bottom:5px">' + H.escHtml(headline) + '</div>'
       + '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:rgba(255,255,255,.72)">'
       + (location ? '<span style="display:inline-flex;align-items:center;gap:3px">' + H.ICONS.location + H.escHtml(location) + '</span>' : '')
@@ -7770,22 +11028,32 @@ H.init();
       + (expectedSal ? '<span style="display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' + H.escHtml(expectedSal) + '</span>' : '')
       + '</div>'
       + (jobTypes.length ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">' + jobTypes.map(function(t){ return '<span style="background:rgba(255,255,255,.2);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px">' + H.escHtml(t) + '</span>'; }).join('') + '</div>' : '')
-      + ((u.linkedinUrl || u.githubUrl || u.websiteUrl) ? '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:11px">'
+      + ((reveal && (u.linkedinUrl || u.githubUrl || u.websiteUrl)) ? '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:11px">'
           + (u.linkedinUrl ? '<a href="' + H.escHtml(u.linkedinUrl) + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> LinkedIn</a>' : '')
           + (u.githubUrl   ? '<a href="' + H.escHtml(u.githubUrl)   + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg> GitHub</a>' : '')
           + (u.websiteUrl  ? '<a href="' + H.escHtml(u.websiteUrl)  + '" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg> Portfolio</a>' : '')
           + '</div>' : '')
       + '</div></div></div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-      + (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="display:flex;align-items:center;gap:5px;background:#25D366;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Chat on WhatsApp</a>' : '')
-      + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="display:flex;align-items:center;gap:5px;background:#1A3A8F;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call Candidate</a>' : '')
-      + '<div onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#fff;cursor:pointer"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;padding:14px 18px 2px">'
+      + (reveal
+        ? (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;min-width:128px;display:flex;align-items:center;justify-content:center;gap:6px;background:#25D366;padding:11px 12px;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
+          + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;min-width:128px;display:flex;align-items:center;justify-content:center;gap:6px;background:#1A3A8F;padding:11px 12px;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
+          + '<div onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;min-width:128px;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--bg);padding:11px 12px;border-radius:10px;font-size:12.5px;font-weight:700;color:#1A3A8F;border:1.5px solid #1A3A8F;cursor:pointer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</div>'
+        : reqBtnHeader)
       + '</div></div>'
       // ── body ──
-      + '<div style="padding:16px 16px 0">'
-      + (summary ? _cvSection('Professional Summary', '<p style="font-size:13px;color:var(--text);line-height:1.75;margin:0">' + H.escHtml(summary) + '</p>')
-          : (u.bio ? _cvSection('Professional Summary', '<p style="font-size:13px;color:var(--text);line-height:1.75;margin:0">' + H.escHtml(u.bio) + '</p>') : ''))
-      + (exp.length ? _cvSection('Work Experience', exp.map(function (e) {
+      + '<div style="padding:0 18px 140px">'
+      + (!reveal ? '<div style="display:flex;align-items:flex-start;gap:10px;background:#1A3A8F0d;border:1px solid #1A3A8F22;border-radius:12px;padding:12px 14px;margin:16px 0 4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><div style="font-size:12.5px;color:var(--text);line-height:1.55">' + (pending ? 'Your request is under review. The full name and contact details unlock here once it’s approved.' : 'This candidate’s <strong>name and contact details are hidden</strong>. Send a request and our team will unlock them for you once approved.') + '</div></div>' : '')
+      // Details
+      + ((expLvl || eduLevel || commitment || expectedSal || postedOn)
+          ? sec('Details', drow('Work experience', expLvl) + drow('Education level', eduLevel) + drow('Commitment', commitment) + drow('Desired salary', expectedSal) + drow('Posted on', postedOn))
+          : '')
+      // Description (cover letter)
+      + (coverLetter ? sec('Description', descHtml) : '')
+      // About / summary
+      + ((summary || u.bio) ? sec('About', '<p style="font-size:13.5px;color:var(--text);line-height:1.7;margin:0;white-space:pre-wrap">' + H.escHtml(summary || u.bio) + '</p>') : '')
+      // Work experience
+      + (exp.length ? sec('Work Experience', exp.map(function (e) {
           return '<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">'
             + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:3px">'
             + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(e.title || '') + '</div>'
@@ -7795,17 +11063,17 @@ H.init();
             + (e.description ? '<div style="font-size:12px;color:var(--sub);line-height:1.65">' + H.escHtml(e.description) + '</div>' : '')
             + '</div>';
         }).join('')) : '')
-      + (edu.length ? _cvSection('Education', edu.map(function (e) {
+      + (edu.length ? sec('Education', edu.map(function (e) {
           return '<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">'
             + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(e.degree || e.qualification || '') + '</div>'
             + '<div style="font-size:12px;color:#1A3A8F;font-weight:600">' + H.escHtml(e.school || e.institution || '') + '</div>'
             + (e.year ? '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + H.escHtml(e.year) + '</div>' : '')
             + '</div>';
         }).join('')) : '')
-      + (skills.length ? _cvSection('Skills', '<div style="display:flex;flex-wrap:wrap;gap:6px">' + skills.map(function (s) {
+      + (skills.length ? sec('Skills', '<div style="display:flex;flex-wrap:wrap;gap:6px">' + skills.map(function (s) {
           return '<span style="background:#1A3A8F14;border:1px solid #1A3A8F30;color:#1A3A8F;font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px">' + H.escHtml(s) + '</span>';
         }).join('') + '</div>') : '')
-      + (certs.length ? _cvSection('Certifications', certs.map(function (c) {
+      + (certs.length ? sec('Certifications', certs.map(function (c) {
           var name = typeof c === 'string' ? c : (c.name || '');
           return '<div style="margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:var(--text)">' + H.escHtml(name) + '</div>'
             + (c.issuer ? '<div style="font-size:12px;color:var(--sub)">' + H.escHtml(c.issuer) + (c.year ? ' · ' + H.escHtml(c.year) : '') + '</div>' : '') + '</div>';
@@ -7816,10 +11084,14 @@ H.init();
       + (isMine
         ? '<button onclick="H.openInner(\'CandidateProfile\')" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>'
           + '<button onclick="H._deleteJobProfile()" style="flex:1;padding:13px;background:var(--bg);color:#ef4444;border:1.5px solid #fecaca;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Delete Profile</button>'
-        : (canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
-          + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
-          + '<button onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;' + (canWa || canCall ? 'background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;' : 'background:#1A3A8F;color:#fff;border:none;') + 'border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'
-          + '<button onclick="H._cvDownload(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952c8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CV</button>'
+        : (reveal
+          ? ((canWa ? '<a href="' + H.escHtml(waUrl) + '" target="_blank" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> WhatsApp</a>' : '')
+            + (canCall ? '<a href="tel:+' + H.escHtml(callNum) + '" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg> Call</a>' : '')
+            + '<button onclick="H.startChatWith(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;' + (canWa || canCall ? 'background:var(--bg);color:#1A3A8F;border:1.5px solid #1A3A8F;' : 'background:#1A3A8F;color:#fff;border:none;') + 'border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>'
+            + '<button onclick="H._cvDownload(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952c8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CV</button>')
+          : (pending
+            ? '<div style="flex:1;padding:14px;background:#F5A62318;color:#c07800;border-radius:12px;font-size:13.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Request pending review</div>'
+            : '<button onclick="H._requestContact(\'' + H.escHtml(u.id) + '\')" style="flex:1;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Request to contact</button>'))
       )
       + '</div></div>';
   };
@@ -8009,10 +11281,10 @@ H.init();
     var u = H.currentUser();
     if (!u) return '<div class="page active">' + H.innerTopbar('Post a Job') + H.emptyState('Sign in required', 'You must sign in to post a job', 'Sign In', "H.requireAuth('Post a job')") + '</div>';
 
-    if (!u.verified) {
-      var pendingBanner = u.verification_pending
-        ? '<div style="background:#F5A62318;border:1px solid #F5A62340;border-radius:12px;padding:14px 16px;margin-bottom:20px"><div style="font-size:14px;font-weight:700;color:#c07800">Verification Pending</div><div style="font-size:13px;color:var(--sub);margin-top:4px">Your request is under review. We\'ll notify you once approved.</div></div>'
-        : '<button onclick="H.openInner(\'Verify\')" style="padding:14px 32px;background:linear-gradient(135deg,#1A3A8F,#0f2460);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:inline-block">Verify My Company →</button>';
+    if (!u.companyVerified) {
+      var pendingBanner = u.company_verification_pending
+        ? '<div style="background:#F5A62318;border:1px solid #F5A62340;border-radius:12px;padding:14px 16px;margin-bottom:20px"><div style="font-size:14px;font-weight:700;color:#c07800">Verification Pending</div><div style="font-size:13px;color:var(--sub);margin-top:4px">Your company request is under review. We\'ll notify you once approved.</div></div>'
+        : '<button onclick="H.openInner(\'CompanyVerify\')" style="padding:14px 32px;background:linear-gradient(135deg,#1A3A8F,#0f2460);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:inline-block">Verify My Company →</button>';
       return '<div class="page active">'
         + '<div class="det-topbar"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Post a Job</div></div>'
         + '<div style="padding:48px 24px;text-align:center">'
@@ -8394,18 +11666,40 @@ H.init();
     H.openInner('ApplyJob', { jobId: jobId });
   };
 
+  // Education-level → qualification dropdown value (reuses Hire-Talent matcher).
+  var _QUAL_OPTS = [['none', 'No formal qualification'], ['secondary', 'High School / Secondary'], ['certificate', 'Certificate / Diploma'], ['degree', 'Bachelor’s Degree'], ['postgrad', 'Postgraduate']];
+
   H.pages.ApplyJob = function (params) {
     var jobId = params && params.jobId;
     var l = (H.state.listings || []).find(function(x){ return x.id === jobId; });
     if (!l) return '<div class="page active">' + H.innerTopbar('Apply') + H.emptyState('Job not found', '', null, null) + '</div>';
+    var u = H.currentUser() || {};
+    var cv = u.cv || {};
     var company = l.company || l.sellerName || 'Company';
     var questions = l.custom_questions || [];
     var inS = 'width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit';
 
+    // Prefill from the saved job-seeker profile
+    var preQual    = _candEduLevel(u) || '';
+    var preTitle   = u.jobTitle || cv.headline || '';
+    var preCat     = parseLine((l.desc || '').split('\n'), 'INDUSTRY') || '';
+    var lastExp    = (cv.experience && cv.experience[0]) || {};
+    var preCompany = lastExp.company || '';
+    var experienced = !!(u.exp && u.exp !== 'entry') || (cv.experience && cv.experience.length > 0);
+    var resumeName = u.cvFileName || (u.cvFileUrl ? 'Resume on file' : '');
+
+    function field(label, req, inner) {
+      return '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:7px">' + label + (req ? ' <span style="color:#ef4444">*</span>' : '') + '</label>' + inner + '</div>';
+    }
+
+    var statusBtn = function (val, label) {
+      var on = (experienced ? 'Experienced' : 'Fresher') === val;
+      return '<button type="button" data-val="' + val + '" onclick="H._ajStatus(this)" style="flex:1;padding:11px;border:1.5px solid ' + (on ? '#1A3A8F' : 'var(--border)') + ';border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:' + (on ? '#1A3A8F' : 'var(--card)') + ';color:' + (on ? '#fff' : 'var(--text)') + ';font-family:inherit">' + label + '</button>';
+    };
+
     var questionsHtml = questions.map(function (q, i) {
       var lbl = '<label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:8px;line-height:1.5">'
-        + (q.required ? '<span style="color:#ef4444;margin-right:2px">*</span>' : '')
-        + H.escHtml(q.question) + '</label>';
+        + (q.required ? '<span style="color:#ef4444;margin-right:2px">*</span>' : '') + H.escHtml(q.question) + '</label>';
       var inp = '';
       if (q.type === 'yesno') {
         inp = '<div id="applyQ_' + i + '" data-value="" style="display:flex;gap:8px">'
@@ -8413,10 +11707,8 @@ H.init();
           + '<button type="button" onclick="var p=this.parentElement;p.dataset.value=\'No\';this.style.background=\'#1A3A8F\';this.style.color=\'#fff\';this.style.borderColor=\'#1A3A8F\';this.previousElementSibling.style.background=\'var(--card)\';this.previousElementSibling.style.color=\'var(--text)\';this.previousElementSibling.style.borderColor=\'var(--border)\'" style="flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--card);color:var(--text);font-family:inherit">No</button>'
           + '</div>';
       } else if (q.type === 'select') {
-        inp = '<select id="applyQ_' + i + '" style="' + inS + '">'
-          + '<option value="">Select an option…</option>'
-          + (q.options || []).map(function(o){ return '<option>' + H.escHtml(o) + '</option>'; }).join('')
-          + '</select>';
+        inp = '<select id="applyQ_' + i + '" style="' + inS + '"><option value="">Select an option…</option>'
+          + (q.options || []).map(function(o){ return '<option>' + H.escHtml(o) + '</option>'; }).join('') + '</select>';
       } else {
         inp = '<textarea id="applyQ_' + i + '" rows="2" placeholder="Your answer…" style="' + inS + ';resize:vertical"></textarea>';
       }
@@ -8424,64 +11716,148 @@ H.init();
     }).join('');
 
     return '<div class="page active">'
-      + H.innerTopbar('Apply for ' + H.escHtml(l.title))
+      + H.innerTopbar('Job Application')
       + '<div style="padding:14px 14px 100px">'
-      + '<div style="background:#1A3A8F14;border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;gap:12px;align-items:center">'
+      // Job header
+      + '<div style="background:#1A3A8F14;border-radius:12px;padding:12px 14px;margin-bottom:18px;display:flex;gap:12px;align-items:center">'
       + '<div style="width:42px;height:42px;border-radius:10px;background:#1A3A8F;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0">' + H.escHtml(company.slice(0, 2).toUpperCase()) + '</div>'
       + '<div><div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(l.title) + '</div>'
       + '<div style="font-size:12px;color:var(--sub)">' + H.escHtml(company) + ' · ' + H.escHtml(l.city || 'Zimbabwe') + '</div></div>'
       + '</div>'
-      + '<div style="margin-bottom:16px">'
-      + '<label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:8px">Cover Message</label>'
-      + '<textarea id="applyMsg" rows="4" placeholder="Introduce yourself — your experience, why you\'re a great fit…" style="' + inS + ';resize:vertical"></textarea>'
-      + '<div style="font-size:11px;color:var(--sub);margin-top:5px">Your profile is shared with the employer. They may message you through PaMarket.</div>'
-      + '</div>'
+
+      + field('Full Name', true, '<input id="ajName" value="' + H.escHtml(u.name || '') + '" placeholder="Your full name" style="' + inS + '">')
+      + field('Email Address', true, '<input id="ajEmail" type="email" value="' + H.escHtml(u.email || '') + '" placeholder="you@example.com" style="' + inS + '">')
+      + field('Phone No.', true, '<input id="ajPhone" type="tel" value="' + H.escHtml(u.phone || u.whatsappFull || '') + '" placeholder="e.g. 077 123 4567" style="' + inS + '">')
+      + field('Currently located in', false, '<input id="ajCity" value="' + H.escHtml(u.city || '') + '" placeholder="e.g. Harare" style="' + inS + '">')
+      + field('Qualification degree', true, '<select id="ajQual" style="' + inS + '"><option value="">Select…</option>'
+          + _QUAL_OPTS.map(function(o){ return '<option value="' + o[0] + '"' + (preQual === o[0] ? ' selected' : '') + '>' + H.escHtml(o[1]) + '</option>'; }).join('') + '</select>')
+      + field('Job Status', true, '<div id="ajStatus" data-value="' + (experienced ? 'Experienced' : 'Fresher') + '" style="display:flex;gap:8px">' + statusBtn('Fresher', 'Fresher') + statusBtn('Experienced', 'Experienced') + '</div>')
+      + field('Job Title', true, '<input id="ajTitle" value="' + H.escHtml(preTitle) + '" placeholder="e.g. Customer Service Driver" style="' + inS + '">')
+      + field('Job Category', true, '<select id="ajCategory" style="' + inS + '"><option value="">Select…</option>'
+          + JOB_CATS.map(function(c){ return '<option' + (preCat === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('') + '<option' + (preCat === 'Other' ? ' selected' : '') + '>Other</option></select>')
+      + field('Industry', false, '<input id="ajIndustry" placeholder="e.g. Logistics, Retail…" style="' + inS + '">')
+      + field('Current / Last Company', false, '<input id="ajCompany" value="' + H.escHtml(preCompany) + '" placeholder="Most recent employer" style="' + inS + '">')
+      + field('Duration', false, '<div style="display:flex;gap:10px">'
+          + '<div style="flex:1"><input id="ajStart" type="month" style="' + inS + '"><div style="font-size:11px;color:var(--sub);margin-top:4px">Start</div></div>'
+          + '<div style="flex:1"><input id="ajEnd" type="month" style="' + inS + '"><div style="font-size:11px;color:var(--sub);margin-top:4px">End</div></div>'
+          + '</div>'
+          + '<label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer"><input type="checkbox" id="ajCurrent" onchange="var e=document.getElementById(\'ajEnd\');e.disabled=this.checked;if(this.checked)e.value=\'\'" style="width:16px;height:16px;accent-color:#1A3A8F"><span style="font-size:13px;font-weight:600;color:var(--text)">Currently working here</span></label>')
+
+      // Resume
+      + field('Resume', false, (resumeName
+          ? '<div style="display:flex;align-items:center;gap:10px;background:#22c55e18;border:1.5px solid #22c55e40;border-radius:10px;padding:11px 13px">'
+            + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#15803d" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+            + '<span style="flex:1;font-size:13px;font-weight:600;color:#15803d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(resumeName) + '</span>'
+            + (u.cvFileUrl ? '<a href="' + H.escHtml(u.cvFileUrl) + '" target="_blank" style="font-size:12px;font-weight:700;color:#15803d;text-decoration:none">View</a>' : '')
+            + '</div>'
+          : '<div onclick="H.openInner(\'CandidateProfile\')" style="display:flex;align-items:center;gap:10px;border:1.5px dashed var(--border);border-radius:10px;padding:13px;cursor:pointer">'
+            + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--sub)" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
+            + '<span style="font-size:13px;color:var(--sub)">Add a resume in your <strong style="color:#1A3A8F">Job-Seeker Profile</strong></span></div>'))
+
+      // Cover message
+      + field('Message to employer', false, '<textarea id="applyMsg" rows="3" placeholder="Why you’re a great fit…" style="' + inS + ';resize:vertical"></textarea>')
+
       + (questions.length
-        ? '<div style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:8px"><span style="flex:1;height:1px;background:var(--border)"></span>Application Questions<span style="flex:1;height:1px;background:var(--border)"></span></div>'
+        ? '<div style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin:6px 0 14px;display:flex;align-items:center;gap:8px"><span style="flex:1;height:1px;background:var(--border)"></span>Screening Questions<span style="flex:1;height:1px;background:var(--border)"></span></div>'
           + questionsHtml
         : '')
       + '</div>'
-      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
-      + '<button onclick="H._submitApplyJob(\'' + H.escHtml(jobId) + '\')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">'
-      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg> Submit Application</button>'
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200;display:flex;gap:10px">'
+      + '<button onclick="H._clearApplyForm()" style="flex:1;padding:14px;background:var(--bg);color:var(--sub);border:1.5px solid var(--border);border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Clear All</button>'
+      + '<button onclick="H._submitApplyJob(\'' + H.escHtml(jobId) + '\')" style="flex:2;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">'
+      + '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg> Save & Apply</button>'
       + '</div></div>';
   };
+
+  H._ajStatus = function (btn) {
+    var wrap = document.getElementById('ajStatus'); if (!wrap) return;
+    wrap.dataset.value = btn.getAttribute('data-val');
+    [].forEach.call(wrap.querySelectorAll('button'), function (b) {
+      var on = b === btn;
+      b.style.background = on ? '#1A3A8F' : 'var(--card)';
+      b.style.color = on ? '#fff' : 'var(--text)';
+      b.style.borderColor = on ? '#1A3A8F' : 'var(--border)';
+    });
+  };
+
+  H._clearApplyForm = function () {
+    ['ajName', 'ajEmail', 'ajPhone', 'ajCity', 'ajTitle', 'ajIndustry', 'ajCompany', 'ajStart', 'ajEnd', 'applyMsg'].forEach(function (id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    ['ajQual', 'ajCategory'].forEach(function (id) { var el = document.getElementById(id); if (el) el.selectedIndex = 0; });
+    var cur = document.getElementById('ajCurrent'); if (cur) cur.checked = false;
+    var end = document.getElementById('ajEnd'); if (end) end.disabled = false;
+    H.toast('Form cleared');
+  };
+
+  function _fmtMonth(v) { // "2022-06" → "06/2022"
+    if (!v) return '';
+    var p = v.split('-'); return p.length === 2 ? p[1] + '/' + p[0] : v;
+  }
 
   H._submitApplyJob = function (jobId) {
     var u = H.currentUser(); if (!u) return;
     var l = (H.state.listings || []).find(function(x){ return x.id === jobId; }); if (!l) return;
-    var msg = ((document.getElementById('applyMsg') || {}).value || '').trim();
-    var questions = l.custom_questions || [];
+    function val(id) { return ((document.getElementById(id) || {}).value || '').trim(); }
+    var name = val('ajName'), email = val('ajEmail'), phone = val('ajPhone');
+    var city = val('ajCity'), title = val('ajTitle');
+    var qualSel = document.getElementById('ajQual');
+    var qual = qualSel ? (qualSel.options[qualSel.selectedIndex] || {}).text || '' : '';
+    var qualVal = val('ajQual');
+    var category = val('ajCategory'), industry = val('ajIndustry'), curCompany = val('ajCompany');
+    var status = (document.getElementById('ajStatus') || {}).dataset ? document.getElementById('ajStatus').dataset.value : '';
+    var start = _fmtMonth(val('ajStart')), end = _fmtMonth(val('ajEnd'));
+    var current = !!(document.getElementById('ajCurrent') || {}).checked;
+    var duration = start ? (start + ' – ' + (current ? 'Present' : (end || '—'))) : '';
+
+    if (!name)  { H.toast('Please enter your full name'); return; }
+    if (!email) { H.toast('Please enter your email address'); return; }
+    if (!phone) { H.toast('Please enter your phone number'); return; }
+    if (!qualVal) { H.toast('Please select your qualification'); return; }
+    if (!title) { H.toast('Please enter your job title'); return; }
+    if (!category) { H.toast('Please select a job category'); return; }
+
+    var msg = val('applyMsg');
     var answers = [];
+    function add(q, a) { if (a) answers.push({ question: q, answer: a }); }
+    add('Located in', city);
+    add('Qualification', qual);
+    add('Job status', status);
+    add('Current / desired job title', title);
+    add('Category', category);
+    add('Industry', industry);
+    add('Current / last company', curCompany);
+    add('Duration', duration);
+    if (u.cvFileName || u.cvFileUrl) add('Resume', u.cvFileName || u.cvFileUrl);
+
+    // Screening questions
+    var questions = l.custom_questions || [];
     var valid = true;
     questions.forEach(function (q, i) {
       var el = document.getElementById('applyQ_' + i);
-      var val = '';
-      if (q.type === 'yesno') {
-        val = el ? (el.dataset.value || '') : '';
-      } else {
-        val = el ? ((el.value || '').trim()) : '';
-      }
-      if (q.required && !val) {
-        H.toast('Please answer: ' + q.question.slice(0, 60));
-        valid = false;
-      }
-      answers.push({ questionId: q.id, question: q.question, answer: val });
+      var v = (q.type === 'yesno') ? (el ? (el.dataset.value || '') : '') : (el ? ((el.value || '').trim()) : '');
+      if (q.required && !v) { H.toast('Please answer: ' + q.question.slice(0, 60)); valid = false; }
+      answers.push({ questionId: q.id, question: q.question, answer: v });
     });
     if (!valid) return;
-    H._submitJobApplication(jobId, msg, answers);
+
+    H._submitJobApplication(jobId, msg, answers, { name: name, email: email, phone: phone });
   };
 
-  H._submitJobApplication = function (jobId, message, answers) {
+  H._submitJobApplication = function (jobId, message, answers, profile) {
     var u = H.currentUser(); if (!u) return;
     var l = (H.state.listings || []).find(function(x){ return x.id === jobId; }); if (!l) return;
     var company = l.company || l.sellerName || 'Company';
+    profile = profile || {};
     H.state.applications = H.state.applications || [];
     var existing = H.state.applications.find(function(a){ return a.jobId === jobId && a.applicantId === u.id; });
     if (existing) { H.toast('You already applied for this job'); return; }
     var app = {
       id: H.uid(), jobId: jobId, jobTitle: l.title, company: company,
-      applicantId: u.id, applicantName: u.name || 'Applicant',
+      applicantId: u.id,
+      applicantName: profile.name || u.name || 'Applicant',
+      applicantEmail: profile.email || u.email || '',
+      applicantPhone: profile.phone || u.phone || '',
       message: message, answers: answers || [], status: 'pending', appliedAt: Date.now(),
       employerId: l.sellerId
     };
@@ -8694,13 +12070,18 @@ H.init();
 
   var inStyle = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit';
 
+  var _cpCardOpen = false;
   function _cpSectionHead(icon, title) {
-    return '<div style="display:flex;align-items:center;gap:10px;margin:20px 0 10px">'
-      + '<span style="display:inline-flex;align-items:center;color:var(--sub)">' + icon + '</span>'
-      + '<span style="font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.8px">' + title + '</span>'
-      + '<span style="flex:1;height:1px;background:var(--border)"></span>'
+    // Each section is its own card; close the previous one (if any) and open a new.
+    var pre = _cpCardOpen ? '</div>' : '';
+    _cpCardOpen = true;
+    return pre + '<div class="cp-card"><div class="cp-card-head">'
+      + '<span class="cp-card-ic">' + icon + '</span>'
+      + '<span class="cp-card-title">' + title + '</span>'
       + '</div>';
   }
+  // Close the final open card.
+  function _cpSectionEnd() { var s = _cpCardOpen ? '</div>' : ''; _cpCardOpen = false; return s; }
 
   function _cpRenderSkillChips(skills) {
     return skills.map(function(s, i) {
@@ -8708,6 +12089,24 @@ H.init();
         + H.escHtml(s.trim())
         + '<button onclick="H._cpRemoveSkill(' + i + ')" style="background:none;border:none;color:#fff;font-size:13px;cursor:pointer;padding:0;line-height:1;font-family:inherit">×</button>'
         + '</span>';
+    }).join('');
+  }
+
+  function _cpRenderExpList(arr) {
+    if (!arr || !arr.length) {
+      return '<div style="color:var(--sub);font-size:13px;padding:2px 0 10px">No experience added yet. Add your roles, companies and dates below.</div>';
+    }
+    return arr.map(function (e, i) {
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px">'
+        + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + H.escHtml(e.title || '') + '</div>'
+        + '<div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">' + H.escHtml(e.company || '') + '</div>'
+        + ((e.duration || e.current) ? '<div style="font-size:12px;color:var(--sub);margin-top:2px">' + H.escHtml(e.duration || '') + (e.current ? ' · Current' : '') + '</div>' : '')
+        + (e.desc ? '<div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.5;white-space:pre-wrap">' + H.escHtml(e.desc) + '</div>' : '')
+        + '<div style="display:flex;gap:8px;margin-top:10px">'
+        + '<button type="button" onclick="H._cpExp.edit(' + i + ')" style="font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer;font-family:inherit">Edit</button>'
+        + '<button type="button" onclick="H._cpExp.del(' + i + ')" style="font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer;font-family:inherit">Remove</button>'
+        + '</div>'
+        + '</div>';
     }).join('');
   }
 
@@ -8736,9 +12135,9 @@ H.init();
   window._cpJT = function(btn) {
     var on = btn.getAttribute('data-sel') !== '1';
     btn.setAttribute('data-sel', on ? '1' : '0');
-    btn.style.background  = on ? '#1A3A8F' : '#fff';
-    btn.style.color       = on ? '#fff'    : '#667085';
-    btn.style.border      = on ? '1.5px solid #1A3A8F' : '1.5px solid #E4E8F0';
+    btn.style.background  = on ? '#1A3A8F' : 'var(--card)';
+    btn.style.color       = on ? '#fff'    : 'var(--text)';
+    btn.style.border      = on ? '1.5px solid #1A3A8F' : '1.5px solid var(--border)';
   };
 
   window._cpCM = function(btn) {
@@ -8746,15 +12145,40 @@ H.init();
     if (!wrap) return;
     [].forEach.call(wrap.querySelectorAll('button[data-cm]'), function(b) {
       b.setAttribute('data-sel', '0');
-      b.style.background = '#fff';
-      b.style.color      = '#667085';
-      b.style.border     = '1.5px solid #E4E8F0';
+      b.style.background = 'var(--card)';
+      b.style.color      = 'var(--text)';
+      b.style.border     = '1.5px solid var(--border)';
     });
     btn.setAttribute('data-sel', '1');
     btn.style.background = '#1A3A8F';
     btn.style.color      = '#fff';
     btn.style.border     = '1.5px solid #1A3A8F';
   };
+
+  // Single-select pill group writing to a hidden input (Notice Period, Education).
+  window._cpPick = function(btn) {
+    var wrap = btn.parentNode;
+    var hid = document.getElementById(wrap.getAttribute('data-target'));
+    var val = btn.getAttribute('data-val');
+    var already = hid && hid.value === val;
+    [].forEach.call(wrap.querySelectorAll('button[data-val]'), function(b) {
+      b.style.background = 'var(--card)'; b.style.color = 'var(--text)'; b.style.border = '1.5px solid var(--border)';
+    });
+    if (already) { if (hid) hid.value = ''; return; }
+    btn.style.background = '#1A3A8F'; btn.style.color = '#fff'; btn.style.border = '1.5px solid #1A3A8F';
+    if (hid) hid.value = val;
+  };
+
+  // Render a single-select pill row + its hidden input.
+  function _cpPillRow(target, options, current) {
+    return '<div data-target="' + target + '" style="display:flex;flex-wrap:wrap;gap:8px">'
+      + options.map(function(o) {
+        var v = Array.isArray(o) ? o[0] : o, t = Array.isArray(o) ? o[1] : o, sel = current === v;
+        return '<button type="button" onclick="_cpPick(this)" data-val="' + H.escHtml(v) + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--text)') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + '">' + H.escHtml(t) + '</button>';
+      }).join('')
+      + '</div><input type="hidden" id="' + target + '" value="' + H.escHtml(current || '') + '">';
+  }
+  H._cpPillRow = _cpPillRow;
 
   window._cpOpenFile = function() {
     var fi = document.getElementById('cpResumeFile');
@@ -8766,13 +12190,17 @@ H.init();
     if (row) row.style.display = el.checked ? 'none' : '';
   };
 
-  H.pages.CandidateProfile = function () {
+  H.pages.CandidateProfile = function (params) {
     var u = H.currentUser();
     if (!u) return '<div class="page active">' + H.innerTopbar('Job Seeker Profile') + H.emptyState('Sign in required', 'Sign in to set up your job seeker profile', 'Sign In', "H.requireAuth('Job seeker profile')") + '</div>';
+    _cpCardOpen = false; // reset card-wrapping state for this render
+    // Pre-fill from the Get Hired wizard (location + profession), else existing.
+    var preCity   = (params && params.city && params.city !== 'Any') ? params.city : (u.city || '');
+    var preSector = (params && params.sector) || u.sector || '';
     var ZW = H._ZW_CITIES || [];
     var expLevels = [['entry','Entry Level (0-2 yrs)'],['mid','3-5 Years'],['senior','5-10 Years'],['expert','10+ Years']];
     var on = u.openToWork ? '1' : '0';
-    var togBg   = u.openToWork ? '#22c55e' : '#E4E8F0';
+    var togBg   = u.openToWork ? '#22c55e' : 'var(--border)';
     var togLeft = u.openToWork ? '23px' : '3px';
     var existingSkills = (u.skills || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
     var jobTypesList = ['Full-Time','Part-Time','Contract','Casual / Day Labor','Remote'];
@@ -8785,7 +12213,7 @@ H.init();
     var waCCOptions = [['263','ZW +263'],['27','ZA +27'],['267','BW +267'],['260','ZM +260'],['255','TZ +255'],['254','KE +254'],['234','NG +234'],['44','GB +44'],['1','US +1']];
     var cvFileName = H._cpResumeFileName || u.cvFileName || '';
 
-    var jt_off = '1.5px solid #E4E8F0';
+    var jt_off = '1.5px solid var(--border)';
     var jt_on  = '1.5px solid #1A3A8F';
 
     return '<div class="page active">'
@@ -8797,9 +12225,9 @@ H.init();
       + '<div style="padding:0 14px 100px">'
 
       // ── Open to Work toggle ──
-      + '<div style="margin-bottom:16px;background:#fff;border-radius:12px;padding:16px;border:1px solid #E4E8F0;display:flex;align-items:center;justify-content:space-between">'
-      + '<div><div style="font-size:15px;font-weight:700;color:var(--text)">Open to Work</div><div style="font-size:12px;color:#667085;margin-top:2px">Appear in employer searches</div></div>'
-      + '<div id="otwTog" onclick="var o=this.dataset.on===\'1\'?\'0\':\'1\';this.dataset.on=o;this.style.background=o===\'1\'?\'#22c55e\':\'#E4E8F0\';this.querySelector(\'div\').style.left=o===\'1\'?\'23px\':\'3px\'" data-on="' + on + '" style="width:46px;height:26px;border-radius:13px;background:' + togBg + ';position:relative;cursor:pointer;transition:background .2s;flex-shrink:0">'
+      + '<div style="margin-bottom:16px;background:var(--card);border-radius:12px;padding:16px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">'
+      + '<div><div style="font-size:15px;font-weight:700;color:var(--text)">Open to Work</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Appear in employer searches</div></div>'
+      + '<div id="otwTog" onclick="var o=this.dataset.on===\'1\'?\'0\':\'1\';this.dataset.on=o;this.style.background=o===\'1\'?\'#22c55e\':\'var(--border)\';this.querySelector(\'div\').style.left=o===\'1\'?\'23px\':\'3px\'" data-on="' + on + '" style="width:46px;height:26px;border-radius:13px;background:' + togBg + ';position:relative;cursor:pointer;transition:background .2s;flex-shrink:0">'
       + '<div style="position:absolute;top:3px;left:' + togLeft + ';width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div></div>'
       + '</div>'
 
@@ -8807,9 +12235,10 @@ H.init();
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>', 'Basic Details')
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Current / Desired Job Title</label>'
       + '<input id="cpTitle" placeholder="e.g. Accountant, Driver, Teacher" value="' + H.escHtml(u.jobTitle || '') + '" style="' + inStyle + '"></div>'
-      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Industry / Sector</label>'
-      + '<select id="cpSector" style="' + inStyle + '"><option value="">Select sector…</option>'
-      + JOB_CATS.map(function(c){ return '<option value="' + H.escHtml(c) + '"' + (u.sector === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Profession / Sector</label>'
+      + '<select id="cpSector" style="' + inStyle + '"><option value="">Select profession…</option>'
+      + (JOB_PROFESSIONS.indexOf(preSector) === -1 && preSector ? '<option value="' + H.escHtml(preSector) + '" selected>' + H.escHtml(preSector) + '</option>' : '')
+      + JOB_PROFESSIONS.map(function(c){ return '<option value="' + H.escHtml(c) + '"' + (preSector === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
       + '</select></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Experience Level</label>'
       + '<select id="cpExp" style="' + inStyle + '"><option value="">Select level…</option>'
@@ -8817,15 +12246,19 @@ H.init();
       + '</select></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">City</label>'
       + '<select id="cpCity" style="' + inStyle + '"><option value="">Select city…</option>'
-      + ZW.map(function(c){ return '<option value="' + H.escHtml(c) + '"' + (u.city === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
-      + '<option value="Remote"' + (u.city === 'Remote' ? ' selected' : '') + '>Remote / Any</option>'
+      + ZW.map(function(c){ return '<option value="' + H.escHtml(c) + '"' + (preCity === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('')
+      + '<option value="Remote / Online"' + (preCity === 'Remote / Online' ? ' selected' : '') + '>Remote / Online</option>'
       + '</select></div>'
 
       // ── Professional Background ──
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>', 'Professional Background')
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Bio / About Me</label>'
       + '<textarea id="cpBio" maxlength="300" placeholder="Tell employers a bit about yourself…" style="' + inStyle + 'height:90px;resize:vertical">' + H.escHtml(u.bio || '') + '</textarea>'
-      + '<div style="text-align:right;font-size:11px;color:#667085;margin-top:3px"><span id="cpBioCount">' + (u.bio || '').length + '</span>/300</div></div>'
+      + '<div style="text-align:right;font-size:11px;color:var(--sub);margin-top:3px"><span id="cpBioCount">' + (u.bio || '').length + '</span>/300</div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Cover Letter <span style="font-weight:400;text-transform:none">(optional)</span></label>'
+      + '<div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.5">A short letter to employers, e.g. <em>“Dear Hiring Manager, I am writing to express my interest…”</em>. This shows as the Description on your profile.</div>'
+      + '<textarea id="cpCover" maxlength="2000" placeholder="Dear Hiring Manager,&#10;&#10;I am writing to express my strong interest in…" style="' + inStyle + 'height:150px;resize:vertical;line-height:1.6">' + H.escHtml((u.cv && u.cv.coverLetter) || '') + '</textarea>'
+      + '<div style="text-align:right;font-size:11px;color:var(--sub);margin-top:3px"><span id="cpCoverCount">' + (((u.cv && u.cv.coverLetter) || '').length) + '</span>/2000</div></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Skills</label>'
       + '<div id="cpSkillsChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' + _cpRenderSkillChips(existingSkills) + '</div>'
       + '<input id="cpSkillsInput" placeholder="Type a skill and press comma or Enter…" style="' + inStyle + '">'
@@ -8834,26 +12267,38 @@ H.init();
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Expected Salary / Rate <span style="font-weight:400;text-transform:none">(optional)</span></label>'
       + '<input id="cpSalary" placeholder="e.g. $500/mo, $20/hr or Negotiable" value="' + H.escHtml(u.expectedSalary || '') + '" style="' + inStyle + '"></div>'
 
+      // ── Work Experience ──
+      + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>', 'Work Experience')
+      + '<div style="font-size:12px;color:var(--sub);margin-bottom:10px;line-height:1.5">Add your roles, companies, dates and what you did in each one.</div>'
+      + '<div id="cpExpList">' + _cpRenderExpList((u.cv && u.cv.experience) || []) + '</div>'
+      + '<button type="button" onclick="H._cpExp.add()" style="width:100%;padding:12px;border-radius:12px;background:#EFF6FF;color:#1A3A8F;border:1.5px dashed #1A3A8F;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px">+ Add Experience</button>'
+
       // ── Job Preferences ──
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>', 'Job Preferences')
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Job Type / Availability</label>'
       + '<div id="cpJTWrap" style="display:flex;flex-wrap:wrap;gap:8px">'
       + jobTypesList.map(function(t) {
           var sel = selectedJobTypes.indexOf(t) !== -1;
-          return '<button type="button" onclick="_cpJT(this)" data-jt="' + H.escHtml(t) + '" data-sel="' + (sel ? '1' : '0') + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (sel ? '#1A3A8F' : '#fff') + ';color:' + (sel ? '#fff' : '#667085') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : '#E4E8F0') + '">' + H.escHtml(t) + '</button>';
+          return '<button type="button" onclick="_cpJT(this)" data-jt="' + H.escHtml(t) + '" data-sel="' + (sel ? '1' : '0') + '" style="padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--text)') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + '">' + H.escHtml(t) + '</button>';
         }).join('')
       + '</div></div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Notice Period</label>'
+      + _cpPillRow('cpNotice', ['Available Immediately', 'Less than 2 weeks', '1 Month', 'More than 1 Month'], (u.cv && u.cv.noticePeriod) || u.noticePeriod || '')
+      + '</div>'
+      + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Education Level</label>'
+      + _cpPillRow('cpEduLevel', ['High School', 'Diploma', 'Bachelor’s Degree', 'Master’s Degree', 'PhD', 'Other'], (u.cv && u.cv.educationLevel) || u.educationLevel || '')
+      + '</div>'
 
       // ── Contact & Reach ──
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 2.1.74 3.26a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.16.38 2.3.61 3.26.74A2 2 0 0122 16.92z"/></svg>', 'Contact & Reach')
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">WhatsApp Number</label>'
       + '<div style="display:flex;gap:8px">'
-      + '<select id="cpWaCC" style="padding:13px;border:1.5px solid #E4E8F0;border-radius:12px;font-size:14px;background:#fff;color:var(--text);outline:none;flex-shrink:0;font-family:inherit">'
+      + '<select id="cpWaCC" style="padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;flex-shrink:0;font-family:inherit">'
       + waCCOptions.map(function(o){ return '<option value="' + o[0] + '"' + (waCC === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('')
       + '</select>'
       + '<input id="cpWaNum" type="tel" placeholder="712 345 678" value="' + H.escHtml(waNum) + '" style="' + inStyle + '">'
       + '</div>'
-      + '<div style="font-size:11px;color:#667085;margin-top:5px">Employers can message you directly on WhatsApp</div>'
+      + '<div style="font-size:11px;color:var(--sub);margin-top:5px">Employers can message you directly on WhatsApp</div>'
       + '</div>'
       + '<div style="margin-bottom:14px;display:flex;align-items:center;gap:8px">'
       + '<input type="checkbox" id="cpSamePhone"' + (samePhone ? ' checked' : '') + ' onchange="_cpSamePhone(this)" style="width:16px;height:16px;cursor:pointer">'
@@ -8869,7 +12314,7 @@ H.init();
           ['<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Both', 'both']
         ].map(function(cm) {
           var sel = contactMethod === cm[1];
-          return '<button type="button" onclick="_cpCM(this)" data-cm="' + cm[1] + '" data-sel="' + (sel ? '1' : '0') + '" style="flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;background:' + (sel ? '#1A3A8F' : '#fff') + ';color:' + (sel ? '#fff' : '#667085') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : '#E4E8F0') + '">' + cm[0] + '</button>';
+          return '<button type="button" onclick="_cpCM(this)" data-cm="' + cm[1] + '" data-sel="' + (sel ? '1' : '0') + '" style="flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;background:' + (sel ? '#1A3A8F' : 'var(--card)') + ';color:' + (sel ? '#fff' : 'var(--text)') + ';border:1.5px solid ' + (sel ? '#1A3A8F' : 'var(--border)') + '">' + cm[0] + '</button>';
         }).join('')
       + '</div></div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Best Time to Contact</label>'
@@ -8888,21 +12333,97 @@ H.init();
 
       // ── Resume / CV ──
       + _cpSectionHead('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>', 'Resume / CV')
-      + '<div id="cpResumeZone" style="margin-bottom:20px">' + _cpRenderResumeZone(cvFileName) + '</div>'
+      + '<div id="cpResumeZone" style="margin-bottom:4px">' + _cpRenderResumeZone(cvFileName) + '</div>'
       + '<input type="file" id="cpResumeFile" accept=".pdf,.doc,.docx" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">'
+      + _cpSectionEnd()
 
       + '</div>'
-      + '<div style="position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #E4E8F0;z-index:200">'
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
       + '<button id="cpSaveBtn" onclick="H._saveCandidateProfile()" style="width:100%;padding:15px;background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Save Profile</button>'
       + '</div></div>';
   };
 
   H.pages.CandidateProfile_after = function () {
+    // ── Work Experience (LinkedIn-style) ──
+    var _cpu = H.currentUser() || {};
+    H._cpExpArr = (_cpu.cv && Array.isArray(_cpu.cv.experience))
+      ? _cpu.cv.experience.map(function (e) { return { title: e.title, company: e.company, duration: e.duration, current: e.current, desc: e.desc }; })
+      : [];
+
+    function _cpRefreshExp() {
+      var el = document.getElementById('cpExpList');
+      if (el) el.innerHTML = _cpRenderExpList(H._cpExpArr);
+    }
+
+    function _expFormBody(e) {
+      e = e || {};
+      return '<div style="display:flex;flex-direction:column;gap:8px">'
+        + '<input id="expTitle" class="fi" value="' + H.escHtml(e.title || '') + '" placeholder="Job Title *">'
+        + '<input id="expCompany" class="fi" value="' + H.escHtml(e.company || '') + '" placeholder="Company Name *">'
+        + '<input id="expDuration" class="fi" value="' + H.escHtml(e.duration || '') + '" placeholder="Duration e.g. Jan 2020 – Dec 2022">'
+        + '<label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer"><input type="checkbox" id="expCurrent"' + (e.current ? ' checked' : '') + '>Still working here</label>'
+        + '<textarea id="expDesc" class="fi" rows="3" placeholder="What you did / responsibilities…">' + H.escHtml(e.desc || '') + '</textarea>'
+        + '</div>';
+    }
+
+    function _readExpForm() {
+      var title   = ((document.getElementById('expTitle')   || {}).value || '').trim();
+      var company = ((document.getElementById('expCompany') || {}).value || '').trim();
+      if (!title || !company) { H.toast('Title and company are required'); return null; }
+      return {
+        title: title, company: company,
+        duration: ((document.getElementById('expDuration') || {}).value || '').trim(),
+        current:  !!(document.getElementById('expCurrent') && document.getElementById('expCurrent').checked),
+        desc:     ((document.getElementById('expDesc') || {}).value || '').trim()
+      };
+    }
+
+    H._cpExp = {
+      add: function () {
+        H.modal({
+          title: 'Add Work Experience',
+          body: _expFormBody(),
+          confirmText: 'Add',
+          onConfirm: function () {
+            var entry = _readExpForm();
+            if (!entry) return false;
+            H._cpExpArr.push(entry);
+            _cpRefreshExp();
+          }
+        });
+      },
+      edit: function (i) {
+        H.modal({
+          title: 'Edit Work Experience',
+          body: _expFormBody(H._cpExpArr[i] || {}),
+          confirmText: 'Save',
+          onConfirm: function () {
+            var entry = _readExpForm();
+            if (!entry) return false;
+            H._cpExpArr[i] = entry;
+            _cpRefreshExp();
+          }
+        });
+      },
+      del: function (i) {
+        H._cpExpArr.splice(i, 1);
+        _cpRefreshExp();
+      }
+    };
+
     // Bio counter
     var bioEl = document.getElementById('cpBio');
     if (bioEl) {
       bioEl.addEventListener('input', function() {
         var cnt = document.getElementById('cpBioCount');
+        if (cnt) cnt.textContent = this.value.length;
+      });
+    }
+    // Cover letter counter
+    var coverEl = document.getElementById('cpCover');
+    if (coverEl) {
+      coverEl.addEventListener('input', function() {
+        var cnt = document.getElementById('cpCoverCount');
         if (cnt) cnt.textContent = this.value.length;
       });
     }
@@ -8969,13 +12490,24 @@ H.init();
 
   H._saveCandidateProfile = function () {
     var u = H.currentUser(); if (!u) return;
+
+    // Validate required basics so an empty profile can't be saved.
+    var vTitle  = ((document.getElementById('cpTitle')  || {}).value || '').trim();
+    var vSector = (document.getElementById('cpSector')  || {}).value || '';
+    var vCity   = (document.getElementById('cpCity')    || {}).value || '';
+    var vBio    = ((document.getElementById('cpBio')    || {}).value || '').trim();
+    if (!vTitle)  { H.toast('Add your job title to continue'); var e1=document.getElementById('cpTitle'); if(e1) e1.focus(); return; }
+    if (!vSector) { H.toast('Choose your profession / sector'); return; }
+    if (!vCity)   { H.toast('Choose your city'); return; }
+    if (vBio.length < 20) { H.toast('Write a short bio (at least 20 characters) so employers know you'); var e2=document.getElementById('cpBio'); if(e2) e2.focus(); return; }
+
     var saveBtn = document.getElementById('cpSaveBtn');
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
 
     // Collect all form values
     u.openToWork     = !!(document.getElementById('otwTog') && document.getElementById('otwTog').dataset.on === '1');
-    u.jobTitle       = ((document.getElementById('cpTitle')   || {}).value || '').trim();
-    u.sector         = (document.getElementById('cpSector')   || {}).value || '';
+    u.jobTitle       = vTitle;
+    u.sector         = vSector;
     u.exp            = (document.getElementById('cpExp')      || {}).value || '';
     u.city           = (document.getElementById('cpCity')     || {}).value || '';
     u.bio            = ((document.getElementById('cpBio')     || {}).value || '').trim();
@@ -8991,6 +12523,8 @@ H.init();
       });
     }
     u.jobTypes = jtArr.join(',');
+    u.noticePeriod   = (document.getElementById('cpNotice')   || {}).value || '';
+    u.educationLevel = (document.getElementById('cpEduLevel') || {}).value || '';
 
     // Contact method — read data-sel attribute
     var contactMethod = '';
@@ -9028,12 +12562,15 @@ H.init();
       headline:       u.jobTitle       || prevCv.headline       || '',
       location:       u.city           || prevCv.location       || '',
       summary:        u.bio            || prevCv.summary        || '',
+      coverLetter:    ((document.getElementById('cpCover') || {}).value || '').trim() || prevCv.coverLetter || '',
       skills:         (u.skills || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean),
       expectedSalary: u.expectedSalary || prevCv.expectedSalary || '',
       visible:        !!u.openToWork,
-      experience:     prevCv.experience     || [],
+      experience:     (H._cpExpArr || prevCv.experience || []),
       education:      prevCv.education      || [],
       certifications: prevCv.certifications || [],
+      noticePeriod:   u.noticePeriod   || prevCv.noticePeriod   || '',
+      educationLevel: u.educationLevel || prevCv.educationLevel || '',
       cvFileUrl:      prevCv.cvFileUrl      || u.cvFileUrl      || ''
     };
 
@@ -9119,16 +12656,11 @@ H.init();
     var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'vehicles'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
 
     var f = H._sel('vehicles', 'subcat', 'Vehicle Type', [['all', 'All Types'], ['car', 'Car'], ['suv', 'SUV / 4x4'], ['truck', 'Truck / Pickup'], ['van', 'Van / Minibus'], ['motorcycle', 'Motorcycle'], ['bus', 'Bus'], ['tractor', 'Tractor'], ['boat', 'Boat']])
-      + H._sel('vehicles', 'condition', 'Condition', [['all', 'All'], ['new', 'Brand New'], ['used', 'Used'], ['accident-free', 'Accident Free']])
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
-      + '<div><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Year From</div>'
-      + '<input type="number" min="1960" max="2026" placeholder="e.g. 2015" oninput="H._setFilter(\'vehicles\',\'yearMin\',this.value)" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none;box-sizing:border-box"></div>'
-      + '<div><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Year To</div>'
-      + '<input type="number" min="1960" max="2026" placeholder="e.g. 2024" oninput="H._setFilter(\'vehicles\',\'yearMax\',this.value)" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none;box-sizing:border-box"></div>'
-      + '</div>'
-      + H._sel('vehicles', 'fuelType', 'Fuel Type', [['all', 'All'], ['petrol', 'Petrol'], ['diesel', 'Diesel'], ['electric', 'Electric'], ['hybrid', 'Hybrid'], ['lpg', 'LPG']])
+      + H._pills('vehicles', 'condition', 'Condition', [['brand new', 'Brand New'], ['used', 'Used'], ['for parts', 'For Parts']])
+      + H._pills('vehicles', 'fuelType', 'Fuel', [['petrol', 'Petrol'], ['diesel', 'Diesel'], ['hybrid', 'Hybrid'], ['electric', 'Electric']])
+      + H._yearRange('vehicles')
       + H._txtInput('vehicles', 'brand', 'Make / Brand', 'e.g. Toyota, Honda, BMW')
-      + H._citysel('vehicles') + H._priceRange('vehicles') + H._sortsel('vehicles');
+      + H._priceRange('vehicles') + H._citysel('vehicles') + H._amenityFilter('vehicles', 'vehicles') + H._sortsel('vehicles');
 
     return '<div class="page active">'
       + H._catTopbar('Vehicles', '#e53935')
@@ -9152,17 +12684,18 @@ H.init();
     var rent = all.filter(function (l) { return !!l.rentalType; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
 
     var fSale = H._sel('property_sale', 'propType', 'Property Type', [['all', 'All Types'], ['residential', 'Residential'], ['commercial', 'Commercial'], ['land', 'Land / Stand'], ['units', 'Units / Flats']])
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
-      + H._sel('property_sale', 'beds', 'Bedrooms', [['any', 'Any'], ['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+'], ['5', '5+']])
-      + H._sel('property_sale', 'baths', 'Bathrooms', [['any', 'Any'], ['1', '1+'], ['2', '2+'], ['3', '3+']])
-      + '</div>'
-      + H._sel('property_sale', 'furnishing', 'Furnishing', [['all', 'All'], ['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['semi-furnished', 'Semi-Furnished']])
-      + H._citysel('property_sale') + H._priceRange('property_sale') + H._sortsel('property_sale');
+      + H._pills('property_sale', 'beds', 'Bedrooms', [['studio', 'Studio'], ['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+'], ['5', '5+']])
+      + H._pills('property_sale', 'baths', 'Bathrooms', [['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+']])
+      + H._pills('property_sale', 'furnishing', 'Furnishing', [['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['part furnished', 'Part Furnished']])
+      + H._priceRange('property_sale') + H._sizeRange('property_sale')
+      + H._citysel('property_sale') + H._amenityFilter('property_sale', 'property') + H._sortsel('property_sale');
 
     var fRent = H._sel('property_rent', 'propType', 'Category', [['all', 'All'], ['residential', 'Residential'], ['rooms', 'Rooms'], ['commercial', 'Commercial']])
-      + H._sel('property_rent', 'rentalType', 'Rental Type', [['all', 'All'], ['monthly', 'Monthly'], ['daily', 'Daily'], ['nightly', 'Nightly']])
-      + H._sel('property_rent', 'furnishing', 'Furnishing', [['all', 'All'], ['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['semi-furnished', 'Semi-Furnished']])
-      + H._citysel('property_rent') + H._priceRange('property_rent') + H._sortsel('property_rent');
+      + H._pills('property_rent', 'beds', 'Bedrooms', [['studio', 'Studio'], ['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+'], ['5', '5+']])
+      + H._pills('property_rent', 'baths', 'Bathrooms', [['1', '1+'], ['2', '2+'], ['3', '3+'], ['4', '4+']])
+      + H._pills('property_rent', 'furnishing', 'Furnishing', [['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['part furnished', 'Part Furnished']])
+      + H._priceRange('property_rent') + H._sizeRange('property_rent')
+      + H._citysel('property_rent') + H._amenityFilter('property_rent', 'property') + H._sortsel('property_rent');
 
     return '<div class="page active">'
       + H._catTopbar('Property', '#1A3A8F')
@@ -9308,9 +12841,8 @@ H.init();
     var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'rooms'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
 
     var f = H._sel('rooms', 'subcat', 'Room Type', [['all', 'All'], ['single', 'Single Room'], ['double', 'Double Room'], ['self-contained', 'Self-Contained'], ['shared', 'Shared'], ['bachelor', 'Bachelor Flat'], ['cottage', 'Cottage']])
-      + H._sel('rooms', 'furnishing', 'Furnishing', [['all', 'All'], ['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['semi-furnished', 'Semi-Furnished']])
-      + H._sel('rooms', 'rentalType', 'Rental Type', [['all', 'All'], ['monthly', 'Monthly'], ['daily', 'Daily'], ['nightly', 'Nightly']])
-      + H._citysel('rooms') + H._priceRange('rooms') + H._sortsel('rooms');
+      + H._pills('rooms', 'furnishing', 'Furnishing', [['furnished', 'Furnished'], ['unfurnished', 'Unfurnished'], ['part furnished', 'Part Furnished']])
+      + H._priceRange('rooms') + H._citysel('rooms') + H._amenityFilter('rooms', 'rooms') + H._sortsel('rooms');
 
     return '<div class="page active">'
       + H._catTopbar('Rooms for Rent', '#00838F')
@@ -9354,7 +12886,7 @@ H.init();
       </div>`;
     }
 
-    const activeAds = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active').length;
+    const activeAds = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active' && !l.businessId).length;
     const savedAds  = ((H.state.saves || {})[u.id] || []).length;
     if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
     const unread    = H.state.conversations.reduce((n, c) =>
@@ -9382,7 +12914,7 @@ H.init();
           <div style="font-size:13px;color:rgba(255,255,255,.8);margin-bottom:3px">${H.escHtml(u.email || '')}</div>
           <div style="font-size:12px;color:rgba(255,255,255,.65)">${H.escHtml(u.phone || 'No phone number')}</div>
         </div>
-        ${u.verified ? '<span style="background:#22C55E;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>' : ''}
+        ${u.verified ? '<span style="background:rgba(255,255,255,.15);color:#fff;font-size:10px;font-weight:700;padding:3px 9px 3px 5px;border-radius:20px;flex-shrink:0;display:flex;align-items:center;gap:4px">' + H.verifiedBadge(14) + 'Verified</span>' : ''}
       </div>
 
       <!-- Quick Stats -->
@@ -9394,6 +12926,36 @@ H.init();
           </div>`).join('')}
       </div>
 
+      <!-- Business Card (prominent, top-level) -->
+      ${(() => {
+        const biz = (H.state.businesses || []).filter(b => b.ownerUserId === u.id);
+        const active = biz.find(b => b.status === 'active');
+        if (active) {
+          const logo = active.logo
+            ? `<img src="${H.escHtml(active.logo)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`
+            : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">${H.initials(active.name)}</div>`;
+          const products = (H.state.listings || []).filter(l => l.businessId === active.id && l.status === 'active').length;
+          return `<div onclick="H._bizOnboard.openFromAccount()" style="margin:12px 12px 0;background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 100%);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+            <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.2);overflow:hidden;flex-shrink:0;border:2px solid rgba(255,255,255,.35)">${logo}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${H.escHtml(active.name)}</div>
+              <div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">${products} product${products === 1 ? '' : 's'} · ${H.escHtml((active.planId || 'free').charAt(0).toUpperCase() + (active.planId || 'free').slice(1))} plan</div>
+            </div>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>`;
+        }
+        return `<div onclick="H._bizOnboard.openFromAccount()" style="margin:12px 12px 0;background:var(--card);border:1.5px dashed var(--border);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          <div style="width:52px;height:52px;border-radius:14px;background:#EEF2FB;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9l2-5h14l2 5"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:800;color:var(--text)">${biz.length ? 'Finish Business Setup' : 'Open a Business'}</div>
+            <div style="font-size:11.5px;color:var(--sub);margin-top:2px">Create your shop and reach more customers</div>
+          </div>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--sub)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>`;
+      })()}
+
       <!-- Menu Rows -->
       <div style="margin-top:12px">
         ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', 'My Profile', 'Profile', '')}
@@ -9404,13 +12966,34 @@ H.init();
         ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>', 'My Job Applications', 'AppliedJobs', ((H.state.applications||[]).filter(a=>a.applicantId===u.id).length || ''))}
         ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>', 'My Job Profile / CV', 'JobSeekerProfile', u.cv && u.cv.headline ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : '')}
         ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>', 'Advertisements', 'Ads', '')}
-        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', 'My Advertisements', 'MyAds', '')}
+        ${(() => {
+          const biz = (H.state.businesses || []).filter(b => b.ownerUserId === u.id);
+          const active = biz.find(b => b.status === 'active');
+          const icon = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9l2-5h14l2 5"/><line x1="12" y1="13" x2="12" y2="17"/></svg>';
+          // Active business → dashboard would open here (Module 8); during onboarding,
+          // tapping resumes the wizard. Until those modules ship, both route to the wizard.
+          const label = active ? H.escHtml(active.name || 'My Business') : (biz.length ? 'Finish Business Setup' : 'Create a Business');
+          const badge = active ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+          return `<div onclick="H._bizOnboard.openFromAccount()"
+              style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent">
+            <div style="width:38px;height:38px;border-radius:12px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">${icon}</div>
+            <div style="flex:1;font-size:15px;font-weight:600;color:var(--text)">${label}</div>
+            ${badge ? `<span style="background:#F5A623;color:#1A3A8F;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800">${badge}</span>` : ''}
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>`;
+        })()}
+        ${H.isAdmin && H.isAdmin() ? `<div onclick="H._bizAdmin.open()" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent">
+            <div style="width:38px;height:38px;border-radius:12px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div style="flex:1;font-size:15px;font-weight:600;color:var(--text)">Business Platform (Admin)</div>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>` : ''}
       </div>
 
       <div style="margin-top:12px">
         ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>', 'Settings', 'Settings', '')}
         ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', 'Security & Password', 'SecuritySettings', '')}
         ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>', 'Help & Support', 'Help', '')}
+        ${row('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>', 'About PaMarket', 'About', '')}
       </div>
 
       <div style="padding:20px 16px 36px">
@@ -9461,6 +13044,10 @@ H.init();
       ? (H.state.users || []).find(x => x.id === viewId)
       : H.currentUser();
 
+    if (!u && viewId) {
+      // Viewing another user we don't hold locally yet — Profile_after fetches it.
+      return '<div class="page active">' + H.innerTopbar('Profile') + '<div style="padding:64px 20px;text-align:center;color:var(--sub);font-size:14px">Loading profile…</div></div>';
+    }
     if (!u) return H.emptyState('Not logged in', 'Please sign in to continue', 'Sign In', "H.authPage()");
 
     const isOwn      = !viewId || (H.currentUser() && viewId === H.currentUser().id);
@@ -9478,7 +13065,7 @@ H.init();
       <div class="profile-hero">
         <div class="profile-pic" style="position:relative">
           ${u.avatar
-            ? `<img src="${u.avatar}" alt="${H.escHtml(u.name||'')}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">`
+            ? `<img src="${u.avatar}" alt="${H.escHtml(u.name||'')}" onclick="H.viewImage('${(u.avatar||'').replace(/'/g, "\\'")}')" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">`
             : `<div class="profile-initials">${H.initials(u.name)}</div>`}
           ${showActivityDot ? `<div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid var(--card,#fff)"></div>` : ''}
         </div>
@@ -9492,7 +13079,7 @@ H.init();
 
       <div class="profile-stats">
         <div class="stat-box"><div class="stat-val">${activeCount(u.id)}</div><div class="stat-label">Active Ads</div></div>
-        <div class="stat-box"><div class="stat-val">${avgRating}</div><div class="stat-label">Rating (${ratingCount})</div></div>
+        <div class="stat-box" style="cursor:pointer" onclick="H.openInner('Reviews'${viewId ? ",{id:'" + u.id + "'}" : ''})"><div class="stat-val">★ ${avgRating}</div><div class="stat-label">Rating (${ratingCount})</div></div>
         <div class="stat-box"><div class="stat-val">${soldCount(u.id)}</div><div class="stat-label">Sold</div></div>
       </div>
 
@@ -9506,6 +13093,7 @@ H.init();
         ${uPrivacy.allowMessages === false
           ? `<button class="btn-pri" disabled style="opacity:0.5;cursor:not-allowed">Messaging turned off</button>`
           : `<button class="btn-pri" onclick="H.startChatWith('${u.id}', null)">Message ${H.escHtml(u.name || 'User')}</button>`}
+        <button class="btn-sec" onclick="H.openInner('Reviews',{id:'${u.id}'})">${IC.star} Reviews &amp; Ratings (${ratingCount})</button>
         <button class="btn-sec" onclick="H.reportUser('${u.id}')">Report User</button>
       </div>`}
 
@@ -9514,18 +13102,65 @@ H.init();
         <div class="info-row"><span class="info-label">Email</span><span class="info-val">${H.escHtml(u.email || 'N/A')}</span></div>
         <div class="info-row"><span class="info-label">Joined</span><span class="info-val">${new Date(u.joinedAt || u.createdAt || Date.now()).toLocaleDateString()}</span></div>
         <div class="info-row"><span class="info-label">Status</span><span class="info-val">${H.escHtml(u.status || 'Active')}</span></div>
-        ${u.bio ? `<div class="info-row"><span class="info-label">Bio</span><span class="info-val">${H.escHtml(u.bio)}</span></div>` : ''}
+        ${u.bio ? `<div style="padding:12px 0 2px"><div class="info-label" style="margin-bottom:6px">Bio</div><div style="font-size:13px;color:var(--text-primary);line-height:1.6;font-weight:400">${H.escHtml(u.bio)}</div></div>` : ''}
       </div>
 
-      <div class="section-box">
-        <div class="section-title">Active Listings</div>
+      ${(() => {
+        const sellerListings = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active');
+        return `<div class="section-box">
+        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>${isOwn ? 'My Listings' : 'Listings'} (${sellerListings.length})</span>
+          ${sellerListings.length > 6 ? `<span style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer" onclick="H.openInner('UserProfile',{id:'${u.id}'})">See all</span>` : ''}
+        </div>
         <div class="listing-list">
-          ${(H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active').slice(0,6).map(H.renderListCard).join('')
+          ${sellerListings.slice(0,6).map(H.renderListCard).join('')
             || '<div style="color:var(--sub);padding:16px;font-size:13px">No active listings</div>'}
         </div>
-      </div>
+      </div>`;
+      })()}
       <div style="height:24px"></div>
     </div>`;
+  };
+
+  // When viewing another user's profile, pull their latest name + photo from the
+  // cloud so it's never stuck on initials / "User". Loop-safe: the guard is set
+  // before the fetch and we only re-render when something actually changed.
+  pages.Profile_after = function (params) {
+    const viewId = params && params.id;
+    if (!viewId) return;                       // own profile already loaded
+    const sb = window.supabase;
+    if (!sb || typeof sb.from !== 'function') return;
+    H._profileFetched = H._profileFetched || {};
+    if (H._profileFetched[viewId]) return;
+    H._profileFetched[viewId] = true;
+    sb.from('profiles')
+      .select('id,name,phone,email,avatar,verified,bio,city,created_at')
+      .eq('id', viewId).maybeSingle()
+      .then(function (res) {
+        const p = res && res.data;
+        if (!p) return;
+        const users = H.state.users = H.state.users || [];
+        let ex = users.find(function (x) { return x.id === viewId; });
+        let changed = false;
+        if (!ex) {
+          ex = { id: p.id, name: p.name || '', phone: p.phone || '', email: p.email || '',
+                 avatar: p.avatar || null, verified: !!p.verified, bio: p.bio || '', city: p.city || '',
+                 role: 'user', status: 'active', joinedAt: p.created_at ? new Date(p.created_at).getTime() : Date.now() };
+          users.push(ex); changed = true;
+        } else {
+          if (p.name   && ex.name   !== p.name)   { ex.name = p.name; changed = true; }
+          if (p.avatar && ex.avatar !== p.avatar) { ex.avatar = p.avatar; changed = true; }
+          if (p.phone  && !ex.phone)              { ex.phone = p.phone; changed = true; }
+          if (!!p.verified !== !!ex.verified)     { ex.verified = !!p.verified; changed = true; }
+          if (p.bio    && !ex.bio)                { ex.bio = p.bio; changed = true; }
+          if (p.city   && !ex.city)               { ex.city = p.city; changed = true; }
+        }
+        if (changed) {
+          H.saveState();
+          if (H.currentPageName === 'Profile') H.renderPage('Profile', H.currentPageParams);
+        }
+      })
+      .catch(function () {});
   };
 
   pages.EditProfile = function () {
@@ -9540,7 +13175,7 @@ H.init();
             ${u.avatar ? `<img id="avatarPreview" src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">` : `<span id="avatarPreview">${H.initials(u.name||'')}</span>`}
           </div>
           <label for="profilePicFile" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer;background:#1A3A8F14;padding:7px 16px;border-radius:20px">Change Photo</label>
-          <input type="file" id="profilePicFile" accept="image/*" capture="user" style="display:none" onchange="H._editProfile.onPicChange(event)">
+          <input type="file" id="profilePicFile" accept="image/*" style="display:none" onchange="H._editProfile.onPicChange(event)">
         </div>
         <div class="fg"><div class="fl">Full Name <span style="color:#EF4444">*</span></div>
           <input class="fi" id="editName" value="${H.escHtml(u.name || '')}" placeholder="Your full name" maxlength="60">
@@ -9550,8 +13185,14 @@ H.init();
           <div style="font-size:11px;color:var(--sub);margin-top:4px">International format, e.g. +263 77 123 4567</div>
         </div>
         <div class="fg"><div class="fl">Email</div>
-          <input class="fi" value="${H.escHtml(u.email || '')}" disabled style="opacity:.6;cursor:not-allowed">
-          <div style="font-size:11px;color:var(--sub);margin-top:4px">Email cannot be changed here</div>
+          <div style="position:relative">
+            <input class="fi" value="${H.escHtml(u.email || '')}" disabled style="background:var(--bg);color:var(--sub);cursor:not-allowed;padding-right:40px">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div style="font-size:11px;color:var(--sub);margin-top:5px;display:flex;align-items:center;gap:5px">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Your login email is locked for security. Contact support to change it.
+          </div>
         </div>
         <div class="fg"><div class="fl">Bio</div>
           <textarea class="fi" rows="3" id="editBio" placeholder="Tell buyers about yourself..." maxlength="200">${H.escHtml(u.bio || '')}</textarea>
@@ -9577,8 +13218,12 @@ H.init();
       onPicChange: async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (file.size > 3 * 1024 * 1024) { H.toast('Photo must be under 3 MB'); return; }
+        // The photo is compressed to 400px below, so any normal phone photo is
+        // fine — only block absurdly large files that could exhaust memory.
+        if (file.size > 40 * 1024 * 1024) { H.toast('That image is too large — please pick one under 40 MB'); return; }
+        H.toast('Processing photo…', 2000);
         const compressed = await H.compressImage(file, 400, 0.82);
+        if (!compressed) { H.toast('Could not read that image — try another'); return; }
         const u = H.currentUser();
         u.avatar = compressed;
         H.saveState();
@@ -9645,21 +13290,23 @@ H.init();
           confirmText: 'Delete My Account',
           cancelText: 'Cancel',
           danger: true,
-          onConfirm() {
+          async onConfirm() {
             const inp = document.getElementById('deleteConfirmInput');
             if (!inp || inp.value.trim() !== 'DELETE') { H.toast('Type DELETE to confirm'); return; }
             const u = H.currentUser();
             if (!u) return;
-            H.state.listings = (H.state.listings || []).filter(l => l.sellerId !== u.id);
-            H.state.conversations = (H.state.conversations || []).filter(c => !(c.members || []).includes(u.id));
-            H.state.users = (H.state.users || []).filter(x => x.id !== u.id);
-            H.state.currentUserId = null;
-            H.saveState();
-            if (window.supabase && window.supabase.auth) {
-              window.supabase.auth.signOut().catch(() => {}).finally(() => window.location.reload());
-            } else {
-              window.location.reload();
-            }
+            H.toast('Deleting your account…');
+            // Remove all cloud data + the login, wipe local storage, then reload.
+            // purgeMyAccount clears local storage itself, so we must NOT saveState after.
+            try {
+              if (typeof H.purgeMyAccount === 'function') {
+                await H.purgeMyAccount();
+              } else if (window.supabase && window.supabase.auth) {
+                await window.supabase.auth.signOut().catch(() => {});
+                Object.keys(localStorage).forEach(function (k) { if (/^pamarket/i.test(k)) { try { localStorage.removeItem(k); } catch (e) {} } });
+              }
+            } catch (e) { console.warn('account deletion:', e); }
+            window.location.reload();
           },
         });
       },
@@ -9669,7 +13316,7 @@ H.init();
   pages.MyListings = function () {
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
-    const all      = (H.state.listings || []).filter(l => l.sellerId === u.id);
+    const all      = (H.state.listings || []).filter(l => l.sellerId === u.id && !l.businessId);
     const active   = all.filter(l => l.status === 'active');
     const pending  = all.filter(l => l.status === 'pending');
     const sold     = all.filter(l => l.status === 'sold');
@@ -9722,16 +13369,35 @@ H.init();
     };
   };
 
+  function elPhotoThumbHtml(p, i) {
+    return '<div style="position:relative;width:88px;height:88px">'
+      + '<img src="' + H.escHtml(p) + '" style="width:88px;height:88px;object-fit:cover;border-radius:10px;border:1.5px solid var(--border)">'
+      + '<button onclick="H._editListing.removePhoto(' + i + ')" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0;line-height:1" aria-label="Remove">x</button>'
+      + (i === 0 ? '<div style="position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:4px">COVER</div>' : '')
+      + '</div>';
+  }
+
   pages.EditListing = function (params) {
     const id = params && params.listingId;
     const l  = id ? (H.state.listings || []).find(x => x.id === id) : null;
     if (!l) return `<div class="page active">${H.innerTopbar('Edit Listing')}${H.emptyState('Listing not found','')}</div>`;
+    H._elPhotos = Array.isArray(l.photos) ? l.photos.slice() : [];
     return `<div class="page active">
       ${H.innerTopbar('Edit Listing')}
       <div class="form-wrap">
         <div class="fg"><div class="fl">Title</div><input class="fi" id="elTitle" value="${H.escHtml(l.title || '')}" placeholder="Listing title" maxlength="80"></div>
         <div class="fg"><div class="fl">Price (USD)</div><input class="fi" id="elPrice" type="number" min="0" value="${H.escHtml(String(l.price || ''))}" placeholder="0"></div>
         <div class="fg"><div class="fl">Description</div><textarea class="fi" id="elDesc" rows="5" placeholder="Describe your item...">${H.escHtml(l.description || '')}</textarea></div>
+        <div class="fg">
+          <div class="fl">Photos <span style="font-weight:400;color:var(--sub);text-transform:none;letter-spacing:0">(first is cover &middot; up to 8)</span></div>
+          <div id="elPhotoGrid" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">${H._elPhotos.map(elPhotoThumbHtml).join('')}</div>
+          <input type="file" id="elPhotoInput" accept="image/*" multiple style="display:none" onchange="H._editListing.addPhotos(event)">
+          <button type="button" onclick="document.getElementById('elPhotoInput').click()" style="width:100%;padding:13px;background:var(--card);border:1.5px dashed var(--border-mid,#ccc);border-radius:12px;color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Photos
+          </button>
+          <div id="elPhotoProgress" style="display:none;text-align:center;font-size:13px;color:var(--blue);font-weight:600;padding:8px 0"></div>
+        </div>
         <div id="elErr" style="display:none;color:#ef4444;font-size:13px;font-weight:600;padding:6px 0"></div>
         <button id="elSaveBtn" class="btn-pri" onclick="H._editListing.save('${id}')">Save Changes</button>
         <button class="btn-sec" onclick="H.goBack()">Cancel</button>
@@ -9741,7 +13407,42 @@ H.init();
 
   pages.EditListing_after = function () {
     H._editListing = {
-      save: (id) => {
+      removePhoto(i) {
+        if (!Array.isArray(H._elPhotos)) return;
+        H._elPhotos.splice(i, 1);
+        const g = document.getElementById('elPhotoGrid');
+        if (g) g.innerHTML = H._elPhotos.map(elPhotoThumbHtml).join('');
+      },
+      async addPhotos(event) {
+        if (!event || !event.target || !event.target.files) return;
+        const files = Array.from(event.target.files);
+        if (!files.length) return;
+        if (!Array.isArray(H._elPhotos)) H._elPhotos = [];
+        const canAdd = 8 - H._elPhotos.length;
+        if (canAdd <= 0) { H.toast('Maximum 8 photos allowed'); return; }
+        const toProcess = files.slice(0, canAdd);
+        const prog = document.getElementById('elPhotoProgress');
+        if (prog) { prog.textContent = 'Processing photos…'; prog.style.display = ''; }
+        for (const f of toProcess) {
+          try {
+            const d = typeof H.compressImage === 'function'
+              ? await H.compressImage(f, 1024, 0.72)
+              : await new Promise(function(resolve) {
+                  const reader = new FileReader();
+                  reader.onload = function(e) { resolve(e.target.result); };
+                  reader.readAsDataURL(f);
+                });
+            if (d) {
+              H._elPhotos.push(d);
+              const g = document.getElementById('elPhotoGrid');
+              if (g) g.innerHTML = H._elPhotos.map(elPhotoThumbHtml).join('');
+            }
+          } catch (err) { /* skip failed photo */ }
+        }
+        if (prog) prog.style.display = 'none';
+        event.target.value = '';
+      },
+      async save(id) {
         const title = document.getElementById('elTitle')?.value.trim();
         const price = parseFloat(document.getElementById('elPrice')?.value);
         const desc  = document.getElementById('elDesc')?.value.trim();
@@ -9753,10 +13454,31 @@ H.init();
         if (!desc) { showErr('Description is required'); return; }
         const l = (H.state.listings || []).find(x => x.id === id);
         if (!l) { showErr('Listing not found'); return; }
-        l.title=title; l.price=price; l.description=desc; l.updatedAt=Date.now();
-        if (l.status === 'rejected') l.status = 'pending';
         if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+        // Upload any new base64 photos to cloud storage
+        let photos = Array.isArray(H._elPhotos) ? H._elPhotos.slice() : (l.photos || []);
+        const u = H.currentUser();
+        if (u && typeof H.uploadListingPhotos === 'function' && photos.some(p => typeof p === 'string' && p.indexOf('data:') === 0)) {
+          const prog = document.getElementById('elPhotoProgress');
+          if (prog) { prog.textContent = 'Uploading photos…'; prog.style.display = ''; }
+          try { photos = await H.uploadListingPhotos(photos, u.id); } catch(e) {}
+          if (prog) prog.style.display = 'none';
+        }
+
+        l.title = title; l.price = price; l.description = desc;
+        l.photos = photos; l.updatedAt = Date.now();
+        if (l.status === 'rejected') l.status = 'pending';
         H.saveState();
+
+        // Persist to Supabase
+        if (window.supabase && typeof window.supabase.from === 'function') {
+          window.supabase.from('listings').update({
+            title: title, price: price, description: desc,
+            photos: photos, updated_at: new Date().toISOString()
+          }).eq('id', id).then(function(){}, function(){});
+        }
+
         H.toast('Listing updated!');
         H.goBack();
       }
@@ -9798,197 +13520,221 @@ H.init();
     };
   };
 
+  // Verification capture held in memory only (uploaded to private Storage on submit)
+  var _pvSelfie = null, _pvIdFront = null, _pvIdNum = '', _pvIdType = 'National ID';
+
   pages.ProfileVerify = function () {
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
-    if (u.verified) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="margin-bottom:12px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Identity Verified</div><div style="font-size:14px;color:var(--sub)">You have a verified badge on all your listings.</div><div style="font-size:12px;color:var(--sub);margin-top:8px">Verified on ${new Date(u.verifiedAt || Date.now()).toLocaleDateString()}</div></div></div>`;
-    if (u.verificationPending) return `<div class="page active">${H.innerTopbar('Identity Verification')}<div class="section-box" style="text-align:center;padding:32px 20px"><div style="margin-bottom:12px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Verification Pending</div><div style="font-size:14px;color:var(--sub)">Your request is under review. We will notify you within 24 hours.</div><button onclick="H._profileVerify.cancelPending()" style="margin-top:18px;padding:10px 28px;background:var(--bg);color:var(--sub);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel request</button></div></div>`;
-    return `<div class="page active">
-      ${H.innerTopbar('Verify Identity')}
-      <div class="section-box" style="text-align:center;padding:20px 20px 14px">
-        <div style="margin-bottom:10px;display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">Identity Verification</div>
-        <div style="font-size:13px;color:var(--sub)">Submit your ID and a selfie. Review takes up to 24 hours.</div>
-      </div>
-      <div class="form-wrap">
-        <div class="fg"><div class="fl">ID Type</div><select class="fi" id="idType"><option>National ID</option><option>Passport</option><option>Driver&#39;s License</option></select></div>
-        <div class="fg"><div class="fl">ID Number</div><input class="fi" id="idNum" placeholder="Enter your ID number"></div>
-        <div class="fg">
-          <div class="fl">Selfie Photo <span style="font-weight:400;color:var(--sub);font-size:11px">(center your face in the oval)</span></div>
-          <div style="position:relative;width:220px;height:280px;margin:0 auto 10px;border-radius:14px;overflow:hidden;background:#111">
-            <div id="selfiePH" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a2e;gap:8px">
-              <div style="display:flex;justify-content:center"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-              <div style="font-size:12px;color:rgba(255,255,255,.65);text-align:center;padding:0 16px">Tap Camera or Upload to add your selfie</div>
-            </div>
-            <video id="selfieVid" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)"></video>
-            <canvas id="selfieCanvas" style="display:none"></canvas>
-            <div id="selfiePrev" style="display:none;position:absolute;inset:0"><img id="selfieImg" style="width:100%;height:100%;object-fit:cover"></div>
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
-              <div style="width:130px;height:170px;border-radius:50%;border:3px solid rgba(255,255,255,.88);box-shadow:0 0 0 9999px rgba(0,0,0,.48)"></div>
-            </div>
+
+    if (u.verified) return `<div class="page active">${H.innerTopbar('Identity Verified')}
+      <div class="inner-content">
+        <div style="background:linear-gradient(135deg,#16a34a,#15803d);border-radius:20px;padding:28px 20px;text-align:center;color:#fff;box-shadow:0 8px 24px rgba(21,128,61,.25)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div style="font-size:19px;font-weight:800">You're Verified</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:4px">Your blue badge shows on all your listings. Verified on ${new Date(u.verifiedAt || Date.now()).toLocaleDateString()}.</div>
+        </div>
+      </div></div>`;
+
+    if (u.verificationPending) return `<div class="page active">${H.innerTopbar('Identity Verification')}
+      <div class="inner-content">
+        <div style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:20px;padding:28px 20px;text-align:center;color:#fff;box-shadow:0 8px 24px rgba(26,58,143,.25)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(245,166,35,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#F5A623" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div style="font-size:19px;font-weight:800">Under Review</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:6px;line-height:1.55">Your ID and selfie were submitted. Our team reviews within 24 hours and you'll be notified once approved.</div>
+        </div>
+        <button onclick="H._profileVerify.cancelPending()" style="width:100%;margin-top:16px;padding:12px;background:var(--bg);color:var(--sub);border:1px solid var(--border);border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Cancel request</button>
+      </div></div>`;
+
+    const esc = H.escHtml;
+    const hasSelfie = !!_pvSelfie, hasId = !!_pvIdFront;
+    const done = (_pvIdNum.trim() ? 1 : 0) + (hasSelfie ? 1 : 0) + (hasId ? 1 : 0);
+    const pct = Math.round((done / 3) * 100);
+    const ready = !!(_pvIdNum.trim() && hasSelfie && hasId);
+    const cam = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+    const chip = '<span style="font-size:10.5px;font-weight:800;color:#16a34a;background:#dcfce7;border-radius:20px;padding:2px 9px;margin-left:8px">ADDED</span>';
+    const card = (title, addedFlag, body) => `
+      <div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(16,24,40,.04)">
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:10px">${title}${addedFlag ? chip : ''}</div>
+        ${body}
+      </div>`;
+    const btn = (label, onclick, primary) => `<button onclick="${onclick}" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:11px;border:${primary ? 'none' : '1px solid var(--border)'};cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;background:${primary ? 'linear-gradient(135deg,#1A3A8F,#2952cc)' : 'var(--bg)'};color:${primary ? '#fff' : 'var(--text)'}">${primary ? cam : ''}${label}</button>`;
+
+    return `<div class="page active">${H.innerTopbar('Verify Identity')}
+      <div class="inner-content" style="padding-bottom:40px">
+
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:22px;padding:22px 20px;margin-bottom:18px;color:#fff;box-shadow:0 10px 28px rgba(26,58,143,.28)">
+          <div style="display:flex;align-items:center;gap:13px;margin-bottom:16px">
+            <div style="width:50px;height:50px;border-radius:15px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#F5A623" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+            <div style="flex:1"><div style="font-size:18px;font-weight:800;letter-spacing:-.3px">Identity Verification</div><div style="font-size:12.5px;color:rgba(255,255,255,.82);margin-top:1px">Submit your ID and a selfie. Review takes up to 24 hours.</div></div>
           </div>
-          <div style="display:flex;gap:8px;max-width:220px;margin:0 auto">
-            <button id="selfieStartBtn" onclick="H._profileVerify.startCamera()" style="flex:1;padding:10px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Camera</button>
-            <button id="selfieCapBtn" onclick="H._profileVerify.captureSelfie()" style="display:none;flex:1;padding:10px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Capture</button>
-            <button id="selfieRetakeBtn" onclick="H._profileVerify.retakeSelfie()" style="display:none;flex:1;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg> Retake</button>
-            <label for="selfieFile" style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">Upload</label>
-            <input type="file" id="selfieFile" accept="image/*" capture="user" style="display:none" onchange="H._profileVerify.handleSelfieFile(this)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex:1;height:8px;background:rgba(255,255,255,.18);border-radius:5px;overflow:hidden"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#F5A623,#ffc55c);border-radius:5px;transition:width .35s"></div></div>
+            <div style="font-size:12px;font-weight:800;color:#F5A623;white-space:nowrap">${done} of 3</div>
           </div>
         </div>
-        <div class="fg"><div class="fl">ID Photo (Front)</div>
-          <label class="img-upload-zone" for="idPhotoFront"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="img-upload-title" id="idPhotoLabel">Upload front of ID</div><div class="img-upload-sub">National ID, Passport or Driver&#39;s License</div></label>
-          <input type="file" id="idPhotoFront" accept="image/*" capture="environment" style="display:none" onchange="H._profileVerify.previewIdPhoto(this)">
+
+        ${card('1. ID Details',  (_pvIdNum.trim() ? true : false),
+          `<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">ID Type</div>
+             <select class="fi" id="idType" onchange="H._profileVerify.setType(this.value)">
+               ${['National ID', 'Passport', "Driver's License"].map(t => `<option ${(_pvIdType === t) ? 'selected' : ''}>${t}</option>`).join('')}
+             </select></div>
+           <div><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">ID Number</div>
+             <input class="fi" id="idNum" value="${esc(_pvIdNum)}" placeholder="Enter your ID number" oninput="H._profileVerify.setNum(this.value)"></div>`)}
+
+        ${card('2. Selfie Photo', hasSelfie,
+          `<div style="display:flex;flex-direction:column;align-items:center">
+             ${hasSelfie
+              ? `<img src="${_pvSelfie}" style="width:130px;height:130px;border-radius:50%;object-fit:cover;border:3px solid #16a34a;margin-bottom:12px">`
+              : `<div style="width:130px;height:160px;border-radius:50% / 46%;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;margin-bottom:12px;color:var(--sub)"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div style="font-size:11px;text-align:center;padding:0 12px">Center your face</div></div>`}
+             <div style="display:flex;gap:8px;width:100%;max-width:260px">
+               ${btn(hasSelfie ? 'Re-take' : 'Take Selfie', 'H._profileVerify.takeSelfie()', true)}
+               <label for="selfieFile" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:11px;border-radius:11px;border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:700;background:var(--bg);color:var(--text)">Upload</label>
+               <input type="file" id="selfieFile" accept="image/*" style="display:none" onchange="H._profileVerify.handleSelfieFile(this)">
+             </div>
+           </div>`)}
+
+        ${card('3. ID Document (front)', hasId,
+          `${hasId
+            ? `<div style="border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-bottom:12px"><img src="${_pvIdFront}" style="width:100%;display:block"></div>`
+            : `<div style="border:2px dashed var(--border);border-radius:14px;padding:26px 12px;text-align:center;color:var(--sub);margin-bottom:12px"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M6 14h6"/></svg><div style="font-size:12px;margin-top:6px">National ID, Passport or Driver's License</div></div>`}
+           <div style="display:flex;gap:8px">
+             ${btn(hasId ? 'Re-take' : 'Take Photo', 'H._profileVerify.takeId()', true)}
+             <label for="idFrontFile" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:11px;border-radius:11px;border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:700;background:var(--bg);color:var(--text)">Upload</label>
+             <input type="file" id="idFrontFile" accept="image/*" style="display:none" onchange="H._profileVerify.handleIdFile(this)">
+           </div>`)}
+
+        <button class="btn-pri" id="pvSubmitBtn" ${ready ? '' : 'disabled'} onclick="H._profileVerify.submit()" style="width:100%;margin-top:6px;${ready ? '' : 'opacity:.5;cursor:not-allowed'}">${ready ? 'Submit for Review' : 'Complete all 3 steps'}</button>
+
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#EEF2FB;border-radius:14px;padding:14px;margin-top:16px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div style="font-size:12px;color:var(--sub);line-height:1.55"><b style="color:#1A3A8F">Your data is secure.</b> Your ID and selfie are stored privately and used only to confirm your identity. They are never sold or shared.</div>
         </div>
-        <button class="btn-pri" onclick="H._profileVerify.submit()">Submit for Verification</button>
       </div>
     </div>`;
   };
 
   pages.ProfileVerify_after = function () {
-    H._profileVerify = {
-      _stream: null,
-      _selfieData: null,
+    // Pull the latest verification status from the server so an admin
+    // approval or rejection shows up without needing a full app reload.
+    (function () {
+      var u = H.currentUser();
+      if (!u || typeof H.loadProfile !== 'function') return;
+      var wasVerified = !!u.verified, wasPending = !!u.verificationPending;
+      H.loadProfile(u.id).then(function () {
+        var u2 = H.currentUser(); if (!u2) return;
+        if ((!!u2.verified !== wasVerified || !!u2.verificationPending !== wasPending) && H.currentPageName === 'ProfileVerify') {
+          H.saveState();
+          H.renderPage('ProfileVerify');
+        }
+      }).catch(function () {});
+    })();
+    function compress(file, maxDim, q) {
+      return new Promise(res => {
+        const r = new FileReader();
+        r.onload = ev => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > h && w > maxDim) { h = h * maxDim / w; w = maxDim; }
+            else if (h > maxDim) { w = w * maxDim / h; h = maxDim; }
+            const c = document.createElement('canvas'); c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            res(c.toDataURL('image/jpeg', q || 0.82));
+          };
+          img.onerror = () => res(ev.target.result);
+          img.src = ev.target.result;
+        };
+        r.readAsDataURL(file);
+      });
+    }
+    const reRender = () => { try { H.renderPage('ProfileVerify'); } catch (e) {} };
+    const Camera = () => window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+    const isNative = () => !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
 
-      startCamera() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          H.toast('Camera not available — please upload a selfie photo.');
+    H._profileVerify = {
+      setType(v) { _pvIdType = v; },
+      setNum(v)  { _pvIdNum = v; },
+
+      async takeSelfie() {
+        const C = Camera();
+        if (isNative() && C) {
+          try {
+            const p = await C.getPhoto({ quality: 85, allowEditing: false, resultType: 'dataUrl', source: 'CAMERA', direction: 'FRONT', width: 600, height: 600, correctOrientation: true });
+            const d = p && (p.dataUrl || (p.base64String ? 'data:image/jpeg;base64,' + p.base64String : null));
+            if (d) { _pvSelfie = d; reRender(); }
+          } catch (e) {
+            const m = ((e && e.message) || '').toLowerCase();
+            if (m.includes('cancel') || m.includes('denied')) return;
+            var fi = document.getElementById('selfieFile'); if (fi) fi.click();
+          }
           return;
         }
-        const btn = document.getElementById('selfieStartBtn');
-        if (btn) btn.style.display = 'none';
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 640 } } })
-          .then(stream => {
-            this._stream = stream;
-            const vid = document.getElementById('selfieVid');
-            const ph  = document.getElementById('selfiePH');
-            const cap = document.getElementById('selfieCapBtn');
-            if (vid) { vid.srcObject = stream; vid.style.display = 'block'; }
-            if (ph)  ph.style.display = 'none';
-            if (cap) cap.style.display = 'flex';
-          })
-          .catch(() => {
-            H.toast('Camera permission denied — use Upload instead.');
-            const btn2 = document.getElementById('selfieStartBtn');
-            if (btn2) btn2.style.display = 'flex';
-          });
+        var fi2 = document.getElementById('selfieFile'); if (fi2) fi2.click();
       },
-
-      captureSelfie() {
-        const vid    = document.getElementById('selfieVid');
-        const canvas = document.getElementById('selfieCanvas');
-        if (!vid || !canvas) return;
-        canvas.width  = vid.videoWidth  || 480;
-        canvas.height = vid.videoHeight || 640;
-        const ctx = canvas.getContext('2d');
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(vid, 0, 0);
-        this._selfieData = canvas.toDataURL('image/jpeg', 0.85);
-        if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
-        vid.style.display = 'none';
-        const prev    = document.getElementById('selfiePrev');
-        const img     = document.getElementById('selfieImg');
-        const capBtn  = document.getElementById('selfieCapBtn');
-        const retake  = document.getElementById('selfieRetakeBtn');
-        if (prev)   prev.style.display = 'block';
-        if (img)    img.src = this._selfieData;
-        if (capBtn) capBtn.style.display = 'none';
-        if (retake) retake.style.display = 'flex';
-        H.toast('Selfie captured');
-      },
-
-      retakeSelfie() {
-        this._selfieData = null;
-        const prev   = document.getElementById('selfiePrev');
-        const retake = document.getElementById('selfieRetakeBtn');
-        if (prev)   prev.style.display = 'none';
-        if (retake) retake.style.display = 'none';
-        this.startCamera();
-      },
-
       handleSelfieFile(input) {
-        const file = input.files && input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-          this._selfieData = e.target.result;
-          const ph      = document.getElementById('selfiePH');
-          const vid     = document.getElementById('selfieVid');
-          const prev    = document.getElementById('selfiePrev');
-          const img     = document.getElementById('selfieImg');
-          const startBtn = document.getElementById('selfieStartBtn');
-          const capBtn  = document.getElementById('selfieCapBtn');
-          const retake  = document.getElementById('selfieRetakeBtn');
-          if (ph)       ph.style.display = 'none';
-          if (vid)      vid.style.display = 'none';
-          if (prev)     prev.style.display = 'block';
-          if (img)      img.src = this._selfieData;
-          if (startBtn) startBtn.style.display = 'none';
-          if (capBtn)   capBtn.style.display = 'none';
-          if (retake)   retake.style.display = 'flex';
-        };
-        reader.readAsDataURL(file);
+        const f = input.files && input.files[0]; if (!f) return;
+        compress(f, 800, 0.85).then(d => { _pvSelfie = d; reRender(); });
       },
 
-      previewIdPhoto(input) {
-        const label = document.getElementById('idPhotoLabel');
-        if (input.files && input.files[0] && label) label.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> ID photo selected';
+      async takeId() {
+        const C = Camera();
+        if (isNative() && C) {
+          try {
+            const p = await C.getPhoto({ quality: 82, allowEditing: false, resultType: 'dataUrl', source: 'PROMPT', width: 1400, correctOrientation: true });
+            const d = p && (p.dataUrl || (p.base64String ? 'data:image/jpeg;base64,' + p.base64String : null));
+            if (d) { _pvIdFront = d; reRender(); }
+          } catch (e) {
+            const m = ((e && e.message) || '').toLowerCase();
+            if (m.includes('cancel') || m.includes('denied')) return;
+            var fi = document.getElementById('idFrontFile'); if (fi) fi.click();
+          }
+          return;
+        }
+        var fi2 = document.getElementById('idFrontFile'); if (fi2) fi2.click();
+      },
+      handleIdFile(input) {
+        const f = input.files && input.files[0]; if (!f) return;
+        compress(f, 1400, 0.82).then(d => { _pvIdFront = d; reRender(); });
       },
 
       async submit() {
-        const idType = document.getElementById('idType')?.value || 'National ID';
-        const idNum  = (document.getElementById('idNum')?.value || '').trim();
-        if (!idNum) { H.toast('Please enter your ID number'); return; }
-        if (!this._selfieData) { H.toast('Please take or upload a selfie photo'); return; }
-        if (this._stream) { this._stream.getTracks().forEach(t => t.stop()); this._stream = null; }
-        const btn = document.querySelector('.btn-pri[onclick="H._profileVerify.submit()"]');
+        if (!_pvIdNum.trim()) { H.toast('Please enter your ID number'); return; }
+        if (!_pvSelfie) { H.toast('Please add a selfie photo'); return; }
+        if (!_pvIdFront) { H.toast('Please add a photo of your ID'); return; }
+        const u = H.currentUser(); const sb = window.supabase;
+        const btn = document.getElementById('pvSubmitBtn');
         if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
-        const u = H.currentUser();
-        const sb = window.supabase;
-
-        const doSubmit = async (idDocData) => {
-          try {
-            if (!sb) throw new Error('Not connected to server');
-            const { error: vErr } = await sb.from('verifications').upsert({
-              user_id: u.id,
-              id_doc: idDocData || null,
-              selfie: this._selfieData,
-              status: 'pending',
-              submitted_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
-            if (vErr) throw vErr;
-            const { error: pErr } = await sb.from('profiles').update({
-              verification_pending: true,
-              updated_at: new Date().toISOString()
-            }).eq('id', u.id);
-            if (pErr) throw pErr;
-            u.verificationPending    = true;
-            u.verification_pending   = true;
-            u.verificationIdType     = idType;
-            u.verificationIdNum      = idNum;
-            H.saveState();
-            H.toast('Verification submitted! Admin will review within 24 hours.');
-            H.goBack();
-          } catch (e) {
-            if (btn) { btn.disabled = false; btn.textContent = 'Submit for Verification'; }
-            H.toast('Failed to submit: ' + (e.message || 'Check your connection'));
-          }
-        };
-
-        const idFile = document.getElementById('idPhotoFront');
-        if (idFile && idFile.files && idFile.files[0]) {
-          const reader = new FileReader();
-          reader.onload = e => doSubmit(e.target.result);
-          reader.readAsDataURL(idFile.files[0]);
-        } else {
-          doSubmit(null);
+        try {
+          if (!sb) throw new Error('Not connected to server');
+          // Use the live authenticated user id so it matches the database security rule.
+          let authId = u.id;
+          try { const ar = await sb.auth.getUser(); if (ar && ar.data && ar.data.user && ar.data.user.id) authId = ar.data.user.id; } catch (e) {}
+          if (!authId) throw new Error('Your session expired. Please sign out and sign in again, then retry.');
+          const idPath     = H.uploadVerificationDoc ? await H.uploadVerificationDoc(authId, _pvIdFront, 'id') : null;
+          const selfiePath = H.uploadVerificationDoc ? await H.uploadVerificationDoc(authId, _pvSelfie, 'selfie') : null;
+          const rec = { user_id: authId, status: 'pending', submitted_at: new Date().toISOString() };
+          if (idPath && selfiePath) { rec.id_doc_path = idPath; rec.selfie_path = selfiePath; rec.id_doc = null; rec.selfie = null; }
+          else { rec.id_doc = _pvIdFront; rec.selfie = _pvSelfie; }
+          const { error: vErr } = await sb.from('verifications').upsert(rec, { onConflict: 'user_id' });
+          if (vErr) throw vErr;
+          const { error: pErr } = await sb.from('profiles').update({ verification_pending: true, updated_at: new Date().toISOString() }).eq('id', authId);
+          if (pErr) throw pErr;
+          u.verificationPending = true; u.verification_pending = true;
+          u.verificationIdType = _pvIdType; u.verificationIdNum = _pvIdNum;
+          _pvSelfie = null; _pvIdFront = null; // clear PII from device
+          H.saveState();
+          H.toast('Verification submitted! Admin reviews within 24 hours.');
+          H.renderPage('ProfileVerify');
+        } catch (e) {
+          if (btn) { btn.disabled = false; btn.textContent = 'Submit for Review'; }
+          H.toast('Failed to submit: ' + (e.message || 'Check your connection'));
         }
       },
 
       async cancelPending() {
         const u = H.currentUser();
-        u.verificationPending  = false;
-        u.verification_pending = false;
+        u.verificationPending = false; u.verification_pending = false;
         H.saveState();
         const sb = window.supabase;
         if (sb) {
@@ -10114,9 +13860,9 @@ H.init();
     const hasProfile = !!(headline || bio || skills.length || exp.length || edu.length);
 
     const sec = (title, icon, content) => `
-      <div style="background:#fff;border-radius:16px;margin-bottom:12px;border:1px solid #E4E8F0;overflow:hidden">
-        <div style="padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #F0F4FF">
-          <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#1A3A8F;text-transform:uppercase;letter-spacing:.5px">${icon}${title}</div>
+      <div style="background:var(--card);border-radius:16px;margin-bottom:12px;border:1px solid var(--border);overflow:hidden">
+        <div style="padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--blue-text);text-transform:uppercase;letter-spacing:.5px">${icon}${title}</div>
           ${title==='Experience'?`<button onclick="H._cvProfile.addExp()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>`:''}
           ${title==='Education'?`<button onclick="H._cvProfile.addEdu()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#1A3A8F;color:#fff;border:none;cursor:pointer">+ Add</button>`:''}
         </div>
@@ -10124,54 +13870,54 @@ H.init();
       </div>`;
 
     const expHtml = exp.length ? exp.map((e, i) => `
-      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #F0F4FF">
+      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border)">
         <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(e.title||'')}</div>
-        <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.company||'')}</div>
-        <div style="font-size:12px;color:#667085;margin-top:2px">${H.escHtml(e.duration||'')}${e.current?' · Current':''}</div>
+        <div style="font-size:13px;color:var(--blue-text);font-weight:600;margin-top:2px">${H.escHtml(e.company||'')}</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:2px">${H.escHtml(e.duration||'')}${e.current?' · Current':''}</div>
         ${e.desc?`<div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.55">${H.escHtml(e.desc)}</div>`:''}
         <div style="display:flex;gap:8px;margin-top:8px">
           <button onclick="H._cvProfile.editExp(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
           <button onclick="H._cvProfile.delExp(${i})"  style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
         </div>
       </div>`).join('')
-      : '<div style="color:#667085;font-size:13px">No experience added yet</div>';
+      : '<div style="color:var(--sub);font-size:13px">No experience added yet</div>';
 
     const eduHtml = edu.length ? edu.map((e, i) => `
-      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #F0F4FF">
+      <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border)">
         <div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(e.degree||'')}</div>
-        <div style="font-size:13px;color:#1A3A8F;font-weight:600;margin-top:2px">${H.escHtml(e.school||'')}</div>
-        <div style="font-size:12px;color:#667085;margin-top:2px">${H.escHtml(e.year||'')}</div>
+        <div style="font-size:13px;color:var(--blue-text);font-weight:600;margin-top:2px">${H.escHtml(e.school||'')}</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:2px">${H.escHtml(e.year||'')}</div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button onclick="H._cvProfile.editEdu(${i})" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;cursor:pointer">Edit</button>
           <button onclick="H._cvProfile.delEdu(${i})"  style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;cursor:pointer">Remove</button>
         </div>
       </div>`).join('')
-      : '<div style="color:#667085;font-size:13px">No education added yet</div>';
+      : '<div style="color:var(--sub);font-size:13px">No education added yet</div>';
 
     const skillsHtml = skills.length
       ? skills.map(s => `<span style="display:inline-block;background:#EFF6FF;color:#1A3A8F;border:1px solid #BFDBFE;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">${H.escHtml(s)}</span>`).join('')
-      : '<div style="color:#667085;font-size:13px">No skills added yet</div>';
+      : '<div style="color:var(--sub);font-size:13px">No skills added yet</div>';
 
     const jtHtml = jobTypes.length
       ? jobTypes.map(t => `<span style="display:inline-block;background:#F0FDF4;color:#15803d;border:1px solid #BBF7D0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:0 4px 6px 0">${H.escHtml(t)}</span>`).join('')
-      : '<div style="color:#667085;font-size:13px">Not set</div>';
+      : '<div style="color:var(--sub);font-size:13px">Not set</div>';
 
     const contactHtml = (() => {
       const rows = [];
       if (u.whatsappFull || u.whatsappNum) rows.push(`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span style="font-size:13px;color:var(--text)">+${H.escHtml(u.whatsappFull||u.whatsappNum||'')}</span></div>`);
-      if (u.contactMethod) rows.push(`<div style="font-size:13px;color:#667085">Preferred: <strong style="color:var(--text)">${H.escHtml(u.contactMethod)}</strong></div>`);
-      if (u.linkedinUrl)   rows.push(`<div style="margin-top:6px;font-size:13px"><a href="${H.escHtml(u.linkedinUrl)}" target="_blank" style="color:#1A3A8F;font-weight:600">LinkedIn Profile</a></div>`);
-      if (u.websiteUrl)    rows.push(`<div style="margin-top:4px;font-size:13px"><a href="${H.escHtml(u.websiteUrl)}" target="_blank" style="color:#1A3A8F;font-weight:600">Portfolio / Website</a></div>`);
-      return rows.length ? rows.join('') : '<div style="color:#667085;font-size:13px">No contact info added yet</div>';
+      if (u.contactMethod) rows.push(`<div style="font-size:13px;color:var(--sub)">Preferred: <strong style="color:var(--text)">${H.escHtml(u.contactMethod)}</strong></div>`);
+      if (u.linkedinUrl)   rows.push(`<div style="margin-top:6px;font-size:13px"><a href="${H.escHtml(u.linkedinUrl)}" target="_blank" style="color:var(--blue-text);font-weight:600">LinkedIn Profile</a></div>`);
+      if (u.websiteUrl)    rows.push(`<div style="margin-top:4px;font-size:13px"><a href="${H.escHtml(u.websiteUrl)}" target="_blank" style="color:var(--blue-text);font-weight:600">Portfolio / Website</a></div>`);
+      return rows.length ? rows.join('') : '<div style="color:var(--sub);font-size:13px">No contact info added yet</div>';
     })();
 
     const resumeHtml = (u.cvFileUrl || u.cvFileName)
       ? `<div style="display:flex;align-items:center;gap:10px;background:#F8FAFF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 14px">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${H.escHtml(u.cvFileName||'Resume')}</div></div>
-          ${u.cvFileUrl?`<a href="${H.escHtml(u.cvFileUrl)}" target="_blank" style="font-size:12px;font-weight:700;color:#1A3A8F;text-decoration:none;flex-shrink:0">View</a>`:''}
+          ${u.cvFileUrl?`<a href="${H.escHtml(u.cvFileUrl)}" target="_blank" style="font-size:12px;font-weight:700;color:var(--blue-text);text-decoration:none;flex-shrink:0">View</a>`:''}
         </div>`
-      : '<div style="color:#667085;font-size:13px">No resume uploaded yet</div>';
+      : '<div style="color:var(--sub);font-size:13px">No resume uploaded yet</div>';
 
     if (!hasProfile) {
       return `<div class="page active">
@@ -10181,7 +13927,7 @@ H.init();
             <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#1A3A8F" stroke-width="1.5"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
           </div>
           <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">You don't have a job profile yet</div>
-          <div style="font-size:13px;color:#667085;line-height:1.6;margin-bottom:24px">Create your profile so employers in Hire Talent can find and contact you.</div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">Create your profile so employers in Hire Talent can find and contact you.</div>
           <button onclick="H.openInner('CandidateProfile')" style="width:100%;max-width:280px;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Create Job Profile</button>
         </div>
       </div>`;
@@ -10210,6 +13956,9 @@ H.init();
 
         ${sec('Skills','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> ', skillsHtml)}
         ${jobTypes.length?sec('Job Type / Availability','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> ', jtHtml):''}
+        ${(cv.noticePeriod||cv.educationLevel)?sec('Availability & Education','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ',
+          (cv.noticePeriod?`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:var(--sub)">Notice Period</span><span style="font-weight:700;color:var(--text)">${H.escHtml(cv.noticePeriod)}</span></div>`:'')
+          +(cv.educationLevel?`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-top:1px solid #F0F4FF"><span style="color:var(--sub)">Education</span><span style="font-weight:700;color:var(--text)">${H.escHtml(cv.educationLevel)}</span></div>`:'')):''}
         ${salary?sec('Expected Salary','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> ',`<div style="font-size:14px;font-weight:700;color:var(--text)">${H.escHtml(String(salary))}</div>`):''}
         ${sec('Work Experience','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> ', expHtml)}
         ${sec('Education','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> ', eduHtml)}
@@ -10219,7 +13968,7 @@ H.init();
       </div>
 
       <!-- Fixed bottom Edit button -->
-      <div style="position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #E4E8F0;z-index:200">
+      <div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">
         <button onclick="H.openInner('CandidateProfile')" style="width:100%;padding:14px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           Edit Profile
@@ -10446,11 +14195,51 @@ H.init();
 
       <div class="settings-section">
         <div class="section-title">Notifications</div>
-        <button class="settings-item" onclick="H.openInner('NotificationSettings')">
+        <button class="settings-item" onclick="H.openInner('NotifSettings')">
           <span class="item-icon">${I.bell}</span>
           <span class="item-label">Notification Preferences</span>
           <span class="item-arrow">›</span>
         </button>
+      </div>
+
+      <div class="settings-section">
+        <div class="section-title">Display & Data</div>
+        <div class="toggle-item">
+          <div class="toggle-label">
+            <span class="toggle-icon">${I.eye || ''}</span>
+            <div class="toggle-text">
+              <span class="toggle-name">Data-light mode</span>
+              <span class="toggle-desc">Load fewer photos to save mobile data</span>
+            </div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" ${(u.privacySettings && u.privacySettings.dataLight) ? 'checked' : ''} onchange="H.togglePref('dataLight', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle-label">
+            <span class="toggle-icon">$</span>
+            <div class="toggle-text">
+              <span class="toggle-name">Show approx. ZiG value</span>
+              <span class="toggle-desc">Estimated ZiG amount next to USD prices</span>
+            </div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" ${(u.privacySettings && u.privacySettings.showZig) ? 'checked' : ''} onchange="H.togglePref('showZig', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle-label">
+            <span class="toggle-icon">${I.exchange || '$'}</span>
+            <div class="toggle-text">
+              <span class="toggle-name">USD → ZiG rate</span>
+              <span class="toggle-desc">Set by PaMarket${(H.state && H.state.fxRateUpdatedAt) ? ' · updated ' + H.timeAgo(H.state.fxRateUpdatedAt) : ''}</span>
+            </div>
+          </div>
+          <span style="font-size:15px;font-weight:800;color:var(--text-primary)">1 USD = ${Number((H.state && H.state.fxRate) || 36).toLocaleString()} ZiG</span>
+        </div>
       </div>
 
       <div class="settings-section">
@@ -10483,6 +14272,29 @@ H.init();
 
       <div style="height:20px"></div>
     </div>`;
+  };
+
+  // Global preference handlers (used by the main Settings page) so Data-light and
+  // approximate-ZiG are reachable without digging into Privacy Settings.
+  H.togglePref = function (key, val) {
+    const u = H.currentUser(); if (!u) return;
+    if (!u.privacySettings) u.privacySettings = {};
+    u.privacySettings[key] = !!val;
+    H.saveState();
+    const MSG = {
+      dataLight: { on: 'Data-light mode on — photos load as icons', off: 'Data-light mode off' },
+      showZig:   { on: 'Showing approximate ZiG values',           off: 'ZiG values hidden' }
+    };
+    if (MSG[key]) H.toast(val ? MSG[key].on : MSG[key].off);
+    if (window.supabase && typeof window.supabase.from === 'function') {
+      window.supabase.from('profiles').update({ privacy: u.privacySettings }).eq('id', u.id).then(function () {}, function () {});
+    }
+  };
+  H.setFxRate = function (val) {
+    const r = parseFloat(val);
+    if (!r || r <= 0) { H.toast('Enter a valid rate'); return; }
+    H.state.fxRate = r; H.saveState();
+    H.toast('ZiG rate updated — used for approximate values');
   };
 
   // --- Theme Settings ---------------------------------------
@@ -10760,6 +14572,13 @@ H.init();
             .then(function() {})
             .catch(function() {});
         }
+      },
+      setRate: function(val) {
+        const r = parseFloat(val);
+        if (!r || r <= 0) { H.toast('Enter a valid rate'); return; }
+        H.state.fxRate = r;
+        H.saveState();
+        H.toast('Rate updated — used for approximate ZiG values');
       }
     };
   };
@@ -11180,7 +14999,7 @@ H.init();
 
   pages.ActiveSessions = function () {
     const u = H.currentUser();
-    const sessions = u.sessions || [{ id: 'current', device: 'This device', location: 'Zimbabwe', time: Date.now(), current: true }];
+    const sessions = u.sessions || [{ id: 'current', device: 'This device', location: '', time: Date.now(), current: true }];
     return `<div class="page active">
       ${H.innerTopbar('Active Sessions')}
       <div class="form-wrap">
@@ -11190,7 +15009,7 @@ H.init();
             <div class="info-row">
               <div>
                 <div style="font-size:13px;font-weight:600;color:var(--charcoal)">${H.escHtml(s.device)}</div>
-                <div style="font-size:11px;color:var(--ash);margin-top:2px">${H.escHtml(s.location)} · ${new Date(s.time).toLocaleDateString()}</div>
+                <div style="font-size:11px;color:var(--ash);margin-top:2px">${s.current ? `<span id="curSessLoc">${s.location ? H.escHtml(s.location) : 'Locating…'}</span>` : H.escHtml(s.location || 'Unknown')} · ${new Date(s.time).toLocaleDateString()}</div>
               </div>
               ${s.current ? '<span style="font-size:11px;font-weight:700;color:#16a34a;background:#dcfce7;padding:3px 10px;border-radius:20px">Current</span>'
                 : `<button class="btn-unblock" onclick="H._sessions.revoke('${s.id}')">Revoke</button>`}
@@ -11203,6 +15022,29 @@ H.init();
   };
 
   pages.ActiveSessions_after = function () {
+    // Look up the approximate location of this device from its IP (no GPS permission).
+    (async function () {
+      const el = document.getElementById('curSessLoc');
+      if (!el) return;
+      try {
+        const r = await fetch('https://ipwho.is/');
+        const d = await r.json();
+        const loc = (d && d.success !== false)
+          ? [d.city, d.country].filter(Boolean).join(', ')
+          : '';
+        el.textContent = loc || 'Location unavailable';
+        if (loc) {
+          const u = H.currentUser();
+          if (u) {
+            u.sessions = (u.sessions && u.sessions.length) ? u.sessions
+              : [{ id: 'current', device: 'This device', location: '', time: Date.now(), current: true }];
+            const cur = u.sessions.find(s => s.current);
+            if (cur) { cur.location = loc; H.saveState(); }
+          }
+        }
+      } catch (e) { el.textContent = 'Location unavailable'; }
+    })();
+
     H._sessions = {
       revoke: (id) => {
         const u = H.currentUser();
@@ -11227,10 +15069,13 @@ H.init();
         </div>
         <div class="section-box">
           <div class="section-title">What will be deleted</div>
-          <div class="info-row"><span class="info-label">Profile</span><span class="info-val" style="color:var(--red)">Permanently removed</span></div>
-          <div class="info-row"><span class="info-label">Listings</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
-          <div class="info-row"><span class="info-label">Messages</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
-          <div class="info-row"><span class="info-label">Wallet</span><span class="info-val" style="color:var(--red)">Balance forfeited</span></div>
+          <div class="info-row"><span class="info-label">Profile &amp; personal details</span><span class="info-val" style="color:var(--red)">Permanently removed</span></div>
+          <div class="info-row"><span class="info-label">Your listings</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
+          <div class="info-row"><span class="info-label">Messages you sent</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
+          <div class="info-row"><span class="info-label">Reviews you wrote</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
+          <div class="info-row"><span class="info-label">Saved items &amp; searches</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
+          <div class="info-row"><span class="info-label">Job applications</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
+          <div class="info-row"><span class="info-label">Verification documents</span><span class="info-val" style="color:var(--red)">All deleted</span></div>
         </div>
         <div class="fg">
           <div class="fl">Type DELETE to confirm</div>
@@ -11242,6 +15087,58 @@ H.init();
     </div>`;
   };
 
+  // Permanently remove the signed-in user's account and all personal data.
+  // Primary path is the server-side delete_my_account() function (removes data AND
+  // the auth login in one transaction). If that function is not installed, we fall
+  // back to deleting the rows the user owns directly — RLS permits own-row deletes.
+  H.purgeMyAccount = async function () {
+    const sb = window.supabase;
+    const u = H.currentUser();
+    if (!sb || typeof sb.from !== 'function' || !u || !u.id) {
+      try { if (sb && sb.auth) await sb.auth.signOut(); } catch (e) {}
+      return { ok: false };
+    }
+    const uid = u.id;
+    const uidText = String(uid);
+    let rpcOk = false;
+    try {
+      const { error } = await sb.rpc('delete_my_account');
+      if (!error) rpcOk = true;
+      else console.warn('delete_my_account rpc:', error.message);
+    } catch (e) { /* function not installed yet — use fallback */ }
+    if (!rpcOk) {
+      const ops = [
+        sb.from('listings').delete().eq('seller_id', uid),
+        sb.from('messages').delete().eq('sender_id', uidText),
+        sb.from('applications').delete().eq('applicant_id', uid),
+        sb.from('reviews').delete().eq('reviewer_id', uid),
+        sb.from('user_saves').delete().eq('user_id', uid),
+        sb.from('saved_searches').delete().eq('user_id', uid),
+        sb.from('notifications').delete().eq('user_id', uidText),
+        sb.from('conversation_deletions').delete().eq('user_id', uid),
+        sb.from('verifications').delete().eq('user_id', uid),
+        sb.from('company_verifications').delete().eq('user_id', uid),
+        sb.from('profiles').delete().eq('id', uid)
+      ];
+      try { await Promise.allSettled(ops); } catch (e) {}
+    }
+    // Clear cached personal data locally so nothing lingers after sign-out
+    try {
+      H.state.listings = (H.state.listings || []).filter(function (l) { return l.sellerId !== uid; });
+      H.state.conversations = (H.state.conversations || []).filter(function (c) { return !((c.members || []).includes(uid)); });
+      H.state.users = (H.state.users || []).filter(function (x) { return x.id !== uid; });
+    } catch (e) {}
+    try { await sb.auth.signOut(); } catch (e) {}
+    // Wipe ALL local PaMarket data (cached state, onboarding flag, caches) so the
+    // next sign-in starts completely fresh — a true first-time experience.
+    try {
+      Object.keys(localStorage).forEach(function (k) {
+        if (/^pamarket/i.test(k)) { try { localStorage.removeItem(k); } catch (e) {} }
+      });
+    } catch (e) {}
+    return { ok: true };
+  };
+
   pages.DeleteAccount_after = function () {
     H._deleteAccount = {
       confirm: async () => {
@@ -11249,17 +15146,11 @@ H.init();
         if (val !== 'DELETE') { H.toast('Type DELETE to confirm'); return; }
         const btn = document.querySelector('.btn-pri[onclick*="confirm"]');
         if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
-        try {
-          const c = H.supabaseClient || (typeof sb === 'function' ? sb() : null);
-          if (c) {
-            await c.rpc('delete_my_account');
-            await c.auth.signOut();
-          }
-        } catch(e) { console.warn('delete_my_account rpc:', e); }
-        H.state.currentUserId = null;
-        H.saveState();
-        H.toast('Account deleted');
-        setTimeout(() => H.navTo('Home', null), 800);
+        try { await H.purgeMyAccount(); }
+        catch (e) { console.warn('account deletion:', e); }
+        // purgeMyAccount has cleared local storage; do NOT saveState (it would rewrite it)
+        H.toast('Your account and data have been deleted');
+        setTimeout(() => { try { window.location.reload(); } catch (e) { H.navTo('Home', null); } }, 900);
       }
     };
   };
@@ -11276,6 +15167,28 @@ H.init();
 'use strict';
 (function (H) {
   const pages = H.pages;
+
+  // ── Official PaMarket social channels ──────────────────────
+  H.SOCIALS = [
+    { name: 'TikTok',    url: 'https://www.tiktok.com/@pamarketzimbabwe', bg: '#000000',
+      svg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M16.6 5.82a4.28 4.28 0 0 1-1.05-2.82h-3.07v12.2a2.43 2.43 0 1 1-2.43-2.43c.2 0 .4.02.59.06v-3.13a5.57 5.57 0 0 0-.59-.03 5.56 5.56 0 1 0 5.56 5.56V9.01a7.33 7.33 0 0 0 4.28 1.37V7.3a4.28 4.28 0 0 1-3.3-1.48z"/></svg>' },
+    { name: 'Facebook',  url: 'https://www.facebook.com/profile.php?id=61591000371129', bg: '#1877F2',
+      svg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M24 12a12 12 0 1 0-13.88 11.85v-8.38H7.08V12h3.04V9.36c0-3 1.79-4.67 4.53-4.67 1.31 0 2.68.24 2.68.24v2.95h-1.51c-1.49 0-1.96.93-1.96 1.87V12h3.33l-.53 3.47h-2.8v8.38A12 12 0 0 0 24 12z"/></svg>' },
+    { name: 'Instagram', url: 'https://www.instagram.com/pamarketzim/', bg: 'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)',
+      svg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg>' },
+    { name: 'YouTube',   url: 'https://www.youtube.com/@PaMarketZim', bg: '#FF0000',
+      svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.8a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 23.5 12 31 31 0 0 0 23 7.2zM9.8 15.3V8.7l5.7 3.3z"/></svg>' }
+  ];
+
+  // Reusable row of social buttons (used on About + anywhere else).
+  H._socialLinks = function () {
+    return H.SOCIALS.map(function (s) {
+      return '<a href="' + s.url + '" target="_blank" rel="noopener" title="' + s.name + '" aria-label="' + s.name + '"'
+        + ' onclick="event.preventDefault();(window.open(\'' + s.url + '\',\'_blank\',\'noopener\'))" '
+        + ' style="width:46px;height:46px;border-radius:50%;background:' + s.bg + ';display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 3px 10px -3px rgba(16,24,40,.4)">'
+        + s.svg + '</a>';
+    }).join('');
+  };
 
   // Icons (prefer H.ICONS, fallback set)
   const I = (window.H && H.ICONS) || {};
@@ -11405,8 +15318,8 @@ H.init();
         a: 'Tap their profile > Block User. They won\'t be able to see your listings or contact you. Manage blocked users in Settings.'
       },
       {
-        q: 'What payment methods do you accept?',
-        a: 'We accept mobile money (EcoCash, OneMoney), bank transfers, and card payments. All payments are secure and verified.'
+        q: 'How do payments work?',
+        a: 'PaMarket does not process or hold any payments. Buyers and sellers arrange payment directly between themselves — cash on delivery, EcoCash, OneMoney or bank transfer. Always inspect items in person before paying, and never send money for an item you have not seen.'
       },
       {
         q: 'How do I delete my account?',
@@ -11486,7 +15399,7 @@ H.init();
   pages.ReportProblem = function () {
     return `<div class="page active" style="display:flex;flex-direction:column;overflow:hidden;height:100%">
       ${H.innerTopbar('Support Chat')}
-      <div id="botChat" style="flex:1;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:12px;min-height:0"></div>
+      <div id="botChat" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:14px 14px 6px;display:flex;flex-direction:column;gap:12px;min-height:0"></div>
       <div id="botChips" style="padding:8px 14px 4px;min-height:46px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--bg);border-top:1px solid var(--border)"></div>
       <div style="padding:8px 14px 20px;background:var(--bg);display:flex;gap:8px;align-items:center">
         <input id="botInput" class="fi" style="flex:1;margin:0;font-size:14px" placeholder="Type your question..." onkeydown="if(event.key==='Enter')H._bot.send()">
@@ -12063,85 +15976,63 @@ pages.HelpPrivacy = function () {
     </div>`;
   };
 pages.HelpVerification = function () {
+    const card = (inner) => `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(16,24,40,.04)">${inner}</div>`;
+    const step = (n, t) => `<div style="display:flex;gap:10px;align-items:flex-start;margin-top:10px"><div style="width:24px;height:24px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div><div style="font-size:13px;color:var(--text);line-height:1.5">${t}</div></div>`;
+    const doc = (n, t, d) => `<div style="display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border,#EEF1F6)"><div style="width:28px;height:28px;border-radius:8px;background:#EFF6FF;color:#1A3A8F;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div><div><div style="font-weight:700;color:var(--text);font-size:13.5px">${t}</div><div style="font-size:12px;color:var(--sub);margin-top:2px;line-height:1.45">${d}</div></div></div>`;
+
     return `<div class="page active">
       ${H.innerTopbar('How to Get Verified')}
-      <div class="doc-content">
-        <div class="doc-section">
+      <div style="padding:0 14px 60px">
 
-          <div style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:16px;padding:20px;text-align:center;margin-bottom:24px">
-            <div style="font-size:36px;margin-bottom:8px">✅</div>
-            <div style="color:#fff;font-size:18px;font-weight:800;margin-bottom:4px">Verified Business Badge</div>
-            <div style="color:rgba(255,255,255,.75);font-size:13px">Build trust with job seekers across Zimbabwe</div>
-          </div>
-
-          <h2>What is Verification?</h2>
-          <p>The PaMarket Verified Business badge confirms that your company is a real, legally registered business in Zimbabwe. Verified businesses appear with a blue ✓ badge on all their job listings and profile, making job seekers more confident applying to your roles.</p>
-
-          <h2>Documents Required</h2>
-          <p>Send clear, readable photos of <strong>all four</strong> of the following:</p>
-
-          <div style="border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin:16px 0">
-            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border)">
-              <div style="width:32px;height:32px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#1A3A8F;font-size:14px">1</div>
-              <div>
-                <div style="font-weight:700;color:var(--text);font-size:14px">Certificate of Incorporation or Business Registration</div>
-                <div style="font-size:12px;color:var(--sub);margin-top:2px">Issued by CIPCC (Companies and Intellectual Property Commission of Zimbabwe). This proves your business is legally registered.</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border)">
-              <div style="width:32px;height:32px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#1A3A8F;font-size:14px">2</div>
-              <div>
-                <div style="font-weight:700;color:var(--text);font-size:14px">National ID or Passport of Owner / Director</div>
-                <div style="font-size:12px;color:var(--sub);margin-top:2px">The ID of the person who owns or runs the business. Must match the name on the registration documents.</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border)">
-              <div style="width:32px;height:32px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#1A3A8F;font-size:14px">3</div>
-              <div>
-                <div style="font-weight:700;color:var(--text);font-size:14px">Tax Clearance Certificate</div>
-                <div style="font-size:12px;color:var(--sub);margin-top:2px">Issued by ZIMRA (Zimbabwe Revenue Authority). Must be current and valid. This confirms your business is tax compliant.</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px">
-              <div style="width:32px;height:32px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#1A3A8F;font-size:14px">4</div>
-              <div>
-                <div style="font-weight:700;color:var(--text);font-size:14px">Photo of Business Premises</div>
-                <div style="font-size:12px;color:var(--sub);margin-top:2px">A clear photo of the outside of your business showing the building and any signage. If you operate from home, a photo of your workspace is acceptable.</div>
-              </div>
-            </div>
-          </div>
-
-          <h2>Tips for Good Photos</h2>
-          <ul>
-            <li>Take photos in good lighting — all text must be clearly readable</li>
-            <li>Lay documents flat on a surface and photograph from directly above</li>
-            <li>Do not crop, edit, or filter any document photos</li>
-            <li>Make sure the full document is visible — no cut-off edges</li>
-          </ul>
-
-          <h2>How to Apply</h2>
-          <ol>
-            <li>Send all four photos to us on WhatsApp: <strong>+971 589 772 645</strong></li>
-            <li>Include your PaMarket account email in the message</li>
-            <li>Our team will review your documents within <strong>2 business days</strong></li>
-            <li>You will receive a message confirming approval or requesting corrections</li>
-            <li>Once approved, your Verified badge appears automatically on your profile and listings</li>
-          </ol>
-
-          <h2>Important Rules</h2>
-          <ul>
-            <li>All documents must be genuine and unaltered. Submitting fake or edited documents is a serious offence and will result in a permanent ban and may be reported to authorities.</li>
-            <li>Verification is tied to your PaMarket account — it cannot be transferred.</li>
-            <li>PaMarket reserves the right to remove verification if your business status changes or if you violate our Terms of Service.</li>
-          </ul>
-
-          <div style="background:var(--bg2,#F5F6FA);border-radius:12px;padding:16px;margin-top:8px;text-align:center">
-            <div style="font-size:13px;color:var(--sub);margin-bottom:8px">Ready to get verified?</div>
-            <div style="font-size:15px;font-weight:700;color:var(--text)">WhatsApp us: +971 589 772 645</div>
-            <div style="font-size:12px;color:var(--sub);margin-top:4px">or email: chakusaprince@gmail.com</div>
-          </div>
-
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:22px;padding:24px 20px;margin:14px 0 16px;text-align:center;color:#fff;box-shadow:0 10px 28px rgba(26,58,143,.28)">
+          <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#F5A623" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+          <div style="font-size:19px;font-weight:800">Get Verified</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.82);margin-top:4px;line-height:1.5">Earn a blue badge that builds trust — done entirely in the app, reviewed by our team.</div>
         </div>
+
+        ${card(`
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <div style="width:38px;height:38px;border-radius:11px;background:rgba(26,58,143,.08);color:#1A3A8F;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div style="font-size:16px;font-weight:800;color:var(--text)">Personal Verification</div>
+          </div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6">Confirms you're a real person and gives sellers a blue ✓ badge — buyers trust verified sellers more.</div>
+          ${step(1, 'Open <b>Account → Verify Identity</b>')}
+          ${step(2, 'Enter your ID number, then <b>Take Selfie</b> and add a photo of your ID (or tap Upload)')}
+          ${step(3, 'Submit — our team reviews within <b>24 hours</b> and your badge appears automatically')}
+        `)}
+
+        ${card(`
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <div style="width:38px;height:38px;border-radius:11px;background:rgba(26,58,143,.08);color:#1A3A8F;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div style="font-size:16px;font-weight:800;color:var(--text)">Business Verification</div>
+          </div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6">Required to post jobs. Verified companies show a blue ✓ on their listings. Open <b>Post a Job → Verify My Company</b> and submit these four documents:</div>
+          <div style="margin-top:10px">
+            ${doc(1, 'Certificate of Incorporation / Business Registration', 'Issued by CIPC — proves your business is legally registered.')}
+            ${doc(2, "Owner / Director's National ID or Passport", 'Must match the name on the registration documents.')}
+            ${doc(3, 'Tax Clearance Certificate', 'Current & valid, issued by ZIMRA.')}
+            ${doc(4, 'Photo of Business Premises', 'Exterior showing signage (a home workspace is acceptable).')}
+          </div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-top:10px">Reviewed within <b>2 business days</b>.</div>
+        `)}
+
+        ${card(`
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px">Tips for clear photos</div>
+          <ul style="margin:0;padding-left:18px;font-size:13px;color:var(--sub);line-height:1.7">
+            <li>Use good lighting — all text must be readable</li>
+            <li>Lay documents flat and shoot straight from above</li>
+            <li>Don't crop, edit or filter document photos</li>
+            <li>Keep the whole document in frame — no cut-off edges</li>
+          </ul>
+        `)}
+
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:14px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#dc2626" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div style="font-size:12.5px;color:#991b1b;line-height:1.55"><b>Use genuine documents only.</b> Submitting fake or edited documents is a serious offence — it leads to a permanent ban and may be reported to the authorities. Verification is tied to your account and can't be transferred.</div>
+        </div>
+
+        <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--sub);line-height:1.6">Need help? WhatsApp <b>+971 589 772 645</b> or email chakusaprince@gmail.com</div>
+
       </div>
     </div>`;
   };
@@ -12395,6 +16286,12 @@ pages.HelpCommunity = function () {
           </a>
         </div>
 
+        ${sec('Follow Us')}
+        <div style="font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.6">Stay updated with the latest listings, deals and news from PaMarket Zimbabwe.</div>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          ${H._socialLinks ? H._socialLinks() : ''}
+        </div>
+
         <div style="text-align:center;padding:32px 0 8px">
           <div style="font-size:12px;color:var(--sub)">© ${year} PaMarket · Made in Zimbabwe 🇿🇼</div>
           <div style="font-size:11px;color:var(--text-hint,#bbb);margin-top:4px">Version 2.0.0 · Built with care for Zimbabwe</div>
@@ -12541,7 +16438,7 @@ H.pages.LegalHub = function() {
   // -- CHAT SPAM DETECTION ------------------------------------
   H.isChatSpam = function (convoId, userId) {
     const c = (H.state.conversations || []).find(x => x.id === convoId);
-    if (!c) return false;
+    if (!c || !Array.isArray(c.messages)) return false;
     const last10s = Date.now() - 10000;
     const recent = c.messages.filter(m => m.from === userId && m.t > last10s).length;
     return recent >= 5;
@@ -12607,6 +16504,7 @@ H.pages.LegalHub = function() {
     if (fp) {
       fp.querySelectorAll('select').forEach(function (s) { s.value = ''; });
       fp.querySelectorAll('input[type=number],input[type=text]').forEach(function (i) { i.value = ''; });
+      fp.querySelectorAll('.flt-pill.on').forEach(function (b) { b.classList.remove('on'); });
     }
     H._applyFilters(catId);
   };
@@ -12635,15 +16533,24 @@ H.pages.LegalHub = function() {
     if (f.furnishing && f.furnishing !== 'all') all = all.filter(function (l) { return (l.furnishing || '').toLowerCase() === f.furnishing; });
     if (f.propType && f.propType !== 'all') all = all.filter(function (l) { return (l.propType || '').toLowerCase() === f.propType; });
     if (f.rentalType && f.rentalType !== 'all') all = all.filter(function (l) { return (l.rentalType || '').toLowerCase() === f.rentalType; });
-    if (f.beds && f.beds !== 'any') all = all.filter(function (l) { return +(l.beds || 0) >= +f.beds; });
+    if (f.beds && f.beds !== 'any') {
+      if (f.beds === 'studio') all = all.filter(function (l) { return String(l.beds || '').toLowerCase() === 'studio' || +(l.beds || 0) === 0; });
+      else all = all.filter(function (l) { return String(l.beds).toLowerCase() !== 'studio' && +(l.beds || 0) >= +f.beds; });
+    }
     if (f.baths && f.baths !== 'any') all = all.filter(function (l) { return +(l.baths || 0) >= +f.baths; });
     if (f.subcat && f.subcat !== 'all') all = all.filter(function (l) { return (l.subcat || l.type || '').toLowerCase() === f.subcat; });
     if (f.brand) all = all.filter(function (l) { return (l.brand || l.make || '').toLowerCase().includes(f.brand.toLowerCase()); });
     if (f.gender && f.gender !== 'all') all = all.filter(function (l) { return (l.gender || '').toLowerCase() === f.gender; });
     if (f.size && f.size !== 'all') all = all.filter(function (l) { return (l.size || '').toLowerCase() === f.size; });
-    if (f.fuelType && f.fuelType !== 'all') all = all.filter(function (l) { return (l.fuelType || '').toLowerCase() === f.fuelType; });
+    if (f.sizeMin) all = all.filter(function (l) { return +(l.size || 0) >= +f.sizeMin; });
+    if (f.sizeMax) all = all.filter(function (l) { return +(l.size || 0) > 0 && +(l.size || 0) <= +f.sizeMax; });
+    if (f.fuelType && f.fuelType !== 'all') all = all.filter(function (l) { return (l.fuel || l.fuelType || '').toLowerCase() === f.fuelType; });
     if (f.yearMin) all = all.filter(function (l) { return +(l.year || 0) >= +f.yearMin; });
     if (f.yearMax) all = all.filter(function (l) { return +(l.year || 9999) <= +f.yearMax; });
+    if (Array.isArray(f.amenities) && f.amenities.length) all = all.filter(function (l) {
+      var feats = Array.isArray(l.features) ? l.features : ((l.attrs && Array.isArray(l.attrs.features)) ? l.attrs.features : []);
+      return f.amenities.every(function (a) { return feats.indexOf(a) !== -1; });
+    });
 
     var sort = f.sort || 'newest';
     all.sort(function (a, b) {
@@ -12653,27 +16560,15 @@ H.pages.LegalHub = function() {
       return b.createdAt - a.createdAt;
     });
 
-    var spotlightHtml = (function(){
-      var now = Date.now();
-      var spot = (H.state.paidAds||[]).find(function(a){
-        return a.type==='spotlight' && a.active && a.endsAt > now && (a.targetCat===catId || a.targetCat===baseCat);
-      });
-      if (!spot) return '';
-      if(H.trackAdImpression) H.trackAdImpression(spot.id);
-      var tap = spot.linkUrl ? 'onclick="H.trackAdClick(' + JSON.stringify(spot.id) + ',' + JSON.stringify(spot.linkUrl) + ')"' : '';
-      return '<div ' + tap + ' style="display:flex;align-items:center;gap:14px;background:' + H.escHtml(spot.bgColor||'#EFF6FF') + ';border:1.5px solid ' + H.escHtml(spot.borderColor||'rgba(26,58,143,0.2)') + ';border-radius:14px;padding:14px 16px;margin-bottom:12px;cursor:' + (spot.linkUrl?'pointer':'default') + ';position:relative">'
-        + (spot.imageUrl ? '<img src="' + H.escHtml(spot.imageUrl) + '" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0" onerror="this.onerror=null;this.style.display=\'none\'">' : '')
-        + '<div style="flex:1;min-width:0">'
-        + '<div style="font-size:14px;font-weight:800;color:#1A3A8F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(spot.businessName) + '</div>'
-        + (spot.tagline ? '<div style="font-size:12px;color:var(--sub);margin-top:2px">' + H.escHtml(spot.tagline) + '</div>' : '')
-        + '</div>'
-        + '<span style="font-size:9px;font-weight:700;color:#1A3A8F;background:rgba(26,58,143,0.1);padding:2px 6px;border-radius:6px;flex-shrink:0">SPONSORED</span>'
-        + '</div>';
-    })();
+    // Sponsored carousel — ads targeting this category (banner or spotlight).
+    var spotlightHtml = (H.adCarousel && H.activeAds)
+      ? H.adCarousel(H.activeAds(baseCat), { heading: false })
+      : '';
 
     el.innerHTML = all.length
       ? spotlightHtml + '<div class="listing-list">' + all.map(H.renderListCard).join('') + '</div>'
       : spotlightHtml + H.emptyState('No listings match', 'Try adjusting your filters', null, null);
+    if (H._initAdCarousels) H._initAdCarousels();
 
     var cnt = document.getElementById('cc_' + catId);
     if (cnt) cnt.textContent = all.length + ' listing' + (all.length !== 1 ? 's' : '');
@@ -12701,12 +16596,71 @@ H.pages.LegalHub = function() {
   };
 
   H._priceRange = function (id) {
-    return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
-      + '<div><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Min Price ($)</div>'
-      + '<input type="number" min="0" placeholder="0" oninput="H._setFilter(\'' + id + '\',\'priceMin\',this.value)" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none;box-sizing:border-box"></div>'
-      + '<div><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Max Price ($)</div>'
-      + '<input type="number" min="0" placeholder="Any" oninput="H._setFilter(\'' + id + '\',\'priceMax\',this.value)" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--bg);color:var(--text);outline:none;box-sizing:border-box"></div>'
-      + '</div>';
+    return '<div class="flt-section"><div class="flt-label">Price Range (USD)</div>'
+      + '<div class="flt-range">'
+      + '<div class="flt-range-in"><span class="pre">$</span><input type="number" min="0" placeholder="Min" oninput="H._setFilter(\'' + id + '\',\'priceMin\',this.value)"></div>'
+      + '<span class="flt-range-sep">to</span>'
+      + '<div class="flt-range-in"><span class="pre">$</span><input type="number" min="0" placeholder="Max" oninput="H._setFilter(\'' + id + '\',\'priceMax\',this.value)"></div>'
+      + '</div></div>';
+  };
+
+  // Area / Size range in m² (Zim standard).
+  H._sizeRange = function (id) {
+    return '<div class="flt-section"><div class="flt-label">Area / Size (m²)</div>'
+      + '<div class="flt-range">'
+      + '<div class="flt-range-in"><input type="number" min="0" placeholder="Min" oninput="H._setFilter(\'' + id + '\',\'sizeMin\',this.value)"><span class="suf">m²</span></div>'
+      + '<span class="flt-range-sep">to</span>'
+      + '<div class="flt-range-in"><input type="number" min="0" placeholder="Max" oninput="H._setFilter(\'' + id + '\',\'sizeMax\',this.value)"><span class="suf">m²</span></div>'
+      + '</div></div>';
+  };
+
+  // Year range (vehicles).
+  H._yearRange = function (id) {
+    return '<div class="flt-section"><div class="flt-label">Year</div>'
+      + '<div class="flt-range">'
+      + '<div class="flt-range-in"><input type="number" min="1960" max="2030" placeholder="From" oninput="H._setFilter(\'' + id + '\',\'yearMin\',this.value)"></div>'
+      + '<span class="flt-range-sep">to</span>'
+      + '<div class="flt-range-in"><input type="number" min="1960" max="2030" placeholder="To" oninput="H._setFilter(\'' + id + '\',\'yearMax\',this.value)"></div>'
+      + '</div></div>';
+  };
+
+  // Selectable pill row (single-select). opts: array of value or [value,label].
+  H._pills = function (id, key, label, opts) {
+    return '<div class="flt-section"><div class="flt-label">' + label + '</div><div class="flt-pills" data-pillkey="' + key + '">'
+      + opts.map(function (o) {
+        var v = Array.isArray(o) ? o[0] : o, t = Array.isArray(o) ? o[1] : o;
+        return '<button type="button" class="flt-pill" onclick="H._setPill(\'' + id + '\',\'' + key + '\',\'' + H.escHtml(v) + '\',this)">' + H.escHtml(t) + '</button>';
+      }).join('')
+      + '</div></div>';
+  };
+
+  H._setPill = function (id, key, val, btn) {
+    var f = H._filters[id] = H._filters[id] || {};
+    var group = btn.parentNode;
+    if (f[key] === val) { f[key] = ''; btn.classList.remove('on'); }
+    else { f[key] = val; group.querySelectorAll('.flt-pill').forEach(function (b) { b.classList.remove('on'); }); btn.classList.add('on'); }
+    H._applyFilters(id);
+  };
+
+  // Amenity multi-select chips, drawn from the category's attribute schema.
+  H._amenityFilter = function (id, cat) {
+    var schema = (H.CATEGORY_ATTRS && H.CATEGORY_ATTRS[cat]) || [];
+    var field = schema.filter(function (x) { return x.type === 'chips'; })[0];
+    if (!field) return '';
+    return '<div class="flt-section"><div class="flt-label">' + H.escHtml(field.label) + '</div><div class="flt-pills flt-amenities">'
+      + field.options.map(function (o) {
+        return '<button type="button" class="flt-pill" onclick="H._toggleAmenity(\'' + id + '\',\'' + H.escHtml(o) + '\',this)">' + H.escHtml(o) + '</button>';
+      }).join('')
+      + '</div></div>';
+  };
+
+  H._toggleAmenity = function (id, val, btn) {
+    var f = H._filters[id] = H._filters[id] || {};
+    f.amenities = f.amenities || [];
+    var i = f.amenities.indexOf(val);
+    if (i >= 0) { f.amenities.splice(i, 1); btn.classList.remove('on'); }
+    else { f.amenities.push(val); btn.classList.add('on'); }
+    H._applyFilters(id);
   };
 
   H._citysel = function (id) {
@@ -12754,16 +16708,58 @@ H.pages.LegalHub = function() {
   };
 
   // ── Override filterByCat for all 12 categories ────────────
+  var CAT_PAGE = {
+    property: 'Property', vehicles: 'Vehicles', rooms: 'Rooms',
+    electronics: 'Electronics', furniture: 'Furniture', fashion: 'Fashion',
+    services: 'Services', jobs: 'Jobs', agriculture: 'Agriculture',
+    pets: 'Pets', kids: 'Kids', other: 'Other'
+  };
+
+  // Open the listing page for a category (optionally pre-filtered by subcategory).
+  H._openCatPage = function (cid, subKey) {
+    function setF(fid) { H._filters[fid] = H._filters[fid] || {}; if (subKey) H._filters[fid].subcat = subKey; else delete H._filters[fid].subcat; }
+    setF(cid);
+    if (cid === 'property') { setF('property_sale'); setF('property_rent'); }
+    var page = CAT_PAGE[cid];
+    if (page) H.openInner(page, { cid: cid });
+    else H.openInner('CategoryView', { cid: cid });
+  };
+
+  // Tapping a category on Home: show its subcategory list first (if it has one),
+  // otherwise jump straight to the listing page.
   H.filterByCat = function (cid) {
-    var map = {
-      property: 'Property', vehicles: 'Vehicles', rooms: 'Rooms',
-      electronics: 'Electronics', furniture: 'Furniture', fashion: 'Fashion',
-      services: 'Services', jobs: 'Jobs', agriculture: 'Agriculture',
-      pets: 'Pets', kids: 'Kids', other: 'Other'
-    };
-    var page = map[cid];
-    if (page) { H.openInner(page, { cid: cid }); }
-    else { H.openInner('CategoryView', { cid: cid }); }
+    if (cid === 'jobs') { H.openInner('JobIntent'); return; }
+    if (H.SUBCATEGORIES && H.SUBCATEGORIES[cid] && H.SUBCATEGORIES[cid].length) {
+      H.openInner('SubCat', { cid: cid });
+    } else {
+      H._openCatPage(cid, null);
+    }
+  };
+
+  H._catColor = function (cid) {
+    return ({ property:'#1A3A8F', vehicles:'#e53935', rooms:'#00838F', electronics:'#3949AB',
+      furniture:'#6D4C41', fashion:'#E91E63', services:'#00897B', agriculture:'#388E3C',
+      pets:'#8E24AA', kids:'#FB8C00', jobs:'#546E7A', other:'#546E7A' }[cid]) || '#1A3A8F';
+  };
+
+  // ── Subcategory picker (PaMarket's own drill-down) ──
+  H.pages.SubCat = function (params) {
+    var cid = params && params.cid;
+    var cat = (H.CATEGORIES || []).filter(function (c) { return c.id === cid; })[0];
+    var subs = (H.SUBCATEGORIES && H.SUBCATEGORIES[cid]) || [];
+    var name = cat ? cat.name : 'Browse';
+    var color = H._catColor(cid);
+    var chev = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+    var check = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="' + color + '" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var rows = '<button class="subcat-row subcat-all" onclick="H._openCatPage(\'' + cid + '\',null)">'
+      + '<span>All in ' + H.escHtml(name) + '</span>' + check + '</button>';
+    rows += subs.map(function (s) {
+      return '<button class="subcat-row" onclick="H._openCatPage(\'' + cid + '\',\'' + H.escHtml(s.key) + '\')">'
+        + '<span>' + H.escHtml(s.label) + '</span>' + chev + '</button>';
+    }).join('');
+    return '<div class="page active">'
+      + H.innerTopbar(name)
+      + '<div class="subcat-list">' + rows + '</div></div>';
   };
 
   // legacy compat
@@ -12827,7 +16823,7 @@ H.pages.LegalHub = function() {
 
     var f = H._sel('pets', 'subcat', 'Pet Type', [['all', 'All'], ['dogs', 'Dogs'], ['cats', 'Cats'], ['birds', 'Birds'], ['fish', 'Fish & Aquatic'], ['rabbits', 'Rabbits & Small Animals'], ['reptiles', 'Reptiles'], ['livestock', 'Livestock'], ['other', 'Other']])
       + H._txtInput('pets', 'brand', 'Breed', 'e.g. German Shepherd, Persian Cat')
-      + H._citysel('pets') + H._priceRange('pets') + H._sortsel('pets');
+      + H._priceRange('pets') + H._citysel('pets') + H._amenityFilter('pets', 'pets') + H._sortsel('pets');
 
     return '<div class="page active">'
       + H._catTopbar('Pets', '#FB8C00')
@@ -12961,6 +16957,7 @@ H.pages.LegalHub = function() {
     } catch(e) { console.warn('OAuth login handler:', e); }
   }
 
+  if (window.supabase && window.supabase.auth && typeof window.supabase.auth.onAuthStateChange === 'function')
   window.supabase.auth.onAuthStateChange(async function(event, session) {
     // Password reset link clicked — show the set-new-password form
     if (event === 'PASSWORD_RECOVERY') {
@@ -13013,6 +17010,12 @@ H.pages.LegalHub = function() {
             views: 0, company: row.company || null
           });
           if (typeof window.H.saveState === 'function') window.H.saveState();
+          // Instantly reflect the new listing on Home without manual refresh
+          if (window.H.currentPageName === 'Home' && !document.hidden &&
+              typeof window.H.renderPage === 'function' &&
+              !(window.H._userIsTyping && window.H._userIsTyping())) {
+            window.H.renderPage('Home');
+          }
         }
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'listings' }, function(payload) {
@@ -13020,16 +17023,21 @@ H.pages.LegalHub = function() {
         if (!id || !window.H || !window.H.state) return;
         window.H.state.listings = (window.H.state.listings || []).filter(function(l){ return l.id !== id; });
         if (typeof window.H.saveState === 'function') window.H.saveState();
+        if (window.H.currentPageName === 'Home' && !document.hidden && typeof window.H.renderPage === 'function' && !(window.H._userIsTyping && window.H._userIsTyping()))
+          window.H.renderPage('Home');
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'listings' }, function(payload) {
         var row = payload.new;
         if (!row || !window.H || !window.H.state) return;
         var l = (window.H.state.listings || []).find(function(x){ return x.id === row.id; });
         if (l) {
+          var statusChanged = row.status && row.status !== l.status;
           l.status = row.status || l.status;
           l.title  = row.title  || l.title;
           l.price  = row.price  != null ? row.price : l.price;
           if (typeof window.H.saveState === 'function') window.H.saveState();
+          if (statusChanged && window.H.currentPageName === 'Home' && !document.hidden && typeof window.H.renderPage === 'function' && !(window.H._userIsTyping && window.H._userIsTyping()))
+            window.H.renderPage('Home');
         }
       })
       .subscribe();
@@ -13051,5 +17059,50 @@ H.pages.LegalHub = function() {
         }
       })
       .subscribe();
+
+    // Businesses channel — new shops and status changes appear immediately on Home
+    sb.channel('rt-businesses')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'businesses' }, function(payload) {
+        var row = payload.new;
+        if (!row || !window.H || !window.H.state || row.status !== 'active') return;
+        var existing = (window.H.state.businesses || []).find(function(b) { return b.id === row.id; });
+        if (!existing) {
+          window.H.state.businesses = window.H.state.businesses || [];
+          window.H.state.businesses.push({ id: row.id, ownerUserId: row.owner_user_id, name: row.name || '', logo: row.logo || null, cover: row.cover || null, description: row.description || '', bizType: row.biz_type || 'individual', category: row.category || '', phone: row.phone || '', whatsapp: row.whatsapp || '', email: row.email || '', province: row.province || '', city: row.city || '', suburb: row.suburb || '', status: row.status, verificationLevel: row.verification_level || 0 });
+          if (typeof window.H.saveState === 'function') window.H.saveState();
+          if (window.H.currentPageName === 'Home' && !document.hidden && typeof window.H.renderPage === 'function' && !(window.H._userIsTyping && window.H._userIsTyping())) window.H.renderPage('Home');
+        }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'businesses' }, function(payload) {
+        var row = payload.new;
+        if (!row || !window.H || !window.H.state) return;
+        var biz = (window.H.state.businesses || []).find(function(b) { return b.id === row.id; });
+        if (biz) {
+          biz.name = row.name || biz.name; biz.status = row.status || biz.status;
+          biz.logo = row.logo != null ? row.logo : biz.logo;
+          biz.category = row.category || biz.category;
+          biz.verificationLevel = row.verification_level != null ? row.verification_level : biz.verificationLevel;
+          if (typeof window.H.saveState === 'function') window.H.saveState();
+          if (window.H.currentPageName === 'Home' && !document.hidden && typeof window.H.renderPage === 'function' && !(window.H._userIsTyping && window.H._userIsTyping())) window.H.renderPage('Home');
+        }
+      })
+      .subscribe();
+
+    // Capacitor foreground event — delegate to H.RM which handles all pages
+    try {
+      var CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+      if (CapApp && typeof CapApp.addListener === 'function') {
+        CapApp.addListener('appStateChange', function(state) {
+          if (!window.H) return;
+          if (state.isActive) {
+            if (window.H.RM && typeof window.H.RM.resume === 'function') {
+              window.H.RM.resume();
+            }
+          } else {
+            if (window.H.RM) window.H.RM._appActive = false;
+          }
+        });
+      }
+    } catch(e) {}
   };
 })();
