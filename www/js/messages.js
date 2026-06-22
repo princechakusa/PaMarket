@@ -292,8 +292,8 @@
         return (bm.t || 0) - (am.t || 0);
       });
 
-    const personalConvs = allConvs.filter(function (c) { return !c.businessId; });
-    const bizConvs      = allConvs.filter(function (c) { return !!c.businessId; });
+    const personalConvs = allConvs.filter(function (c) { return !c.businessId && !(typeof c.id === 'string' && c.id.indexOf('biz_') === 0); });
+    const bizConvs      = allConvs.filter(function (c) { return !!c.businessId || (typeof c.id === 'string' && c.id.indexOf('biz_') === 0); });
     const personalUnread = personalConvs.reduce((s, c) => s + (c.messages || []).filter(m => m.from !== u.id && !m.read).length, 0);
     const bizUnread      = bizConvs.reduce((s, c) => s + (c.messages || []).filter(m => m.from !== u.id && !m.read).length, 0);
     const hasBizTab      = bizConvs.length > 0 || myBizIds.size > 0;

@@ -1817,11 +1817,24 @@ window.H = {
             let local = H.state.conversations.find(x => x.id === c.id);
             if (!local) {
               local = { id: c.id, members: c.members || [], listingId: c.listing_id || null, messages: [] };
+              // biz_ conv IDs encode the business ID suffix — restore businessId so the
+              // owner sees these threads in the Business tab, not the Personal tab.
+              if (typeof c.id === 'string' && c.id.indexOf('biz_') === 0) {
+                const _bs = c.id.slice(4, 12);
+                const _bm = (H.state.businesses || []).find(function(b) { return b.id && String(b.id).slice(-8) === _bs; });
+                if (_bm) local.businessId = _bm.id;
+              }
               H.state.conversations.push(local);
               changed = true;
             } else {
               const m = Array.isArray(c.members) ? c.members : [];
               if (JSON.stringify(local.members||[]) !== JSON.stringify(m)) { local.members = m; changed = true; }
+              // Backfill businessId for existing convs synced before this fix
+              if (!local.businessId && typeof local.id === 'string' && local.id.indexOf('biz_') === 0) {
+                const _bs = local.id.slice(4, 12);
+                const _bm = (H.state.businesses || []).find(function(b) { return b.id && String(b.id).slice(-8) === _bs; });
+                if (_bm) { local.businessId = _bm.id; changed = true; }
+              }
             }
           }
         }
@@ -1867,6 +1880,45 @@ window.H = {
           changed = true;
         }
       } catch(e) { /* messages table scan failed */ }
+
+      // Phase 2b: discover biz_ conversations for businesses this user OWNS.
+      // biz_ conv IDs embed the business ID suffix, NOT the owner's user ID suffix,
+      // so the uidSuffix LIKE query above never finds them for the shop owner.
+      // Phase 1 (conversations table) is the primary path; this is the fallback when
+      // ensureConversationInCloud failed or the conversations table is unavailable.
+      try {
+        const myBizSuffixes = (H.state.businesses || [])
+          .filter(function(b) { return b.ownerUserId === u.id; })
+          .map(function(b) { return String(b.id).slice(-8); });
+        if (myBizSuffixes.length) {
+          const bizResults = await Promise.all(myBizSuffixes.map(function(suffix) {
+            return sb.from('messages')
+              .select('conversation_id,sender_id,sender_name,created_at')
+              .like('conversation_id', 'biz_' + suffix + '_%')
+              .neq('sender_id', u.id)
+              .order('created_at', {ascending: false})
+              .limit(100)
+              .catch(function() { return { data: [] }; });
+          }));
+          for (const res of bizResults) {
+            for (const row of (res.data || [])) {
+              if (!row.conversation_id || knownIds.has(row.conversation_id)) continue;
+              if (deletedIds.has(row.conversation_id)) continue;
+              knownIds.add(row.conversation_id);
+              const _bs = row.conversation_id.slice(4, 12);
+              const _bm = (H.state.businesses || []).find(function(b) { return b.id && String(b.id).slice(-8) === _bs; });
+              H.state.conversations.push({
+                id: row.conversation_id,
+                members: [row.sender_id, u.id],
+                listingId: null,
+                messages: [],
+                businessId: _bm ? _bm.id : undefined
+              });
+              changed = true;
+            }
+          }
+        }
+      } catch(e) { /* biz_ owner scan failed */ }
 
       // Phase 3 (profile fetch) runs AFTER Phase 4 (message sync) so that messages
       // are loaded first — this ensures we have all sender_id values needed to populate

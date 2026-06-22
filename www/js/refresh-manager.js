@@ -204,8 +204,10 @@
     _poll: function (name, params, force) {
       var c = _cfg[name];
       if (!c) return;
+      if (H.RT && H.RT._log) H.RT._log('pipeline', '[poll] fetch start', { page: name, force: !!force });
       var before = c.sig(params);
       c.fetch(params).then(function () {
+        if (H.RT && H.RT._log) H.RT._log('pipeline', '[poll] fetch done', { page: name, changed: c.sig(params) !== before });
         if (RM._current !== name || H.currentPageName !== name) return;
         if (!RM._appActive || document.hidden) return;
         if (RM._inBgRender) return;
@@ -220,6 +222,7 @@
     _renderPreserved: function (name, params) {
       if (RM._inBgRender) return;
       RM._inBgRender = true;
+      if (H.RT && H.RT._log) H.RT._log('pipeline', '[4] render started', { page: name });
       var area = document.getElementById('mainArea');
       var scrollTop = area ? area.scrollTop : 0;
       var focused  = document.activeElement;
@@ -231,6 +234,7 @@
 
       function _restore() {
         RM._inBgRender = false;
+        if (H.RT && H.RT._log) H.RT._log('pipeline', '[5] render completed', { page: name });
         if (area) area.scrollTop = scrollTop;
         if (fId) {
           var el = document.getElementById(fId);

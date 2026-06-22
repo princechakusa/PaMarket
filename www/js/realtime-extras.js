@@ -277,12 +277,16 @@
   H.RT._backoffAttempt   = 0;
 
   // Minimal structured logger. No-ops unless H.RT.debug = true.
+  // Enable from the browser/logcat console: H.RT.debug = true
   // Log format: [RT:category] message  data
-  H.RT.debug = false;
+  H.RT.debug = !!(typeof localStorage !== 'undefined' && localStorage.getItem('pmRtDebug') === '1');
   H.RT._log = function (cat, msg, data) {
     if (!H.RT.debug) return;
     try { console.log('[RT:' + cat + ']', msg, data !== undefined ? data : ''); } catch (e) {}
   };
+  // H.RT.enableDebug() / H.RT.disableDebug() — run in console to toggle without refreshing
+  H.RT.enableDebug  = function () { H.RT.debug = true;  try { localStorage.setItem('pmRtDebug', '1'); } catch(e) {} console.log('[RT] debug ON — watching pipeline'); };
+  H.RT.disableDebug = function () { H.RT.debug = false; try { localStorage.removeItem('pmRtDebug');    } catch(e) {} console.log('[RT] debug OFF'); };
 
   H.RT._setState = function (s) {
     if (H.RT._state !== s) {
@@ -472,6 +476,7 @@
   // ===================================================================
   H.applyFeedUpdate = function (payload, source) {
     if (!payload) return;
+    H.RT._log('pipeline', '[1] event received', { type: payload.type, evt: payload.evt, source: source, id: (payload.data && payload.data.id) || payload.id });
     H.state.listings   = H.state.listings   || [];
     H.state.businesses = H.state.businesses || [];
     var type = payload.type;
@@ -513,6 +518,7 @@
           delete H._rtInsertWindow[mapped.id];
         }
       }
+      H.RT._log('pipeline', '[2] data merged', { type: type, evt: evt, listings: H.state.listings.length });
       H.saveState && H.saveState();
 
     // ── Full listings result from server (poll / startup) ───────────────────────
@@ -564,6 +570,7 @@
 
       H.state.listings = rtSafe.concat(cloud).concat(nonActive);
       H.RT._log('feed', 'listings_full applied', { server: cloud.length, rtSafe: rtSafe.length, nonActive: nonActive.length });
+      H.RT._log('pipeline', '[2] data merged', { type: 'listings_full', total: H.state.listings.length });
       H.saveState && H.saveState();
       if (typeof H._pruneCache === 'function') H._pruneCache('listings');
 
@@ -639,6 +646,7 @@
       });
 
       H.RT._log('feed', 'businesses_full applied', { count: bcloud.length });
+      H.RT._log('pipeline', '[2] data merged', { type: 'businesses_full', total: H.state.businesses.length });
       H.saveState && H.saveState();
       if (typeof H._pruneCache === 'function') H._pruneCache('businesses');
     }
@@ -666,6 +674,7 @@
     var capturedParams = H.currentPageParams;
     var capturedEpoch  = H._navEpoch;
 
+    H.RT._log('pipeline', '[3] render queued', { page: capturedPage, epoch: capturedEpoch });
     H.RT._log('render', 'scheduled', { page: capturedPage, epoch: capturedEpoch });
 
     clearTimeout(H._renderBatchTimer);
