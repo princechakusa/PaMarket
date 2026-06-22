@@ -1559,6 +1559,19 @@ window.H = {
             const ex=conv.messages.find(m=>m.id===msg.id);
             if(!ex){
               const localMsg = {id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,image:msg.image||null,t:new Date(msg.created_at).getTime(),read:false};
+              // Keep membership accurate so the chat resolves the correct "other"
+              // user: a real incoming sender that isn't us must be a member.
+              if (!Array.isArray(conv.members)) conv.members = [];
+              if (msg.sender_id && msg.sender_id !== H.state.currentUserId && conv.members.indexOf(msg.sender_id) === -1) {
+                conv.members.push(msg.sender_id);
+              }
+              // A biz_ conversation must carry its businessId so it stays in the
+              // Business tab and never leaks into personal chats.
+              if (!conv.businessId && typeof conv.id === 'string' && conv.id.indexOf('biz_') === 0) {
+                const _bs = conv.id.slice(4, 12);
+                const _bm = (H.state.businesses || []).find(function(b){ return b.id && String(b.id).slice(-8) === _bs; });
+                if (_bm) conv.businessId = _bm.id;
+              }
               conv.messages.push(localMsg);
               H.saveState();
               // Update bottom nav badge immediately without waiting for the 5 s interval
