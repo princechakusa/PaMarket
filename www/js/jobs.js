@@ -29,52 +29,49 @@
     return found ? found.slice(key.length + 1).trim() : '';
   }
 
+  function _jobLogo(logoSrc, initials, size) {
+    var s = size || 44;
+    return '<div style="width:' + s + 'px;height:' + s + 'px;min-width:' + s + 'px;border-radius:10px;flex-shrink:0;background:#EEF2FB;display:flex;align-items:center;justify-content:center;font-size:' + Math.round(s * 0.34) + 'px;font-weight:800;color:#1A3A8F;border:1px solid #E8ECF4;overflow:hidden">'
+      + (logoSrc ? '<img src="' + logoSrc + '" style="width:' + s + 'px;height:' + s + 'px;max-width:' + s + 'px;max-height:' + s + 'px;object-fit:cover;display:block" onerror="this.parentNode.innerHTML=\'' + H.escHtml(initials) + '\'">' : H.escHtml(initials))
+      + '</div>';
+  }
+
   function jobCard(l) {
-    var lines = (l.desc || '').split('\n');
+    var lines    = (l.desc || '').split('\n');
     var company  = l.company || l.sellerName || parseLine(lines, 'COMPANY') || 'Company';
     var jobType  = parseLine(lines, 'JOB TYPE') || '';
     var salary   = parseLine(lines, 'SALARY') || 'Negotiable';
     var seller   = (H.state.users || []).find(function(u){ return u.id === l.sellerId; });
-    var coVerified = seller && (seller.companyVerified || seller.verified);
-    var _sellerBiz = (H.state.businesses || []).find(function(b){ return b.ownerUserId === l.sellerId && b.status === 'active'; });
-    var _logoSrc = (_sellerBiz && _sellerBiz.logo) || (seller && seller.avatar) || '';
-    var initials = company.split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase() || 'JB';
-    var logoHtml = '<div style="width:52px;height:52px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;color:#fff;border:1.5px solid var(--border);overflow:hidden">'
-      + (_logoSrc ? '<img src="' + _logoSrc + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">' : '')
-      + (_logoSrc ? '' : initials)
-      + '</div>';
-    var verBadge = coVerified ? '<span style="display:inline-flex;align-items:center;background:#EAF7EF;color:#0f7a3d;font-size:10px;font-weight:800;padding:2px 6px;border-radius:10px">&#10003; Verified</span>' : '';
-    var apps = (H.state.applications || []).filter(function(a){ return a.jobId === l.id; });
+    var sellerBiz = (H.state.businesses || []).find(function(b){ return b.ownerUserId === l.sellerId && b.status === 'active'; });
+    var logoSrc  = (sellerBiz && sellerBiz.logo) || (seller && seller.avatar) || '';
+    var initials = company.split(' ').slice(0,2).map(function(w){ return w[0] || ''; }).join('').toUpperCase() || 'JB';
+    var apps     = (H.state.applications || []).filter(function(a){ return a.jobId === l.id; });
     var appCount = apps.length;
-    var u = H.currentUser();
-    var alreadyApplied = u && apps.some(function(a){ return a.applicantId === u.id; });
-    var salaryColor = salary === 'Negotiable' ? '#888' : '#15803d';
-    var applyBtn = alreadyApplied
-      ? '<span style="font-size:11px;font-weight:700;color:#15803d;display:inline-flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Applied</span>'
-      : '<button onclick="event.stopPropagation();H._applyToJob(\'' + l.id + '\')" style="background:#1A3A8F;color:#fff;font-size:12px;font-weight:700;padding:7px 14px;border-radius:20px;border:none;cursor:pointer;font-family:inherit">Easy Apply</button>';
+    var u        = H.currentUser();
+    var applied  = u && apps.some(function(a){ return a.applicantId === u.id; });
+    var icoPin   = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#9ca3af" stroke-width="2" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
 
-    return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + l.id + '\'})" style="background:var(--card);border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:10px;cursor:pointer">'
-      + '<div style="padding:14px 14px 10px">'
-      + '<div style="display:flex;align-items:flex-start;gap:12px">'
-      + logoHtml
+    return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + l.id + '\'})" style="background:var(--card);border-radius:14px;border:1px solid var(--border,#E8ECF4);margin-bottom:10px;cursor:pointer;overflow:hidden">'
+      + '<div style="padding:13px 14px 11px">'
+      + '<div style="display:flex;align-items:center;gap:11px;margin-bottom:10px">'
+      + _jobLogo(logoSrc, initials, 44)
       + '<div style="flex:1;min-width:0">'
-      + '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:2px;letter-spacing:-.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(l.title) + '</div>'
-      + '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:6px">'
-      + '<span style="font-size:13px;font-weight:600;color:#1A3A8F">' + H.escHtml(company) + '</span>'
-      + verBadge
+      + '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(l.title) + '</div>'
+      + '<div style="font-size:12.5px;font-weight:600;color:#F5A623;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(company) + '</div>'
       + '</div>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:5px">'
-      + (jobType ? '<span style="display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px;background:#EEF2FF;color:#1A3A8F">' + H.escHtml(jobType) + '</span>' : '')
-      + (l.city  ? '<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:#F5F5F5;color:#555">' + H.ICONS.location + H.escHtml(l.city) + '</span>' : '')
-      + '<span style="font-size:11px;color:#999;padding:4px 0">' + H.timeAgo(l.createdAt) + '</span>'
-      + '</div></div></div>'
-      + '<div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;margin-top:8px">'
-      + '<div style="font-size:15px;font-weight:800;color:' + salaryColor + '">' + H.escHtml(salary) + '</div>'
-      + applyBtn
+      + (applied
+          ? '<span style="font-size:11px;font-weight:700;color:#15803d;background:#f0fdf4;padding:5px 9px;border-radius:20px;white-space:nowrap">&#10003; Applied</span>'
+          : '<button onclick="event.stopPropagation();H._applyToJob(\'' + l.id + '\')" style="background:#1A3A8F;color:#fff;font-size:11.5px;font-weight:700;padding:7px 13px;border-radius:20px;border:none;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">Easy Apply</button>')
+      + '</div>'
+      + '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px">'
+      + (jobType ? '<span style="font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:#EEF2FF;color:#1A3A8F">' + H.escHtml(jobType) + '</span>' : '')
+      + (l.city  ? '<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#6b7280">' + icoPin + H.escHtml(l.city) + '</span>' : '')
+      + '<span style="font-size:11px;color:#9ca3af;margin-left:auto">' + H.timeAgo(l.createdAt) + '</span>'
       + '</div>'
       + '</div>'
-      + '<div style="font-size:11px;color:#888;padding:0 14px 10px">'
-      + (appCount > 0 ? appCount + ' applicant' + (appCount === 1 ? '' : 's') : 'Be among the first to apply')
+      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--border,#E8ECF4);background:var(--bg,#F9FAFB)">'
+      + '<div style="font-size:14px;font-weight:800;color:' + (salary === 'Negotiable' ? '#9ca3af' : '#111827') + '">' + H.escHtml(salary) + '</div>'
+      + '<div style="font-size:11px;color:#6b7280">' + (appCount > 0 ? appCount + ' applicant' + (appCount === 1 ? '' : 's') : 'Be the first to apply') + '</div>'
       + '</div>'
       + '</div>';
   }
@@ -362,31 +359,23 @@
     var _pSeller = (H.state.users || []).find(function(u){ return u.id === l.sellerId; });
     var _pBiz    = (H.state.businesses || []).find(function(b){ return b.ownerUserId === l.sellerId && b.status === 'active'; });
     var _pLogoSrc = (_pBiz && _pBiz.logo) || (_pSeller && _pSeller.avatar) || '';
-    var _ini = company.split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase() || 'JB';
+    var _ini = company.split(' ').slice(0,2).map(function(w){ return w[0] || ''; }).join('').toUpperCase() || 'JB';
+    var salaryColor = salary === 'Negotiable' ? '#9ca3af' : '#15803d';
+    var icoPay = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+    var icoPin = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#9ca3af" stroke-width="2" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
 
-    var logoHtml = '<div style="width:44px;height:44px;flex-shrink:0;border-radius:10px;border:1px solid #e5e7eb;background:#f9fafb;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#6b7280;overflow:hidden">'
-      + (_pLogoSrc
-        ? '<img src="' + _pLogoSrc + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'
-        : '<span>' + _ini + '</span>')
-      + '</div>';
-
-    var salaryColor = salary === 'Negotiable' ? '#9ca3af' : '#111827';
-    var icoCard = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>';
-    var icoPin  = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-
-    return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + l.id + '\'})" style="flex:0 0 185px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:13px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.05)">'
-      + '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:11px">'
-      + logoHtml
+    return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + l.id + '\'})" style="flex:0 0 168px;min-width:168px;background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:12px;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.06)">'
+      + '<div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">'
+      + _jobLogo(_pLogoSrc, _ini, 36)
       + '<div style="flex:1;min-width:0">'
-      + '<div style="font-size:13.5px;font-weight:700;color:#111827;line-height:1.3;margin-bottom:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">' + H.escHtml(l.title) + '</div>'
-      + '<div style="font-size:11.5px;color:#F5A623;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(company) + '</div>'
+      + '<div style="font-size:13px;font-weight:700;color:var(--text,#111827);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">' + H.escHtml(l.title) + '</div>'
       + '</div></div>'
+      + '<div style="font-size:11.5px;font-weight:600;color:#F5A623;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:9px">' + H.escHtml(company) + '</div>'
       + '<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">'
-      + icoCard
-      + '<span style="font-size:12px;font-weight:600;color:' + salaryColor + '">' + H.escHtml(salary) + '</span>'
+      + icoPay + '<span style="font-size:12px;font-weight:700;color:' + salaryColor + '">' + H.escHtml(salary) + '</span>'
       + '</div>'
-      + (l.city ? '<div style="display:flex;align-items:center;gap:5px;margin-bottom:9px">' + icoPin + '<span style="font-size:11.5px;color:#9ca3af">' + H.escHtml(l.city) + '</span></div>' : '<div style="margin-bottom:9px"></div>')
-      + (jobType ? '<span style="display:inline-block;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:20px;background:#f3f4f6;color:#374151">' + H.escHtml(jobType) + '</span>' : '')
+      + (l.city ? '<div style="display:flex;align-items:center;gap:5px;margin-bottom:8px">' + icoPin + '<span style="font-size:11px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(l.city) + '</span></div>' : '<div style="margin-bottom:8px"></div>')
+      + (jobType ? '<span style="display:inline-block;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:20px;background:#EEF2FF;color:#1A3A8F">' + H.escHtml(jobType) + '</span>' : '')
       + '</div>';
   }
 
@@ -1825,8 +1814,6 @@
         + '</div>'
         : '')
 
-      // Second Apply button at bottom of content
-      + '<div style="margin-bottom:8px">' + applyBtn + '</div>'
       + '</div>'
 
       // Sticky footer
