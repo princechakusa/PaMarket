@@ -29,7 +29,7 @@
   function renderPostShell() {
     return `<div class="page active">
       <div class="post-header" style="position:relative">
-        <button onclick="H._post.headerBack()" aria-label="Back" style="position:absolute;left:12px;top:12px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.16);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button onclick="H._post.headerBack()" aria-label="Back" style="position:absolute;left:12px;top:12px;z-index:2;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.16);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
         <div class="post-h" style="padding-left:46px">${postState.businessId ? 'Add Business Product' : 'Post a Free Ad'}</div>
         <div class="post-sub-txt" style="padding-left:46px">${postState.businessId ? 'Publishing to your business store' : 'Reach buyers across Zimbabwe in minutes'}</div>
       </div>

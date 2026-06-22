@@ -631,6 +631,7 @@
       d.status = 'active';
       d.onboardingStep = 'done';
       persistDraft();
+      if (typeof H.saveBusinessToCloud === 'function') await H.saveBusinessToCloud(JSON.parse(JSON.stringify(d)));
       if (typeof H.saveBusinessSubscriptionToCloud === 'function') await H.saveBusinessSubscriptionToCloud(d);
 
       if (wasEdit) {
