@@ -21,7 +21,7 @@
   H.fetchAllBusinesses = async function () {
     const sb = window.supabase; if (!sb) return adminList();
     try {
-      const { data, error } = await sb.from('businesses').select('*').order('created_at', { ascending: false }).limit(500);
+      const { data, error } = await sb.from('businesses').select('*').order('created_at', { ascending: false }).limit(200);
       if (error || !Array.isArray(data)) return adminList();
       H.state.adminBusinesses = data.map(r => ({
         id: r.id, ownerUserId: r.owner_user_id, name: r.name, bizType: r.biz_type,

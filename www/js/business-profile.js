@@ -858,7 +858,7 @@
   H.fetchAllActiveBusinesses = async function () {
     const sb = window.supabase; if (!sb) return H.state.businesses || [];
     try {
-      const { data, error } = await sb.from('businesses').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(300);
+      const { data, error } = await sb.from('businesses').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(100);
       if (error || !Array.isArray(data)) return H.state.businesses || [];
       const serverList = data.map(row => {
         const _cats = (row.category || '').split('|').filter(Boolean);

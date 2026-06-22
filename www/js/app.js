@@ -1480,7 +1480,7 @@ window.H = {
         .from('listings').select('*')
         .eq('status','active')
         .order('created_at',{ascending:false})
-        .limit(200);
+        .limit(100);
       if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
       const cloud=(data||[]).map(r=>H._mapCloudListing(r));
       if (typeof H.applyFeedUpdate === 'function') {
@@ -1540,7 +1540,7 @@ window.H = {
       const {data,error}=await window.supabase
         .from('listings').select('*')
         .order('created_at',{ascending:false})
-        .limit(1000);
+        .limit(200);
       if(error||!Array.isArray(data)) return;
       const cloud=data.map(r=>H._mapCloudListing(r));
       const cloudIds=new Set(cloud.map(l=>l.id));
@@ -1728,7 +1728,7 @@ window.H = {
       const { data, error } = await sb.from('reports')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(300);
+        .limit(100);
       if (error || !data) return;
 
       H.state.reports = H.state.reports || [];
@@ -1867,8 +1867,8 @@ window.H = {
       try {
         const uidSuffix = u.id.slice(-6);
         const [sentRes, recvRes] = await Promise.all([
-          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(300),
-          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(300)
+          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(100),
+          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(100)
         ]);
         // Build a map: convId -> first other-user sender_id found across both result sets
         const convOtherMap = {};
