@@ -947,7 +947,8 @@ async function doSetPlan(id, next) {
 function updateBadges() {
   var pendingL = DATA.listings.filter(function(l){ return l.status==='pending'; }).length;
   var pendingV = DATA.verifications.filter(function(v){ return v.status==='pending'; }).length
-    + DATA.users.filter(function(u){ return u.verification_pending && !DATA.verifications.find(function(v){ return v.user_id===u.id; }); }).length;
+    + DATA.users.filter(function(u){ return u.verification_pending && !DATA.verifications.find(function(v){ return v.user_id===u.id; }); }).length
+    + (DATA.companyVerifications||[]).filter(function(c){ return c.status==='pending'; }).length;
   var openR = DATA.reports.filter(function(r){ return r.status==='open'; }).length;
   var pendingC = DATA.contactRequests.filter(function(c){ return c.status==='pending'; }).length;
 
@@ -1236,9 +1237,11 @@ function renderVerifications() {
   var approved = DATA.verifications.filter(function(v){ return v.status==='approved'; });
   var rejected = DATA.verifications.filter(function(v){ return v.status==='rejected'; });
 
+  var cvPending = (DATA.companyVerifications||[]).filter(function(c){ return c.status==='pending'; }).length;
   var html = '<div class="stats-grid">';
-  html += statCard('Pending','amber',pendingFromTable.length+pendingFromProfiles.length,'awaiting review');
-  html += statCard('Approved','green',approved.length,'verified today');
+  html += statCard('ID Pending','amber',pendingFromTable.length+pendingFromProfiles.length,'awaiting review');
+  html += statCard('Co. Pending','accent',cvPending,'company / sole trader');
+  html += statCard('Approved','green',approved.length,'identity verified');
   html += statCard('Rejected','red',rejected.length,'declined');
   html += '</div>';
 
@@ -1296,24 +1299,41 @@ function renderVerifications() {
 }
 
 function companyVerifCard(cv, u) {
-  var docs = [
-    ['Certificate of Incorporation', cv._regUrl],
-    ['Owner / Director ID', cv._ownerUrl],
-    ['Tax Clearance', cv._taxUrl],
-    ['Business Premises', cv._premisesUrl]
-  ];
+  var isSoleTrader = (cv.company_name||'').startsWith('SOLE TRADER:');
+  var displayName  = isSoleTrader
+    ? (cv.company_name||'').replace(/^SOLE TRADER:\s*/,'')
+    : (cv.company_name||'Company');
+  var typeBadge = isSoleTrader
+    ? '<span class="badge" style="background:rgba(124,58,237,.15);color:#7c3aed">Sole Trader</span>'
+    : '<span class="badge badge-info">Company</span>';
+
+  var docs = isSoleTrader
+    ? [['Owner ID / National ID', cv._ownerUrl]]
+    : [
+        ['Certificate of Incorporation', cv._regUrl],
+        ['Tax Clearance',                cv._taxUrl],
+        ['Business Premises',            cv._premisesUrl]
+      ];
+
   var html = '<div class="verif-card">';
-  html += '<div class="verif-header"><div class="verif-user"><div class="verif-avatar">'+initials(cv.company_name||u.name||'C')+'</div><div><div class="verif-name">'+esc(cv.company_name||'Company')+'</div><div class="verif-meta">'+esc(u.name||'')+' · '+esc(u.email||u.phone||'')+' · '+fmtDate(cv.submitted_at)+'</div></div></div><span class="badge badge-pending">Pending</span></div>';
+  html += '<div class="verif-header">';
+  html += '<div class="verif-user"><div class="verif-avatar">'+initials(displayName||u.name||'C')+'</div>';
+  html += '<div><div class="verif-name">'+esc(displayName)+'</div>';
+  html += '<div class="verif-meta">'+esc(u.name||'')+' · '+esc(u.email||u.phone||'')+' · Submitted '+fmtDate(cv.submitted_at)+'</div></div></div>';
+  html += '<div style="display:flex;gap:6px;align-items:center">'+typeBadge+'<span class="badge badge-pending">Pending</span></div>';
+  html += '</div>';
+
   html += '<div class="verif-docs">';
   docs.forEach(function(d){
     html += '<div class="verif-doc-box"><div class="verif-doc-label">'+esc(d[0])+'</div>';
     if(d[1]) html += '<img class="verif-doc-img" src="'+esc(d[1])+'" onclick="openVerifPhoto(this,false)" onerror="this.style.opacity=\'.3\'">';
-    else html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:12px">Not available</div>';
+    else html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:12px">Not submitted</div>';
     html += '</div>';
   });
   html += '</div>';
+
   html += '<div class="verif-actions">';
-  html += '<button class="btn-verif-approve" onclick="approveCompany(\''+esc(cv.user_id)+'\')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> Approve Company</button>';
+  html += '<button class="btn-verif-approve" onclick="approveCompany(\''+esc(cv.user_id)+'\')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> Approve</button>';
   html += '<button class="btn-verif-reject" onclick="rejectCompany(\''+esc(cv.user_id)+'\')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Reject</button>';
   html += '</div></div>';
   return html;
