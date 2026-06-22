@@ -564,7 +564,7 @@
       </div>
 
       <!-- Sticky CTA -->
-      <div style="position:sticky;bottom:0;background:rgba(var(--card-rgb,255,255,255),0.97);backdrop-filter:blur(10px);padding:10px 14px 14px;border-top:1px solid var(--border,#E8ECF4)">
+      <div style="position:sticky;bottom:0;background:rgba(var(--card-rgb,255,255,255),0.97);backdrop-filter:blur(10px);padding:10px 14px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border,#E8ECF4)">
         ${isOwn
           ? `<div style="display:flex;gap:8px">
               <button onclick="H._bizAnalytics&&H._bizAnalytics.open('${escHtml(String(b.id))}')" style="flex:1;padding:13px 0;background:#EEF2FB;color:#1A3A8F;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px">
