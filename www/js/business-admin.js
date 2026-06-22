@@ -74,9 +74,12 @@
         <span style="font-size:11px;font-weight:700;color:#b45309;background:#FFF8EC;border-radius:20px;padding:2px 9px">Verify L${b.verificationLevel || 0}</span>
       </div>
       <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-        ${b.status === 'suspended'
-          ? `<button onclick="H._bizAdmin.setStatus('${b.id}','active')" style="flex:1;padding:8px;border-radius:9px;border:none;background:#16a34a;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Activate</button>`
-          : `<button onclick="H._bizAdmin.setStatus('${b.id}','suspended')" style="flex:1;padding:8px;border-radius:9px;border:1px solid #FECACA;background:#FFF1F0;color:#EF4444;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Suspend</button>`}
+        ${(b.status === 'pending_activation' || b.status === 'draft')
+          ? `<button onclick="H._bizAdmin.setStatus('${b.id}','active')" style="flex:1;padding:8px;border-radius:9px;border:none;background:#16a34a;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Approve</button>
+             <button onclick="H._bizAdmin.setStatus('${b.id}','suspended')" style="flex:1;padding:8px;border-radius:9px;border:1px solid #FECACA;background:#FFF1F0;color:#EF4444;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Reject</button>`
+          : b.status === 'suspended'
+            ? `<button onclick="H._bizAdmin.setStatus('${b.id}','active')" style="flex:1;padding:8px;border-radius:9px;border:none;background:#16a34a;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Activate</button>`
+            : `<button onclick="H._bizAdmin.setStatus('${b.id}','suspended')" style="flex:1;padding:8px;border-radius:9px;border:1px solid #FECACA;background:#FFF1F0;color:#EF4444;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Suspend</button>`}
         <button onclick="H._bizAdmin.cycleVerify('${b.id}')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Set verify</button>
         <button onclick="H._bizAdmin.cyclePlan('${b.id}')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Set plan</button>
       </div>
@@ -116,6 +119,11 @@
           <div style="font-size:13px;color:var(--sub)">Total businesses</div>
           <div style="font-size:16px;font-weight:800;color:#1A3A8F">${list.length}</div>
         </div>
+        ${(() => {
+          const pendingBiz = list.filter(b => b.status === 'pending_activation' || b.status === 'draft');
+          return queue('Businesses awaiting approval', pendingBiz.length,
+            pendingBiz.length ? pendingBiz.map(card).join('') : `<div style="font-size:12.5px;color:var(--sub);padding:8px 0 12px">No businesses awaiting approval.</div>`);
+        })()}
         ${queue('Pending invoices', invoices.length, invoices.length ? invoices.map(invCard).join('') : `<div style="font-size:12.5px;color:var(--sub);padding:8px 0 12px">No invoices awaiting payment.</div>`)}
         ${queue('Verification requests', verifs.length, verifs.length ? verifs.map(verCard).join('') : `<div style="font-size:12.5px;color:var(--sub);padding:8px 0 12px">No pending verification requests.</div>`)}
         <div style="font-size:13px;font-weight:800;color:var(--text);margin:4px 0 8px">All businesses</div>
@@ -189,9 +197,26 @@
       } catch (e) { toast('Could not open document'); }
     },
     async setStatus(id, status) {
-      const b = this._find(id); if (b) { b.status = status; saveState(); }
+      const prev = this._find(id);
+      const wasPending = prev && (prev.status === 'pending_activation' || prev.status === 'draft');
+      if (prev) { prev.status = status; saveState(); }
       const sb = window.supabase; if (sb) { try { await sb.from('businesses').update({ status }).eq('id', id); } catch (e) {} }
-      toast('Business ' + status); renderPage('BusinessAdmin');
+      // Notify the owner of the moderation decision.
+      try {
+        const owner = bizOwnerOf(id);
+        if (owner && H.pushNotif) {
+          if (status === 'active') {
+            H.pushNotif(owner, 'Business approved', bizNameOf(id) + ' is now live on PaMarket.', 'business', null, 'BusinessView');
+          } else if (status === 'suspended') {
+            H.pushNotif(owner, wasPending ? 'Business not approved' : 'Business suspended',
+              wasPending ? bizNameOf(id) + ' was not approved. Please review your details and resubmit.'
+                         : bizNameOf(id) + ' has been suspended. Contact support for details.',
+              'report', null, 'BusinessView');
+          }
+        }
+      } catch (e) {}
+      toast(status === 'active' ? 'Business approved' : (status === 'suspended' && wasPending ? 'Business rejected' : 'Business ' + status));
+      renderPage('BusinessAdmin');
     },
     async cycleVerify(id) {
       const b = this._find(id); if (!b) return;

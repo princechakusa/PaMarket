@@ -92,11 +92,13 @@
 
   function ensureDraft() {
     if (!_draft) {
-      // Resume the most recent un-activated business if one exists, else start fresh.
+      // Resume a still-incomplete draft only. A business already submitted for
+      // review (pending_activation), live (active) or suspended must NOT reopen
+      // as an editable onboarding draft — edits go through BusinessView instead.
       const u = currentUser();
       const mine = (H.state.businesses || []).filter(b => b.ownerUserId === (u && u.id));
-      const pending = mine.find(b => b.status !== 'active' && b.status !== 'suspended');
-      _draft = pending ? JSON.parse(JSON.stringify(pending)) : blankDraft();
+      const draft = mine.find(b => b.status === 'draft');
+      _draft = draft ? JSON.parse(JSON.stringify(draft)) : blankDraft();
     }
     return _draft;
   }
@@ -384,14 +386,14 @@
   pages.BusinessActivated = function () {
     const d = _draft || {};
     return `<div class="page active">
-      ${innerTopbar('Business Activated')}
+      ${innerTopbar('Submitted for Review')}
       <div class="inner-content" style="text-align:center;padding:48px 24px">
-        <div style="width:76px;height:76px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;margin:0 auto 18px">
-          <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <div style="width:76px;height:76px;border-radius:50%;background:#FEF6E7;display:flex;align-items:center;justify-content:center;margin:0 auto 18px">
+          <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="#B45309" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
         </div>
-        <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px">You're live!</div>
-        <div style="font-size:13.5px;color:var(--sub);line-height:1.6;max-width:300px;margin:0 auto 28px">
-          <b>${escHtml(d.name || 'Your business')}</b> is now active on PaMarket. Start adding listings to receive leads and track performance.
+        <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px">Submitted for review</div>
+        <div style="font-size:13.5px;color:var(--sub);line-height:1.6;max-width:320px;margin:0 auto 28px">
+          <b>${escHtml(d.name || 'Your business')}</b> has been sent for approval. We review new shops to keep PaMarket safe, and you will be notified once it is approved and live. You can prepare your listings in the meantime.
         </div>
         <button class="btn-pri" style="width:100%;max-width:300px;margin-bottom:10px" onclick="H._bizOnboard.view('${d.id}')">View My Business</button>
         <button class="ml-act-btn" style="width:100%;max-width:300px;padding:13px" onclick="H.navTo('Account')">Go to Account</button>
@@ -425,13 +427,33 @@
     }
     _viewId = b.id;
 
-    // Still mid-setup → guide them back into the wizard instead of showing a blank profile.
+    // Not live yet → show the right state: still a draft (resume wizard),
+    // submitted for review (waiting on admin), or suspended.
     if (b.status !== 'active') {
+      if (b.status === 'pending_activation') {
+        return `<div class="page active">${innerTopbar('Seller Center')}
+          <div class="inner-content" style="text-align:center;padding:40px 24px">
+            <div style="width:64px;height:64px;border-radius:50%;background:#FEF6E7;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#B45309" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 7 12 12 15 14"/></svg></div>
+            <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">${escHtml(b.name || 'Your business')}</div>
+            <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">Submitted for review. We will notify you once it is approved and live. You can keep editing your details while you wait.</div>
+            <button class="btn-pri" style="width:100%;max-width:300px;margin-bottom:10px" onclick="H._bizOnboard.edit('${b.id}')">Edit Details</button>
+            <button class="ml-act-btn" style="width:100%;max-width:300px;padding:13px" onclick="H.navTo('Account')">Go to Account</button>
+          </div></div>`;
+      }
+      if (b.status === 'suspended') {
+        return `<div class="page active">${innerTopbar('Seller Center')}
+          <div class="inner-content" style="text-align:center;padding:40px 24px">
+            <div style="width:64px;height:64px;border-radius:50%;background:#FFF1F0;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">${escHtml(b.name || 'Your business')}</div>
+            <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">This business has been suspended. Please contact support if you believe this was a mistake.</div>
+            <button class="ml-act-btn" style="width:100%;max-width:300px;padding:13px" onclick="H.navTo('Account')">Go to Account</button>
+          </div></div>`;
+      }
       return `<div class="page active">${innerTopbar('Seller Center')}
         <div class="inner-content" style="text-align:center;padding:40px 24px">
           <div style="width:64px;height:64px;border-radius:50%;background:#EEF2FB;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#1A3A8F" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
           <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">${escHtml(b.name || 'Your business')}</div>
-          <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">Setup isn't finished yet. Continue where you left off to activate it.</div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">Setup isn't finished yet. Continue where you left off to submit it for review.</div>
           <button class="btn-pri" style="width:100%;max-width:300px" onclick="H._bizOnboard.edit('${b.id}')">Continue Setup</button>
         </div></div>`;
     }
@@ -645,10 +667,17 @@
       if (!d.planId)   { toast('Select a plan first'); d.onboardingStep = 'plan'; renderPage('BusinessOnboarding'); return; }
 
       const btn = document.getElementById('bzActivateBtn');
-      if (btn) { btn.disabled = true; btn.textContent = 'Activating…'; }
+      if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
 
       const wasEdit = _mode === 'edit';
-      d.status = 'active';
+      // Approval workflow: a NEW business is submitted for admin review
+      // (pending_activation) and only goes public once an admin approves it in
+      // admin.html. Editing a business that is ALREADY live keeps it live — no
+      // re-review for ordinary profile edits.
+      const prior = (H.state.businesses || []).find(b => b.id === d.id);
+      const wasActive = !!(prior && prior.status === 'active');
+      const priorStatus = d.status;
+      d.status = wasActive ? 'active' : 'pending_activation';
       d.onboardingStep = 'done';
       persistDraft();
 
@@ -664,21 +693,20 @@
       if (saveRes.ok) {
         if (typeof H.saveBusinessSubscriptionToCloud === 'function') await H.saveBusinessSubscriptionToCloud(d);
       } else {
-        if (btn) { btn.disabled = false; btn.textContent = 'Activate Business'; }
-        d.status = 'draft';
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit for Review'; }
+        d.status = priorStatus || 'draft';
         persistDraft();
-        toast('Could not activate. Please check your connection and try again.');
+        toast('Could not submit. Please check your connection and try again.');
         return;
       }
 
-      // Force-refresh the marketplace business list so the new shop appears
-      // immediately in Local Shops on Home for this device (others get it via
-      // realtime or the next poll cycle).
+      // Refresh the marketplace business list (an approved edit may need to
+      // reflect immediately; a pending submission simply will not appear yet).
       if (typeof H.fetchAllActiveBusinesses === 'function') {
         H.fetchAllActiveBusinesses().catch(function () {});
       }
 
-      if (wasEdit) {
+      if (wasEdit && wasActive) {
         _mode = 'create';
         toast('Business updated');
         _viewId = d.id;
@@ -687,9 +715,9 @@
       }
 
       if (typeof H.pushNotif === 'function') {
-        try { H.pushNotif(currentUser().id, 'Business activated', `${d.name} is now live on PaMarket.`, 'business'); } catch (e) {}
+        try { H.pushNotif(currentUser().id, 'Submitted for review', `${d.name} has been submitted. We will notify you once it is approved.`, 'business'); } catch (e) {}
       }
-      toast('Business activated!');
+      toast('Submitted for review');
       renderPage('BusinessActivated');
     }
   };
