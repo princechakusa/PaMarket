@@ -2612,6 +2612,27 @@ window.H = {
 window.pushNotif=(uid,title,body)=>H.pushNotif&&H.pushNotif(uid,title,body);
 window.openListing=id=>H.openListing(id);
 
+// God-mode unlock — rapid-tap the PaMarket logo 7 times to open the admin panel
+(function(){
+  var _count = 0;
+  var _timer = null;
+  H.logoTap = function() {
+    _count++;
+    clearTimeout(_timer);
+    _timer = setTimeout(function(){ _count = 0; }, 2000);
+    if (_count >= 7) {
+      _count = 0;
+      var u = typeof H.currentUser === 'function' ? H.currentUser() : null;
+      if (u && u.role === 'admin') {
+        H.state.adminSession = true;
+        H.navTo('Admin', null);
+      } else {
+        H.toast('Access denied');
+      }
+    }
+  };
+})();
+
 // Deep link router — called when user taps a push notification
 // Route a deep link, but wait until the app is booted (cold start from a
 // notification tap can fire before navTo/state exist).

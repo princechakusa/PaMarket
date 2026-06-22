@@ -269,7 +269,7 @@
 
   H.pages.Home_after = function () {
     if (H._initAdCarousels) H._initAdCarousels();
-    if (typeof H.maybeShowNotifBanner === 'function') H.maybeShowNotifBanner();
+    if (typeof H.maybeShowNotifBanner === 'function') H.maybeShowNotifBanner().catch(function(){});
     if (typeof H.maybeShowRatingPrompt === 'function') H.maybeShowRatingPrompt();
 
     // Attach infinite-scroll listener — remove previous to avoid stacking

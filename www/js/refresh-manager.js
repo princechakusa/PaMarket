@@ -216,7 +216,7 @@
       if (!c) return;
       c.fetch(p).then(function () {
         if (H.currentPageName === name && !RM._inBgRender) RM._renderPreserved(name, p);
-      });
+      }).catch(function(){});
     },
 
     // Core poll: fetch then re-render only when data actually changed (or forced)
@@ -231,7 +231,7 @@
         if (!RM._appActive || document.hidden) return;
         if (RM._inBgRender) return;
         if (force || c.sig(params) !== before) RM._renderPreserved(name, params);
-      });
+      }).catch(function(){});
     },
 
     // Re-render while preserving scroll position and active input value + cursor.
