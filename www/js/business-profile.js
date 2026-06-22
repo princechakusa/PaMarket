@@ -737,7 +737,8 @@
           phone: row.phone, whatsapp: row.whatsapp, email: row.email,
           province: row.province, city: row.city, suburb: row.suburb,
           status: row.status, verificationLevel: row.verification_level || 0,
-          featuredListingIds: Array.isArray(row.featured_listing_ids) ? row.featured_listing_ids : [] };
+          featuredListingIds: Array.isArray(row.featured_listing_ids) ? row.featured_listing_ids : [],
+          updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : 0 };
       });
       if (typeof H.applyFeedUpdate === 'function') {
         H.applyFeedUpdate({ type: 'businesses_full', data: serverList }, 'poll');
