@@ -643,7 +643,16 @@
     if (_bizCat !== 'all') list = list.filter(b => b.category === _bizCat);
     if (q) list = list.filter(b => {
       const cn = ((H.CATEGORIES.find(c => c.id === b.category) || {}).name || '').toLowerCase();
-      return (b.name || '').toLowerCase().indexOf(q) !== -1 || (b.description || '').toLowerCase().indexOf(q) !== -1 || cn.indexOf(q) !== -1 || (b.city || '').toLowerCase().indexOf(q) !== -1;
+      if ((b.name || '').toLowerCase().indexOf(q) !== -1) return true;
+      if ((b.description || '').toLowerCase().indexOf(q) !== -1) return true;
+      if (cn.indexOf(q) !== -1) return true;
+      if ((b.city || '').toLowerCase().indexOf(q) !== -1) return true;
+      // Match any active listing this shop sells
+      return (H.state.listings || []).some(function(l) {
+        return l.status === 'active' &&
+          (String(l.businessId) === String(b.id) || String(l.sellerId) === String(b.ownerUserId)) &&
+          (l.title || '').toLowerCase().indexOf(q) !== -1;
+      });
     });
     return list;
   }
@@ -657,7 +666,7 @@
       const prods = (H.state.listings || []).filter(l => l.businessId === b.id && l.status === 'active').length;
       const verified = (b.verificationLevel || 0) >= 2;
       return `<div onclick="H.openBusinessShop('${b.id}')" style="display:flex;gap:12px;align-items:center;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:8px;padding:12px;margin:0 16px 10px;cursor:pointer">
-        <div style="width:52px;height:52px;border-radius:6px;overflow:hidden;background:#EEF2FB;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#1A3A8F">${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}</div>
+        <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2245b8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px rgba(26,58,143,0.15)">${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:5px"><span style="font-size:14.5px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}</span>${verified ? H.verifiedBadge(14) : ''}</div>
           <div style="font-size:12px;color:var(--sub);margin-top:2px">${cat ? escHtml(cat.name) : ''}${loc ? ' · ' + escHtml(loc) : ''}</div>
@@ -675,7 +684,7 @@
       <div style="padding:12px 16px 8px">
         <div style="display:flex;align-items:center;gap:8px;background:var(--card,#fff);border:1.5px solid var(--border,#E8ECF4);border-radius:12px;padding:10px 14px">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--sub)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="bizSearchIn" value="${escHtml(_bizQ)}" oninput="H._bizSearch.onQuery(this.value)" placeholder="Search stores, e.g. Pharmacy, Furniture" style="flex:1;border:none;outline:none;background:none;font-size:14px;color:var(--text);font-family:inherit">
+          <input id="bizSearchIn" value="${escHtml(_bizQ)}" oninput="H._bizSearch.onQuery(this.value)" placeholder="Search shops or products, e.g. iPhone, Furniture..." style="flex:1;border:none;outline:none;background:none;font-size:14px;color:var(--text);font-family:inherit">
         </div>
       </div>
       <div style="display:flex;gap:8px;overflow-x:auto;padding:4px 16px 12px;-webkit-overflow-scrolling:touch">
