@@ -678,14 +678,24 @@
         return;
       }
       if (H.RM._inBgRender) {
-        // RM is mid-render; re-queue to run cleanly after it settles
-        H._renderBatchTimer = setTimeout(function () {
+        // RM is mid-render; retry with backoff until it settles (up to 5 attempts)
+        var _retries = 0;
+        function _retryRender() {
           H._renderBatchTimer = null;
-          if (H._navEpoch === capturedEpoch && H.currentPageName === capturedPage && !H.RM._inBgRender) {
-            H.RT._log('render', 'deferred:fire', { page: capturedPage });
+          if (H._navEpoch !== capturedEpoch || H.currentPageName !== capturedPage) return;
+          if (!H.RM._inBgRender) {
+            H.RT._log('render', 'deferred:fire', { page: capturedPage, attempt: _retries });
             H.RM._renderPreserved(capturedPage, H.currentPageParams);
+            return;
           }
-        }, 200);
+          _retries++;
+          if (_retries >= 5) {
+            H.RT._log('render', 'deferred:abandoned', { page: capturedPage });
+            return;
+          }
+          H._renderBatchTimer = setTimeout(_retryRender, 200 * _retries);
+        }
+        H._renderBatchTimer = setTimeout(_retryRender, 200);
         return;
       }
       H.RT._log('render', 'fire', { page: capturedPage });

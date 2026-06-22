@@ -202,13 +202,13 @@
 
     // Core poll: fetch then re-render only when data actually changed (or forced)
     _poll: function (name, params, force) {
-      if (RM._inBgRender) return;
       var c = _cfg[name];
       if (!c) return;
       var before = c.sig(params);
       c.fetch(params).then(function () {
         if (RM._current !== name || H.currentPageName !== name) return;
         if (!RM._appActive || document.hidden) return;
+        if (RM._inBgRender) return;
         if (force || c.sig(params) !== before) RM._renderPreserved(name, params);
       });
     },

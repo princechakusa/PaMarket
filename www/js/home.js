@@ -264,7 +264,13 @@
       if (H.currentPageName !== 'Home') return;
       const _sigAfter = (H.state.listings || []).filter(l => l.status === 'active').length
         + '|' + (H.state.businesses || []).filter(b => b.status === 'active').length;
-      if (_sigAfter !== _sigBefore) H.renderPage('Home');
+      if (_sigAfter !== _sigBefore) {
+        if (typeof H._scheduleRender === 'function') {
+          H._scheduleRender();
+        } else if (H.RM && typeof H.RM._renderPreserved === 'function' && !H.RM._inBgRender) {
+          H.RM._renderPreserved('Home', H.currentPageParams);
+        }
+      }
     });
   };
 
