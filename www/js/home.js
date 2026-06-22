@@ -9,7 +9,6 @@
   const { escHtml, timeAgo, filterListings, renderListCard, renderFeatCard, CATEGORIES, ICONS } = H;
 
   let searchTimer;
-  let _homeVisListener = null;
   function debounce(fn, delay) {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(fn, delay);
@@ -259,28 +258,11 @@
     }, 300);
   };
 
-  function _refreshHomeData(onlyIfChanged) {
-    const _fetches = [];
-    if (typeof H.fetchAllActiveBusinesses === 'function') _fetches.push(H.fetchAllActiveBusinesses().catch(function(){}));
-    if (typeof H.fetchListingsFromSupabase === 'function') _fetches.push(H.fetchListingsFromSupabase().catch(function(){}));
-    if (!_fetches.length) return;
-    Promise.all(_fetches).then(function () {
-      if (H.currentPageName === 'Home') H.renderPage('Home');
-    });
-  }
-
   H.pages.Home_after = function () {
     if (H._initAdCarousels) H._initAdCarousels();
     if (typeof H.maybeShowNotifBanner === 'function') H.maybeShowNotifBanner();
     if (typeof H.maybeShowRatingPrompt === 'function') H.maybeShowRatingPrompt();
-    _refreshHomeData();
-    // Auto-refresh when app returns to foreground — no manual pull needed
-    if (_homeVisListener) document.removeEventListener('visibilitychange', _homeVisListener);
-    _homeVisListener = function () {
-      if (document.hidden || H.currentPageName !== 'Home') return;
-      _refreshHomeData();
-    };
-    document.addEventListener('visibilitychange', _homeVisListener);
+    // Background refresh is handled by H.RM (refresh-manager.js)
   };
 
   H.toggleCityPicker = function () {
