@@ -113,7 +113,7 @@
       + '<div onclick="H.openInner(\'HireTalent\')" style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 6px 20px rgba(26,58,143,.25)">'
       + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
       + '<div style="width:52px;height:52px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">' + briefcase + '</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;color:#fff">I’m Hiring</div><div style="font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.4">Browse available candidates and find the right person.</div></div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;color:#fff">I&#39;m Hiring</div><div style="font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.4">Browse available candidates and find the right person.</div></div>'
       + '<div style="color:#fff">' + arrow + '</div></div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
       + chip('Browse Candidates', "H.openInner('HireTalent')")
@@ -898,10 +898,10 @@
     var inStyle = 'width:100%;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit;margin-top:4px';
     H.modal({
       title: 'Request to contact',
-      body: '<div style="font-size:12.5px;color:var(--sub);line-height:1.6;margin-bottom:14px">Tell us a little about the role. Our team reviews each request and unlocks this candidate’s name and contact details once approved.</div>'
+      body: '<div style="font-size:12.5px;color:var(--sub);line-height:1.6;margin-bottom:14px">Tell us a little about the role. Our team reviews each request and unlocks this candidate&#39;s name and contact details once approved.</div>'
         + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text)">Your company / organisation *</label><input id="crCompany" placeholder="e.g. Acme Logistics" value="' + H.escHtml(me.company || '') + '" style="' + inStyle + '"></div>'
-        + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text)">Role you’re hiring for *</label><input id="crRole" placeholder="e.g. Delivery Driver" style="' + inStyle + '"></div>'
-        + '<div><label style="font-size:12px;font-weight:700;color:var(--text)">Message (optional)</label><textarea id="crNote" rows="3" placeholder="Anything you’d like us to know…" style="' + inStyle + ';resize:vertical"></textarea></div>',
+        + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:var(--text)">Role you&#39;re hiring for *</label><input id="crRole" placeholder="e.g. Delivery Driver" style="' + inStyle + '"></div>'
+        + '<div><label style="font-size:12px;font-weight:700;color:var(--text)">Message (optional)</label><textarea id="crNote" rows="3" placeholder="Anything you\'d like us to know..." style="' + inStyle + ';resize:vertical"></textarea></div>',
       confirmText: 'Send request',
       onConfirm: function () {
         var company = ((document.getElementById('crCompany') || {}).value || '').trim();
@@ -947,7 +947,7 @@
         });
       });
     }
-    H.toast('Request sent — we’ll review and notify you');
+    H.toast('Request sent — we\'ll review and notify you');
     if (H.currentPageName === 'ViewCandidateCV') H.renderPage('ViewCandidateCV', { id: candidateId });
     else if (typeof H._filterTalent === 'function') H._filterTalent();
   };
@@ -982,7 +982,7 @@
     };
     var body;
     if (!reqs.length) {
-      body = H.emptyState('No requests yet', 'When you request a candidate’s contact in Hire Talent, it shows here with its status.', 'Browse Candidates', "H.openInner('HireTalent')");
+      body = H.emptyState('No requests yet', 'When you request a candidate\'s contact in Hire Talent, it shows here with its status.', 'Browse Candidates', "H.openInner('HireTalent')");
     } else {
       body = '<div style="padding:12px 14px 88px">' + reqs.map(function (r) {
         var m = statusMeta[r.status] || statusMeta.pending;
@@ -1005,7 +1005,7 @@
               + '</div></div>'
             : (r.status === 'declined'
               ? '<div style="font-size:12px;color:var(--sub);line-height:1.5">This request was not approved. You can try another candidate.</div>'
-              : '<div style="font-size:12px;color:var(--sub);line-height:1.5">We’re reviewing your request. You’ll be notified once it’s approved and the contact details unlock here.</div>'))
+              : '<div style="font-size:12px;color:var(--sub);line-height:1.5">We&#39;re reviewing your request. You&#39;ll be notified once it&#39;s approved and the contact details unlock here.</div>'))
           + '<div style="font-size:11px;color:var(--sub2);margin-top:8px">Requested ' + H.timeAgo(r.createdAt) + '</div>'
           + '</div>';
       }).join('') + '</div>';
@@ -1137,7 +1137,7 @@
       + '</div></div>'
       // ── body ──
       + '<div style="padding:0 18px 140px">'
-      + (!reveal ? '<div style="display:flex;align-items:flex-start;gap:10px;background:#1A3A8F0d;border:1px solid #1A3A8F22;border-radius:12px;padding:12px 14px;margin:16px 0 4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><div style="font-size:12.5px;color:var(--text);line-height:1.55">' + (pending ? 'Your request is under review. The full name and contact details unlock here once it’s approved.' : 'This candidate’s <strong>name and contact details are hidden</strong>. Send a request and our team will unlock them for you once approved.') + '</div></div>' : '')
+      + (!reveal ? '<div style="display:flex;align-items:flex-start;gap:10px;background:#1A3A8F0d;border:1px solid #1A3A8F22;border-radius:12px;padding:12px 14px;margin:16px 0 4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><div style="font-size:12.5px;color:var(--text);line-height:1.55">' + (pending ? 'Your request is under review. The full name and contact details unlock here once it&#39;s approved.' : 'This candidate&#39;s <strong>name and contact details are hidden</strong>. Send a request and our team will unlock them for you once approved.') + '</div></div>' : '')
       // Details
       + ((expLvl || eduLevel || commitment || expectedSal || postedOn)
           ? sec('Details', drow('Work experience', expLvl) + drow('Education level', eduLevel) + drow('Commitment', commitment) + drow('Desired salary', expectedSal) + drow('Posted on', postedOn))
@@ -1830,168 +1830,168 @@
   };
 
   // Education-level → qualification dropdown value (reuses Hire-Talent matcher).
-  var _QUAL_OPTS = [['none', 'No formal qualification'], ['secondary', 'High School / Secondary'], ['certificate', 'Certificate / Diploma'], ['degree', 'Bachelor’s Degree'], ['postgrad', 'Postgraduate']];
+  var _QUAL_OPTS = [['none', 'No formal qualification'], ['secondary', 'High School / Secondary'], ['certificate', 'Certificate / Diploma'], ['degree', "Bachelor's Degree"], ['postgrad', 'Postgraduate']];
 
   H.pages.ApplyJob = function (params) {
     var jobId = params && params.jobId;
     var l = (H.state.listings || []).find(function(x){ return x.id === jobId; });
-    if (!l) return ‘<div class="page active">’ + H.innerTopbar(‘Apply’) + H.emptyState(‘Job not found’, ‘’, null, null) + ‘</div>’;
+    if (!l) return '<div class="page active">' + H.innerTopbar('Apply') + H.emptyState('Job not found', '', null, null) + '</div>';
     var u = H.currentUser() || {};
     var cv = u.cv || {};
-    var company = l.company || l.sellerName || ‘Company’;
-    var companyInitials = company.split(‘ ‘).slice(0,2).map(function(w){return w[0]||’’;}).join(‘’).toUpperCase() || ‘CO’;
+    var company = l.company || l.sellerName || 'Company';
+    var companyInitials = company.split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase() || 'CO';
     var questions = l.custom_questions || [];
-    var inS = ‘width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:13px;font-size:15px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit;line-height:1.4’;
+    var inS = 'width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:13px;font-size:15px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;font-family:inherit;line-height:1.4';
 
     // Prefill from saved profile
-    var preQual    = _candEduLevel(u) || ‘’;
-    var preTitle   = u.jobTitle || cv.headline || ‘’;
-    var preCat     = parseLine((l.desc || ‘’).split(‘\n’), ‘INDUSTRY’) || ‘’;
+    var preQual    = _candEduLevel(u) || '';
+    var preTitle   = u.jobTitle || cv.headline || '';
+    var preCat     = parseLine((l.desc || '').split('\n'), 'INDUSTRY') || '';
     var lastExp    = (_arr(cv.experience)[0]) || {};
-    var preCompany = lastExp.company || ‘’;
-    var experienced = !!(u.exp && u.exp !== ‘entry’) || (_arr(cv.experience).length > 0);
-    var resumeName = u.cvFileName || (u.cvFileUrl ? ‘Resume on file’ : ‘’);
+    var preCompany = lastExp.company || '';
+    var experienced = !!(u.exp && u.exp !== 'entry') || (_arr(cv.experience).length > 0);
+    var resumeName = u.cvFileName || (u.cvFileUrl ? 'Resume on file' : '');
     var hasSavedCV = !!(preTitle || preCompany || preQual || resumeName);
 
     // Section heading helper — thin left accent bar, friendly tone
     function secHead(title, sub) {
-      return ‘<div style="display:flex;align-items:center;gap:10px;margin:24px 0 14px">’
-        + ‘<div style="width:4px;height:20px;background:#1A3A8F;border-radius:3px;flex-shrink:0"></div>’
-        + ‘<div><div style="font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.2px">’ + title + ‘</div>’
-        + (sub ? ‘<div style="font-size:12px;color:var(--sub);margin-top:1px">’ + sub + ‘</div>’ : ‘’)
-        + ‘</div></div>’;
+      return '<div style="display:flex;align-items:center;gap:10px;margin:24px 0 14px">'
+        + '<div style="width:4px;height:20px;background:#1A3A8F;border-radius:3px;flex-shrink:0"></div>'
+        + '<div><div style="font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.2px">' + title + '</div>'
+        + (sub ? '<div style="font-size:12px;color:var(--sub);margin-top:1px">' + sub + '</div>' : '')
+        + '</div></div>';
     }
 
     // Inline field — label above input
     function field(label, req, inner) {
-      return ‘<div style="margin-bottom:14px">’
-        + ‘<label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:7px">’
-        + label + (req ? ‘<span style="color:#ef4444;margin-left:3px">*</span>’ : ‘’) + ‘</label>’
-        + inner + ‘</div>’;
+      return '<div style="margin-bottom:14px">'
+        + '<label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:7px">'
+        + label + (req ? '<span style="color:#ef4444;margin-left:3px">*</span>' : '') + '</label>'
+        + inner + '</div>';
     }
 
     var statusBtn = function (val, label) {
-      var on = (experienced ? ‘Experienced’ : ‘Fresher’) === val;
-      return ‘<button type="button" data-val="’ + val + ‘" onclick="H._ajStatus(this)" style="flex:1;padding:12px;border:1.5px solid ‘ + (on ? ‘#1A3A8F’ : ‘var(--border)’) + ‘;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;background:’ + (on ? ‘#1A3A8F’ : ‘var(--card)’) + ‘;color:’ + (on ? ‘#fff’ : ‘var(--text)’) + ‘;font-family:inherit;transition:all .15s">’ + label + ‘</button>’;
+      var on = (experienced ? 'Experienced' : 'Fresher') === val;
+      return '<button type="button" data-val="' + val + '" onclick="H._ajStatus(this)" style="flex:1;padding:12px;border:1.5px solid ' + (on ? '#1A3A8F' : 'var(--border)') + ';border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;background:' + (on ? '#1A3A8F' : 'var(--card)') + ';color:' + (on ? '#fff' : 'var(--text)') + ';font-family:inherit;transition:all .15s">' + label + '</button>';
     };
 
     // CV snapshot card shown when they have a saved profile
     var cvCard = hasSavedCV
-      ? ‘<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px">’
-          + (preTitle ? ‘<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px">’ + H.escHtml(preTitle) + ‘</div>’ : ‘’)
-          + (preCompany ? ‘<div style="font-size:13px;color:var(--sub);margin-bottom:6px">’ + H.escHtml(preCompany) + (lastExp.startDate ? ‘ · ‘ + H.escHtml(lastExp.startDate) : ‘’) + ‘</div>’ : ‘’)
-          + (preQual ? ‘<div style="display:inline-flex;align-items:center;background:#EEF2FF;color:#1A3A8F;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:8px">’ + H.escHtml((_QUAL_OPTS.find(function(o){return o[0]===preQual;})||[‘’,’’])[1] || preQual) + ‘</div>’ : ‘’)
+      ? '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px">'
+          + (preTitle ? '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px">' + H.escHtml(preTitle) + '</div>' : '')
+          + (preCompany ? '<div style="font-size:13px;color:var(--sub);margin-bottom:6px">' + H.escHtml(preCompany) + (lastExp.startDate ? ' · ' + H.escHtml(lastExp.startDate) : '') + '</div>' : '')
+          + (preQual ? '<div style="display:inline-flex;align-items:center;background:#EEF2FF;color:#1A3A8F;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:8px">' + H.escHtml((_QUAL_OPTS.find(function(o){return o[0]===preQual;})||['',''])[1] || preQual) + '</div>' : '')
           + (resumeName
-              ? ‘<div style="display:flex;align-items:center;gap:8px;background:#22c55e12;border:1px solid #22c55e30;border-radius:10px;padding:9px 12px;margin-top:4px">’
-                + ‘<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#15803d" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>’
-                + ‘<span style="flex:1;font-size:13px;font-weight:600;color:#15803d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">’ + H.escHtml(resumeName) + ‘</span>’
-                + (u.cvFileUrl ? ‘<a href="’ + H.escHtml(u.cvFileUrl) + ‘" target="_blank" style="font-size:12px;font-weight:700;color:#15803d;text-decoration:none;padding:2px 0">View</a>’ : ‘’)
-                + ‘</div>’
-              : ‘’)
-          + ‘</div>’
-        : ‘’;
+              ? '<div style="display:flex;align-items:center;gap:8px;background:#22c55e12;border:1px solid #22c55e30;border-radius:10px;padding:9px 12px;margin-top:4px">'
+                + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#15803d" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+                + '<span style="flex:1;font-size:13px;font-weight:600;color:#15803d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(resumeName) + '</span>'
+                + (u.cvFileUrl ? '<a href="' + H.escHtml(u.cvFileUrl) + '" target="_blank" style="font-size:12px;font-weight:700;color:#15803d;text-decoration:none;padding:2px 0">View</a>' : '')
+                + '</div>'
+              : '')
+          + '</div>'
+        : '';
 
-    var cvUpdateBtn = ‘<button onclick="H.openInner(\’CandidateProfile\’)" style="width:100%;padding:13px;background:var(--bg);border:1.5px dashed #1A3A8F;border-radius:13px;font-size:14px;font-weight:700;color:#1A3A8F;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">’
-      + ‘<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>’
-      + (hasSavedCV ? ‘Update your CV before applying’ : ‘Build your CV profile’)
-      + ‘</button>’;
+    var cvUpdateBtn = '<button onclick="H.openInner(\'CandidateProfile\')" style="width:100%;padding:13px;background:var(--bg);border:1.5px dashed #1A3A8F;border-radius:13px;font-size:14px;font-weight:700;color:#1A3A8F;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">'
+      + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+      + (hasSavedCV ? 'Update your CV before applying' : 'Build your CV profile')
+      + '</button>';
 
     var questionsHtml = questions.map(function (q, i) {
-      var lbl = ‘<label style="font-size:14px;font-weight:600;color:var(--text);display:block;margin-bottom:10px;line-height:1.5">’
-        + (q.required ? ‘<span style="color:#ef4444;margin-right:3px">*</span>’ : ‘’) + H.escHtml(q.question) + ‘</label>’;
-      var inp = ‘’;
-      if (q.type === ‘yesno’) {
-        inp = ‘<div id="applyQ_’ + i + ‘" data-value="" style="display:flex;gap:8px">’
-          + ‘<button type="button" onclick="var p=this.parentElement;p.dataset.value=\’Yes\’;this.style.background=\’#1A3A8F\’;this.style.color=\’#fff\’;this.style.borderColor=\’#1A3A8F\’;this.nextElementSibling.style.background=\’var(--card)\’;this.nextElementSibling.style.color=\’var(--text)\’;this.nextElementSibling.style.borderColor=\’var(--border)\’" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;background:var(--card);color:var(--text);font-family:inherit">Yes</button>’
-          + ‘<button type="button" onclick="var p=this.parentElement;p.dataset.value=\’No\’;this.style.background=\’#1A3A8F\’;this.style.color=\’#fff\’;this.style.borderColor=\’#1A3A8F\’;this.previousElementSibling.style.background=\’var(--card)\’;this.previousElementSibling.style.color=\’var(--text)\’;this.previousElementSibling.style.borderColor=\’var(--border)\’" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;background:var(--card);color:var(--text);font-family:inherit">No</button>’
-          + ‘</div>’;
-      } else if (q.type === ‘select’) {
-        inp = ‘<select id="applyQ_’ + i + ‘" style="’ + inS + ‘"><option value="">Pick one…</option>’
-          + (q.options || []).map(function(o){ return ‘<option>’ + H.escHtml(o) + ‘</option>’; }).join(‘’) + ‘</select>’;
+      var lbl = '<label style="font-size:14px;font-weight:600;color:var(--text);display:block;margin-bottom:10px;line-height:1.5">'
+        + (q.required ? '<span style="color:#ef4444;margin-right:3px">*</span>' : '') + H.escHtml(q.question) + '</label>';
+      var inp = '';
+      if (q.type === 'yesno') {
+        inp = '<div id="applyQ_' + i + '" data-value="" style="display:flex;gap:8px">'
+          + '<button type="button" onclick="var p=this.parentElement;p.dataset.value=\'Yes\';this.style.background=\'#1A3A8F\';this.style.color=\'#fff\';this.style.borderColor=\'#1A3A8F\';this.nextElementSibling.style.background=\'var(--card)\';this.nextElementSibling.style.color=\'var(--text)\';this.nextElementSibling.style.borderColor=\'var(--border)\'" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;background:var(--card);color:var(--text);font-family:inherit">Yes</button>'
+          + '<button type="button" onclick="var p=this.parentElement;p.dataset.value=\'No\';this.style.background=\'#1A3A8F\';this.style.color=\'#fff\';this.style.borderColor=\'#1A3A8F\';this.previousElementSibling.style.background=\'var(--card)\';this.previousElementSibling.style.color=\'var(--text)\';this.previousElementSibling.style.borderColor=\'var(--border)\'" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;background:var(--card);color:var(--text);font-family:inherit">No</button>'
+          + '</div>';
+      } else if (q.type === 'select') {
+        inp = '<select id="applyQ_' + i + '" style="' + inS + '"><option value="">Pick one…</option>'
+          + (q.options || []).map(function(o){ return '<option>' + H.escHtml(o) + '</option>'; }).join('') + '</select>';
       } else {
-        inp = ‘<textarea id="applyQ_’ + i + ‘" rows="3" placeholder="Your answer…" style="’ + inS + ‘;resize:vertical"></textarea>’;
+        inp = '<textarea id="applyQ_' + i + '" rows="3" placeholder="Your answer…" style="' + inS + ';resize:vertical"></textarea>';
       }
-      return ‘<div style="margin-bottom:18px">’ + lbl + inp + ‘</div>’;
-    }).join(‘’);
+      return '<div style="margin-bottom:18px">' + lbl + inp + '</div>';
+    }).join('');
 
-    var _sellerBiz = (H.state.businesses || []).find(function(b){ return b.ownerUserId === l.sellerId && b.status === ‘active’; });
+    var _sellerBiz = (H.state.businesses || []).find(function(b){ return b.ownerUserId === l.sellerId && b.status === 'active'; });
     var _sellerUser = (H.state.users || []).find(function(u2){ return u2.id === l.sellerId; });
-    var _logoSrc = (l.photos && l.photos[0]) || (_sellerBiz && _sellerBiz.logo) || (_sellerUser && _sellerUser.avatar) || ‘’;
+    var _logoSrc = (l.photos && l.photos[0]) || (_sellerBiz && _sellerBiz.logo) || (_sellerUser && _sellerUser.avatar) || '';
 
-    return ‘<div class="page active">’
-      + H.innerTopbar(‘Apply for this Job’)
+    return '<div class="page active">'
+      + H.innerTopbar('Apply for this Job')
 
-      + ‘<div style="padding:16px 16px 110px">’
+      + '<div style="padding:16px 16px 110px">'
 
       // ── Job context ──────────────────────────────────────────────
-      + ‘<div style="display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:4px">’
-      + ‘<div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden">’
-      + (_logoSrc ? ‘<img src="’ + _logoSrc + ‘" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\’none\’">’ : ‘’)
-      + (_logoSrc ? ‘’ : companyInitials)
-      + ‘</div>’
-      + ‘<div style="min-width:0"><div style="font-size:15px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">’ + H.escHtml(l.title) + ‘</div>’
-      + ‘<div style="font-size:13px;color:var(--sub);margin-top:2px">’ + H.escHtml(company) + ‘ · ‘ + H.escHtml(l.city || ‘Zimbabwe’) + ‘</div></div>’
-      + ‘</div>’
-      + ‘<div style="font-size:12px;color:var(--sub);text-align:center;padding:8px 0 4px">Your application goes directly to the employer</div>’
+      + '<div style="display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:4px">'
+      + '<div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden">'
+      + (_logoSrc ? '<img src="' + _logoSrc + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">' : '')
+      + (_logoSrc ? '' : companyInitials)
+      + '</div>'
+      + '<div style="min-width:0"><div style="font-size:15px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(l.title) + '</div>'
+      + '<div style="font-size:13px;color:var(--sub);margin-top:2px">' + H.escHtml(company) + ' · ' + H.escHtml(l.city || 'Zimbabwe') + '</div></div>'
+      + '</div>'
+      + '<div style="font-size:12px;color:var(--sub);text-align:center;padding:8px 0 4px">Your application goes directly to the employer</div>'
 
       // ── Section 1: About you ─────────────────────────────────────
-      + secHead(‘About you’, ‘The employer will use this to contact you’)
-      + field(‘What is your full name?’, true, ‘<input id="ajName" value="’ + H.escHtml(u.name || ‘’) + ‘" placeholder="e.g. Tendai Moyo" style="’ + inS + ‘">’)
-      + field(‘Your email address’, true, ‘<input id="ajEmail" type="email" value="’ + H.escHtml(u.email || ‘’) + ‘" placeholder="you@gmail.com" style="’ + inS + ‘">’)
-      + field(‘Your phone number’, true, ‘<input id="ajPhone" type="tel" value="’ + H.escHtml(u.phone || u.whatsappFull || ‘’) + ‘" placeholder="077 123 4567" style="’ + inS + ‘">’)
-      + field(‘Where are you based?’, false, ‘<input id="ajCity" value="’ + H.escHtml(u.city || ‘’) + ‘" placeholder="City or town, e.g. Harare" style="’ + inS + ‘">’)
+      + secHead('About you', 'The employer will use this to contact you')
+      + field('What is your full name?', true, '<input id="ajName" value="' + H.escHtml(u.name || '') + '" placeholder="e.g. Tendai Moyo" style="' + inS + '">')
+      + field('Your email address', true, '<input id="ajEmail" type="email" value="' + H.escHtml(u.email || '') + '" placeholder="you@gmail.com" style="' + inS + '">')
+      + field('Your phone number', true, '<input id="ajPhone" type="tel" value="' + H.escHtml(u.phone || u.whatsappFull || '') + '" placeholder="077 123 4567" style="' + inS + '">')
+      + field('Where are you based?', false, '<input id="ajCity" value="' + H.escHtml(u.city || '') + '" placeholder="City or town, e.g. Harare" style="' + inS + '">')
 
       // ── Section 2: Your CV ───────────────────────────────────────
-      + secHead(‘Your CV’, hasSavedCV ? ‘This is what the employer will see about your background’ : ‘Help the employer understand your experience’)
-      + (hasSavedCV ? cvCard : ‘’)
+      + secHead('Your CV', hasSavedCV ? 'This is what the employer will see about your background' : 'Help the employer understand your experience')
+      + (hasSavedCV ? cvCard : '')
       + cvUpdateBtn
 
       // Show the detail fields so they can still fill in / confirm manually
-      + ‘<div style="margin-top:18px">’
-      + field(‘Your highest qualification’, true, ‘<select id="ajQual" style="’ + inS + ‘"><option value="">Select your qualification…</option>’
-          + _QUAL_OPTS.map(function(o){ return ‘<option value="’ + o[0] + ‘"’ + (preQual === o[0] ? ‘ selected’ : ‘’) + ‘>’ + H.escHtml(o[1]) + ‘</option>’; }).join(‘’) + ‘</select>’)
-      + field(‘Are you experienced or a fresher?’, true,
-          ‘<div id="ajStatus" data-value="’ + (experienced ? ‘Experienced’ : ‘Fresher’) + ‘" style="display:flex;gap:8px">’
-          + statusBtn(‘Fresher’, ‘Fresher — just starting out’)
-          + statusBtn(‘Experienced’, ‘Experienced’)
-          + ‘</div>’)
-      + field(‘Your current job title’, true, ‘<input id="ajTitle" value="’ + H.escHtml(preTitle) + ‘" placeholder="e.g. Customer Service Driver" style="’ + inS + ‘">’)
-      + field(‘Which job category fits best?’, true, ‘<select id="ajCategory" style="’ + inS + ‘"><option value="">Pick a category…</option>’
-          + JOB_CATS.map(function(c){ return ‘<option’ + (preCat === c ? ‘ selected’ : ‘’) + ‘>’ + H.escHtml(c) + ‘</option>’; }).join(‘’) + ‘<option’ + (preCat === ‘Other’ ? ‘ selected’ : ‘’) + ‘>Other</option></select>’)
-      + field(‘Specific industry (optional)’, false, ‘<input id="ajIndustry" placeholder="e.g. Logistics, Mining, Retail…" style="’ + inS + ‘">’)
-      + field(‘Most recent employer’, false, ‘<input id="ajCompany" value="’ + H.escHtml(preCompany) + ‘" placeholder="Company name" style="’ + inS + ‘">’)
-      + field(‘How long were you there?’, false,
-          ‘<div style="display:flex;gap:10px;margin-bottom:10px">’
-          + ‘<div style="flex:1"><label style="font-size:11px;color:var(--sub);font-weight:600;display:block;margin-bottom:5px">From</label><input id="ajStart" type="month" style="’ + inS + ‘"></div>’
-          + ‘<div style="flex:1"><label style="font-size:11px;color:var(--sub);font-weight:600;display:block;margin-bottom:5px">To</label><input id="ajEnd" type="month" style="’ + inS + ‘"></div>’
-          + ‘</div>’
-          + ‘<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;background:var(--bg);border-radius:12px;border:1.5px solid var(--border)">’
-          + ‘<input type="checkbox" id="ajCurrent" onchange="var e=document.getElementById(\’ajEnd\’);e.disabled=this.checked;if(this.checked)e.value=\’\’" style="width:18px;height:18px;accent-color:#1A3A8F;flex-shrink:0">’
-          + ‘<span style="font-size:14px;font-weight:600;color:var(--text)">I still work here</span></label>’)
-      + ‘</div>’
+      + '<div style="margin-top:18px">'
+      + field('Your highest qualification', true, '<select id="ajQual" style="' + inS + '"><option value="">Select your qualification…</option>'
+          + _QUAL_OPTS.map(function(o){ return '<option value="' + o[0] + '"' + (preQual === o[0] ? ' selected' : '') + '>' + H.escHtml(o[1]) + '</option>'; }).join('') + '</select>')
+      + field('Are you experienced or a fresher?', true,
+          '<div id="ajStatus" data-value="' + (experienced ? 'Experienced' : 'Fresher') + '" style="display:flex;gap:8px">'
+          + statusBtn('Fresher', 'Fresher — just starting out')
+          + statusBtn('Experienced', 'Experienced')
+          + '</div>')
+      + field('Your current job title', true, '<input id="ajTitle" value="' + H.escHtml(preTitle) + '" placeholder="e.g. Customer Service Driver" style="' + inS + '">')
+      + field('Which job category fits best?', true, '<select id="ajCategory" style="' + inS + '"><option value="">Pick a category…</option>'
+          + JOB_CATS.map(function(c){ return '<option' + (preCat === c ? ' selected' : '') + '>' + H.escHtml(c) + '</option>'; }).join('') + '<option' + (preCat === 'Other' ? ' selected' : '') + '>Other</option></select>')
+      + field('Specific industry (optional)', false, '<input id="ajIndustry" placeholder="e.g. Logistics, Mining, Retail…" style="' + inS + '">')
+      + field('Most recent employer', false, '<input id="ajCompany" value="' + H.escHtml(preCompany) + '" placeholder="Company name" style="' + inS + '">')
+      + field('How long were you there?', false,
+          '<div style="display:flex;gap:10px;margin-bottom:10px">'
+          + '<div style="flex:1"><label style="font-size:11px;color:var(--sub);font-weight:600;display:block;margin-bottom:5px">From</label><input id="ajStart" type="month" style="' + inS + '"></div>'
+          + '<div style="flex:1"><label style="font-size:11px;color:var(--sub);font-weight:600;display:block;margin-bottom:5px">To</label><input id="ajEnd" type="month" style="' + inS + '"></div>'
+          + '</div>'
+          + '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;background:var(--bg);border-radius:12px;border:1.5px solid var(--border)">'
+          + '<input type="checkbox" id="ajCurrent" onchange="var e=document.getElementById(\'ajEnd\');e.disabled=this.checked;if(this.checked)e.value=\'\'" style="width:18px;height:18px;accent-color:#1A3A8F;flex-shrink:0">'
+          + '<span style="font-size:14px;font-weight:600;color:var(--text)">I still work here</span></label>')
+      + '</div>'
 
       // ── Section 3: Why you? ──────────────────────────────────────
-      + secHead(‘Why are you a good fit?’, ‘Optional — but a personal note makes a big difference’)
-      + ‘<textarea id="applyMsg" rows="4" placeholder="Tell the employer a bit about yourself — why this role suits you, what you bring to the table, or anything else worth knowing." style="’ + inS + ‘;resize:vertical"></textarea>’
+      + secHead('Why are you a good fit?', 'Optional — but a personal note makes a big difference')
+      + '<textarea id="applyMsg" rows="4" placeholder="Tell the employer a bit about yourself — why this role suits you, what you bring to the table, or anything else worth knowing." style="' + inS + ';resize:vertical"></textarea>'
 
       // ── Screening questions ──────────────────────────────────────
       + (questions.length
-        ? ‘<div style="margin-top:22px">’
-          + ‘<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">’
-          + ‘<div style="width:4px;height:20px;background:#F5A623;border-radius:3px;flex-shrink:0"></div>’
-          + ‘<div style="font-size:16px;font-weight:800;color:var(--text)">A few quick questions</div></div>’
+        ? '<div style="margin-top:22px">'
+          + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">'
+          + '<div style="width:4px;height:20px;background:#F5A623;border-radius:3px;flex-shrink:0"></div>'
+          + '<div style="font-size:16px;font-weight:800;color:var(--text)">A few quick questions</div></div>'
           + questionsHtml
-          + ‘</div>’
-        : ‘’)
+          + '</div>'
+        : '')
 
-      + ‘</div>’
+      + '</div>'
 
       // ── Sticky footer ────────────────────────────────────────────
-      + ‘<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">’
-      + ‘<button onclick="H._submitApplyJob(\’’ + H.escHtml(jobId) + ‘\’)" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px">’
-      + ‘<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Submit Application</button>’
-      + ‘<button onclick="H._clearApplyForm()" style="width:100%;margin-top:8px;padding:11px;background:none;border:none;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;font-family:inherit">Clear form and start over</button>’
-      + ‘</div></div>’;
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:12px 16px;padding-bottom:calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--border);z-index:200">'
+      + '<button onclick="H._submitApplyJob(\'' + H.escHtml(jobId) + '\')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px">'
+      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Submit Application</button>'
+      + '<button onclick="H._clearApplyForm()" style="width:100%;margin-top:8px;padding:11px;background:none;border:none;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;font-family:inherit">Clear form and start over</button>'
+      + '</div></div>';
   };
 
   H._ajStatus = function (btn) {
@@ -2511,7 +2511,7 @@
       + _cpPillRow('cpNotice', ['Available Immediately', 'Less than 2 weeks', '1 Month', 'More than 1 Month'], (u.cv && u.cv.noticePeriod) || u.noticePeriod || '')
       + '</div>'
       + '<div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Education Level</label>'
-      + _cpPillRow('cpEduLevel', ['High School', 'Diploma', 'Bachelor’s Degree', 'Master’s Degree', 'PhD', 'Other'], (u.cv && u.cv.educationLevel) || u.educationLevel || '')
+      + _cpPillRow('cpEduLevel', ['High School', 'Diploma', "Bachelor's Degree", "Master's Degree", 'PhD', 'Other'], (u.cv && u.cv.educationLevel) || u.educationLevel || '')
       + '</div>'
 
       // ── Contact & Reach ──
