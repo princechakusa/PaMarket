@@ -858,7 +858,7 @@
   H.fetchAllActiveBusinesses = async function () {
     const sb = window.supabase; if (!sb) return H.state.businesses || [];
     try {
-      const { data, error } = await sb.from('businesses').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(20);
+      const { data, error } = await sb.from('businesses').select('id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,featured_listing_ids,updated_at').eq('status', 'active').order('created_at', { ascending: false }).limit(20);
       if (error || !Array.isArray(data)) return H.state.businesses || [];
       const serverList = data.map(row => {
         const _cats = (row.category || '').split('|').filter(Boolean);

@@ -286,28 +286,15 @@
       _mainArea.addEventListener('scroll', _mainArea._homeScrollHandler, { passive: true });
     }
 
-    // Always pull fresh listings + shops when Home renders. This guarantees the
-    // grid fills even if the one-time boot fetch was slow or failed (cold start /
-    // flaky mobile). Background polling on top is handled by H.RM.
+    // Hydration is handled by H.RM (refresh-manager.js) which calls
+    // fetchListingsFromSupabase + fetchAllActiveBusinesses through throttled
+    // wrappers (_fetchListings/_fetchBiz, 30 s minimum between calls) and
+    // re-renders only when data actually changed. Calling them directly here
+    // was causing a second unthrottled fetch on every Home render — doubling
+    // egress — because the direct call does not update RM's throttle timestamps.
     if (H.RM && H.RM._inBgRender) return; // skip during a background re-render
-    const _fetches = [];
-    if (typeof H.fetchListingsFromSupabase === 'function') _fetches.push(H.fetchListingsFromSupabase().catch(function(){}));
-    if (typeof H.fetchAllActiveBusinesses === 'function') _fetches.push(H.fetchAllActiveBusinesses().catch(function(){}));
-    if (!_fetches.length) return;
-    const _listSigBefore = (H.state.listings  || []).filter(l => l.status === 'active').length;
-    const _bizSigBefore  = (H.state.businesses || []).filter(b => b.status === 'active').length;
-    Promise.all(_fetches).then(function () {
-      if (H.currentPageName !== 'Home') return;
-      const _listSigAfter = (H.state.listings  || []).filter(l => l.status === 'active').length;
-      const _bizSigAfter  = (H.state.businesses || []).filter(b => b.status === 'active').length;
-      if (_bizSigAfter !== _bizSigBefore) {
-        // Business count changed — Local Shops is outside #catSections so needs a full repaint.
-        if (typeof H._scheduleRender === 'function') H._scheduleRender();
-      } else if (_listSigAfter !== _listSigBefore) {
-        // Only listings changed — patch grid in-place, no scroll reset.
-        if (typeof H._renderHomeCatSections === 'function') H._renderHomeCatSections();
-      }
-    }).catch(function(){});
+    // RM.start() is called by the _autoHook wrapper in refresh-manager.js
+    // immediately after this function returns, so no extra work needed here.
   };
 
   H.toggleCityPicker = function () {

@@ -176,7 +176,7 @@
     const u = currentUser();
     if (!sb || !u) return;
     try {
-      const { data, error } = await sb.from('businesses').select('*').eq('owner_user_id', u.id);
+      const { data, error } = await sb.from('businesses').select('id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,onboarding_step,verification_level,created_at,updated_at').eq('owner_user_id', u.id).limit(10);
       if (error || !Array.isArray(data)) return;
       H.state.businesses = H.state.businesses || [];
       data.forEach(row => {

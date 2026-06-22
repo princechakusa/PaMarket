@@ -1475,7 +1475,7 @@ window.H = {
   async _fetchListingById(id) {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return null;
-      const { data, error } = await window.supabase.from('listings').select('*').eq('id', id).maybeSingle();
+      const { data, error } = await window.supabase.from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes').eq('id', id).maybeSingle();
       if (error || !data) return null;
       const o = H._mapCloudListing(data);
       H.state.listings = H.state.listings || [];
@@ -1488,15 +1488,15 @@ window.H = {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
       const {data,error}=await window.supabase
-        .from('listings').select('*')
+        .from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes')
         .eq('status','active')
         .order('created_at',{ascending:false})
-        .limit(100);
+        .limit(50);
       if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
       const cloud=(data||[]).map(r=>H._mapCloudListing(r));
       // Reset pagination cursor — this is always a fresh fetch from newest
-      H._listingsCursor    = (data.length === 100) ? data[data.length - 1].created_at : null;
-      H._listingsAllLoaded = data.length < 100;
+      H._listingsCursor    = (data.length === 50) ? data[data.length - 1].created_at : null;
+      H._listingsAllLoaded = data.length < 50;
       if (typeof H.applyFeedUpdate === 'function') {
         H.applyFeedUpdate({ type: 'listings_full', data: cloud }, 'poll');
       } else {
@@ -1550,16 +1550,16 @@ window.H = {
     var sentinel = document.getElementById('homeLoadMore');
     if (sentinel) sentinel.textContent = 'Loading more listings...';
     try {
-      var res = await window.supabase.from('listings').select('*')
+      var res = await window.supabase.from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .lt('created_at', H._listingsCursor)
-        .limit(100);
+        .limit(50);
       if (res.error || !Array.isArray(res.data)) return;
       var batch = res.data;
       var cloud = batch.map(function(r) { return H._mapCloudListing(r); });
-      if (batch.length < 100) H._listingsAllLoaded = true;
-      if (batch.length === 100) H._listingsCursor = batch[batch.length - 1].created_at;
+      if (batch.length < 50) H._listingsAllLoaded = true;
+      if (batch.length === 50) H._listingsCursor = batch[batch.length - 1].created_at;
       if (cloud.length > 0) {
         var existing = new Set((H.state.listings || []).map(function(l) { return l.id; }));
         var toAdd = cloud.filter(function(l) { return !existing.has(l.id); });
@@ -1591,7 +1591,7 @@ window.H = {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
       const {data,error}=await window.supabase
-        .from('listings').select('*')
+        .from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes')
         .order('created_at',{ascending:false})
         .limit(20);
       if(error||!Array.isArray(data)) return;
@@ -1782,7 +1782,7 @@ window.H = {
       const sb = window.supabase;
       if (!sb || typeof sb.from !== 'function') return;
       const { data, error } = await sb.from('reports')
-        .select('*')
+        .select('id, reporter_id, reported_by, target_type, target_id, reason, status, created_at')
         .order('created_at', { ascending: false })
         .limit(20);
       if (error || !data) return;

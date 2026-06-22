@@ -81,7 +81,7 @@
     const u = H.currentUser(); if (!u) return;
     try {
       const res = await c.from('notifications')
-        .select('*').eq('user_id', u.id)
+        .select('id, user_id, title, body, type, read, created_at, meta, image_url').eq('user_id', u.id)
         .order('created_at', { ascending: false }).limit(20);
       if (res.error || !res.data) return;
       H.state.notifs = H.state.notifs || {};

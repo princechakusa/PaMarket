@@ -797,13 +797,16 @@
           if (!document.hidden && me()) H.touchLastSeen();
         }, 60000);
       }
-      // Connection health monitor — runs every 5 s while foregrounded.
+      // Connection health monitor — runs every 30 s while foregrounded.
       // Two failure modes handled:
-      //   1. Socket disconnected → reconnect all channels + catch-up sync.
-      //   2. Socket connected but no event in 10 s → the table is probably not
-      //      yet in the Supabase realtime publication; do a single poll so the
-      //      page stays fresh in the interim.  Once the SQL migration is run
-      //      this branch never fires because events arrive within milliseconds.
+      //   1. Socket disconnected → reconnect channels + throttled catch-up poll.
+      //      NOTE: we do NOT call RM.resume() here because resume() resets both
+      //      fetch throttle timestamps to 0, causing full SELECT* dumps on every
+      //      5-second tick when WebSocket drops on mobile — the primary cause of
+      //      runaway egress. Instead we call RM._poll() which respects the 30s
+      //      throttle and only fetches when data is actually stale.
+      //   2. Socket connected but no event in 60 s — could be a silent channel
+      //      drop or a low-traffic table. Poll once (throttle-respecting).
       if (!H._rtHealthInterval) {
         H._rtHealthInterval = setInterval(function () {
           if (document.hidden || !canRealtime()) return;
@@ -813,19 +816,18 @@
             H.RT.reconnectAll('health');
             if (me() && typeof H.syncConversations === 'function') H.syncConversations().catch(function () {});
             if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
-            if (H.RM && typeof H.RM.resume === 'function') H.RM.resume();
-          } else if (_now - (H._lastRtEvent || 0) > 10000) {
-            // Realtime socket is up but no postgres_changes event has arrived in
-            // 10 s — tables not yet in publication or a silent channel drop.
-            // Poll the current page once (respects the 30 s fetch throttle so
-            // we never spam the DB) and sync notifications if signed in.
+            // Throttle-respecting poll — does NOT reset _lastListingsFetch/_lastBizFetch
+            var _pg = H.currentPageName; var _pr = H.currentPageParams;
+            if (_pg && H.RM && typeof H.RM._poll === 'function') H.RM._poll(_pg, _pr, false);
+          } else if (_now - (H._lastRtEvent || 0) > 60000) {
+            // Realtime socket up but silent for 60 s — poll once with throttle.
             H._lastRtEvent = _now;
             var _pg = H.currentPageName;
             var _pr = H.currentPageParams;
             if (_pg && H.RM && typeof H.RM._poll === 'function') H.RM._poll(_pg, _pr, false);
             if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
           }
-        }, 5000);
+        }, 30000);
       }
     } else if (tries < 60) {
       setTimeout(boot, 1000);

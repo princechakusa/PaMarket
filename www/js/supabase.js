@@ -59,7 +59,7 @@
     var avatar = meta.avatar_url || meta.picture || null;
     var email  = user.email || '';
     try {
-      var pr = await window.supabase.from('profiles').select('*').eq('id', userId).single();
+      var pr = await window.supabase.from('profiles').select('id, name, avatar, role, status, verified, phone, created_at').eq('id', userId).single();
       var profile = pr.data;
       if (!profile) {
         await window.supabase.from('profiles').upsert({ id: userId, name: name, avatar: avatar });
