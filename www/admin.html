@@ -858,6 +858,7 @@ function renderBusinesses() {
     if(st!=='pending_activation') html += '<button class="ab ab-reject" onclick="bizSetStatus(\''+b.id+'\',\'suspended\')">Suspend</button>';
     html += '<button class="ab ab-view" onclick="bizSetPlan(\''+b.id+'\')">Plan</button>';
     html += '<button class="ab ab-view" onclick="bizSetVerify(\''+b.id+'\')">Verify</button>';
+    html += '<button class="ab ab-reject" onclick="adminDeleteBusiness(\''+b.id+'\')" style="background:rgba(239,68,68,.12);color:var(--red)">Delete</button>';
     html += '</div></td></tr>';
   });
   html += '</tbody></table></div>';
@@ -908,6 +909,27 @@ async function bizSetVerify(id) {
     b.verification_level = next;
     renderBusinesses(); toast('Verification level set to '+next);
   } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+function adminDeleteBusiness(id) {
+  var b = DATA.businesses.find(function(x){return x.id===id;}); if(!b) return;
+  openModal('<div class="modal-title">Delete Business<button class="modal-close" onclick="closeModal()">×</button></div>'
+    +'<div style="font-size:13.5px;color:var(--sub);line-height:1.6;margin-bottom:16px">Permanently delete <strong>'+esc(b.name||'this business')+'</strong>? This cannot be undone.</div>'
+    +'<div style="display:flex;gap:10px">'
+    +'<button class="btn-verif-reject" style="flex:1" onclick="closeModal()">Cancel</button>'
+    +'<button class="btn-verif-approve" style="flex:1;background:var(--red)" onclick="closeModal();_doDeleteBusiness(\''+id+'\')">Delete</button>'
+    +'</div>'
+  );
+}
+
+async function _doDeleteBusiness(id) {
+  var b = DATA.businesses.find(function(x){return x.id===id;});
+  try {
+    var r = await sb.from('businesses').delete().eq('id',id);
+    if(r.error) throw r.error;
+    DATA.businesses = DATA.businesses.filter(function(x){return x.id!==id;});
+    renderBusinesses(); toast('Business deleted');
+  } catch(e){ toast('Error: '+(e.message||'Failed'),'error'); }
 }
 
 function bizSetPlan(id) {

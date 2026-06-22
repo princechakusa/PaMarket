@@ -104,6 +104,7 @@
   };
   H._clearChatDraft = function (convId) {
     if (!convId) return;
+    if (H._saveDraftTimer) { clearTimeout(H._saveDraftTimer); H._saveDraftTimer = null; }
     delete H._chatDrafts[convId];
     if (H.state._chatDrafts) delete H.state._chatDrafts[convId];
   };
@@ -173,7 +174,7 @@
           // No profile row at all (maybeSingle → null, no error) = deleted account.
           // Mark resolved so we don't retry forever (which showed "PaMarket User").
           H._resolvedProfileFetch[otherId] = true;
-          if (conv && !conv.otherDeleted) {
+          if (conv && !conv.otherDeleted && !(conv.id && String(conv.id).startsWith('biz_'))) {
             conv.otherDeleted = true;
             H.saveState();
             if (H.currentPageName === 'Messages') H.renderPage('Messages');

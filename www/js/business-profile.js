@@ -702,15 +702,20 @@
       <!-- Sticky CTA -->
       <div style="position:sticky;bottom:0;background:rgba(var(--card-rgb,255,255,255),0.97);backdrop-filter:blur(10px);padding:10px 14px calc(14px + var(--safe-bottom, 0px));border-top:1px solid var(--border,#E8ECF4)">
         ${isOwn
-          ? `<div style="display:flex;gap:8px">
-              <button onclick="H._bizAnalytics&&H._bizAnalytics.open('${escHtml(String(b.id))}')" style="flex:1;padding:13px 0;background:#EEF2FB;color:#1A3A8F;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics
-              </button>
-              <button onclick="H._bizLeads&&H._bizLeads.open('${escHtml(String(b.id))}')" style="flex:1;padding:13px 0;background:#EEF2FB;color:#1A3A8F;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Leads
-              </button>
-              <button onclick="H._bizProfile.openEdit('${escHtml(String(b.id))}')" style="flex:1;padding:13px 0;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit
+          ? `<div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;gap:8px">
+                <button onclick="H._bizAnalytics&&H._bizAnalytics.open('${escHtml(String(b.id))}')" style="flex:1;padding:13px 0;background:#EEF2FB;color:#1A3A8F;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics
+                </button>
+                <button onclick="H._bizLeads&&H._bizLeads.open('${escHtml(String(b.id))}')" style="flex:1;padding:13px 0;background:#EEF2FB;color:#1A3A8F;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Leads
+                </button>
+                <button onclick="H._bizProfile.openEdit('${escHtml(String(b.id))}')" style="flex:1;padding:13px 0;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit
+                </button>
+              </div>
+              <button onclick="H._bizProfile.confirmDeleteShop('${escHtml(String(b.id))}')" style="width:100%;padding:11px 0;background:#FFF1F0;color:#dc2626;border:1.5px solid #FECACA;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>Delete Shop
               </button>
             </div>`
           : `<button onclick="H.recordShopLead&&H.recordShopLead('${escHtml(String(b.id))}','chat');H.startBizChat('${escHtml(String(b.id))}')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#2245b8);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 5px 18px rgba(26,58,143,0.3)">
@@ -974,6 +979,29 @@
   H._bizProfile = {
     openEdit(id) { _edit = null; H.openInner('BusinessEditProfile', { id }); },
     openStaff(id) { H.fetchBusinessStaff(id).then(() => renderPage('BusinessStaff', { id })); H.openInner('BusinessStaff', { id }); },
+
+    confirmDeleteShop(id) {
+      const b = (H.state.businesses || []).find(function(x) { return x.id === id; });
+      if (!b) return;
+      const u = currentUser(); if (!u || b.ownerUserId !== u.id) { toast('Owner only'); return; }
+      H.modal({
+        title: 'Delete Your Shop',
+        body: `Permanently delete <strong>${escHtml(b.name || 'your shop')}</strong>? All your shop data will be removed. This cannot be undone.`,
+        confirmText: 'Delete Shop', danger: true,
+        onConfirm: async function() {
+          try {
+            if (window.supabase) {
+              const r = await window.supabase.from('businesses').delete().eq('id', id);
+              if (r.error) throw r.error;
+            }
+            H.state.businesses = (H.state.businesses || []).filter(function(x) { return x.id !== id; });
+            H.saveState();
+            toast('Your shop has been deleted');
+            H.navTo('Home');
+          } catch(e) { toast('Could not delete shop'); }
+        }
+      });
+    },
 
     toggleFeatured: function(listingId) {
       if (!_edit) return;

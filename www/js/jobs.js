@@ -229,7 +229,7 @@
     { key: 'postgrad',    label: 'Postgraduate',            match: ['postgrad', 'masters', 'msc', 'mba', 'phd'] }
   ];
 
-  // Compact line icon per job category.
+  // Icon paths and accent colors per job category.
   var JOB_CAT_ICON = {
     'Accounting & Finance': '<path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>',
     'Sales & Marketing':    '<path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-5"/>',
@@ -237,10 +237,22 @@
     'Construction':         '<path d="M2 20h20M4 20V8l8-5 8 5v12M9 20v-6h6v6"/>',
     'Healthcare':           '<path d="M19 14a7 7 0 11-14 0 7 7 0 0114 0z"/><path d="M12 8v4M10 10h4"/>',
     'Education':            '<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2 6 2s6-1 6-2v-5"/>',
-    'Hospitality':         '<path d="M3 11h18M5 11V7a7 7 0 0114 0v4M4 11v3a8 8 0 0016 0v-3"/>',
+    'Hospitality':          '<path d="M3 11h18M5 11V7a7 7 0 0114 0v4M4 11v3a8 8 0 0016 0v-3"/>',
     'Administration':       '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/>',
     'Engineering':          '<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.1-.4-.4-2.1z"/>',
     'Driving & Logistics':  '<path d="M1 3h15v13H1zM16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="18.5" cy="18.5" r="2"/>'
+  };
+  var JOB_CAT_COLOR = {
+    'Accounting & Finance': 'linear-gradient(135deg,#1A3A8F,#2952cc)',
+    'Sales & Marketing':    'linear-gradient(135deg,#F5A623,#e8910a)',
+    'IT & Technology':      'linear-gradient(135deg,#0ea5e9,#0284c7)',
+    'Construction':         'linear-gradient(135deg,#78716c,#57534e)',
+    'Healthcare':           'linear-gradient(135deg,#ef4444,#dc2626)',
+    'Education':            'linear-gradient(135deg,#8b5cf6,#7c3aed)',
+    'Hospitality':          'linear-gradient(135deg,#f97316,#ea580c)',
+    'Administration':       'linear-gradient(135deg,#14b8a6,#0d9488)',
+    'Engineering':          'linear-gradient(135deg,#6366f1,#4f46e5)',
+    'Driving & Logistics':  'linear-gradient(135deg,#22c55e,#16a34a)'
   };
 
   function _activeJobs() {
@@ -270,10 +282,11 @@
     var catCards = JOB_CATS.map(function (cat) {
       var cnt = _catCount(jobs, cat);
       var icon = JOB_CAT_ICON[cat] || '<rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>';
-      return '<div onclick="H.openInner(\'JobResults\',{cat:\'' + cat + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 12px;cursor:pointer;display:flex;align-items:center;gap:11px">'
-        + '<div style="width:40px;height:40px;border-radius:11px;background:#1A3A8F12;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#1A3A8F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + icon + '</svg></div>'
-        + '<div style="min-width:0"><div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.25;overflow:hidden;text-overflow:ellipsis">' + H.escHtml(cat) + '</div>'
-        + '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + cnt + ' job' + (cnt !== 1 ? 's' : '') + '</div></div></div>';
+      var grad = JOB_CAT_COLOR[cat] || 'linear-gradient(135deg,#1A3A8F,#2952cc)';
+      return '<div onclick="H.openInner(\'JobResults\',{cat:\'' + cat + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:14px;cursor:pointer;overflow:hidden">'
+        + '<div style="background:' + grad + ';padding:18px 0;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + icon + '</svg></div>'
+        + '<div style="padding:10px 11px 11px"><div style="font-size:12.5px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:3px">' + H.escHtml(cat) + '</div>'
+        + '<div style="font-size:11px;color:var(--sub)">' + cnt + ' job' + (cnt !== 1 ? 's' : '') + '</div></div></div>';
     }).join('');
 
     var typeCards = JOB_TYPES.map(function (t) {
@@ -283,9 +296,16 @@
         + '<span style="font-size:11px;font-weight:700;color:#1A3A8F;background:#1A3A8F12;padding:2px 8px;border-radius:10px">' + cnt + '</span></div>';
     }).join('');
 
+    var qualIcons = {
+      none:        '<path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M9 12h6M12 9v6"/>',
+      certificate: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h4"/>',
+      degree:      '<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2 6 2s6-1 6-2v-5"/>',
+      postgrad:    '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'
+    };
     var qualCards = JOB_QUALS.map(function (q) {
+      var qIco = qualIcons[q.key] || qualIcons.degree;
       return '<div onclick="H.openInner(\'JobResults\',{qual:\'' + q.key + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center">'
-        + '<div style="display:flex;justify-content:center;margin-bottom:8px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1A3A8F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2 6 2s6-1 6-2v-5"/></svg></div>'
+        + '<div style="display:flex;justify-content:center;margin-bottom:8px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1A3A8F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + qIco + '</svg></div>'
         + '<div style="font-size:12.5px;font-weight:700;color:var(--text);line-height:1.3">' + H.escHtml(q.label) + '</div></div>';
     }).join('');
 
