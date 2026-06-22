@@ -464,8 +464,11 @@
   //   payload.type: 'listing_event' | 'listings_full'
   //                 'business_event' | 'businesses_full'
   // ===================================================================
+  H._lastRtEvent = H._lastRtEvent || 0;
+
   H.applyFeedUpdate = function (payload, source) {
     if (!payload) return;
+    H._lastRtEvent = Date.now();   // realtime is delivering events — stale-check resets
     H.RT._log('pipeline', '[1] event received', { type: payload.type, evt: payload.evt, source: source, id: (payload.data && payload.data.id) || payload.id });
     H.state.listings   = H.state.listings   || [];
     H.state.businesses = H.state.businesses || [];
@@ -690,6 +693,7 @@
         return;
       }
       if (H.RM._inBgRender) {
+
         // RM is mid-render; retry with backoff until it settles (up to 5 attempts)
         var _retries = 0;
         function _retryRender() {
@@ -712,7 +716,7 @@
       }
       H.RT._log('render', 'fire', { page: capturedPage });
       H.RM._renderPreserved(capturedPage, H.currentPageParams);
-    }, 350);
+    }, 120);
   };
 
   // ===================================================================
@@ -793,22 +797,35 @@
           if (!document.hidden && me()) H.touchLastSeen();
         }, 60000);
       }
-      // Connection health monitor (lightweight polling fallback). Every 30s while
-      // foregrounded, if the realtime socket is DOWN, reconnect every channel and
-      // do a one-off catch-up sync. This costs nothing while realtime is healthy
-      // (the common case) — it is gated on actual disconnection, so it never burns
-      // data when the live stream is working. That is the deliberate design: rely
-      // on realtime when it works, poll only when it doesn't.
+      // Connection health monitor — runs every 5 s while foregrounded.
+      // Two failure modes handled:
+      //   1. Socket disconnected → reconnect all channels + catch-up sync.
+      //   2. Socket connected but no event in 10 s → the table is probably not
+      //      yet in the Supabase realtime publication; do a single poll so the
+      //      page stays fresh in the interim.  Once the SQL migration is run
+      //      this branch never fires because events arrive within milliseconds.
       if (!H._rtHealthInterval) {
         H._rtHealthInterval = setInterval(function () {
           if (document.hidden || !canRealtime()) return;
+          var _now = Date.now();
           if (!realtimeConnected()) {
+            H._lastRtEvent = _now;
             H.RT.reconnectAll('health');
             if (me() && typeof H.syncConversations === 'function') H.syncConversations().catch(function () {});
             if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
             if (H.RM && typeof H.RM.resume === 'function') H.RM.resume();
+          } else if (_now - (H._lastRtEvent || 0) > 10000) {
+            // Realtime socket is up but no postgres_changes event has arrived in
+            // 10 s — tables not yet in publication or a silent channel drop.
+            // Poll the current page once (respects the 30 s fetch throttle so
+            // we never spam the DB) and sync notifications if signed in.
+            H._lastRtEvent = _now;
+            var _pg = H.currentPageName;
+            var _pr = H.currentPageParams;
+            if (_pg && H.RM && typeof H.RM._poll === 'function') H.RM._poll(_pg, _pr, false);
+            if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
           }
-        }, 30000);
+        }, 5000);
       }
     } else if (tries < 60) {
       setTimeout(boot, 1000);
