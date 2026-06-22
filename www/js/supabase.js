@@ -43,6 +43,8 @@
     auth: { flowType: 'pkce' }
   });
 
+  window.H = window.H || {};
+
   // ── Cloudflare R2 upload helper ──────────────────────────────────────────────
   // Replaces all supabase.storage.from(...).upload() calls.
   // Gets a 2-minute presigned PUT URL from the edge function, uploads the blob
