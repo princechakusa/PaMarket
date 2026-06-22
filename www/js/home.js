@@ -299,10 +299,9 @@
       const _sigAfter = (H.state.listings || []).filter(l => l.status === 'active').length
         + '|' + (H.state.businesses || []).filter(b => b.status === 'active').length;
       if (_sigAfter !== _sigBefore) {
-        if (typeof H._scheduleRender === 'function') {
-          H._scheduleRender();
-        } else if (H.RM && typeof H.RM._renderPreserved === 'function' && !H.RM._inBgRender) {
-          H.RM._renderPreserved('Home', H.currentPageParams);
+        // Update only the listings grid in-place — no scroll reset, no full repaint
+        if (typeof H._renderHomeCatSections === 'function') {
+          H._renderHomeCatSections();
         }
       }
     });
