@@ -168,7 +168,7 @@ window.H = {
     adminLogs:[], supportTickets:[], paidAds:[], deletedConvIds:[],
     deletedConvMeta:{},
     applications:[], contactRequests:[], savedCandidates:[], savedSearches:[],
-    businesses:[]
+    businesses:[], followedBusinesses:[]
   },
 
   loadState() {
@@ -197,6 +197,7 @@ window.H = {
         contactRequests: Array.isArray(loaded.contactRequests) ? loaded.contactRequests : base.contactRequests,
         savedCandidates: Array.isArray(loaded.savedCandidates) ? loaded.savedCandidates : base.savedCandidates,
         savedSearches:   Array.isArray(loaded.savedSearches)   ? loaded.savedSearches   : base.savedSearches,
+        followedBusinesses: Array.isArray(loaded.followedBusinesses) ? loaded.followedBusinesses : base.followedBusinesses,
         businesses:      Array.isArray(loaded.businesses)      ? loaded.businesses      : base.businesses,
       });
       merged._v = this.STATE_VERSION;
@@ -224,6 +225,7 @@ window.H = {
         contactRequests:    this.state.contactRequests    || [],
         savedCandidates:    this.state.savedCandidates    || [],
         savedSearches:      this.state.savedSearches      || [],
+        followedBusinesses: this.state.followedBusinesses || [],
         deletedConvIds:    (this.state.deletedConvIds    || []).slice(0, 300),
         deletedConvMeta:    this.state.deletedConvMeta   || {},
       };

@@ -983,8 +983,13 @@
     }
     saveState();
     const f = H.isFollowingBusiness(id);
+    // BusinessProfile button (pill style)
     const btn = document.getElementById('bizFollowBtn');
     if (btn) { btn.textContent = f ? 'Following' : 'Follow'; btn.style.cssText = 'flex-shrink:0;border-radius:20px;padding:9px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;' + (f ? 'background:var(--bg,#EEF2FB);color:#1A3A8F;border:1.5px solid #1A3A8F' : 'background:#1A3A8F;color:#fff;border:none'); }
+    // BusinessShop button (square style) — was previously never updated, so the
+    // tap appeared to do nothing on the storefront page.
+    const bsBtn = document.getElementById('bsFollowBtn');
+    if (bsBtn) { bsBtn.textContent = f ? 'Following' : 'Follow Shop'; bsBtn.style.cssText = 'flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.2px;' + (f ? 'background:var(--bg,#EEF2FB);color:#1A3A8F;border:1.5px solid #1A3A8F' : 'background:#1A3A8F;color:#fff;border:none'); }
     const cnt = document.getElementById('bizFollowerCount');
     if (cnt && b) cnt.textContent = b.followerCount || 0;
   };
