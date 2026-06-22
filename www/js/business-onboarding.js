@@ -46,7 +46,7 @@
       name: '', bizType: 'individual', description: '',
       phone: u.phone || '', whatsapp: '', email: u.email || '',
       province: '', city: '', suburb: '',
-      category: '', planId: '', billingCycle: 'monthly',
+      categories: [], category: '', planId: '', billingCycle: 'monthly',
       logo: null, cover: null,
       status: 'draft', onboardingStep: 'details', verificationLevel: 0,
       createdAt: Date.now(), updatedAt: Date.now()
@@ -84,7 +84,7 @@
         id: b.id, owner_user_id: b.ownerUserId,
         name: b.name || '', logo: b.logo || null, cover: b.cover || null,
         description: b.description || null, biz_type: b.bizType || 'individual',
-        category: b.category || null, phone: b.phone || null,
+        category: (Array.isArray(b.categories) && b.categories.length ? b.categories.join('|') : (b.category || null)), phone: b.phone || null,
         whatsapp: b.whatsapp || null, email: b.email || null,
         province: b.province || null, city: b.city || null, suburb: b.suburb || null,
         status: b.status || 'draft', onboarding_step: b.onboardingStep || 'details',
@@ -123,7 +123,7 @@
         const mapped = {
           id: row.id, ownerUserId: row.owner_user_id, name: row.name || '',
           logo: row.logo, cover: row.cover, description: row.description,
-          bizType: row.biz_type || 'individual', category: row.category,
+          bizType: row.biz_type || 'individual', categories: (row.category || '').split('|').filter(Boolean), category: (row.category || '').split('|')[0] || null,
           phone: row.phone, whatsapp: row.whatsapp, email: row.email,
           province: row.province, city: row.city, suburb: row.suburb,
           status: row.status || 'draft', onboardingStep: row.onboarding_step || 'details',
@@ -217,19 +217,24 @@
       <button class="btn-pri" style="width:100%;margin-top:6px" onclick="H._bizOnboard.next('details')">Continue</button>`;
   }
 
-  // Step 2 — Category
+  // Step 2 — Category (multi-select)
   function stepCategory(d) {
+    const sel = Array.isArray(d.categories) ? d.categories : (d.category ? [d.category] : []);
     return `
-      <div style="font-size:13px;color:var(--sub);line-height:1.55;margin-bottom:16px">Pick the category that best fits your business. It decides where your listings appear.</div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.55;margin-bottom:6px">Select all categories that match your business. You can pick more than one.</div>
+      ${sel.length ? `<div style="font-size:12px;color:#1A3A8F;font-weight:700;margin-bottom:12px">${sel.length} selected</div>` : `<div style="font-size:12px;color:var(--sub);margin-bottom:12px">None selected yet</div>`}
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px">
-        ${H.CATEGORIES.map(c => `
-          <button type="button" onclick="H._bizOnboard.setCategory('${c.id}')"
-            style="display:flex;align-items:center;gap:10px;padding:14px 12px;border-radius:14px;cursor:pointer;font-family:inherit;text-align:left;
-            border:1.5px solid ${d.category === c.id ? '#1A3A8F' : 'var(--border,#E8ECF4)'};
-            background:${d.category === c.id ? '#EEF2FB' : 'var(--card,#fff)'};color:${d.category === c.id ? '#1A3A8F' : 'var(--text)'}">
+        ${H.CATEGORIES.map(c => {
+          const active = sel.includes(c.id);
+          return `<button type="button" onclick="H._bizOnboard.setCategory('${c.id}')"
+            style="display:flex;align-items:center;gap:10px;padding:14px 12px;border-radius:14px;cursor:pointer;font-family:inherit;text-align:left;position:relative;
+            border:1.5px solid ${active ? '#1A3A8F' : 'var(--border,#E8ECF4)'};
+            background:${active ? '#EEF2FB' : 'var(--card,#fff)'};color:${active ? '#1A3A8F' : 'var(--text)'}">
             <span style="flex-shrink:0;color:#1A3A8F">${c.icon}</span>
-            <span style="font-size:13.5px;font-weight:700">${c.name}</span>
-          </button>`).join('')}
+            <span style="font-size:13.5px;font-weight:700;flex:1">${c.name}</span>
+            ${active ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#1A3A8F" stroke-width="3" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+          </button>`;
+        }).join('')}
       </div>
       <div style="display:flex;gap:10px">
         <button class="ml-act-btn" style="flex:1;padding:13px" onclick="H._bizOnboard.back('category')">Back</button>
@@ -285,7 +290,8 @@
   // Step 4 — Activate (review)
   function stepActivate(d) {
     const plan = H.BIZ_PLANS.find(p => p.id === d.planId);
-    const cat  = H.CATEGORIES.find(c => c.id === d.category);
+    const selCats = Array.isArray(d.categories) ? d.categories : (d.category ? [d.category] : []);
+    const catLabel = selCats.map(id => ((H.CATEGORIES.find(c => c.id === id) || {}).name || '')).filter(Boolean).join(', ') || '—';
     const typeLabel = { individual: 'Individual', company: 'Registered Company', agency: 'Agency' }[d.bizType] || d.bizType;
     const row = (k, v) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--border,#E8ECF4)">
       <span style="font-size:13px;color:var(--sub)">${k}</span>
@@ -297,7 +303,7 @@
       <div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:16px;padding:4px 16px;margin-bottom:18px">
         ${row('Name', escHtml(d.name) || '—')}
         ${row('Type', typeLabel)}
-        ${row('Category', cat ? cat.name : '—')}
+        ${row('Categories', escHtml(catLabel))}
         ${row('Phone', escHtml(d.phone) || '—')}
         ${row('Location', escHtml(loc))}
         ${row('Plan', plan ? `${plan.name} · ${d.billingCycle === 'yearly' ? 'Yearly' : 'Monthly'}` : '—')}
@@ -373,7 +379,8 @@
     }
 
     const plan = H.BIZ_PLANS.find(p => p.id === b.planId);
-    const cat  = H.CATEGORIES.find(c => c.id === b.category);
+    const _vCats = b.categories && b.categories.length ? b.categories : (b.category ? [b.category] : []);
+    const catLabel = _vCats.map(id => ((H.CATEGORIES.find(c => c.id === id) || {}).name || '')).filter(Boolean).join(' / ') || '';
     const typeLabel = { individual: 'Individual', company: 'Registered Company', agency: 'Agency' }[b.bizType] || b.bizType;
     const loc = [b.suburb, b.city, b.province].filter(Boolean).join(', ') || '—';
     const detail = (label, val) => val ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border,#E8ECF4)">
@@ -391,7 +398,7 @@
           </div>
           <div style="flex:1;min-width:0">
             <div style="font-size:19px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.8);margin-top:2px">${typeLabel}${cat ? ' · ' + cat.name : ''}</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.8);margin-top:2px">${typeLabel}${catLabel ? ' · ' + catLabel : ''}</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
               ${(b.verificationLevel||0) >= 2 ? '<span style="font-size:10px;font-weight:800;background:#EAF7EF;color:#0f7a3d;border-radius:20px;padding:3px 9px">✓ Verified</span>' : ''}
               <span style="font-size:10px;font-weight:800;background:#FFE9C7;color:#92670A;border-radius:20px;padding:3px 9px">${(plan ? plan.name : 'Free').toUpperCase()}</span>
@@ -523,7 +530,14 @@
 
     onProvince(p) { ensureDraft(); collectDetails(); _draft.province = p; _draft.city = ''; renderPage('BusinessOnboarding'); },
 
-    setCategory(c) { ensureDraft(); _draft.category = c; renderPage('BusinessOnboarding'); },
+    setCategory(c) {
+      ensureDraft();
+      _draft.categories = Array.isArray(_draft.categories) ? _draft.categories : (_draft.category ? [_draft.category] : []);
+      const idx = _draft.categories.indexOf(c);
+      if (idx >= 0) _draft.categories.splice(idx, 1); else _draft.categories.push(c);
+      _draft.category = _draft.categories[0] || '';
+      renderPage('BusinessOnboarding');
+    },
 
     setCycle(c) { ensureDraft(); _draft.billingCycle = c; renderPage('BusinessOnboarding'); },
 
@@ -539,7 +553,8 @@
         if (!d.province || !d.city) { toast('Select your province and city'); return; }
         d.onboardingStep = 'category';
       } else if (from === 'category') {
-        if (!d.category) { toast('Pick a category'); return; }
+        const cats = Array.isArray(d.categories) ? d.categories : (d.category ? [d.category] : []);
+        if (!cats.length) { toast('Pick at least one category'); return; }
         d.onboardingStep = 'plan';
       } else if (from === 'plan') {
         if (!d.planId) { toast('Select a plan to continue'); return; }
@@ -560,7 +575,7 @@
       const d = ensureDraft();
       // Final invariant guard — every prior step must be complete.
       if (!d.name || !d.phone || !d.province || !d.city) { toast('Complete your business details first'); d.onboardingStep = 'details'; renderPage('BusinessOnboarding'); return; }
-      if (!d.category) { toast('Pick a category first'); d.onboardingStep = 'category'; renderPage('BusinessOnboarding'); return; }
+      { const cats = Array.isArray(d.categories) ? d.categories : (d.category ? [d.category] : []); if (!cats.length) { toast('Pick a category first'); d.onboardingStep = 'category'; renderPage('BusinessOnboarding'); return; } }
       if (!d.planId)   { toast('Select a plan first'); d.onboardingStep = 'plan'; renderPage('BusinessOnboarding'); return; }
 
       const btn = document.getElementById('bzActivateBtn');

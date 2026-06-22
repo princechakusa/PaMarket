@@ -72,6 +72,7 @@
     if (!_edit || _edit.id !== b.id) {
       _edit = {
         id: b.id, name: b.name || '', description: b.description || '', bizType: b.bizType || 'individual',
+        categories: b.categories && b.categories.length ? b.categories.slice() : (b.category ? [b.category] : []),
         phone: b.phone || '', whatsapp: b.whatsapp || '', email: b.email || '',
         province: b.province || '', city: b.city || '', suburb: b.suburb || '',
         logo: b.logo || null, cover: b.cover || null, featuredListingIds: b.featuredListingIds ? b.featuredListingIds.slice() : []
@@ -121,6 +122,7 @@
         ${field('Business name', `<input class="fi" id="epName" maxlength="60" value="${escHtml(e.name)}">`)}
         ${field('Business type', `<div style="display:flex;gap:8px">${typeBtn('individual','Individual')}${typeBtn('company','Company')}${typeBtn('agency','Agency')}</div>`)}
         ${field('Description', `<textarea class="fi" id="epDesc" rows="3" maxlength="300">${escHtml(e.description)}</textarea>`)}
+        ${field('Categories', `<div style="font-size:11.5px;color:var(--sub);margin-bottom:10px">Select all categories that apply to your business.</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">${(H.CATEGORIES || []).map(c => `<button type="button" onclick="H._bizProfile.toggleCategory('${c.id}')" style="display:flex;align-items:center;gap:8px;padding:10px 11px;border-radius:12px;cursor:pointer;font-family:inherit;text-align:left;border:1.5px solid ${(e.categories||[]).includes(c.id) ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${(e.categories||[]).includes(c.id) ? '#EEF2FB' : 'var(--card,#fff)'};color:${(e.categories||[]).includes(c.id) ? '#1A3A8F' : 'var(--text)'}"><span style="flex-shrink:0;color:#1A3A8F">${c.icon}</span><span style="font-size:12.5px;font-weight:700">${escHtml(c.name)}</span>${(e.categories||[]).includes(c.id) ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1A3A8F" stroke-width="3" style="margin-left:auto;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</button>`).join('')}</div>`)}
         ${field('Contact phone', `<input class="fi" id="epPhone" type="tel" value="${escHtml(e.phone)}">`)}
         ${field('WhatsApp', `<input class="fi" id="epWa" type="tel" value="${escHtml(e.whatsapp)}">`)}
         ${field('Email', `<input class="fi" id="epEmail" type="email" value="${escHtml(e.email)}">`)}
@@ -221,7 +223,8 @@
     if (b.status !== 'active' && !canEdit(b)) {
       return `<div class="page active">${innerTopbar('Business')}${H.emptyState('Unavailable', 'This business is not currently available.')}</div>`;
     }
-    const cat = H.CATEGORIES.find(c => c.id === b.category);
+    const _bCats = b.categories && b.categories.length ? b.categories : (b.category ? [b.category] : []);
+    const catLabel = _bCats.map(id => ((H.CATEGORIES.find(c => c.id === id) || {}).name || '')).filter(Boolean).join(' / ');
     const typeLabel = { individual: 'Individual', company: 'Registered Company', agency: 'Agency' }[b.bizType] || b.bizType;
     const loc = [b.suburb, b.city, b.province].filter(Boolean).join(', ');
     const verified = (b.verificationLevel || 0) >= 2;
@@ -244,7 +247,7 @@
               <div style="font-size:20px;font-weight:800;color:var(--text)">${escHtml(b.name)}</div>
               ${verified ? `<span title="Verified business">${H.verifiedBadge(18)}</span>` : ''}
             </div>
-            <div style="font-size:13px;color:var(--sub);margin-top:3px">${escHtml(typeLabel)}${cat ? ' · ' + escHtml(cat.name) : ''}</div>
+            <div style="font-size:13px;color:var(--sub);margin-top:3px">${escHtml(typeLabel)}${catLabel ? ' · ' + escHtml(catLabel) : ''}</div>
           </div>
           ${!canEdit(b) ? `<button id="bizFollowBtn" onclick="H.toggleFollowBusiness('${b.id}')" style="flex-shrink:0;border:none;border-radius:20px;padding:9px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;${H.isFollowingBusiness(b.id) ? 'background:var(--bg,#EEF2FB);color:#1A3A8F;border:1.5px solid #1A3A8F' : 'background:#1A3A8F;color:#fff'}">${H.isFollowingBusiness(b.id) ? 'Following' : 'Follow'}</button>` : ''}
         </div>
@@ -295,11 +298,7 @@
 
   function shopProducts(b) {
     return (H.state.listings || []).filter(function (l) {
-      return l.status === 'active' && (
-        String(l.businessId) === String(b.id) ||
-        String(l.sellerId)   === String(b.ownerUserId) ||
-        String(l.userId)     === String(b.ownerUserId)
-      );
+      return l.status === 'active' && String(l.businessId) === String(b.id);
     });
   }
 
@@ -525,7 +524,7 @@
             <svg viewBox="0 0 24 24" width="12" height="12" fill="#16a34a"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             WhatsApp
           </a>` : ''}
-          <button onclick="H.recordShopLead&&H.recordShopLead('${escHtml(String(b.id))}','chat');H.openInner('Messages')" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;background:var(--bg,#F4F6FB);color:var(--sub);font-size:12.5px;font-weight:700;border:none;cursor:pointer;font-family:inherit">
+          <button onclick="H.recordShopLead&&H.recordShopLead('${escHtml(String(b.id))}','chat');H.startChatWith('${escHtml(String(b.ownerUserId))}')" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;background:var(--bg,#F4F6FB);color:var(--sub);font-size:12.5px;font-weight:700;border:none;cursor:pointer;font-family:inherit">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             Message
           </button>
@@ -578,7 +577,7 @@
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit
               </button>
             </div>`
-          : `<button onclick="H.recordShopLead&&H.recordShopLead('${escHtml(String(b.id))}','chat');H.openInner('Messages')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#2245b8);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 5px 18px rgba(26,58,143,0.3)">
+          : `<button onclick="H.recordShopLead&&H.recordShopLead('${escHtml(String(b.id))}','chat');H.startChatWith('${escHtml(String(b.ownerUserId))}')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#2245b8);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 5px 18px rgba(26,58,143,0.3)">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             Message This Shop
           </button>`}
@@ -678,7 +677,8 @@
       if (error || !Array.isArray(data)) return H.state.businesses || [];
       H.state.businesses = H.state.businesses || [];
       data.forEach(row => {
-        const mapped = { id: row.id, ownerUserId: row.owner_user_id, name: row.name || '', logo: row.logo, cover: row.cover, description: row.description, bizType: row.biz_type || 'individual', category: row.category, phone: row.phone, whatsapp: row.whatsapp, email: row.email, province: row.province, city: row.city, suburb: row.suburb, status: row.status, verificationLevel: row.verification_level || 0, featuredListingIds: Array.isArray(row.featured_listing_ids) ? row.featured_listing_ids : [] };
+        const _cats = (row.category || '').split('|').filter(Boolean);
+        const mapped = { id: row.id, ownerUserId: row.owner_user_id, name: row.name || '', logo: row.logo, cover: row.cover, description: row.description, bizType: row.biz_type || 'individual', category: _cats[0] || null, categories: _cats, phone: row.phone, whatsapp: row.whatsapp, email: row.email, province: row.province, city: row.city, suburb: row.suburb, status: row.status, verificationLevel: row.verification_level || 0, featuredListingIds: Array.isArray(row.featured_listing_ids) ? row.featured_listing_ids : [] };
         const i = H.state.businesses.findIndex(b => b.id === mapped.id);
         if (i >= 0) H.state.businesses[i] = Object.assign(H.state.businesses[i], mapped); else H.state.businesses.push(mapped);
       });
@@ -690,9 +690,10 @@
   function bizSearchList() {
     const q = (_bizQ || '').toLowerCase().trim();
     let list = (H.state.businesses || []).filter(b => b.status === 'active');
-    if (_bizCat !== 'all') list = list.filter(b => b.category === _bizCat);
+    if (_bizCat !== 'all') list = list.filter(b => (b.categories && b.categories.length ? b.categories : (b.category ? [b.category] : [])).includes(_bizCat));
     if (q) list = list.filter(b => {
-      const cn = ((H.CATEGORIES.find(c => c.id === b.category) || {}).name || '').toLowerCase();
+      const cats = b.categories && b.categories.length ? b.categories : (b.category ? [b.category] : []);
+      const cn = cats.map(id => ((H.CATEGORIES.find(c => c.id === id) || {}).name || '')).join(' ').toLowerCase();
       if ((b.name || '').toLowerCase().indexOf(q) !== -1) return true;
       if ((b.description || '').toLowerCase().indexOf(q) !== -1) return true;
       if (cn.indexOf(q) !== -1) return true;
@@ -711,7 +712,8 @@
     const list = bizSearchList();
     if (!list.length) return `<div style="text-align:center;color:var(--sub);font-size:13px;padding:36px 16px">No stores found. Try a different search.</div>`;
     return list.map(b => {
-      const cat = H.CATEGORIES.find(c => c.id === b.category);
+      const _bizCats = b.categories && b.categories.length ? b.categories : (b.category ? [b.category] : []);
+      const catLabel = _bizCats.map(id => ((H.CATEGORIES.find(c => c.id === id) || {}).name || '')).filter(Boolean).join(' / ');
       const loc = [b.city, b.province].filter(Boolean).join(', ');
       const prods = (H.state.listings || []).filter(l => l.businessId === b.id && l.status === 'active').length;
       const verified = (b.verificationLevel || 0) >= 2;
@@ -719,7 +721,7 @@
         <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2245b8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px rgba(26,58,143,0.15)">${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : _shopIcon}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:5px"><span style="font-size:14.5px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}</span>${verified ? H.verifiedBadge(14) : ''}</div>
-          <div style="font-size:12px;color:var(--sub);margin-top:2px">${cat ? escHtml(cat.name) : ''}${loc ? ' · ' + escHtml(loc) : ''}</div>
+          <div style="font-size:12px;color:var(--sub);margin-top:2px">${catLabel ? escHtml(catLabel) : ''}${loc ? ' · ' + escHtml(loc) : ''}</div>
           <div style="font-size:11.5px;color:var(--sub2,#98A2B3);margin-top:3px">${prods} product${prods === 1 ? '' : 's'}</div>
         </div>
         <span style="color:#CBD2E0;font-size:18px">›</span>
@@ -786,6 +788,13 @@
     },
 
     setType(t) { collectEdit(); _edit.bizType = t; renderPage('BusinessEditProfile'); },
+    toggleCategory(catId) {
+      collectEdit();
+      _edit.categories = _edit.categories || [];
+      const idx = _edit.categories.indexOf(catId);
+      if (idx >= 0) _edit.categories.splice(idx, 1); else _edit.categories.push(catId);
+      renderPage('BusinessEditProfile');
+    },
     onProvince(p) { collectEdit(); _edit.province = p; _edit.city = ''; renderPage('BusinessEditProfile'); },
 
     onMedia(ev, which) {
@@ -808,10 +817,12 @@
         if (e.cover && e.cover.indexOf('data:') === 0) { const r = await H.uploadListingPhotos([e.cover], u.id); e.cover = r[0]; }
       } catch (err) { /* keep base64 fallback */ }
 
+      const updCategories = e.categories && e.categories.length ? e.categories.slice() : [];
       Object.assign(b, {
         name: e.name, description: e.description, bizType: e.bizType, phone: e.phone,
         whatsapp: e.whatsapp, email: e.email, province: e.province, city: e.city,
         suburb: e.suburb, logo: e.logo, cover: e.cover,
+        categories: updCategories, category: updCategories[0] || null,
         featuredListingIds: e.featuredListingIds ? e.featuredListingIds.slice() : [], updatedAt: Date.now()
       });
       saveState();
