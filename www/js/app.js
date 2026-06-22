@@ -152,7 +152,7 @@ window.H = {
   ],
 
   state:            {},
-  APP_VERSION:      '1.7.0',
+  APP_VERSION:      '1.8.0',
   pageStack:        [],
   currentPageName:  'Home',
   currentPageParams:{},
@@ -1539,7 +1539,9 @@ window.H = {
   _setupRealtimeMessages() {
     try {
       if(!window.supabase||typeof window.supabase.channel!=='function') return;
-      if(window._msgChannel) window._msgChannel.unsubscribe();
+      // removeChannel (not unsubscribe) so the old channel is dropped from the
+      // client's registry too — prevents a slow channel leak on every reconnect.
+      if(window._msgChannel){ try{ window.supabase.removeChannel(window._msgChannel); }catch(e){} window._msgChannel=null; }
       window._msgChannel=window.supabase.channel('messages-rt')
         .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
           const msg=payload.new; if(!msg) return;
@@ -1577,7 +1579,11 @@ window.H = {
               });
             }
           }
-        }).subscribe();
+        }).subscribe(function(status){
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            if (H.RT && typeof H.RT.scheduleReconnect === 'function') H.RT.scheduleReconnect('messages:' + status);
+          }
+        });
     } catch(e){ console.warn('Realtime setup failed:',e.message); }
   },
 
@@ -1623,7 +1629,9 @@ window.H = {
           } catch(e) { console.warn('listings RT handler:', e); }
         })
         .subscribe(function(status) {
-          if (status === 'CHANNEL_ERROR') console.warn('listings realtime channel error — polling is the fallback');
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            if (H.RT && typeof H.RT.scheduleReconnect === 'function') H.RT.scheduleReconnect('listings:' + status);
+          }
         });
     } catch(e) { console.warn('_setupRealtimeListings:', e.message); }
   },
@@ -1676,7 +1684,9 @@ window.H = {
           } catch(e) { console.warn('businesses RT handler:', e); }
         })
         .subscribe(function(status) {
-          if (status === 'CHANNEL_ERROR') console.warn('businesses realtime channel error — polling is the fallback');
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            if (H.RT && typeof H.RT.scheduleReconnect === 'function') H.RT.scheduleReconnect('businesses:' + status);
+          }
         });
     } catch(e) { console.warn('_setupRealtimeBusinesses:', e.message); }
   },
@@ -2045,7 +2055,7 @@ window.H = {
     H.pages.About=function(){
       return '<div class="page active">'+H.innerTopbar('About PaMarket')
         +'<div class="about-wrap">'
-        +'<div class="about-hero"><div class="about-brand">Pa<em>Market</em></div><div class="about-tag">Zimbabwe\'s Free Marketplace</div><div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:6px">Version 1.7.0</div></div>'
+        +'<div class="about-hero"><div class="about-brand">Pa<em>Market</em></div><div class="about-tag">Zimbabwe\'s Free Marketplace</div><div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:6px">Version 1.8.0</div></div>'
         +'<div class="about-card"><div class="about-sec-title">What is PaMarket?</div><div class="about-body">PaMarket is a free Zimbabwean marketplace connecting buyers, sellers, businesses, and job seekers across all ten provinces. Post a listing in minutes, browse thousands of ads, or open your own verified shop - all completely free.</div></div>'
         +'<div class="about-card"><div class="about-sec-title">What\'s Inside</div><div class="about-grid">'
         +['Marketplace','Business Shops','Hire Talent','Direct Messaging','Verified Sellers','Province Filters','12 Categories','Always Free'].map(f=>'<div class="about-feat">'+f+'</div>').join('')
@@ -2062,7 +2072,7 @@ window.H = {
         +'<div class="about-contact-row" onclick="window.open(\'https://wa.me/971589772645\')"><div class="about-contact-ic wa-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg></div><div><div class="about-contact-label">WhatsApp Support</div><div class="about-contact-val">+971 589 772 645</div></div></div>'
         +'</div>'
         +'<div class="about-ads-banner"><div class="about-ads-title">Advertise with PaMarket</div><div class="about-ads-sub">Reach active buyers across all provinces of Zimbabwe</div><button class="about-ads-btn" onclick="H.openInner(\'Ads\')">Get in Touch</button></div>'
-        +'<div style="text-align:center;font-size:12px;color:var(--text-muted,#999);padding:16px 0 4px">PaMarket v1.7.0 &copy; 2026 · Made in Zimbabwe</div>'
+        +'<div style="text-align:center;font-size:12px;color:var(--text-muted,#999);padding:16px 0 4px">PaMarket v1.8.0 &copy; 2026 · Made in Zimbabwe</div>'
         +'</div></div>';
     };
 

@@ -163,6 +163,9 @@
         .subscribe();
     } catch (e) { readCh = null; }
   };
+  H._teardownReadReceipts = function () {
+    if (readCh) { try { sb().removeChannel(readCh); } catch (e) {} readCh = null; }
+  };
 
   // ===================================================================
   // LAST SEEN  (persisted to profiles.last_seen; respects showActivity privacy)
@@ -241,6 +244,93 @@
   };
 
   // ===================================================================
+  // REALTIME SUPERVISOR  (H.RT)
+  // One place that (re)subscribes EVERY realtime channel and keeps the live
+  // connection healthy. Each channel's own setup function tears down its old
+  // channel before creating a new one, so reconnectAll is safe to call
+  // repeatedly. It is triggered by:
+  //   • app foreground (Capacitor appStateChange / visibilitychange)
+  //   • the browser 'online' event (network came back)
+  //   • a channel reporting CHANNEL_ERROR / TIMED_OUT (scheduleReconnect)
+  //   • the 30s health monitor when the socket is found disconnected
+  // ===================================================================
+  function realtimeConnected() {
+    try {
+      var s = sb();
+      return !!(s && s.realtime && typeof s.realtime.isConnected === 'function' && s.realtime.isConnected());
+    } catch (e) { return false; }
+  }
+  H._realtimeConnected = realtimeConnected;
+
+  H.RT = H.RT || {};
+  H.RT._lastReconnect  = 0;
+  H.RT._reconnectTimer = null;
+
+  // Re-subscribe every realtime channel. Debounced so simultaneous triggers
+  // (e.g. 'online' + foreground firing together) only reconnect once.
+  H.RT.reconnectAll = function (reason) {
+    if (!canRealtime()) return;
+    var now = Date.now();
+    if (now - H.RT._lastReconnect < 4000) return;     // collapse storms
+    H.RT._lastReconnect = now;
+    try {
+      // Public content — no auth required.
+      if (typeof H._setupRealtimeListings   === 'function') H._setupRealtimeListings();
+      if (typeof H._setupRealtimeBusinesses === 'function') H._setupRealtimeBusinesses();
+      if (typeof H._setupRealtimeReviews    === 'function') H._setupRealtimeReviews();
+      // User-specific content — only when signed in.
+      if (me()) {
+        if (typeof H._setupRealtimeMessages === 'function') H._setupRealtimeMessages();
+        if (typeof H._setupRealtimeNotifs   === 'function') H._setupRealtimeNotifs();
+        // Presence + read receipts skip re-init while a handle exists, so tear
+        // them down first to guarantee a fresh subscription.
+        H.teardownPresence();
+        if (typeof H._teardownReadReceipts === 'function') H._teardownReadReceipts();
+        H.initPresence();
+        H.initReadReceipts();
+        // Rejoin the open chat's typing channel.
+        if (H.currentPageName === 'Chat' && H._activeChat && typeof H.joinChatChannel === 'function') {
+          H.joinChatChannel(H._activeChat);
+        }
+      }
+    } catch (e) { console.warn('RT.reconnectAll:', e && e.message); }
+  };
+
+  // Single debounced reconnect after a channel reports an error.
+  H.RT.scheduleReconnect = function (reason) {
+    clearTimeout(H.RT._reconnectTimer);
+    H.RT._reconnectTimer = setTimeout(function () {
+      if (!document.hidden) H.RT.reconnectAll(reason || 'scheduled');
+    }, 2000);
+  };
+
+  // ── Realtime for shop reviews (live ratings / new reviews) ───────
+  // Reuses the existing in-place section refresh (H.fetchShopReviews) so only
+  // the reviews block redraws — never the whole page. Requires 'business_reviews'
+  // in the Supabase realtime publication; if it is not, this no-ops silently and
+  // the 30s BusinessShop poll keeps reviews fresh. We deliberately do NOT
+  // schedule reconnects from this channel: a CHANNEL_ERROR here most likely means
+  // the table is simply unpublished, and reconnecting would loop pointlessly.
+  H._setupRealtimeReviews = function () {
+    var s = sb(); if (!s || typeof s.channel !== 'function') return;
+    if (H._reviewsChannel) { try { s.removeChannel(H._reviewsChannel); } catch (e) {} H._reviewsChannel = null; }
+    try {
+      H._reviewsChannel = s.channel('reviews-live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'business_reviews' }, function (payload) {
+          var row = payload.new || payload.old; if (!row) return;
+          var bizId = row.business_id; if (!bizId) return;
+          var pg = H.currentPageName;
+          var viewing = (pg === 'BusinessShop' || pg === 'BusinessProfile') &&
+            H.currentPageParams && String(H.currentPageParams.id) === String(bizId);
+          if (viewing && typeof H.fetchShopReviews === 'function') H.fetchShopReviews(bizId);
+        })
+        .subscribe(function (status) {
+          if (status === 'CHANNEL_ERROR') console.warn('reviews realtime unavailable (business_reviews not in publication?) — poll fallback active');
+        });
+    } catch (e) { H._reviewsChannel = null; }
+  };
+
+  // ===================================================================
   // BOOTSTRAP — wait for supabase + a signed-in user, then wire everything.
   // ===================================================================
   var tries = 0;
@@ -249,12 +339,30 @@
     if (canRealtime() && me()) {
       H.initPresence();
       H.initReadReceipts();
+      if (typeof H._setupRealtimeReviews === 'function') H._setupRealtimeReviews();
       H.touchLastSeen(true);                 // mark active on app open
       // Keep our last_seen fresh while the app is foregrounded.
       if (!H._lastSeenInterval) {
         H._lastSeenInterval = setInterval(function () {
           if (!document.hidden && me()) H.touchLastSeen();
         }, 60000);
+      }
+      // Connection health monitor (lightweight polling fallback). Every 30s while
+      // foregrounded, if the realtime socket is DOWN, reconnect every channel and
+      // do a one-off catch-up sync. This costs nothing while realtime is healthy
+      // (the common case) — it is gated on actual disconnection, so it never burns
+      // data when the live stream is working. That is the deliberate design: rely
+      // on realtime when it works, poll only when it doesn't.
+      if (!H._rtHealthInterval) {
+        H._rtHealthInterval = setInterval(function () {
+          if (document.hidden || !canRealtime()) return;
+          if (!realtimeConnected()) {
+            H.RT.reconnectAll('health');
+            if (me() && typeof H.syncConversations === 'function') H.syncConversations().catch(function () {});
+            if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
+            if (H.RM && typeof H.RM.resume === 'function') H.RM.resume();
+          }
+        }, 30000);
       }
     } else if (tries < 60) {
       setTimeout(boot, 1000);
@@ -269,34 +377,32 @@
   //   • user-specific data (conversations, notifications) that RM doesn't own
   //   • immediate kick for Messages / Chat, which use their own polls outside RM
   function onForeground() {
-    H.initPresence(); H.initReadReceipts();
     H.touchLastSeen(true);
-    // Re-subscribe to listings/businesses realtime channels — the WebSocket
-    // may have been dropped while the app was in the background.
-    if (typeof H._setupRealtimeListings   === 'function') H._setupRealtimeListings();
-    if (typeof H._setupRealtimeBusinesses === 'function') H._setupRealtimeBusinesses();
-    // Small delay so the network re-establishes after an app switch.
+    // Re-establish EVERY realtime channel through the supervisor (listings,
+    // businesses, reviews, messages, notifications, presence, receipts + the open
+    // chat). The WebSocket is frequently dropped by the OS while backgrounded.
+    H.RT.reconnectAll('foreground');
+    // Short delay so the network re-establishes after an app switch, then catch
+    // up on history the realtime stream can't backfill (messages / notifications
+    // that arrived while we were away) and kick the page-specific polls.
     setTimeout(function () {
       var pg = H.currentPageName;
-      // Messages page: kick its own poll immediately instead of waiting up to 5 s.
       if (pg === 'Messages' && typeof H._refreshMessagesPage === 'function') {
         H._refreshMessagesPage();
-      // Chat page: restart the poll so new messages appear instantly.
       } else if (pg === 'Chat' && H._activeChat && typeof H.startChatPolling === 'function') {
         H.startChatPolling(H._activeChat);
       }
-      // Sync user-specific cloud data (conversations + notifications) for badge
-      // counts and so the next poll cycle starts from a fresh baseline.
       if (me() && typeof H.syncConversations === 'function') H.syncConversations().catch(function () {});
       if (me() && typeof H.syncNotifications === 'function') H.syncNotifications().catch(function () {});
-    }, 800);
+    }, 600);
   }
 
-  // App open/close/background — keep presence + last_seen accurate.
+  // App open/close/background. onForeground reconnects realtime (public channels
+  // need no auth; user channels self-gate on me()), so we call it even when
+  // signed out — that keeps the public feed live for browsing visitors too.
   document.addEventListener('visibilitychange', function () {
-    if (!me()) return;
     if (document.hidden) {
-      H.touchLastSeen(true);                 // record the moment we left
+      if (me()) H.touchLastSeen(true);       // record the moment we left
     } else {
       onForeground();
     }
@@ -307,11 +413,20 @@
     var App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
     if (App && typeof App.addListener === 'function') {
       App.addListener('appStateChange', function (st) {
-        if (!me()) return;
         if (st && st.isActive) { onForeground(); }
-        else { H.touchLastSeen(true); }
+        else if (me()) { H.touchLastSeen(true); }
       });
     }
   } catch (e) {}
+
+  // Network recovery — when the device regains connectivity (mobile data toggled,
+  // Wi-Fi reconnected, tunnel re-established) the realtime socket is usually dead.
+  // Reconnect every channel and immediately refresh the visible page so content
+  // catches up the instant the connection returns.
+  window.addEventListener('online', function () {
+    if (!canRealtime()) return;
+    H.RT.reconnectAll('online');
+    if (!document.hidden && H.RM && typeof H.RM.resume === 'function') H.RM.resume();
+  });
 
 })(window.H);

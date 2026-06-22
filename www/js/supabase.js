@@ -129,55 +129,15 @@
     if (window._realtimeStarted) return;
     window._realtimeStarted = true;
 
-    // Listings channel
-    sb.channel('rt-listings')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'listings' }, function(payload) {
-        var row = payload.new;
-        if (!row || !window.H || !window.H.state) return;
-        var existing = (window.H.state.listings || []).find(function(l){ return l.id === row.id; });
-        if (!existing) {
-          window.H.state.listings = window.H.state.listings || [];
-          window.H.state.listings.unshift({
-            id: row.id, title: row.title || '', desc: row.description || '',
-            price: row.price || 0, currency: row.currency || 'USD',
-            cat: row.category || '', photos: row.photos || [],
-            sellerId: row.seller_id || '', sellerName: row.seller_name || '',
-            province: row.province || '', status: row.status || 'active',
-            createdAt: new Date(row.created_at || Date.now()).getTime(),
-            views: 0, company: row.company || null
-          });
-          if (typeof window.H.saveState === 'function') window.H.saveState();
-          // Instantly reflect the new listing on Home without manual refresh
-          if (window.H.currentPageName === 'Home' && !document.hidden &&
-              typeof window.H.renderPage === 'function' &&
-              !(window.H._userIsTyping && window.H._userIsTyping())) {
-            window.H.renderPage('Home');
-          }
-        }
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'listings' }, function(payload) {
-        var id = payload.old && payload.old.id;
-        if (!id || !window.H || !window.H.state) return;
-        window.H.state.listings = (window.H.state.listings || []).filter(function(l){ return l.id !== id; });
-        if (typeof window.H.saveState === 'function') window.H.saveState();
-        if (window.H.currentPageName === 'Home' && !document.hidden && typeof window.H.renderPage === 'function' && !(window.H._userIsTyping && window.H._userIsTyping()))
-          window.H.renderPage('Home');
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'listings' }, function(payload) {
-        var row = payload.new;
-        if (!row || !window.H || !window.H.state) return;
-        var l = (window.H.state.listings || []).find(function(x){ return x.id === row.id; });
-        if (l) {
-          var statusChanged = row.status && row.status !== l.status;
-          l.status = row.status || l.status;
-          l.title  = row.title  || l.title;
-          l.price  = row.price  != null ? row.price : l.price;
-          if (typeof window.H.saveState === 'function') window.H.saveState();
-          if (statusChanged && window.H.currentPageName === 'Home' && !document.hidden && typeof window.H.renderPage === 'function' && !(window.H._userIsTyping && window.H._userIsTyping()))
-            window.H.renderPage('Home');
-        }
-      })
-      .subscribe();
+    // NOTE: Listings and businesses realtime are handled canonically in app.js
+    // (_setupRealtimeListings / _setupRealtimeBusinesses) with full field mapping
+    // via _mapCloudListing and scroll-preserving re-renders across ALL feed pages.
+    // They used to be DUPLICATED here with a cruder mapping that re-rendered Home
+    // from scratch (scroll jumped) and raced the canonical handler. That
+    // duplication has been removed. Foreground re-sync is owned by
+    // refresh-manager.js (RM.resume) and realtime-extras.js (the RT supervisor),
+    // so there is no appStateChange listener here either. This channel keeps only
+    // the unique profile-verification stream below.
 
     // Profile verification approvals
     sb.channel('rt-profiles')
@@ -196,50 +156,5 @@
         }
       })
       .subscribe();
-
-    // Businesses channel — new shops and status changes appear immediately on Home
-    sb.channel('rt-businesses')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'businesses' }, function(payload) {
-        var row = payload.new;
-        if (!row || !window.H || !window.H.state || row.status !== 'active') return;
-        var existing = (window.H.state.businesses || []).find(function(b) { return b.id === row.id; });
-        if (!existing) {
-          window.H.state.businesses = window.H.state.businesses || [];
-          window.H.state.businesses.push({ id: row.id, ownerUserId: row.owner_user_id, name: row.name || '', logo: row.logo || null, cover: row.cover || null, description: row.description || '', bizType: row.biz_type || 'individual', category: row.category || '', phone: row.phone || '', whatsapp: row.whatsapp || '', email: row.email || '', province: row.province || '', city: row.city || '', suburb: row.suburb || '', status: row.status, verificationLevel: row.verification_level || 0 });
-          if (typeof window.H.saveState === 'function') window.H.saveState();
-          if (window.H.currentPageName === 'Home' && !document.hidden && typeof window.H.renderPage === 'function' && !(window.H._userIsTyping && window.H._userIsTyping())) window.H.renderPage('Home');
-        }
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'businesses' }, function(payload) {
-        var row = payload.new;
-        if (!row || !window.H || !window.H.state) return;
-        var biz = (window.H.state.businesses || []).find(function(b) { return b.id === row.id; });
-        if (biz) {
-          biz.name = row.name || biz.name; biz.status = row.status || biz.status;
-          biz.logo = row.logo != null ? row.logo : biz.logo;
-          biz.category = row.category || biz.category;
-          biz.verificationLevel = row.verification_level != null ? row.verification_level : biz.verificationLevel;
-          if (typeof window.H.saveState === 'function') window.H.saveState();
-          if (window.H.currentPageName === 'Home' && !document.hidden && typeof window.H.renderPage === 'function' && !(window.H._userIsTyping && window.H._userIsTyping())) window.H.renderPage('Home');
-        }
-      })
-      .subscribe();
-
-    // Capacitor foreground event — delegate to H.RM which handles all pages
-    try {
-      var CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
-      if (CapApp && typeof CapApp.addListener === 'function') {
-        CapApp.addListener('appStateChange', function(state) {
-          if (!window.H) return;
-          if (state.isActive) {
-            if (window.H.RM && typeof window.H.RM.resume === 'function') {
-              window.H.RM.resume();
-            }
-          } else {
-            if (window.H.RM) window.H.RM._appActive = false;
-          }
-        });
-      }
-    } catch(e) {}
   };
 })();
