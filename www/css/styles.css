@@ -1465,3 +1465,25 @@ select.fi {
 .toggle-sw.on { background: var(--blue); }
 .toggle-slider { background: #CBD5E1; }
 .toggle-switch input:checked + .toggle-slider { background: var(--blue); }
+
+/* ── RESPONSIVE & SAFE-AREA FIXES ────────────────────────────── */
+/* Inner-page scroll areas have no bottom nav, so the scroll region reaches the
+   very bottom of the screen. On iOS the home indicator occupies
+   env(safe-area-inset-bottom), so we must pad past it to avoid cutting off the
+   last form field or button. */
+.form-wrap     { padding-bottom: calc(110px + var(--safe-bottom)); }
+.inner-content { padding-bottom: calc(110px + var(--safe-bottom)); }
+
+/* On very short devices (e.g. small landscape or compact budget phones) the
+   detail-page hero image at 250 px can dominate the viewport; cap it earlier. */
+@media (max-height: 580px) {
+  .det-photo { height: 180px; }
+}
+
+/* On the narrowest common phones (320 px) tighten the category grid so each
+   tile label stays readable without horizontal overflow. */
+@media (max-width: 320px) {
+  .cats-grid   { gap: 5px; }
+  .cat-tile    { padding: 12px 4px 8px; }
+  .cat-icon-bg { width: 32px; height: 32px; font-size: 17px; }
+}

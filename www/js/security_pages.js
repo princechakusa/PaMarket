@@ -371,8 +371,12 @@
       ];
       try { await Promise.allSettled(ops); } catch (e) {}
     }
-    // Clear cached personal data locally so nothing lingers after sign-out
+    // Clear cached personal data locally so nothing lingers after sign-out.
+    // Tombstone every deleted listing/biz so any realtime INSERT that races the
+    // 900ms reload window cannot resurrect them in H.state.
     try {
+      var _now = Date.now();
+      (H.state.listings || []).forEach(function (l) { if (l.sellerId === uid && H._deletedListingIds) H._deletedListingIds[l.id] = _now; });
       H.state.listings = (H.state.listings || []).filter(function (l) { return l.sellerId !== uid; });
       H.state.conversations = (H.state.conversations || []).filter(function (c) { return !((c.members || []).includes(uid)); });
       H.state.users = (H.state.users || []).filter(function (x) { return x.id !== uid; });

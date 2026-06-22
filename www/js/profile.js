@@ -351,7 +351,7 @@
     H._myListings = {
       edit: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); H.openInner(l&&l.cat==='jobs'?'EditJob':'EditListing',{listingId:id}); },
       markSold: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='sold'; l.soldAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'sold'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job marked as filled' : 'Listing marked as sold'); H.renderPage('MyListings'); },
-      del: (id) => { if(!window.confirm('Delete this listing permanently?'))return; if(H._deletedListingIds)H._deletedListingIds[id]=Date.now(); H.state.listings=(H.state.listings||[]).filter(x=>x.id!==id); H.saveState(); H.toast('Listing deleted'); H.renderPage('MyListings'); },
+      del: (id) => { if(!window.confirm('Delete this listing permanently?'))return; if(H._deletedListingIds)H._deletedListingIds[id]=Date.now(); H.state.listings=(H.state.listings||[]).filter(x=>x.id!==id); H.saveState(); H.toast('Listing deleted'); H.renderPage('MyListings'); if(window.supabase&&typeof window.supabase.from==='function')window.supabase.from('listings').delete().eq('id',id).then(null,function(){}); },
       reactivate: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='active'; delete l.soldAt; l.renewedAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'active'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job reopened!' : 'Listing reactivated!'); H.renderPage('MyListings'); },
     };
   };
