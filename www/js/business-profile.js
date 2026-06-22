@@ -270,6 +270,80 @@
     });
   }
 
+  function _reviewsHtml(b) {
+    if (!b) return '';
+    const reviews = (H.state.businessReviews && H.state.businessReviews[b.id]) || [];
+    const avg = reviews.length ? (reviews.reduce(function(s, r){ return s + (r.rating || 0); }, 0) / reviews.length).toFixed(1) : null;
+    const u = currentUser();
+    const isOwn = canEdit(b);
+    const alreadyReviewed = u && reviews.some(function(r){ return r.reviewerId === u.id; });
+    const stars = function(n) {
+      n = Math.round(n || 0);
+      return '<span style="color:#F59E0B">' + '&#9733;'.repeat(n) + '</span><span style="color:#D1D5DB">' + '&#9734;'.repeat(5 - n) + '</span>';
+    };
+    return '<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:12px;overflow:hidden">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border,#E8ECF4)">'
+      + '<div>'
+      + '<div style="font-size:14px;font-weight:800;color:var(--text)">Reviews</div>'
+      + (avg
+        ? '<div style="font-size:12px;color:var(--sub);margin-top:2px;display:flex;align-items:center;gap:5px"><span style="font-weight:700;color:var(--text)">' + avg + '</span>' + stars(parseFloat(avg)) + '<span>(' + reviews.length + ')</span></div>'
+        : '<div style="font-size:12px;color:var(--sub);margin-top:2px">No reviews yet</div>')
+      + '</div>'
+      + (!isOwn
+        ? '<button onclick="H._bizShop.openReviewModal(\'' + escHtml(String(b.id)) + '\')" style="padding:7px 14px;border-radius:8px;background:#1A3A8F;color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + (alreadyReviewed ? 'Update Review' : 'Write a Review') + '</button>'
+        : '')
+      + '</div>'
+      + (reviews.length
+        ? reviews.slice(0, 6).map(function(r){
+            return '<div style="padding:14px 16px;border-bottom:1px solid var(--border,#E8ECF4)">'
+              + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">'
+              + '<div style="font-size:13px;font-weight:700;color:var(--text)">' + escHtml(r.reviewerName) + '</div>'
+              + '<div style="font-size:13px;letter-spacing:1px">' + stars(r.rating) + '</div>'
+              + '</div>'
+              + (r.comment ? '<div style="font-size:12.5px;color:var(--sub);line-height:1.55;margin-bottom:4px">' + escHtml(r.comment) + '</div>' : '')
+              + '<div style="font-size:10.5px;color:var(--sub2,#98A2B3)">' + (typeof H.timeAgo === 'function' ? H.timeAgo(r.createdAt) : '') + '</div>'
+              + '</div>';
+          }).join('')
+        : '<div style="padding:24px 16px;text-align:center;color:var(--sub);font-size:13px">Be the first to review this shop.</div>')
+      + '</div>';
+  }
+
+  H.fetchShopReviews = async function (bizId) {
+    const sb = window.supabase; if (!sb || !bizId) return;
+    try {
+      const { data, error } = await sb.from('business_reviews').select('*').eq('business_id', bizId).order('created_at', { ascending: false }).limit(50);
+      if (error || !Array.isArray(data)) return;
+      H.state.businessReviews = H.state.businessReviews || {};
+      H.state.businessReviews[bizId] = data.map(function(r){
+        return { id: r.id, bizId: bizId, reviewerId: r.reviewer_id, reviewerName: r.reviewer_name || 'Anonymous', rating: r.rating || 0, comment: r.comment || '', createdAt: new Date(r.created_at).getTime() };
+      });
+      saveState();
+      if (H.currentPageName === 'BusinessShop') {
+        const sec = document.getElementById('shopReviewsSection');
+        const b = getBiz(bizId);
+        if (sec && b) sec.innerHTML = _reviewsHtml(b);
+      }
+    } catch(e) {}
+  };
+
+  H.submitShopReview = async function (bizId, rating, comment) {
+    const u = currentUser();
+    if (!u) { if (H.requireAuth) H.requireAuth('Sign in to leave a review'); return; }
+    if (!rating) { if (H.toast) H.toast('Please select a star rating'); return; }
+    const b = getBiz(bizId); if (!b) return;
+    const row = { id: H.uid(), bizId: bizId, reviewerId: u.id, reviewerName: u.name || u.phone || 'User', rating: rating, comment: comment || '', createdAt: Date.now() };
+    H.state.businessReviews = H.state.businessReviews || {};
+    H.state.businessReviews[bizId] = (H.state.businessReviews[bizId] || []).filter(function(r){ return r.reviewerId !== u.id; });
+    H.state.businessReviews[bizId].unshift(row);
+    saveState();
+    const m = document.getElementById('shopReviewModal'); if (m) m.remove();
+    if (H.toast) H.toast('Review submitted');
+    const sec = document.getElementById('shopReviewsSection'); if (sec) sec.innerHTML = _reviewsHtml(b);
+    if (typeof H.pushNotif === 'function') H.pushNotif(b.ownerUserId, 'New review', (u.name || 'Someone') + ' left a ' + rating + '-star review on ' + b.name, 'review');
+    const sb = window.supabase;
+    if (sb) { try { await sb.from('business_reviews').upsert({ id: row.id, business_id: bizId, reviewer_id: u.id, reviewer_name: row.reviewerName, rating: rating, comment: row.comment || '' }, { onConflict: 'reviewer_id,business_id' }); } catch(e) {} }
+  };
+
   pages.BusinessShop = function (params) {
     const b = getBiz(params && params.id);
     if (!b) return `<div class="page active">${innerTopbar('Shop')}${H.emptyState('Shop not found', '')}</div>`;
@@ -393,15 +467,15 @@
 
         <!-- Contact pills -->
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${b.phone ? `<a href="tel:${escHtml(b.phone)}" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;background:#EEF2FB;color:#1A3A8F;font-size:12.5px;font-weight:700;text-decoration:none">
+          ${b.phone ? `<a href="tel:${escHtml(b.phone)}" onclick="H.recordShopLead&&H.recordShopLead('${escHtml(String(b.id))}','call')" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;background:#EEF2FB;color:#1A3A8F;font-size:12.5px;font-weight:700;text-decoration:none">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.58a16 16 0 0 0 6.06 6.06l1.65-1.85a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             Call
           </a>` : ''}
-          ${waNum ? `<a href="https://wa.me/${escHtml(waNum.startsWith('263') ? waNum : '263' + waNum.replace(/^0/, ''))}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;background:#DCFCE7;color:#15803D;font-size:12.5px;font-weight:700;text-decoration:none">
+          ${waNum ? `<a href="https://wa.me/${escHtml(waNum.startsWith('263') ? waNum : '263' + waNum.replace(/^0/, ''))}" target="_blank" onclick="H.recordShopLead&&H.recordShopLead('${escHtml(String(b.id))}','whatsapp')" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;background:#DCFCE7;color:#15803D;font-size:12.5px;font-weight:700;text-decoration:none">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="#16a34a"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             WhatsApp
           </a>` : ''}
-          <button onclick="H.openInner('Messages')" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;background:var(--bg,#F4F6FB);color:var(--sub);font-size:12.5px;font-weight:700;border:none;cursor:pointer;font-family:inherit">
+          <button onclick="H.recordShopLead&&H.recordShopLead('${escHtml(String(b.id))}','chat');H.openInner('Messages')" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;background:var(--bg,#F4F6FB);color:var(--sub);font-size:12.5px;font-weight:700;border:none;cursor:pointer;font-family:inherit">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             Message
           </button>
@@ -429,17 +503,32 @@
       </div>
 
       <!-- Product grid -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 12px ${isOwn ? '80px' : '100px'}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 12px 16px">
         ${shown.length
           ? shown.map(productCard).join('')
           : `<div style="grid-column:1/-1;text-align:center;color:var(--sub);font-size:13px;padding:40px 16px">No products yet.</div>`}
       </div>
 
+      <!-- Reviews -->
+      <div id="shopReviewsSection" style="padding:0 12px ${isOwn ? '80px' : '100px'}">
+        ${_reviewsHtml(b)}
+      </div>
+
       <!-- Sticky CTA -->
       <div style="position:sticky;bottom:0;background:rgba(var(--card-rgb,255,255,255),0.97);backdrop-filter:blur(10px);padding:10px 14px 14px;border-top:1px solid var(--border,#E8ECF4)">
         ${isOwn
-          ? `<button onclick="H._bizProfile.openEdit('${escHtml(String(b.id))}')" style="width:100%;padding:15px;background:#1A3A8F;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Edit Shop</button>`
-          : `<button onclick="H.openInner('Messages')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#2245b8);color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 5px 18px rgba(26,58,143,0.3)">
+          ? `<div style="display:flex;gap:8px">
+              <button onclick="H._bizAnalytics&&H._bizAnalytics.open('${escHtml(String(b.id))}')" style="flex:1;padding:13px 0;background:#EEF2FB;color:#1A3A8F;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics
+              </button>
+              <button onclick="H._bizLeads&&H._bizLeads.open('${escHtml(String(b.id))}')" style="flex:1;padding:13px 0;background:#EEF2FB;color:#1A3A8F;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Leads
+              </button>
+              <button onclick="H._bizProfile.openEdit('${escHtml(String(b.id))}')" style="flex:1;padding:13px 0;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit
+              </button>
+            </div>`
+          : `<button onclick="H.recordShopLead&&H.recordShopLead('${escHtml(String(b.id))}','chat');H.openInner('Messages')" style="width:100%;padding:15px;background:linear-gradient(135deg,#1A3A8F,#2245b8);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 5px 18px rgba(26,58,143,0.3)">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             Message This Shop
           </button>`}
@@ -455,12 +544,43 @@
         if (changed && H.currentPageName === 'BusinessShop') H.renderPage('BusinessShop', { id });
       });
     }
+    if (typeof H.fetchShopReviews === 'function') H.fetchShopReviews(id);
   };
 
   H.openBusinessShop = function (id) { H.openInner('BusinessShop', { id }); };
 
   H._bizShop = {
     setCat: function (id, cat) { _shopCat = cat; _shopQ = ''; H.renderPage('BusinessShop', { id: id }); },
+    _reviewStar: 0,
+    setReviewStar: function (n) {
+      H._bizShop._reviewStar = n;
+      document.querySelectorAll('#reviewStars [data-star]').forEach(function(s) {
+        s.style.color = parseInt(s.dataset.star) <= n ? '#F59E0B' : '#D1D5DB';
+      });
+    },
+    openReviewModal: function (bizId) {
+      H._bizShop._reviewStar = 0;
+      if (document.getElementById('shopReviewModal')) return;
+      const u = H.currentUser && H.currentUser();
+      if (!u) { if (H.requireAuth) H.requireAuth('Sign in to leave a review'); return; }
+      const ov = document.createElement('div');
+      ov.id = 'shopReviewModal';
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(16,24,40,.55);z-index:9600;display:flex;align-items:flex-end;justify-content:center';
+      ov.innerHTML = '<div style="background:var(--card,#fff);border-radius:22px 22px 0 0;width:100%;max-width:520px;padding:22px 20px calc(30px + env(safe-area-inset-bottom));font-family:Inter,sans-serif">'
+        + '<div style="width:40px;height:4px;border-radius:2px;background:var(--border,#E8ECF4);margin:0 auto 18px"></div>'
+        + '<div style="font-size:17px;font-weight:800;color:var(--text);text-align:center;margin-bottom:4px">Write a Review</div>'
+        + '<div style="font-size:12.5px;color:var(--sub);text-align:center;margin-bottom:18px">Tap a star to rate this shop</div>'
+        + '<div id="reviewStars" style="display:flex;justify-content:center;gap:10px;margin-bottom:18px">'
+        + [1,2,3,4,5].map(function(n){ return '<span onclick="H._bizShop.setReviewStar(' + n + ')" data-star="' + n + '" style="font-size:40px;cursor:pointer;color:#D1D5DB;line-height:1;transition:color .12s">&#9733;</span>'; }).join('')
+        + '</div>'
+        + '<textarea id="reviewComment" placeholder="Share your experience with this shop (optional)" style="width:100%;height:90px;border:1.5px solid var(--border,#E8ECF4);border-radius:10px;padding:12px;font-size:14px;color:var(--text);font-family:inherit;resize:none;outline:none;box-sizing:border-box;background:var(--bg,#F4F6FB);margin-bottom:14px;display:block"></textarea>'
+        + '<div style="display:flex;gap:10px">'
+        + '<button onclick="document.getElementById(\'shopReviewModal\').remove()" style="flex:1;padding:14px;border-radius:10px;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Cancel</button>'
+        + '<button onclick="H.submitShopReview(\'' + escHtml(String(bizId)) + '\',H._bizShop._reviewStar,(document.getElementById(\'reviewComment\')||{}).value||\'\')" style="flex:2;padding:14px;border-radius:10px;background:#1A3A8F;color:#fff;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">Submit</button>'
+        + '</div></div>';
+      ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+      document.body.appendChild(ov);
+    },
     onSearch: function (id, v) {
       _shopQ = v || '';
       const b = getBiz(id); if (!b) return;
@@ -536,8 +656,8 @@
       const loc = [b.city, b.province].filter(Boolean).join(', ');
       const prods = (H.state.listings || []).filter(l => l.businessId === b.id && l.status === 'active').length;
       const verified = (b.verificationLevel || 0) >= 2;
-      return `<div onclick="H.openBusinessProfile('${b.id}')" style="display:flex;gap:12px;align-items:center;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:12px;margin:0 16px 10px;cursor:pointer">
-        <div style="width:52px;height:52px;border-radius:13px;overflow:hidden;background:#EEF2FB;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#1A3A8F">${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}</div>
+      return `<div onclick="H.openBusinessShop('${b.id}')" style="display:flex;gap:12px;align-items:center;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:8px;padding:12px;margin:0 16px 10px;cursor:pointer">
+        <div style="width:52px;height:52px;border-radius:6px;overflow:hidden;background:#EEF2FB;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#1A3A8F">${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:5px"><span style="font-size:14.5px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}</span>${verified ? H.verifiedBadge(14) : ''}</div>
           <div style="font-size:12px;color:var(--sub);margin-top:2px">${cat ? escHtml(cat.name) : ''}${loc ? ' · ' + escHtml(loc) : ''}</div>
@@ -549,7 +669,7 @@
   }
 
   pages.BusinessSearch = function () {
-    const chip = (id, label) => `<button onclick="H._bizSearch.setCat('${id}')" style="flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid ${_bizCat === id ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${_bizCat === id ? '#1A3A8F' : 'var(--card,#fff)'};color:${_bizCat === id ? '#fff' : 'var(--text)'}">${label}</button>`;
+    const chip = (id, label) => `<button onclick="H._bizSearch.setCat('${id}')" style="flex-shrink:0;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid ${_bizCat === id ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${_bizCat === id ? '#1A3A8F' : 'var(--card,#fff)'};color:${_bizCat === id ? '#fff' : 'var(--text)'}">${label}</button>`;
     return `<div class="page active">
       ${innerTopbar('Stores')}
       <div style="padding:12px 16px 8px">
