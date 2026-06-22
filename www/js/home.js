@@ -9,6 +9,7 @@
   const { escHtml, timeAgo, filterListings, renderListCard, renderFeatCard, CATEGORIES, ICONS } = H;
 
   let searchTimer;
+  let _homeVisListener = null;
   function debounce(fn, delay) {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(fn, delay);
@@ -130,12 +131,11 @@
         <!-- SPONSORED — swipeable banner carousel (all active ads), right under categories -->
         ${(H.adCarousel && H.activeAds) ? H.adCarousel(H.activeAds(), { title: 'Featured Partners' }) : ''}
 
-        <!-- LOCAL SHOPS — horizontal scroll landscape cards -->
+        <!-- LOCAL SHOPS — 3-column grid, logo left + thumbnails right -->
         ${(() => {
           const activeShops = (H.state.businesses || []).filter(function(b) { return b.status === 'active'; });
           if (!activeShops.length) return '';
-          const placeholderSvg = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#B0BAD0" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M9 21V9"/></svg>';
-          const cards = activeShops.slice(0, 8).map(function(b) {
+          const cards = activeShops.slice(0, 6).map(function(b) {
             const ini = H.initials ? H.initials(b.name || 'Shop') : (b.name || 'S').charAt(0).toUpperCase();
             const bProds = (H.state.listings || []).filter(function(l) {
               return l.status === 'active' && (String(l.sellerId) === String(b.ownerUserId) || String(l.businessId) === String(b.id));
@@ -144,30 +144,31 @@
             const catName = (H.CATEGORIES && H.CATEGORIES.find(function(c){ return c.id === b.category; }) || {}).name || '';
             const niche = catName || 'Local Shop';
             const thumbProds = bProds.filter(function(l) { return l.photos && l.photos[0]; }).slice(0, 2);
+            const logoHtml = b.logo
+              ? '<img src="' + escHtml(b.logo) + '" style="width:100%;height:100%;object-fit:cover">'
+              : '<span style="font-size:17px;font-weight:900;color:#fff">' + escHtml(ini) + '</span>';
             var thumbsHtml = '';
             for (var ti = 0; ti < 2; ti++) {
               if (thumbProds[ti]) {
-                thumbsHtml += '<div style="width:50px;height:50px;border-radius:4px;overflow:hidden;background:#EEF2FB;flex-shrink:0">'
+                thumbsHtml += '<div style="flex:1;border-radius:5px;overflow:hidden;background:#EEF2FB">'
                   + '<img src="' + escHtml(thumbProds[ti].photos[0]) + '" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
                   + '</div>';
               } else {
-                thumbsHtml += '<div style="width:50px;height:50px;border-radius:4px;background:#EEF2FB;flex-shrink:0;display:flex;align-items:center;justify-content:center">' + placeholderSvg + '</div>';
+                thumbsHtml += '<div style="flex:1;border-radius:5px;background:#EEF2FB"></div>';
               }
             }
             return '<div onclick="H.openBusinessShop && H.openBusinessShop(\'' + escHtml(String(b.id)) + '\')" '
-              + 'style="flex-shrink:0;width:calc(100vw - 44px);max-width:340px;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:8px;padding:14px;display:flex;align-items:center;gap:13px;cursor:pointer">'
-              // Circle logo
-              + '<div style="width:56px;height:56px;border-radius:50%;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#1A3A8F,#2245b8);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px rgba(26,58,143,0.18)">'
-              + (b.logo ? '<img src="' + escHtml(b.logo) + '" style="width:100%;height:100%;object-fit:cover">' : escHtml(ini))
+              + 'style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:8px;cursor:pointer;min-width:0">'
+              + '<div style="display:flex;gap:4px;height:62px;margin-bottom:7px">'
+              + '<div style="width:56px;height:62px;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2245b8);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+              + logoHtml
               + '</div>'
-              // Info
-              + '<div style="flex:1;min-width:0">'
-              + '<div style="font-size:13px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">' + escHtml(b.name) + '</div>'
-              + '<div style="font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:5px">' + escHtml(niche) + '</div>'
-              + '<div style="font-size:10.5px;font-weight:800;color:#1A3A8F">' + lCount + ' item' + (lCount === 1 ? '' : 's') + '</div>'
+              + '<div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0;overflow:hidden">'
+              + thumbsHtml
               + '</div>'
-              // Product thumbnails
-              + '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">' + thumbsHtml + '</div>'
+              + '</div>'
+              + '<div style="font-size:11px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">' + escHtml(b.name) + '</div>'
+              + '<div style="font-size:10px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(niche) + ' (' + lCount + (lCount === 1 ? ' item' : ' items') + ')</div>'
               + '</div>';
           }).join('');
           return '<div style="background:var(--card,#fff);padding:18px 0 20px;margin-bottom:8px">'
@@ -175,7 +176,7 @@
             + '<span style="font-size:15px;font-weight:800;color:var(--text)">Local Shops</span>'
             + '<span onclick="H._bizSearch&&H._bizSearch.open()" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>'
             + '</div>'
-            + '<div style="display:flex;gap:10px;overflow-x:auto;padding:2px 16px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none">'
+            + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 12px">'
             + cards
             + '</div></div>';
         })()}
@@ -266,13 +267,28 @@
         if (bizAfter !== bizBefore) H.renderPage('Home');
       }).catch(function () {});
     }
-    if (typeof H.fetchListingsFromSupabase !== 'function') return;
-    const countBefore = (H.state.listings || []).filter(l => l.status === 'active').length;
-    H.fetchListingsFromSupabase().then(() => {
-      if (H.currentPageName !== 'Home') return;
-      const countAfter = (H.state.listings || []).filter(l => l.status === 'active').length;
-      if (countAfter > countBefore) H.toast('New listings loaded — pull down to refresh');
-    }).catch(() => {});
+    if (typeof H.fetchListingsFromSupabase === 'function') {
+      H.fetchListingsFromSupabase().then(function () {
+        if (H.currentPageName !== 'Home') return;
+        H.renderPage('Home');
+      }).catch(function () {});
+    }
+    // Auto-refresh when app returns to foreground — no manual pull needed
+    if (_homeVisListener) document.removeEventListener('visibilitychange', _homeVisListener);
+    _homeVisListener = function () {
+      if (document.hidden || H.currentPageName !== 'Home') return;
+      if (typeof H.fetchAllActiveBusinesses === 'function') {
+        H.fetchAllActiveBusinesses().then(function () {
+          if (H.currentPageName === 'Home') H.renderPage('Home');
+        }).catch(function () {});
+      }
+      if (typeof H.fetchListingsFromSupabase === 'function') {
+        H.fetchListingsFromSupabase().then(function () {
+          if (H.currentPageName === 'Home') H.renderPage('Home');
+        }).catch(function () {});
+      }
+    };
+    document.addEventListener('visibilitychange', _homeVisListener);
   };
 
   H.toggleCityPicker = function () {
