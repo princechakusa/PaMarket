@@ -161,7 +161,9 @@
           _maybeRenderNotifs(u.id);
         }
       })
-      .subscribe();
+      .subscribe(function (status) {
+        if (H.RT && typeof H.RT._onChannelStatus === 'function') H.RT._onChannelStatus('notifications', status);
+      });
   };
 
   // ── Mark single notification as read (cloud-aware) ────────

@@ -831,7 +831,9 @@ window.H = {
           const FEED = { Home:1, Browse:1, Property:1, Vehicles:1, Electronics:1, Fashion:1,
             Furniture:1, Services:1, Agriculture:1, Pets:1, Kids:1, Other:1, Jobs:1, Rooms:1 };
           if (_sigBefore !== _sigAfter && FEED[pg] && !H._userIsTyping()) {
-            if (H.RM && typeof H.RM._renderPreserved === 'function' && !H.RM._inBgRender) {
+            if (typeof H._scheduleRender === 'function') {
+              H._scheduleRender();
+            } else if (H.RM && typeof H.RM._renderPreserved === 'function' && !H.RM._inBgRender) {
               H.RM._renderPreserved(pg, H.currentPageParams);
             } else {
               H.renderPage(pg, H.currentPageParams);
@@ -1473,9 +1475,13 @@ window.H = {
         .limit(200);
       if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
       const cloud=(data||[]).map(r=>H._mapCloudListing(r));
-      const nonActive=(H.state.listings||[]).filter(l=>l.status!=='active');
-      H.state.listings=[...cloud,...nonActive];
-      H.saveState();
+      if (typeof H.applyFeedUpdate === 'function') {
+        H.applyFeedUpdate({ type: 'listings_full', data: cloud }, 'poll');
+      } else {
+        const nonActive=(H.state.listings||[]).filter(l=>l.status!=='active');
+        H.state.listings=[...cloud,...nonActive];
+        H.saveState();
+      }
       if (typeof H._checkSavedSearchAlerts === 'function') { try { H._checkSavedSearchAlerts(); } catch(e){} }
 
       // Seller verified-badge backfill runs in the background so it never
@@ -1580,9 +1586,7 @@ window.H = {
             }
           }
         }).subscribe(function(status){
-          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            if (H.RT && typeof H.RT.scheduleReconnect === 'function') H.RT.scheduleReconnect('messages:' + status);
-          }
+          if (H.RT && typeof H.RT._onChannelStatus === 'function') H.RT._onChannelStatus('messages', status);
         });
     } catch(e){ console.warn('Realtime setup failed:',e.message); }
   },
@@ -1591,6 +1595,8 @@ window.H = {
   // instantly and update the UI without waiting for the next poll cycle.
   // Requires 'listings' to be in the Supabase realtime publication.
   // Falls back to RM polling silently if the channel errors.
+  // State mutations go through H.applyFeedUpdate (conflict rules + dedup).
+  // Renders are batched via H._scheduleRender (350 ms debounce, scroll-safe).
   _setupRealtimeListings() {
     try {
       const sb = window.supabase;
@@ -1602,42 +1608,27 @@ window.H = {
       window._listingsChannel = sb.channel('listings-live')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, function(payload) {
           try {
-            H.state.listings = H.state.listings || [];
-            const evt = payload.eventType;
-            if (evt === 'DELETE') {
-              const oldId = payload.old && payload.old.id;
-              if (oldId) H.state.listings = H.state.listings.filter(function(l) { return l.id !== oldId; });
-            } else if (evt === 'INSERT' || evt === 'UPDATE') {
-              if (!payload.new) return;
-              const mapped = H._mapCloudListing(payload.new);
-              if (mapped.status === 'active') {
-                const idx = H.state.listings.findIndex(function(l) { return l.id === mapped.id; });
-                if (idx >= 0) {
-                  H.state.listings[idx] = Object.assign({}, H.state.listings[idx], mapped);
-                } else {
-                  H.state.listings.unshift(mapped);
-                }
-              } else {
-                H.state.listings = H.state.listings.filter(function(l) { return l.id !== mapped.id; });
-              }
+            if (typeof H.applyFeedUpdate === 'function') {
+              H.applyFeedUpdate({
+                type: 'listing_event',
+                evt:  payload.eventType,
+                data: payload.new ? H._mapCloudListing(payload.new) : null,
+                id:   payload.old && payload.old.id
+              }, 'realtime');
             }
-            H.saveState();
             const pg = H.currentPageName;
-            if (FEED_PAGES[pg] && H.RM && typeof H.RM._renderPreserved === 'function' && !H.RM._inBgRender) {
-              H.RM._renderPreserved(pg, H.currentPageParams);
-            }
+            if (FEED_PAGES[pg] && typeof H._scheduleRender === 'function') H._scheduleRender();
           } catch(e) { console.warn('listings RT handler:', e); }
         })
         .subscribe(function(status) {
-          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            if (H.RT && typeof H.RT.scheduleReconnect === 'function') H.RT.scheduleReconnect('listings:' + status);
-          }
+          if (H.RT && typeof H.RT._onChannelStatus === 'function') H.RT._onChannelStatus('listings', status);
         });
     } catch(e) { console.warn('_setupRealtimeListings:', e.message); }
   },
 
   // Supabase Realtime for businesses — same pattern as listings.
   // Requires 'businesses' to be in the Supabase realtime publication.
+  // State mutations go through H.applyFeedUpdate; renders via H._scheduleRender.
   _setupRealtimeBusinesses() {
     try {
       const sb = window.supabase;
@@ -1647,46 +1638,32 @@ window.H = {
       window._bizRtChannel = sb.channel('businesses-live')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'businesses' }, function(payload) {
           try {
-            H.state.businesses = H.state.businesses || [];
-            const evt = payload.eventType;
-            if (evt === 'DELETE') {
-              const oldId = payload.old && payload.old.id;
-              if (oldId) H.state.businesses = H.state.businesses.filter(function(b) { return b.id !== oldId; });
-            } else if (evt === 'INSERT' || evt === 'UPDATE') {
-              const row = payload.new; if (!row) return;
+            var bmapped = null;
+            const row = payload.new;
+            if (row) {
               const _cats = (row.category || '').split('|').filter(Boolean);
-              const mapped = { id: row.id, ownerUserId: row.owner_user_id, name: row.name || '',
+              bmapped = { id: row.id, ownerUserId: row.owner_user_id, name: row.name || '',
                 logo: row.logo, cover: row.cover, description: row.description,
                 bizType: row.biz_type || 'individual', category: _cats[0] || null, categories: _cats,
                 phone: row.phone, whatsapp: row.whatsapp, email: row.email,
                 province: row.province, city: row.city, suburb: row.suburb,
                 status: row.status, verificationLevel: row.verification_level || 0,
                 featuredListingIds: Array.isArray(row.featured_listing_ids) ? row.featured_listing_ids : [] };
-              if (mapped.status === 'active') {
-                const idx = H.state.businesses.findIndex(function(b) { return b.id === mapped.id; });
-                if (idx >= 0) {
-                  const prev = H.state.businesses[idx];
-                  if (!mapped.logo && prev.logo) mapped.logo = prev.logo;
-                  if (!mapped.cover && prev.cover) mapped.cover = prev.cover;
-                  H.state.businesses[idx] = Object.assign({}, prev, mapped);
-                } else {
-                  H.state.businesses.unshift(mapped);
-                }
-              } else {
-                H.state.businesses = H.state.businesses.filter(function(b) { return b.id !== mapped.id; });
-              }
             }
-            H.saveState();
+            if (typeof H.applyFeedUpdate === 'function') {
+              H.applyFeedUpdate({
+                type: 'business_event',
+                evt:  payload.eventType,
+                data: bmapped,
+                id:   payload.old && payload.old.id
+              }, 'realtime');
+            }
             const pg = H.currentPageName;
-            if (BIZ_PAGES[pg] && H.RM && typeof H.RM._renderPreserved === 'function' && !H.RM._inBgRender) {
-              H.RM._renderPreserved(pg, H.currentPageParams);
-            }
+            if (BIZ_PAGES[pg] && typeof H._scheduleRender === 'function') H._scheduleRender();
           } catch(e) { console.warn('businesses RT handler:', e); }
         })
         .subscribe(function(status) {
-          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            if (H.RT && typeof H.RT.scheduleReconnect === 'function') H.RT.scheduleReconnect('businesses:' + status);
-          }
+          if (H.RT && typeof H.RT._onChannelStatus === 'function') H.RT._onChannelStatus('businesses', status);
         });
     } catch(e) { console.warn('_setupRealtimeBusinesses:', e.message); }
   },

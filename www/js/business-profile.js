@@ -729,21 +729,31 @@
     try {
       const { data, error } = await sb.from('businesses').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(300);
       if (error || !Array.isArray(data)) return H.state.businesses || [];
-      H.state.businesses = H.state.businesses || [];
-      data.forEach(row => {
+      const serverList = data.map(row => {
         const _cats = (row.category || '').split('|').filter(Boolean);
-        const mapped = { id: row.id, ownerUserId: row.owner_user_id, name: row.name || '', logo: row.logo, cover: row.cover, description: row.description, bizType: row.biz_type || 'individual', category: _cats[0] || null, categories: _cats, phone: row.phone, whatsapp: row.whatsapp, email: row.email, province: row.province, city: row.city, suburb: row.suburb, status: row.status, verificationLevel: row.verification_level || 0, featuredListingIds: Array.isArray(row.featured_listing_ids) ? row.featured_listing_ids : [] };
-        const i = H.state.businesses.findIndex(b => b.id === mapped.id);
-        if (i >= 0) {
-          var _prev = H.state.businesses[i];
-          // Don't erase a locally-held logo/cover with a null that arrives during a
-          // cloud-write race (user just saved, cloud hasn't committed yet).
-          if (!mapped.logo && _prev.logo) mapped.logo = _prev.logo;
-          if (!mapped.cover && _prev.cover) mapped.cover = _prev.cover;
-          H.state.businesses[i] = Object.assign(_prev, mapped);
-        } else H.state.businesses.push(mapped);
+        return { id: row.id, ownerUserId: row.owner_user_id, name: row.name || '',
+          logo: row.logo, cover: row.cover, description: row.description,
+          bizType: row.biz_type || 'individual', category: _cats[0] || null, categories: _cats,
+          phone: row.phone, whatsapp: row.whatsapp, email: row.email,
+          province: row.province, city: row.city, suburb: row.suburb,
+          status: row.status, verificationLevel: row.verification_level || 0,
+          featuredListingIds: Array.isArray(row.featured_listing_ids) ? row.featured_listing_ids : [] };
       });
-      saveState();
+      if (typeof H.applyFeedUpdate === 'function') {
+        H.applyFeedUpdate({ type: 'businesses_full', data: serverList }, 'poll');
+      } else {
+        H.state.businesses = H.state.businesses || [];
+        serverList.forEach(function (mapped) {
+          const i = H.state.businesses.findIndex(b => b.id === mapped.id);
+          if (i >= 0) {
+            var _prev = H.state.businesses[i];
+            if (!mapped.logo && _prev.logo) mapped.logo = _prev.logo;
+            if (!mapped.cover && _prev.cover) mapped.cover = _prev.cover;
+            H.state.businesses[i] = Object.assign(_prev, mapped);
+          } else H.state.businesses.push(mapped);
+        });
+        saveState();
+      }
       return H.state.businesses;
     } catch (e) { return H.state.businesses || []; }
   };
