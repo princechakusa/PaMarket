@@ -1374,23 +1374,28 @@ window.H = {
   async fetchAdsFromSupabase() {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
+      // Select * (not an explicit column list): the paid_ads table may or may not
+      // have the richer ad columns (headline, business_name, bg_color, ...). An
+      // explicit list that names a missing column 400s and returns ZERO ads, so
+      // ads "exist but never appear". With * we take whatever exists and fall
+      // back to the minimal columns (title/image_url/link_url) that always exist.
       const {data,error} = await window.supabase
         .from('paid_ads')
-        .select('id,type,business_name,headline,tagline,image_url,bg_color,link_url,target_cat,starts_at,ends_at,active,priority,impressions,clicks,listing_id')
-        .eq('active',true)
-        .order('priority',{ascending:false});
+        .select('*')
+        .eq('active',true);
       if(error||!data) return;
       H.state.paidAds = data.map(r=>({
-        id:r.id, type:r.type,
-        businessName:r.business_name, headline:r.headline,
-        tagline:r.tagline, imageUrl:r.image_url,
-        bgColor:r.bg_color, linkUrl:r.link_url, targetCat:r.target_cat,
+        id:r.id, type:r.type||'banner',
+        businessName:r.business_name || r.title || 'Sponsored',
+        headline:r.headline || r.title || '',
+        tagline:r.tagline || '', imageUrl:r.image_url,
+        bgColor:r.bg_color || '#1A3A8F', linkUrl:r.link_url, targetCat:r.target_cat || null,
         startsAt:r.starts_at?new Date(r.starts_at).getTime():0,
         endsAt:r.ends_at?new Date(r.ends_at).getTime():9999999999999,
         active:r.active, priority:r.priority||0,
         impressions:r.impressions||0, clicks:r.clicks||0,
         listingId:r.listing_id||null
-      }));
+      })).sort(function(a,b){ return (b.priority||0)-(a.priority||0); });
     } catch(e){ console.warn('fetchAdsFromSupabase:',e.message); }
   },
 

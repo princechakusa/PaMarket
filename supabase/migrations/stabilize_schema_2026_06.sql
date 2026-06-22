@@ -31,6 +31,20 @@ create index if not exists profiles_last_seen_idx on public.profiles (last_seen)
 alter table public.profiles
   add column if not exists privacy jsonb not null default '{}'::jsonb;
 
+-- ── paid_ads rich columns ────────────────────────────────────
+-- The sponsored-ads carousel renders a richer ad than the original
+-- title/image/link table. These columns are optional; the frontend now
+-- falls back to title/image_url/link_url when they are absent, but adding
+-- them enables branded headline/category-targeted/prioritised ads.
+alter table public.paid_ads add column if not exists type          text;
+alter table public.paid_ads add column if not exists business_name text;
+alter table public.paid_ads add column if not exists headline      text;
+alter table public.paid_ads add column if not exists tagline       text;
+alter table public.paid_ads add column if not exists bg_color      text;
+alter table public.paid_ads add column if not exists target_cat    text;
+alter table public.paid_ads add column if not exists priority      integer not null default 0;
+alter table public.paid_ads add column if not exists listing_id    uuid;
+
 -- Force PostgREST to reload its schema cache so the new columns are
 -- visible immediately (otherwise the API may keep returning the cache
 -- miss for a minute).

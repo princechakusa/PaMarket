@@ -594,4 +594,19 @@
     </div>`;
   };
 
+  // Some recently-viewed listings may not be in the local feed cache (older,
+  // no longer active, or pruned). Fetch the missing ones by id so "Recently
+  // Viewed" shows the full history instead of silently dropping them.
+  pages.MyActivity_after = function () {
+    if (!H.currentUser()) return;
+    let rvIds = [];
+    try { rvIds = JSON.parse(localStorage.getItem('pamarket_rv') || '[]'); } catch (e) {}
+    const missing = rvIds.filter(id => !(H.state.listings || []).some(l => l.id === id));
+    if (!missing.length || typeof H._fetchListingById !== 'function') return;
+    Promise.all(missing.map(id => H._fetchListingById(id).catch(() => null))).then(results => {
+      if (H.currentPageName !== 'MyActivity') return;
+      if (results.some(Boolean)) H.renderPage('MyActivity', H.currentPageParams);
+    });
+  };
+
 })(window.H = window.H || {});
