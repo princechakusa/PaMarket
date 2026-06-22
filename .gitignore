@@ -48,3 +48,4 @@ website/_*.html
 website/_*.png
 website/_*.js
 website/_*.css
+website/_*.json
