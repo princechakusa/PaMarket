@@ -147,6 +147,12 @@
             views: 0, company: row.company || null
           });
           if (typeof window.H.saveState === 'function') window.H.saveState();
+          // Instantly reflect the new listing on Home without manual refresh
+          if (window.H.currentPageName === 'Home' && !document.hidden &&
+              typeof window.H.renderPage === 'function' &&
+              !(window.H._userIsTyping && window.H._userIsTyping())) {
+            window.H.renderPage('Home');
+          }
         }
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'listings' }, function(payload) {
@@ -185,5 +191,45 @@
         }
       })
       .subscribe();
+
+    // Businesses channel — new shops and status changes appear immediately on Home
+    sb.channel('rt-businesses')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'businesses' }, function(payload) {
+        var row = payload.new;
+        if (!row || !window.H || !window.H.state || row.status !== 'active') return;
+        var existing = (window.H.state.businesses || []).find(function(b) { return b.id === row.id; });
+        if (!existing) {
+          window.H.state.businesses = window.H.state.businesses || [];
+          window.H.state.businesses.push({ id: row.id, ownerUserId: row.owner_user_id, name: row.name || '', logo: row.logo || null, cover: row.cover || null, description: row.description || '', bizType: row.biz_type || 'individual', category: row.category || '', phone: row.phone || '', whatsapp: row.whatsapp || '', email: row.email || '', province: row.province || '', city: row.city || '', suburb: row.suburb || '', status: row.status, verificationLevel: row.verification_level || 0 });
+          if (typeof window.H.saveState === 'function') window.H.saveState();
+          if (window.H.currentPageName === 'Home' && !document.hidden && typeof window.H.renderPage === 'function' && !(window.H._userIsTyping && window.H._userIsTyping())) window.H.renderPage('Home');
+        }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'businesses' }, function(payload) {
+        var row = payload.new;
+        if (!row || !window.H || !window.H.state) return;
+        var biz = (window.H.state.businesses || []).find(function(b) { return b.id === row.id; });
+        if (biz) {
+          biz.name = row.name || biz.name; biz.status = row.status || biz.status;
+          biz.logo = row.logo != null ? row.logo : biz.logo;
+          biz.category = row.category || biz.category;
+          biz.verificationLevel = row.verification_level != null ? row.verification_level : biz.verificationLevel;
+          if (typeof window.H.saveState === 'function') window.H.saveState();
+          if (window.H.currentPageName === 'Home' && !document.hidden && typeof window.H.renderPage === 'function' && !(window.H._userIsTyping && window.H._userIsTyping())) window.H.renderPage('Home');
+        }
+      })
+      .subscribe();
+
+    // Capacitor foreground event — re-fetch when app returns from background
+    try {
+      var CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+      if (CapApp && typeof CapApp.addListener === 'function') {
+        CapApp.addListener('appStateChange', function(state) {
+          if (!state.isActive || !window.H || window.H.currentPageName !== 'Home') return;
+          if (typeof window.H.fetchListingsFromSupabase === 'function') window.H.fetchListingsFromSupabase().then(function() { if (window.H.currentPageName === 'Home') window.H.renderPage('Home'); }).catch(function(){});
+          if (typeof window.H.fetchAllActiveBusinesses === 'function') window.H.fetchAllActiveBusinesses().then(function() { if (window.H.currentPageName === 'Home') window.H.renderPage('Home'); }).catch(function(){});
+        });
+      }
+    } catch(e) {}
   };
 })();
