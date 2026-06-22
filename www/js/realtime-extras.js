@@ -271,6 +271,10 @@
   function onForeground() {
     H.initPresence(); H.initReadReceipts();
     H.touchLastSeen(true);
+    // Re-subscribe to listings/businesses realtime channels — the WebSocket
+    // may have been dropped while the app was in the background.
+    if (typeof H._setupRealtimeListings   === 'function') H._setupRealtimeListings();
+    if (typeof H._setupRealtimeBusinesses === 'function') H._setupRealtimeBusinesses();
     // Small delay so the network re-establishes after an app switch.
     setTimeout(function () {
       var pg = H.currentPageName;
