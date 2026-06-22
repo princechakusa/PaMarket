@@ -1431,7 +1431,7 @@
     if (desc.trim().length < 30) { H.toast('Please write a job description (min 30 chars)'); return; }
     var u = H.currentUser();
     if (!u) { H.toast('Please sign in first'); return; }
-    if (!u.verified) { H.toast('Company must be verified to post jobs. Go to Profile → Verify Identity.', 4000); return; }
+    if (!u.companyVerified) { H.toast('You must be verified to post jobs. Go to Profile > Get Verified.', 4000); return; }
     var jobType = 'Full-time';
     document.querySelectorAll('input[name="jType"]').forEach(function (r) { if (r.checked) jobType = r.value; });
     var salaryRaw = ((document.getElementById('jSalary') || {}).value || '').trim();
