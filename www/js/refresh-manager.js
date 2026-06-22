@@ -121,8 +121,23 @@
   };
 
   // ── Core RefreshManager ──────────────────────────────────────────────────────
+  // Realtime-first architecture: every data change arrives instantly via Supabase
+  // Realtime channels (postgres_changes) set up in app.js and notifications.js.
+  // RM no longer drives periodic poll loops for any user-facing page. Its role is:
+  //   1. ONE initial hydration fetch when a page mounts (RM.start)
+  //   2. A catch-up fetch when the app returns from background (RM.resume)
+  //   3. Immediate re-fetch after a user mutation (RM.postAction)
+  //   4. Scroll-safe re-render infrastructure used by realtime handlers (_renderPreserved)
+  //
+  // The Admin page is the sole exception: it queries non-published tables
+  // (verifications, all listings including non-active, reports) that have no
+  // realtime publication, so a 30s poll interval is kept for that page only.
+  //
+  // Disconnection fallback: realtime-extras.js runs a 30s health check. When the
+  // WebSocket is found disconnected it calls H.RT.reconnectAll() + H.RM.resume()
+  // so the app catches up even when realtime is temporarily down.
   var RM = H.RM = {
-    _loops:      {},   // { pageName: intervalId }
+    _loops:      {},   // { pageName: intervalId } — only Admin uses this now
     _current:    null, // page name currently on screen
     _params:     null, // params for current page
     _appActive:  true,
@@ -131,26 +146,26 @@
     // Allow other modules to add/override page configs
     register: function (name, cfg) { _cfg[name] = cfg; },
 
-    // Start polling for a page — called from each page's _after hook.
-    // Debounced: rapid successive calls (e.g. realtime + boot) only set
-    // the interval once, from the LAST call within a 500ms window.
+    // Called from each page's _after hook. Does ONE hydration fetch then stops.
+    // Interval-based polling is only started for the Admin page (no RT coverage).
     start: function (name, params) {
       RM.stopAll();
       RM._current = name;
       RM._params  = params || null;
       var c = _cfg[name];
       if (!c) return;
-      // Debounce interval creation so rapid re-renders (realtime events,
-      // initial boot sequence) don't keep resetting the 45s countdown.
       clearTimeout(RM._startTimer);
       RM._startTimer = setTimeout(function () {
         if (RM._current !== name) return; // navigated away during debounce
         RM._poll(name, params, false);
-        RM._loops[name] = setInterval(function () {
-          if (!RM._appActive || document.hidden) return;
-          if (RM._current !== name) { RM.stop(name); return; }
-          RM._poll(name, params, false);
-        }, c.interval);
+        // Admin has no realtime publication for its queries — keep a 30s interval.
+        if (name === 'Admin') {
+          RM._loops[name] = setInterval(function () {
+            if (!RM._appActive || document.hidden) return;
+            if (RM._current !== name) { RM.stop(name); return; }
+            RM._poll(name, params, false);
+          }, c.interval);
+        }
       }, 300);
     },
 
@@ -163,15 +178,17 @@
       Object.keys(RM._loops).forEach(function (name) { RM.stop(name); });
     },
 
-    // Called by H._onAppStateChange('background') — suspends poll loops.
+    // Called by H._onAppStateChange('background') — no-op for timers we no longer run.
     pause: function () {
       RM._appActive = false;
     },
 
-    // Called when app returns to foreground — force fresh fetch then resume loop
+    // Called on foreground return or realtime reconnect: do one fresh fetch to
+    // catch up on anything missed while backgrounded. Realtime channels are
+    // re-subscribed independently by H.RT.reconnectAll() in realtime-extras.js.
     resume: function () {
       RM._appActive    = true;
-      _lastListingsFetch = 0; // bypass throttle so we get fresh data immediately
+      _lastListingsFetch = 0; // bypass throttle — get server-fresh data immediately
       _lastBizFetch      = 0;
       var name   = RM._current || H.currentPageName;
       var params = RM._params;
@@ -179,13 +196,15 @@
       RM.stop(name);
       clearTimeout(RM._startTimer);
       RM._poll(name, params, true);
+      // Restart Admin interval if we're returning to that page.
       var c = _cfg[name];
-      if (!c) return;
-      RM._loops[name] = setInterval(function () {
-        if (!RM._appActive || document.hidden) return;
-        if (RM._current !== name) { RM.stop(name); return; }
-        RM._poll(name, params, false);
-      }, c.interval);
+      if (c && name === 'Admin') {
+        RM._loops[name] = setInterval(function () {
+          if (!RM._appActive || document.hidden) return;
+          if (RM._current !== name) { RM.stop(name); return; }
+          RM._poll(name, params, false);
+        }, c.interval);
+      }
     },
 
     // Immediate re-fetch + re-render after a user action that mutates data
