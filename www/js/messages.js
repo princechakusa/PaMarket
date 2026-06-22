@@ -493,7 +493,7 @@
     // Only show the linked listing card to the buyer. The seller already knows
     // it is their own item; showing it on their side looks like the other
     // person's listing.
-    const listing = (state.listings || []).find(function(l) {
+    const listing = (H.state.listings || []).find(function(l) {
       return l.id === c.listingId && String(l.sellerId || l.userId || '') !== String(u.id);
     });
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
@@ -1190,9 +1190,9 @@
       return '<div class="page active">' + innerTopbar('Shop Inbox') + H.emptyState('Not found', '', null, null) + '</div>';
     }
     const tab = H._shopInboxTab || 'all';
-    const bizConvs = (H.state.conversations || [])
+    const bizConvs = conversations()
       .filter(function (c) {
-        return c.businessId === bizId && !c.otherDeleted
+        return c.businessId === bizId
           && Array.isArray(c.messages) && c.messages.some(function (m) { return m.from !== u.id; });
       })
       .sort(function (a, b) {

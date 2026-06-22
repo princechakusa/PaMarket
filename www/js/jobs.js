@@ -37,7 +37,7 @@
     var seller   = (H.state.users || []).find(function(u){ return u.id === l.sellerId; });
     var coVerified = seller && (seller.companyVerified || seller.verified);
     var _sellerBiz = (H.state.businesses || []).find(function(b){ return b.ownerUserId === l.sellerId && b.status === 'active'; });
-    var _logoSrc = (l.photos && l.photos[0]) || (_sellerBiz && _sellerBiz.logo) || (seller && seller.avatar) || '';
+    var _logoSrc = (_sellerBiz && _sellerBiz.logo) || (seller && seller.avatar) || '';
     var initials = company.split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase() || 'JB';
     var logoHtml = '<div style="width:52px;height:52px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;color:#fff;border:1.5px solid var(--border);overflow:hidden">'
       + (_logoSrc ? '<img src="' + _logoSrc + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">' : '')
@@ -341,26 +341,34 @@
     var salary  = parseLine(lines, 'SALARY') || 'Negotiable';
     var _pSeller = (H.state.users || []).find(function(u){ return u.id === l.sellerId; });
     var _pBiz = (H.state.businesses || []).find(function(b){ return b.ownerUserId === l.sellerId && b.status === 'active'; });
-    var _pLogoSrc = (l.photos && l.photos[0]) || (_pBiz && _pBiz.logo) || (_pSeller && _pSeller.avatar) || '';
-    var initials = company.split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase() || 'JB';
-    var logo = '<div style="width:40px;height:40px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;margin-bottom:8px">'
+    var _pLogoSrc = (_pBiz && _pBiz.logo) || (_pSeller && _pSeller.avatar) || '';
+    var _ini = company.split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase() || 'JB';
+    var logo = '<div style="width:40px;height:40px;flex-shrink:0;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2952cc);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff">'
       + (_pLogoSrc ? '<img src="' + _pLogoSrc + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">' : '')
-      + (_pLogoSrc ? '' : initials)
+      + (_pLogoSrc ? '' : _ini)
       + '</div>';
     var salaryColor = salary === 'Negotiable' ? '#888' : '#15803d';
+    var icoDollar = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="' + salaryColor + '" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+    var icoPin = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#888" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+    var icoClock = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#1A3A8F" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
     return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + l.id + '\'})" style="flex:0 0 200px;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.07);cursor:pointer">'
       + '<div style="height:4px;background:linear-gradient(90deg,#1A3A8F,#F5A623)"></div>'
       + '<div style="padding:12px">'
+      + '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px">'
       + logo
-      + '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;line-height:1.3;height:36px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">' + H.escHtml(l.title) + '</div>'
-      + '<div style="font-size:11.5px;color:#1A3A8F;font-weight:600;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(company) + '</div>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">'
-      + (jobType ? '<span style="font-size:10.5px;font-weight:700;padding:3px 7px;border-radius:20px;background:#EEF2FF;color:#1A3A8F">' + H.escHtml(jobType) + '</span>' : '')
-      + (l.city  ? '<span style="font-size:10.5px;font-weight:600;padding:3px 7px;border-radius:20px;background:#F5F5F5;color:#666">' + H.escHtml(l.city) + '</span>' : '')
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:13px;font-weight:800;color:var(--text);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:3px">' + H.escHtml(l.title) + '</div>'
+      + '<div style="font-size:11px;color:#1A3A8F;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H.escHtml(company) + '</div>'
+      + '</div></div>'
+      + '<div style="border-top:1px solid var(--border);margin-bottom:8px"></div>'
+      + '<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">'
+      + icoDollar
+      + '<span style="font-size:12px;font-weight:700;color:' + salaryColor + '">' + H.escHtml(salary) + '</span>'
       + '</div>'
-      + '<div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:9px">'
-      + '<div style="font-size:13px;font-weight:800;color:' + salaryColor + '">' + H.escHtml(salary) + '</div>'
-      + '<div style="font-size:10.5px;color:#bbb">' + H.timeAgo(l.createdAt) + '</div>'
+      + (l.city ? '<div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">' + icoPin + '<span style="font-size:11px;color:#888">' + H.escHtml(l.city) + '</span></div>' : '')
+      + '<div style="display:flex;align-items:center;justify-content:space-between">'
+      + (jobType ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:3px 7px;border-radius:20px;background:#EEF2FF;color:#1A3A8F">' + icoClock + H.escHtml(jobType) + '</span>' : '<span></span>')
+      + '<span style="font-size:10px;color:#bbb">' + H.timeAgo(l.createdAt) + '</span>'
       + '</div>'
       + '</div></div>';
   }

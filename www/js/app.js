@@ -1021,7 +1021,7 @@ window.H = {
       area.scrollTop=scrollTo;
     }
     if(area.style.opacity!=='1') area.style.opacity='1';
-    if(this.pages[name+'_after']) this.pages[name+'_after'](params||{});
+    if(this.pages[name+'_after']) { try { this.pages[name+'_after'](params||{}); } catch(e){ console.warn(name+'_after error:',e); } }
     this._initPullToRefresh();
   },
 
