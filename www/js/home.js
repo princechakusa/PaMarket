@@ -143,10 +143,14 @@
             const lCount = bProds.length;
             const catName = (H.CATEGORIES && H.CATEGORIES.find(function(c){ return c.id === b.category; }) || {}).name || '';
             const niche = catName || 'Local Shop';
-            const thumbProds = bProds.filter(function(l) { return l.photos && l.photos[0]; }).slice(0, 2);
+            const featuredIds = b.featuredListingIds || [];
+            const featuredProds = featuredIds.length
+              ? featuredIds.map(function(id){ return bProds.find(function(l){ return l.id === id; }); }).filter(Boolean)
+              : [];
+            const thumbProds = (featuredProds.length ? featuredProds : bProds.filter(function(l){ return l.photos && l.photos[0]; })).slice(0, 2);
             const logoHtml = b.logo
               ? '<img src="' + escHtml(b.logo) + '" style="width:100%;height:100%;object-fit:cover">'
-              : '<span style="font-size:17px;font-weight:900;color:#fff">' + escHtml(ini) + '</span>';
+              : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-6h15L21 9M3 9h18v11a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm6 0v2a3 3 0 006 0V9"/></svg>';
             var thumbsHtml = '';
             for (var ti = 0; ti < 2; ti++) {
               if (thumbProds[ti]) {

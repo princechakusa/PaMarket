@@ -74,7 +74,7 @@
         id: b.id, name: b.name || '', description: b.description || '', bizType: b.bizType || 'individual',
         phone: b.phone || '', whatsapp: b.whatsapp || '', email: b.email || '',
         province: b.province || '', city: b.city || '', suburb: b.suburb || '',
-        logo: b.logo || null, cover: b.cover || null
+        logo: b.logo || null, cover: b.cover || null, featuredListingIds: b.featuredListingIds ? b.featuredListingIds.slice() : []
       };
     }
     const e = _edit;
@@ -118,6 +118,29 @@
         ${field('City / Town', `<select class="fi" id="epCity">${cityOpts}</select>`)}
         ${field('Suburb / Area', `<input class="fi" id="epSuburb" value="${escHtml(e.suburb)}">`)}
 
+        ${(() => {
+          const u = currentUser();
+          if (!u) return '';
+          const myProds = (H.state.listings || []).filter(function(l) {
+            return l.status === 'active' && (String(l.sellerId) === String(u.id) || String(l.businessId) === String(e.id));
+          });
+          if (!myProds.length) return '';
+          const featured = e.featuredListingIds || [];
+          const prodHtml = myProds.slice(0, 8).map(function(l) {
+            const sel = featured.indexOf(l.id) !== -1;
+            const hasPhoto = l.photos && l.photos[0];
+            return '<div onclick="H._bizProfile.toggleFeatured(\'' + escHtml(String(l.id)) + '\')" style="border:2px solid ' + (sel ? '#1A3A8F' : 'var(--border,#E8ECF4)') + ';border-radius:10px;overflow:hidden;cursor:pointer;position:relative;background:var(--card,#fff)">'
+              + (hasPhoto ? '<img src="' + escHtml(l.photos[0]) + '" style="width:100%;aspect-ratio:1/1;object-fit:cover">' : '<div style="aspect-ratio:1/1;background:#EEF2FB;display:flex;align-items:center;justify-content:center;font-size:22px">' + (typeof H.categoryIcon === 'function' ? H.categoryIcon(l.cat) : '') + '</div>')
+              + '<div style="padding:4px 6px;font-size:10.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(l.title || 'Untitled') + '</div>'
+              + (sel ? '<div style="position:absolute;top:5px;right:5px;width:18px;height:18px;border-radius:50%;background:#1A3A8F;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>' : '')
+              + '</div>';
+          }).join('');
+          return '<div class="fg" style="margin-bottom:14px">'
+            + '<div class="fl">Featured Items</div>'
+            + '<div style="font-size:11.5px;color:var(--sub);margin-bottom:10px">Pick up to 2 listings to show as preview images on the Local Shops grid.</div>'
+            + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">' + prodHtml + '</div>'
+            + '</div>';
+        })()}
         <button class="btn-pri" id="epSaveBtn" style="width:100%;margin-top:6px" onclick="H._bizProfile.save()">Save Profile</button>
         ${isOwner(b) ? `<button class="ml-act-btn" style="width:100%;padding:13px;margin-top:10px" onclick="H._bizProfile.openStaff('${b.id}')">Manage Staff</button>` : ''}
       </div>
@@ -201,7 +224,7 @@
       <div style="position:relative;margin-bottom:48px">
         <div style="height:140px;${coverStyle}"></div>
         <div style="position:absolute;left:16px;bottom:-38px;width:78px;height:78px;border-radius:18px;border:3px solid var(--card,#fff);background:#EEF2FB;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:26px;font-weight:800;color:#1A3A8F">
-          ${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}
+          ${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : _shopIconBlue}
         </div>
       </div>
       <div class="inner-content" style="padding-bottom:40px">
@@ -270,6 +293,24 @@
     });
   }
 
+  var _shopIcon = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-6h15L21 9M3 9h18v11a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm6 0v2a3 3 0 006 0V9"/></svg>';
+  var _shopIconBlue = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#1A3A8F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-6h15L21 9M3 9h18v11a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm6 0v2a3 3 0 006 0V9"/></svg>';
+
+  function _ratingStatsHtml(b) {
+    var allP = shopProducts(b);
+    var rvs = (H.state.businessReviews && H.state.businessReviews[b.id]) || [];
+    var cnt = rvs.length;
+    var avg = cnt > 0 ? (rvs.reduce(function(s, r){ return s + (r.rating || 0); }, 0) / cnt) : null;
+    var filled = avg !== null ? Math.round(avg) : 0;
+    return (avg !== null
+      ? '<span style="font-size:13.5px;font-weight:800;color:var(--text)">' + avg.toFixed(1) + '</span>'
+        + '<span style="color:#F59E0B;font-size:13px;letter-spacing:1px">' + '&#9733;'.repeat(filled) + '<span style="color:#D1D5DB">' + '&#9734;'.repeat(5 - filled) + '</span></span>'
+        + '<span style="font-size:12px;color:var(--sub)">(' + cnt + ' review' + (cnt === 1 ? '' : 's') + ')</span>'
+      : '<span style="font-size:12px;color:var(--sub)">No reviews yet</span>')
+      + '<span style="color:var(--border,#E8ECF4)">|</span>'
+      + '<span style="font-size:12px;color:var(--sub)">' + allP.length + ' product' + (allP.length === 1 ? '' : 's') + '</span>';
+  }
+
   function _reviewsHtml(b) {
     if (!b) return '';
     const reviews = (H.state.businessReviews && H.state.businessReviews[b.id]) || [];
@@ -322,6 +363,8 @@
         const sec = document.getElementById('shopReviewsSection');
         const b = getBiz(bizId);
         if (sec && b) sec.innerHTML = _reviewsHtml(b);
+        const statsEl = document.getElementById('shopRatingStats');
+        if (statsEl && b) statsEl.innerHTML = _ratingStatsHtml(b);
       }
     } catch(e) {}
   };
@@ -339,6 +382,7 @@
     const m = document.getElementById('shopReviewModal'); if (m) m.remove();
     if (H.toast) H.toast('Review submitted');
     const sec = document.getElementById('shopReviewsSection'); if (sec) sec.innerHTML = _reviewsHtml(b);
+    const statsEl = document.getElementById('shopRatingStats'); if (statsEl) statsEl.innerHTML = _ratingStatsHtml(b);
     if (typeof H.pushNotif === 'function') H.pushNotif(b.ownerUserId, 'New review', (u.name || 'Someone') + ' left a ' + rating + '-star review on ' + b.name, 'review');
     const sb = window.supabase;
     if (sb) { try { await sb.from('business_reviews').upsert({ id: row.id, business_id: bizId, reviewer_id: u.id, reviewer_name: row.reviewerName, rating: rating, comment: row.comment || '' }, { onConflict: 'reviewer_id,business_id' }); } catch(e) {} }
@@ -439,7 +483,7 @@
       <div style="background:var(--card,#fff);padding:0 16px 16px">
         <div style="display:flex;align-items:flex-end;gap:14px;margin-top:-32px;margin-bottom:12px">
           <div style="width:64px;height:64px;border-radius:50%;border:3px solid var(--card,#fff);overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#1A3A8F,#2245b8);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;box-shadow:0 3px 12px rgba(0,0,0,0.18)">
-            ${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}
+            ${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : _shopIcon}
           </div>
           <div style="flex:1;min-width:0;padding-bottom:2px">
             <div style="font-size:17px;font-weight:900;color:var(--text);line-height:1.1">${escHtml(b.name)}</div>
@@ -455,12 +499,8 @@
         </div>
 
         <!-- Rating + stats -->
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-          <span style="font-size:13.5px;font-weight:800;color:var(--text)">${b.rating || '4.8'}</span>
-          <span style="color:#F59E0B;font-size:13px;letter-spacing:1px">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-          <span style="font-size:12px;color:var(--sub)">(${b.reviewCount || Math.max(allProds.length * 3, 1)} reviews)</span>
-          <span style="color:var(--border,#E8ECF4)">|</span>
-          <span style="font-size:12px;color:var(--sub)">${allProds.length} product${allProds.length === 1 ? '' : 's'}</span>
+        <div id="shopRatingStats" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+          ${_ratingStatsHtml(b)}
         </div>
 
         ${b.description ? `<div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:12px">${escHtml(b.description)}</div>` : ''}
@@ -628,7 +668,7 @@
       if (error || !Array.isArray(data)) return H.state.businesses || [];
       H.state.businesses = H.state.businesses || [];
       data.forEach(row => {
-        const mapped = { id: row.id, ownerUserId: row.owner_user_id, name: row.name || '', logo: row.logo, cover: row.cover, description: row.description, bizType: row.biz_type || 'individual', category: row.category, phone: row.phone, whatsapp: row.whatsapp, email: row.email, province: row.province, city: row.city, suburb: row.suburb, status: row.status, verificationLevel: row.verification_level || 0 };
+        const mapped = { id: row.id, ownerUserId: row.owner_user_id, name: row.name || '', logo: row.logo, cover: row.cover, description: row.description, bizType: row.biz_type || 'individual', category: row.category, phone: row.phone, whatsapp: row.whatsapp, email: row.email, province: row.province, city: row.city, suburb: row.suburb, status: row.status, verificationLevel: row.verification_level || 0, featuredListingIds: Array.isArray(row.featured_listing_ids) ? row.featured_listing_ids : [] };
         const i = H.state.businesses.findIndex(b => b.id === mapped.id);
         if (i >= 0) H.state.businesses[i] = Object.assign(H.state.businesses[i], mapped); else H.state.businesses.push(mapped);
       });
@@ -666,7 +706,7 @@
       const prods = (H.state.listings || []).filter(l => l.businessId === b.id && l.status === 'active').length;
       const verified = (b.verificationLevel || 0) >= 2;
       return `<div onclick="H.openBusinessShop('${b.id}')" style="display:flex;gap:12px;align-items:center;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:8px;padding:12px;margin:0 16px 10px;cursor:pointer">
-        <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2245b8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px rgba(26,58,143,0.15)">${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}</div>
+        <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2245b8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px rgba(26,58,143,0.15)">${b.logo ? `<img src="${escHtml(b.logo)}" style="width:100%;height:100%;object-fit:cover">` : _shopIcon}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:5px"><span style="font-size:14.5px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}</span>${verified ? H.verifiedBadge(14) : ''}</div>
           <div style="font-size:12px;color:var(--sub);margin-top:2px">${cat ? escHtml(cat.name) : ''}${loc ? ' · ' + escHtml(loc) : ''}</div>
@@ -720,6 +760,21 @@
     openEdit(id) { _edit = null; H.openInner('BusinessEditProfile', { id }); },
     openStaff(id) { H.fetchBusinessStaff(id).then(() => renderPage('BusinessStaff', { id })); H.openInner('BusinessStaff', { id }); },
 
+    toggleFeatured: function(listingId) {
+      if (!_edit) return;
+      _edit.featuredListingIds = _edit.featuredListingIds || [];
+      var idx = _edit.featuredListingIds.indexOf(listingId);
+      if (idx !== -1) {
+        _edit.featuredListingIds.splice(idx, 1);
+      } else if (_edit.featuredListingIds.length < 2) {
+        _edit.featuredListingIds.push(listingId);
+      } else {
+        toast('You can feature up to 2 items');
+        return;
+      }
+      renderPage('BusinessEditProfile');
+    },
+
     setType(t) { collectEdit(); _edit.bizType = t; renderPage('BusinessEditProfile'); },
     onProvince(p) { collectEdit(); _edit.province = p; _edit.city = ''; renderPage('BusinessEditProfile'); },
 
@@ -746,7 +801,8 @@
       Object.assign(b, {
         name: e.name, description: e.description, bizType: e.bizType, phone: e.phone,
         whatsapp: e.whatsapp, email: e.email, province: e.province, city: e.city,
-        suburb: e.suburb, logo: e.logo, cover: e.cover, updatedAt: Date.now()
+        suburb: e.suburb, logo: e.logo, cover: e.cover,
+        featuredListingIds: e.featuredListingIds ? e.featuredListingIds.slice() : [], updatedAt: Date.now()
       });
       saveState();
       if (typeof H.saveBusinessToCloud === 'function') await H.saveBusinessToCloud(b);
