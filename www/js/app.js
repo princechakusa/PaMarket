@@ -1231,20 +1231,29 @@ window.H = {
       showRefreshing();
       try {
         var pageName = H.currentPageName;
-        // Refresh only what THIS page shows, render immediately, and let the rest
-        // sync in the background — the spinner lasts one fetch, not five.
         if ((pageName === 'Messages' || pageName === 'Chat') && H.currentUser()) {
+          // Messages must be live before rendering — await is intentional here.
           if (typeof H.syncConversations === 'function') await H.syncConversations();
-        } else if (typeof H.fetchListingsFromSupabase === 'function') {
-          await H.fetchListingsFromSupabase();
-        }
-        await H.renderPage(pageName, H.currentPageParams);
-        if (H.currentUser()) {
-          if (pageName !== 'Messages' && pageName !== 'Chat' && typeof H.syncConversations === 'function') H.syncConversations();
+          await H.renderPage(pageName, H.currentPageParams);
           if (typeof H.syncNotifications === 'function') H.syncNotifications();
-          if (typeof H.syncApplications  === 'function') H.syncApplications();
+        } else {
+          // Render immediately from cache so the UI responds in milliseconds, then
+          // fetch fresh data in the background and silently update again when done.
+          await H.renderPage(pageName, H.currentPageParams);
+          if (typeof H.fetchListingsFromSupabase === 'function') {
+            H.fetchListingsFromSupabase().then(function() {
+              if (H.currentPageName === pageName) {
+                H.renderPage(pageName, H.currentPageParams).catch(function(){});
+              }
+            }).catch(function(){});
+          }
+          if (H.currentUser()) {
+            if (typeof H.syncConversations === 'function') H.syncConversations().catch(function(){});
+            if (typeof H.syncNotifications === 'function') H.syncNotifications();
+            if (typeof H.syncApplications  === 'function') H.syncApplications();
+          }
         }
-        if (typeof H.toast === 'function') H.toast('Feed updated', 1800, true);
+        if (typeof H.toast === 'function') H.toast('Refreshed', 1500, true);
       } catch(e) {
         console.warn('PTR:', e);
         if (typeof H.toast === 'function') H.toast('Could not refresh - check your connection', 3000, true);
