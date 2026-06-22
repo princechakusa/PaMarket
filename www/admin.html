@@ -868,7 +868,7 @@ function viewBusiness(id) {
   openModal('<div class="modal-title">'+esc(b.name||'Business')+'<button class="modal-close" onclick="closeModal()">×</button></div>'
     + '<div style="font-size:13px;color:var(--sub);line-height:1.8">'
     + '<div><b>Owner:</b> '+esc(ownerName(b.owner_user_id))+'</div>'
-    + '<div><b>Type:</b> '+esc(b.biz_type||'—')+' &nbsp; <b>Category:</b> '+esc(b.category||'—')+'</div>'
+    + '<div><b>Type:</b> '+esc(b.biz_type||'—')+' &nbsp; <b>Category:</b> '+esc((b.category||'—').replace(/\|/g,', '))+'</div>'
     + '<div><b>Contact:</b> '+esc(b.phone||'—')+(b.email?(' · '+esc(b.email)):'')+'</div>'
     + '<div><b>Location:</b> '+esc([b.suburb,b.city,b.province].filter(Boolean).join(', ')||'—')+'</div>'
     + '<div><b>Plan:</b> '+esc(plan)+(sub&&sub.billing_cycle?(' ('+esc(sub.billing_cycle)+')'):'')+(sub&&sub.current_period_end?(' · renews '+fmtDate(sub.current_period_end)):'')+'</div>'
