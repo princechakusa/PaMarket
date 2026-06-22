@@ -1035,7 +1035,7 @@
         featuredListingIds: e.featuredListingIds ? e.featuredListingIds.slice() : [], updatedAt: Date.now()
       });
       saveState();
-      if (typeof H.saveBusinessToCloud === 'function') await H.saveBusinessToCloud(b);
+      try { if (typeof H.saveBusinessToCloud === 'function') await H.saveBusinessToCloud(b); } catch (e) { console.warn('saveBusinessToCloud:', e.message); }
       toast('Profile saved');
       _edit = null;
       renderPage('BusinessView', { id: b.id });

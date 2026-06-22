@@ -1191,6 +1191,7 @@
 
   // ── SHOP INBOX (owner view) ──────────────────────────────
   pages.BusinessShopInbox = function (params) {
+    try {
     const bizId = params && params.id;
     const b = (H.state.businesses || []).find(function (b) { return b.id === bizId; });
     const u = currentUser();
@@ -1255,6 +1256,10 @@
       </div>
       <div style="text-align:center;font-size:11.5px;color:var(--sub);padding:16px 20px;line-height:1.55;border-top:1px solid var(--border,#E8ECF4);margin-top:8px">Shop messages are separate from personal DMs. Buyers see your business identity, not your personal name or profile picture.</div>
     </div>`;
+    } catch (e) {
+      console.error('BusinessShopInbox render error:', e);
+      return '<div class="page active">' + innerTopbar('Shop Inbox') + '<div style="padding:32px 20px;text-align:center"><div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px">Could not load inbox</div><div style="font-size:13px;color:var(--sub);margin-bottom:20px">Please go back and try again.</div><button onclick="H.goBack()" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:11px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Go Back</button></div></div>';
+    }
   };
 
   H.openChat = function (id) { H.openInner('Chat', { id }); };

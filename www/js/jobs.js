@@ -2193,7 +2193,7 @@
       H._syncingJobApplications = true;
       H.syncApplications().then(function(){
         if (H.currentPageName === 'JobApplications') H.renderPage('JobApplications', params || H.currentPageParams);
-      }).finally(function(){
+      }).catch(function(){}).finally(function(){
         H._syncingJobApplications = false;
       });
     }

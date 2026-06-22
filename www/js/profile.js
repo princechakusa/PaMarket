@@ -236,8 +236,10 @@
         H.saveState();
         const c = window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null;
         if (c) {
-          const res = await c.from('profiles').upsert({ id: u.id, name: u.name, phone: u.phone || null, bio: u.bio || null, avatar: u.avatar || null, updated_at: new Date().toISOString() });
-          if (res && res.error) console.warn('Profile sync failed:', res.error.message);
+          try {
+            const res = await c.from('profiles').upsert({ id: u.id, name: u.name, phone: u.phone || null, bio: u.bio || null, avatar: u.avatar || null, updated_at: new Date().toISOString() });
+            if (res && res.error) console.warn('Profile sync failed:', res.error.message);
+          } catch (e) { console.warn('Profile sync failed:', e.message); }
         }
         if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
         if (okEl) { okEl.style.display = ''; setTimeout(() => { if(okEl) okEl.style.display='none'; }, 2500); }
@@ -725,8 +727,10 @@
         H.saveState();
         const sb = window.supabase;
         if (sb) {
-          await sb.from('profiles').update({ verification_pending: false }).eq('id', u.id);
-          await sb.from('verifications').delete().eq('user_id', u.id);
+          try {
+            await sb.from('profiles').update({ verification_pending: false }).eq('id', u.id);
+            await sb.from('verifications').delete().eq('user_id', u.id);
+          } catch (e) { console.warn('cancel verification:', e.message); }
         }
         H.toast('Verification request cancelled');
         H.renderPage('ProfileVerify');
