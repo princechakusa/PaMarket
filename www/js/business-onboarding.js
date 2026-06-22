@@ -113,25 +113,45 @@
   }
 
   // ── Cloud helpers (graceful if tables are not migrated yet) ──
+  // Columns that may be absent on a not-yet-migrated database. If Postgres
+  // rejects the write with "could not find column X", we strip X and retry so
+  // onboarding still completes instead of looping on a 400. Run
+  // supabase/migrations/stabilize_schema_2026_06.sql to enable these features.
+  const _BIZ_OPTIONAL_COLS = ['featured_listing_ids'];
+
   H.saveBusinessToCloud = async function (b) {
     const sb = window.supabase;
-    if (!sb || !b) return;
-    try {
-      const row = {
-        id: b.id, owner_user_id: b.ownerUserId,
-        name: b.name || '', logo: b.logo || null, cover: b.cover || null,
-        description: b.description || null, biz_type: b.bizType || 'individual',
-        category: (Array.isArray(b.categories) && b.categories.length ? b.categories.join('|') : (b.category || null)), phone: b.phone || null,
-        whatsapp: b.whatsapp || null, email: b.email || null,
-        province: b.province || null, city: b.city || null, suburb: b.suburb || null,
-        status: b.status || 'draft', onboarding_step: b.onboardingStep || 'details',
-        verification_level: b.verificationLevel || 0,
-        featured_listing_ids: (b.featuredListingIds && b.featuredListingIds.length) ? b.featuredListingIds : null,
-        updated_at: new Date().toISOString()
-      };
-      const { error } = await sb.from('businesses').upsert(row, { onConflict: 'id' });
-      if (error) console.warn('saveBusinessToCloud:', error.message);
-    } catch (e) { console.warn('saveBusinessToCloud error:', e); }
+    if (!sb || !b) return { ok: false };
+    const row = {
+      id: b.id, owner_user_id: b.ownerUserId,
+      name: b.name || '', logo: b.logo || null, cover: b.cover || null,
+      description: b.description || null, biz_type: b.bizType || 'individual',
+      category: (Array.isArray(b.categories) && b.categories.length ? b.categories.join('|') : (b.category || null)), phone: b.phone || null,
+      whatsapp: b.whatsapp || null, email: b.email || null,
+      province: b.province || null, city: b.city || null, suburb: b.suburb || null,
+      status: b.status || 'draft', onboarding_step: b.onboardingStep || 'details',
+      verification_level: b.verificationLevel || 0,
+      featured_listing_ids: (b.featuredListingIds && b.featuredListingIds.length) ? b.featuredListingIds : null,
+      updated_at: new Date().toISOString()
+    };
+    // Try the full row, then progressively drop optional columns the DB rejects.
+    for (let attempt = 0; attempt <= _BIZ_OPTIONAL_COLS.length; attempt++) {
+      try {
+        const { error } = await sb.from('businesses').upsert(row, { onConflict: 'id' });
+        if (!error) return { ok: true };
+        // PostgREST schema-cache miss reports code PGRST204 / "could not find the X column".
+        const missing = _BIZ_OPTIONAL_COLS.find(function (c) {
+          return c in row && (error.message || '').indexOf(c) !== -1;
+        });
+        if (missing) { delete row[missing]; continue; } // retry without it
+        console.warn('saveBusinessToCloud:', error.message);
+        return { ok: false, error: error };
+      } catch (e) {
+        console.warn('saveBusinessToCloud error:', e);
+        return { ok: false, error: e };
+      }
+    }
+    return { ok: false };
   };
 
   H.saveBusinessSubscriptionToCloud = async function (b) {
@@ -631,8 +651,25 @@
       d.status = 'active';
       d.onboardingStep = 'done';
       persistDraft();
-      if (typeof H.saveBusinessToCloud === 'function') await H.saveBusinessToCloud(JSON.parse(JSON.stringify(d)));
-      if (typeof H.saveBusinessSubscriptionToCloud === 'function') await H.saveBusinessSubscriptionToCloud(d);
+
+      // The business row MUST land in the cloud before we record its subscription:
+      // the business_subscriptions RLS insert policy checks that a business owned by
+      // auth.uid() exists. If the business write fails (e.g. schema not migrated),
+      // skip the subscription insert so we don't trigger a guaranteed 403, and tell
+      // the user rather than falsely reporting success.
+      let saveRes = { ok: true };
+      if (typeof H.saveBusinessToCloud === 'function') {
+        saveRes = await H.saveBusinessToCloud(JSON.parse(JSON.stringify(d))) || { ok: false };
+      }
+      if (saveRes.ok) {
+        if (typeof H.saveBusinessSubscriptionToCloud === 'function') await H.saveBusinessSubscriptionToCloud(d);
+      } else {
+        if (btn) { btn.disabled = false; btn.textContent = 'Activate Business'; }
+        d.status = 'draft';
+        persistDraft();
+        toast('Could not activate. Please check your connection and try again.');
+        return;
+      }
 
       // Force-refresh the marketplace business list so the new shop appears
       // immediately in Local Shops on Home for this device (others get it via
