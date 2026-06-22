@@ -479,6 +479,7 @@
   };
 
   H.loadProfile = async function(userId) {
+    try {
     var c = sb(); if (!c) return;
     var res = await c.from('profiles').select('*').eq('id',userId).single();
     if (res.error||!res.data) {
@@ -520,6 +521,7 @@
       if (profile.cv            != null) u.cv             = profile.cv;
     }
     H.saveState();
+    } catch(e) { console.warn('loadProfile:', e && e.message); }
   };
 
   H.logout = function() {

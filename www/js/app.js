@@ -314,7 +314,7 @@ window.H = {
       if (typeof H.saveState === 'function') H.saveState();
       if (typeof H.loadProfile === 'function' && !H._loadingCurrentProfile) {
         H._loadingCurrentProfile = true;
-        H.loadProfile(id).finally(()=>{ H._loadingCurrentProfile = false; });
+        H.loadProfile(id).catch(function(){}).finally(()=>{ H._loadingCurrentProfile = false; });
       }
     }
     return user;
@@ -2612,27 +2612,6 @@ window.H = {
 window.pushNotif=(uid,title,body)=>H.pushNotif&&H.pushNotif(uid,title,body);
 window.openListing=id=>H.openListing(id);
 
-// God-mode unlock — rapid-tap the PaMarket logo 7 times to open the admin panel
-(function(){
-  var _count = 0;
-  var _timer = null;
-  H.logoTap = function() {
-    _count++;
-    clearTimeout(_timer);
-    _timer = setTimeout(function(){ _count = 0; }, 2000);
-    if (_count >= 7) {
-      _count = 0;
-      var u = typeof H.currentUser === 'function' ? H.currentUser() : null;
-      if (u && u.role === 'admin') {
-        H.state.adminSession = true;
-        H.navTo('Admin', null);
-      } else {
-        H.toast('Access denied');
-      }
-    }
-  };
-})();
-
 // Deep link router — called when user taps a push notification
 // Route a deep link, but wait until the app is booted (cold start from a
 // notification tap can fire before navTo/state exist).
@@ -2867,6 +2846,7 @@ H.openAppRating = function() {
 
   // Ask the user to enable notifications (from the in-app banner / button).
   H.promptEnableNotifications = async function() {
+    try {
     var status = await H.notifStatus();
     if (status === 'granted') { H.toast('Notifications are already on'); H._refreshNotifBanner(); return; }
     if (status === 'unsupported') { H.toast('Notifications are not supported on this device'); return; }
@@ -2888,6 +2868,7 @@ H.openAppRating = function() {
     var after = await H.notifStatus();
     if (after === 'granted') H.toast('Notifications enabled');
     H._refreshNotifBanner();
+    } catch(e) { console.warn('promptEnableNotifications:', e && e.message); }
   };
 
   // Fill #notifEnableBanner with a nudge card when notifications aren't on.
@@ -2909,7 +2890,7 @@ H.openAppRating = function() {
       + '</div>';
   };
   H._dismissNotifBanner = function() { H._notifBannerDismissed = true; var el = document.getElementById('notifEnableBanner'); if (el) el.innerHTML = ''; };
-  H._refreshNotifBanner = function() { try { H.maybeShowNotifBanner(); } catch (e) {} };
+  H._refreshNotifBanner = function() { H.maybeShowNotifBanner().catch(function(){}); };
 
   // Handle deeplink sent from the service worker when user taps a notification
   if ('serviceWorker' in navigator) {

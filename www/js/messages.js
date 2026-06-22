@@ -19,7 +19,7 @@
     }
     const deleted = H.state.deletedConvIds || [];
     return H.state.conversations.filter(function(c) {
-      return !deleted.includes(c.id) && !c.otherDeleted;
+      return c && !deleted.includes(c.id) && !c.otherDeleted;
     });
   }
 
@@ -450,6 +450,7 @@
 
   
   pages.Chat = function ({ id }) {
+    try {
     const c = conversations().find(x => x.id === id);
     if (!c) return '<div class="page active">' + H.innerTopbar('Chat') + '<div class="empty-state"><div class="empty-title">Conversation not found</div></div></div>';
     const u = currentUser();
@@ -619,6 +620,13 @@
       + '<input type="file" id="chatImgGallery" accept="image/*" multiple style="display:none" onchange="H._chat.handleImageFile(this)">'
       + '<input type="file" id="chatImgCamera" accept="image/*" capture="environment" style="display:none" onchange="H._chat.handleImageFile(this)">'
       + '</div>';
+    } catch (e) {
+      console.error('Chat render error:', e);
+      return '<div class="page active">' + H.innerTopbar('Chat')
+        + '<div style="padding:32px 20px;text-align:center"><div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px">Could not load chat</div>'
+        + '<div style="font-size:13px;color:var(--sub);margin-bottom:20px">Please go back and try again.</div>'
+        + '<button onclick="H.goBack()" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:11px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Go Back</button></div></div>';
+    }
   };
 
   // ----- Chat render helpers -----
