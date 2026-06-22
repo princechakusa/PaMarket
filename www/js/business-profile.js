@@ -835,8 +835,7 @@
       if (typeof H.saveBusinessToCloud === 'function') await H.saveBusinessToCloud(b);
       toast('Profile saved');
       _edit = null;
-      if (H._bizOnboard && typeof H._bizOnboard.view === 'function') H._bizOnboard.view(b.id);
-      else renderPage('BusinessProfile', { id: b.id });
+      renderPage('BusinessView', { id: b.id });
     },
 
     async invite(businessId) {
