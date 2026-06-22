@@ -38,9 +38,12 @@
     var seller   = (H.state.users || []).find(function(u){ return u.id === l.sellerId; });
     var coVerified = seller && (seller.companyVerified || seller.verified);
     var verBadge = coVerified ? '<span style="margin-left:4px;display:inline-flex;vertical-align:middle">' + H.verifiedBadge(14) + '</span>' : '';
-    var logoHtml = (l.photos && l.photos[0])
-      ? '<img src="' + l.photos[0] + '" style="width:46px;height:46px;border-radius:12px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)">'
-      : '<div style="width:46px;height:46px;border-radius:12px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;font-weight:800;color:#1A3A8F">' + (company.slice(0,2).toUpperCase()) + '</div>';
+    var _sellerBiz = (H.state.businesses || []).find(function(b){ return b.ownerUserId === l.sellerId && b.status === 'active'; });
+    var _logoSrc = (l.photos && l.photos[0]) || (_sellerBiz && _sellerBiz.logo) || (seller && seller.avatar) || '';
+    var logoHtml = _logoSrc
+      ? '<img src="' + _logoSrc + '" style="width:46px;height:46px;border-radius:12px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
+        + '<div style="display:none;width:46px;height:46px;border-radius:12px;background:#1A3A8F14;flex-shrink:0;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#1A3A8F">' + company.slice(0,2).toUpperCase() + '</div>'
+      : '<div style="width:46px;height:46px;border-radius:12px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;font-weight:800;color:#1A3A8F">' + company.slice(0,2).toUpperCase() + '</div>';
 
     return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + l.id + '\'})" style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:10px;border:1px solid var(--border);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
       + '<div style="display:flex;align-items:flex-start;gap:12px">'
@@ -316,8 +319,12 @@
     var company = l.company || l.sellerName || parseLine(lines, 'COMPANY') || 'Company';
     var jobType = parseLine(lines, 'JOB TYPE') || '';
     var salary  = parseLine(lines, 'SALARY') || 'Negotiable';
-    var logo = (l.photos && l.photos[0])
-      ? '<img src="' + l.photos[0] + '" style="width:38px;height:38px;border-radius:10px;object-fit:cover;border:1px solid var(--border)">'
+    var _pSeller = (H.state.users || []).find(function(u){ return u.id === l.sellerId; });
+    var _pBiz = (H.state.businesses || []).find(function(b){ return b.ownerUserId === l.sellerId && b.status === 'active'; });
+    var _pLogoSrc = (l.photos && l.photos[0]) || (_pBiz && _pBiz.logo) || (_pSeller && _pSeller.avatar) || '';
+    var logo = _pLogoSrc
+      ? '<img src="' + _pLogoSrc + '" style="width:38px;height:38px;border-radius:10px;object-fit:cover;border:1px solid var(--border)" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
+        + '<div style="display:none;width:38px;height:38px;border-radius:10px;background:#1A3A8F14;flex-shrink:0;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#1A3A8F">' + company.slice(0,2).toUpperCase() + '</div>'
       : '<div style="width:38px;height:38px;border-radius:10px;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#1A3A8F">' + company.slice(0, 2).toUpperCase() + '</div>';
     return '<div onclick="H.openInner(\'JobDetail\',{id:\'' + l.id + '\'})" style="flex:0 0 224px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
       + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">' + logo

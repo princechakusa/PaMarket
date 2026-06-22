@@ -435,8 +435,7 @@
           <div class="inner-content" style="text-align:center;padding:40px 24px">
             <div style="width:64px;height:64px;border-radius:50%;background:#FEF6E7;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#B45309" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 7 12 12 15 14"/></svg></div>
             <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">${escHtml(b.name || 'Your business')}</div>
-            <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">Submitted for review. We will notify you once it is approved and live. You can keep editing your details while you wait.</div>
-            <button class="btn-pri" style="width:100%;max-width:300px;margin-bottom:10px" onclick="H._bizOnboard.edit('${b.id}')">Edit Details</button>
+            <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">Submitted for review. We will notify you once it is approved and live.</div>
             <button class="ml-act-btn" style="width:100%;max-width:300px;padding:13px" onclick="H.navTo('Account')">Go to Account</button>
           </div></div>`;
       }

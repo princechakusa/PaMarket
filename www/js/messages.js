@@ -490,7 +490,12 @@
       }
     }
     const otherDisplayName = (other && other.name) || c.otherName || (c.otherDeleted ? 'Deleted User' : 'PaMarket User');
-    const listing = (state.listings || []).find(l => l.id === c.listingId);
+    // Only show the linked listing card to the buyer. The seller already knows
+    // it is their own item; showing it on their side looks like the other
+    // person's listing.
+    const listing = (state.listings || []).find(function(l) {
+      return l.id === c.listingId && String(l.sellerId || l.userId || '') !== String(u.id);
+    });
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
     H.saveState();
     if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
