@@ -160,16 +160,21 @@
         if (!id || !window.H || !window.H.state) return;
         window.H.state.listings = (window.H.state.listings || []).filter(function(l){ return l.id !== id; });
         if (typeof window.H.saveState === 'function') window.H.saveState();
+        if (window.H.currentPageName === 'Home' && !document.hidden && typeof window.H.renderPage === 'function' && !(window.H._userIsTyping && window.H._userIsTyping()))
+          window.H.renderPage('Home');
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'listings' }, function(payload) {
         var row = payload.new;
         if (!row || !window.H || !window.H.state) return;
         var l = (window.H.state.listings || []).find(function(x){ return x.id === row.id; });
         if (l) {
+          var statusChanged = row.status && row.status !== l.status;
           l.status = row.status || l.status;
           l.title  = row.title  || l.title;
           l.price  = row.price  != null ? row.price : l.price;
           if (typeof window.H.saveState === 'function') window.H.saveState();
+          if (statusChanged && window.H.currentPageName === 'Home' && !document.hidden && typeof window.H.renderPage === 'function' && !(window.H._userIsTyping && window.H._userIsTyping()))
+            window.H.renderPage('Home');
         }
       })
       .subscribe();
@@ -226,8 +231,10 @@
       if (CapApp && typeof CapApp.addListener === 'function') {
         CapApp.addListener('appStateChange', function(state) {
           if (!state.isActive || !window.H || window.H.currentPageName !== 'Home') return;
-          if (typeof window.H.fetchListingsFromSupabase === 'function') window.H.fetchListingsFromSupabase().then(function() { if (window.H.currentPageName === 'Home') window.H.renderPage('Home'); }).catch(function(){});
-          if (typeof window.H.fetchAllActiveBusinesses === 'function') window.H.fetchAllActiveBusinesses().then(function() { if (window.H.currentPageName === 'Home') window.H.renderPage('Home'); }).catch(function(){});
+          var _cap = [];
+          if (typeof window.H.fetchListingsFromSupabase === 'function') _cap.push(window.H.fetchListingsFromSupabase().catch(function(){}));
+          if (typeof window.H.fetchAllActiveBusinesses === 'function') _cap.push(window.H.fetchAllActiveBusinesses().catch(function(){}));
+          if (_cap.length) Promise.all(_cap).then(function() { if (window.H.currentPageName === 'Home') window.H.renderPage('Home'); });
         });
       }
     } catch(e) {}
