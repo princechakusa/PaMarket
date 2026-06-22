@@ -122,12 +122,19 @@
     H.state.conversations = H.state.conversations || [];
     let c = H.state.conversations.find(function (x) { return x.id === convId; });
     if (!c) {
-      c = { id: convId, members: [myId, ownerId], messages: [], businessId: bizId, otherName: b.name, listingId: null };
+      c = { id: convId, members: [myId, ownerId], messages: [], businessId: bizId, otherName: b.name, listingId: null, bizV: 2 };
       H.state.conversations.unshift(c);
       H.saveState();
       if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c).catch(function () {});
     } else {
       let dirty = false;
+      // bizV < 2 means the conv was created before the merge-bug fix and may have had
+      // personal DM messages merged into it. Clear them so the chat starts clean.
+      if (!c.bizV || c.bizV < 2) {
+        c.messages = [];
+        c.bizV = 2;
+        dirty = true;
+      }
       if (!c.businessId) { c.businessId = bizId; dirty = true; }
       if (!Array.isArray(c.members) || c.members.indexOf(ownerId) === -1) { c.members = [myId, ownerId]; dirty = true; }
       if (dirty) H.saveState();
