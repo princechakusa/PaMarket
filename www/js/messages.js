@@ -510,6 +510,22 @@
       const content = m.image
         ? '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">'
         : (replyQuoteHtml(m) + escHtml(msgText(m)));
+      // In a business-branded chat (buyer view), buyer msgs go LEFT, shop msgs go RIGHT
+      if (showBizBrand) {
+        if (mine) {
+          return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
+            + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
+            + content
+            + '<div class="chat-bubble-meta">Sent to ' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
+            + '</div></div>';
+        }
+        return sep + '<div class="chat-msg-row" style="justify-content:flex-end" data-msg-id="' + escHtml(m.id) + '">'
+          + '<div class="chat-row-av">' + otherAvatar + '</div>'
+          + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
+          + content
+          + '<div class="chat-bubble-meta" style="text-align:right">' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
+          + '</div></div>';
+      }
       if (mine) {
         return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
@@ -533,12 +549,14 @@
       + '<div class="chat-hdr-av" onclick="' + (showBizBrand ? 'H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')' : 'H._chat.showProfile(\'' + otherIdSafe + '\')') + '">' + otherAvatar + '</div>'
       + '<div class="chat-hdr-info" onclick="' + (showBizBrand ? 'H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')' : 'H._chat.showProfile(\'' + otherIdSafe + '\')') + '">'
       + '<div class="chat-hdr-name">' + escHtml(chatDisplayName) + '</div>'
-      + '<div class="chat-hdr-sub" id="chatHdrSub">' + (showBizBrand ? '<span style="color:#9baec8">' + escHtml((_bizChat && _bizChat.category) ? _bizChat.category + ' · Official Shop' : 'Official Shop') + '</span>' : chatHdrSubHtml(other, onlineNow)) + '</div></div>'
+      + '<div class="chat-hdr-sub" id="chatHdrSub">' + (showBizBrand ? '<span style="color:#9baec8">Official Shop' + ((_bizChat && _bizChat.category) ? ' | ' + escHtml(_bizChat.category) : '') + '</span>' : chatHdrSubHtml(other, onlineNow)) + '</div>'
+      + (showBizBrand ? '<div onclick="H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')" style="font-size:11px;color:#4A90E2;cursor:pointer;margin-top:1px">View Shop &gt;</div>' : '')
+      + '</div>'
       + '<button class="chat-hdr-menu" onclick="H._chat.openMenu(\'' + otherIdSafe + '\')"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
       + '</div>'
       + (listing ? chatContextCard(listing) : '')
       + '<div class="chat-thread" id="chatThread"><div class="chat-thread-spacer"></div>'
-      + (showBizBrand ? '<div style="text-align:center;font-size:12px;color:var(--sub);margin:10px 16px 4px;padding:9px 14px;background:var(--bg,#F9FAFB);border:1px solid var(--border,#E8ECF4);border-radius:12px;line-height:1.55">Replies come from <b>' + escHtml(chatDisplayName) + '</b>, a business on PaMarket. Keep transactions on-platform for safety.</div>' : '')
+      + (showBizBrand ? '<div style="margin:10px 16px 4px;padding:12px 16px;background:#EEF2FB;border:1.5px solid #1A3A8F;border-radius:14px"><div style="font-size:13.5px;font-weight:700;color:#1A3A8F">You are messaging ' + escHtml(chatDisplayName) + '</div><div style="font-size:12px;color:var(--sub);margin-top:3px">Replies come from the business, not a personal account</div></div>' : '')
       + (!showBizBrand && c.messages.length < 6 ? '<div class="chat-safety"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div><b>Stay safe.</b> Meet in a public place, inspect the item before you pay, and never send a deposit to someone you don\'t know.</div></div>' : '')
       + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">' + (showBizBrand ? 'Send a message to ' + escHtml(chatDisplayName) + '.' : 'No messages yet. Say hello!') + '</div>')
       + '<div class="chat-typing" id="chatTyping" style="display:none"><div class="chat-row-av">' + otherAvatar + '</div><div class="chat-bubble them chat-typing-bubble"><span></span><span></span><span></span></div></div>'
