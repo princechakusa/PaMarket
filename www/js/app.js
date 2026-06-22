@@ -1402,6 +1402,28 @@ window.H = {
     } catch(e){ console.warn('fetchListingsFromSupabase:',e.message); }
   },
 
+  // Admin-only: pull EVERY listing (all statuses) so the moderation queue is
+  // complete across devices. The normal feed fetch (fetchListingsFromSupabase)
+  // only pulls status='active', so pending/banned ads posted on OTHER devices
+  // would never reach the admin to be approved. Merges cloud rows by id into
+  // local state — cloud wins for known ids; local-only unsynced listings are
+  // preserved so nothing the admin posted locally disappears.
+  async fetchAllListingsForAdmin() {
+    try {
+      if(!window.supabase||typeof window.supabase.from!=='function') return;
+      const {data,error}=await window.supabase
+        .from('listings').select('*')
+        .order('created_at',{ascending:false})
+        .limit(1000);
+      if(error||!Array.isArray(data)) return;
+      const cloud=data.map(r=>H._mapCloudListing(r));
+      const cloudIds=new Set(cloud.map(l=>l.id));
+      const localOnly=(H.state.listings||[]).filter(l=>!cloudIds.has(l.id));
+      H.state.listings=[...cloud,...localOnly];
+      H.saveState();
+    } catch(e){ console.warn('fetchAllListingsForAdmin:',e.message); }
+  },
+
   _setupRealtimeMessages() {
     try {
       if(!window.supabase||typeof window.supabase.channel!=='function') return;

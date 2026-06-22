@@ -91,6 +91,7 @@
       fetch: function () {
         var ps = [];
         if (typeof H.syncVerificationsFromSupabase === 'function') ps.push(H.syncVerificationsFromSupabase().catch(function () {}));
+        if (typeof H.fetchAllListingsForAdmin === 'function') ps.push(H.fetchAllListingsForAdmin().catch(function () {}));
         if (typeof H.syncReports      === 'function') ps.push(H.syncReports().catch(function () {}));
         if (typeof H.syncConversations === 'function') ps.push(H.syncConversations().catch(function () {}));
         return ps.length ? Promise.all(ps) : Promise.resolve();
@@ -98,7 +99,10 @@
       sig: function () {
         var rs = (H.state && H.state.reports)        || [];
         var vs = (H.state && H.state.verifications)  || [];
-        return rs.length + '|' + vs.length;
+        var ls = (H.state && H.state.listings)       || [];
+        var pend = 0;
+        for (var i = 0; i < ls.length; i++) { if (ls[i] && ls[i].status === 'pending') pend++; }
+        return rs.length + '|' + vs.length + '|' + ls.length + '|' + pend;
       }
     },
     MyListings: { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
