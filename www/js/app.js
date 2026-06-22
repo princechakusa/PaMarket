@@ -1111,7 +1111,11 @@ window.H = {
           if (typeof H.syncNotifications === 'function') H.syncNotifications();
           if (typeof H.syncApplications  === 'function') H.syncApplications();
         }
-      } catch(e) { console.warn('PTR:', e); }
+        if (typeof H.toast === 'function') H.toast('Feed updated', 1800, true);
+      } catch(e) {
+        console.warn('PTR:', e);
+        if (typeof H.toast === 'function') H.toast('Could not refresh - check your connection', 3000, true);
+      }
       setTimeout(function() { hideIndicator(); refreshing = false; }, 300);
     }
 
