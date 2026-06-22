@@ -85,13 +85,17 @@
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
           </div>`;
         }
+        const _pendingBiz = biz.find(b => b.status === 'pending_activation');
+        const _draftBiz   = biz.find(b => b.status === 'draft');
+        const _bizTitle   = _pendingBiz ? 'Under Review' : (_draftBiz ? 'Finish Business Setup' : 'Open a Business');
+        const _bizSub     = _pendingBiz ? 'Submitted for review. You will be notified once approved.' : 'Create your shop and reach more customers';
         return `<div onclick="H._bizOnboard.openFromAccount()" style="margin:12px 12px 0;background:var(--card);border:1.5px dashed var(--border);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">
           <div style="width:52px;height:52px;border-radius:14px;background:#EEF2FB;display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9l2-5h14l2 5"/></svg>
           </div>
           <div style="flex:1">
-            <div style="font-size:14px;font-weight:800;color:var(--text)">${biz.length ? 'Finish Business Setup' : 'Open a Business'}</div>
-            <div style="font-size:11.5px;color:var(--sub);margin-top:2px">Create your shop and reach more customers</div>
+            <div style="font-size:14px;font-weight:800;color:var(--text)">${_bizTitle}</div>
+            <div style="font-size:11.5px;color:var(--sub);margin-top:2px">${_bizSub}</div>
           </div>
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--sub)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>`;
@@ -113,7 +117,8 @@
           const icon = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9l2-5h14l2 5"/><line x1="12" y1="13" x2="12" y2="17"/></svg>';
           // Active business → dashboard would open here (Module 8); during onboarding,
           // tapping resumes the wizard. Until those modules ship, both route to the wizard.
-          const label = active ? H.escHtml(active.name || 'My Business') : (biz.length ? 'Finish Business Setup' : 'Create a Business');
+          const _hasPending = biz.find(b => b.status === 'pending_activation');
+          const label = active ? H.escHtml(active.name || 'My Business') : (_hasPending ? 'Under Review' : (biz.length ? 'Finish Business Setup' : 'Create a Business'));
           const badge = active ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : '';
           return `<div onclick="H._bizOnboard.openFromAccount()"
               style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent">
@@ -147,6 +152,19 @@
         </div>
       </div>
     </div>`;
+  };
+
+  // Re-fetch the user's own businesses whenever the Account tab opens so that
+  // an admin approval (pending_activation → active) is reflected immediately
+  // without requiring a full app restart.
+  pages.Account_after = async function () {
+    if (typeof H.fetchMyBusinesses !== 'function') return;
+    const before = (H.state.businesses || []).map(b => b.status).join(',');
+    await H.fetchMyBusinesses();
+    const after = (H.state.businesses || []).map(b => b.status).join(',');
+    if (before !== after && H.currentPageName === 'Account') {
+      H.renderPage('Account', H.currentPageParams);
+    }
   };
 
 })(window.H = window.H || {});

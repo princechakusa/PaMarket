@@ -564,9 +564,13 @@
     openFromAccount() {
       const mine = myBusinesses();
       const active = mine.find(b => b.status === 'active');
-      if (active) { this.view(active.id); return; }          // has a live business → its page
-      const pending = mine.find(b => b.status !== 'active' && b.status !== 'suspended');
-      if (pending) { _mode = 'create'; _draft = JSON.parse(JSON.stringify(pending)); H.openInner('BusinessOnboarding'); return; } // resume setup
+      if (active) { this.view(active.id); return; }
+      // Already submitted — show the "under review" status screen, not the wizard.
+      const pendingActivation = mine.find(b => b.status === 'pending_activation');
+      if (pendingActivation) { this.view(pendingActivation.id); return; }
+      // Still a draft — resume the wizard where the user left off.
+      const draft = mine.find(b => b.status === 'draft');
+      if (draft) { _mode = 'create'; _draft = JSON.parse(JSON.stringify(draft)); H.openInner('BusinessOnboarding'); return; }
       this.open();                                            // none yet → start fresh
     },
 
