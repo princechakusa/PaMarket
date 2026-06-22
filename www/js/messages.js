@@ -322,7 +322,7 @@
         </div>
         <div class="msg-summary"><b>${summary}</b>${totalUnread > 0 ? '<button onclick="H._markAllRead()" class="msg-markall">Mark all read</button>' : ''}</div>
         ${convos.map(c => {
-          const otherId = c.members.find(m => m !== u.id);
+          const otherId = Array.isArray(c.members) ? c.members.find(m => m !== u.id) : null;
           if (!c.otherName) {
             const sn = ((c.messages || []).find(function (m) { return m.from === otherId && m.senderName; }) || {}).senderName;
             if (sn) { c.otherName = sn; H.saveState(); }

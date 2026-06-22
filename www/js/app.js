@@ -643,6 +643,7 @@ window.H = {
   },
   adminLog(action,meta={}) {
     const u=this.currentUser(); if(!u) return;
+    if(!Array.isArray(this.state.adminLogs)) this.state.adminLogs=[];
     this.state.adminLogs.unshift({id:this.uid(),t:Date.now(),adminId:u.id,adminName:u.name||'Admin',action,meta});
     this.state.adminLogs=this.state.adminLogs.slice(0,300);
     this.saveState();
@@ -1026,7 +1027,7 @@ window.H = {
   },
 
   openListing(id) {
-    const l=this.state.listings.find(x=>x.id===id); if(!l) return;
+    const l=(this.state.listings||[]).find(x=>x.id===id); if(!l) return;
     l.views=(l.views||0)+1;
     const rv=JSON.parse(localStorage.getItem('pamarket_rv')||'[]');
     const filtered=[...new Set([id,...rv.filter(x=>x!==id)])].slice(0,10);
