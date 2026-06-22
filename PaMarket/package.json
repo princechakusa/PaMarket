@@ -1,0 +1,12 @@
+{
+  "name": "pamarket",
+  "version": "1.0.0",
+  "description": "PaMarket Zimbabwe — Buy. Sell. Hire. Get Hired.",
+  "dependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/ios": "^8.3.1",
+    "@supabase/supabase-js": "^2.105.3"
+  }
+}

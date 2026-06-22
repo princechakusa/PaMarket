@@ -2835,7 +2835,7 @@
       _sb.from('profiles').upsert(d).then(function(r){ if (r && r.error) console.warn('cp sync:', r.error.message); });
     };
 
-    if (H._cpResumeData && H._cpResumeFileName && window.supabase) {
+    if (H._cpResumeData && H._cpResumeFileName && typeof H.uploadToR2 === 'function') {
       try {
         var b64    = H._cpResumeData.split(',')[1] || '';
         var mmatch = H._cpResumeData.match(/data:([^;]+);/);
@@ -2844,16 +2844,10 @@
         var arr    = new Uint8Array(bytes.length);
         for (var k = 0; k < bytes.length; k++) arr[k] = bytes.charCodeAt(k);
         var blob   = new Blob([arr], { type: mime });
-        var path   = u.id + '/' + Date.now() + '_' + H._cpResumeFileName;
-        window.supabase.storage.from('cv-files').upload(path, blob, { upsert: true })
-          .then(function(res) {
-            var url = '';
-            if (!res.error) {
-              var pr = window.supabase.storage.from('cv-files').getPublicUrl(path);
-              url = pr.data && pr.data.publicUrl ? pr.data.publicUrl : '';
-            }
-            _syncToCloud(url);
-          }).catch(function() { _syncToCloud(''); });
+        var key    = 'cv/' + u.id + '/' + Date.now() + '_' + H._cpResumeFileName;
+        H.uploadToR2(blob, key, mime)
+          .then(function(url) { _syncToCloud(url || ''); })
+          .catch(function() { _syncToCloud(''); });
       } catch(e) { _syncToCloud(''); }
     } else {
       _syncToCloud('');

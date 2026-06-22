@@ -187,13 +187,13 @@
       toast('Verification rejected'); renderPage('BusinessAdmin');
     },
 
-    // Open a private verification document via a signed URL.
+    // Open a private verification document via a short-lived R2 presigned GET URL.
     async viewDoc(path) {
-      const sb = window.supabase; if (!sb || !path) { toast('Document unavailable'); return; }
+      if (!path) { toast('Document unavailable'); return; }
       try {
-        const { data, error } = await sb.storage.from('verification-docs').createSignedUrl(path, 3600);
-        if (error || !data || !data.signedUrl) { toast('Could not open document'); return; }
-        window.open(data.signedUrl, '_blank');
+        const url = await H.r2SignedGetUrl(path, 300);
+        if (!url) { toast('Could not open document'); return; }
+        window.open(url, '_blank');
       } catch (e) { toast('Could not open document'); }
     },
     async setStatus(id, status) {

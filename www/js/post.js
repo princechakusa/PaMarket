@@ -454,29 +454,21 @@
     }
   };
 
-  // Upload base64 photos to Supabase Storage; return an array of public URLs.
-  // Anything already an http(s) URL is passed through untouched. If storage is
-  // unavailable or an upload fails, that photo keeps its original value so the
-  // listing still posts (best-effort, never blocks the user).
+  // Upload base64 photos to Cloudflare R2; return an array of public URLs.
+  // Anything already an http(s) URL is passed through untouched. If the upload
+  // fails, that photo keeps its original value so the listing still posts
+  // (best-effort, never blocks the user).
   H.uploadListingPhotos = async function uploadListingPhotos(photos, userId) {
     const list = Array.isArray(photos) ? photos : [];
-    const sb = window.supabase;
-    if (!sb || typeof sb.storage !== 'object') return list;
+    if (typeof H.uploadToR2 !== 'function') return list;
     const out = [];
     for (const p of list) {
       if (typeof p !== 'string' || p.indexOf('data:') !== 0) { out.push(p); continue; }
       try {
-        // Path must match the storage RLS policy: listings/{user_id}/file.jpg
-        const path = 'listings/' + userId + '/' + H.uid() + '.jpg';
+        const key = 'listings/' + userId + '/' + H.uid() + '.jpg';
         const blob = await (await fetch(p)).blob();
-        const { data: up, error } = await sb.storage.from('listings-photos')
-          .upload(path, blob, { contentType: 'image/jpeg', upsert: false });
-        if (!error && up) {
-          const { data: urlData } = sb.storage.from('listings-photos').getPublicUrl(path);
-          out.push(urlData && urlData.publicUrl ? urlData.publicUrl : p);
-        } else {
-          out.push(p);
-        }
+        const url = await H.uploadToR2(blob, key, 'image/jpeg');
+        out.push(url || p);
       } catch (e) { out.push(p); }
     }
     return out;

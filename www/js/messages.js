@@ -1594,18 +1594,13 @@
     try {
       let imageUrl = dataUrl;
       try {
-        const sb = window.supabase;
-        if (sb && typeof sb.storage === 'object') {
-          const ext  = 'jpg';
-          const path = u.id + '/' + H.uid() + '.' + ext;
+        if (typeof H.uploadToR2 === 'function') {
+          const key = 'chat/' + u.id + '/' + H.uid() + '.jpg';
           const blob = await (await fetch(dataUrl)).blob();
-          const { data: upData, error: upErr } = await sb.storage.from('chat-images').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
-          if (!upErr && upData) {
-            const { data: urlData } = sb.storage.from('chat-images').getPublicUrl(path);
-            if (urlData && urlData.publicUrl) imageUrl = urlData.publicUrl;
-          }
+          const url = await H.uploadToR2(blob, key, 'image/jpeg');
+          if (url) imageUrl = url;
         }
-      } catch(e) { /* storage not configured — use base64 */ }
+      } catch(e) { /* R2 unavailable — fall back to base64 */ }
       await H._chat.sendImageMessage(c, u, imageUrl);
     } catch(e) {
       console.warn('Image send error:', e);

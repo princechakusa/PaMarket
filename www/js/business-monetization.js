@@ -59,7 +59,7 @@
   H.fetchBusinessPayments = async function (businessId) {
     const sb = window.supabase; if (!sb || !businessId) return payOf(businessId);
     try {
-      const { data, error } = await sb.from('business_payments').select('*').eq('business_id', businessId).order('created_at', { ascending: false });
+      const { data, error } = await sb.from('business_payments').select('id,business_id,type,amount,description,status,created_at').eq('business_id', businessId).order('created_at', { ascending: false }).limit(50);
       if (error || !Array.isArray(data)) return payOf(businessId);
       payMap()[businessId] = data.map(r => ({ id: r.id, businessId: r.business_id, type: r.type, amount: Number(r.amount) || 0, description: r.description, status: r.status, createdAt: new Date(r.created_at || Date.now()).getTime() }));
       saveState();

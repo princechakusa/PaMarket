@@ -43,6 +43,56 @@
     auth: { flowType: 'pkce' }
   });
 
+  // ── Cloudflare R2 upload helper ──────────────────────────────────────────────
+  // Replaces all supabase.storage.from(...).upload() calls.
+  // Gets a 2-minute presigned PUT URL from the edge function, uploads the blob
+  // directly to R2, and returns the permanent public URL (or undefined for
+  // private verification docs — those are accessed only via r2SignedGetUrl).
+  H.uploadToR2 = async function (blob, key, contentType) {
+    const session = await window.supabase.auth.getSession();
+    const token = session && session.data && session.data.session && session.data.session.access_token;
+    if (!token) throw new Error('Not authenticated');
+    const res = await fetch(window.SUPABASE_URL + '/functions/v1/get-r2-upload-url', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: key, contentType: contentType }),
+    });
+    if (!res.ok) {
+      var errText = '';
+      try { errText = (await res.json()).error || ''; } catch(e) {}
+      throw new Error('R2 upload-url error: ' + (errText || res.status));
+    }
+    var payload = await res.json();
+    var signedUrl = payload.signedUrl;
+    var publicUrl = payload.publicUrl;
+    var up = await fetch(signedUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: blob,
+    });
+    if (!up.ok) throw new Error('R2 PUT failed: ' + up.status);
+    return publicUrl; // undefined for verification/ keys (private bucket)
+  };
+
+  // Generates a short-lived presigned GET URL for private verification documents.
+  // Validates auth server-side; admins may access any path, users only their own.
+  H.r2SignedGetUrl = async function (key, expiresIn) {
+    if (!key) return null;
+    try {
+      var session = await window.supabase.auth.getSession();
+      var token = session && session.data && session.data.session && session.data.session.access_token;
+      if (!token) return null;
+      var res = await fetch(window.SUPABASE_URL + '/functions/v1/get-r2-upload-url', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: key, verb: 'GET', expiresIn: expiresIn || 300 }),
+      });
+      if (!res.ok) return null;
+      var data = await res.json();
+      return data.signedUrl || null;
+    } catch (e) { return null; }
+  };
+
   // Only handle OAuth callbacks — NOT regular page loads with stored sessions.
   // The app restores login state from H.loadState() (localStorage), not from here.
   var _isOAuthCallback = window.location.search.includes('code=') || window.location.hash.includes('access_token=');

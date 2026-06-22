@@ -177,7 +177,7 @@
               ? featuredProds.filter(function(l){ return l.photos && l.photos[0]; })
               : bProds.filter(function(l){ return l.photos && l.photos[0]; })).slice(0, 2);
             const logoHtml = b.logo
-              ? '<img src="' + escHtml(b.logo) + '?v=' + (b._updatedAt || b.updatedAt || '') + '" style="width:100%;height:100%;object-fit:cover">'
+              ? '<img src="' + escHtml(b.logo) + (b.logo.startsWith('data:') ? '' : '?v=' + (b._updatedAt || b.updatedAt || '')) + '" style="width:100%;height:100%;object-fit:cover">'
               : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-6h15L21 9M3 9h18v11a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm6 0v2a3 3 0 006 0V9"/></svg>';
             var thumbsHtml = '';
             for (var ti = 0; ti < 2; ti++) {

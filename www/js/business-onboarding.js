@@ -473,7 +473,7 @@
       <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);padding:26px 20px;color:#fff">
         <div style="display:flex;align-items:center;gap:14px">
           <div style="width:62px;height:62px;border-radius:16px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px;font-weight:800;overflow:hidden">
-            ${b.logo ? `<img src="${escHtml(b.logo)}?v=${b._updatedAt||b.updatedAt||''}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}
+            ${b.logo ? `<img src="${escHtml(b.logo)}${b.logo.startsWith('data:') ? '' : '?v=' + (b._updatedAt||b.updatedAt||'')}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}
           </div>
           <div style="flex:1;min-width:0">
             <div style="font-size:19px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}</div>
@@ -593,7 +593,7 @@
       ov.id = 'bizSwitcher';
       ov.style.cssText = 'position:fixed;inset:0;background:rgba(16,24,40,.5);z-index:9300;display:flex;align-items:flex-end;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)';
       const rows = mine.map(b => `<button onclick="H._closeBizSwitcher();H._bizOnboard.view('${b.id}')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;background:none;border:none;border-bottom:1px solid var(--border,#F0F2F6);cursor:pointer;font-family:inherit;text-align:left">
-          <span style="width:38px;height:38px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1A3A8F;flex-shrink:0;overflow:hidden">${b.logo ? `<img src="${escHtml(b.logo)}?v=${b._updatedAt||b.updatedAt||''}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}</span>
+          <span style="width:38px;height:38px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1A3A8F;flex-shrink:0;overflow:hidden">${b.logo ? `<img src="${escHtml(b.logo)}${b.logo.startsWith('data:') ? '' : '?v=' + (b._updatedAt||b.updatedAt||'')}" style="width:100%;height:100%;object-fit:cover">` : escHtml(H.initials(b.name))}</span>
           <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}</span><span style="font-size:11px;color:var(--sub)">${b.status === 'active' ? 'Active' : 'Setup in progress'}</span></span>
           ${b.id === _viewId ? '<span style="color:#1A7F4B;font-weight:800;font-size:16px">✓</span>' : ''}
         </button>`).join('');

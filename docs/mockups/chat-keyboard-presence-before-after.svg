@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1050" viewBox="0 0 1600 1050">
+  <defs>
+    <style>
+      .bg{fill:#f4f6fb}.navy{fill:#1A3A8F}.gold{fill:#F5A623}.card{fill:#fff}.soft{fill:#F8FAFC}.border{stroke:#D9E1F2;stroke-width:2}.text{fill:#18181B;font-family:'Plus Jakarta Sans','Inter',Arial,sans-serif}.sub{fill:#667085}.white{fill:#fff}.label{font-size:17px;font-weight:800}.small{font-size:14px}.tiny{font-size:12px}.title{font-size:30px;font-weight:900}.phone{fill:#101828}.screen{fill:#FAFAFA}.bubbleMe{fill:#1A3A8F}.bubbleThem{fill:#fff;stroke:#E4E8F0;stroke-width:1}.key{fill:#fff;stroke:#CDD5E1;stroke-width:1}.bad{fill:#FEF2F2;stroke:#FCA5A5;stroke-width:2}.good{fill:#ECFDF3;stroke:#86EFAC;stroke-width:2}.callout{fill:#fff;stroke:#CBD5E1;stroke-width:2}.shadow{filter:url(#ds)}
+    </style>
+    <filter id="ds" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#101828" flood-opacity=".16"/>
+    </filter>
+    <marker id="arrowBad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#DC2626"/>
+    </marker>
+    <marker id="arrowGood" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#16A34A"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1050" class="bg"/>
+  <text x="80" y="70" class="text title">PaMarket Chat UI/UX Fix Mockup</text>
+  <text x="80" y="100" class="text sub small">Affected screen only: Chat conversation with keyboard open. No unrelated redesign.</text>
+
+  <g transform="translate(90,145)">
+    <text x="0" y="-30" class="text label">BEFORE - Current behavior</text>
+    <rect x="0" y="0" width="430" height="840" rx="42" class="phone shadow"/>
+    <rect x="18" y="18" width="394" height="804" rx="32" class="screen"/>
+    <rect x="18" y="18" width="394" height="78" rx="32" class="navy"/>
+    <rect x="18" y="64" width="394" height="32" class="navy"/>
+    <text x="46" y="66" class="white text" font-size="28" font-weight="700">‹</text>
+    <circle cx="92" cy="58" r="20" fill="#2952cc"/>
+    <text x="92" y="64" text-anchor="middle" class="white text tiny" font-weight="800">TM</text>
+    <text x="122" y="53" class="white text" font-size="15" font-weight="800">Tariro Moyo</text>
+    <text x="122" y="73" class="white text tiny" opacity=".75">Tap to view profile</text>
+    <text x="380" y="63" class="white text" font-size="24" font-weight="900">...</text>
+
+    <rect x="34" y="112" width="362" height="62" rx="14" class="card border"/>
+    <rect x="48" y="126" width="44" height="36" rx="9" fill="#DBEAFE"/>
+    <text x="108" y="140" class="text tiny" font-weight="700">Samsung S24 Ultra</text>
+    <text x="108" y="158" class="text tiny" fill="#1A3A8F" font-weight="800">$620</text>
+    <text x="365" y="152" class="text sub" font-size="18">›</text>
+
+    <rect x="54" y="205" width="245" height="48" rx="18" class="bubbleThem"/>
+    <text x="76" y="234" class="text small">Is it still available?</text>
+    <rect x="142" y="270" width="240" height="54" rx="18" class="bubbleMe"/>
+    <text x="162" y="294" class="white text small">Yes, I can meet today</text>
+    <text x="318" y="314" class="white text tiny" opacity=".75">9:42 ✓</text>
+    <rect x="58" y="350" width="190" height="48" rx="18" class="bubbleThem"/>
+    <text x="80" y="379" class="text small">Can you do $580?</text>
+
+    <rect x="18" y="430" width="394" height="76" fill="#fff" stroke="#E4E8F0"/>
+    <circle cx="52" cy="468" r="21" fill="#EEF2FF" stroke="#D9E1F2"/>
+    <text x="52" y="476" text-anchor="middle" class="text" font-size="28">+</text>
+    <circle cx="98" cy="468" r="21" fill="#EEF2FF" stroke="#D9E1F2"/>
+    <text x="98" y="475" text-anchor="middle" class="text" font-size="24" font-weight="800">$</text>
+    <rect x="126" y="447" width="198" height="42" rx="21" fill="#F5F6FA" stroke="#D9E1F2"/>
+    <text x="146" y="473" class="text sub small">Message...</text>
+    <circle cx="360" cy="468" r="23" fill="#1A3A8F"/>
+    <path d="M350 458 L373 468 L350 478 L356 468 Z" fill="#fff"/>
+
+    <rect x="18" y="506" width="394" height="316" fill="#DDE3EE"/>
+    <g transform="translate(35,526)">
+      <rect x="0" y="0" width="80" height="42" rx="8" class="key"/><rect x="88" y="0" width="80" height="42" rx="8" class="key"/><rect x="176" y="0" width="80" height="42" rx="8" class="key"/><rect x="264" y="0" width="80" height="42" rx="8" class="key"/>
+      <rect x="0" y="50" width="80" height="42" rx="8" class="key"/><rect x="88" y="50" width="80" height="42" rx="8" class="key"/><rect x="176" y="50" width="80" height="42" rx="8" class="key"/><rect x="264" y="50" width="80" height="42" rx="8" class="key"/>
+      <rect x="0" y="100" width="70" height="42" rx="8" class="key"/><rect x="78" y="100" width="70" height="42" rx="8" class="key"/><rect x="156" y="100" width="70" height="42" rx="8" class="key"/><rect x="234" y="100" width="110" height="42" rx="8" fill="#1A3A8F"/>
+      <text x="289" y="126" text-anchor="middle" class="white text small" font-weight="800">Send</text>
+      <rect x="0" y="158" width="344" height="42" rx="8" class="key"/>
+    </g>
+  </g>
+
+  <g transform="translate(570,145)">
+    <text x="0" y="-30" class="text label">AFTER - Proposed behavior</text>
+    <rect x="0" y="0" width="430" height="840" rx="42" class="phone shadow"/>
+    <rect x="18" y="18" width="394" height="804" rx="32" class="screen"/>
+    <rect x="18" y="18" width="394" height="78" rx="32" class="navy"/>
+    <rect x="18" y="64" width="394" height="32" class="navy"/>
+    <text x="46" y="66" class="white text" font-size="28" font-weight="700">‹</text>
+    <circle cx="92" cy="58" r="20" fill="#2952cc"/>
+    <text x="92" y="64" text-anchor="middle" class="white text tiny" font-weight="800">TM</text>
+    <text x="122" y="51" class="white text" font-size="15" font-weight="800">Tariro Moyo</text>
+    <circle cx="125" cy="70" r="4" fill="#7CF6B0"/>
+    <text x="135" y="74" class="white text tiny" fill="#7CF6B0">Online</text>
+    <text x="380" y="63" class="white text" font-size="24" font-weight="900">...</text>
+
+    <rect x="34" y="112" width="362" height="62" rx="14" class="card border"/>
+    <rect x="48" y="126" width="44" height="36" rx="9" fill="#DBEAFE"/>
+    <text x="108" y="140" class="text tiny" font-weight="700">Samsung S24 Ultra</text>
+    <text x="108" y="158" class="text tiny" fill="#1A3A8F" font-weight="800">$620</text>
+    <text x="365" y="152" class="text sub" font-size="18">›</text>
+
+    <rect x="54" y="205" width="245" height="48" rx="18" class="bubbleThem"/>
+    <text x="76" y="234" class="text small">Is it still available?</text>
+    <rect x="142" y="270" width="240" height="54" rx="18" class="bubbleMe"/>
+    <text x="162" y="294" class="white text small">Yes, I can meet today</text>
+    <text x="318" y="314" class="white text tiny" opacity=".75">9:42 ✓✓</text>
+    <g>
+      <circle cx="78" cy="374" r="14" fill="#2952cc"/>
+      <rect x="102" y="354" width="76" height="34" rx="17" class="bubbleThem"/>
+      <circle cx="126" cy="371" r="4" fill="#98A2B3"/><circle cx="140" cy="371" r="4" fill="#98A2B3"/><circle cx="154" cy="371" r="4" fill="#98A2B3"/>
+    </g>
+
+    <rect x="18" y="430" width="394" height="76" fill="#fff" stroke="#E4E8F0"/>
+    <circle cx="52" cy="468" r="21" fill="#EEF2FF" stroke="#D9E1F2"/>
+    <text x="52" y="476" text-anchor="middle" class="text" font-size="28">+</text>
+    <circle cx="98" cy="468" r="21" fill="#EEF2FF" stroke="#D9E1F2"/>
+    <text x="98" y="475" text-anchor="middle" class="text" font-size="24" font-weight="800">$</text>
+    <rect x="126" y="444" width="198" height="48" rx="22" fill="#F5F6FA" stroke="#1A3A8F" stroke-width="2"/>
+    <text x="146" y="465" class="text small">Can you do</text>
+    <text x="146" y="484" class="text small">$600 today?</text>
+    <line x1="246" y1="460" x2="246" y2="486" stroke="#1A3A8F" stroke-width="2"/>
+    <circle cx="360" cy="468" r="23" fill="#1A3A8F"/>
+    <path d="M350 458 L373 468 L350 478 L356 468 Z" fill="#fff"/>
+
+    <rect x="18" y="506" width="394" height="316" fill="#DDE3EE"/>
+    <g transform="translate(35,526)">
+      <rect x="0" y="0" width="80" height="42" rx="8" class="key"/><rect x="88" y="0" width="80" height="42" rx="8" class="key"/><rect x="176" y="0" width="80" height="42" rx="8" class="key"/><rect x="264" y="0" width="80" height="42" rx="8" class="key"/>
+      <rect x="0" y="50" width="80" height="42" rx="8" class="key"/><rect x="88" y="50" width="80" height="42" rx="8" class="key"/><rect x="176" y="50" width="80" height="42" rx="8" class="key"/><rect x="264" y="50" width="80" height="42" rx="8" class="key"/>
+      <rect x="0" y="100" width="70" height="42" rx="8" class="key"/><rect x="78" y="100" width="70" height="42" rx="8" class="key"/><rect x="156" y="100" width="70" height="42" rx="8" class="key"/><rect x="234" y="100" width="110" height="42" rx="8" class="key"/>
+      <path d="M278 112 L262 121 L278 130" fill="none" stroke="#475467" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="304" y="126" text-anchor="middle" class="text small" font-weight="800">Return</text>
+      <rect x="0" y="158" width="344" height="42" rx="8" class="key"/>
+    </g>
+  </g>
+
+  <g transform="translate(1070,142)">
+    <rect x="0" y="0" width="430" height="170" rx="18" class="bad"/>
+    <text x="22" y="36" class="text label" fill="#991B1B">Current problems</text>
+    <text x="22" y="68" class="text small">1. Enter key is configured as Send.</text>
+    <text x="22" y="96" class="text small">2. Pressing Enter sends instead of adding a line.</text>
+    <text x="22" y="124" class="text small">3. Send, +, $, camera and gallery flows blur input.</text>
+    <text x="22" y="152" class="text small">4. Header only shows Online/Verified/profile fallback.</text>
+
+    <rect x="0" y="205" width="430" height="238" rx="18" class="good"/>
+    <text x="22" y="241" class="text label" fill="#14532D">Proposed changes</text>
+    <text x="22" y="273" class="text small">1. Use multiline textarea with Return key.</text>
+    <text x="22" y="301" class="text small">2. Return inserts newline and never sends.</text>
+    <text x="22" y="329" class="text small">3. Blue send button sends, clears, refocuses input.</text>
+    <text x="22" y="357" class="text small">4. Toolbar actions restore focus after sheet/file picker.</text>
+    <text x="22" y="385" class="text small">5. Header cycles: Online, Typing..., Last seen formats.</text>
+    <text x="22" y="413" class="text small">6. Respect presence privacy before showing timestamps.</text>
+
+    <rect x="0" y="478" width="430" height="250" rx="18" class="callout"/>
+    <text x="22" y="514" class="text label">Presence examples</text>
+    <circle cx="34" cy="548" r="5" fill="#16A34A"/><text x="52" y="553" class="text small">Online</text>
+    <circle cx="34" cy="582" r="5" fill="#F5A623"/><text x="52" y="587" class="text small">Typing...</text>
+    <circle cx="34" cy="616" r="5" fill="#98A2B3"/><text x="52" y="621" class="text small">Last seen just now</text>
+    <circle cx="34" cy="650" r="5" fill="#98A2B3"/><text x="52" y="655" class="text small">Last seen 2 minutes ago</text>
+    <circle cx="34" cy="684" r="5" fill="#98A2B3"/><text x="52" y="689" class="text small">Last seen today at 5:42 PM</text>
+    <circle cx="34" cy="718" r="5" fill="#98A2B3"/><text x="52" y="723" class="text small">Last seen yesterday / Monday</text>
+  </g>
+
+  <path d="M450 674 C520 675 535 674 570 674" fill="none" stroke="#DC2626" stroke-width="4" marker-end="url(#arrowBad)"/>
+  <text x="420" y="708" class="text tiny" fill="#DC2626" font-weight="800">Send key sends + closes flow</text>
+  <path d="M930 674 C1000 675 1020 674 1060 674" fill="none" stroke="#16A34A" stroke-width="4" marker-end="url(#arrowGood)"/>
+  <text x="885" y="708" class="text tiny" fill="#16A34A" font-weight="800">Return inserts newline; keyboard remains open</text>
+
+  <rect x="82" y="1005" width="1438" height="1" fill="#D0D5DD"/>
+  <text x="80" y="1030" class="text sub tiny">Mockup generated for approval only. Production files are unchanged.</text>
+</svg>

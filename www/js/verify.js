@@ -51,28 +51,25 @@
     return new Blob([arr], { type: mime });
   }
 
-  // Upload a captured image (data URL) to the private verification-docs bucket.
-  // Returns the storage path, or null if unavailable (caller falls back to base64).
+  // Upload a captured image (data URL) to the private R2 bucket.
+  // Returns the object key, or null on failure (caller falls back to base64).
+  // The key is stored in the DB — never a public URL. Access is only via
+  // H.signedVerificationUrl() which gates on auth server-side.
   H.uploadVerificationDoc = async function (userId, dataUrl, label) {
-    var sb = window.supabase;
-    if (!sb || !sb.storage || !dataUrl || dataUrl.indexOf('data:') !== 0) return null;
+    if (!dataUrl || dataUrl.indexOf('data:') !== 0 || typeof H.uploadToR2 !== 'function') return null;
     try {
       var blob = _dataUrlToBlob(dataUrl);
-      var path = userId + '/' + label + '_' + Date.now() + '.jpg';
-      var up = await sb.storage.from('verification-docs').upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
-      if (up.error) { console.warn('verification upload failed:', up.error.message); return null; }
-      return path;
+      var key = 'verification/' + userId + '/' + label + '_' + Date.now() + '.jpg';
+      await H.uploadToR2(blob, key, blob.type || 'image/jpeg');
+      return key; // return key, not URL — private bucket has no public URL
     } catch (e) { console.warn('verification upload error:', e); return null; }
   };
 
-  // Admin: turn a stored path into a short-lived signed URL for review.
+  // Generate a short-lived presigned GET URL for a verification document.
+  // Auth check is enforced server-side in the edge function.
   H.signedVerificationUrl = async function (path, secs) {
-    var sb = window.supabase;
-    if (!sb || !sb.storage || !path) return null;
-    try {
-      var r = await sb.storage.from('verification-docs').createSignedUrl(path, secs || 3600);
-      return (r && r.data && r.data.signedUrl) || null;
-    } catch (e) { return null; }
+    if (!path) return null;
+    return H.r2SignedGetUrl(path, secs || 300);
   };
 
   // ---------------------------------------------------

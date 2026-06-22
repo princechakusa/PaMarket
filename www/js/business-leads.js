@@ -60,7 +60,7 @@
   H.fetchBusinessLeads = async function (businessId) {
     const sb = window.supabase; if (!sb || !businessId) return leadsOf(businessId);
     try {
-      const { data, error } = await sb.from('business_leads').select('*').eq('business_id', businessId).order('created_at', { ascending: false });
+      const { data, error } = await sb.from('business_leads').select('id,business_id,listing_id,user_id,user_name,type,status,created_at').eq('business_id', businessId).order('created_at', { ascending: false }).limit(100);
       if (error || !Array.isArray(data)) return leadsOf(businessId);
       leadsMap()[businessId] = data.map(r => ({ id: r.id, businessId: r.business_id, listingId: r.listing_id, userId: r.user_id, userName: r.user_name, type: r.type, status: r.status, createdAt: new Date(r.created_at || Date.now()).getTime() }));
       saveState();
