@@ -134,7 +134,7 @@
         ${(() => {
           const activeShops = (H.state.businesses || []).filter(function(b) { return b.status === 'active'; });
           if (!activeShops.length) return '';
-          const cards = activeShops.slice(0, 6).map(function(b) {
+          const cards = activeShops.slice(0, 12).map(function(b) {
             const ini = H.initials ? H.initials(b.name || 'Shop') : (b.name || 'S').charAt(0).toUpperCase();
             const bProds = (H.state.listings || []).filter(function(l) {
               return l.status === 'active' && (String(l.sellerId) === String(b.ownerUserId) || String(l.businessId) === String(b.id));
@@ -161,7 +161,7 @@
               }
             }
             return '<div onclick="H.openBusinessShop && H.openBusinessShop(\'' + escHtml(String(b.id)) + '\')" '
-              + 'style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:8px;cursor:pointer;min-width:0">'
+              + 'style="flex:0 0 150px;width:150px;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:8px;cursor:pointer">'
               + '<div style="display:flex;gap:4px;height:62px;margin-bottom:7px">'
               + '<div style="width:56px;height:62px;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2245b8);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
               + logoHtml
@@ -179,7 +179,7 @@
             + '<span style="font-size:15px;font-weight:800;color:var(--text)">Local Shops</span>'
             + '<span onclick="H._bizSearch&&H._bizSearch.open()" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>'
             + '</div>'
-            + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 12px">'
+            + '<div style="display:flex;gap:10px;overflow-x:auto;padding:0 16px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">'
             + cards
             + '</div></div>';
         })()}
