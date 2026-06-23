@@ -1430,23 +1430,57 @@ window.H = {
   },
 
   trackAdClick(id) {
-    // Use String comparison — DB ids may be numeric but onclick passes a string.
     const a = (H.state.paidAds||[]).find(x=>String(x.id)===String(id));
     if(a&&window.supabase&&typeof window.supabase.from==='function'){
       a.clicks=(a.clicks||0)+1;
       window.supabase.from('paid_ads').update({clicks:a.clicks}).eq('id',id).then(()=>{});
     }
-    // Listing link takes priority over external URL; open Detail directly (not business routing)
-    if(a && a.listingId) { H.openInner('Detail', {id: a.listingId}); return; }
-    const url = a && a.linkUrl;
-    if(url) {
-      try {
-        var _native=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
-        window.open(url,_native?'_system':'_blank',_native?'':' noopener');
-      } catch(e){ try{window.open(url,'_blank');}catch(e2){} }
-      return;
+    if(a) H._showAdDetail(a);
+  },
+
+  _showAdDetail(a) {
+    const e = H.escHtml;
+    const native = !!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+    const bg = e(a.bgColor||'#1A3A8F');
+    const imgHtml = a.imageUrl
+      ? `<img src="${e(a.imageUrl)}" style="width:100%;max-height:280px;object-fit:cover;display:block">`
+      : `<div style="height:120px;background:${bg}"></div>`;
+
+    let actionHtml = '';
+    if(a.listingId) {
+      actionHtml = `<button onclick="H._closeAdModal();H.openInner('Detail',{id:'${e(String(a.listingId))}'})" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">View Listing</button>`;
+    } else if(a.linkUrl) {
+      const safeUrl = e(a.linkUrl);
+      actionHtml = `<button onclick="H._closeAdModal();try{window.open('${safeUrl}',${native?`'_system'`:`'_blank'`})}catch(err){window.open('${safeUrl}','_blank')}" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Visit Website</button>`;
+    } else if(a.targetCat) {
+      const cat = e(a.targetCat);
+      const catName = (H.CATEGORIES&&H.CATEGORIES.find(c=>c.id===a.targetCat)||{}).name || a.targetCat;
+      actionHtml = `<button onclick="H._closeAdModal();H.filterByCat('${cat}')" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Browse ${e(catName)}</button>`;
     }
-    if(a) H.toast((a.businessName||'Sponsored') + (a.tagline ? ' · ' + a.tagline : ''), 3000);
+
+    const modal = document.createElement('div');
+    modal.id = '_adDetailModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+    modal.onclick = function(ev){ if(ev.target===modal) H._closeAdModal(); };
+    modal.innerHTML = `<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;overflow:hidden;max-height:90vh;overflow-y:auto">
+      <div style="position:relative">${imgHtml}
+        <button onclick="H._closeAdModal()" style="position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.45);border:none;color:#fff;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif">×</button>
+        <span style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.45);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.5px">AD</span>
+      </div>
+      <div style="padding:20px 20px ${actionHtml?'12px':'20px'}">
+        <div style="font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">${e(a.businessName||'Sponsored')}</div>
+        <div style="font-size:20px;font-weight:800;color:#1C2340;line-height:1.25;margin-bottom:${a.tagline?'8px':'0'}">${e(a.headline||'')}</div>
+        ${a.tagline?`<div style="font-size:14px;color:#5A6480;line-height:1.5">${e(a.tagline)}</div>`:''}
+      </div>
+      ${actionHtml?`<div style="padding:0 20px 28px">${actionHtml}</div>`:''}
+    </div>`;
+    document.body.appendChild(modal);
+    requestAnimationFrame(()=>{ modal.style.transition='opacity .2s'; modal.style.opacity='1'; });
+  },
+
+  _closeAdModal() {
+    const m = document.getElementById('_adDetailModal');
+    if(m) m.remove();
   },
 
   // Map a raw cloud `listings` row to the app's local listing shape.
