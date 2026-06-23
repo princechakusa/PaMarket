@@ -71,43 +71,53 @@
   // Entry chooser shown when you tap "Jobs" — two doors, each with its own
   // sub-actions (matches the Get Hired / I'm Hiring tree).
   H.pages.JobIntent = function () {
-    var briefcase = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>';
-    var seeker = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
-    var arrow = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
-    function chip(label, onclick) {
-      return '<button onclick="event.stopPropagation();' + onclick + '" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:12px;font-weight:700;padding:7px 12px;border-radius:20px;cursor:pointer;font-family:inherit">' + label + '</button>';
+    var icSeeker = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+    var icBriefcase = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#1A3A8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>';
+    var chev = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#9CA3AF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+    var icJob = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>';
+    var icPerson = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+    var icPeople = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1A3A8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+    var icSend = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1A3A8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+    function gchip(icon, label, onclick) {
+      return '<button onclick="event.stopPropagation();' + onclick + '" style="display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid #bbf7d0;color:#16a34a;font-size:12px;font-weight:600;padding:7px 13px;border-radius:20px;cursor:pointer;font-family:inherit">' + icon + label + '</button>';
     }
-    return '<div class="page active">'
+    function nchip(icon, label, onclick) {
+      return '<button onclick="event.stopPropagation();' + onclick + '" style="display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid #c7d2fe;color:#1A3A8F;font-size:12px;font-weight:600;padding:7px 13px;border-radius:20px;cursor:pointer;font-family:inherit">' + icon + label + '</button>';
+    }
+    var card = 'background:#fff;border:1px solid #E8EBF2;border-radius:18px;padding:20px;margin-bottom:14px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.06)';
+    return '<div class="page active" style="background:#F5F7FC">'
       + '<div class="det-topbar" style="background:#F5A623">'
       + '<button class="back" onclick="H.goBack()" style="color:#1A3A8F"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
       + '<div class="det-topbar-title" style="color:#1A3A8F">Jobs</div>'
       + '<div style="width:40px"></div></div>'
       + '<div style="padding:22px 16px 32px">'
       + '<div style="font-size:23px;font-weight:900;color:var(--text);margin-bottom:4px;letter-spacing:-.4px">What brings you here?</div>'
-      + '<div style="font-size:13.5px;color:var(--sub);margin-bottom:22px">Choose how you want to use PaMarket Jobs.</div>'
+      + '<div style="font-size:13.5px;color:var(--sub);margin-bottom:20px">Choose how you want to use PaMarket Jobs.</div>'
 
-      // ── Get Hired (job seeker) ──
-      + '<div onclick="H.openInner(\'FindJobs\')" style="background:linear-gradient(135deg,#22c55e,#15803d);border-radius:20px;padding:20px;margin-bottom:16px;cursor:pointer;box-shadow:0 6px 20px rgba(21,128,61,.25)">'
+      // ── Get Hired ──
+      + '<div onclick="H.openInner(\'FindJobs\')" style="' + card + '">'
       + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
-      + '<div style="width:52px;height:52px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">' + seeker + '</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;color:#fff">Get Hired</div><div style="font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.4">Browse jobs across Zimbabwe and apply in seconds.</div></div>'
-      + '<div style="color:#fff">' + arrow + '</div></div>'
+      + '<div style="width:50px;height:50px;border-radius:14px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + icSeeker + '</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:800;color:#111827">Get Hired</div><div style="font-size:12.5px;color:#6B7280;line-height:1.45;margin-top:2px">Browse jobs across Zimbabwe and apply in seconds.</div></div>'
+      + '<div>' + chev + '</div></div>'
+      + '<div style="height:1px;background:#F3F4F6;margin-bottom:14px"></div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
-      + chip('Browse Jobs', "H.openInner('FindJobs')")
-      + chip('My Applications', "H.openInner('AppliedJobs')")
-      + chip('My Profile', "H._getHired()")
+      + gchip(icJob, 'Browse Jobs', "H.openInner('FindJobs')")
+      + gchip(icPerson, 'My Applications', "H.openInner('AppliedJobs')")
+      + gchip(icPerson, 'My Profile', "H._getHired()")
       + '</div></div>'
 
-      // ── I'm Hiring (employer) ──
-      + '<div onclick="H.openInner(\'HireTalent\')" style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 6px 20px rgba(26,58,143,.25)">'
+      // ── I'm Hiring ──
+      + '<div onclick="H.openInner(\'HireTalent\')" style="' + card + 'margin-bottom:0">'
       + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
-      + '<div style="width:52px;height:52px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">' + briefcase + '</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;color:#fff">I&#39;m Hiring</div><div style="font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.4">Browse available candidates and find the right person.</div></div>'
-      + '<div style="color:#fff">' + arrow + '</div></div>'
+      + '<div style="width:50px;height:50px;border-radius:14px;background:#e0e7ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + icBriefcase + '</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:800;color:#111827">I\'m Hiring</div><div style="font-size:12.5px;color:#6B7280;line-height:1.45;margin-top:2px">Browse available candidates and find the right person.</div></div>'
+      + '<div>' + chev + '</div></div>'
+      + '<div style="height:1px;background:#F3F4F6;margin-bottom:14px"></div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
-      + chip('Browse Candidates', "H.openInner('HireTalent')")
-      + chip('My Requests', "H.openInner('MyContactRequests')")
-      + chip('Post a Job', "H.openInner('PostJob')")
+      + nchip(icPeople, 'Browse Candidates', "H.openInner('HireTalent')")
+      + nchip(icPeople, 'My Requests', "H.openInner('MyContactRequests')")
+      + nchip(icSend, 'Post a Job', "H.openInner('PostJob')")
       + '</div></div>'
       + '</div></div>';
   };
