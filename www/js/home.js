@@ -146,10 +146,11 @@
           </div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
             ${CATEGORIES.map(c => {
-              const color = CAT_COLORS[c.id] || '#546E7A';
               return `<div onclick="H.filterByCat('${c.id}')" style="display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer">
-                <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,${color}22,${color}0f);color:${color};display:flex;align-items:center;justify-content:center;border:1.5px solid ${color}22;box-shadow:0 4px 10px -4px ${color}55;transition:transform 0.15s"
-                  onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">${c.icon}</div>
+                <div style="width:60px;height:60px;border-radius:16px;background:#F5F7FC;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:transform 0.15s"
+                  onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
+                  <img src="img/cats/cat_${c.id}.png" alt="${c.name}" style="width:52px;height:52px;object-fit:contain" onerror="this.style.display='none';this.parentNode.innerHTML+='${c.icon.replace(/'/g,"\\'")}'" loading="lazy">
+                </div>
                 <span style="font-size:11px;font-weight:600;color:var(--text);text-align:center;line-height:1.2">${c.name}</span>
               </div>`;
             }).join('')}
