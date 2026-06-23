@@ -1681,59 +1681,125 @@ async function sendNotification() {
 }
 
 // ── REPORTS ───────────────────────────────────────────────
+var _reportView = 'support'; // 'support' | 'flags'
 function renderReports() {
-  var filtered = DATA.reports.filter(function(r){ return _reportFilter==='all'||r.status===_reportFilter; });
-  var counts = {all:DATA.reports.length,open:DATA.reports.filter(function(r){return r.status==='open';}).length,resolved:DATA.reports.filter(function(r){return r.status==='resolved';}).length,dismissed:DATA.reports.filter(function(r){return r.status==='dismissed';}).length};
+  var support = DATA.reports.filter(function(r){ return (r.target_type||r.targetType)==='support'; });
+  var flags   = DATA.reports.filter(function(r){ var t=r.target_type||r.targetType||''; return t!=='support'; });
+  var openSupport = support.filter(function(r){ return r.status==='open'; }).length;
+  var openFlags   = flags.filter(function(r){ return r.status==='open'; }).length;
 
-  var html = '<div class="sec-head"><div class="sec-title">Reports</div><div class="sec-actions">';
-  ['all','open','resolved','dismissed'].forEach(function(f){
-    html+='<button class="filter-btn'+((_reportFilter===f)?' on':'')+'" onclick="_reportFilter=\''+f+'\';renderReports()">'+f.charAt(0).toUpperCase()+f.slice(1)+' ('+counts[f]+')</button>';
-  });
-  html+='</div></div>';
+  var html = '<div class="sec-head"><div class="sec-title">Reports & Support</div></div>';
 
-  // Info: explain where reports come from
-  html+='<div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:var(--sub);line-height:1.7">';
-  html+='<strong style="color:var(--text)">Where do reports come from?</strong><br>';
-  html+='Reports are submitted by users inside the app. On any listing detail page there is a <em>"Report this Listing"</em> button, and on any user profile there is a <em>"Report User"</em> button. Users select a reason (spam, fraud, inappropriate, etc.) and it appears here instantly.';
-  html+='</div>';
+  // View switcher
+  html += '<div style="display:flex;gap:8px;margin-bottom:20px">';
+  html += '<button onclick="_reportView=\'support\';renderReports()" style="flex:1;padding:12px;border-radius:12px;border:2px solid '+(_reportView==='support'?'#1A3A8F':'var(--border)')+';background:'+(_reportView==='support'?'#EFF6FF':'var(--card)')+';color:'+(_reportView==='support'?'#1A3A8F':'var(--text)')+';font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">';
+  html += 'Support Messages';
+  if(openSupport) html += ' <span style="background:#EF4444;color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;margin-left:4px">'+openSupport+'</span>';
+  html += '</button>';
+  html += '<button onclick="_reportView=\'flags\';_reportFilter=\'all\';renderReports()" style="flex:1;padding:12px;border-radius:12px;border:2px solid '+(_reportView==='flags'?'#1A3A8F':'var(--border)')+';background:'+(_reportView==='flags'?'#EFF6FF':'var(--card)')+';color:'+(_reportView==='flags'?'#1A3A8F':'var(--text)')+';font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">';
+  html += 'User Reports';
+  if(openFlags) html += ' <span style="background:#F59E0B;color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;margin-left:4px">'+openFlags+'</span>';
+  html += '</button>';
+  html += '</div>';
 
-  if(!DATA.reports.length) {
-    html+='<div class="empty-msg">No reports yet. Reports appear here when app users flag a listing or user as spam, fraudulent, or inappropriate.</div>';
-    document.getElementById('mainContent').innerHTML=html; return;
+  if(_reportView === 'support') {
+    // ── Support Messages view ──────────────────────────────
+    var statusFilter = _reportFilter||'all';
+    var shown = support.filter(function(r){ return statusFilter==='all'||r.status===statusFilter; });
+    html += '<div style="display:flex;gap:6px;margin-bottom:16px">';
+    ['all','open','resolved'].forEach(function(f){
+      var cnt = f==='all' ? support.length : support.filter(function(r){return r.status===f;}).length;
+      html += '<button class="filter-btn'+(statusFilter===f?' on':'')+'" onclick="_reportFilter=\''+f+'\';renderReports()">'+f.charAt(0).toUpperCase()+f.slice(1)+' ('+cnt+')</button>';
+    });
+    html += '</div>';
+
+    if(!shown.length) {
+      html += '<div class="empty-msg">No support messages yet. When users tap "Talk to a Human" or "Submit a Bug Report" in the support chat, their message appears here.</div>';
+      document.getElementById('mainContent').innerHTML=html; return;
+    }
+
+    shown.forEach(function(r){
+      var reporter = DATA.users.find(function(x){ return x.id===r.reporter_id||x.id===r.reporterId; })||{};
+      var rawMsg = (r.reason||'').replace(/^\[Support\]\s*/,'');
+      var lines = rawMsg.split('\n\n');
+      var subject = lines[0]||'Support request';
+      var body = lines.slice(1).join('\n\n').trim()||rawMsg;
+      var phone = reporter.phone||'';
+      var waNum = phone.replace(/\D/g,'');
+      if(waNum && waNum.charAt(0)==='0') waNum='263'+waNum.slice(1);
+      var waLink = waNum ? 'https://wa.me/'+waNum+'?text='+encodeURIComponent('Hi '+esc(reporter.name||'there')+', this is PaMarket Support. We received your message: "'+subject+'". ') : '';
+      var emailLink = reporter.email ? 'mailto:'+reporter.email+'?subject='+encodeURIComponent('Re: '+subject)+'&body='+encodeURIComponent('Hi '+(reporter.name||'')+',%0D%0A%0D%0AThank you for contacting PaMarket support.%0D%0A%0D%0A') : '';
+      var statusColor = r.status==='open'?'#F59E0B':r.status==='resolved'?'#16a34a':'#9CA3AF';
+      var statusBg = r.status==='open'?'#FEF3C7':r.status==='resolved'?'#DCFCE7':'#F3F4F6';
+
+      html += '<div style="background:var(--card);border:1.5px solid '+(r.status==='open'?'#FCD34D':'var(--border)')+';border-radius:14px;padding:16px;margin-bottom:12px">';
+      // Header row
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+      html += '<div style="display:flex;align-items:center;gap:10px">';
+      html += '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1A3A8F,#3B6FE8);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0">'+(reporter.name||'?').charAt(0).toUpperCase()+'</div>';
+      html += '<div><div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(reporter.name||'Unknown User')+'</div>';
+      html += '<div style="font-size:11px;color:var(--sub)">'+esc(phone||reporter.email||r.reporter_id||'No contact info')+'</div></div>';
+      html += '</div>';
+      html += '<div style="display:flex;align-items:center;gap:8px">';
+      html += '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:'+statusBg+';color:'+statusColor+'">'+esc(r.status||'open')+'</span>';
+      html += '<span style="font-size:11px;color:var(--sub)">'+fmtDate(r.created_at||r.t)+'</span>';
+      html += '</div></div>';
+      // Message body
+      html += '<div style="background:var(--bg);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--text);line-height:1.6;margin-bottom:12px;white-space:pre-wrap">'+esc(body||subject)+'</div>';
+      // Action buttons
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+      if(waLink) html += '<a href="'+waLink+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#F0FDF4;color:#16a34a;border:1.5px solid #bbf7d0;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg> Reply on WhatsApp</a>';
+      if(emailLink) html += '<a href="'+emailLink+'" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#EFF6FF;color:#1A3A8F;border:1.5px solid #bfdbfe;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Reply by Email</a>';
+      if(r.status==='open') html += '<button onclick="resolveReport(\''+r.id+'\')" style="padding:8px 14px;background:#DCFCE7;color:#16a34a;border:1.5px solid #bbf7d0;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Mark Resolved</button>';
+      html += '<button onclick="dismissReport(\''+r.id+'\')" style="padding:8px 14px;background:var(--bg);color:var(--sub);border:1.5px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Dismiss</button>';
+      html += '</div></div>';
+    });
+
+  } else {
+    // ── User Reports (flags) view ──────────────────────────
+    var filtered = flags.filter(function(r){ return _reportFilter==='all'||r.status===_reportFilter; });
+    var counts = {all:flags.length,open:openFlags,resolved:flags.filter(function(r){return r.status==='resolved';}).length,dismissed:flags.filter(function(r){return r.status==='dismissed';}).length};
+    html += '<div style="display:flex;gap:6px;margin-bottom:16px">';
+    ['all','open','resolved','dismissed'].forEach(function(f){
+      html+='<button class="filter-btn'+((_reportFilter===f)?' on':'')+'" onclick="_reportFilter=\''+f+'\';renderReports()">'+f.charAt(0).toUpperCase()+f.slice(1)+' ('+counts[f]+')</button>';
+    });
+    html += '</div>';
+
+    if(!filtered.length){
+      html+='<div class="empty-msg">No user reports match this filter.</div>';
+      document.getElementById('mainContent').innerHTML=html; return;
+    }
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Reporter</th><th>Type</th><th>What was reported</th><th>Reason</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+    filtered.forEach(function(r){
+      var reporter = DATA.users.find(function(x){ return x.id===r.reporter_id||x.id===r.reporterId; })||{};
+      var targetLabel = '—', targetLink = '';
+      var tId = r.target_id||r.targetId||'';
+      var tType = r.target_type||r.targetType||'';
+      if(tType==='listing'){
+        var listing = DATA.listings.find(function(x){ return x.id===tId; });
+        targetLabel = listing ? esc(listing.title||'Listing') : 'Listing '+tId.slice(0,8);
+        targetLink = listing ? ' <span style="font-size:10px;color:var(--sub)">('+esc(listing.cat||'')+' · '+esc(listing.city||'')+')</span>' : '';
+      } else if(tType==='user'){
+        var tUser = DATA.users.find(function(x){ return x.id===tId; });
+        targetLabel = tUser ? esc(tUser.name||'User') : 'User '+tId.slice(0,8);
+        targetLink = tUser ? ' <span style="font-size:10px;color:var(--sub)">('+esc(tUser.phone||tUser.email||'')+')</span>' : '';
+      }
+      var statusColor = r.status==='open'?'amber':r.status==='resolved'?'active':'rejected';
+      html+='<tr>';
+      html+='<td style="font-size:13px;font-weight:600">'+esc(reporter.name||r.reporter_id||'—')+'<div style="font-size:11px;color:var(--sub)">'+esc(reporter.phone||reporter.email||'')+'</div></td>';
+      html+='<td><span class="badge badge-info">'+esc(tType||'—')+'</span></td>';
+      html+='<td style="font-size:12px;font-weight:600">'+targetLabel+targetLink+'</td>';
+      html+='<td style="color:var(--sub);font-size:12px;max-width:200px">'+esc((r.reason||'—').slice(0,120))+'</td>';
+      html+='<td><span class="badge badge-'+statusColor+'">'+esc(r.status||'—')+'</span></td>';
+      html+='<td style="color:var(--sub);font-size:12px">'+fmtDate(r.created_at||r.t)+'</td>';
+      html+='<td><div style="display:flex;gap:4px">';
+      if(r.status==='open') html+='<button class="ab ab-approve" onclick="resolveReport(\''+r.id+'\')">Resolve</button>';
+      html+='<button class="ab ab-delete" onclick="dismissReport(\''+r.id+'\')">Dismiss</button>';
+      html+='</div></td></tr>';
+    });
+    html+='</tbody></table></div>';
   }
 
-  html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Reporter</th><th>Type</th><th>What was reported</th><th>Reason</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
-  if(!filtered.length) html+='<tr><td colspan="7"><div class="empty-msg">No reports match this filter</div></td></tr>';
-  filtered.forEach(function(r){
-    // Look up who reported and what was reported
-    var reporter = DATA.users.find(function(x){ return x.id===r.reporter_id||x.id===r.reporterId; })||{};
-    var targetLabel = '—';
-    var targetLink = '';
-    var tId = r.target_id||r.targetId||'';
-    var tType = r.target_type||r.targetType||'';
-    if(tType==='listing'){
-      var listing = DATA.listings.find(function(x){ return x.id===tId; });
-      targetLabel = listing ? esc(listing.title||'Listing') : 'Listing '+tId.slice(0,8);
-      targetLink = listing ? ' <span style="font-size:10px;color:var(--sub)">('+esc(listing.cat||'')+' · '+esc(listing.city||'')+')</span>' : '';
-    } else if(tType==='user'){
-      var tUser = DATA.users.find(function(x){ return x.id===tId; });
-      targetLabel = tUser ? esc(tUser.name||'User') : 'User '+tId.slice(0,8);
-      targetLink = tUser ? ' <span style="font-size:10px;color:var(--sub)">('+esc(tUser.phone||tUser.email||'')+')</span>' : '';
-    }
-    var statusColor = r.status==='open'?'amber':r.status==='resolved'?'active':'rejected';
-    html+='<tr>';
-    html+='<td style="font-size:13px;font-weight:600">'+esc(reporter.name||r.reporterId||'—')+'<div style="font-size:11px;color:var(--sub)">'+esc(reporter.phone||reporter.email||'')+'</div></td>';
-    html+='<td><span class="badge badge-info">'+esc(tType||'—')+'</span></td>';
-    html+='<td style="font-size:12px;font-weight:600">'+targetLabel+targetLink+'</td>';
-    html+='<td style="color:var(--sub);font-size:12px;max-width:180px">'+esc(r.reason||'—')+'</td>';
-    html+='<td><span class="badge badge-'+statusColor+'">'+esc(r.status||'—')+'</span></td>';
-    html+='<td style="color:var(--sub);font-size:12px">'+fmtDate(r.created_at||r.t)+'</td>';
-    html+='<td><div style="display:flex;gap:4px">';
-    if(r.status==='open') html+='<button class="ab ab-approve" onclick="resolveReport(\''+r.id+'\')">Resolve</button>';
-    html+='<button class="ab ab-delete" onclick="dismissReport(\''+r.id+'\')">Dismiss</button>';
-    html+='</div></td></tr>';
-  });
-  html+='</tbody></table></div>';
   document.getElementById('mainContent').innerHTML=html;
 }
 
