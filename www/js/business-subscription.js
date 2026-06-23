@@ -150,13 +150,23 @@
       const ents = H.planEntitlements(p.id);
       const higher = ents.rank > H.planEntitlements(curPlanId).rank;
       const price = (cyc => p.price === 0 ? 'Free' : (cyc === 'yearly' ? `$${p.price * 10}/yr` : `$${p.price}/mo`))(b.billingCycle);
+      const bPays = ((H.state.businessPayments || {})[b.id] || []);
+      const hasPending = !cur && bPays.some(pay => pay.status === 'pending' && pay.type === 'subscription' && (pay.description || '').includes('[' + p.id + ']'));
+      let actionBtn = '';
+      if (isOwner && !cur) {
+        if (hasPending) {
+          actionBtn = `<button disabled style="width:100%;margin-top:10px;padding:9px;border-radius:10px;background:#F1F5F9;color:#94A3B8;border:1.5px solid #E2E8F0;font-size:13px;font-weight:700;font-family:inherit;cursor:default">Pending Approval</button>`;
+        } else {
+          actionBtn = `<button class="btn-pri" style="width:100%;margin-top:10px;padding:9px" onclick="H._bizSub.${higher ? 'upgrade' : 'downgrade'}('${b.id}','${p.id}')">${higher ? 'Request Upgrade' : 'Downgrade'}</button>`;
+        }
+      }
       return `<div style="border:2px solid ${cur ? '#1A3A8F' : 'var(--border,#E8ECF4)'};border-radius:16px;padding:15px;margin-bottom:10px;background:${cur ? '#EEF2FB' : 'var(--card,#fff)'}">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-size:15px;font-weight:800;color:${cur ? '#1A3A8F' : 'var(--text)'}">${p.name}${cur ? ' · Current' : ''}</div>
           <div style="font-size:14px;font-weight:800;color:#1A3A8F">${price}</div>
         </div>
         <div style="font-size:11.5px;color:var(--sub);margin-top:4px">${ents.listingLimit < 0 ? 'Unlimited' : ents.listingLimit} listings · ${ents.staffLimit === Infinity ? '∞' : ents.staffLimit} staff · ${ents.featuredSlots} featured</div>
-        ${isOwner && !cur ? `<button class="btn-pri" style="width:100%;margin-top:10px;padding:9px" onclick="H._bizSub.${higher ? 'upgrade' : 'downgrade'}('${b.id}','${p.id}')">${higher ? 'Request Upgrade' : 'Downgrade'}</button>` : ''}
+        ${actionBtn}
       </div>`;
     };
 
@@ -220,7 +230,11 @@
   }
 
   H._bizSub = {
-    open(id) { H.fetchBusinessSubscriptions(id).then(() => renderPage('BusinessSubscription', { id })); H.openInner('BusinessSubscription', { id }); },
+    open(id) {
+      Promise.all([H.fetchBusinessSubscriptions(id), typeof H.fetchBusinessPayments === 'function' ? H.fetchBusinessPayments(id) : Promise.resolve()])
+        .then(() => renderPage('BusinessSubscription', { id }));
+      H.openInner('BusinessSubscription', { id });
+    },
 
     async upgrade(id, planId) {
       const b = getBiz(id); if (!b) return;
