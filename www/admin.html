@@ -1961,11 +1961,13 @@ function openCreateAd() {
     +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="adAction" value="listing" id="adActionListing" onchange="_onAdActionChange()"> A specific listing in the app</label>'
     +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="adAction" value="link" id="adActionLink" onchange="_onAdActionChange()"> An external link (website / WhatsApp)</label>'
     +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="adAction" value="cat" id="adActionCat" onchange="_onAdActionChange()"> Browse a category in the app</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="adAction" value="inapp" id="adActionInapp" onchange="_onAdActionChange()"> Open an in-app page (Verify Account, Post Ad, etc.)</label>'
     +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="adAction" value="none" id="adActionNone" onchange="_onAdActionChange()" checked> Just show the ad (no action)</label>'
     +'</div></div>'
     +'<div id="adListingRow" style="display:none" class="form-row"><label class="form-label">Listing ID</label><input class="form-input" id="adListingId" placeholder="Paste the listing ID from the Listings tab"></div>'
     +'<div id="adLinkRow" style="display:none" class="form-row"><label class="form-label">Link URL</label><input class="form-input" id="adLinkUrl" placeholder="https://wa.me/2637... or https://..."></div>'
     +'<div id="adActionCatRow" style="display:none" class="form-row"><label class="form-label">Category</label><select class="form-input" id="adActionCatVal"><option value="electronics">Electronics</option><option value="vehicles">Vehicles</option><option value="property">Property</option><option value="furniture">Furniture</option><option value="fashion">Fashion</option><option value="jobs">Jobs</option><option value="agriculture">Agriculture</option><option value="services">Services</option><option value="rooms">Rooms</option><option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option></select></div>'
+    +'<div id="adInappRow" style="display:none" class="form-row"><label class="form-label">In-App Page</label><select class="form-input" id="adInappPage"><option value="pamarket://Verify">Verify Account</option><option value="pamarket://Post">Post a Free Ad</option><option value="pamarket://Messages">Messages</option><option value="pamarket://Account">My Account</option></select></div>'
 
     // Background colour
     +'<div class="form-row"><label class="form-label">Card Background Colour</label><div style="display:flex;align-items:center;gap:10px"><input type="color" id="adBgColor" value="#1A3A8F" style="width:48px;height:36px;border:none;padding:2px;border-radius:6px;cursor:pointer"><span style="font-size:12px;color:var(--sub)">Shows behind the image or as the card colour</span></div></div>'
@@ -1999,10 +2001,11 @@ function _onAdPlacementChange(){
 }
 function _onAdActionChange(){
   var v = (document.querySelector('input[name="adAction"]:checked')||{}).value||'none';
-  ['adListingRow','adLinkRow','adActionCatRow'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
+  ['adListingRow','adLinkRow','adActionCatRow','adInappRow'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
   if(v==='listing') (document.getElementById('adListingRow')||{style:{}}).style.display='';
   if(v==='link')    (document.getElementById('adLinkRow')||{style:{}}).style.display='';
   if(v==='cat')     (document.getElementById('adActionCatRow')||{style:{}}).style.display='';
+  if(v==='inapp')   (document.getElementById('adInappRow')||{style:{}}).style.display='';
 }
 
 window._adLoadImage = function(e) {
@@ -2025,7 +2028,9 @@ async function saveNewAd() {
   try {
     var adAction = (document.querySelector('input[name="adAction"]:checked')||{}).value||'none';
     var listingId = adAction==='listing' ? ((document.getElementById('adListingId')||{}).value||'').trim()||null : null;
-    var linkUrl   = adAction==='link'    ? ((document.getElementById('adLinkUrl')||{}).value||'').trim()||null : null;
+    var linkUrl   = adAction==='link'    ? ((document.getElementById('adLinkUrl')||{}).value||'').trim()||null
+                  : adAction==='inapp'   ? ((document.getElementById('adInappPage')||{}).value||null)
+                  : null;
     var actionCat = adAction==='cat'     ? ((document.getElementById('adActionCatVal')||{}).value||null) : null;
     var placement = (document.getElementById('adPlacement')||{}).value;
     var placementCat = (placement==='category') ? ((document.getElementById('adCat')||{}).value||'other') : null;

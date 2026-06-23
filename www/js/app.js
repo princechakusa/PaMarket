@@ -1446,9 +1446,20 @@ window.H = {
       ? `<img src="${e(a.imageUrl)}" style="width:100%;max-height:280px;object-fit:cover;display:block">`
       : `<div style="height:120px;background:${bg}"></div>`;
 
+    // pamarket://PageName — in-app deep links stored in link_url
+    const IN_APP_ROUTES = {
+      'pamarket://Verify':    { label: 'Verify My Account', page: 'Verify' },
+      'pamarket://Post':      { label: 'Post a Free Ad',    page: 'Post' },
+      'pamarket://Messages':  { label: 'Messages',          page: 'Messages' },
+      'pamarket://Account':   { label: 'My Account',        page: 'Account' },
+    };
+
     let actionHtml = '';
     if(a.listingId) {
       actionHtml = `<button onclick="H._closeAdModal();H.openInner('Detail',{id:'${e(String(a.listingId))}'})" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">View Listing</button>`;
+    } else if(a.linkUrl && IN_APP_ROUTES[a.linkUrl]) {
+      const route = IN_APP_ROUTES[a.linkUrl];
+      actionHtml = `<button onclick="H._closeAdModal();H.openInner('${route.page}')" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">${route.label}</button>`;
     } else if(a.linkUrl) {
       const safeUrl = e(a.linkUrl);
       actionHtml = `<button onclick="H._closeAdModal();try{window.open('${safeUrl}',${native?`'_system'`:`'_blank'`})}catch(err){window.open('${safeUrl}','_blank')}" style="width:100%;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Visit Website</button>`;
