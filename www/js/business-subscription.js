@@ -145,19 +145,23 @@
       </div>`;
     };
 
+    const supportWa = H.state.supportWhatsapp || '263776543210';
     const planCard = (p) => {
       const cur = p.id === curPlanId;
       const ents = H.planEntitlements(p.id);
       const higher = ents.rank > H.planEntitlements(curPlanId).rank;
       const price = (cyc => p.price === 0 ? 'Free' : (cyc === 'yearly' ? `$${p.price * 10}/yr` : `$${p.price}/mo`))(b.billingCycle);
-      const bPays = ((H.state.businessPayments || {})[b.id] || []);
-      const hasPending = !cur && bPays.some(pay => pay.status === 'pending' && pay.type === 'subscription' && (pay.description || '').includes('[' + p.id + ']'));
       let actionBtn = '';
       if (isOwner && !cur) {
-        if (hasPending) {
-          actionBtn = `<button disabled style="width:100%;margin-top:10px;padding:9px;border-radius:10px;background:#F1F5F9;color:#94A3B8;border:1.5px solid #E2E8F0;font-size:13px;font-weight:700;font-family:inherit;cursor:default">Pending Approval</button>`;
+        if (higher && p.price > 0) {
+          // Paid upgrade: open WhatsApp contact only — no in-app state change (Google Play compliant)
+          const waMsg = encodeURIComponent('Hi PaMarket, I would like to upgrade ' + (b.name || 'my business') + ' to the ' + p.name + ' plan (' + (b.billingCycle || 'monthly') + ' billing). Please contact me to arrange payment.');
+          actionBtn = `<a href="https://wa.me/${supportWa}?text=${waMsg}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:10px;padding:9px;border-radius:10px;background:#16a34a;color:#fff;font-size:13px;font-weight:700;text-decoration:none;font-family:inherit;box-sizing:border-box;-webkit-tap-highlight-color:transparent">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M5.337 3.004A11.924 11.924 0 0 0 0 12.001c0 2.096.543 4.063 1.49 5.789L0 24l6.39-1.677A11.937 11.937 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0a11.924 11.924 0 0 0-6.663 2.004z"/></svg>
+            Contact to Upgrade
+          </a>`;
         } else {
-          actionBtn = `<button class="btn-pri" style="width:100%;margin-top:10px;padding:9px" onclick="H._bizSub.${higher ? 'upgrade' : 'downgrade'}('${b.id}','${p.id}')">${higher ? 'Request Upgrade' : 'Downgrade'}</button>`;
+          actionBtn = `<button class="btn-pri" style="width:100%;margin-top:10px;padding:9px" onclick="H._bizSub.downgrade('${b.id}','${p.id}')">Downgrade</button>`;
         }
       }
       return `<div style="border:2px solid ${cur ? '#1A3A8F' : 'var(--border,#E8ECF4)'};border-radius:16px;padding:15px;margin-bottom:10px;background:${cur ? '#EEF2FB' : 'var(--card,#fff)'}">
@@ -200,7 +204,7 @@
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <div>
               <div style="font-size:13px;font-weight:800;color:#1A3A8F;margin-bottom:4px">No payments in the app</div>
-              <div style="font-size:12.5px;color:#475569;line-height:1.55">PaMarket does not process payments inside the app. Pressing "Request Upgrade" sends your request to the admin for approval. You will be contacted about payment arrangements before your plan is activated.</div>
+              <div style="font-size:12.5px;color:#475569;line-height:1.55">PaMarket does not process payments inside the app. Tapping "Contact to Upgrade" opens WhatsApp so you can speak directly with the PaMarket team. We will activate your plan once payment is confirmed.</div>
               <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
                 <a href="https://wa.me/263776543210" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#16a34a;color:#fff;border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:700;text-decoration:none;-webkit-tap-highlight-color:transparent">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M5.337 3.004A11.924 11.924 0 0 0 0 12.001c0 2.096.543 4.063 1.49 5.789L0 24l6.39-1.677A11.937 11.937 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0a11.924 11.924 0 0 0-6.663 2.004z"/></svg>
@@ -230,11 +234,7 @@
   }
 
   H._bizSub = {
-    open(id) {
-      Promise.all([H.fetchBusinessSubscriptions(id), typeof H.fetchBusinessPayments === 'function' ? H.fetchBusinessPayments(id) : Promise.resolve()])
-        .then(() => renderPage('BusinessSubscription', { id }));
-      H.openInner('BusinessSubscription', { id });
-    },
+    open(id) { H.fetchBusinessSubscriptions(id).then(() => renderPage('BusinessSubscription', { id })); H.openInner('BusinessSubscription', { id }); },
 
     async upgrade(id, planId) {
       const b = getBiz(id); if (!b) return;
