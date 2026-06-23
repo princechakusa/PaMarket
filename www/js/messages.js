@@ -1966,10 +1966,11 @@
   H._chat._lpTimer = null;
   H._chat._lpStart = function (e, msgId, isMine) {
     clearTimeout(H._chat._lpTimer);
+    // Prevent Android from triggering native text-selection before our timer fires
+    if (e && e.cancelable) try { e.preventDefault(); } catch(_) {}
     H._chat._lpTimer = setTimeout(function () {
-      if (e && e.cancelable) try { e.preventDefault(); } catch(_) {}
       H._chat.showMsgActions(msgId, isMine);
-    }, 600);
+    }, 500);
   };
   H._chat._lpEnd = function () { clearTimeout(H._chat._lpTimer); };
 
