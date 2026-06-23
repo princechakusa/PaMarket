@@ -149,7 +149,7 @@
               return `<div onclick="H.filterByCat('${c.id}')" style="display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer">
                 <div style="width:60px;height:60px;border-radius:16px;background:#F5F7FC;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:transform 0.15s"
                   onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
-                  <img src="img/cats/cat_${c.id}.png" alt="${c.name}" style="width:52px;height:52px;object-fit:contain" onerror="this.style.display='none';this.parentNode.innerHTML+='${c.icon.replace(/'/g,"\\'")}'" loading="lazy">
+                  <img src="img/cats/cat_${c.id}.png" style="width:52px;height:52px;object-fit:contain">
                 </div>
                 <span style="font-size:11px;font-weight:600;color:var(--text);text-align:center;line-height:1.2">${c.name}</span>
               </div>`;
