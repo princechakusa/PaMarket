@@ -1905,8 +1905,9 @@ async function deleteAd(id) {
 }
 
 function openCreateAd() {
-  // Build advertiser options from users list
-  var userOpts = '<option value="">— Select advertiser account —</option>';
+  // Build advertiser options — PaMarket company first, then users
+  var userOpts = '<option value="">— Select advertiser account —</option>'
+    + '<option value="__pamarket__">PaMarket (Company)</option>';
   DATA.users.slice(0,200).forEach(function(u){
     userOpts += '<option value="'+esc(u.id)+'">'+esc(u.name||'User')+' ('+esc(u.phone||u.email||u.id.slice(0,8))+')</option>';
   });
@@ -1989,6 +1990,7 @@ function openCreateAd() {
   document.getElementById('adAdvertiser').addEventListener('change', function(){
     if(_adBizManual) return;
     var uid = this.value;
+    if(uid === '__pamarket__') { document.getElementById('adBiz').value = 'PaMarket'; return; }
     var u = DATA.users.find(function(x){ return x.id===uid; });
     if(u && u.name) document.getElementById('adBiz').value = u.name;
   });
@@ -2020,7 +2022,8 @@ window._adLoadImage = function(e) {
 };
 
 async function saveNewAd() {
-  var advertId = (document.getElementById('adAdvertiser')||{}).value||'';
+  var _advertRaw = (document.getElementById('adAdvertiser')||{}).value||'';
+  var advertId = (_advertRaw && _advertRaw !== '__pamarket__') ? _advertRaw : null;
   var biz = (document.getElementById('adBiz')||{}).value.trim();
   var head = (document.getElementById('adHead')||{}).value.trim();
   if(!biz){ toast('Enter business name','error'); return; }
