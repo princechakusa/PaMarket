@@ -145,7 +145,11 @@
         </div>
 
         ${isMine ? `
-          <button style="width:100%;padding:13px;background:#fee2e2;color:#dc2626;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" onclick="if(!confirm('Are you sure you want to delete this listing?')) return; H.deleteListing('${l.id}')">Delete Listing</button>
+          <div style="display:flex;gap:8px;margin-bottom:4px">
+            <button onclick="H._myListings.edit('${l.id}')" style="flex:1;padding:11px 4px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#EFF6FF;color:#1A3A8F;border:1.5px solid #BFDBFE;font-family:Inter,sans-serif">Edit Ad</button>
+            <button onclick="H._myListings.markSold('${l.id}')" style="flex:1;padding:11px 4px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#dcfce7;color:#16a34a;border:1.5px solid #bbf7d0;font-family:Inter,sans-serif">Stop It</button>
+            <button onclick="H._myListings.del('${l.id}')" style="flex:1;padding:11px 4px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#fef2f2;color:#ef4444;border:1.5px solid #fecaca;font-family:Inter,sans-serif">Remove</button>
+          </div>
         ` : (function(){
           const cm = l.contactMethod || 'chat';
           const waBtn   = `<button class="wa-btn" onclick="H.openWA('${l.id}')">${S.wa} Chat on WhatsApp</button>`;
