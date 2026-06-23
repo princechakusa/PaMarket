@@ -146,9 +146,8 @@
           </div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
             ${CATEGORIES.map(c => {
-              return `<div onclick="H.filterByCat('${c.id}')" style="display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
-                <img src="img/cats/cat_${c.id}.png" style="width:64px;height:64px;object-fit:contain;mix-blend-mode:multiply;transition:transform .15s"
-                  onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
+              return `<div onclick="H.filterByCat('${c.id}')" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''" style="display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .15s;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none">
+                <img src="img/cats/cat_${c.id}.png" draggable="false" oncontextmenu="return false" style="width:64px;height:64px;object-fit:contain;mix-blend-mode:multiply;pointer-events:none">
                 <span style="font-size:11px;font-weight:600;color:var(--text);text-align:center;line-height:1.2">${c.name}</span>
               </div>`;
             }).join('')}
