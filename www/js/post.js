@@ -378,9 +378,9 @@
         catch (e) { mod = { status: 'active', reason: null }; }
         if (mod.status === 'rejected') { H.toast(mod.reason || 'Listing could not be posted', 5000, true); return; }
       }
-      const needsApproval = !!(H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified));
-      // Pending if the admin forces review OR moderation flagged it for review.
-      const finalStatus = (needsApproval || mod.status === 'pending') ? 'pending' : 'active';
+      const needsApproval = u.role !== 'admin' && !!(H.state.requireListingApproval && !(H.state.autoApproveVerified && u.verified));
+      // Pending if the admin forces review OR moderation flagged it for review. Admin always goes live immediately.
+      const finalStatus = (needsApproval || (u.role !== 'admin' && mod.status === 'pending')) ? 'pending' : 'active';
 
       H._post._posting = true;
       const btn = document.querySelector('.btn-submit');
