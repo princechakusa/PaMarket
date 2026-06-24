@@ -126,44 +126,52 @@
   pages.FAQs = function () {
     const faqs = [
       {
-        q: 'How do I post an ad?',
-        a: 'Tap the Post Ad button at the bottom of the screen. Follow the steps to add photos, title, description, price, and location. Your ad will be reviewed before going live.'
+        q: 'How do I post an ad on PaMarket?',
+        a: 'Tap the "Post" button at the bottom of the screen. Choose your category, add clear photos, write a title and description, set your price, and select your location. Your listing goes live instantly — no waiting for review.'
       },
       {
-        q: 'How much does it cost to post?',
-        a: 'Posting an ad is completely free. Browsing, messaging, applying for jobs, and getting verified are all free too. No subscriptions, no hidden fees, no commission on sales.'
+        q: 'Is PaMarket free to use?',
+        a: 'Yes — completely free. Posting ads, browsing listings, sending messages, applying for jobs, and getting verified are all 100% free. No subscriptions, no commission on sales, no hidden charges.'
       },
       {
-        q: 'How long do listings stay active?',
-        a: 'Listings remain active for 30 days. You can renew your listing anytime by tapping "Renew" on My Listings.'
+        q: 'How do I get my account verified?',
+        a: 'Go to Account → Verify Identity. Enter your ID number, take a selfie, and upload a photo of your National ID or passport. Our team reviews your submission within 24 hours and your blue verified badge appears automatically when approved.'
       },
       {
-        q: 'How do I get verified?',
-        a: 'Go to your Profile > Verify Identity. Upload a valid ID and we\'ll verify it within 24 hours. Verified sellers get a blue badge!'
+        q: 'How long do my listings stay active?',
+        a: 'Listings stay active for 30 days. You can renew any listing anytime by going to My Listings and tapping Renew. Renewing resets the 30-day timer and bumps your listing back to the top.'
       },
       {
-        q: 'Can I edit my listing?',
-        a: 'Yes! Go to My Listings, tap the listing, then tap Edit. You can change photos, price, description, and other details.'
-      },
-      {
-        q: 'Is my information safe?',
-        a: 'We use industry-standard encryption to protect your data. Your phone number and email are never shared without your permission.'
-      },
-      {
-        q: 'How do I report inappropriate content?',
-        a: 'Tap the listing, scroll to the bottom, and tap "Report". Select the reason and submit. We review all reports within 24h.'
-      },
-      {
-        q: 'How do I block a user?',
-        a: 'Tap their profile > Block User. They won\'t be able to see your listings or contact you. Manage blocked users in Settings.'
+        q: 'Can I edit or delete a listing after posting?',
+        a: 'Yes. Go to Account → My Listings, tap the listing you want to change, then tap Edit to update photos, price, or description. To remove a listing, tap Delete. Deleted listings are permanently removed and cannot be recovered.'
       },
       {
         q: 'How do payments work?',
-        a: 'PaMarket does not process or hold any payments. Buyers and sellers arrange payment directly between themselves — cash on delivery, EcoCash, OneMoney or bank transfer. Always inspect items in person before paying, and never send money for an item you have not seen.'
+        a: 'PaMarket does not process or hold any payments. All payments are arranged directly between the buyer and seller — cash on collection, EcoCash, OneMoney, or bank transfer. Always inspect the item in person before paying, and never send money upfront for something you have not seen.'
+      },
+      {
+        q: 'How do I stay safe from scams?',
+        a: 'Never pay in advance without seeing the item. Avoid sellers who refuse to meet in person or who ask you to pay via gift cards or Western Union. If a deal feels too good to be true, it probably is. Use the in-app Report button to flag suspicious listings immediately.'
+      },
+      {
+        q: 'How do I contact a seller?',
+        a: 'Tap any listing, then tap "Send Message" to chat in-app, or tap "Call" or "WhatsApp" to contact the seller directly. All messages are stored in your Messages tab so you never lose a conversation.'
+      },
+      {
+        q: 'How do I report a listing or block a user?',
+        a: 'To report a listing: open the listing and tap the flag icon or scroll to the bottom and tap "Report". To block a user: tap their name on a listing or in Messages, then tap "Block User". Blocked users cannot see your listings or message you.'
+      },
+      {
+        q: 'How do I post a job as a company?',
+        a: 'Your company must be verified before you can post jobs on PaMarket. Go to Post → Jobs and follow the Company Verification steps. You will need your Certificate of Incorporation, Tax Clearance Certificate from ZIMRA, owner ID, and a photo of your premises. Verification takes up to 2 business days.'
+      },
+      {
+        q: 'Why is my listing not showing up?',
+        a: 'Make sure your listing is set to "Active" in My Listings. Check that it was saved successfully — you should have received a confirmation. If your listing was removed by our moderation team, you will receive a notification with the reason. Contact support if you believe this was an error.'
       },
       {
         q: 'How do I delete my account?',
-        a: 'Go to Settings > Security > Delete Account. Your account and all listings will be permanently removed after 30 days.'
+        a: 'Go to Settings → Security → Delete Account. Type DELETE to confirm. Your account, listings, and messages are permanently removed within 30 days. This action cannot be undone — download any data you need before proceeding.'
       }
     ];
 
@@ -243,7 +251,7 @@
 
       <!-- Header -->
       <div style="background:#1A3A8F;padding:14px 16px 14px;display:flex;align-items:center;gap:12px">
-        <button onclick="H.closeInner()" style="background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+        <button onclick="H.goBack()" style="background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3B6FE8,#1A3A8F);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,0.25)">P</div>
@@ -771,7 +779,7 @@
       <div class="doc-content">
         <div class="doc-section">
           <h2>Terms of Service</h2>
-          <p style="color:var(--ash);font-size:12px">Last updated: May 2026 · Effective immediately</p>
+          <p style="color:var(--ash);font-size:12px">Last updated: June 2026 · Effective immediately</p>
 
           <h2>1. Agreement to Terms</h2>
           <p>By downloading, installing, or using the PaMarket application ("App"), you agree to be legally bound by these Terms of Service. If you do not agree to these terms, you must not use the App. These terms govern all users: buyers, sellers, job seekers, employers, and visitors.</p>
@@ -964,63 +972,94 @@ pages.HelpPrivacy = function () {
     </div>`;
   };
 pages.HelpVerification = function () {
-    const card = (inner) => `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(16,24,40,.04)">${inner}</div>`;
-    const step = (n, t) => `<div style="display:flex;gap:10px;align-items:flex-start;margin-top:10px"><div style="width:24px;height:24px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div><div style="font-size:13px;color:var(--text);line-height:1.5">${t}</div></div>`;
-    const doc = (n, t, d) => `<div style="display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border,#EEF1F6)"><div style="width:28px;height:28px;border-radius:8px;background:#EFF6FF;color:#1A3A8F;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div><div><div style="font-weight:700;color:var(--text);font-size:13.5px">${t}</div><div style="font-size:12px;color:var(--sub);margin-top:2px;line-height:1.45">${d}</div></div></div>`;
-
     return `<div class="page active">
       ${H.innerTopbar('How to Get Verified')}
-      <div style="padding:0 14px 60px">
+      <div class="form-wrap">
 
-        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:22px;padding:24px 20px;margin:14px 0 16px;text-align:center;color:#fff;box-shadow:0 10px 28px rgba(26,58,143,.28)">
-          <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#F5A623" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
-          <div style="font-size:19px;font-weight:800">Get Verified</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.82);margin-top:4px;line-height:1.5">Earn a blue badge that builds trust — done entirely in the app, reviewed by our team.</div>
+        <!-- Hero -->
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:18px;padding:22px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px">
+          <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#F5A623" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          </div>
+          <div>
+            <div style="font-size:17px;font-weight:800;color:#fff">Get Verified on PaMarket</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:3px;line-height:1.5">Earn a blue badge — builds trust with buyers and employers.</div>
+          </div>
         </div>
 
-        ${card(`
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-            <div style="width:38px;height:38px;border-radius:11px;background:rgba(26,58,143,.08);color:#1A3A8F;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-            <div style="font-size:16px;font-weight:800;color:var(--text)">Personal Verification</div>
+        <!-- Personal Verification -->
+        <div class="section-box">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="width:34px;height:34px;border-radius:10px;background:#EFF6FF;color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div>
+              <div style="font-size:15px;font-weight:800;color:var(--text)">Personal Verification</div>
+              <div style="font-size:11px;color:var(--sub)">Free · Reviewed within 24 hours</div>
+            </div>
           </div>
-          <div style="font-size:13px;color:var(--sub);line-height:1.6">Confirms you're a real person and gives sellers a blue ✓ badge — buyers trust verified sellers more.</div>
-          ${step(1, 'Open <b>Account → Verify Identity</b>')}
-          ${step(2, 'Enter your ID number, then <b>Take Selfie</b> and add a photo of your ID (or tap Upload)')}
-          ${step(3, 'Submit — our team reviews within <b>24 hours</b> and your badge appears automatically')}
-        `)}
-
-        ${card(`
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-            <div style="width:38px;height:38px;border-radius:11px;background:rgba(26,58,143,.08);color:#1A3A8F;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-            <div style="font-size:16px;font-weight:800;color:var(--text)">Business Verification</div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:12px">Confirms you are a real person. Verified sellers get a blue ✓ badge — buyers trust them more.</div>
+          <div class="info-row" style="align-items:flex-start;padding:10px 0">
+            <div style="width:22px;height:22px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.5">Open <b>Account → Verify Identity</b></div>
           </div>
-          <div style="font-size:13px;color:var(--sub);line-height:1.6">Required to post jobs. Verified companies show a blue ✓ on their listings. Open <b>Post a Job → Verify My Company</b> and submit these four documents:</div>
-          <div style="margin-top:10px">
-            ${doc(1, 'Certificate of Incorporation / Business Registration', 'Issued by CIPC — proves your business is legally registered.')}
-            ${doc(2, "Owner / Director's National ID or Passport", 'Must match the name on the registration documents.')}
-            ${doc(3, 'Tax Clearance Certificate', 'Current & valid, issued by ZIMRA.')}
-            ${doc(4, 'Photo of Business Premises', 'Exterior showing signage (a home workspace is acceptable).')}
+          <div class="info-row" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--border)">
+            <div style="width:22px;height:22px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.5">Enter your ID number, tap <b>Take Selfie</b>, and upload a photo of your National ID or passport</div>
           </div>
-          <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-top:10px">Reviewed within <b>2 business days</b>.</div>
-        `)}
+          <div class="info-row" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--border)">
+            <div style="width:22px;height:22px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.5">Submit — your badge appears automatically once approved</div>
+          </div>
+        </div>
 
-        ${card(`
-          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px">Tips for clear photos</div>
-          <ul style="margin:0;padding-left:18px;font-size:13px;color:var(--sub);line-height:1.7">
-            <li>Use good lighting — all text must be readable</li>
-            <li>Lay documents flat and shoot straight from above</li>
-            <li>Don't crop, edit or filter document photos</li>
-            <li>Keep the whole document in frame — no cut-off edges</li>
-          </ul>
-        `)}
+        <!-- Business Verification -->
+        <div class="section-box" style="margin-top:12px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="width:34px;height:34px;border-radius:10px;background:#EFF6FF;color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <div>
+              <div style="font-size:15px;font-weight:800;color:var(--text)">Business Verification</div>
+              <div style="font-size:11px;color:var(--sub)">Required to post jobs · 2 business days</div>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:12px">Go to <b>Post a Job → Verify My Company</b> and submit these four documents via WhatsApp:</div>
+          <div class="info-row" style="align-items:flex-start;padding:10px 0">
+            <div style="width:22px;height:22px;border-radius:6px;background:#EFF6FF;color:#1A3A8F;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text)">Certificate of Incorporation</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Business registration from CIPCC</div></div>
+          </div>
+          <div class="info-row" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--border)">
+            <div style="width:22px;height:22px;border-radius:6px;background:#EFF6FF;color:#1A3A8F;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text)">Owner / Director National ID or Passport</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Must match the registration documents</div></div>
+          </div>
+          <div class="info-row" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--border)">
+            <div style="width:22px;height:22px;border-radius:6px;background:#EFF6FF;color:#1A3A8F;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text)">Tax Clearance Certificate</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Current and valid, issued by ZIMRA</div></div>
+          </div>
+          <div class="info-row" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--border)">
+            <div style="width:22px;height:22px;border-radius:6px;background:#EFF6FF;color:#1A3A8F;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">4</div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text)">Photo of Business Premises</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Exterior showing signage (home office is acceptable)</div></div>
+          </div>
+        </div>
 
-        <div style="display:flex;gap:10px;align-items:flex-start;background:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:14px">
+        <!-- Photo tips -->
+        <div class="section-box" style="margin-top:12px">
+          <div class="section-title">Tips for Clear Document Photos</div>
+          <div class="info-row" style="padding:8px 0"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#1A3A8F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;color:var(--sub)">Use good lighting — all text must be readable</span></div>
+          <div class="info-row" style="padding:8px 0;border-top:1px solid var(--border)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#1A3A8F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;color:var(--sub)">Lay documents flat, shoot straight from above</span></div>
+          <div class="info-row" style="padding:8px 0;border-top:1px solid var(--border)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#1A3A8F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;color:var(--sub)">No crops, edits, or filters on document photos</span></div>
+          <div class="info-row" style="padding:8px 0;border-top:1px solid var(--border)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#1A3A8F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;color:var(--sub)">Keep the whole document in frame — no cut-off edges</span></div>
+        </div>
+
+        <!-- Warning -->
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:14px;margin-top:12px">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#dc2626" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <div style="font-size:12.5px;color:#991b1b;line-height:1.55"><b>Use genuine documents only.</b> Submitting fake or edited documents is a serious offence — it leads to a permanent ban and may be reported to the authorities. Verification is tied to your account and can't be transferred.</div>
+          <div style="font-size:12.5px;color:#991b1b;line-height:1.55"><b>Use genuine documents only.</b> Submitting fake or edited documents leads to a permanent ban and may be reported to Zimbabwean authorities.</div>
         </div>
 
-        <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--sub);line-height:1.6">Need help? WhatsApp <b>+971 589 772 645</b> or email chakusaprince@gmail.com</div>
-
+        <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--sub);line-height:1.6">Need help? WhatsApp <b>+971 589 772 645</b> or email chakusaprince@gmail.com</div>
+        <div style="height:16px"></div>
       </div>
     </div>`;
   };

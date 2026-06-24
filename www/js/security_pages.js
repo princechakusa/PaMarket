@@ -248,21 +248,49 @@
 
   pages.ActiveSessions = function () {
     const u = H.currentUser();
-    const sessions = u.sessions || [{ id: 'current', device: 'This device', location: '', time: Date.now(), current: true }];
+    // Detect current device name from User-Agent if not already stored
+    function _deviceName() {
+      const ua = navigator.userAgent || '';
+      if (/iPhone/.test(ua))   return 'iPhone';
+      if (/iPad/.test(ua))     return 'iPad';
+      if (/Android/.test(ua)) {
+        const m = ua.match(/Android [^;]+;\s*([^)]+)\)/);
+        return (m && m[1] && m[1].trim()) || 'Android Device';
+      }
+      if (/Windows/.test(ua))  return 'Windows PC';
+      if (/Macintosh/.test(ua)) return 'Mac';
+      if (/Linux/.test(ua))    return 'Linux Device';
+      return 'This device';
+    }
+    const deviceLabel = _deviceName();
+    const sessions = (u.sessions && u.sessions.length)
+      ? u.sessions
+      : [{ id: 'current', device: deviceLabel, location: '', time: Date.now(), current: true }];
+    // Ensure current session always has an up-to-date device name
+    const curSess = sessions.find(s => s.current);
+    if (curSess && curSess.device === 'This device') curSess.device = deviceLabel;
+
+    const DEVICE_ICON = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2.5"/></svg>`;
+    const DESKTOP_ICON = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>`;
+
     return `<div class="page active">
       ${H.innerTopbar('Active Sessions')}
       <div class="form-wrap">
         <div class="section-box">
           <div class="section-title">Logged-in Devices</div>
-          ${sessions.map(s => `
-            <div class="info-row">
-              <div>
-                <div style="font-size:13px;font-weight:600;color:var(--charcoal)">${H.escHtml(s.device)}</div>
-                <div style="font-size:11px;color:var(--ash);margin-top:2px">${s.current ? `<span id="curSessLoc">${s.location ? H.escHtml(s.location) : 'Locating…'}</span>` : H.escHtml(s.location || 'Unknown')} · ${new Date(s.time).toLocaleDateString()}</div>
+          ${sessions.map(s => {
+            const isMobile = /iPhone|iPad|Android/.test(s.device);
+            return `<div class="info-row">
+              <div style="width:38px;height:38px;border-radius:11px;background:#EFF6FF;color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0">${isMobile ? DEVICE_ICON : DESKTOP_ICON}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:700;color:var(--text)">${H.escHtml(s.device)}</div>
+                <div style="font-size:11px;color:var(--sub);margin-top:2px">${s.current ? `<span id="curSessLoc">${s.location ? H.escHtml(s.location) : 'Locating…'}</span>` : H.escHtml(s.location || 'Location unknown')} · ${new Date(s.time).toLocaleDateString()}</div>
               </div>
-              ${s.current ? '<span style="font-size:11px;font-weight:700;color:#16a34a;background:#dcfce7;padding:3px 10px;border-radius:20px">Current</span>'
+              ${s.current
+                ? '<span style="font-size:11px;font-weight:700;color:#16a34a;background:#dcfce7;padding:3px 10px;border-radius:20px;white-space:nowrap">Current</span>'
                 : `<button class="btn-unblock" onclick="H._sessions.revoke('${s.id}')">Revoke</button>`}
-            </div>`).join('')}
+            </div>`;
+          }).join('')}
         </div>
         <button class="btn-sec" style="background:var(--red2);color:var(--red)" onclick="H._sessions.revokeAll()">Sign Out All Other Devices</button>
         <button class="btn-sec" onclick="H.goBack()">Back</button>
@@ -286,7 +314,7 @@
           const u = H.currentUser();
           if (u) {
             u.sessions = (u.sessions && u.sessions.length) ? u.sessions
-              : [{ id: 'current', device: 'This device', location: '', time: Date.now(), current: true }];
+              : [{ id: 'current', device: navigator.userAgent || 'This device', location: '', time: Date.now(), current: true }];
             const cur = u.sessions.find(s => s.current);
             if (cur) { cur.location = loc; H.saveState(); }
           }

@@ -565,12 +565,12 @@
                   onclick="H.navTo('Browse');setTimeout(()=>{var el=document.getElementById('searchInput');if(el){el.value=${JSON.stringify(q)};el.dispatchEvent(new Event('input'));}},220)">
                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                <span style="flex:1;font-size:14px;color:var(--text)">${H.escHtml(q)}</span>
-               <button onclick="event.stopPropagation();var u=H.currentUser();u.recentSearches=(u.recentSearches||[]).filter(s=>s!==${JSON.stringify(q)});H.saveState();H.openInner('MyActivity')"
+               <button onclick="event.stopPropagation();var u=H.currentUser();u.recentSearches=(u.recentSearches||[]).filter(s=>s!==${JSON.stringify(q)});H.saveState();H.renderPage('MyActivity')"
                        style="background:none;border:none;color:var(--sub);font-size:20px;padding:0 2px;line-height:1;cursor:pointer">&times;</button>
              </div>`).join('')}
          </div>
          <div style="padding:4px 16px 8px;text-align:right">
-           <button onclick="var u=H.currentUser();u.recentSearches=[];H.saveState();H.openInner('MyActivity')"
+           <button onclick="var u=H.currentUser();u.recentSearches=[];H.saveState();H.renderPage('MyActivity')"
                    style="background:none;border:none;font-size:12px;color:#EF4444;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;padding:4px 0">
              Clear all
            </button>

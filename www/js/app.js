@@ -1407,6 +1407,8 @@ window.H = {
         impressions:r.impressions||0, clicks:r.clicks||0,
         listingId:r.listing_id||null
       })).sort(function(a,b){ return (b.priority||0)-(a.priority||0); });
+      // Show announcement-type ads as dismissible popups after a short delay
+      setTimeout(function(){ if(typeof H._showAnnouncementPopups==='function') H._showAnnouncementPopups(); }, 1500);
     } catch(e){ console.warn('fetchAdsFromSupabase:',e.message); }
   },
 
@@ -1494,6 +1496,103 @@ window.H = {
     if(m) m.remove();
   },
 
+  // Half-screen bottom-sheet ad (type='halfscreen') — full image, compact text + CTA.
+  _showHalfScreenAd(a) {
+    if(!a) return;
+    const e = H.escHtml;
+    const native = !!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+    const safeId = String(a.id||'').replace(/['"\\<>&]/g,'');
+    const imgHtml = a.imageUrl
+      ? `<img src="${e(a.imageUrl)}" style="width:100%;height:100%;object-fit:cover;display:block">`
+      : `<div style="width:100%;height:100%;background:${e(a.bgColor||'#1A3A8F')}"></div>`;
+    let actionHtml = '';
+    if(a.listingId) {
+      actionHtml = `<button onclick="H._closeHalfAd();H.openInner('Detail',{id:'${e(String(a.listingId))}'})" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">View Listing</button>`;
+    } else if(a.linkUrl) {
+      const safeUrl = e(a.linkUrl);
+      actionHtml = `<button onclick="H._closeHalfAd();try{window.open('${safeUrl}',${native?`'_system'`:`'_blank'`})}catch(err){window.open('${safeUrl}','_blank')}" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Learn More</button>`;
+    } else if(a.targetCat) {
+      const cat = e(a.targetCat);
+      actionHtml = `<button onclick="H._closeHalfAd();H.filterByCat('${cat}')" style="flex:1;padding:13px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Browse</button>`;
+    }
+    const modal = document.createElement('div');
+    modal.id = '_halfAdModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9998;display:flex;align-items:flex-end;justify-content:center';
+    modal.onclick = function(ev){ if(ev.target===modal) H._closeHalfAd(); };
+    modal.innerHTML = `<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;height:52vh;display:flex;flex-direction:column;overflow:hidden">
+      <div style="position:relative;flex:1;min-height:0">
+        ${imgHtml}
+        <button onclick="H._closeHalfAd()" style="position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,0.45);border:none;color:#fff;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif">×</button>
+        <span style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.45);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;letter-spacing:.5px">AD</span>
+      </div>
+      <div style="padding:14px 16px ${actionHtml?'8px':'14px'}">
+        <div style="font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">${e(a.businessName||'Sponsored')}</div>
+        <div style="font-size:16px;font-weight:800;color:#1C2340;line-height:1.25">${e(a.headline||'')}</div>
+        ${a.tagline?`<div style="font-size:12px;color:#5A6480;margin-top:3px">${e(a.tagline)}</div>`:''}
+      </div>
+      ${actionHtml?`<div style="padding:0 16px 20px;display:flex;gap:10px"><button onclick="H._closeHalfAd()" style="padding:13px 16px;background:#F3F4F6;color:#374151;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Not Now</button>${actionHtml}</div>`:''}
+    </div>`;
+    if(H.trackAdImpression) { try { H.trackAdImpression(a.id); } catch(err){} }
+    document.body.appendChild(modal);
+    requestAnimationFrame(()=>{ modal.style.transition='opacity .2s'; modal.style.opacity='1'; });
+  },
+
+  _closeHalfAd() {
+    const m = document.getElementById('_halfAdModal');
+    if(m) m.remove();
+  },
+
+  // Announcement popup (type='announcement') — centered card with X to dismiss.
+  // Dismissed ad IDs are stored in localStorage so they never reappear.
+  _showAnnouncementPopups() {
+    const STORE_KEY = 'pamarket_dismissed_announcements';
+    let dismissed = [];
+    try { dismissed = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch(e) {}
+    const now = Date.now();
+    const pending = (H.state.paidAds || []).filter(function(a) {
+      if(!a || !a.active || a.type !== 'announcement') return false;
+      if(a.startsAt && a.startsAt > now) return false;
+      if(a.endsAt && a.endsAt < now) return false;
+      return !dismissed.includes(String(a.id));
+    });
+    if(!pending.length) return;
+    const a = pending[0]; // show one announcement at a time
+    const e = H.escHtml;
+    const safeId = String(a.id||'').replace(/['"\\<>&]/g,'');
+    function _dismiss() {
+      const m = document.getElementById('_announcementPopup');
+      if(m) { m.style.opacity='0'; setTimeout(()=>{ if(m.parentNode) m.remove(); },200); }
+      try {
+        const ids = JSON.parse(localStorage.getItem(STORE_KEY)||'[]');
+        if(!ids.includes(safeId)) { ids.push(safeId); localStorage.setItem(STORE_KEY, JSON.stringify(ids)); }
+      } catch(err) {}
+    }
+    H._dismissAnnouncement = _dismiss;
+    const imgHtml = a.imageUrl
+      ? `<img src="${e(a.imageUrl)}" style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:14px 14px 0 0">`
+      : '';
+    const modal = document.createElement('div');
+    modal.id = '_announcementPopup';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .2s';
+    modal.innerHTML = `<div style="background:#fff;border-radius:18px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+      <div style="position:relative">${imgHtml}
+        <button onclick="H._dismissAnnouncement()" style="position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.45);border:none;color:#fff;font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif">×</button>
+      </div>
+      <div style="padding:18px 18px ${a.linkUrl||a.targetCat||a.listingId?'10px':'18px'}">
+        ${a.businessName?`<div style="font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${e(a.businessName)}</div>`:''}
+        <div style="font-size:17px;font-weight:800;color:#1C2340;line-height:1.3">${e(a.headline||a.businessName||'Announcement')}</div>
+        ${a.tagline?`<div style="font-size:13px;color:#5A6480;margin-top:6px;line-height:1.5">${e(a.tagline)}</div>`:''}
+      </div>
+      ${(a.linkUrl||a.targetCat||a.listingId)?`<div style="padding:0 18px 18px;display:flex;gap:8px">
+        <button onclick="H._dismissAnnouncement()" style="flex:1;padding:12px;background:#F3F4F6;color:#374151;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Dismiss</button>
+        <button onclick="H._dismissAnnouncement();H.trackAdClick('${safeId}')" style="flex:1;padding:12px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">View</button>
+      </div>`:'<div style="height:4px"></div>'}
+    </div>`;
+    if(H.trackAdImpression) { try { H.trackAdImpression(a.id); } catch(err){} }
+    document.body.appendChild(modal);
+    requestAnimationFrame(()=>{ modal.style.opacity='1'; });
+  },
+
   // Map a raw cloud `listings` row to the app's local listing shape.
   _mapCloudListing(r) {
     const o={
@@ -1533,7 +1632,7 @@ window.H = {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
       const {data,error}=await window.supabase
-        .from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes')
+        .from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at')
         .eq('status','active')
         .order('created_at',{ascending:false})
         .limit(50);
