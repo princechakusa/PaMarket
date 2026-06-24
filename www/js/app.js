@@ -1550,47 +1550,68 @@ window.H = {
     try { dismissed = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch(e) {}
     const now = Date.now();
     const pending = (H.state.paidAds || []).filter(function(a) {
-      if(!a || !a.active || a.type !== 'announcement') return false;
-      if(a.startsAt && a.startsAt > now) return false;
-      if(a.endsAt && a.endsAt < now) return false;
+      if (!a || a.type !== 'announcement') return false;
+      if (a.startsAt && a.startsAt > now) return false;
+      if (a.endsAt && a.endsAt < now) return false;
       return !dismissed.includes(String(a.id));
     });
-    if(!pending.length) return;
-    const a = pending[0]; // show one announcement at a time
+    if (!pending.length) return;
+    // Don't stack — one at a time
+    if (document.getElementById('_announcementPopup')) return;
+    const a = pending[0];
     const e = H.escHtml;
-    const safeId = String(a.id||'').replace(/['"\\<>&]/g,'');
+    const safeId = String(a.id || '').replace(/['"\\<>&]/g, '');
     function _dismiss() {
       const m = document.getElementById('_announcementPopup');
-      if(m) { m.style.opacity='0'; setTimeout(()=>{ if(m.parentNode) m.remove(); },200); }
+      if (m) { m.style.opacity = '0'; setTimeout(function() { if (m.parentNode) m.remove(); }, 220); }
       try {
-        const ids = JSON.parse(localStorage.getItem(STORE_KEY)||'[]');
-        if(!ids.includes(safeId)) { ids.push(safeId); localStorage.setItem(STORE_KEY, JSON.stringify(ids)); }
+        const ids = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+        if (!ids.includes(safeId)) { ids.push(safeId); localStorage.setItem(STORE_KEY, JSON.stringify(ids)); }
       } catch(err) {}
     }
     H._dismissAnnouncement = _dismiss;
-    const imgHtml = a.imageUrl
-      ? `<img src="${e(a.imageUrl)}" style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:14px 14px 0 0">`
-      : '';
+
+    // Build card HTML — X button always in the header row (not inside the image)
+    // so it is visible whether or not an image exists.
+    const hasImg = !!a.imageUrl;
+    const hasCta = !!(a.linkUrl || a.targetCat || a.listingId);
+    let inner = '';
+
+    if (hasImg) {
+      inner += '<div style="position:relative">'
+        + '<img src="' + e(a.imageUrl) + '" style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:18px 18px 0 0">'
+        + '<button onclick="H._dismissAnnouncement()" style="position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#fff;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;touch-action:manipulation">&times;</button>'
+        + '</div>';
+    } else {
+      // No image — header bar with brand colour and X button
+      inner += '<div style="background:#1A3A8F;padding:16px 16px 16px 18px;border-radius:18px 18px 0 0;display:flex;align-items:center;justify-content:space-between">'
+        + '<span style="font-size:11px;font-weight:800;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.6px">PaMarket Announcement</span>'
+        + '<button onclick="H._dismissAnnouncement()" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;touch-action:manipulation;flex-shrink:0">&times;</button>'
+        + '</div>';
+    }
+
+    inner += '<div style="padding:18px 18px ' + (hasCta ? '10px' : '22px') + '">'
+      + (a.businessName ? '<div style="font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">' + e(a.businessName) + '</div>' : '')
+      + '<div style="font-size:17px;font-weight:800;color:#1C2340;line-height:1.35">' + e(a.headline || a.businessName || 'Announcement') + '</div>'
+      + (a.tagline ? '<div style="font-size:13.5px;color:#5A6480;margin-top:7px;line-height:1.55">' + e(a.tagline) + '</div>' : '')
+      + '</div>';
+
+    if (hasCta) {
+      inner += '<div style="padding:0 18px 18px;display:flex;gap:8px">'
+        + '<button onclick="H._dismissAnnouncement()" style="flex:1;padding:12px;background:#F3F4F6;color:#374151;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;touch-action:manipulation">Dismiss</button>'
+        + '<button onclick="H._dismissAnnouncement();H.trackAdClick(\'' + safeId + '\')" style="flex:1;padding:12px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;touch-action:manipulation">View</button>'
+        + '</div>';
+    }
+
     const modal = document.createElement('div');
     modal.id = '_announcementPopup';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .2s';
-    modal.innerHTML = `<div style="background:#fff;border-radius:18px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)">
-      <div style="position:relative">${imgHtml}
-        <button onclick="H._dismissAnnouncement()" style="position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.45);border:none;color:#fff;font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif">×</button>
-      </div>
-      <div style="padding:18px 18px ${a.linkUrl||a.targetCat||a.listingId?'10px':'18px'}">
-        ${a.businessName?`<div style="font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${e(a.businessName)}</div>`:''}
-        <div style="font-size:17px;font-weight:800;color:#1C2340;line-height:1.3">${e(a.headline||a.businessName||'Announcement')}</div>
-        ${a.tagline?`<div style="font-size:13px;color:#5A6480;margin-top:6px;line-height:1.5">${e(a.tagline)}</div>`:''}
-      </div>
-      ${(a.linkUrl||a.targetCat||a.listingId)?`<div style="padding:0 18px 18px;display:flex;gap:8px">
-        <button onclick="H._dismissAnnouncement()" style="flex:1;padding:12px;background:#F3F4F6;color:#374151;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Dismiss</button>
-        <button onclick="H._dismissAnnouncement();H.trackAdClick('${safeId}')" style="flex:1;padding:12px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">View</button>
-      </div>`:'<div style="height:4px"></div>'}
-    </div>`;
-    if(H.trackAdImpression) { try { H.trackAdImpression(a.id); } catch(err){} }
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9997;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .22s';
+    modal.innerHTML = '<div style="background:#fff;border-radius:18px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.35)">' + inner + '</div>';
+    // Tap backdrop to dismiss
+    modal.addEventListener('click', function(ev) { if (ev.target === modal) _dismiss(); });
+    if (H.trackAdImpression) { try { H.trackAdImpression(a.id); } catch(err) {} }
     document.body.appendChild(modal);
-    requestAnimationFrame(()=>{ modal.style.opacity='1'; });
+    requestAnimationFrame(function() { modal.style.opacity = '1'; });
   },
 
   // Map a raw cloud `listings` row to the app's local listing shape.
