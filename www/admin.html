@@ -1901,13 +1901,35 @@ async function decideContact(id, status) {
 
 // ── ADS ───────────────────────────────────────────────────
 function renderAds() {
-  var html = '<div class="sec-head"><div class="sec-title">Paid Ads</div><button class="btn-send" onclick="openCreateAd()" style="padding:8px 16px;font-size:13px">+ Create Ad</button></div>';
+  var html = '<div class="sec-head"><div class="sec-title">Paid Ads &amp; Announcements</div><button class="btn-send" onclick="openCreateAd()" style="padding:8px 16px;font-size:13px">+ Create Ad</button></div>';
 
   html+='<div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:var(--sub);line-height:1.7">';
-  html+='<strong style="color:var(--text)">How paid ads work:</strong> Each ad is linked to a business/user account. The ad banner (image + headline) appears in the chosen app section. When a user taps it, it opens that business\'s listings inside the app.';
+  html+='<strong style="color:var(--text)">Ad types:</strong> <b>Banner</b> — carousel on Home/category. <b>Spotlight</b> — category-specific. <b>Announcement</b> — dismissible popup notification shown to all users. <b>Half-Screen</b> — bottom sheet with full image.';
   html+='</div>';
 
   if(!DATA.ads.length) { html+='<div class="empty-msg">No paid ads yet.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
+
+  // ── Announcements sub-section ──────────────────────────
+  var announcements = DATA.ads.filter(function(a){ return a.type === 'announcement'; });
+  if(announcements.length) {
+    html+='<div style="margin-bottom:20px">';
+    html+='<div class="sec-head" style="margin-bottom:10px"><div class="sec-title" style="font-size:14px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Announcement Ads</div></div>';
+    announcements.forEach(function(a){
+      html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px">';
+      if(a.image_url||a.image) html+='<img src="'+esc(a.image_url||a.image)+'" style="width:52px;height:40px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display=\'none\'">';
+      html+='<div style="flex:1;min-width:0">';
+      html+='<div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(a.headline||a.business_name||'Announcement')+'</div>';
+      if(a.tagline) html+='<div style="font-size:11px;color:var(--sub);margin-top:2px">'+esc(a.tagline)+'</div>';
+      html+='<div style="display:flex;gap:6px;margin-top:5px"><span class="badge badge-'+(a.active?'active':'rejected')+'">'+(a.active?'Active':'Paused')+'</span><span class="badge badge-pending">announcement</span></div>';
+      html+='</div>';
+      html+='<div style="display:flex;flex-direction:column;gap:6px">';
+      html+='<button class="ab '+(a.active?'ab-reject':'ab-approve')+'" onclick="toggleAd(\''+esc(a.id)+'\','+(a.active?'false':'true')+')">'+(a.active?'Pause':'Resume')+'</button>';
+      html+='<button class="ab ab-delete" onclick="deleteAd(\''+esc(a.id)+'\')">Delete</button>';
+      html+='</div></div>';
+    });
+    html+='</div>';
+    html+='<div style="border-top:1px solid var(--border);margin-bottom:18px"></div>';
+  }
 
   var totalImp = DATA.ads.reduce(function(s,a){return s+(a.impressions||0);},0);
   var totalClk = DATA.ads.reduce(function(s,a){return s+(a.clicks||0);},0);
@@ -1988,13 +2010,22 @@ function openCreateAd() {
     // Business name (auto-fills but editable)
     +'<div class="form-row"><label class="form-label">Business Name <span style="color:var(--red)">*</span></label><input class="form-input" id="adBiz" placeholder="e.g. ABC Holdings Zimbabwe" oninput="_adBizManual=true"></div>'
 
-    // Placement — controls exactly where the ad appears in the app
-    +'<div class="form-row"><label class="form-label">Where should this ad show? <span style="color:var(--red)">*</span></label>'
-    +'<select class="form-input" id="adPlacement" onchange="_onAdPlacementChange()">'
-    +'<option value="home">Home — Featured Partners carousel (under the categories)</option>'
-    +'<option value="category">Home + a category page</option>'
+    // Ad Format / Type
+    +'<div class="form-row"><label class="form-label">Ad Format <span style="color:var(--red)">*</span></label>'
+    +'<select class="form-input" id="adType" onchange="_onAdTypeChange()">'
+    +'<option value="banner">Banner — carousel on Home / category page</option>'
+    +'<option value="spotlight">Spotlight — category-specific carousel</option>'
+    +'<option value="announcement">Announcement — dismissible popup shown to all users</option>'
+    +'<option value="halfscreen">Half-Screen — bottom sheet with full image</option>'
     +'</select>'
-    +'<div style="font-size:11px;color:var(--sub);margin-top:4px">All ads appear in the swipeable "Featured Partners" carousel on Home. Choosing a category also shows it in that category page\'s carousel.</div></div>'
+    +'<div style="font-size:11px;color:var(--sub);margin-top:4px" id="adTypeDesc">Appears in the Featured Partners carousel on Home.</div></div>'
+
+    // Placement — controls exactly where the ad appears in the app
+    +'<div class="form-row" id="adPlacementRow"><label class="form-label">Where should this ad show?</label>'
+    +'<select class="form-input" id="adPlacement" onchange="_onAdPlacementChange()">'
+    +'<option value="home">Home — Featured Partners carousel</option>'
+    +'<option value="category">Home + a category page</option>'
+    +'</select></div>'
     +'<div class="form-row" id="adCatRow" style="display:none"><label class="form-label">Which category?</label>'
     +'<select class="form-input" id="adCat">'
     +'<option value="electronics">Electronics</option>'
@@ -2062,6 +2093,22 @@ function openCreateAd() {
   });
 }
 
+function _onAdTypeChange(){
+  var t = (document.getElementById('adType')||{}).value||'banner';
+  var placRow = document.getElementById('adPlacementRow');
+  var catRow  = document.getElementById('adCatRow');
+  var desc    = document.getElementById('adTypeDesc');
+  var descMap = {
+    banner:       'Appears in the Featured Partners carousel on Home.',
+    spotlight:    'Appears in the category page carousel + Home carousel.',
+    announcement: 'Shows as a dismissible popup notification for all users. Users can tap X to dismiss permanently.',
+    halfscreen:   'Shows as a half-screen bottom sheet with a full image when triggered.'
+  };
+  if(desc) desc.textContent = descMap[t]||'';
+  var showPlacement = (t==='banner'||t==='spotlight');
+  if(placRow) placRow.style.display = showPlacement ? '' : 'none';
+  if(catRow && !showPlacement) catRow.style.display = 'none';
+}
 function _onAdPlacementChange(){
   var p = (document.getElementById('adPlacement')||{}).value;
   var row = document.getElementById('adCatRow');
@@ -2113,7 +2160,7 @@ async function saveNewAd() {
       tagline: (document.getElementById('adTag')||{}).value.trim(),
       image_url: (document.getElementById('adImg')||{}).value||null,
       bg_color: bgColor,
-      type: (placement==='category') ? 'spotlight' : 'banner',
+      type: (document.getElementById('adType')||{}).value||'banner',
       target_cat: targetCat,
       listing_id: listingId,
       link_url: linkUrl,

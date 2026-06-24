@@ -972,94 +972,59 @@ pages.HelpPrivacy = function () {
     </div>`;
   };
 pages.HelpVerification = function () {
+    const card = (inner) => `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(16,24,40,.04)">${inner}</div>`;
+    const step = (n, t) => `<div style="display:flex;gap:10px;align-items:flex-start;margin-top:12px"><div style="width:26px;height:26px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div><div style="font-size:13.5px;color:var(--text);line-height:1.55;padding-top:3px">${t}</div></div>`;
+    const doc = (n, t, d) => `<div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border,#EEF1F6)"><div style="width:26px;height:26px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div><div><div style="font-weight:700;color:var(--text);font-size:13.5px">${t}</div>${d?`<div style="font-size:12px;color:var(--sub);margin-top:2px;line-height:1.45">${d}</div>`:''}</div></div>`;
+
     return `<div class="page active">
       ${H.innerTopbar('How to Get Verified')}
-      <div class="form-wrap">
+      <div style="padding:0 14px 60px">
 
-        <!-- Hero -->
-        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:18px;padding:22px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px">
-          <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#F5A623" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        <div style="background:linear-gradient(135deg,#1A3A8F 0%,#0f2460 100%);border-radius:20px;padding:22px 18px;margin:14px 0 16px;display:flex;align-items:center;gap:16px;box-shadow:0 8px 24px rgba(26,58,143,.25)">
+          <div style="width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#F5A623" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
           </div>
           <div>
-            <div style="font-size:17px;font-weight:800;color:#fff">Get Verified on PaMarket</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:3px;line-height:1.5">Earn a blue badge — builds trust with buyers and employers.</div>
+            <div style="font-size:17px;font-weight:800;color:#fff;line-height:1.2">Get Verified</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:4px;line-height:1.5">Earn a blue badge — builds instant trust with buyers and employers.</div>
           </div>
         </div>
 
-        <!-- Personal Verification -->
-        <div class="section-box">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-            <div style="width:34px;height:34px;border-radius:10px;background:#EFF6FF;color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </div>
+        ${card(`
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:36px;height:36px;border-radius:10px;background:#EFF6FF;color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
             <div>
               <div style="font-size:15px;font-weight:800;color:var(--text)">Personal Verification</div>
               <div style="font-size:11px;color:var(--sub)">Free · Reviewed within 24 hours</div>
             </div>
           </div>
-          <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:12px">Confirms you are a real person. Verified sellers get a blue ✓ badge — buyers trust them more.</div>
-          <div class="info-row" style="align-items:flex-start;padding:10px 0">
-            <div style="width:22px;height:22px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</div>
-            <div style="font-size:13px;color:var(--text);line-height:1.5">Open <b>Account → Verify Identity</b></div>
-          </div>
-          <div class="info-row" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--border)">
-            <div style="width:22px;height:22px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</div>
-            <div style="font-size:13px;color:var(--text);line-height:1.5">Enter your ID number, tap <b>Take Selfie</b>, and upload a photo of your National ID or passport</div>
-          </div>
-          <div class="info-row" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--border)">
-            <div style="width:22px;height:22px;border-radius:50%;background:#1A3A8F;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</div>
-            <div style="font-size:13px;color:var(--text);line-height:1.5">Submit — your badge appears automatically once approved</div>
-          </div>
-        </div>
+          <div style="font-size:12.5px;color:var(--sub);line-height:1.55">Confirms you're a real person. Gives your profile a blue verified badge that buyers trust.</div>
+          ${step(1, 'Open <b>Account → Verify Identity</b>')}
+          ${step(2, 'Enter your ID number, take a <b>selfie</b>, and upload your National ID or passport')}
+          ${step(3, 'Submit — badge appears <b>automatically</b> once our team approves it')}
+        `)}
 
-        <!-- Business Verification -->
-        <div class="section-box" style="margin-top:12px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-            <div style="width:34px;height:34px;border-radius:10px;background:#EFF6FF;color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            </div>
+        ${card(`
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:36px;height:36px;border-radius:10px;background:#EFF6FF;color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
             <div>
               <div style="font-size:15px;font-weight:800;color:var(--text)">Business Verification</div>
               <div style="font-size:11px;color:var(--sub)">Required to post jobs · 2 business days</div>
             </div>
           </div>
-          <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:12px">Go to <b>Post a Job → Verify My Company</b> and submit these four documents via WhatsApp:</div>
-          <div class="info-row" style="align-items:flex-start;padding:10px 0">
-            <div style="width:22px;height:22px;border-radius:6px;background:#EFF6FF;color:#1A3A8F;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</div>
-            <div><div style="font-size:13px;font-weight:700;color:var(--text)">Certificate of Incorporation</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Business registration from CIPCC</div></div>
-          </div>
-          <div class="info-row" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--border)">
-            <div style="width:22px;height:22px;border-radius:6px;background:#EFF6FF;color:#1A3A8F;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</div>
-            <div><div style="font-size:13px;font-weight:700;color:var(--text)">Owner / Director National ID or Passport</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Must match the registration documents</div></div>
-          </div>
-          <div class="info-row" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--border)">
-            <div style="width:22px;height:22px;border-radius:6px;background:#EFF6FF;color:#1A3A8F;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</div>
-            <div><div style="font-size:13px;font-weight:700;color:var(--text)">Tax Clearance Certificate</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Current and valid, issued by ZIMRA</div></div>
-          </div>
-          <div class="info-row" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--border)">
-            <div style="width:22px;height:22px;border-radius:6px;background:#EFF6FF;color:#1A3A8F;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">4</div>
-            <div><div style="font-size:13px;font-weight:700;color:var(--text)">Photo of Business Premises</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Exterior showing signage (home office is acceptable)</div></div>
-          </div>
-        </div>
+          <div style="font-size:12.5px;color:var(--sub);line-height:1.55;margin-bottom:8px">Go to <b>Post a Job → Verify My Company</b> and send these 4 documents via WhatsApp:</div>
+          ${doc(1, 'Certificate of Incorporation', 'Business registration from CIPCC')}
+          ${doc(2, "Owner / Director's National ID or Passport", 'Must match the registration documents')}
+          ${doc(3, 'Tax Clearance Certificate', 'Current & valid, issued by ZIMRA')}
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0"><div style="width:26px;height:26px;border-radius:7px;background:#EFF6FF;color:#1A3A8F;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div><div><div style="font-weight:700;color:var(--text);font-size:13.5px">Photo of Business Premises</div><div style="font-size:12px;color:var(--sub);margin-top:2px">Exterior with signage — home office is acceptable</div></div></div>
+        `)}
 
-        <!-- Photo tips -->
-        <div class="section-box" style="margin-top:12px">
-          <div class="section-title">Tips for Clear Document Photos</div>
-          <div class="info-row" style="padding:8px 0"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#1A3A8F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;color:var(--sub)">Use good lighting — all text must be readable</span></div>
-          <div class="info-row" style="padding:8px 0;border-top:1px solid var(--border)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#1A3A8F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;color:var(--sub)">Lay documents flat, shoot straight from above</span></div>
-          <div class="info-row" style="padding:8px 0;border-top:1px solid var(--border)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#1A3A8F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;color:var(--sub)">No crops, edits, or filters on document photos</span></div>
-          <div class="info-row" style="padding:8px 0;border-top:1px solid var(--border)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#1A3A8F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:13px;color:var(--sub)">Keep the whole document in frame — no cut-off edges</span></div>
-        </div>
-
-        <!-- Warning -->
-        <div style="display:flex;gap:10px;align-items:flex-start;background:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:14px;margin-top:12px">
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:14px">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#dc2626" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <div style="font-size:12.5px;color:#991b1b;line-height:1.55"><b>Use genuine documents only.</b> Submitting fake or edited documents leads to a permanent ban and may be reported to Zimbabwean authorities.</div>
+          <div style="font-size:12.5px;color:#991b1b;line-height:1.55"><b>Use genuine documents only.</b> Fake or edited documents lead to a permanent ban and may be reported to Zimbabwean authorities.</div>
         </div>
 
-        <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--sub);line-height:1.6">Need help? WhatsApp <b>+971 589 772 645</b> or email chakusaprince@gmail.com</div>
-        <div style="height:16px"></div>
+        <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--sub)">Questions? WhatsApp <b>+971 589 772 645</b></div>
       </div>
     </div>`;
   };

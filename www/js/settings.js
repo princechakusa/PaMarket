@@ -37,7 +37,7 @@
         <button class="settings-item" onclick="H.openInner('ThemeSettings')">
           <span class="item-icon">${I.palette}</span>
           <span class="item-label">Theme</span>
-          <span class="item-value">${u.settings && u.settings.theme ? u.settings.theme.charAt(0).toUpperCase() + u.settings.theme.slice(1) : 'Light'}</span>
+          <span style="display:flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:13px;font-weight:600;color:var(--text)">${u.settings && u.settings.theme ? u.settings.theme.charAt(0).toUpperCase() + u.settings.theme.slice(1) : 'Light'}<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span>
         </button>
       </div>
 
@@ -80,13 +80,13 @@
         </div>
         <div class="toggle-item">
           <div class="toggle-label">
-            <span class="toggle-icon">${I.exchange || '$'}</span>
+            <span class="toggle-icon">$</span>
             <div class="toggle-text">
-              <span class="toggle-name">USD → ZiG rate</span>
-              <span class="toggle-desc">Set by PaMarket${(H.state && H.state.fxRateUpdatedAt) ? ' · updated ' + H.timeAgo(H.state.fxRateUpdatedAt) : ''}</span>
+              <span class="toggle-name">ZiG Exchange Rate (PaMarket)</span>
+              <span class="toggle-desc">Set by PaMarket${(H.state && H.state.fxRateUpdatedAt) ? ' · Updated: ' + new Date(H.state.fxRateUpdatedAt).toLocaleDateString() : ''}</span>
             </div>
           </div>
-          <span style="font-size:15px;font-weight:800;color:var(--text-primary)">1 USD = ${Number((H.state && H.state.fxRate) || 36).toLocaleString()} ZiG</span>
+          <span style="font-size:14px;font-weight:800;color:var(--text)">1 USD = ${Number((H.state && H.state.fxRate) || 36).toLocaleString()} ZiG</span>
         </div>
       </div>
 
