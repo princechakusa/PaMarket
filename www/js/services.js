@@ -4,8 +4,23 @@
   H.pages.Services = function () {
     var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'services'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
 
-    var f = H._sel('services', 'subcat', 'Service Type', [['all', 'All Services'], ['cleaning', 'Cleaning'], ['construction', 'Construction & Building'], ['plumbing', 'Plumbing'], ['electrical', 'Electrical'], ['painting', 'Painting'], ['gardening', 'Gardening & Landscaping'], ['transport', 'Transport & Delivery'], ['photography', 'Photography & Video'], ['catering', 'Catering & Events'], ['it', 'IT & Tech Support'], ['tutoring', 'Tutoring & Education'], ['beauty', 'Beauty & Wellness'], ['security', 'Security'], ['legal', 'Legal & Finance']])
-      + H._citysel('services') + H._priceRange('services') + H._sortsel('services');
+    var f = H._filterCarouselHtml('services', [
+      {
+        title: '1. Service Type',
+        tag: 'BASICS',
+        html: H._sel('services', 'subcat', 'Service Type', [
+                ['all','All Services'],['home','Home & Repairs'],['building','Building & Construction'],
+                ['tutoring','Tutoring & Lessons'],['events','Events & Catering'],
+                ['beauty','Beauty & Hair'],['transport','Transport & Moving'],
+                ['professional','Professional Services']
+              ])
+      },
+      {
+        title: '2. Price & Location',
+        tag: 'RANGE FILTERS',
+        html: H._priceRange('services') + H._citysel('services')
+      }
+    ]);
 
     return '<div class="page active">'
       + H._catTopbar('Services', '#00897B')

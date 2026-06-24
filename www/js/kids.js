@@ -4,10 +4,29 @@
   H.pages.Kids = function () {
     var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'kids'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
 
-    var f = H._sel('kids', 'subcat', 'Category', [['all', 'All'], ['clothing', 'Clothing & Shoes'], ['toys', 'Toys & Games'], ['furniture', 'Baby Furniture & Gear'], ['feeding', 'Feeding & Nursing'], ['education', 'Books & Education'], ['strollers', 'Strollers & Car Seats'], ['electronics', 'Kids Electronics'], ['other', 'Other']])
-      + H._sel('kids', 'gender', 'For', [['all', 'All'], ['boys', 'Boys'], ['girls', 'Girls'], ['unisex', 'Unisex'], ['baby', 'Baby (0-2yr)']])
-      + H._sel('kids', 'condition', 'Condition', [['all', 'All'], ['new', 'Brand New'], ['like-new', 'Like New'], ['good', 'Good'], ['fair', 'Fair']])
-      + H._citysel('kids') + H._priceRange('kids') + H._sortsel('kids');
+    var f = H._filterCarouselHtml('kids', [
+      {
+        title: '1. Category & For',
+        tag: 'BASICS',
+        html: H._sel('kids', 'subcat', 'Category', [
+                ['all','All'],['clothing','Clothing'],['toys','Toys'],
+                ['prams','Prams & Strollers'],['cots','Cots & Beds'],
+                ['carseats','Car Seats'],['school','School Items']
+              ])
+             + H._pills('kids', 'gender', 'For', [
+                ['Boys','Boys'],['Girls','Girls'],['Unisex','Unisex']
+              ])
+      },
+      {
+        title: '2. Condition & Price',
+        tag: 'RANGE FILTERS',
+        html: H._pills('kids', 'condition', 'Condition', [
+                ['Brand New','Brand New'],['Used','Used']
+              ])
+             + H._priceRange('kids')
+             + H._citysel('kids')
+      }
+    ]);
 
     return '<div class="page active">'
       + H._catTopbar('Baby & Kids', '#E91E63')

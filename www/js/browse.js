@@ -50,14 +50,24 @@
     const locEl = document.getElementById('locationFilter');
     const loc = locEl ? locEl.value : (browseState.location || 'all');
 
+    // Collect checked category checkboxes
+    const checkedCats = Array.from(
+      document.querySelectorAll('.filter-options input[type=checkbox][value]:checked')
+    ).map(function (cb) { return cb.value; });
+
     const pool = (list || []).filter(function (l) {
+      // Category filter (only when at least one checkbox is ticked)
+      if (checkedCats.length && !checkedCats.includes(l.cat)) return false;
       // Compare in canonical USD so the price range works for any listing
       // (including legacy ones still stored in ZiG).
       const price = (typeof H.toUSD === 'function') ? H.toUSD(l.price, l.currency) : (l.price || 0);
       if (price < pMin || price > pMax) return false;
       if (cond !== 'all' && (l.condition || '') !== cond) return false;
       if (cur !== 'all' && (l.currency || 'USD') !== cur) return false;
-      if (loc && loc !== 'all' && (l.city || l.prov || '') !== loc) return false;
+      if (loc && loc !== 'all') {
+        const haystack = ((l.city || '') + ' ' + (l.prov || '')).toLowerCase();
+        if (haystack.indexOf(loc.toLowerCase()) === -1) return false;
+      }
       if (verifiedOnly) {
         const seller = (state.users || []).find(function (x) { return x.id === l.sellerId; });
         if (!(seller && seller.verified)) return false;
@@ -111,9 +121,9 @@
         </button>
         <select class="sort-sel" id="sortBy" onchange="H._browse.onSortChange()">
           <option value="recent">Latest</option>
-          <option value="price-low">Price: Low to High</option>
-          <option value="price-high">Price: High to Low</option>
-          <option value="trending">Trending</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="views">Trending</option>
         </select>
       </div>
 

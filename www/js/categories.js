@@ -11,6 +11,9 @@
   H._filters = {};
   H._currentTalentSector = 'All';
 
+  // ── SELECT cols used in every category fetch ──────────────────────────────
+  var LISTING_COLS = 'id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes';
+
   function getF(id) { return H._filters[id] || (H._filters[id] = {}); }
 
   H._setFilter = function (catId, key, val) {
@@ -27,65 +30,248 @@
     H._filters[catId] = {};
     var fp = document.getElementById('fp_' + catId);
     if (fp) {
-      fp.querySelectorAll('select').forEach(function (s) { s.value = ''; });
+      fp.querySelectorAll('select').forEach(function (s) { s.value = s.options[0] ? s.options[0].value : ''; });
       fp.querySelectorAll('input[type=number],input[type=text]').forEach(function (i) { i.value = ''; });
       fp.querySelectorAll('.flt-pill.on').forEach(function (b) { b.classList.remove('on'); });
+      var sortSel = fp.querySelector('.flt-sort-sel');
+      if (sortSel) sortSel.value = 'newest';
+      // Reset main carousel
+      var mainCar = document.getElementById('fc_' + catId);
+      if (mainCar) mainCar.scrollTo({ left: 0, behavior: 'smooth' });
+      document.querySelectorAll('#fd_' + catId + ' .flt-dot').forEach(function (d, i) { d.classList.toggle('on', i === 0); });
+      // Reset amenity carousel
+      var amenCar = document.getElementById('fca_' + catId);
+      if (amenCar) amenCar.scrollTo({ left: 0, behavior: 'smooth' });
+      document.querySelectorAll('#fda_' + catId + ' .flt-dot').forEach(function (d, i) { d.classList.toggle('on', i === 0); });
     }
     H._applyFilters(catId);
   };
 
+  // ── ENTRY POINT — debounces and dispatches to server or local ─────────────
   H._applyFilters = function (catId) {
     var el = document.getElementById('cl_' + catId);
     if (!el) return;
+
+    // Immediately show local results for instant feedback
+    H._localFilter(catId);
+
+    // Debounce the server round-trip so rapid filter changes only fire once
+    clearTimeout(H._fltTimer);
+    H._fltTimer = setTimeout(function () {
+      if (window.supabase && typeof window.supabase.from === 'function') {
+        H._serverFilter(catId).catch(function () { /* local results already shown */ });
+      }
+    }, 250);
+  };
+
+  // ── SERVER-SIDE FILTER — pushes heavy predicates into Supabase ───────────
+  H._serverFilter = async function (catId) {
+    var el = document.getElementById('cl_' + catId);
+    if (!el) return;
+
     var f = getF(catId);
     var baseCat = catId.replace('_sale', '').replace('_rent', '');
-    var all = (H.state.listings || []).filter(function (l) {
+
+    var q = window.supabase.from('listings')
+      .select(LISTING_COLS)
+      .eq('status', 'active')
+      .eq('category', baseCat);
+
+    // Price (top-level column — indexed)
+    if (f.priceMin && +f.priceMin > 0) q = q.gte('price', +f.priceMin);
+    if (f.priceMax && +f.priceMax > 0) q = q.lte('price', +f.priceMax);
+
+    // City / Location (uses pg_trgm GIN index for leading-wildcard ILIKE)
+    if (f.city && f.city !== 'all') {
+      q = q.or('city.ilike.%' + f.city + '%,province.ilike.%' + f.city + '%');
+    }
+
+    // Sort at the DB level (top-level columns only; JSONB sorts stay client-side)
+    var sort = f.sort || 'newest';
+    if (sort === 'price_asc')  q = q.order('price',      { ascending: true  });
+    else if (sort === 'price_desc') q = q.order('price', { ascending: false });
+    else if (sort === 'oldest')     q = q.order('created_at', { ascending: true });
+    else                            q = q.order('created_at', { ascending: false });
+
+    // Cap at 200 — enough headroom for client-side JSONB attribute filters
+    q = q.limit(200);
+
+    var res = await q;
+    if (res.error) throw res.error;
+
+    var listings = (res.data || []).map(H._mapCloudListing);
+
+    // Merge fresh rows into local state without displacing existing entries
+    var seen = new Set((H.state.listings || []).map(function (l) { return l.id; }));
+    var toAdd = listings.filter(function (l) { return !seen.has(l.id); });
+    if (toAdd.length) H.state.listings = (H.state.listings || []).concat(toAdd);
+
+    // Apply remaining filters that require attribute inspection
+    var result = H._clientFilter(catId, listings);
+    H._renderCatResults(catId, result, baseCat);
+  };
+
+  // ── LOCAL FILTER — runs against H.state.listings cache ───────────────────
+  H._localFilter = function (catId) {
+    var baseCat = catId.replace('_sale', '').replace('_rent', '');
+    var pool = (H.state.listings || []).filter(function (l) {
       return l.status === 'active' && l.cat === baseCat;
     });
-    if (catId === 'property_sale') all = all.filter(function (l) { return !l.rentalType; });
-    if (catId === 'property_rent') all = all.filter(function (l) { return !!l.rentalType; });
+    var result = H._clientFilter(catId, pool);
+    H._renderCatResults(catId, result, baseCat);
+  };
 
-    var inp = document.getElementById('cs_' + catId);
-    var q = inp ? inp.value.toLowerCase().trim() : '';
-    if (q) all = all.filter(function (l) {
-      return (l.title + ' ' + (l.desc || '') + ' ' + (l.city || '') + ' ' + (l.suburb || '')).toLowerCase().includes(q);
-    });
+  // ── CLIENT-SIDE FILTER — applies all predicates using AND logic ──────────
+  // Operates on an already-fetched array; server pre-filtered by category,
+  // price and city. This layer handles text search and JSONB attribute fields.
+  H._clientFilter = function (catId, listings) {
+    var f = getF(catId);
+    var all = listings.slice(); // never mutate the source array
 
-    if (f.priceMin) all = all.filter(function (l) { return (l.price || 0) >= +f.priceMin; });
-    if (f.priceMax) all = all.filter(function (l) { return (l.price || 0) <= +f.priceMax; });
-    if (f.city && f.city !== 'all') all = all.filter(function (l) { return (l.city + ' ' + (l.prov || '')).toLowerCase().includes(f.city.toLowerCase()); });
-    if (f.condition && f.condition !== 'all') all = all.filter(function (l) { return (l.condition || '').toLowerCase() === f.condition; });
-    if (f.furnishing && f.furnishing !== 'all') all = all.filter(function (l) { return (l.furnishing || '').toLowerCase() === f.furnishing; });
-    if (f.propType && f.propType !== 'all') all = all.filter(function (l) { return (l.propType || '').toLowerCase() === f.propType; });
-    if (f.rentalType && f.rentalType !== 'all') all = all.filter(function (l) { return (l.rentalType || '').toLowerCase() === f.rentalType; });
-    if (f.beds && f.beds !== 'any') {
-      if (f.beds === 'studio') all = all.filter(function (l) { return String(l.beds || '').toLowerCase() === 'studio' || +(l.beds || 0) === 0; });
-      else all = all.filter(function (l) { return String(l.beds).toLowerCase() !== 'studio' && +(l.beds || 0) >= +f.beds; });
+    // ── Property tab split ────────────────────────────────────────────────
+    if (catId === 'property_sale') {
+      all = all.filter(function (l) {
+        var rt = _attr(l, 'rentalType');
+        return rt === '' || rt === 'For Sale';
+      });
     }
-    if (f.baths && f.baths !== 'any') all = all.filter(function (l) { return +(l.baths || 0) >= +f.baths; });
-    if (f.subcat && f.subcat !== 'all') all = all.filter(function (l) { return (l.subcat || l.type || '').toLowerCase() === f.subcat; });
-    if (f.brand) all = all.filter(function (l) { return (l.brand || l.make || '').toLowerCase().includes(f.brand.toLowerCase()); });
-    if (f.gender && f.gender !== 'all') all = all.filter(function (l) { return (l.gender || '').toLowerCase() === f.gender; });
-    if (f.size && f.size !== 'all') all = all.filter(function (l) { return (l.size || '').toLowerCase() === f.size; });
-    if (f.sizeMin) all = all.filter(function (l) { return +(l.size || 0) >= +f.sizeMin; });
-    if (f.sizeMax) all = all.filter(function (l) { return +(l.size || 0) > 0 && +(l.size || 0) <= +f.sizeMax; });
-    if (f.fuelType && f.fuelType !== 'all') all = all.filter(function (l) { return (l.fuel || l.fuelType || '').toLowerCase() === f.fuelType; });
-    if (f.yearMin) all = all.filter(function (l) { return +(l.year || 0) >= +f.yearMin; });
-    if (f.yearMax) all = all.filter(function (l) { return +(l.year || 9999) <= +f.yearMax; });
-    if (Array.isArray(f.amenities) && f.amenities.length) all = all.filter(function (l) {
-      var feats = Array.isArray(l.features) ? l.features : ((l.attrs && Array.isArray(l.attrs.features)) ? l.attrs.features : []);
-      return f.amenities.every(function (a) { return feats.indexOf(a) !== -1; });
-    });
+    if (catId === 'property_rent') {
+      all = all.filter(function (l) {
+        return _attr(l, 'rentalType') === 'For Rent';
+      });
+    }
 
+    // ── Full-text search (AND logic — every word must appear) ─────────────
+    var inp = document.getElementById('cs_' + catId);
+    var q   = inp ? inp.value.toLowerCase().trim() : '';
+    if (q) {
+      var words = q.split(/\s+/).filter(Boolean);
+      all = all.filter(function (l) {
+        var hay = ((l.title || '') + ' ' + (l.desc || '') + ' ' + (l.city || '') + ' ' + (l.suburb || '')).toLowerCase();
+        return words.every(function (w) { return hay.indexOf(w) !== -1; });
+      });
+    }
+
+    // ── Price (covers local-only mode where server wasn't called) ─────────
+    if (f.priceMin && +f.priceMin > 0) all = all.filter(function (l) { return (l.price || 0) >= +f.priceMin; });
+    if (f.priceMax && +f.priceMax > 0) all = all.filter(function (l) { return (l.price || 0) <= +f.priceMax; });
+
+    // ── City (covers local-only mode) ─────────────────────────────────────
+    if (f.city && f.city !== 'all') {
+      var cityLc = f.city.toLowerCase();
+      all = all.filter(function (l) {
+        return ((l.city || '') + ' ' + (l.prov || '')).toLowerCase().indexOf(cityLc) !== -1;
+      });
+    }
+
+    // ── Condition — prefer attrs.condition, fall back to top-level column ──
+    if (f.condition && f.condition !== 'all') {
+      var condLc = f.condition.toLowerCase();
+      all = all.filter(function (l) {
+        return (_attr(l, 'condition') || l.condition || '').toLowerCase() === condLc;
+      });
+    }
+
+    // ── Furnishing ────────────────────────────────────────────────────────
+    if (f.furnishing && f.furnishing !== 'all') {
+      var furnLc = f.furnishing.toLowerCase();
+      all = all.filter(function (l) { return _attr(l, 'furnishing').toLowerCase() === furnLc; });
+    }
+
+    // ── Property type ─────────────────────────────────────────────────────
+    if (f.propType && f.propType !== 'all') {
+      var ptLc = f.propType.toLowerCase();
+      all = all.filter(function (l) { return _attr(l, 'propType').toLowerCase() === ptLc; });
+    }
+
+    // ── Bedrooms ──────────────────────────────────────────────────────────
+    if (f.beds && f.beds !== 'any') {
+      all = all.filter(function (l) {
+        var b = String(_attr(l, 'beds') || '');
+        if (f.beds === 'studio') return b.toLowerCase() === 'studio' || b === '0';
+        return b.toLowerCase() !== 'studio' && +b >= +f.beds;
+      });
+    }
+
+    // ── Bathrooms ─────────────────────────────────────────────────────────
+    if (f.baths && f.baths !== 'any') {
+      all = all.filter(function (l) { return +(_attr(l, 'baths') || 0) >= +f.baths; });
+    }
+
+    // ── Subcategory (exact match on the stored subcat key) ────────────────
+    if (f.subcat && f.subcat !== 'all') {
+      var subLc = f.subcat.toLowerCase();
+      all = all.filter(function (l) {
+        return (_attr(l, 'subcat') || l.subcat || '').toLowerCase() === subLc;
+      });
+    }
+
+    // ── Brand / Make / Material (partial match) ───────────────────────────
+    if (f.brand && f.brand.trim()) {
+      var brandLc = f.brand.toLowerCase();
+      all = all.filter(function (l) {
+        var val = (_attr(l, 'brand') || _attr(l, 'make') || _attr(l, 'material') || l.brand || l.make || '').toLowerCase();
+        return val.indexOf(brandLc) !== -1;
+      });
+    }
+
+    // ── Gender ────────────────────────────────────────────────────────────
+    if (f.gender && f.gender !== 'all') {
+      var genLc = f.gender.toLowerCase();
+      all = all.filter(function (l) { return (_attr(l, 'gender') || '').toLowerCase() === genLc; });
+    }
+
+    // ── Size — exact match for fashion; numeric range for property ─────────
+    if (f.size && f.size !== 'all') {
+      var sizeLc = f.size.toLowerCase();
+      all = all.filter(function (l) { return (_attr(l, 'size') || '').toLowerCase() === sizeLc; });
+    }
+    if (f.sizeMin) {
+      all = all.filter(function (l) { return +(_attr(l, 'size') || 0) >= +f.sizeMin; });
+    }
+    if (f.sizeMax) {
+      all = all.filter(function (l) {
+        var s = +(_attr(l, 'size') || 0);
+        return s > 0 && s <= +f.sizeMax;
+      });
+    }
+
+    // ── Fuel type ─────────────────────────────────────────────────────────
+    if (f.fuelType && f.fuelType !== 'all') {
+      var fuelLc = f.fuelType.toLowerCase();
+      all = all.filter(function (l) {
+        return (_attr(l, 'fuel') || _attr(l, 'fuelType') || '').toLowerCase() === fuelLc;
+      });
+    }
+
+    // ── Year range ────────────────────────────────────────────────────────
+    if (f.yearMin) all = all.filter(function (l) { return +(_attr(l, 'year') || 0) >= +f.yearMin; });
+    if (f.yearMax) all = all.filter(function (l) { return +(_attr(l, 'year') || 9999) <= +f.yearMax; });
+
+    // ── Amenities / features — AND logic (every selected feature must exist) ─
+    if (Array.isArray(f.amenities) && f.amenities.length) {
+      all = all.filter(function (l) {
+        var feats = (l.attrs && Array.isArray(l.attrs.features)) ? l.attrs.features
+          : (Array.isArray(l.features) ? l.features : []);
+        return f.amenities.every(function (a) { return feats.indexOf(a) !== -1; });
+      });
+    }
+
+    // ── Sort ──────────────────────────────────────────────────────────────
     var sort = f.sort || 'newest';
-    all.sort(function (a, b) {
-      if (sort === 'price_asc') return (a.price || 0) - (b.price || 0);
-      if (sort === 'price_desc') return (b.price || 0) - (a.price || 0);
-      if (sort === 'oldest') return a.createdAt - b.createdAt;
-      return b.createdAt - a.createdAt;
-    });
+    if      (sort === 'price_asc')  all.sort(function (a, b) { return (a.price || 0) - (b.price || 0); });
+    else if (sort === 'price_desc') all.sort(function (a, b) { return (b.price || 0) - (a.price || 0); });
+    else if (sort === 'oldest')     all.sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
+    else                            all.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
 
-    // Sponsored carousel — ads targeting this category (banner or spotlight).
+    return all;
+  };
+
+  // ── RENDER — writes results into the category container ──────────────────
+  H._renderCatResults = function (catId, all, baseCat) {
+    var el = document.getElementById('cl_' + catId);
+    if (!el) return;
+
     var spotlightHtml = (H.adCarousel && H.activeAds)
       ? H.adCarousel(H.activeAds(baseCat), { heading: false })
       : '';
@@ -93,20 +279,174 @@
     el.innerHTML = all.length
       ? spotlightHtml + '<div class="listing-list">' + all.map(H.renderListCard).join('') + '</div>'
       : spotlightHtml + H.emptyState('No listings match', 'Try adjusting your filters', null, null);
+
     if (H._initAdCarousels) H._initAdCarousels();
 
+    // Result count label
     var cnt = document.getElementById('cc_' + catId);
     if (cnt) cnt.textContent = all.length + ' listing' + (all.length !== 1 ? 's' : '');
 
-    // update filter badge
-    var n = Object.keys(getF(catId)).filter(function (k) {
-      var v = getF(catId)[k]; return v && v !== '' && v !== 'all' && v !== 'any' && v !== 'newest';
+    // Filter badge (count of active non-default filters)
+    var f = getF(catId);
+    var n = Object.keys(f).filter(function (k) {
+      var v = f[k];
+      return v && v !== '' && v !== 'all' && v !== 'any' && v !== 'newest'
+        && !(Array.isArray(v) && !v.length);
     }).length;
-    var b = document.getElementById('fb_' + catId);
-    if (b) { b.textContent = n || ''; b.style.display = n ? 'flex' : 'none'; }
+    var badge = document.getElementById('fb_' + catId);
+    if (badge) { badge.textContent = n || ''; badge.style.display = n ? 'flex' : 'none'; }
   };
 
-  // ── UI builder helpers (attached to H so separate files can use them) ──
+  // ── HELPER — read an attribute, preferring l.attrs over top-level ─────────
+  function _attr(l, key) {
+    if (l.attrs && l.attrs[key] != null) return l.attrs[key];
+    if (l[key] != null) return l[key];
+    return '';
+  }
+
+  // ── FILTER CAROUSEL BUILDER ───────────────────────────────────────────────
+  // mainCards: [{ title, tag, html }] — one swipeable card per filter group
+  // amenityCat: optional key into H.CATEGORY_ATTRS whose chips field becomes
+  //             a separate paginated mini-carousel below the main one
+  H._filterCarouselHtml = function (catId, mainCards, amenityCat) {
+    var scrollId = 'fc_' + catId;
+    var dotsId   = 'fd_' + catId;
+    var SVG_L = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>';
+    var SVG_R = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>';
+
+    var cardsHtml = mainCards.map(function (c) {
+      return '<div class="flt-card">'
+        + '<div class="flt-card-head">'
+          + '<span class="flt-card-num">' + H.escHtml(c.title) + '</span>'
+          + (c.tag ? '<span class="flt-card-tag">' + H.escHtml(c.tag) + '</span>' : '')
+        + '</div>'
+        + c.html
+      + '</div>';
+    }).join('');
+
+    var dotsHtml = mainCards.map(function (_, i) {
+      return '<button class="flt-dot' + (i === 0 ? ' on' : '') + '" aria-label="Slide ' + (i + 1) + '"'
+        + ' onclick="H._carouselTo(\'' + scrollId + '\',\'' + dotsId + '\',' + i + ')"></button>';
+    }).join('');
+
+    var html = '<div class="flt-carousel-row">'
+      + '<button class="flt-nav-btn flt-nav-l" onclick="H._carouselPrev(\'' + scrollId + '\',\'' + dotsId + '\')" aria-label="Previous">' + SVG_L + '</button>'
+      + '<div class="flt-carousel" id="' + scrollId + '" onscroll="H._carouselSync(\'' + scrollId + '\',\'' + dotsId + '\')">'
+        + cardsHtml
+      + '</div>'
+      + '<button class="flt-nav-btn flt-nav-r" onclick="H._carouselNext(\'' + scrollId + '\',\'' + dotsId + '\')" aria-label="Next">' + SVG_R + '</button>'
+    + '</div>'
+    + '<div class="flt-dots" id="' + dotsId + '">' + dotsHtml + '</div>';
+
+    if (amenityCat) {
+      html += H._amenityCarouselSection(catId, amenityCat, mainCards.length + 1);
+    }
+
+    html += '<div class="flt-sort-row">'
+      + '<div class="flt-sort-lbl">Sort By</div>'
+      + '<select class="flt-sort-sel" onchange="H._setFilter(\'' + catId + '\',\'sort\',this.value)">'
+        + '<option value="newest">Newest First</option>'
+        + '<option value="oldest">Oldest First</option>'
+        + '<option value="price_asc">Price: Low → High</option>'
+        + '<option value="price_desc">Price: High → Low</option>'
+      + '</select>'
+    + '</div>'
+    + '<div class="flt-btns">'
+      + '<button class="flt-btn-clear" onclick="H._clearFilters(\'' + catId + '\')">Clear</button>'
+      + '<button class="flt-btn-apply" onclick="H._toggleFilters(\'' + catId + '\')">Apply Filters</button>'
+    + '</div>';
+
+    return html;
+  };
+
+  // Builds a paginated amenity mini-carousel (6 chips per slide) with its own
+  // section separator, header, nav arrows and dots
+  H._amenityCarouselSection = function (catId, amenityCat, sectionNum) {
+    var schema = (H.CATEGORY_ATTRS && H.CATEGORY_ATTRS[amenityCat]) || [];
+    var field = schema.filter(function (x) { return x.type === 'chips'; })[0];
+    if (!field || !field.options || !field.options.length) return '';
+
+    var scrollId = 'fca_' + catId;
+    var dotsId   = 'fda_' + catId;
+    var SVG_L = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>';
+    var SVG_R = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>';
+
+    var PAGE = 6;
+    var pages = [];
+    for (var i = 0; i < field.options.length; i += PAGE) {
+      pages.push(field.options.slice(i, i + PAGE));
+    }
+
+    var cardsHtml = pages.map(function (page) {
+      return '<div class="flt-card">'
+        + '<div class="flt-pills flt-amenities">'
+        + page.map(function (o) {
+          return '<button type="button" class="flt-pill" onclick="H._toggleAmenity(\'' + catId + '\',\'' + H.escHtml(o) + '\',this)">' + H.escHtml(o) + '</button>';
+        }).join('')
+        + '</div></div>';
+    }).join('');
+
+    var dotsHtml = pages.map(function (_, i) {
+      return '<button class="flt-dot' + (i === 0 ? ' on' : '') + '" aria-label="Amenities slide ' + (i + 1) + '"'
+        + ' onclick="H._carouselTo(\'' + scrollId + '\',\'' + dotsId + '\',' + i + ')"></button>';
+    }).join('');
+
+    return '<div class="fp-section-sep">'
+      + '<div class="fp-sec-head">'
+        + '<span class="fp-sec-num">' + sectionNum + '. ' + H.escHtml(field.label) + '</span>'
+        + '<span class="fp-sec-tag">OTHER ATTRIBUTES</span>'
+      + '</div>'
+      + '<div class="flt-carousel-row">'
+        + '<button class="flt-nav-btn flt-nav-l" onclick="H._carouselPrev(\'' + scrollId + '\',\'' + dotsId + '\')" aria-label="Previous">' + SVG_L + '</button>'
+        + '<div class="flt-carousel" id="' + scrollId + '" onscroll="H._carouselSync(\'' + scrollId + '\',\'' + dotsId + '\')">'
+          + cardsHtml
+        + '</div>'
+        + '<button class="flt-nav-btn flt-nav-r" onclick="H._carouselNext(\'' + scrollId + '\',\'' + dotsId + '\')" aria-label="Next">' + SVG_R + '</button>'
+      + '</div>'
+      + '<div class="flt-dots" id="' + dotsId + '">' + dotsHtml + '</div>'
+    + '</div>';
+  };
+
+  // ── Carousel helpers ──────────────────────────────────────────────────────
+  function _carouselStep(el) {
+    var card = el.querySelector('.flt-card');
+    return card ? (card.offsetWidth + 10) : el.offsetWidth;
+  }
+
+  H._carouselSync = function (scrollId, dotsId) {
+    var el = document.getElementById(scrollId);
+    if (!el) return;
+    var idx = Math.round(el.scrollLeft / (_carouselStep(el) || 1));
+    document.querySelectorAll('#' + dotsId + ' .flt-dot').forEach(function (d, i) {
+      d.classList.toggle('on', i === idx);
+    });
+  };
+
+  H._carouselTo = function (scrollId, dotsId, idx) {
+    var el = document.getElementById(scrollId);
+    if (!el) return;
+    el.scrollTo({ left: idx * _carouselStep(el), behavior: 'smooth' });
+    document.querySelectorAll('#' + dotsId + ' .flt-dot').forEach(function (d, i) {
+      d.classList.toggle('on', i === idx);
+    });
+  };
+
+  H._carouselPrev = function (scrollId, dotsId) {
+    var el = document.getElementById(scrollId);
+    if (!el) return;
+    var idx = Math.max(0, Math.round(el.scrollLeft / (_carouselStep(el) || 1)) - 1);
+    H._carouselTo(scrollId, dotsId, idx);
+  };
+
+  H._carouselNext = function (scrollId, dotsId) {
+    var el = document.getElementById(scrollId);
+    if (!el) return;
+    var total = el.querySelectorAll('.flt-card').length;
+    var idx = Math.min(total - 1, Math.round(el.scrollLeft / (_carouselStep(el) || 1)) + 1);
+    H._carouselTo(scrollId, dotsId, idx);
+  };
+
+  // ── UI builder helpers ────────────────────────────────────────────────────
   var ZW_CITIES = ['Harare', 'Bulawayo', 'Mutare', 'Gweru', 'Kwekwe', 'Kadoma', 'Masvingo', 'Chinhoyi', 'Bindura', 'Marondera', 'Hwange', 'Victoria Falls', 'Zvishavane'];
   H._ZW_CITIES = ZW_CITIES;
 
@@ -129,7 +469,6 @@
       + '</div></div>';
   };
 
-  // Area / Size range in m² (Zim standard).
   H._sizeRange = function (id) {
     return '<div class="flt-section"><div class="flt-label">Area / Size (m²)</div>'
       + '<div class="flt-range">'
@@ -139,7 +478,6 @@
       + '</div></div>';
   };
 
-  // Year range (vehicles).
   H._yearRange = function (id) {
     return '<div class="flt-section"><div class="flt-label">Year</div>'
       + '<div class="flt-range">'
@@ -149,7 +487,6 @@
       + '</div></div>';
   };
 
-  // Selectable pill row (single-select). opts: array of value or [value,label].
   H._pills = function (id, key, label, opts) {
     return '<div class="flt-section"><div class="flt-label">' + label + '</div><div class="flt-pills" data-pillkey="' + key + '">'
       + opts.map(function (o) {
@@ -167,7 +504,6 @@
     H._applyFilters(id);
   };
 
-  // Amenity multi-select chips, drawn from the category's attribute schema.
   H._amenityFilter = function (id, cat) {
     var schema = (H.CATEGORY_ATTRS && H.CATEGORY_ATTRS[cat]) || [];
     var field = schema.filter(function (x) { return x.type === 'chips'; })[0];
@@ -193,7 +529,8 @@
   };
 
   H._sortsel = function (id) {
-    return H._sel(id, 'sort', 'Sort By', [['newest', 'Newest First'], ['oldest', 'Oldest First'], ['price_asc', 'Price: Low → High'], ['price_desc', 'Price: High → Low']]);
+    // Sort is now embedded inside the carousel footer; this is kept for safety.
+    return '';
   };
 
   H._txtInput = function (id, key, label, placeholder) {
@@ -216,12 +553,13 @@
       + '</div>'
       + '<div style="color:' + sc + ';font-size:12px;font-weight:600;margin-top:8px;padding:0 2px"><span id="cc_' + id + '">…</span></div>'
       + '</div>'
-      + '<div id="fp_' + id + '" style="display:none;background:var(--card);border-bottom:2px solid ' + color + ';padding:16px 14px">'
+      + '<div id="fp_' + id + '" style="display:none;background:var(--card);border-bottom:2px solid ' + color + '">'
+      + '<div class="flt-cr-header"><span class="flt-cr-title">Filter ' + H.escHtml(name) + '</span>'
+      + '<button class="flt-cr-close" onclick="H._toggleFilters(\'' + id + '\')">'
+      + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      + '</button></div>'
       + filterHtml
-      + '<div style="display:flex;gap:8px;margin-top:4px">'
-      + '<button onclick="H._clearFilters(\'' + id + '\')" style="flex:1;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">Clear</button>'
-      + '<button onclick="H._toggleFilters(\'' + id + '\')" style="flex:2;padding:10px;background:' + color + ';border:none;border-radius:10px;font-size:13px;font-weight:700;color:' + tc + ';cursor:pointer">Apply Filters</button>'
-      + '</div></div>';
+      + '</div>';
   };
 
   H._catTopbar = function (title, color) {
@@ -232,7 +570,7 @@
       + '</div>';
   };
 
-  // ── Override filterByCat for all 12 categories ────────────
+  // ── Category page routing ─────────────────────────────────────────────────
   var CAT_PAGE = {
     property: 'Property', vehicles: 'Vehicles', rooms: 'Rooms',
     electronics: 'Electronics', furniture: 'Furniture', fashion: 'Fashion',
@@ -240,7 +578,6 @@
     pets: 'Pets', kids: 'Kids', other: 'Other'
   };
 
-  // Open the listing page for a category (optionally pre-filtered by subcategory).
   H._openCatPage = function (cid, subKey) {
     function setF(fid) { H._filters[fid] = H._filters[fid] || {}; if (subKey) H._filters[fid].subcat = subKey; else delete H._filters[fid].subcat; }
     setF(cid);
@@ -250,8 +587,6 @@
     else H.openInner('CategoryView', { cid: cid });
   };
 
-  // Tapping a category on Home: show its subcategory list first (if it has one),
-  // otherwise jump straight to the listing page.
   H.filterByCat = function (cid) {
     if (cid === 'jobs') { H.openInner('JobIntent'); return; }
     if (H.SUBCATEGORIES && H.SUBCATEGORIES[cid] && H.SUBCATEGORIES[cid].length) {
@@ -267,7 +602,7 @@
       pets:'#8E24AA', kids:'#FB8C00', jobs:'#546E7A', other:'#546E7A' }[cid]) || '#1A3A8F';
   };
 
-  // ── Subcategory picker (PaMarket's own drill-down) ──
+  // ── Subcategory picker ────────────────────────────────────────────────────
   H.pages.SubCat = function (params) {
     var cid = params && params.cid;
     var cat = (H.CATEGORIES || []).filter(function (c) { return c.id === cid; })[0];

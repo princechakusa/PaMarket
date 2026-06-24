@@ -4,12 +4,34 @@
   H.pages.Vehicles = function () {
     var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'vehicles'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
 
-    var f = H._sel('vehicles', 'subcat', 'Vehicle Type', [['all', 'All Types'], ['car', 'Car'], ['suv', 'SUV / 4x4'], ['truck', 'Truck / Pickup'], ['van', 'Van / Minibus'], ['motorcycle', 'Motorcycle'], ['bus', 'Bus'], ['tractor', 'Tractor'], ['boat', 'Boat']])
-      + H._pills('vehicles', 'condition', 'Condition', [['brand new', 'Brand New'], ['used', 'Used'], ['for parts', 'For Parts']])
-      + H._pills('vehicles', 'fuelType', 'Fuel', [['petrol', 'Petrol'], ['diesel', 'Diesel'], ['hybrid', 'Hybrid'], ['electric', 'Electric']])
-      + H._yearRange('vehicles')
-      + H._txtInput('vehicles', 'brand', 'Make / Brand', 'e.g. Toyota, Honda, BMW')
-      + H._priceRange('vehicles') + H._citysel('vehicles') + H._amenityFilter('vehicles', 'vehicles') + H._sortsel('vehicles');
+    var f = H._filterCarouselHtml('vehicles', [
+      {
+        title: '1. Vehicle Type',
+        tag: 'BASICS',
+        html: H._sel('vehicles', 'subcat', 'Vehicle Type', [
+                ['all','All Types'],['cars','Cars'],['bakkies','Bakkies & Trucks'],
+                ['suvs','SUVs & 4x4'],['kombis','Kombis & Buses'],['motorbikes','Motorbikes'],
+                ['trailers','Trailers'],['parts','Spares & Parts'],['tyres','Tyres & Rims']
+              ])
+             + H._pills('vehicles', 'condition', 'Condition', [
+                ['Brand New','Brand New'],['Used','Used'],['For Parts','For Parts']
+              ])
+      },
+      {
+        title: '2. Make & Year',
+        tag: 'DETAILS',
+        html: H._txtInput('vehicles', 'brand', 'Make / Brand', 'e.g. Toyota, Honda, BMW')
+             + H._yearRange('vehicles')
+             + H._pills('vehicles', 'fuelType', 'Fuel Type', [
+                ['Petrol','Petrol'],['Diesel','Diesel'],['Hybrid','Hybrid'],['Electric','Electric']
+              ])
+      },
+      {
+        title: '3. Price & Location',
+        tag: 'RANGE FILTERS',
+        html: H._priceRange('vehicles') + H._citysel('vehicles')
+      }
+    ], 'vehicles');
 
     return '<div class="page active">'
       + H._catTopbar('Vehicles', '#e53935')

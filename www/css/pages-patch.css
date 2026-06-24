@@ -228,4 +228,49 @@
 /* ── ADMIN ENHANCEMENTS ──────────────────────────────── */
 .admin-alert-row{display:flex;align-items:center;padding:12px 14px;border-bottom:.5px solid var(--border);font-size:13px;color:var(--text-mid);cursor:pointer;gap:6px}
 .admin-alert-row:last-child{border-bottom:none}
+
+/* ── FILTER CAROUSEL ─────────────────────────────────── */
+/* Container sits inside the collapsible fp_ panel        */
+.flt-cr-header{padding:14px 16px 0;display:flex;align-items:center;justify-content:space-between}
+.flt-cr-title{font-size:16px;font-weight:800;letter-spacing:-.3px;color:var(--text)}
+.flt-cr-close{background:none;border:none;padding:4px;cursor:pointer;color:var(--sub);display:flex;align-items:center}
+/* ── FILTER CAROUSEL ────────────────────────────────────────────── */
+/* Wrapper that lets absolute nav arrows overlay the carousel track */
+.flt-carousel-row{position:relative}
+/* Circular prev / next arrows */
+.flt-nav-btn{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:var(--card);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;color:var(--text);box-shadow:0 1px 6px rgba(0,0,0,.14);padding:0}
+.flt-nav-l{left:6px}
+.flt-nav-r{right:6px}
+/* Scrollable card track — right padding lets next card peek through */
+.flt-carousel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;gap:10px;padding:8px 16px 6px;scrollbar-width:none}
+.flt-carousel::-webkit-scrollbar{display:none}
+/* Individual card — peek effect: card slightly narrower than viewport */
+.flt-card{min-width:calc(100vw - 50px);background:#EEF1F8;border-radius:18px;padding:16px;scroll-snap-align:start;flex-shrink:0;border:none}
+[data-theme="dark"] .flt-card{background:rgba(255,255,255,.07)}
+/* Card header: numbered title on left, tag label on right */
+.flt-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.flt-card-num{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.2px}
+.flt-card-tag{font-size:9px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.8px}
+/* Two-column grid inside a card */
+.flt-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.flt-card-grid .flt-section{margin-bottom:0}
+/* Pagination dots */
+.flt-dots{display:flex;justify-content:center;align-items:center;gap:6px;padding:8px 0 2px}
+.flt-dot{width:8px;height:8px;border-radius:50%;background:var(--border,#E4E8F0);transition:all .2s;cursor:pointer;border:none;padding:0;flex-shrink:0}
+.flt-dot.on{background:#1A3A8F;width:20px;border-radius:4px}
+/* Amenities section — separator + header above its own mini-carousel */
+.fp-section-sep{border-top:1px solid var(--border);margin:6px 0 0}
+.fp-sec-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px 0}
+.fp-sec-num{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.2px}
+.fp-sec-tag{font-size:9px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.8px}
+/* Sort row */
+.flt-sort-row{padding:10px 16px 0}
+.flt-sort-lbl{font-size:9px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.flt-sort-sel{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;font-family:Inter,sans-serif;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+/* Action buttons */
+.flt-btns{display:flex;gap:8px;padding:10px 16px 16px}
+.flt-btn-clear{flex:1;padding:13px;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;color:var(--sub);cursor:pointer;font-family:Inter,sans-serif}
+.flt-btn-apply{flex:2;padding:13px;background:#1A3A8F;border:none;border-radius:12px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:Inter,sans-serif;letter-spacing:-.1px}
+.flt-btn-apply:active{opacity:.88}
+.flt-btn-clear:active{background:var(--border)}
 .admin-alert-row:active{background:var(--bg)}
