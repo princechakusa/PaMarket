@@ -2021,7 +2021,12 @@
       + '<button class="crb-x" onclick="H._chat.cancelEdit()" aria-label="Cancel edit"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
     inputBar.parentNode.insertBefore(bar, inputBar);
     const inp = document.getElementById('chatIn');
-    if (inp) { inp.value = H._chat._editingOrigText; inp.focus(); if (typeof H._autoGrowChat === 'function') H._autoGrowChat(inp); }
+    if (inp) {
+      inp.value = H._chat._editingOrigText;
+      if (typeof H._autoGrowChat === 'function') H._autoGrowChat(inp);
+      // Android requires a small delay before focus triggers the soft keyboard
+      setTimeout(function() { try { inp.focus(); } catch(e){} }, 80);
+    }
   };
 
   H._chat.cancelEdit = function () {

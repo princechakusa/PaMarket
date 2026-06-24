@@ -1754,6 +1754,32 @@ window.H = {
       // client's registry too — prevents a slow channel leak on every reconnect.
       if(window._msgChannel){ try{ window.supabase.removeChannel(window._msgChannel); }catch(e){} window._msgChannel=null; }
       window._msgChannel=window.supabase.channel('messages-rt')
+        .on('postgres_changes',{event:'UPDATE',schema:'public',table:'messages'},function(payload){
+          var msg=payload.new; if(!msg||!msg.id) return;
+          var conv=(H.state.conversations||[]).find(function(c){return c.id===msg.conversation_id;});
+          if(!conv||!Array.isArray(conv.messages)) return;
+          var lm=conv.messages.find(function(m){return m.id===msg.id;});
+          if(!lm) return;
+          if(msg.deleted){lm.text='';lm.deleted=true;}
+          else if(msg.edited){lm.text=msg.text||'';lm.edited=true;}
+          H.saveState();
+          if(H.currentPageName==='Chat'&&H.currentPageParams&&H.currentPageParams.id===msg.conversation_id){
+            var row=document.querySelector('[data-msg-id="'+msg.id+'"]');
+            if(row){
+              var bubble=row.querySelector('.chat-bubble');
+              if(bubble){
+                if(msg.deleted){
+                  bubble.innerHTML='<span style="font-style:italic;opacity:.5;font-size:13px">This message was deleted</span>';
+                } else {
+                  var meta=bubble.querySelector('.chat-bubble-meta');
+                  var mh=meta?meta.outerHTML:'';
+                  var et=(msg.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                  bubble.innerHTML=et+'<span style="font-size:10px;opacity:.55"> · edited</span>'+mh;
+                }
+              }
+            }
+          }
+        })
         .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
           const msg=payload.new; if(!msg) return;
           if (!Array.isArray(H.state.conversations)) H.state.conversations = [];

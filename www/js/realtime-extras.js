@@ -528,6 +528,16 @@
 
       // 3. Server wins: take each server row verbatim, preserving only local-only
       //    UI fields. No version checks, no local overrides.
+      //    Exception: if the current user has already locally marked one of their
+      //    own listings as sold/deleted and the server snapshot still shows it as
+      //    active (cloud write race), the local status wins so the listing doesn't
+      //    reappear in the feed before the server catches up.
+      var _cu = H.currentUser ? H.currentUser() : null;
+      var ownNonActiveIds = {};
+      H.state.listings.forEach(function (l) {
+        if (l.status !== 'active' && _cu && l.sellerId === _cu.id) ownNonActiveIds[l.id] = true;
+      });
+      cloud = cloud.filter(function (l) { return !ownNonActiveIds[l.id]; });
       var localById = {};
       H.state.listings.forEach(function (l) { if (l.status === 'active') localById[l.id] = l; });
       cloud = cloud.map(function (serverItem) {
