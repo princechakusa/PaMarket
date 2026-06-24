@@ -80,9 +80,15 @@
     const c = sb(); if (!c) return;
     const u = H.currentUser(); if (!u) return;
     try {
-      const res = await c.from('notifications')
+      let res = await c.from('notifications')
         .select('id, user_id, title, body, type, read, created_at, meta, image_url').eq('user_id', u.id)
         .order('created_at', { ascending: false }).limit(20);
+      // If the full select 400s (image_url column not yet in this DB), retry without it
+      if (res.error && /image_url|column|PGRST/i.test((res.error.message || '') + (res.error.code || ''))) {
+        res = await c.from('notifications')
+          .select('id, user_id, title, body, type, read, created_at, meta').eq('user_id', u.id)
+          .order('created_at', { ascending: false }).limit(20);
+      }
       if (res.error || !res.data) return;
       H.state.notifs = H.state.notifs || {};
       const local = H.state.notifs[u.id] || [];
