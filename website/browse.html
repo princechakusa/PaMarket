@@ -11,232 +11,147 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/site.css">
 <style>
-/* New header override */
-:root{--navy:#1A3A8F;--navy-deep:#122870;--gold:#E8A33D;--line:#E8EBF2;--paper:#F5F7FC;--sub:#5A6480;--ink:#1C2340}
-#site-header{box-shadow:0 2px 8px rgba(26,58,143,.06)}
-.hdr{max-width:1280px;padding:0 24px;height:68px}
-.logo{font-size:22px;font-weight:800}
-.hdr-search{flex:1;display:flex;align-items:center;background:var(--paper);border:1.5px solid var(--line);border-radius:10px;overflow:hidden;max-width:640px;transition:border-color .15s}
-.hdr-search:focus-within{border-color:var(--navy)}
-.hdr-cat-sel{border:0;background:transparent;padding:0 12px 0 14px;font-size:13px;font-family:inherit;color:var(--sub);border-right:1px solid var(--line);height:42px;outline:none}
-.hdr-q{flex:1;border:0;background:transparent;padding:0 14px;font-size:14px;font-family:inherit;color:var(--ink);height:42px;outline:none}
-.hdr-search-btn{background:var(--navy);color:#fff;border:0;padding:0 20px;height:42px;display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px}
-.hdr-post{background:var(--gold);color:#fff;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;border:0;white-space:nowrap}
-.hdr-actions{display:flex;align-items:center;gap:8px}
-/* Category nav */
 .cat-nav{background:#fff;border-bottom:1px solid var(--line)}
-.cat-nav-inner{max-width:1280px;margin:0 auto;padding:0 24px;display:flex;overflow-x:auto;scrollbar-width:none}
+.cat-nav-inner{max-width:1140px;margin:0 auto;padding:0 40px;display:flex;overflow-x:auto;scrollbar-width:none;gap:2px}
 .cat-nav-inner::-webkit-scrollbar{display:none}
-.cat-tab{flex-shrink:0;padding:11px 18px;font-size:13px;font-weight:500;color:var(--sub);border-bottom:2.5px solid transparent;white-space:nowrap;text-decoration:none;display:block}
-.cat-tab:hover,.cat-tab.active{color:var(--navy);border-bottom-color:var(--navy)}
-/* Page hero */
-.page-hero{background:linear-gradient(135deg,#122870,#1A3A8F);color:#fff;padding:56px 24px}
-.page-hero-inner{max-width:1280px;margin:0 auto}
-.page-hero h1{font-size:36px;font-weight:800;margin-top:10px}
-.page-hero p{font-size:16px;color:#C7D4F0;margin-top:10px;max-width:560px}
+.cat-tab{flex-shrink:0;padding:11px 18px;font-size:13px;font-weight:500;color:var(--sub);border-bottom:2.5px solid transparent;white-space:nowrap;text-decoration:none;display:block;transition:all .15s}
+.cat-tab:hover,.cat-tab.active{color:var(--navy);border-bottom-color:var(--navy);font-weight:600}
+.page-hero{background:linear-gradient(135deg,var(--navy-deep,#122870),var(--navy));color:#fff;padding:48px 0}
+.ph-inner{max-width:1140px;margin:0 auto;padding:0 40px}
+.ph-inner h1{font-size:32px;font-weight:800;margin-top:8px}
+.ph-inner p{font-size:15px;color:#C7D4F0;margin-top:8px;max-width:520px}
 .pagetag{display:inline-block;background:rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:600;padding:5px 13px;border-radius:20px;letter-spacing:.04em}
-/* Category grid */
-.section-wrap{max-width:1280px;margin:0 auto;padding:40px 24px}
-.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:24px}
-.cat-card{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:24px 18px;text-align:center;transition:border-color .15s,transform .15s,box-shadow .15s;display:block;text-decoration:none}
+.section-wrap{max-width:1140px;margin:0 auto;padding:40px 40px}
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px}
+.cat-card{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:22px 16px;text-align:center;transition:border-color .15s,transform .15s,box-shadow .15s;display:block;text-decoration:none}
 .cat-card:hover{border-color:var(--navy);transform:translateY(-2px);box-shadow:0 8px 24px -8px rgba(26,58,143,.18)}
-.cat-ic{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px}
-.cat-card h3{font-size:14px;font-weight:700;color:#1C2340;margin-bottom:4px}
-.cat-card p{font-size:12.5px;color:var(--sub)}
-/* Province grid */
-.prov-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:24px}
-.prov-chip{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:10px 16px;font-size:13.5px;font-weight:600;color:#1C2340;text-align:center;transition:all .15s;cursor:pointer;text-decoration:none;display:block}
+.cat-ic{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.cat-card h3{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px}
+.cat-card p{font-size:12px;color:var(--sub)}
+.prov-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:20px}
+.prov-chip{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:10px 14px;font-size:13px;font-weight:600;color:var(--ink);text-align:center;transition:all .15s;text-decoration:none;display:block}
 .prov-chip:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
-/* App CTA */
-.app-cta{background:linear-gradient(120deg,#122870,#1A3A8F);border-radius:18px;padding:48px;text-align:center;margin-top:0}
-.app-cta h2{font-size:26px;font-weight:800;color:#fff}
-.app-cta p{font-size:15px;color:#C7D4F0;margin-top:10px}
-.app-cta-btns{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:24px}
-.btn-gold{background:var(--gold);color:#fff;border:0;border-radius:9px;padding:13px 28px;font-size:14px;font-weight:700;cursor:pointer;display:inline-block;text-decoration:none}
+.play-cta{background:linear-gradient(120deg,#122870,#1A3A8F);border-radius:18px;padding:48px 40px;text-align:center;margin:0}
+.play-cta h2{font-size:26px;font-weight:800;color:#fff}
+.play-cta p{font-size:15px;color:rgba(255,255,255,.75);margin-top:10px;margin-bottom:28px}
+.play-cta-btns{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.btn-gold{background:var(--gold);color:#fff;border:0;border-radius:9px;padding:13px 28px;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
 .btn-outline-w{color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:9px;padding:12px 26px;font-size:14px;font-weight:600;background:transparent;display:inline-block;text-decoration:none}
-/* Footer */
-footer{background:#1A3A8F;color:#8FA3D4;padding:48px 0 0;margin-top:0}
-.foot-inner{max-width:1280px;margin:0 auto;padding:0 24px}
-.foot-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:32px;padding-bottom:40px}
-.foot-brand .logo{font-size:22px;font-weight:800;color:#fff}
-.foot-brand .logo span{color:var(--gold)}
-.foot-brand p{font-size:13px;color:#8FA3D4;margin-top:10px;max-width:250px;line-height:1.7}
-.foot-col h4{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;margin-bottom:14px}
-.foot-col a{display:block;font-size:13px;color:#8FA3D4;margin-bottom:9px;text-decoration:none}
-.foot-col a:hover{color:#fff}
-.foot-bottom{border-top:1px solid rgba(255,255,255,.1);padding:16px 0;font-size:12px;color:#6A83C0;text-align:center}
-/* Reveal */
-.reveal{opacity:0;transform:translateY(14px);transition:opacity .5s,transform .5s}
-.reveal.in{opacity:1;transform:none}
-/* Mob nav */
-.mob-nav{display:none;flex-direction:column;background:#fff;border-top:1px solid var(--line);padding:12px 24px 20px}
-.mob-nav a{padding:11px 0;color:#1C2340;font-weight:500;border-bottom:1px solid var(--line);font-size:14px;text-decoration:none}
-.mob-nav.open{display:flex}
-.hamburger{display:none;background:none;border:0;color:#1C2340;cursor:pointer}
-@media(max-width:760px){
-  .hdr-cat-sel{display:none}.hamburger{display:block}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:0}
+.sec-hdr h2{font-size:20px;font-weight:700;color:var(--ink)}
+.sec-hdr h2 span{color:var(--navy)}
+.filter-tag{display:inline-flex;align-items:center;gap:7px;background:var(--navy-tint,#EEF2FF);color:var(--navy);font-size:13px;font-weight:600;padding:6px 14px;border-radius:20px;margin-bottom:20px}
+.filter-tag a{color:var(--navy);text-decoration:none;opacity:.7;margin-left:4px;font-weight:700}.filter-tag a:hover{opacity:1}
+@media(max-width:860px){
   .cat-grid{grid-template-columns:repeat(2,1fr)}
   .prov-grid{grid-template-columns:repeat(2,1fr)}
-  .foot-grid{grid-template-columns:1fr;gap:20px}
+  .section-wrap{padding:32px 22px}
+  .cat-nav-inner{padding:0 22px}
+  .ph-inner{padding:0 22px}
+  .ph-inner h1{font-size:24px}
+  .play-cta{padding:36px 24px}
 }
 </style>
 </head>
-<body>
+<body data-page="Browse Listings">
 
 <header id="site-header">
-  <div class="hdr" style="display:flex;align-items:center;gap:16px">
+  <div class="hdr">
     <a href="index.html" class="logo">Pa<span>Market</span></a>
-    <div class="hdr-search">
-      <select class="hdr-cat-sel" id="hdrCat">
-        <option value="">All Categories</option>
-        <option>Property</option><option>Vehicles</option><option>Electronics</option>
-        <option>Jobs</option><option>Furniture</option><option>Fashion</option>
-        <option>Services</option><option>Agriculture</option><option>Rooms</option>
-        <option>Pets</option><option>Baby &amp; Kids</option>
-      </select>
-      <input type="text" id="hdrQ" class="hdr-q" placeholder="Search listings, shops, jobs..." onkeydown="if(event.key==='Enter')doSearch()">
-      <button class="hdr-search-btn" onclick="doSearch()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        Search
-      </button>
-    </div>
+    <nav class="hdr-nav">
+      <a href="browse.html" class="nav-a active">Browse</a>
+      <a href="browse.html?shops=1" class="nav-a">Shops</a>
+      <a href="jobs.html" class="nav-a">Hire Talent</a>
+      <a href="advertise.html" class="nav-a">Advertise</a>
+      <a href="about.html" class="nav-a">About</a>
+    </nav>
     <div class="hdr-actions">
-      <a href="post-ad.html" class="hdr-post">+ Post Free Ad</a>
-      <button class="hamburger" onclick="toggleMob()">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-      </button>
+      <a href="post-ad.html" class="btn btn-accent btn-sm">Post Free Ad</a>
     </div>
+    <button class="hamburger" onclick="toggleMob()" aria-label="Toggle menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+    </button>
   </div>
   <nav id="mobNav" class="mob-nav">
     <a href="index.html">Home</a>
     <a href="browse.html">Browse All</a>
-    <a href="jobs.html">Jobs</a>
     <a href="browse.html?shops=1">Shops</a>
+    <a href="jobs.html">Hire Talent</a>
     <a href="advertise.html">Advertise</a>
     <a href="about.html">About</a>
-    <a href="post-ad.html" style="color:var(--gold);font-weight:700;border-bottom:0">+ Post Free Ad</a>
+    <div class="mob-nav-btns"><a href="post-ad.html" class="btn btn-accent">Post Free Ad</a></div>
   </nav>
 </header>
 
-<nav class="cat-nav">
+<nav class="cat-nav" id="catNav">
   <div class="cat-nav-inner">
-    <a href="browse.html" class="cat-tab active">All Listings</a>
-    <a href="browse.html?cat=Property" class="cat-tab">Property</a>
-    <a href="browse.html?cat=Vehicles" class="cat-tab">Vehicles</a>
-    <a href="browse.html?cat=Electronics" class="cat-tab">Electronics</a>
+    <a href="browse.html" class="cat-tab" data-cat="">All Listings</a>
+    <a href="browse.html?cat=Property" class="cat-tab" data-cat="Property">Property</a>
+    <a href="browse.html?cat=Vehicles" class="cat-tab" data-cat="Vehicles">Vehicles</a>
+    <a href="browse.html?cat=Electronics" class="cat-tab" data-cat="Electronics">Electronics</a>
     <a href="jobs.html" class="cat-tab">Jobs</a>
-    <a href="browse.html?cat=Furniture" class="cat-tab">Furniture</a>
-    <a href="browse.html?cat=Fashion" class="cat-tab">Fashion</a>
-    <a href="browse.html?cat=Services" class="cat-tab">Services</a>
-    <a href="browse.html?cat=Agriculture" class="cat-tab">Agriculture</a>
-    <a href="browse.html?cat=Rooms" class="cat-tab">Rooms to Rent</a>
-    <a href="browse.html?cat=Pets" class="cat-tab">Pets</a>
-    <a href="browse.html?shops=1" class="cat-tab">Shops</a>
+    <a href="browse.html?cat=Furniture" class="cat-tab" data-cat="Furniture">Furniture</a>
+    <a href="browse.html?cat=Fashion" class="cat-tab" data-cat="Fashion">Fashion</a>
+    <a href="browse.html?cat=Services" class="cat-tab" data-cat="Services">Services</a>
+    <a href="browse.html?cat=Agriculture" class="cat-tab" data-cat="Agriculture">Agriculture</a>
+    <a href="browse.html?cat=Rooms" class="cat-tab" data-cat="Rooms">Rooms to Rent</a>
+    <a href="browse.html?cat=Pets" class="cat-tab" data-cat="Pets">Pets</a>
+    <a href="browse.html?shops=1" class="cat-tab" data-cat="shops">Shops</a>
   </div>
 </nav>
 
 <section class="page-hero">
-  <div class="page-hero-inner">
-    <div class="pagetag">Browse</div>
-    <h1>Find anything across Zimbabwe.</h1>
-    <p>Thousands of listings across 12 categories and all ten provinces. Updated daily.</p>
+  <div class="ph-inner">
+    <div class="pagetag" id="heroTag">Browse</div>
+    <h1 id="heroTitle">Find anything across Zimbabwe.</h1>
+    <p id="heroSub">Thousands of listings across 12 categories and all ten provinces. Updated daily.</p>
   </div>
 </section>
 
-<div class="section-wrap reveal">
-  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
-    <h2 style="font-size:20px;font-weight:700">Shop From <span style="color:var(--navy)">Top Categories</span></h2>
-  </div>
-  <div class="cat-grid">
-    <a href="browse.html?cat=Property" class="cat-card">
-      <div class="cat-ic" style="background:#EEF2FF;color:#1A3A8F"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-      <h3>Property</h3><p>Houses, flats, stands, commercial</p>
-    </a>
-    <a href="browse.html?cat=Vehicles" class="cat-card">
-      <div class="cat-ic" style="background:#FEF3C7;color:#B27D22"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 17H5v-5l2-6h10l2 6v5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg></div>
-      <h3>Vehicles</h3><p>Cars, trucks, motorbikes, boats</p>
-    </a>
-    <a href="browse.html?cat=Electronics" class="cat-card">
-      <div class="cat-ic" style="background:#DCFCE7;color:#1E7E34"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div>
-      <h3>Electronics</h3><p>Phones, laptops, TV, appliances</p>
-    </a>
-    <a href="browse.html?cat=Fashion" class="cat-card">
-      <div class="cat-ic" style="background:#FEE2E2;color:#C62828"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg></div>
-      <h3>Fashion</h3><p>Clothing, shoes, accessories</p>
-    </a>
-    <a href="browse.html?cat=Furniture" class="cat-card">
-      <div class="cat-ic" style="background:#F3E8FF;color:#7B2D8B"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="8" rx="2"/><rect x="5" y="7" width="3" height="3" rx="1"/><rect x="16" y="7" width="3" height="3" rx="1"/><path d="M5 18v2"/><path d="M19 18v2"/></svg></div>
-      <h3>Furniture</h3><p>Home and office furniture</p>
-    </a>
-    <a href="browse.html?cat=Agriculture" class="cat-card">
-      <div class="cat-ic" style="background:#ECFDF5;color:#065F46"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
-      <h3>Agriculture</h3><p>Livestock, crops, equipment</p>
-    </a>
-    <a href="browse.html?cat=Services" class="cat-card">
-      <div class="cat-ic" style="background:#EFF6FF;color:#1A3A8F"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-      <h3>Services</h3><p>Repairs, cleaning, transport</p>
-    </a>
-    <a href="browse.html?cat=Baby+%26+Kids" class="cat-card">
-      <div class="cat-ic" style="background:#FFF7ED;color:#C2410C"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
-      <h3>Baby &amp; Kids</h3><p>Toys, clothes, accessories</p>
-    </a>
-    <a href="browse.html?cat=Pets" class="cat-card">
-      <div class="cat-ic" style="background:#FDF2F8;color:#9D174D"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="14" r="5"/><circle cx="7" cy="7" r="2"/><circle cx="17" cy="7" r="2"/><circle cx="4" cy="13" r="2"/><circle cx="20" cy="13" r="2"/></svg></div>
-      <h3>Pets</h3><p>Animals, food, accessories</p>
-    </a>
-    <a href="browse.html?cat=Rooms" class="cat-card">
-      <div class="cat-ic" style="background:#EEF2FF;color:#1A3A8F"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg></div>
-      <h3>Rooms to Rent</h3><p>Rooms, lodges, shared housing</p>
-    </a>
-    <a href="jobs.html" class="cat-card">
-      <div class="cat-ic" style="background:#E8F5E9;color:#1E7E34"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
-      <h3>Jobs</h3><p>Full time, part time, internships</p>
-    </a>
-    <a href="browse.html?shops=1" class="cat-card">
-      <div class="cat-ic" style="background:#FEF3C7;color:#B27D22"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9h18v11H3zM3 9l2-5h14l2 5"/></svg></div>
-      <h3>Shops</h3><p>Verified business storefronts</p>
-    </a>
-  </div>
-</div>
+<!-- Dynamic content injected by JS -->
+<div class="section-wrap reveal" id="mainContent"></div>
 
-<div style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:40px 0">
+<div style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:40px 0" id="provSection">
   <div class="section-wrap reveal" style="padding-top:0;padding-bottom:0">
-    <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Browse by <span style="color:var(--navy)">Province</span></h2>
-    <p style="font-size:14px;color:var(--sub);margin-bottom:0">Select a province to see listings near you.</p>
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:6px">Browse by <span style="color:var(--navy)">Province</span></h2>
+    <p style="font-size:14px;color:var(--sub);margin-bottom:16px">Select a province to see listings near you.</p>
     <div class="prov-grid">
       <a href="browse.html?prov=Harare" class="prov-chip">Harare</a>
       <a href="browse.html?prov=Bulawayo" class="prov-chip">Bulawayo</a>
       <a href="browse.html?prov=Manicaland" class="prov-chip">Manicaland</a>
-      <a href="browse.html?prov=Mashonaland+Central" class="prov-chip">Mashonaland Central</a>
-      <a href="browse.html?prov=Mashonaland+East" class="prov-chip">Mashonaland East</a>
-      <a href="browse.html?prov=Mashonaland+West" class="prov-chip">Mashonaland West</a>
+      <a href="browse.html?prov=Mashonaland Central" class="prov-chip">Mashonaland Central</a>
+      <a href="browse.html?prov=Mashonaland East" class="prov-chip">Mashonaland East</a>
+      <a href="browse.html?prov=Mashonaland West" class="prov-chip">Mashonaland West</a>
       <a href="browse.html?prov=Masvingo" class="prov-chip">Masvingo</a>
-      <a href="browse.html?prov=Matabeleland+North" class="prov-chip">Matabeleland North</a>
-      <a href="browse.html?prov=Matabeleland+South" class="prov-chip">Matabeleland South</a>
+      <a href="browse.html?prov=Matabeleland North" class="prov-chip">Matabeleland North</a>
+      <a href="browse.html?prov=Matabeleland South" class="prov-chip">Matabeleland South</a>
       <a href="browse.html?prov=Midlands" class="prov-chip">Midlands</a>
     </div>
   </div>
 </div>
 
 <div class="section-wrap reveal" style="padding-bottom:60px">
-  <div class="app-cta">
-    <h2>See all live listings in the app</h2>
-    <p>The full marketplace with photos, search filters, and direct messaging is free. Open it now.</p>
-    <div class="app-cta-btns">
-      <a href="https://princechakusa.github.io/PaMarket/www/" class="btn-gold" target="_blank" rel="noopener">Open the App</a>
+  <div class="play-cta">
+    <h2>Download PaMarket — it's free</h2>
+    <p>The full marketplace with real-time listings, photos, search filters, and direct messaging. Free on Android.</p>
+    <div class="play-cta-btns">
+      <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" class="btn-gold" target="_blank" rel="noopener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76a1.75 1.75 0 0 1-.88-1.54V1.78A1.75 1.75 0 0 1 3.18.24l12.08 11.76zm13.56-6.62-3.08-3-9.42 5.28zM20.4 10.94a1.77 1.77 0 0 1 0 2.12l-2.56 1.46-3.4-3.32 3.4-3.32zm-2.14-4.24-9.42-5.28 9.5 9.24z"/></svg>
+        Get on Google Play
+      </a>
       <a href="post-ad.html" class="btn-outline-w">Post a Free Ad</a>
     </div>
   </div>
 </div>
 
 <footer>
-  <div class="foot-inner">
-    <div class="foot-grid">
-      <div class="foot-brand">
-        <a href="index.html" class="logo">Pa<span>Market</span></a>
-        <p>Zimbabwe's free marketplace. Buy, sell, hire and grow your business across all ten provinces.</p>
+  <div class="wrap" style="padding-top:0;padding-bottom:0">
+    <div class="foot-grid" style="padding:54px 0 38px">
+      <div>
+        <a href="index.html" class="logo foot" style="color:#fff;font-size:22px">Pa<span style="color:var(--gold)">Market</span></a>
+        <p style="font-size:14px;margin-top:12px;max-width:260px;line-height:1.7;color:#A9B6D2">Zimbabwe's free marketplace. Buy, sell, hire and grow your business across all ten provinces.</p>
       </div>
-      <div class="foot-col">
+      <div class="foot">
         <h4>Categories</h4>
         <a href="browse.html?cat=Property">Property</a>
         <a href="browse.html?cat=Vehicles">Vehicles</a>
@@ -244,52 +159,194 @@ footer{background:#1A3A8F;color:#8FA3D4;padding:48px 0 0;margin-top:0}
         <a href="browse.html?cat=Furniture">Furniture</a>
         <a href="jobs.html">Jobs</a>
       </div>
-      <div class="foot-col">
+      <div class="foot">
         <h4>Company</h4>
         <a href="about.html">About</a>
+        <a href="plans.html">Shop Plans</a>
         <a href="advertise.html">Advertise</a>
         <a href="contact.html">Contact</a>
         <a href="help.html">Help</a>
       </div>
-      <div class="foot-col">
+      <div class="foot">
         <h4>Legal</h4>
         <a href="terms.html">Terms</a>
         <a href="privacy.html">Privacy</a>
         <a href="community-guidelines.html">Guidelines</a>
       </div>
     </div>
-    <div class="foot-bottom">&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</div>
+    <div class="footer-bottom">&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</div>
   </div>
 </footer>
 
+<div id="toast-container"></div>
+
+<script src="js/site.js"></script>
 <script>
-function toggleMob(){const n=document.getElementById('mobNav');n.classList.toggle('open')}
-document.addEventListener('click',e=>{const n=document.getElementById('mobNav');if(n&&n.classList.contains('open')&&!document.getElementById('site-header').contains(e.target))n.classList.remove('open')});
-function doSearch(){
-  const q=document.getElementById('hdrQ')?.value?.trim();
-  const cat=document.getElementById('hdrCat')?.value;
-  if(cat==='Jobs'){window.location='jobs.html'+(q?'?q='+encodeURIComponent(q):'');return}
-  let url='browse.html?';
-  if(q)url+='q='+encodeURIComponent(q);
-  if(cat)url+=(q?'&':'')+'cat='+encodeURIComponent(cat);
-  window.location=url==='browse.html?'?'browse.html':url;
+// ── Listing data ────────────────────────────────────────────────
+var ALL_LISTINGS = [
+  // Electronics
+  {cat:'Electronics',price:85,title:'Samsung Galaxy A15 4G',loc:'Harare',badge:'NEW'},
+  {cat:'Electronics',price:320,title:'iPhone 11 Pro 64GB',loc:'Bulawayo',badge:''},
+  {cat:'Electronics',price:150,title:'Smart TV 43" LED',loc:'Gweru',badge:''},
+  {cat:'Electronics',price:280,title:'HP Laptop i5 8GB RAM',loc:'Harare',badge:'HOT'},
+  {cat:'Electronics',price:200,title:'Samsung A54 5G 128GB',loc:'Mutare',badge:''},
+  {cat:'Electronics',price:55,title:'JBL Speaker Flip 6',loc:'Harare',badge:''},
+  {cat:'Electronics',price:180,title:'DSLR Camera Nikon D3500',loc:'Bulawayo',badge:''},
+  {cat:'Electronics',price:160,title:'PS4 Console + 2 Games',loc:'Harare',badge:'HOT'},
+  // Vehicles
+  {cat:'Vehicles',price:5500,title:'Toyota Vitz 2015 Auto',loc:'Harare',badge:''},
+  {cat:'Vehicles',price:6200,title:'Honda Fit Jazz 2016',loc:'Bulawayo',badge:'HOT'},
+  {cat:'Vehicles',price:14000,title:'Isuzu D-Max 2018 4x4',loc:'Gweru',badge:''},
+  {cat:'Vehicles',price:6800,title:'Nissan Note 2017',loc:'Harare',badge:''},
+  {cat:'Vehicles',price:5200,title:'Toyota Fielder 2014',loc:'Mutare',badge:''},
+  {cat:'Vehicles',price:18000,title:'Ford Ranger 2019 XLT',loc:'Harare',badge:''},
+  {cat:'Vehicles',price:9500,title:'BMW 3 Series 2015',loc:'Bulawayo',badge:'HOT'},
+  {cat:'Vehicles',price:5800,title:'Mazda Demio 2016',loc:'Harare',badge:''},
+  // Property
+  {cat:'Property',price:85000,title:'3 Bed House Borrowdale',loc:'Harare',badge:''},
+  {cat:'Property',price:45000,title:'2 Bed Flat Avondale',loc:'Harare',badge:''},
+  {cat:'Property',price:28000,title:'Stand 2000m² Glen Lorne',loc:'Harare',badge:'HOT'},
+  {cat:'Property',price:75000,title:'4 Bed House Hillside',loc:'Bulawayo',badge:''},
+  {cat:'Property',price:22000,title:'1 Bed Cottage Resthaven',loc:'Gweru',badge:''},
+  {cat:'Property',price:800,title:'Shop to Let — CBD',loc:'Harare',badge:''},
+  // Furniture
+  {cat:'Furniture',price:420,title:'L-Shape Leather Sofa',loc:'Harare',badge:'NEW'},
+  {cat:'Furniture',price:180,title:'Queen Bed Frame + Mattress',loc:'Bulawayo',badge:''},
+  {cat:'Furniture',price:95,title:'Dining Table 6-Seater',loc:'Gweru',badge:''},
+  {cat:'Furniture',price:60,title:'Office Desk + Chair',loc:'Harare',badge:''},
+  // Fashion
+  {cat:'Fashion',price:25,title:'Jordan Retro Sneakers Sz 42',loc:'Harare',badge:'NEW'},
+  {cat:'Fashion',price:15,title:'Ladies Handbag — Leather',loc:'Bulawayo',badge:''},
+  {cat:'Fashion',price:35,title:'Men\'s Business Suit',loc:'Harare',badge:''},
+  {cat:'Fashion',price:12,title:'African Print Dress',loc:'Mutare',badge:''},
+  // Agriculture
+  {cat:'Agriculture',price:1200,title:'5 Dairy Cows (Holstein)',loc:'Marondera',badge:''},
+  {cat:'Agriculture',price:450,title:'1 Ton Maize — Clean Grade',loc:'Kwekwe',badge:'HOT'},
+  {cat:'Agriculture',price:2200,title:'Tractor MF 135 Good Cond.',loc:'Gweru',badge:''},
+  {cat:'Agriculture',price:80,title:'100 Broiler Chicks Day-Old',loc:'Harare',badge:'NEW'},
+  // Services
+  {cat:'Services',price:30,title:'Electrician — Same Day',loc:'Harare',badge:''},
+  {cat:'Services',price:20,title:'Plumber 24/7 Available',loc:'Bulawayo',badge:''},
+  {cat:'Services',price:50,title:'Moving & Transport Truck',loc:'Harare',badge:'HOT'},
+  {cat:'Services',price:15,title:'Domestic Cleaning Service',loc:'Gweru',badge:''},
+  // Rooms
+  {cat:'Rooms',price:120,title:'Single Room — Avondale',loc:'Harare',badge:'NEW'},
+  {cat:'Rooms',price:200,title:'Bachelor Flat — Borrowdale',loc:'Harare',badge:''},
+  {cat:'Rooms',price:90,title:'Room to Rent — Suburb',loc:'Bulawayo',badge:''},
+  // Pets
+  {cat:'Pets',price:80,title:'German Shepherd Puppies',loc:'Harare',badge:'NEW'},
+  {cat:'Pets',price:50,title:'Maltese Puppies 8 Weeks',loc:'Bulawayo',badge:''},
+  {cat:'Pets',price:30,title:'African Grey Parrot',loc:'Harare',badge:''},
+];
+
+var COLORS=['#EEF2FF','#FEF3C7','#DCFCE7','#FCE7F3','#E0F2FE','#FEF9C3','#F3E8FF','#FFEDD5','#ECFDF5','#FEE2E2'];
+var TCOLORS=['#1A3A8F','#B27D22','#16A34A','#9D174D','#0369A1','#92400E','#7B2D8B','#C2410C','#065F46','#B91C1C'];
+var PIN='<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+
+function buildCard(item, idx) {
+  var bg = COLORS[idx % COLORS.length], tc = TCOLORS[idx % TCOLORS.length];
+  var badge = item.badge ? '<span class="l-badge ' + (item.badge==='HOT'?'l-badge-hot':'l-badge-new') + '">' + item.badge + '</span>' : '';
+  return '<div class="l-card">' +
+    '<div class="l-card-img" style="background:' + bg + ';color:' + tc + '">' + badge +
+      item.title.split(' ').slice(0,3).join('<br>') +
+    '</div>' +
+    '<div class="l-card-body">' +
+      '<div class="l-price">$' + Number(item.price).toLocaleString() + '</div>' +
+      '<div class="l-title">' + item.title + '</div>' +
+      '<div class="l-loc">' + PIN + ' ' + item.loc + '</div>' +
+    '</div></div>';
 }
-// Pre-select category from URL
-(function(){
-  const p=new URLSearchParams(location.search);
-  const cat=p.get('cat');
-  if(cat){const s=document.getElementById('hdrCat');if(s)s.value=cat}
-  // highlight active tab
-  document.querySelectorAll('.cat-tab').forEach(t=>{
-    t.classList.remove('active');
-    const u=new URL(t.href,location.href);
-    const tc=new URLSearchParams(u.search).get('cat');
-    if((!cat&&!tc&&!p.get('shops'))&&t.href.endsWith('browse.html'))t.classList.add('active');
-    else if(cat&&tc===cat)t.classList.add('active');
+
+// ── URL params & render ─────────────────────────────────────────
+var params = new URLSearchParams(location.search);
+var activeCat = params.get('cat') || '';
+var activeQ   = params.get('q') || '';
+var activeProv = params.get('prov') || '';
+var activeShop = params.get('shops') === '1';
+
+// Highlight active cat tab
+document.querySelectorAll('#catNav .cat-tab').forEach(function(tab) {
+  var dc = tab.getAttribute('data-cat');
+  if (dc === null) return;
+  tab.classList.remove('active');
+  if (activeShop && dc === 'shops') tab.classList.add('active');
+  else if (!activeShop && dc === activeCat) tab.classList.add('active');
+});
+
+var content = document.getElementById('mainContent');
+
+if (activeShop) {
+  // Shops page
+  document.getElementById('heroTag').textContent = 'Shops';
+  document.getElementById('heroTitle').textContent = 'Verified Business Shops';
+  document.getElementById('heroSub').textContent = 'Browse verified businesses with their own storefronts and product catalogs.';
+  document.body.setAttribute('data-page', 'Shops');
+  content.innerHTML =
+    '<p style="font-size:15px;color:var(--sub);margin-bottom:24px">Verified shops on PaMarket have a confirmed identity, a business inbox, and a full product catalog.</p>' +
+    '<div style="background:var(--navy-tint,#EEF2FF);border-radius:16px;padding:28px;text-align:center">' +
+      '<div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:8px">Browse shops in the PaMarket app</div>' +
+      '<p style="font-size:14px;color:var(--sub);margin-bottom:20px">Shop profiles, reviews, and direct messaging are available in the free Android app.</p>' +
+      '<a href="https://play.google.com/store/apps/details?id=com.pamarket.app" class="btn btn-navy" target="_blank" rel="noopener">Get the App — Free</a>' +
+    '</div>';
+
+} else if (activeCat || activeQ || activeProv) {
+  // Filtered listings
+  var filtered = ALL_LISTINGS.filter(function(item) {
+    if (activeCat && item.cat !== activeCat) return false;
+    if (activeProv && item.loc.toLowerCase().indexOf(activeProv.toLowerCase()) === -1) return false;
+    if (activeQ && item.title.toLowerCase().indexOf(activeQ.toLowerCase()) === -1) return false;
+    return true;
   });
-})();
-const revealObs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');revealObs.unobserve(e.target)}})},{threshold:0.08});
-document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
+
+  var label = activeCat || (activeProv ? activeProv : (activeQ ? '"' + activeQ + '"' : 'All'));
+  document.getElementById('heroTag').textContent = activeCat || 'Search';
+  document.getElementById('heroTitle').textContent = activeCat ? activeCat + ' listings in Zimbabwe' : (activeQ ? 'Results for "' + activeQ + '"' : 'Listings in ' + activeProv);
+  document.getElementById('heroSub').textContent = filtered.length + ' listings found' + (activeProv ? ' in ' + activeProv : '') + '.';
+
+  var filterTag = '<div class="filter-tag">' +
+    (activeCat ? activeCat : activeQ ? 'Search: ' + activeQ : activeProv) +
+    ' <a href="browse.html">✕ Clear</a></div>';
+
+  if (filtered.length === 0) {
+    content.innerHTML = filterTag + '<div class="no-results">No listings found for this filter.<br><a href="browse.html" style="color:var(--navy);font-weight:600">Clear filters</a></div>';
+  } else {
+    content.innerHTML = filterTag +
+      '<div class="sec-hdr"><h2>Showing <span>' + filtered.length + ' listings</span></h2></div>' +
+      '<div class="listing-grid">' + filtered.map(buildCard).join('') + '</div>';
+  }
+
+} else {
+  // Default — category grid
+  content.innerHTML =
+    '<div class="sec-hdr" style="margin-bottom:20px"><h2>Shop From <span>Top Categories</span></h2></div>' +
+    '<div class="cat-grid">' +
+    '<a href="browse.html?cat=Property" class="cat-card"><div class="cat-ic" style="background:#EEF2FF;color:#1A3A8F"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><h3>Property</h3><p>Houses, flats, stands, commercial</p></a>' +
+    '<a href="browse.html?cat=Vehicles" class="cat-card"><div class="cat-ic" style="background:#FEF3C7;color:#B27D22"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 17H5v-5l2-6h10l2 6v5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg></div><h3>Vehicles</h3><p>Cars, trucks, motorbikes, boats</p></a>' +
+    '<a href="browse.html?cat=Electronics" class="cat-card"><div class="cat-ic" style="background:#DCFCE7;color:#1E7E34"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div><h3>Electronics</h3><p>Phones, laptops, TV, appliances</p></a>' +
+    '<a href="browse.html?cat=Fashion" class="cat-card"><div class="cat-ic" style="background:#FEE2E2;color:#C62828"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg></div><h3>Fashion</h3><p>Clothing, shoes, accessories</p></a>' +
+    '<a href="browse.html?cat=Furniture" class="cat-card"><div class="cat-ic" style="background:#F3E8FF;color:#7B2D8B"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="8" rx="2"/><rect x="5" y="7" width="3" height="3" rx="1"/><rect x="16" y="7" width="3" height="3" rx="1"/><path d="M5 18v2"/><path d="M19 18v2"/></svg></div><h3>Furniture</h3><p>Home and office furniture</p></a>' +
+    '<a href="browse.html?cat=Agriculture" class="cat-card"><div class="cat-ic" style="background:#ECFDF5;color:#065F46"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div><h3>Agriculture</h3><p>Livestock, crops, equipment</p></a>' +
+    '<a href="browse.html?cat=Services" class="cat-card"><div class="cat-ic" style="background:#EFF6FF;color:#1A3A8F"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><h3>Services</h3><p>Repairs, cleaning, transport</p></a>' +
+    '<a href="browse.html?cat=Rooms" class="cat-card"><div class="cat-ic" style="background:#EEF2FF;color:#1A3A8F"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg></div><h3>Rooms to Rent</h3><p>Rooms, lodges, shared housing</p></a>' +
+    '<a href="browse.html?cat=Pets" class="cat-card"><div class="cat-ic" style="background:#FDF2F8;color:#9D174D"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="14" r="5"/><circle cx="7" cy="7" r="2"/><circle cx="17" cy="7" r="2"/><circle cx="4" cy="13" r="2"/><circle cx="20" cy="13" r="2"/></svg></div><h3>Pets</h3><p>Animals, food, accessories</p></a>' +
+    '<a href="jobs.html" class="cat-card"><div class="cat-ic" style="background:#E8F5E9;color:#1E7E34"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><h3>Jobs</h3><p>Full time, part time, internships</p></a>' +
+    '<a href="browse.html?shops=1" class="cat-card"><div class="cat-ic" style="background:#FEF3C7;color:#B27D22"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9h18v11H3zM3 9l2-5h14l2 5"/></svg></div><h3>Shops</h3><p>Verified business storefronts</p></a>' +
+    '</div>';
+}
+
+// ── Search ──────────────────────────────────────────────────────
+function doSearch() {
+  var q = document.getElementById('hdrQ') ? document.getElementById('hdrQ').value.trim() : '';
+  var cat = document.getElementById('hdrCat') ? document.getElementById('hdrCat').value : '';
+  if (cat === 'Jobs') { window.location = 'jobs.html' + (q ? '?q=' + encodeURIComponent(q) : ''); return; }
+  var u = 'browse.html?';
+  if (q) u += 'q=' + encodeURIComponent(q);
+  if (cat) u += (q ? '&' : '') + 'cat=' + encodeURIComponent(cat);
+  window.location = u === 'browse.html?' ? 'browse.html' : u;
+}
+// Pre-fill search inputs from URL
+if (activeCat && document.getElementById('hdrCat')) document.getElementById('hdrCat').value = activeCat;
+if (activeQ && document.getElementById('hdrQ')) document.getElementById('hdrQ').value = activeQ;
 </script>
 </body>
 </html>

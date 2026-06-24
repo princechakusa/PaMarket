@@ -52,32 +52,33 @@ footer{background:#1A3A8F!important;color:#8FA3D4!important;padding:48px 0 0!imp
   @media(max-width:860px){.tip-grid{grid-template-columns:1fr}}
 </style>
 </head>
-<body>
+<body data-page="Post a Free Ad">
 
 <header id="site-header">
-  <div class="hdr" style="display:flex;align-items:center;gap:16px">
+  <div class="hdr">
     <a href="index.html" class="logo">Pa<span>Market</span></a>
-    <div class="hdr-search">
-      <input type="text" id="hdrQ" class="hdr-q" placeholder="Search listings, shops, jobs..." onkeydown="if(event.key==='Enter')window.location='browse.html?q='+encodeURIComponent(this.value)">
-      <button class="hdr-search-btn" onclick="window.location='browse.html?q='+encodeURIComponent(document.getElementById('hdrQ').value)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        Search
-      </button>
-    </div>
+    <nav class="hdr-nav">
+      <a href="browse.html" class="nav-a">Browse</a>
+      <a href="browse.html?shops=1" class="nav-a">Shops</a>
+      <a href="jobs.html" class="nav-a">Hire Talent</a>
+      <a href="advertise.html" class="nav-a">Advertise</a>
+      <a href="about.html" class="nav-a">About</a>
+    </nav>
     <div class="hdr-actions">
-      <a href="post-ad.html" class="hdr-post">+ Post Free Ad</a>
-      <button class="hamburger2" onclick="toggleMob()">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-      </button>
+      <a href="post-ad.html" class="btn btn-accent btn-sm">Post Free Ad</a>
     </div>
+    <button class="hamburger" onclick="toggleMob()" aria-label="Toggle menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+    </button>
   </div>
   <nav id="mobNav" class="mob-nav">
     <a href="index.html">Home</a>
     <a href="browse.html">Browse All</a>
-    <a href="jobs.html">Jobs</a>
     <a href="browse.html?shops=1">Shops</a>
+    <a href="jobs.html">Hire Talent</a>
     <a href="advertise.html">Advertise</a>
     <a href="about.html">About</a>
+    <div class="mob-nav-btns"><a href="post-ad.html" class="btn btn-accent">Post Free Ad</a></div>
   </nav>
 </header>
 
@@ -87,7 +88,7 @@ footer{background:#1A3A8F!important;color:#8FA3D4!important;padding:48px 0 0!imp
     <h1>Sell anything. Reach all of Zimbabwe.</h1>
     <p>Your listing goes live in under 2 minutes. No fees, no commissions, no catch.</p>
     <div style="margin-top:32px">
-      <a href="https://princechakusa.github.io/PaMarket/www/" target="_blank" rel="noopener" class="btn btn-accent" style="font-size:16px;padding:14px 36px">Post Your Ad Now</a>
+      <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener" class="btn btn-accent" style="font-size:16px;padding:14px 36px">Post Your Ad — Get the App</a>
     </div>
   </div>
 </section>
@@ -167,28 +168,27 @@ footer{background:#1A3A8F!important;color:#8FA3D4!important;padding:48px 0 0!imp
       <div class="eyebrow" style="color:rgba(255,255,255,.6)">Ready?</div>
       <h2 style="font-size:30px;font-weight:900;color:#fff;margin:10px 0">Post your first ad now. It's free.</h2>
       <p style="font-size:16px;color:rgba(255,255,255,.75);margin-bottom:32px;max-width:480px;margin-left:auto;margin-right:auto">Open the app, tap Post Free Ad, and your listing can be live today. No account charges, no listing fees, no commission on sales.</p>
-      <a href="https://princechakusa.github.io/PaMarket/www/" target="_blank" rel="noopener" class="btn btn-accent" style="font-size:16px;padding:14px 36px">Open the App</a>
+      <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener" class="btn btn-accent" style="font-size:16px;padding:14px 36px">Download on Google Play</a>
     </div>
   </div>
 </section>
 
 <footer>
-  <div class="foot-inner">
-    <div class="foot-grid2">
-      <div class="foot-brand2"><a href="index.html" class="logo2">Pa<span>Market</span></a><p>Zimbabwe's free marketplace. Buy, sell, hire and grow your business across all ten provinces.</p></div>
-      <div class="foot-col2"><h4>Categories</h4><a href="browse.html?cat=Property">Property</a><a href="browse.html?cat=Vehicles">Vehicles</a><a href="browse.html?cat=Electronics">Electronics</a><a href="jobs.html">Jobs</a></div>
-      <div class="foot-col2"><h4>Company</h4><a href="about.html">About</a><a href="advertise.html">Advertise</a><a href="contact.html">Contact</a><a href="help.html">Help</a></div>
-      <div class="foot-col2"><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="community-guidelines.html">Guidelines</a></div>
+  <div class="wrap" style="padding-top:0;padding-bottom:0">
+    <div class="foot-grid" style="padding:54px 0 38px">
+      <div>
+        <a href="index.html" class="logo" style="color:#fff;font-size:22px">Pa<span style="color:var(--gold)">Market</span></a>
+        <p style="font-size:14px;margin-top:12px;max-width:260px;line-height:1.7;color:#A9B6D2">Zimbabwe's free marketplace. Buy, sell, hire and grow your business across all ten provinces.</p>
+      </div>
+      <div class="foot"><h4>Categories</h4><a href="browse.html?cat=Property">Property</a><a href="browse.html?cat=Vehicles">Vehicles</a><a href="browse.html?cat=Electronics">Electronics</a><a href="browse.html?cat=Furniture">Furniture</a><a href="jobs.html">Jobs</a></div>
+      <div class="foot"><h4>Company</h4><a href="about.html">About</a><a href="plans.html">Shop Plans</a><a href="advertise.html">Advertise</a><a href="contact.html">Contact</a><a href="help.html">Help</a></div>
+      <div class="foot"><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="community-guidelines.html">Guidelines</a></div>
     </div>
-    <div class="foot-bottom2">&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</div>
+    <div class="footer-bottom">&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</div>
   </div>
 </footer>
 
-<script>
-function toggleMob(){const n=document.getElementById('mobNav');n.classList.toggle('open')}
-document.addEventListener('click',e=>{const n=document.getElementById('mobNav');if(n.classList.contains('open')&&!document.getElementById('site-header').contains(e.target))n.classList.remove('open')});
-const revealObs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');revealObs.unobserve(e.target)}})},{threshold:0.08});
-document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
-</script>
+<div id="toast-container"></div>
+<script src="js/site.js"></script>
 </body>
 </html>

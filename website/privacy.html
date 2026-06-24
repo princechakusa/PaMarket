@@ -27,7 +27,7 @@
 @media(max-width:860px){.legal-wrap{padding:40px 22px 60px}.rights-table{font-size:13px}}
 </style>
 </head>
-<body>
+<body data-page="Privacy Policy">
 
 <header id="site-header">
   <div class="hdr">
@@ -204,7 +204,7 @@
   <div class="wrap">
     <div class="foot-grid">
       <div><a href="index.html" class="logo">Pa<span>Market</span></a><p>Zimbabwe's free marketplace. Buy, sell, hire and grow your business across all ten provinces.</p></div>
-      <div class="foot"><h4>Marketplace</h4><a href="browse.html">Browse</a><a href="post-ad.html">Post a Free Ad</a><a href="browse.html?shops=1">Shops</a><a href="jobs.html">Hire Talent</a></div>
+      <div class="foot"><h4>Marketplace</h4><a href="browse.html">Browse</a><a href="post-ad.html">Post a Free Ad</a><a href="browse.html?shops=1">Shops</a><a href="plans.html">Plans</a><a href="jobs.html">Hire Talent</a></div>
       <div class="foot"><h4>Company</h4><a href="about.html">About</a><a href="advertise.html">Advertise</a><a href="contact.html">Contact</a><a href="help.html">Help</a></div>
       <div class="foot"><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="community-guidelines.html">Guidelines</a><a href="help.html">Safety</a></div>
     </div>
@@ -216,5 +216,6 @@
 function toggleMob(){document.getElementById('mobNav').classList.toggle('open')}
 document.addEventListener('click',e=>{const n=document.getElementById('mobNav');if(n.classList.contains('open')&&!document.getElementById('site-header').contains(e.target))n.classList.remove('open')});
 </script>
+<script src="js/site.js"></script>
 </body>
 </html>
