@@ -2120,81 +2120,251 @@
     H.goBack();
   };
 
+  // ── Colour pool for applicant avatars ──────────────────────
+  var _APP_COLORS = ['#1A3A8F','#7C3AED','#059669','#DC2626','#F59E0B','#2563EB','#DB2777','#0891B2'];
+  function _appAvatarColor(name) {
+    var h = 0;
+    for (var i = 0; i < (name || '').length; i++) h = (h * 31 + name.charCodeAt(i)) % _APP_COLORS.length;
+    return _APP_COLORS[Math.abs(h)];
+  }
+  var _APP_STATUS_LABEL = { new:'NEW', pending:'NEW', reviewed:'REVIEWED', shortlisted:'SHORTLISTED', hired:'HIRED', declined:'DECLINED', rejected:'DECLINED' };
+  var _APP_STATUS_COLOR = { new:'#F5A623', pending:'#F5A623', reviewed:'#6366F1', shortlisted:'#22c55e', hired:'#15803d', declined:'#ef4444', rejected:'#ef4444' };
+
   H.pages.JobApplications = function (params) {
-    var jobId = params && params.jobId;
+    var jobId     = params && params.jobId;
+    var filterKey = (params && params.filter) || 'all';
     var u = H.currentUser();
     if (!u) return '<div class="page active">' + H.innerTopbar('Applications') + H.emptyState('Sign in required', '', null, null) + '</div>';
-    var l = (H.state.listings || []).find(function(x){ return x.id === jobId; });
-    var title = l ? l.title : 'Job';
-    var apps = (H.state.applications || []).filter(function(a){ return a.jobId === jobId; })
-      .sort(function(a,b){ return b.appliedAt - a.appliedAt; });
 
-    var statusColors = { pending:'#F5A623', reviewed:'#1A3A8F', shortlisted:'#22c55e', rejected:'#ef4444' };
-    var statusLabels = { pending:'New', reviewed:'Reviewed', shortlisted:'Shortlisted', rejected:'Rejected' };
+    var l       = (H.state.listings || []).find(function(x){ return x.id === jobId; });
+    var title   = l ? l.title   : 'Job';
+    var company = l ? (l.company || l.sellerName || 'Company') : 'Company';
+
+    var all = (H.state.applications || [])
+      .filter(function(a){ return a.jobId === jobId; })
+      .sort(function(a, b){ return b.appliedAt - a.appliedAt; });
+
+    var nNew  = all.filter(function(a){ var s=a.status||'new'; return s==='new'||s==='pending'||s==='reviewed'; }).length;
+    var nShrt = all.filter(function(a){ return a.status==='shortlisted'; }).length;
+    var nHire = all.filter(function(a){ return a.status==='hired'; }).length;
+    var nDecl = all.filter(function(a){ return a.status==='declined'||a.status==='rejected'; }).length;
+
+    var shown = filterKey === 'all' ? all
+      : filterKey === 'new' ? all.filter(function(a){ var s=a.status||'new'; return s==='new'||s==='pending'||s==='reviewed'; })
+      : filterKey === 'declined' ? all.filter(function(a){ return a.status==='declined'||a.status==='rejected'; })
+      : all.filter(function(a){ return a.status === filterKey; });
+
+    function _statBox(n, lbl, col) {
+      return '<div style="flex:1;padding:10px 4px;text-align:center">'
+        + '<div style="font-size:20px;font-weight:900;color:' + col + '">' + n + '</div>'
+        + '<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.4px;margin-top:1px">' + lbl + '</div>'
+        + '</div>';
+    }
+
+    var pills = [['all','All',all.length],['new','New',nNew],['shortlisted','Shortlisted',nShrt],['hired','Hired',nHire],['declined','Declined',nDecl]].map(function(fp){
+      var on = filterKey === fp[0];
+      return '<button onclick="H.renderPage(\'JobApplications\',{jobId:\''+jobId+'\',filter:\''+fp[0]+'\'})" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;border:'+(on?'none':'1.5px solid var(--border)')+';background:'+(on?'#1A3A8F':'var(--card)')+';color:'+(on?'#fff':'var(--sub)')+';cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">'
+        + fp[1] + (fp[2] ? ' (' + fp[2] + ')' : '') + '</button>';
+    }).join('');
+
+    function _appCard(app) {
+      var s      = app.status || 'new';
+      var sLbl   = _APP_STATUS_LABEL[s] || s.toUpperCase();
+      var sCol   = _APP_STATUS_COLOR[s] || '#9CA3AF';
+      var ini    = (app.applicantName || 'A').split(' ').map(function(w){ return w[0] || ''; }).join('').toUpperCase().slice(0, 2);
+      var color  = _appAvatarColor(app.applicantName);
+      var msg    = (app.message || '').trim();
+      var preview = msg ? ('"' + msg.slice(0, 130) + (msg.length > 130 ? '…' : '') + '"') : '';
+      var fade   = (s === 'declined' || s === 'rejected') ? 'opacity:.65;' : '';
+
+      // Action buttons follow the interview pipeline:
+      // new/reviewed → Shortlist | Message | Decline
+      // shortlisted  → Mark Hired | Message | Decline
+      // hired        → Message only
+      // declined     → Reconsider
+      var btns;
+      if (s === 'hired') {
+        btns = '<button onclick="H._openApplicationChat(\''+app.id+'\')" style="flex:1;padding:10px;background:#EFF6FF;color:#1A3A8F;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Message</button>';
+      } else if (s === 'shortlisted') {
+        btns = '<button onclick="H._setAppStatus(\''+app.id+'\',\'hired\')" style="flex:1;padding:10px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Mark Hired</button>'
+             + '<button onclick="H._openApplicationChat(\''+app.id+'\')" style="flex:1;padding:10px;background:#EFF6FF;color:#1A3A8F;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Message</button>'
+             + '<button onclick="H._setAppStatus(\''+app.id+'\',\'declined\')" style="flex:1;padding:10px;background:#FEE2E2;color:#991B1B;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button>';
+      } else if (s === 'declined' || s === 'rejected') {
+        btns = '<button onclick="H._setAppStatus(\''+app.id+'\',\'shortlisted\')" style="flex:1;padding:10px;background:#EFF6FF;color:#1A3A8F;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Reconsider</button>'
+             + '<button onclick="H._openApplicationChat(\''+app.id+'\')" style="flex:1;padding:10px;background:#F3F4F6;color:#374151;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Message</button>';
+      } else {
+        // new / reviewed / pending
+        btns = '<button onclick="H._setAppStatus(\''+app.id+'\',\'shortlisted\')" style="flex:1;padding:10px;background:#DCFCE7;color:#15803d;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Shortlist</button>'
+             + '<button onclick="H._openApplicationChat(\''+app.id+'\')" style="flex:1;padding:10px;background:#EFF6FF;color:#1A3A8F;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Message</button>'
+             + '<button onclick="H._setAppStatus(\''+app.id+'\',\'declined\')" style="flex:1;padding:10px;background:#FEE2E2;color:#991B1B;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button>';
+      }
+
+      return '<div style="background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden;margin-bottom:12px;' + fade + '">'
+        + '<div style="display:flex;align-items:center;gap:12px;padding:14px 14px 10px">'
+        + '<div style="width:46px;height:46px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#fff;flex-shrink:0">' + H.escHtml(ini) + '</div>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:14px;font-weight:800;color:var(--text)">' + H.escHtml(app.applicantName || 'Applicant') + '</div>'
+        + '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + H.timeAgo(app.appliedAt) + (app.applicantPhone ? ' · ' + H.escHtml(app.applicantPhone) : '') + '</div>'
+        + '</div>'
+        + '<span style="background:' + sCol + '18;color:' + sCol + ';font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap">' + sLbl + '</span>'
+        + '</div>'
+        + (preview ? '<div style="margin:0 14px 10px;padding:9px 12px;background:var(--bg);border-radius:10px;border-left:3px solid #1A3A8F">'
+            + '<div style="font-size:12.5px;color:var(--sub);line-height:1.55;font-style:italic">' + H.escHtml(preview) + '</div></div>' : '')
+        + '<div style="display:flex;gap:7px;padding:0 14px 14px">'
+        + '<button onclick="H.openInner(\'ApplicationDetail\',{appId:\'' + app.id + '\'})" style="display:flex;align-items:center;justify-content:center;gap:5px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;flex-shrink:0"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Full CV</button>'
+        + btns
+        + '</div></div>';
+    }
 
     return '<div class="page active">'
-      + H.innerTopbar('Applications for ' + H.escHtml(title))
-      + '<div style="padding:12px 14px 16px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px">'
-      + '<div><div style="font-size:22px;font-weight:800;color:var(--text)">' + apps.length + ' Application' + (apps.length===1?'':'s') + '</div>'
-      + '<div style="font-size:13px;color:var(--sub);margin-top:2px">' + H.escHtml(title) + '</div></div>'
-      + (l ? '<button onclick="H._markJobFilled(\'' + jobId + '\')" style="flex-shrink:0;padding:8px 14px;background:#22c55e15;color:#15803d;border:1.5px solid #22c55e40;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">Position Filled ✓</button>' : '')
+      + '<div style="background:#1A3A8F;padding:48px 16px 0">'
+      + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'
+      + '<button onclick="H.goBack()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">'
+      + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:800;color:#fff">Applications</div>'
+      + '<div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:1px">' + H.escHtml(title) + ' · ' + H.escHtml(company) + '</div></div>'
+      + (nNew > 0 ? '<span style="background:#F5A623;color:#1A3A8F;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">' + nNew + ' New</span>' : '')
       + '</div>'
+      + '<div style="display:flex;background:rgba(255,255,255,.1);border-radius:14px 14px 0 0">'
+      + _statBox(all.length, 'Total',       '#fff')
+      + _statBox(nNew,       'New',         '#F5A623')
+      + _statBox(nShrt,      'Shortlisted', '#86EFAC')
+      + _statBox(nHire,      'Hired',       '#4ADE80')
+      + '</div></div>'
+      + '<div style="display:flex;gap:8px;overflow-x:auto;padding:12px 14px;background:var(--card);border-bottom:1px solid var(--border);scrollbar-width:none">' + pills + '</div>'
       + '<div style="padding:12px 14px 88px">'
-      + (apps.length ? apps.map(function(app) {
-          var statusC = statusColors[app.status] || '#999';
-          var statusL = statusLabels[app.status] || app.status;
-          var ini = (app.applicantName||'A').split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
-          return '<div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid var(--border)">'
-            + '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">'
-            + '<div style="width:44px;height:44px;border-radius:50%;background:#1A3A8F;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0">' + ini + '</div>'
-            + '<div style="flex:1;min-width:0">'
-            + '<div style="display:flex;justify-content:space-between;align-items:flex-start">'
-            + '<div style="font-size:15px;font-weight:700;color:var(--text)">' + H.escHtml(app.applicantName || 'Applicant') + '</div>'
-            + '<span style="background:' + statusC + '20;color:' + statusC + ';font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px">' + statusL + '</span>'
+      + (shown.length ? shown.map(_appCard).join('') : H.emptyState('No applications here', 'Try a different filter', null, null))
+      + '</div></div>';
+  };
+
+  // ── Full application detail page ────────────────────────────
+  H.pages.ApplicationDetail = function (params) {
+    var appId = params && params.appId;
+    var app   = (H.state.applications || []).find(function(a){ return a.id === appId; });
+    if (!app) return '<div class="page active">' + H.innerTopbar('Application') + H.emptyState('Not found', '', null, null) + '</div>';
+
+    // Mark as reviewed when the employer opens the detail
+    if (!app.status || app.status === 'new' || app.status === 'pending') {
+      app.status = 'reviewed';
+      H.saveState();
+      if (typeof H.updateApplicationStatusCloud === 'function') H.updateApplicationStatusCloud(appId, 'reviewed');
+    }
+
+    var s      = app.status || 'reviewed';
+    var sLbl   = _APP_STATUS_LABEL[s] || s;
+    var sCol   = _APP_STATUS_COLOR[s] || '#9CA3AF';
+    var ini    = (app.applicantName || 'A').split(' ').map(function(w){ return w[0] || ''; }).join('').toUpperCase().slice(0, 2);
+    var color  = _appAvatarColor(app.applicantName);
+
+    var row = function(lbl, val) {
+      return val ? '<div style="display:flex;padding:10px 0;border-bottom:1px solid var(--border)">'
+        + '<div style="font-size:12px;color:var(--sub);width:110px;flex-shrink:0;padding-top:1px">' + lbl + '</div>'
+        + '<div style="font-size:13px;font-weight:600;color:var(--text);flex:1">' + H.escHtml(val) + '</div>'
+        + '</div>' : '';
+    };
+
+    var footerBtns;
+    if (s === 'hired') {
+      footerBtns = '<button onclick="H._openApplicationChat(\''+appId+'\')" style="flex:1;padding:14px;background:#EFF6FF;color:#1A3A8F;border:none;border-radius:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Message</button>';
+    } else if (s === 'shortlisted') {
+      footerBtns = '<button onclick="H._setAppStatus(\''+appId+'\',\'hired\')" style="flex:1;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Mark Hired</button>'
+                 + '<button onclick="H._openApplicationChat(\''+appId+'\')" style="flex:1;padding:14px;background:#EFF6FF;color:#1A3A8F;border:none;border-radius:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Message</button>';
+    } else if (s === 'declined' || s === 'rejected') {
+      footerBtns = '<button onclick="H._setAppStatus(\''+appId+'\',\'shortlisted\')" style="flex:1;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Reconsider</button>';
+    } else {
+      footerBtns = '<button onclick="H._setAppStatus(\''+appId+'\',\'shortlisted\')" style="flex:1;padding:14px;background:#1A3A8F;color:#fff;border:none;border-radius:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Shortlist for Interview</button>'
+                 + '<button onclick="H._setAppStatus(\''+appId+'\',\'declined\')" style="flex:1;padding:14px;background:#FEE2E2;color:#991B1B;border:none;border-radius:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Decline</button>';
+    }
+
+    return '<div class="page active">'
+      + H.innerTopbar('Application')
+      + '<div style="padding:16px 14px 100px">'
+
+      // Applicant header card
+      + '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;display:flex;align-items:center;gap:14px">'
+      + '<div style="width:54px;height:54px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;flex-shrink:0">' + H.escHtml(ini) + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:17px;font-weight:800;color:var(--text)">' + H.escHtml(app.applicantName || 'Applicant') + '</div>'
+      + '<div style="font-size:12px;color:var(--sub);margin-top:3px">' + H.timeAgo(app.appliedAt) + ' · ' + H.escHtml(app.jobTitle || '') + '</div>'
+      + '</div>'
+      + '<span style="background:' + sCol + '18;color:' + sCol + ';font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px">' + sLbl + '</span>'
+      + '</div>'
+
+      // Contact details
+      + '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px">'
+      + '<div style="font-size:10px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Contact</div>'
+      + row('Phone', app.applicantPhone)
+      + row('Email', app.applicantEmail)
+      + row('City', app.applicantCity || '')
+      + row('Experience', app.applicantExp || '')
+      + row('Education', app.applicantQual || '')
+      + '</div>'
+
+      // Cover letter
+      + (app.message ? '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px">'
+          + '<div style="font-size:10px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Cover Letter</div>'
+          + '<div style="font-size:13.5px;color:var(--text);line-height:1.75;white-space:pre-wrap">' + H.escHtml(app.message) + '</div>'
+          + '</div>' : '')
+
+      // Screening answers
+      + (app.answers && app.answers.length
+          ? '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px">'
+            + '<div style="font-size:10px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Screening Answers</div>'
+            + app.answers.map(function(qa) {
+                return '<div style="margin-bottom:12px">'
+                  + '<div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:4px">' + H.escHtml(qa.question || '') + '</div>'
+                  + '<div style="font-size:13.5px;color:var(--text);line-height:1.55">' + H.escHtml(qa.answer || '—') + '</div>'
+                  + '</div>';
+              }).join('')
             + '</div>'
-            + '<div style="font-size:12px;color:var(--sub);margin-top:2px">' + H.timeAgo(app.appliedAt) + '</div>'
-            + '</div></div>'
-            + (app.message ? '<div style="font-size:13px;color:var(--text);line-height:1.6;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:10px">' + H.escHtml(app.message.slice(0,200)) + (app.message.length>200?'…':'') + '</div>' : '')
-            + (app.answers && app.answers.length
-              ? '<div style="margin-bottom:12px">'
-                + '<div style="font-size:10px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Screening Answers</div>'
-                + app.answers.map(function(a) {
-                    return '<div style="border-left:3px solid #1A3A8F30;padding:5px 8px;margin-bottom:5px">'
-                      + '<div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:1px">' + H.escHtml(a.question || '') + '</div>'
-                      + '<div style="font-size:13px;font-weight:600;color:' + (a.answer ? 'var(--text)' : 'var(--sub2)') + '">' + H.escHtml(a.answer || 'No answer') + '</div>'
-                      + '</div>';
-                  }).join('')
-                + '</div>'
-              : '')
-            + '<div style="display:flex;gap:8px">'
-            + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'shortlisted\')" style="flex:1;padding:8px;background:#22c55e15;color:#15803d;border:1.5px solid #22c55e40;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Shortlist</button>'
-            + '<button onclick="H._setAppStatus(\'' + app.id + '\',\'rejected\')" style="flex:1;padding:8px;background:#ef444415;color:#dc2626;border:1.5px solid #ef444440;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Decline</button>'
-            + '<button onclick="H._openApplicationChat(\'' + app.id + '\')" style="flex:1;padding:8px;background:#1A3A8F15;color:#1A3A8F;border:1.5px solid #1A3A8F40;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">Message</button>'
-            + '</div></div>';
-        }).join('')
-        : H.emptyState('No applications yet', 'Share your job posting to attract candidates.', null, null))
+          : '')
+
+      + '</div>'
+
+      // Sticky footer
+      + '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));z-index:100;display:flex;gap:10px">'
+      + footerBtns
       + '</div></div>';
   };
 
   H._setAppStatus = function (appId, status) {
     var app = (H.state.applications || []).find(function(a){ return a.id === appId; });
     if (!app) return;
+    var prevStatus = app.status;
     app.status = status;
     H.saveState();
     if (typeof H.updateApplicationStatusCloud === 'function') H.updateApplicationStatusCloud(appId, status);
-    var u = H.currentUser();
-    var jobId = app.jobId;
-    H.toast(status === 'shortlisted' ? 'Shortlisted!' : 'Declined');
+    var jobId   = app.jobId;
+    var jTitle  = app.jobTitle || 'this position';
+    var company = app.company  || 'the company';
+
+    var toastMsg = { shortlisted: 'Shortlisted!', hired: 'Marked as Hired', declined: 'Declined', rejected: 'Declined' }[status] || 'Updated';
+    H.toast(toastMsg);
+
     if (app.applicantId) {
-      H.pushNotif(app.applicantId,
-        status === 'shortlisted' ? 'Application Update' : 'Application Update',
-        status === 'shortlisted'
-          ? 'Congratulations! Your application for ' + app.jobTitle + ' has been shortlisted.'
-          : 'Your application for ' + app.jobTitle + ' was not selected at this time.',
-        status === 'shortlisted' ? 'verify' : 'info'
-      );
+      var notifTitle, notifBody, notifType;
+      if (status === 'shortlisted') {
+        notifTitle = 'You\'ve been shortlisted!';
+        notifBody  = 'Great news! Your application for ' + jTitle + ' at ' + company + ' has been shortlisted. The employer will be in touch to arrange an interview.';
+        notifType  = 'verify';
+      } else if (status === 'hired') {
+        notifTitle = 'Congratulations — You\'re Hired!';
+        notifBody  = 'You have been selected for the role of ' + jTitle + ' at ' + company + '. Please check your messages for next steps.';
+        notifType  = 'verify';
+      } else if (status === 'declined' || status === 'rejected') {
+        notifTitle = 'Application Update';
+        notifBody  = 'Thank you for applying to ' + jTitle + ' at ' + company + '. The employer has moved forward with other candidates.';
+        notifType  = 'info';
+      }
+      if (notifTitle) H.pushNotif(app.applicantId, notifTitle, notifBody, notifType);
     }
-    H.renderPage('JobApplications', {jobId: jobId});
+
+    // If we are on the detail page, return to the list; otherwise re-render list in place
+    if (H.currentPageName === 'ApplicationDetail') {
+      H.goBack();
+    } else {
+      H.renderPage('JobApplications', { jobId: jobId, filter: H.currentPageParams && H.currentPageParams.filter || 'all' });
+    }
   };
 
   H.pages.JobApplications_after = function(params) {
