@@ -3271,6 +3271,12 @@ H._checkEngagementAlerts = function () {
 H.uploadToR2 = async function (blob, key, contentType) {
   var session = await window.supabase.auth.getSession();
   var token = session && session.data && session.data.session && session.data.session.access_token;
+  if (!token) {
+    try {
+      var refreshed = await window.supabase.auth.refreshSession();
+      token = refreshed && refreshed.data && refreshed.data.session && refreshed.data.session.access_token;
+    } catch (_) {}
+  }
   if (!token) throw new Error('Not authenticated');
   var res = await fetch(window.SUPABASE_URL + '/functions/v1/get-r2-upload-url', {
     method: 'POST',
@@ -3293,6 +3299,12 @@ H.r2SignedGetUrl = async function (key, expiresIn) {
   try {
     var session = await window.supabase.auth.getSession();
     var token = session && session.data && session.data.session && session.data.session.access_token;
+    if (!token) {
+      try {
+        var ref2 = await window.supabase.auth.refreshSession();
+        token = ref2 && ref2.data && ref2.data.session && ref2.data.session.access_token;
+      } catch (_) {}
+    }
     if (!token) return null;
     var res = await fetch(window.SUPABASE_URL + '/functions/v1/get-r2-upload-url', {
       method: 'POST',

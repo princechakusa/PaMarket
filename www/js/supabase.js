@@ -51,8 +51,15 @@
   // directly to R2, and returns the permanent public URL (or undefined for
   // private verification docs — those are accessed only via r2SignedGetUrl).
   H.uploadToR2 = async function (blob, key, contentType) {
-    const session = await window.supabase.auth.getSession();
-    const token = session && session.data && session.data.session && session.data.session.access_token;
+    let session = await window.supabase.auth.getSession();
+    let token = session && session.data && session.data.session && session.data.session.access_token;
+    if (!token) {
+      // Session expired or not restored — attempt silent refresh
+      try {
+        const refreshed = await window.supabase.auth.refreshSession();
+        token = refreshed && refreshed.data && refreshed.data.session && refreshed.data.session.access_token;
+      } catch (_) {}
+    }
     if (!token) throw new Error('Not authenticated');
     const res = await fetch(window.SUPABASE_URL + '/functions/v1/get-r2-upload-url', {
       method: 'POST',
@@ -83,6 +90,12 @@
     try {
       var session = await window.supabase.auth.getSession();
       var token = session && session.data && session.data.session && session.data.session.access_token;
+      if (!token) {
+        try {
+          var refreshed2 = await window.supabase.auth.refreshSession();
+          token = refreshed2 && refreshed2.data && refreshed2.data.session && refreshed2.data.session.access_token;
+        } catch (_) {}
+      }
       if (!token) return null;
       var res = await fetch(window.SUPABASE_URL + '/functions/v1/get-r2-upload-url', {
         method: 'POST',
