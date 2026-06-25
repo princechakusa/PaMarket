@@ -615,11 +615,21 @@ async function loadListings() {
     if(!r.error && r.data) DATA.listings = r.data;
   } catch(e){}
 }
-function signedVUrl(path) {
-  if(!path) return Promise.resolve(null);
-  return sb.storage.from('verification-docs').createSignedUrl(path, 3600).then(function(r){
-    return (r && r.data && r.data.signedUrl) || null;
-  }).catch(function(){ return null; });
+async function signedVUrl(path) {
+  if(!path) return null;
+  try {
+    var sess = await sb.auth.getSession();
+    var tok = sess && sess.data && sess.data.session && sess.data.session.access_token;
+    if(!tok) return null;
+    var res = await fetch('https://gxgytumhknmnwspxjzxw.supabase.co/functions/v1/get-r2-upload-url', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: path, verb: 'GET', expiresIn: 3600 })
+    });
+    if(!res.ok) return null;
+    var data = await res.json();
+    return data.signedUrl || null;
+  } catch(e) { return null; }
 }
 async function loadVerifications() {
   try {
