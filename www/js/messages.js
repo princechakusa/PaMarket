@@ -550,9 +550,11 @@
           + offerCardHtml(_of, mine, m.id, otherDisplayName, resolved)
           + '</div>';
       }
-      const content = m.image
-        ? '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">'
-        : (replyQuoteHtml(m) + escHtml(msgText(m)));
+      const content = m.deleted
+        ? '<span style="font-style:italic;opacity:.5;font-size:13px">This message was deleted</span>'
+        : m.image
+          ? '<img src="' + escHtml(m.image) + '" class="chat-img" onclick="H._chat.viewImg(\'' + escHtml(m.image) + '\')" onerror="this.style.display=\'none\'">'
+          : (replyQuoteHtml(m) + escHtml(msgText(m)));
       // Business-branded chat: buyer messages go RIGHT (me), shop replies go LEFT (them)
       if (showBizBrand) {
         if (mine) {
@@ -1472,7 +1474,7 @@
         ? new Date(Math.max.apply(null, conv.messages.map(function(m){ return m.t || 0; }))).toISOString()
         : null;
       var query = sb.from('messages')
-        .select('id, sender_id, sender_name, text, image, read, created_at')
+        .select('id, sender_id, sender_name, text, image, read, created_at, edited, deleted')
         .eq('conversation_id', convId)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -1487,7 +1489,7 @@
       msgs.forEach(function(m) {
         const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
         if (!conv.messages.find(function(x){ return x.id === m.id; })) {
-          conv.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, image: m.image||null, t, read: !!m.read });
+          conv.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, image: m.image||null, t, read: !!m.read, edited: !!m.edited, deleted: !!m.deleted });
         }
         if (m.sender_id && m.sender_id !== u.id && !(conv.members||[]).includes(m.sender_id)) {
           conv.members = conv.members || [];
@@ -2067,7 +2069,7 @@
       }
     }
     try {
-      if (window.supabase) await window.supabase.from('messages').update({ text: newText }).eq('id', msgId);
+      if (window.supabase) await window.supabase.from('messages').update({ text: newText, edited: true }).eq('id', msgId);
     } catch (e) { console.warn('edit msg sync:', e); }
   };
 
@@ -2100,7 +2102,7 @@
           if (bubble) bubble.innerHTML = '<span style="font-style:italic;opacity:.5;font-size:13px">This message was deleted</span>';
         }
         try {
-          if (window.supabase) await window.supabase.from('messages').update({ text: '' }).eq('id', msgId);
+          if (window.supabase) await window.supabase.from('messages').update({ text: '', deleted: true }).eq('id', msgId);
         } catch (e) { console.warn('delete msg sync:', e); }
       }
     });
