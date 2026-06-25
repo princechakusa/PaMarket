@@ -1390,32 +1390,58 @@ window.H = {
   },
 
   async fetchAdsFromSupabase() {
+    var _t0 = Date.now();
     try {
-      if(!window.supabase||typeof window.supabase.from!=='function') return;
-      // Use select('*') — an explicit column list 400s if any named column is absent
-      // from the DB schema, silently wiping all ads. With * we get whatever columns
-      // exist and fall back gracefully for any that are missing.
-      var res = await window.supabase.from('paid_ads').select('*').eq('active',true).limit(20);
-      if(res.error||!res.data||!res.data.length) {
-        if(res.error) console.warn('fetchAdsFromSupabase:', res.error.message);
+      if(!window.supabase||typeof window.supabase.from!=='function') {
+        console.warn('[Ads] fetchAdsFromSupabase: supabase client not ready');
         return;
       }
-      var mapped = res.data.map(function(r) { return {
-        id:r.id, type:r.type||'banner',
-        businessName:r.business_name||r.title||'Sponsored',
-        headline:r.headline||r.title||'',
-        tagline:r.tagline||'', imageUrl:r.image_url||null,
-        bgColor:r.bg_color||'#1A3A8F', linkUrl:r.link_url||null,
-        targetCat:r.target_cat||null, listingId:r.listing_id||null,
-        startsAt:r.starts_at?new Date(r.starts_at).getTime():0,
-        endsAt:r.ends_at?new Date(r.ends_at).getTime():9999999999999,
-        active:r.active, priority:r.priority||0,
-        impressions:r.impressions||0, clicks:r.clicks||0
-      }; });
+      console.log('[Ads] fetchAdsFromSupabase: fetching paid_ads...');
+      var res = await window.supabase.from('paid_ads').select('*').eq('active',true).limit(20);
+      var elapsed = Date.now() - _t0;
+      if(res.error) {
+        console.error('[Ads] fetchAdsFromSupabase API error after '+elapsed+'ms:', res.error.message, res.error);
+        return;
+      }
+      if(!res.data||!res.data.length) {
+        console.warn('[Ads] fetchAdsFromSupabase: 0 rows returned (no active ads in DB)');
+        H.state.paidAds = [];
+        return;
+      }
+      console.log('[Ads] fetchAdsFromSupabase: '+res.data.length+' row(s) in '+elapsed+'ms');
+      var now = Date.now();
+      var mapped = res.data.map(function(r) {
+        var imgUrl = r.image_url||null;
+        if (imgUrl && imgUrl.startsWith('data:') && imgUrl.length > 120000) {
+          console.warn('[Ads] Ad '+r.id+' has oversized base64 image ('+Math.round(imgUrl.length/1024)+'KB) — stripping. Upload images to Storage instead.');
+          imgUrl = null;
+        }
+        var startsAt = r.starts_at ? new Date(r.starts_at).getTime() : 0;
+        var endsAt   = r.ends_at   ? new Date(r.ends_at).getTime()   : 9999999999999;
+        var wouldShow = r.active && (startsAt <= now) && (endsAt > now);
+        if (!wouldShow) {
+          console.warn('[Ads] Ad '+r.id+' ('+r.headline+') BLOCKED: active='+r.active+' startsAt='+new Date(startsAt).toISOString()+' endsAt='+new Date(endsAt).toISOString()+' now='+new Date(now).toISOString());
+        }
+        return {
+          id:r.id, type:r.type||'banner',
+          businessName:r.business_name||r.title||'Sponsored',
+          headline:r.headline||r.title||'',
+          tagline:r.tagline||'', imageUrl:imgUrl,
+          bgColor:r.bg_color||'#1A3A8F', linkUrl:r.link_url||null,
+          targetCat:r.target_cat||null, listingId:r.listing_id||null,
+          startsAt:startsAt, endsAt:endsAt,
+          active:r.active, priority:r.priority||0,
+          impressions:r.impressions||0, clicks:r.clicks||0
+        };
+      });
       mapped.sort(function(a,b){ return (b.priority||0)-(a.priority||0); });
       H.state.paidAds = mapped;
+      var visible = mapped.filter(function(a){ return a.active && a.startsAt<=now && a.endsAt>now; });
+      console.log('[Ads] fetchAdsFromSupabase complete: '+mapped.length+' total, '+visible.length+' currently visible');
       setTimeout(function(){ if(typeof H._showAnnouncementPopups==='function') H._showAnnouncementPopups(); }, 1500);
-    } catch(e){ console.warn('fetchAdsFromSupabase:',e.message); }
+    } catch(e){
+      console.error('[Ads] fetchAdsFromSupabase exception after '+(Date.now()-_t0)+'ms:', e.message, e);
+    }
   },
 
   async fetchAppSettings() {
@@ -1432,18 +1458,24 @@ window.H = {
 
   trackAdImpression(id) {
     if(!id||!window.supabase||typeof window.supabase.from!=='function') return;
-    const a = (H.state.paidAds||[]).find(x=>String(x.id)===String(id)); if(!a) return;
+    const a = (H.state.paidAds||[]).find(x=>String(x.id)===String(id));
+    if(!a) { console.warn('[Ads] trackAdImpression: ad '+id+' not found in paidAds'); return; }
     a.impressions = (a.impressions||0)+1;
-    window.supabase.from('paid_ads').update({impressions:a.impressions}).eq('id',id).then(()=>{});
+    console.log('[Ads] impression recorded: '+id+' ('+a.headline+') total='+a.impressions);
+    window.supabase.from('paid_ads').update({impressions:a.impressions}).eq('id',id)
+      .then(function(r){ if(r&&r.error) console.error('[Ads] impression DB write failed:', r.error.message); });
   },
 
   trackAdClick(id) {
     const a = (H.state.paidAds||[]).find(x=>String(x.id)===String(id));
-    if(a&&window.supabase&&typeof window.supabase.from==='function'){
-      a.clicks=(a.clicks||0)+1;
-      window.supabase.from('paid_ads').update({clicks:a.clicks}).eq('id',id).then(()=>{});
+    if(!a) { console.warn('[Ads] trackAdClick: ad '+id+' not found in paidAds'); return; }
+    a.clicks=(a.clicks||0)+1;
+    console.log('[Ads] click recorded: '+id+' ('+a.headline+') total='+a.clicks+' linkUrl='+a.linkUrl);
+    if(window.supabase&&typeof window.supabase.from==='function'){
+      window.supabase.from('paid_ads').update({clicks:a.clicks}).eq('id',id)
+        .then(function(r){ if(r&&r.error) console.error('[Ads] click DB write failed:', r.error.message); });
     }
-    if(a) H._showAdDetail(a);
+    H._showAdDetail(a);
   },
 
   _showAdDetail(a) {
@@ -1555,12 +1587,16 @@ window.H = {
     let dismissed = [];
     try { dismissed = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch(e) {}
     const now = Date.now();
-    const pending = (H.state.paidAds || []).filter(function(a) {
+    const all = H.state.paidAds || [];
+    console.log('[Ads] _showAnnouncementPopups: checking '+all.length+' ads, dismissed='+dismissed.length);
+    const pending = all.filter(function(a) {
       if (!a || a.type !== 'announcement') return false;
-      if (a.startsAt && a.startsAt > now) return false;
-      if (a.endsAt && a.endsAt < now) return false;
-      return !dismissed.includes(String(a.id));
+      if (a.startsAt && a.startsAt > now) { console.log('[Ads] announcement '+a.id+' not started yet'); return false; }
+      if (a.endsAt && a.endsAt < now) { console.warn('[Ads] announcement '+a.id+' expired (endsAt='+new Date(a.endsAt).toISOString()+')'); return false; }
+      if (dismissed.includes(String(a.id))) { console.log('[Ads] announcement '+a.id+' already dismissed'); return false; }
+      return true;
     });
+    console.log('[Ads] announcements pending to show: '+pending.length);
     if (!pending.length) return;
     // Don't stack — one at a time
     if (document.getElementById('_announcementPopup')) return;
@@ -1945,16 +1981,25 @@ window.H = {
   _setupRealtimeAds() {
     try {
       const sb = window.supabase;
-      if (!sb || typeof sb.channel !== 'function') return;
+      if (!sb || typeof sb.channel !== 'function') {
+        console.warn('[Ads] _setupRealtimeAds: supabase channel not available, realtime skipped');
+        return;
+      }
       if (window._adsRtChannel) { try { sb.removeChannel(window._adsRtChannel); } catch(e) {} }
       window._adsRtChannel = sb.channel('paid-ads-live')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'paid_ads' }, function(payload) {
           var r = payload.new;
-          if (!r || r.active === false) return;
+          console.log('[Ads] realtime INSERT received:', r && r.id, r && r.headline, 'active='+( r && r.active));
+          if (!r || r.active === false) { console.log('[Ads] realtime INSERT ignored (active=false or null)'); return; }
+          var imgUrl = r.image_url || null;
+          if (imgUrl && imgUrl.startsWith('data:') && imgUrl.length > 120000) {
+            console.warn('[Ads] realtime INSERT: oversized base64 image stripped from ad '+r.id);
+            imgUrl = null;
+          }
           var ad = {
             id: r.id, type: r.type || 'banner', active: true,
             businessName: r.business_name || '', headline: r.headline || '',
-            tagline: r.tagline || '', imageUrl: r.image_url || null,
+            tagline: r.tagline || '', imageUrl: imgUrl,
             bgColor: r.bg_color || '#1A3A8F', linkUrl: r.link_url || null,
             targetCat: r.target_cat || null, listingId: r.listing_id || null,
             startsAt: r.starts_at ? new Date(r.starts_at).getTime() : 0,
@@ -1964,23 +2009,31 @@ window.H = {
           if (!Array.isArray(H.state.paidAds)) H.state.paidAds = [];
           if (!H.state.paidAds.find(function(x) { return String(x.id) === String(ad.id); })) {
             H.state.paidAds.push(ad);
+            console.log('[Ads] realtime INSERT added to paidAds. Total now:', H.state.paidAds.length);
             if (r.type === 'announcement' && typeof H._showAnnouncementPopups === 'function') {
               setTimeout(function() { H._showAnnouncementPopups(); }, 600);
             }
+          } else {
+            console.log('[Ads] realtime INSERT: ad '+r.id+' already in paidAds, skipped');
           }
         })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'paid_ads' }, function(payload) {
           var r = payload.new; if (!r) return;
+          console.log('[Ads] realtime UPDATE received:', r.id, 'active='+r.active);
           if (!Array.isArray(H.state.paidAds)) return;
-          // Only handle deactivation — impression/click counter updates are ignored
-          // to avoid overwriting local ad data with a partial payload.
           if (r.active === false) {
             var idx = H.state.paidAds.findIndex(function(x) { return String(x.id) === String(r.id); });
-            if (idx !== -1) H.state.paidAds.splice(idx, 1);
+            if (idx !== -1) {
+              H.state.paidAds.splice(idx, 1);
+              console.log('[Ads] realtime UPDATE: ad '+r.id+' deactivated and removed from paidAds');
+            }
           }
         })
-        .subscribe();
-    } catch(e) { console.warn('_setupRealtimeAds:', e.message); }
+        .subscribe(function(status) {
+          console.log('[Ads] realtime channel status:', status);
+        });
+      console.log('[Ads] _setupRealtimeAds: channel subscribed to paid_ads INSERT/UPDATE');
+    } catch(e) { console.error('[Ads] _setupRealtimeAds exception:', e.message, e); }
   },
 
   async syncApplications() {

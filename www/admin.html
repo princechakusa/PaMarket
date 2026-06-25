@@ -2125,13 +2125,30 @@ function _onAdActionChange(){
 
 window._adLoadImage = function(e) {
   var f = e.target.files[0]; if(!f) return;
-  var r = new FileReader();
-  r.onload = function(ev){
-    document.getElementById('adImg').value = ev.target.result;
-    var prev = document.getElementById('adImgPreview');
-    prev.innerHTML = '<img src="'+ev.target.result+'" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:contain">';
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var dataUrl = ev.target.result;
+    // Compress via canvas so we stay under 80KB in the DB.
+    // Base64 at 80KB raw ≈ 60KB image — fine for a banner/logo.
+    var img = new Image();
+    img.onload = function() {
+      var MAX_W = 800, MAX_H = 400;
+      var w = img.naturalWidth, h = img.naturalHeight;
+      if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
+      if (h > MAX_H) { w = Math.round(w * MAX_H / h); h = MAX_H; }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      var compressed = canvas.toDataURL('image/jpeg', 0.72);
+      var kb = Math.round(compressed.length * 0.75 / 1024);
+      document.getElementById('adImg').value = compressed;
+      var prev = document.getElementById('adImgPreview');
+      prev.innerHTML = '<img src="'+compressed+'" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:contain">'
+        + '<div style="font-size:11px;color:var(--sub);margin-top:4px">'+w+'×'+h+' px · ~'+kb+' KB stored</div>';
+    };
+    img.src = dataUrl;
   };
-  r.readAsDataURL(f);
+  reader.readAsDataURL(f);
 };
 
 async function saveNewAd() {
@@ -2164,8 +2181,10 @@ async function saveNewAd() {
       target_cat: targetCat,
       listing_id: listingId,
       link_url: linkUrl,
-      starts_at: (document.getElementById('adStart')||{}).value||null,
-      ends_at: (document.getElementById('adEnd')||{}).value||null,
+      starts_at: (document.getElementById('adStart')||{}).value
+        ? (document.getElementById('adStart')||{}).value + 'T00:00:00Z' : null,
+      ends_at: (document.getElementById('adEnd')||{}).value
+        ? (document.getElementById('adEnd')||{}).value + 'T23:59:59Z' : null,
       price_paid: parseFloat((document.getElementById('adPrice')||{}).value)||0,
       active: true, impressions: 0, clicks: 0,
       created_at: new Date().toISOString()

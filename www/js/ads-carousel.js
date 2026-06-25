@@ -11,18 +11,25 @@
   // Active, in-window ads, optionally filtered to a target category.
   H.activeAds = function (cat) {
     var now = Date.now();
-    return (H.state.paidAds || []).filter(function (a) {
+    var pool = H.state.paidAds || [];
+    var result = pool.filter(function (a) {
       if (!a || !a.active) return false;
       if (a.startsAt && a.startsAt > now) return false;
       if (a.endsAt && a.endsAt < now) return false;
-      if (cat) return a.targetCat === cat;          // category page: only ads for this category
-      return true;                                  // Home: every active ad
+      if (cat) return !a.targetCat || a.targetCat === cat; // category page: targeted ads + global ads
+      return true;                                         // Home: every active ad
     }).sort(function (a, b) { return (b.priority || 0) - (a.priority || 0); });
+    console.log('[Ads] activeAds(cat='+( cat||'all')+') pool='+pool.length+' result='+result.length);
+    return result;
   };
 
   // Build the carousel HTML for a set of ads. opts: { heading, title }.
   H.adCarousel = function (ads, opts) {
-    if (!ads || !ads.length) return '';
+    if (!ads || !ads.length) {
+      console.log('[Ads] adCarousel: 0 ads passed — carousel skipped');
+      return '';
+    }
+    console.log('[Ads] adCarousel: rendering '+ads.length+' ad(s): '+ads.map(function(a){return a.headline;}).join(', '));
     opts = opts || {};
     var cid = 'adc_' + Math.random().toString(36).slice(2, 8);
     var esc = H.escHtml;
