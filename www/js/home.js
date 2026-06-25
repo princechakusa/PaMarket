@@ -138,6 +138,25 @@
 
         <div id="notifEnableBanner"></div>
 
+        <!-- DRAFT AD BANNER -->
+        ${(() => {
+          let draft = null;
+          try { draft = JSON.parse(localStorage.getItem('pamarket_draft') || 'null'); } catch(_) {}
+          if (!draft || !draft.cat) return '';
+          const ageMin = Math.round((Date.now() - (draft.savedAt || 0)) / 60000);
+          const ageLabel = ageMin < 60 ? ageMin + ' min ago' : Math.round(ageMin / 60) + 'h ago';
+          return `<div onclick="H.navTo('Post')" style="margin:12px 16px 0;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer">
+            <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:800;color:#fff">Unfinished ad saved ${escHtml(ageLabel)}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:1px">${escHtml((draft.title || draft.cat || 'Draft').slice(0, 40))} · Tap to continue</div>
+            </div>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>`;
+        })()}
+
         <!-- CATEGORIES GRID -->
         <div style="background:#fff;padding:18px 16px 20px;margin-bottom:8px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -224,6 +243,32 @@
             Post a Free Ad
           </button>
         </div>
+
+        <!-- RECENTLY VIEWED CAROUSEL -->
+        ${(() => {
+          let rvIds = [];
+          try { rvIds = JSON.parse(localStorage.getItem('pamarket_rv') || '[]'); } catch(_) {}
+          const rvListings = rvIds.map(id => (H.state.listings || []).find(l => l.id === id && l.status === 'active')).filter(Boolean).slice(0, 10);
+          if (!rvListings.length) return '';
+          const rvCards = rvListings.map(l => {
+            const photo = l.photos && l.photos[0] ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.style.display='none'">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+            const price = l.price ? '$' + Number(l.price).toLocaleString() : 'Free';
+            return `<div onclick="H.openListing('${escHtml(l.id)}')" style="flex:0 0 120px;min-width:120px;cursor:pointer">
+              <div style="width:120px;height:72px;border-radius:10px;overflow:hidden;background:#f0f0f0;border:1px solid var(--border)">${photo}</div>
+              <div style="margin-top:5px;padding:0 1px">
+                <div style="font-size:12px;font-weight:700;color:#1A3A8F">${escHtml(price)}</div>
+                <div style="font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:118px">${escHtml((l.title || '').slice(0, 22))}</div>
+              </div>
+            </div>`;
+          }).join('');
+          return `<div style="background:var(--card,#fff);padding:14px 0 16px;margin-bottom:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:10px">
+              <span style="font-size:14px;font-weight:800;color:var(--text)">Recently Viewed</span>
+              <span onclick="localStorage.removeItem('pamarket_rv');H.renderPage('Home')" style="font-size:11px;font-weight:600;color:var(--sub);cursor:pointer">Clear</span>
+            </div>
+            <div style="display:flex;gap:10px;overflow-x:auto;padding:0 16px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">${rvCards}</div>
+          </div>`;
+        })()}
 
         <!-- SEARCH RESULTS (shown when typing) -->
         <div id="searchResults" style="display:none;padding:16px 12px 0">

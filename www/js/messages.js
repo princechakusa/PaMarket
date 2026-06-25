@@ -2067,7 +2067,7 @@
       }
     }
     try {
-      if (window.supabase) await window.supabase.from('messages').update({ text: newText, edited: true }).eq('id', msgId);
+      if (window.supabase) await window.supabase.from('messages').update({ text: newText }).eq('id', msgId);
     } catch (e) { console.warn('edit msg sync:', e); }
   };
 
@@ -2100,7 +2100,7 @@
           if (bubble) bubble.innerHTML = '<span style="font-style:italic;opacity:.5;font-size:13px">This message was deleted</span>';
         }
         try {
-          if (window.supabase) await window.supabase.from('messages').update({ text: '', deleted: true }).eq('id', msgId);
+          if (window.supabase) await window.supabase.from('messages').update({ text: '' }).eq('id', msgId);
         } catch (e) { console.warn('delete msg sync:', e); }
       }
     });

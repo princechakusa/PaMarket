@@ -733,7 +733,7 @@
           target_id: null,
           reason: '[Support] ' + full,
           status: 'open',
-          created_at: new Date().toISOString()
+          created_at: Date.now()
         };
         var btn = document.querySelector('#ticketDesc + button') || document.querySelector('button[onclick="H._bot.submitTicket()"]');
         if (btn) { btn.textContent = 'Sending...'; btn.disabled = true; }

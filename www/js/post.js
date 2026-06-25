@@ -16,6 +16,35 @@
     if (!H.currentUser()) {
       return `<div class="page active">${H.innerTopbar('Post a Listing')}<div style="padding: 20px;">${H.emptyState('Sign In Required', 'Sign in to post listings and reach millions of buyers.', 'Sign In', "H.requireAuth('Sign in to post listings')")}</div></div>`;
     }
+    // Check for saved draft and offer to restore it
+    let savedDraft = null;
+    try { savedDraft = JSON.parse(localStorage.getItem('pamarket_draft') || 'null'); } catch (_) {}
+    if (savedDraft && savedDraft.cat && !H._postBizTarget) {
+      const draftAge = (Date.now() - (savedDraft.savedAt || 0)) / 60000;
+      if (draftAge < 10080) { // 7 days
+        postState = Object.assign({
+          step: 1, cat: null, title: '', desc: '', price: '',
+          currency: 'USD', prov: PROVINCES[0],
+          city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: [], attrs: {}, variations: [],
+          businessId: null
+        }, savedDraft);
+        H._postBizTarget = null;
+        const mins = Math.round(draftAge);
+        const ageLabel = mins < 60 ? mins + ' min ago' : Math.round(draftAge / 60) + 'h ago';
+        return `<div class="page active">${H.innerTopbar('Post a Listing')}
+          <div style="padding:24px 16px">
+            <div style="background:#EEF2FB;border:1.5px solid #1A3A8F;border-radius:16px;padding:18px;margin-bottom:16px">
+              <div style="font-size:15px;font-weight:800;color:#1A3A8F;margin-bottom:4px">Continue your draft?</div>
+              <div style="font-size:13px;color:var(--sub);margin-bottom:14px">You left a <strong>${H.escHtml(savedDraft.cat)}</strong> listing unfinished ${ageLabel}${savedDraft.title ? ': "' + H.escHtml(savedDraft.title.slice(0, 40)) + '"' : ''}.</div>
+              <div style="display:flex;gap:10px">
+                <button onclick="H._post._resumeDraft()" style="flex:1;padding:12px;background:#1A3A8F;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">Continue</button>
+                <button onclick="H._post._discardDraft()" style="flex:1;padding:12px;background:#fff;color:var(--sub);border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">Start fresh</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }
+    }
     postState = {
       step: 1, cat: null, title: '', desc: '', price: '',
       currency: 'USD', prov: PROVINCES[0],
@@ -221,6 +250,19 @@
       const s = postState;
       if (s.step > 1) { this.prev(); return; }
       if (s.cat) { this.changeCat(); return; }
+      // Save draft if user has meaningful data (category or title set)
+      const t = document.getElementById('postTitle'); if (t) s.title = t.value;
+      const d = document.getElementById('postDesc');  if (d) s.desc  = d.value;
+      if (s.cat || (s.title && s.title.trim())) {
+        try {
+          localStorage.setItem('pamarket_draft', JSON.stringify({ savedAt: Date.now(), ...s }));
+          const u = H.currentUser && H.currentUser();
+          if (u && typeof H.pushNotif === 'function') {
+            H.pushNotif(u.id, 'Unfinished Ad Saved', 'You have an unfinished ad. Tap to continue posting.', 'info', null, 'page:Post');
+          }
+          H.toast('Draft saved');
+        } catch (_) {}
+      }
       if (typeof H.goBack === 'function') H.goBack(); else H.navTo('Home');
     },
     readVariations() {
@@ -244,6 +286,21 @@
       this.readVariations();
       postState.variations.splice(i, 1);
       const el = document.getElementById('postVariants'); if (el) el.innerHTML = renderVariantRows();
+    },
+    _resumeDraft() {
+      // postState was already populated from the draft in pages.Post
+      try { localStorage.removeItem('pamarket_draft'); } catch (_) {}
+      H.renderPage('Post', null, true);
+    },
+    _discardDraft() {
+      try { localStorage.removeItem('pamarket_draft'); } catch (_) {}
+      postState = {
+        step: 1, cat: null, title: '', desc: '', price: '',
+        currency: 'USD', prov: PROVINCES[0],
+        city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: [], attrs: {}, variations: [],
+        businessId: null
+      };
+      H.renderPage('Post');
     },
     setCat(c)    {
       if(c==='jobs'){H.openInner('JobIntent');return;}
@@ -442,6 +499,8 @@
         H._bizListings.open(s.businessId);
         return;
       }
+      // Clear any saved draft — post was successful
+      try { localStorage.removeItem('pamarket_draft'); } catch (_) {}
       if (finalStatus === 'pending') {
         H.toast(mod.status === 'pending' && !needsApproval
           ? (mod.reason || 'Ad submitted for review before going live.')

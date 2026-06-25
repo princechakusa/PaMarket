@@ -260,6 +260,10 @@
     if (t.includes('report')) return 'report';
     if (t.includes('sold') || t.includes('paid') || t.includes('payment')) return 'sale';
     if (t.includes('review') || t.includes('appeal')) return 'review';
+    if (t.includes('job') || t.includes('hiring') || t.includes('vacancy') || t.includes('position')) return 'job_alert';
+    if (t.includes('security') || t.includes('sign-in') || t.includes('login')) return 'security';
+    if (t.includes('draft') || t.includes('unfinished') || t.includes('saved')) return 'info';
+    if (t.includes('promo') || t.includes('discount') || t.includes('offer') || t.includes('deal')) return 'info';
     return 'info';
   }
 
@@ -272,8 +276,10 @@
       ban:     `<svg viewBox="0 0 24 24" style="${s}"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`,
       report:  `<svg viewBox="0 0 24 24" style="${s}"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`,
       sale:    `<svg viewBox="0 0 24 24" style="${s}"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
-      review:  `<svg viewBox="0 0 24 24" style="${s}"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
-      info:    `<svg viewBox="0 0 24 24" style="${s}"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`
+      review:    `<svg viewBox="0 0 24 24" style="${s}"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+      job_alert: `<svg viewBox="0 0 24 24" style="${s}"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
+      security:  `<svg viewBox="0 0 24 24" style="${s}"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+      info:      `<svg viewBox="0 0 24 24" style="${s}"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`
     };
     return map[type] || map.info;
   }
@@ -283,7 +289,8 @@
       boost: 'rgba(245,166,35,.12)', verify: 'rgba(29,155,240,.12)',
       message: 'rgba(34,197,94,.12)', ban: 'rgba(255,59,48,.12)',
       report: 'rgba(255,149,0,.12)', sale: 'rgba(0,122,255,.12)',
-      review: 'rgba(139,92,246,.12)', info: 'var(--bg2)'
+      review: 'rgba(139,92,246,.12)', info: 'var(--bg2)',
+      job_alert: 'rgba(84,110,122,.12)', security: 'rgba(255,59,48,.1)'
     };
     return map[type] || 'var(--bg2)';
   }
@@ -292,7 +299,8 @@
     const map = {
       boost: '#F5A623', verify: '#1D9BF0', message: '#22C55E',
       ban: '#FF3B30', report: '#FF9500', sale: '#007AFF',
-      review: '#8B5CF6', info: '#1A3A8F'
+      review: '#8B5CF6', info: '#1A3A8F',
+      job_alert: '#546E7A', security: '#FF3B30'
     };
     return map[type] || '#1A3A8F';
   }
@@ -396,6 +404,79 @@
     H.navTo('Home');
   };
 
+  // Category tab definitions for the notifications page
+  var _NOTIF_TABS = [
+    { id: 'all',      label: 'All',           types: null },
+    { id: 'messages', label: 'Messages',       types: ['message'] },
+    { id: 'listings', label: 'Active Ads',     types: ['sale', 'boost', 'review'] },
+    { id: 'jobs',     label: 'Job Alerts',     types: ['job_alert'] },
+    { id: 'account',  label: 'Account',        types: ['verify', 'ban', 'report', 'security'] },
+    { id: 'promo',    label: 'Promotions',     types: ['info', 'system'] }
+  ];
+
+  H._notifTab = H._notifTab || 'all';
+
+  H._setNotifTab = function (tabId) {
+    H._notifTab = tabId;
+    const list = document.getElementById('notifList');
+    if (list) {
+      const u = H.currentUser(); if (!u) return;
+      const allItems = (H.state.notifs[u.id] || []).slice().sort(function(a, b) { return b.t - a.t; });
+      list.innerHTML = _renderNotifItems(allItems, tabId);
+    }
+    document.querySelectorAll('[data-notif-tab]').forEach(function(el) {
+      var active = el.dataset.notifTab === tabId;
+      el.style.background = active ? '#1A3A8F' : 'transparent';
+      el.style.color = active ? '#fff' : 'var(--sub)';
+      el.style.borderColor = active ? '#1A3A8F' : 'var(--border)';
+    });
+  };
+
+  function _matchesTab(n, tabId) {
+    if (tabId === 'all') return true;
+    var tab = _NOTIF_TABS.find(function(t) { return t.id === tabId; });
+    if (!tab || !tab.types) return true;
+    var type = n.type || _inferType(n.title);
+    return tab.types.indexOf(type) !== -1;
+  }
+
+  function _renderNotifItems(list, tabId) {
+    var filtered = list.filter(function(n) { return _matchesTab(n, tabId); });
+    if (!filtered.length) {
+      return '<div style="text-align:center;padding:60px 20px">'
+        + '<svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--sub)" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'
+        + '<div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px">No notifications in this category</div>'
+        + '<div style="font-size:13px;color:var(--sub)">Check back later or view All notifications.</div>'
+        + '</div>';
+    }
+    return filtered.map(function(n) {
+      var type = n.type || _inferType(n.title);
+      var color = _notifColor(type);
+      var safeLink = n.deepLink ? escHtml(n.deepLink) : '';
+      var tapAction = 'H.markNotifRead(\'' + n.id + '\');this.querySelector(\'[data-unread-dot]\')&&this.querySelector(\'[data-unread-dot]\').remove();this.style.background=\'var(--card)\';H._notifNavigate(' + (safeLink ? '\'' + safeLink + '\'' : 'null') + ',\'' + type + '\',\'' + n.id + '\');';
+      var navHint = type === 'message' ? 'Messages ›'
+        : type === 'sale' ? 'Account ›'
+        : n.deepLink ? 'Open ›'
+        : type === 'info' || type === 'system' ? 'View ›'
+        : 'Open ›';
+      return '<div onclick="' + tapAction + '" style="background:' + (n.read ? 'var(--card)' : 'rgba(26,58,143,.04)') + ';border-bottom:1px solid var(--border);padding:14px 40px 14px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;position:relative">'
+        + (n.imageUrl
+          ? '<img src="' + escHtml(n.imageUrl) + '" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'">'
+          : '<div style="width:38px;height:38px;border-radius:50%;background:' + _notifBg(type) + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + color + '">' + _notifIcon(type) + '</div>')
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:14px;font-weight:' + (n.read ? '600' : '800') + ';color:var(--text);margin-bottom:3px;line-height:1.3">' + escHtml(n.title || '') + '</div>'
+        + '<div style="font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:4px">' + escHtml(n.body || '') + '</div>'
+        + '<div style="display:flex;align-items:center;gap:8px">'
+        + '<div style="font-size:11px;color:var(--sub2);font-weight:500">' + timeAgo(n.t) + '</div>'
+        + '<div style="font-size:11px;color:' + color + ';font-weight:600">' + navHint + '</div>'
+        + '</div></div>'
+        + (n.read ? '' : '<span data-unread-dot style="width:9px;height:9px;border-radius:50%;background:' + color + ';margin-top:6px;flex-shrink:0"></span>')
+        + '<button onclick="event.stopPropagation();H.deleteNotif(\'' + n.id + '\')" aria-label="Delete" style="position:absolute;top:50%;right:10px;transform:translateY(-50%);background:none;border:none;padding:6px;cursor:pointer;color:var(--sub);border-radius:6px;display:flex;align-items:center;justify-content:center;opacity:0.55">'
+        + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>'
+        + '</button></div>';
+    }).join('');
+  }
+
   // ── Notifications page ────────────────────────────────────
   pages.Notifications = function () {
     const u = H.currentUser();
@@ -406,58 +487,35 @@
     }
     const list = (H.state.notifs[u.id] || []).slice().sort((a, b) => b.t - a.t);
     const unreadCount = list.filter(n => !n.read).length;
+    const activeTab = H._notifTab || 'all';
 
-    const headerBar = `<div class="inner-topbar">
-      <button class="back" onclick="H.goBack()" aria-label="Go back">
-        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <div class="inner-topbar-title">Notifications${unreadCount ? ` <span style="background:#F5A623;color:#1A3A8F;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:800;margin-left:6px">${unreadCount}</span>` : ''}</div>
-      ${unreadCount ? '<button onclick="H.markAllNotifsRead()" style="background:none;border:none;color:#1A3A8F;font-size:13px;font-weight:600;cursor:pointer;padding:6px 10px">Mark all read</button>' : '<div style="width:34px"></div>'}
-    </div>
-    ${list.length ? `<div style="display:flex;justify-content:flex-end;padding:8px 16px;border-bottom:1px solid var(--border)">
-      <button onclick="H.clearAllNotifs()" style="background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 6px">
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        Clear all
-      </button>
-    </div>` : ''}`;
+    const tabsHtml = _NOTIF_TABS.map(t => {
+      const tabCount = t.types ? list.filter(n => !n.read && t.types.indexOf(n.type || _inferType(n.title)) !== -1).length : unreadCount;
+      const isActive = t.id === activeTab;
+      return `<button data-notif-tab="${t.id}" onclick="H._setNotifTab('${t.id}')"
+        style="flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid ${isActive ? '#1A3A8F' : 'var(--border)'};background:${isActive ? '#1A3A8F' : 'transparent'};color:${isActive ? '#fff' : 'var(--sub)'};font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;display:flex;align-items:center;gap:5px">
+        ${escHtml(t.label)}${tabCount > 0 ? `<span style="background:${isActive ? 'rgba(255,255,255,.3)' : '#1A3A8F'};color:${isActive ? '#fff' : '#fff'};border-radius:10px;padding:0 5px;font-size:10px;font-weight:800">${tabCount > 9 ? '9+' : tabCount}</span>` : ''}
+      </button>`;
+    }).join('');
 
-    return `<div class="page active">${headerBar}
+    return `<div class="page active">
+      <div class="inner-topbar">
+        <button class="back" onclick="H.goBack()" aria-label="Go back">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="inner-topbar-title">Notifications${unreadCount ? ` <span style="background:#F5A623;color:#1A3A8F;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:800;margin-left:6px">${unreadCount}</span>` : ''}</div>
+        <div style="display:flex;gap:4px">
+          ${unreadCount ? '<button onclick="H.markAllNotifsRead()" style="background:none;border:none;color:#1A3A8F;font-size:12px;font-weight:600;cursor:pointer;padding:6px 4px">Read all</button>' : ''}
+          ${list.length ? '<button onclick="H.clearAllNotifs()" style="background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;padding:6px 4px">Clear</button>' : ''}
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;padding:10px 16px;display:flex;gap:8px;border-bottom:1px solid var(--border);background:var(--card)">
+        ${tabsHtml}
+      </div>
+
       <div id="notifList" style="padding-bottom:90px">
-        ${list.length ? list.map(n => {
-          const type = n.type || _inferType(n.title);
-          const color = _notifColor(type);
-          const safeLink = n.deepLink ? escHtml(n.deepLink) : '';
-          const tapAction = `H.markNotifRead('${n.id}');this.querySelector('[data-unread-dot]')?.remove();this.style.background='var(--card)';H._notifNavigate(${safeLink ? `'${safeLink}'` : 'null'},'${type}','${n.id}');`;
-          const navHint = type === 'message' ? 'Open Messages ›'
-            : type === 'sale' ? 'Open Account ›'
-            : n.deepLink ? 'Tap to open ›'
-            : type === 'info' || type === 'system' ? 'Tap to view ›'
-            : 'Open ›';
-          return `<div onclick="${tapAction}"
-              style="background:${n.read ? 'var(--card)' : 'rgba(26,58,143,.04)'};border-bottom:1px solid var(--border);padding:14px 40px 14px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;position:relative">
-            ${n.imageUrl
-              ? `<img src="${escHtml(n.imageUrl)}" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
-              : `<div style="width:38px;height:38px;border-radius:50%;background:${_notifBg(type)};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${color}">${_notifIcon(type)}</div>`
-            }
-            <div style="flex:1;min-width:0">
-              <div style="font-size:14px;font-weight:${n.read ? '600' : '800'};color:var(--text);margin-bottom:3px;line-height:1.3">${escHtml(n.title || '')}</div>
-              <div style="font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:4px">${escHtml(n.body || '')}</div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <div style="font-size:11px;color:var(--sub2);font-weight:500">${timeAgo(n.t)}</div>
-                <div style="font-size:11px;color:${color};font-weight:600">${navHint}</div>
-              </div>
-            </div>
-            ${n.read ? '' : `<span data-unread-dot style="width:9px;height:9px;border-radius:50%;background:${color};margin-top:6px;flex-shrink:0"></span>`}
-            <button onclick="event.stopPropagation();H.deleteNotif('${n.id}')" aria-label="Delete notification"
-              style="position:absolute;top:50%;right:10px;transform:translateY(-50%);background:none;border:none;padding:6px;cursor:pointer;color:var(--sub);border-radius:6px;display:flex;align-items:center;justify-content:center;opacity:0.55">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            </button>
-          </div>`;
-        }).join('') : `<div style="text-align:center;padding:60px 20px">
-          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--sub)" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px">No notifications yet</div>
-          <div style="font-size:13px;color:var(--sub)">You'll be notified about messages, saves, and activity on your listings.</div>
-        </div>`}
+        ${_renderNotifItems(list, activeTab)}
       </div>
 
       <div class="menu-group-label">Notification Settings</div>
