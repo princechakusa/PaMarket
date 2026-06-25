@@ -533,6 +533,17 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
       try {
         if (!window.supabase) throw new Error('Not connected');
+        // Verify Supabase auth session exists — if not, try refresh, then prompt re-login
+        let _sess = await window.supabase.auth.getSession();
+        let _tok = _sess && _sess.data && _sess.data.session && _sess.data.session.access_token;
+        if (!_tok) {
+          try { const _r = await window.supabase.auth.refreshSession(); _tok = _r && _r.data && _r.data.session && _r.data.session.access_token; } catch(_) {}
+        }
+        if (!_tok) {
+          if (btn) { btn.disabled = false; btn.textContent = 'Submit for Review'; }
+          toast('Session expired. Please sign out and sign in again, then resubmit.', 5000, true);
+          return;
+        }
         const paths = {};
         for (const d of activeDocs) {
           paths[d[0]] = await H.uploadVerificationDoc(u.id, _pendingCompany[d[0]], 'co_' + d[0]);
