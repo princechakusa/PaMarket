@@ -873,6 +873,12 @@ window.H = {
     if(typeof H.setupPush==='function') H.setupPush();
     this._initPullToRefresh();
     if(typeof window._hideSplash==='function') window._hideSplash();
+    // Poll paid_ads every 3 min as realtime fallback — announcements appear within
+    // 3 minutes of admin posting even if the paid_ads table has no realtime publication.
+    var _self2 = this;
+    setInterval(function() {
+      if (typeof _self2.fetchAdsFromSupabase === 'function') _self2.fetchAdsFromSupabase().catch(function(){});
+    }, 180000);
   },
 
   // True while the user has a text field focused — background refreshes must
@@ -1249,6 +1255,7 @@ window.H = {
               }
             }).catch(function(){});
           }
+          if (typeof H.fetchAdsFromSupabase === 'function') H.fetchAdsFromSupabase().catch(function(){});
           if (H.currentUser()) {
             if (typeof H.syncConversations === 'function') H.syncConversations({ skipMessageFetch: true }).catch(function(){});
             if (typeof H.syncNotifications === 'function') H.syncNotifications();
@@ -1385,30 +1392,28 @@ window.H = {
   async fetchAdsFromSupabase() {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
-      // Select * (not an explicit column list): the paid_ads table may or may not
-      // have the richer ad columns (headline, business_name, bg_color, ...). An
-      // explicit list that names a missing column 400s and returns ZERO ads, so
-      // ads "exist but never appear". With * we take whatever exists and fall
-      // back to the minimal columns (title/image_url/link_url) that always exist.
-      const {data,error} = await window.supabase
-        .from('paid_ads')
-        .select('id,type,business_name,headline,tagline,image_url,bg_color,link_url,target_cat,starts_at,ends_at,active,priority,impressions,clicks,listing_id')
-        .eq('active',true)
-        .limit(20);
-      if(error||!data) return;
-      H.state.paidAds = data.map(r=>({
+      // Use select('*') — an explicit column list 400s if any named column is absent
+      // from the DB schema, silently wiping all ads. With * we get whatever columns
+      // exist and fall back gracefully for any that are missing.
+      var res = await window.supabase.from('paid_ads').select('*').eq('active',true).limit(20);
+      if(res.error||!res.data||!res.data.length) {
+        if(res.error) console.warn('fetchAdsFromSupabase:', res.error.message);
+        return;
+      }
+      var mapped = res.data.map(function(r) { return {
         id:r.id, type:r.type||'banner',
-        businessName:r.business_name || r.title || 'Sponsored',
-        headline:r.headline || r.title || '',
-        tagline:r.tagline || '', imageUrl:r.image_url,
-        bgColor:r.bg_color || '#1A3A8F', linkUrl:r.link_url, targetCat:r.target_cat || null,
+        businessName:r.business_name||r.title||'Sponsored',
+        headline:r.headline||r.title||'',
+        tagline:r.tagline||'', imageUrl:r.image_url||null,
+        bgColor:r.bg_color||'#1A3A8F', linkUrl:r.link_url||null,
+        targetCat:r.target_cat||null, listingId:r.listing_id||null,
         startsAt:r.starts_at?new Date(r.starts_at).getTime():0,
         endsAt:r.ends_at?new Date(r.ends_at).getTime():9999999999999,
         active:r.active, priority:r.priority||0,
-        impressions:r.impressions||0, clicks:r.clicks||0,
-        listingId:r.listing_id||null
-      })).sort(function(a,b){ return (b.priority||0)-(a.priority||0); });
-      // Show announcement-type ads as dismissible popups after a short delay
+        impressions:r.impressions||0, clicks:r.clicks||0
+      }; });
+      mapped.sort(function(a,b){ return (b.priority||0)-(a.priority||0); });
+      H.state.paidAds = mapped;
       setTimeout(function(){ if(typeof H._showAnnouncementPopups==='function') H._showAnnouncementPopups(); }, 1500);
     } catch(e){ console.warn('fetchAdsFromSupabase:',e.message); }
   },
@@ -1966,31 +1971,12 @@ window.H = {
         })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'paid_ads' }, function(payload) {
           var r = payload.new; if (!r) return;
-          if (!Array.isArray(H.state.paidAds)) H.state.paidAds = [];
-          var idx = H.state.paidAds.findIndex(function(x) { return String(x.id) === String(r.id); });
-          if (idx !== -1) {
-            Object.assign(H.state.paidAds[idx], {
-              headline: r.headline || H.state.paidAds[idx].headline,
-              tagline: r.tagline || H.state.paidAds[idx].tagline,
-              imageUrl: r.image_url || H.state.paidAds[idx].imageUrl,
-              active: r.active
-            });
-            if (r.active === false) H.state.paidAds.splice(idx, 1);
-          } else if (r.active !== false) {
-            var ad2 = {
-              id: r.id, type: r.type || 'banner',
-              businessName: r.business_name || '', headline: r.headline || '',
-              tagline: r.tagline || '', imageUrl: r.image_url || '',
-              bgColor: r.bg_color || '', linkUrl: r.link_url || '',
-              targetCat: r.target_cat || '', listingId: r.listing_id || null,
-              startsAt: r.starts_at ? new Date(r.starts_at).getTime() : null,
-              endsAt: r.ends_at ? new Date(r.ends_at).getTime() : null,
-              priority: r.priority || 0, impressions: r.impressions || 0, clicks: r.clicks || 0
-            };
-            H.state.paidAds.push(ad2);
-            if (r.type === 'announcement' && typeof H._showAnnouncementPopups === 'function') {
-              setTimeout(function() { H._showAnnouncementPopups(); }, 600);
-            }
+          if (!Array.isArray(H.state.paidAds)) return;
+          // Only handle deactivation — impression/click counter updates are ignored
+          // to avoid overwriting local ad data with a partial payload.
+          if (r.active === false) {
+            var idx = H.state.paidAds.findIndex(function(x) { return String(x.id) === String(r.id); });
+            if (idx !== -1) H.state.paidAds.splice(idx, 1);
           }
         })
         .subscribe();
