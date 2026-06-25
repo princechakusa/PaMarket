@@ -47,83 +47,132 @@
 
   // --- Help Center ------------------------------------------
   pages.Help = function () {
+    const WA = 'https://wa.me/971589772645';
+
+    const topics = [
+      { label:'FAQs',            desc:'Common questions answered',         icon:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>', page:'FAQs',             color:'#1A3A8F', bg:'#EEF2FF' },
+      { label:'Post a Listing',  desc:'How to sell on PaMarket',           icon:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>', page:'FAQs',             color:'#059669', bg:'#ECFDF5' },
+      { label:'Get Verified',    desc:'Blue badge & business accounts',     icon:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>', page:'HelpVerification', color:'#1A3A8F', bg:'#EEF2FF' },
+      { label:'Safety & Fraud',  desc:'Avoid scams, stay protected',        icon:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', page:'ReportProblem',   color:'#DC2626', bg:'#FEF2F2' },
+      { label:'Jobs & CV',       desc:'Apply for jobs, build your CV',      icon:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>', page:'FAQs',             color:'#D97706', bg:'#FFFBEB' },
+      { label:'Payments',        desc:'How money works on PaMarket',        icon:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>', page:'FAQs',             color:'#059669', bg:'#ECFDF5' },
+    ];
+
+    const topicGrid = topics.map(function(t) {
+      return '<button onclick="H.openInner(\'' + t.page + '\')" style="display:flex;flex-direction:column;align-items:flex-start;padding:14px;background:' + t.bg + ';border:1.5px solid var(--border);border-radius:14px;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;gap:8px">'
+        + '<div style="width:38px;height:38px;border-radius:11px;background:' + t.color + ';display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0">' + t.icon + '</div>'
+        + '<div><div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:2px">' + t.label + '</div><div style="font-size:11px;color:var(--sub);line-height:1.4">' + t.desc + '</div></div>'
+        + '</button>';
+    }).join('');
+
+    const chips = ['Post a listing','Get verified','Report scam','EcoCash payment','Job application','Delete account','Renew listing','Block user'];
+    const chipRow = chips.map(function(c) {
+      return '<button onclick="H.openInner(\'ReportProblem\')" style="background:var(--bg);border:1.5px solid var(--border);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap;flex-shrink:0">' + c + '</button>';
+    }).join('');
+
+    const waIcon = '<svg viewBox="0 0 24 24" width="22" height="22" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>';
+
     return `<div class="page active">
       ${H.innerTopbar('Help & Support')}
-      <div class="form-wrap">
-        <div class="help-section">
-          <div class="section-title">Common Questions</div>
-          <button class="help-item" onclick="H.openInner('FAQs')">
-            <span class="help-icon">${S.help}</span>
-            <span class="help-label">FAQs</span>
-            <span class="help-arrow">${S.chevron}</span>
-          </button>
-        </div>
 
-        <div class="help-section">
-          <div class="section-title">For Businesses</div>
-          <button class="help-item" onclick="H.openInner('HelpVerification')">
-            <span class="help-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
-            <span class="help-label">How to Get Verified</span>
-            <span class="help-arrow">${S.chevron}</span>
-          </button>
-        </div>
-
-        <div class="help-section">
-          <div class="section-title">Legal & Documentation</div>
-          <button class="help-item" onclick="H.openInner('LegalHub')">
-            <span class="help-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
-            <span class="help-label">Legal Hub</span>
-            <span class="help-arrow">${S.chevron}</span>
-          </button>
-          <button class="help-item" onclick="H.openInner('HelpTerms')">
-            <span class="help-icon">${S.doc}</span>
-            <span class="help-label">Terms & Conditions</span>
-            <span class="help-arrow">${S.chevron}</span>
-          </button>
-          <button class="help-item" onclick="H.openInner('HelpPrivacy')">
-            <span class="help-icon">${S.lock}</span>
-            <span class="help-label">Privacy Policy</span>
-            <span class="help-arrow">${S.chevron}</span>
-          </button>
-          <button class="help-item" onclick="H.openInner('HelpCommunity')">
-            <span class="help-icon">${S.users}</span>
-            <span class="help-label">Community Guidelines</span>
-            <span class="help-arrow">${S.chevron}</span>
-          </button>
-        </div>
-
-        <div class="help-section">
-          <div class="section-title">Support</div>
-          <button class="help-item" onclick="H.openInner('ContactSupport')">
-            <span class="help-icon">${S.mail}</span>
-            <span class="help-label">Contact Support</span>
-            <span class="help-arrow">${S.chevron}</span>
-          </button>
-          <button class="help-item" onclick="H.openInner('ReportProblem')">
-            <span class="help-icon">${S.bug}</span>
-            <span class="help-label">Report a Problem</span>
-            <span class="help-arrow">${S.chevron}</span>
-          </button>
-        </div>
-
-        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px">
-          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">Quick Contact</div>
-          <a href="mailto:chakusaprince@gmail.com" style="display:flex;align-items:center;gap:10px;padding:10px 0;text-decoration:none;border-bottom:1px solid var(--border)">
-            <span style="color:#1A3A8F">${S.mail}</span>
-            <span style="font-size:13px;font-weight:600;color:#1A3A8F">chakusaprince@gmail.com</span>
-          </a>
-          <a href="tel:+971589772645" style="display:flex;align-items:center;gap:10px;padding:10px 0;text-decoration:none;border-bottom:1px solid var(--border)">
-            <span style="color:#16a34a">${S.phone}</span>
-            <span style="font-size:13px;font-weight:600;color:#16a34a">+971 589 772 645</span>
-          </a>
-          <a href="https://wa.me/971589772645" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:10px 0;text-decoration:none">
-            <span style="color:#25D366"><svg viewBox="0 0 24 24" width="20" height="20" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></span>
-            <span style="font-size:13px;font-weight:600;color:#25D366">Chat on WhatsApp</span>
-          </a>
-        </div>
-
-        <div style="height:20px"></div>
+      <div style="padding:12px 16px 0">
+        <button onclick="H.openInner('ReportProblem')" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          ${S.help}
+          <span style="font-size:14px;color:var(--sub)">Search for help...</span>
+        </button>
       </div>
+
+      <div style="padding:10px 16px 4px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
+        ${chipRow}
+      </div>
+
+      <div style="margin:12px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px">
+        <div style="width:10px;height:10px;border-radius:50%;background:#10B981;flex-shrink:0;box-shadow:0 0 0 3px rgba(16,185,129,.2)"></div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">All systems running normally</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:1px">No reported issues</div>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:#10B981;background:#ECFDF5;border-radius:8px;padding:3px 8px">Operational</div>
+      </div>
+
+      <div style="padding:0 16px 8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)">Browse Topics</div>
+      <div style="margin:0 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${topicGrid}
+      </div>
+
+      <div style="padding:0 16px 8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)">Contact Us</div>
+      <div style="margin:0 16px 16px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:var(--card)">
+
+        <button onclick="H.openInner('ReportProblem')" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;background:linear-gradient(135deg,#1A3A8F,#2952cc);border:none;border-bottom:1px solid rgba(255,255,255,.1);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          <div style="width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;font-weight:900;color:#fff;border:1.5px solid rgba(255,255,255,.2)">P</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:800;color:#fff">PaMarket Support Bot</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:2px;display:flex;align-items:center;gap:5px">
+              <span style="width:6px;height:6px;border-radius:50%;background:#4ADE80;flex-shrink:0"></span>
+              Answers instantly · 30 topics covered
+            </div>
+          </div>
+          ${S.chevron.replace('currentColor','rgba(255,255,255,.7)')}
+        </button>
+
+        <a href="${WA}" onclick="event.preventDefault();(window.open('${WA}','_blank','noopener'))" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent">
+          <div style="width:42px;height:42px;border-radius:13px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;flex-shrink:0">${waIcon}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:#25D366">WhatsApp Support</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">+971 589 772 645 · Fastest response</div>
+          </div>
+          ${S.chevron}
+        </a>
+
+        <a href="mailto:support@pamarket.app" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;-webkit-tap-highlight-color:transparent">
+          <div style="width:42px;height:42px;border-radius:13px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">${S.mail}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:#1A3A8F">Email Support</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">support@pamarket.app · Reply within 24h</div>
+          </div>
+          ${S.chevron}
+        </a>
+      </div>
+
+      <div style="padding:0 16px 8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)">For Businesses</div>
+      <div style="margin:0 16px 16px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:var(--card)">
+        <button onclick="H.openInner('HelpVerification')" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          <div style="width:42px;height:42px;border-radius:13px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">How to Get Verified</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">Blue badge, Business &amp; Job posting verification</div>
+          </div>
+          ${S.chevron}
+        </button>
+        <button onclick="H.openInner('FAQs')" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;background:transparent;border:none;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          <div style="width:42px;height:42px;border-radius:13px;background:#FFFBEB;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#D97706">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">Posting Jobs</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">How to post vacancies and find candidates</div>
+          </div>
+          ${S.chevron}
+        </button>
+      </div>
+
+      <div style="padding:0 16px 8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)">Legal</div>
+      <div style="margin:0 16px 24px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:var(--card)">
+        <button onclick="H.openInner('LegalHub')" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;background:transparent;border:none;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          <div style="width:42px;height:42px;border-radius:13px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">Legal Hub</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">Terms, Privacy Policy &amp; 16 more documents</div>
+          </div>
+          ${S.chevron}
+        </button>
+      </div>
+
+      <div style="height:8px"></div>
     </div>`;
   };
 
@@ -215,11 +264,11 @@
       ${H.innerTopbar('Contact Support')}
       <div class="form-wrap">
 
-        <a href="mailto:chakusaprince@gmail.com" style="display:flex;align-items:center;gap:14px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;text-decoration:none;-webkit-tap-highlight-color:transparent">
+        <a href="mailto:support@pamarket.app" style="display:flex;align-items:center;gap:14px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;text-decoration:none;-webkit-tap-highlight-color:transparent">
           <div style="width:42px;height:42px;border-radius:12px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">${S.mail}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;color:var(--sub);font-weight:500;margin-bottom:2px">Email Support</div>
-            <div style="font-size:14px;font-weight:700;color:#1A3A8F">chakusaprince@gmail.com</div>
+            <div style="font-size:14px;font-weight:700;color:#1A3A8F">support@pamarket.app</div>
           </div>
           <div style="color:var(--sub)">${S.chevron}</div>
         </a>
