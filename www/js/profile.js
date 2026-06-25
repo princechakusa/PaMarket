@@ -212,10 +212,18 @@
         const compressed = await H.compressImage(file, 400, 0.82);
         if (!compressed) { H.toast('Could not read that image — try another'); return; }
         const u = H.currentUser();
-        u.avatar = compressed;
+        // Upload to R2 — base64 must never be stored in the DB
+        let avatarUrl = null;
+        try {
+          const avatarBlob = await (await fetch(compressed)).blob();
+          const avatarKey = 'profiles/' + u.id + '/avatar_' + Date.now() + '.jpg';
+          avatarUrl = await H.uploadToR2(avatarBlob, avatarKey, 'image/jpeg');
+        } catch (uploadErr) { console.warn('Avatar R2 upload failed:', uploadErr); }
+        u.avatar = avatarUrl || compressed;
         H.saveState();
+        const displaySrc = avatarUrl || compressed;
         const prev = document.getElementById('avatarPreview');
-        if (prev) { prev.outerHTML = `<img id="avatarPreview" src="${compressed}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g,"\\'")}'))">`; }
+        if (prev) { prev.outerHTML = `<img id="avatarPreview" src="${displaySrc}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g,"\\'")}'))">`; }
       },
       save: async () => {
         const u = H.currentUser();
@@ -237,7 +245,8 @@
         const c = window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null;
         if (c) {
           try {
-            const res = await c.from('profiles').upsert({ id: u.id, name: u.name, phone: u.phone || null, bio: u.bio || null, avatar: u.avatar || null, updated_at: new Date().toISOString() });
+            const safeAvatar = (u.avatar && u.avatar.startsWith('https://')) ? u.avatar : null;
+            const res = await c.from('profiles').upsert({ id: u.id, name: u.name, phone: u.phone || null, bio: u.bio || null, avatar: safeAvatar, updated_at: new Date().toISOString() });
             if (res && res.error) console.warn('Profile sync failed:', res.error.message);
           } catch (e) { console.warn('Profile sync failed:', e.message); }
         }

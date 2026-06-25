@@ -1663,7 +1663,7 @@ window.H = {
       sellerPhone:r.seller_phone||'', title:r.title, desc:r.description,
       price:r.price, currency:r.currency, cat:r.category,
       prov:r.province, city:r.city, suburb:r.suburb,
-      photos:Array.isArray(r.photos)?r.photos:(r.photos?[r.photos]:[]),
+      photos:(Array.isArray(r.photos)?r.photos:(r.photos?[r.photos]:[])).filter(p=>typeof p==='string'&&p.startsWith('https://')),
       status:r.status, boost:r.boost, views:r.views||0,
       businessId:r.business_id||null,
       createdAt:r.created_at?new Date(r.created_at).getTime():Date.now(),
