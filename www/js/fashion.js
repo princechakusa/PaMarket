@@ -38,11 +38,12 @@
     return '<div class="page active">'
       + H._catTopbar('Fashion', '#E91E63')
       + H._catHeader('fashion', 'Fashion', '#E91E63', f)
+      + (H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds('fashion')) : '')
       + '<div id="cl_fashion" style="padding-bottom:88px">'
       + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No fashion items listed', 'Style up Zimbabwe!', 'Post an Ad', "H.navTo('Post')"))
       + '</div></div>';
   };
 
-  H.pages.Fashion_after = function () { H._applyFilters('fashion'); };
+  H.pages.Fashion_after = function () { H._applyFilters('fashion'); if (H._initAdCarousels) H._initAdCarousels(); };
 
 })(window.H);

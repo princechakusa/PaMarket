@@ -24,11 +24,12 @@
     return '<div class="page active">'
       + H._catTopbar('Pets', '#8E24AA')
       + H._catHeader('pets', 'Pets', '#8E24AA', f)
+      + (H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds('pets')) : '')
       + '<div id="cl_pets" style="padding-bottom:88px">'
       + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No pets listed', 'Find your perfect companion!', 'Post an Ad', "H.navTo('Post')"))
       + '</div></div>';
   };
 
-  H.pages.Pets_after = function () { H._applyFilters('pets'); };
+  H.pages.Pets_after = function () { H._applyFilters('pets'); if (H._initAdCarousels) H._initAdCarousels(); };
 
 })(window.H);

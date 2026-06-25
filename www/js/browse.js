@@ -198,6 +198,7 @@
         </div>
       </div>
 
+      ${H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds()) : ''}
       <div class="sec-head"><div class="sec-title">Results</div></div>
       <div class="listing-list" id="listingList">
         ${activeListings.length
@@ -208,6 +209,7 @@
   };
 
   pages.Browse_after = function () {
+    if (H._initAdCarousels) H._initAdCarousels();
     if (typeof H.fetchListingsFromSupabase === 'function') {
       H.fetchListingsFromSupabase().then(() => {
         const el = document.getElementById('listingList');

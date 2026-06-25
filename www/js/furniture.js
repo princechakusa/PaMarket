@@ -31,11 +31,12 @@
     return '<div class="page active">'
       + H._catTopbar('Furniture', '#6D4C41')
       + H._catHeader('furniture', 'Furniture', '#6D4C41', f)
+      + (H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds('furniture')) : '')
       + '<div id="cl_furniture" style="padding-bottom:88px">'
       + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No furniture listed', 'Furnish your home!', 'Post an Ad', "H.navTo('Post')"))
       + '</div></div>';
   };
 
-  H.pages.Furniture_after = function () { H._applyFilters('furniture'); };
+  H.pages.Furniture_after = function () { H._applyFilters('furniture'); if (H._initAdCarousels) H._initAdCarousels(); };
 
 })(window.H);

@@ -27,11 +27,12 @@
     return '<div class="page active">'
       + H._catTopbar('Agriculture', '#388E3C')
       + H._catHeader('agriculture', 'Agriculture', '#388E3C', f)
+      + (H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds('agriculture')) : '')
       + '<div id="cl_agriculture" style="padding-bottom:88px">'
       + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No agriculture listings', 'Buy & sell farm products!', 'Post an Ad', "H.navTo('Post')"))
       + '</div></div>';
   };
 
-  H.pages.Agriculture_after = function () { H._applyFilters('agriculture'); };
+  H.pages.Agriculture_after = function () { H._applyFilters('agriculture'); if (H._initAdCarousels) H._initAdCarousels(); };
 
 })(window.H);

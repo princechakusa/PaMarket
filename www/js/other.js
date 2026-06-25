@@ -28,11 +28,12 @@
     return '<div class="page active">'
       + H._catTopbar('Other', '#546E7A')
       + H._catHeader('other', 'Other', '#546E7A', f)
+      + (H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds('other')) : '')
       + '<div id="cl_other" style="padding-bottom:88px">'
       + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No listings yet', 'Post anything for sale!', 'Post an Ad', "H.navTo('Post')"))
       + '</div></div>';
   };
 
-  H.pages.Other_after = function () { H._applyFilters('other'); };
+  H.pages.Other_after = function () { H._applyFilters('other'); if (H._initAdCarousels) H._initAdCarousels(); };
 
 })(window.H);

@@ -83,6 +83,7 @@
       + '<button id="ptab_sale" onclick="H._propTab(\'sale\')" style="flex:1;padding:12px 0;background:none;border:none;border-bottom:3px solid #F5A623;margin-bottom:-2px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">For Sale</button>'
       + '<button id="ptab_rent" onclick="H._propTab(\'rent\')" style="flex:1;padding:12px 0;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;color:rgba(255,255,255,.6);font-size:14px;font-weight:600;cursor:pointer">For Rent</button>'
       + '</div></div>'
+      + (H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds('property')) : '')
       + '<div id="pp_sale">'
       + H._catHeader('property_sale', 'Property for Sale', '#1A3A8F', _saleCarousel())
       + '<div id="cl_property_sale" style="padding-bottom:88px">'
@@ -96,7 +97,7 @@
       + '</div>';
   };
 
-  H.pages.Property_after = function () { H._propTab('sale'); };
+  H.pages.Property_after = function () { H._propTab('sale'); if (H._initAdCarousels) H._initAdCarousels(); };
 
   H._propTab = function (tab) {
     var ps = document.getElementById('pp_sale'), pr = document.getElementById('pp_rent');

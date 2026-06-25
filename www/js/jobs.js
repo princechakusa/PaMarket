@@ -186,6 +186,7 @@
       + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
       + '<input placeholder="Search job title, company, skills…" autocomplete="off" oninput="H.openInner(\'JobResults\',{q:this.value})" style="flex:1;border:none;outline:none;padding:14px 0;font-size:14px;background:transparent;color:#1A3A8F;font-family:Inter,sans-serif"></div>'
       + '</div>'
+      + (H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds('jobs')) : '')
       + '<div style="padding:16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">'
       + '<div onclick="H.openInner(\'FindJobs\')" style="background:#1A3A8F;border-radius:16px;padding:20px 14px;cursor:pointer;box-shadow:0 4px 16px rgba(26,58,143,.25)">'
       + '<div style="margin-bottom:8px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div>'
@@ -218,6 +219,8 @@
       + '<button onclick="H.openInner(\'PostJob\')" style="background:#F5A623;border:none;color:#1A3A8F;font-size:14px;font-weight:800;padding:12px 24px;border-radius:10px;cursor:pointer">Post a Job →</button>'
       + '</div></div>';
   };
+
+  H.pages.Jobs_after = function () { if (H._initAdCarousels) H._initAdCarousels(); };
 
   // ── Job taxonomy used across the discovery page ───────────────
   var JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];

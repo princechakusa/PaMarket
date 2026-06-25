@@ -29,11 +29,12 @@
     return '<div class="page active">'
       + H._catTopbar('Electronics', '#3949AB')
       + H._catHeader('electronics', 'Electronics', '#3949AB', f)
+      + (H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds('electronics')) : '')
       + '<div id="cl_electronics" style="padding-bottom:88px">'
       + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No electronics listed', 'Buy & sell gadgets!', 'Post an Ad', "H.navTo('Post')"))
       + '</div></div>';
   };
 
-  H.pages.Electronics_after = function () { H._applyFilters('electronics'); };
+  H.pages.Electronics_after = function () { H._applyFilters('electronics'); if (H._initAdCarousels) H._initAdCarousels(); };
 
 })(window.H);

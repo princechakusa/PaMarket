@@ -31,11 +31,12 @@
     return '<div class="page active">'
       + H._catTopbar('Baby & Kids', '#E91E63')
       + H._catHeader('kids', 'Baby & Kids', '#E91E63', f)
+      + (H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds('kids')) : '')
       + '<div id="cl_kids" style="padding-bottom:88px">'
       + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No kids items listed', 'Great deals for little ones!', 'Post an Ad', "H.navTo('Post')"))
       + '</div></div>';
   };
 
-  H.pages.Kids_after = function () { H._applyFilters('kids'); };
+  H.pages.Kids_after = function () { H._applyFilters('kids'); if (H._initAdCarousels) H._initAdCarousels(); };
 
 })(window.H);

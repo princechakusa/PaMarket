@@ -27,11 +27,12 @@
     return '<div class="page active">'
       + H._catTopbar('Rooms for Rent', '#00838F')
       + H._catHeader('rooms', 'Rooms', '#00838F', f)
+      + (H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds('rooms')) : '')
       + '<div id="cl_rooms" style="padding-bottom:88px">'
       + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No rooms listed', 'Find the perfect room!', 'Post a Room', "H.navTo('Post')"))
       + '</div></div>';
   };
 
-  H.pages.Rooms_after = function () { H._applyFilters('rooms'); };
+  H.pages.Rooms_after = function () { H._applyFilters('rooms'); if (H._initAdCarousels) H._initAdCarousels(); };
 
 })(window.H);

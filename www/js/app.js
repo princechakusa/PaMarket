@@ -1952,13 +1952,13 @@ window.H = {
           var r = payload.new;
           if (!r || r.active === false) return;
           var ad = {
-            id: r.id, type: r.type || 'banner',
+            id: r.id, type: r.type || 'banner', active: true,
             businessName: r.business_name || '', headline: r.headline || '',
-            tagline: r.tagline || '', imageUrl: r.image_url || '',
-            bgColor: r.bg_color || '', linkUrl: r.link_url || '',
-            targetCat: r.target_cat || '', listingId: r.listing_id || null,
-            startsAt: r.starts_at ? new Date(r.starts_at).getTime() : null,
-            endsAt: r.ends_at ? new Date(r.ends_at).getTime() : null,
+            tagline: r.tagline || '', imageUrl: r.image_url || null,
+            bgColor: r.bg_color || '#1A3A8F', linkUrl: r.link_url || null,
+            targetCat: r.target_cat || null, listingId: r.listing_id || null,
+            startsAt: r.starts_at ? new Date(r.starts_at).getTime() : 0,
+            endsAt: r.ends_at ? new Date(r.ends_at).getTime() : 9999999999999,
             priority: r.priority || 0, impressions: r.impressions || 0, clicks: r.clicks || 0
           };
           if (!Array.isArray(H.state.paidAds)) H.state.paidAds = [];

@@ -36,11 +36,12 @@
     return '<div class="page active">'
       + H._catTopbar('Vehicles', '#e53935')
       + H._catHeader('vehicles', 'Vehicles', '#e53935', f)
+      + (H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds('vehicles')) : '')
       + '<div id="cl_vehicles" style="padding-bottom:88px">'
       + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No vehicles listed', 'Be the first to sell!', 'Post an Ad', "H.navTo('Post')"))
       + '</div></div>';
   };
 
-  H.pages.Vehicles_after = function () { H._applyFilters('vehicles'); };
+  H.pages.Vehicles_after = function () { H._applyFilters('vehicles'); if (H._initAdCarousels) H._initAdCarousels(); };
 
 })(window.H);
