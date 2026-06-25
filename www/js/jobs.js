@@ -220,7 +220,10 @@
       + '</div></div>';
   };
 
-  H.pages.Jobs_after = function () { if (H._initAdCarousels) H._initAdCarousels(); };
+  H.pages.Jobs_after = function () {
+    if (H._initAdCarousels) H._initAdCarousels();
+    if (typeof H.fetchJobsFromSupabase === 'function') H.fetchJobsFromSupabase().catch(function(){});
+  };
 
   // ── Job taxonomy used across the discovery page ───────────────
   var JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];
@@ -420,6 +423,13 @@
       + '<div id="cl_findjobs" style="padding:12px 12px 88px">'
       + (jobs.length ? jobs.map(jobCard).join('') : H.emptyState('No jobs yet', 'Check back soon!', 'Post a Job', "H.openInner('PostJob')"))
       + '</div></div>';
+  };
+
+  H.pages.FindJobs_after = function () {
+    if (typeof H.fetchJobsFromSupabase === 'function') H.fetchJobsFromSupabase().then(function() {
+      var el = document.getElementById('cl_findjobs');
+      if (el && typeof H._applyJobFilters === 'function') H._applyJobFilters();
+    }).catch(function(){});
   };
 
   H.pages.JobResults_after = function (params) {
@@ -1502,7 +1512,7 @@
       + (reqs ? '\n\nREQUIREMENTS:\n' + reqs : '')
       + ((email || phone) ? '\n\nHOW TO APPLY:\n' + (email ? 'Email: ' + email + '\n' : '') + (phone ? 'WhatsApp: ' + phone : '') : '');
     var listing = {
-      id: H.uid(), cat: 'Jobs', title: title.trim(), desc: fullDesc,
+      id: H.uid(), cat: 'jobs', title: title.trim(), desc: fullDesc,
       price: (parseFloat(salary) || 0), currency: 'USD', city: location, prov: prov || location,
       sellerId: u.id, sellerName: anon ? company : (u.name || company),
       sellerPhone: u.phone || '', company: company,

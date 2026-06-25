@@ -1697,6 +1697,7 @@ window.H = {
       const {data,error}=await window.supabase
         .from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at')
         .eq('status','active')
+        .neq('category','jobs')
         .order('created_at',{ascending:false})
         .limit(50);
       if(error) { if(!navigator.onLine) H.toast('No internet — showing saved listings', 4000, true); return; }
@@ -1712,6 +1713,8 @@ window.H = {
         H.saveState();
       }
       if (typeof H._checkSavedSearchAlerts === 'function') { try { H._checkSavedSearchAlerts(); } catch(e){} }
+      // Refresh jobs in parallel — they are excluded from the main feed fetch
+      if (typeof H.fetchJobsFromSupabase === 'function') H.fetchJobsFromSupabase().catch(function(){});
 
       // Seller verified-badge backfill runs in the background so it never
       // delays the main fetch return. The UI already has fresh listings above;
@@ -1759,6 +1762,7 @@ window.H = {
     try {
       var res = await window.supabase.from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes')
         .eq('status', 'active')
+        .neq('category', 'jobs')
         .order('created_at', { ascending: false })
         .lt('created_at', H._listingsCursor)
         .limit(50);
@@ -1786,6 +1790,30 @@ window.H = {
       var _s = document.getElementById('homeLoadMore');
       if (_s) _s.textContent = H._listingsAllLoaded ? 'All listings loaded' : '';
     }
+  },
+
+  // Fetch ONLY jobs listings and merge into H.state.listings so the Jobs section
+  // always has fresh data independently of the marketplace feed fetch which
+  // explicitly excludes category='jobs'.
+  async fetchJobsFromSupabase() {
+    try {
+      if (!window.supabase || typeof window.supabase.from !== 'function') return;
+      const { data, error } = await window.supabase
+        .from('listings')
+        .select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at')
+        .eq('status', 'active')
+        .eq('category', 'jobs')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error || !Array.isArray(data)) return;
+      const jobs = data.map(r => H._mapCloudListing(r));
+      // Merge: replace existing job entries, keep all non-job entries
+      const nonJobs = (H.state.listings || []).filter(l => (l.cat || '').toLowerCase() !== 'jobs');
+      const merged = [...nonJobs, ...jobs];
+      H.state.listings = merged;
+      H.saveState();
+      console.log('[Jobs] fetchJobsFromSupabase: ' + jobs.length + ' jobs loaded');
+    } catch(e) { console.warn('fetchJobsFromSupabase:', e.message); }
   },
 
   // Admin-only: pull EVERY listing (all statuses) so the moderation queue is

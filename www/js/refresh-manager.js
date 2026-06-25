@@ -21,6 +21,16 @@
       : Promise.resolve();
   }
 
+  var _lastJobsFetch = 0;
+  function _fetchJobs() {
+    var now = Date.now();
+    if (now - _lastJobsFetch < _THROTTLE) return Promise.resolve();
+    _lastJobsFetch = now;
+    return typeof H.fetchJobsFromSupabase === 'function'
+      ? H.fetchJobsFromSupabase().catch(function () {})
+      : Promise.resolve();
+  }
+
   function _fetchBiz() {
     var now = Date.now();
     if (now - _lastBizFetch < _THROTTLE) return Promise.resolve();
@@ -69,7 +79,9 @@
     Pets:        { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
     Kids:        { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
     Other:       { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
-    Jobs:        { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
+    Jobs:        { interval: 60000,  fetch: _fetchJobs, sig: _sigListings },
+    FindJobs:    { interval: 60000,  fetch: _fetchJobs, sig: _sigListings },
+    JobDetail:   { interval: 60000,  fetch: _fetchJobs, sig: _sigListings },
     Rooms:       { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
     Detail: {
       interval: 60000,
@@ -188,6 +200,7 @@
     resume: function () {
       RM._appActive    = true;
       _lastListingsFetch = 0; // bypass throttle — get server-fresh data immediately
+      _lastJobsFetch     = 0;
       _lastBizFetch      = 0;
       var name   = RM._current || H.currentPageName;
       var params = RM._params;
