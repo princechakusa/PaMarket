@@ -533,26 +533,33 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
       try {
         if (!window.supabase) throw new Error('Not connected');
-        // Verify Supabase auth session exists — if not, try refresh, then prompt re-login
+        // Ensure a live Supabase JWT exists; try refresh if needed
         let _sess = await window.supabase.auth.getSession();
         let _tok = _sess && _sess.data && _sess.data.session && _sess.data.session.access_token;
         if (!_tok) {
-          try { const _r = await window.supabase.auth.refreshSession(); _tok = _r && _r.data && _r.data.session && _r.data.session.access_token; } catch(_) {}
+          try { const _r = await window.supabase.auth.refreshSession(); _tok = _r && _r.data && _r.data.session && _r.data.session.access_token; } catch (_) {}
         }
         if (!_tok) {
           if (btn) { btn.disabled = false; btn.textContent = 'Submit for Review'; }
           toast('Session expired. Please sign out and sign in again, then resubmit.', 5000, true);
           return;
         }
+        // Get the authoritative Supabase user ID from the JWT — must match what the
+        // R2 edge function checks against, so we cannot use u.id from local state here.
+        let authId = u.id;
+        try { const _au = await window.supabase.auth.getUser(); if (_au && _au.data && _au.data.user && _au.data.user.id) authId = _au.data.user.id; } catch (_) {}
+        if (!authId) throw new Error('Could not verify your identity. Please sign out and sign in again.');
+        // Upload each document directly through H.uploadToR2 so real errors surface
         const paths = {};
         for (const d of activeDocs) {
-          paths[d[0]] = await H.uploadVerificationDoc(u.id, _pendingCompany[d[0]], 'co_' + d[0]);
+          const blob = _dataUrlToBlob(_pendingCompany[d[0]]);
+          const key = 'verification/' + authId + '/co_' + d[0] + '_' + Date.now() + '.jpg';
+          await H.uploadToR2(blob, key, blob.type || 'image/jpeg');
+          paths[d[0]] = key;
         }
-        if (Object.keys(paths).some(k => !paths[k])) throw new Error('Document storage is not set up yet');
-        // Use 'SOLE TRADER: ' prefix so admin can identify the type without a new DB column.
         const storedName = isIndividual ? ('SOLE TRADER: ' + name) : name;
         const rec = {
-          user_id: u.id, company_name: storedName, status: 'pending', submitted_at: new Date().toISOString(),
+          user_id: authId, company_name: storedName, status: 'pending', submitted_at: new Date().toISOString(),
           reg_cert_path: paths.reg || null,
           owner_id_path: paths.nationalId || null,
           tax_cert_path: paths.tax || null,
@@ -560,7 +567,7 @@
         };
         const { error } = await window.supabase.from('company_verifications').upsert(rec, { onConflict: 'user_id' });
         if (error) throw error;
-        await window.supabase.from('profiles').update({ company_verification_pending: true, company: name }).eq('id', u.id);
+        await window.supabase.from('profiles').update({ company_verification_pending: true, company: name }).eq('id', authId);
         _pendingCompany = {}; _companyName = ''; _verifyType = null;
         u.company = name; u.company_verification_pending = true; saveState();
         toast('Documents submitted! Reviewed within 2 business days.', 5000);
