@@ -2079,10 +2079,12 @@
   };
 
   H._chat.startEdit = function (msgId) {
+    const u = H.currentUser(); if (!u) return;
     const c = conversations().find(function (x) { return x.id === H._activeChat; });
     if (!c) return;
     const m = (c.messages || []).find(function (x) { return x.id === msgId; });
     if (!m || m.deleted) return;
+    if (String(m.from) !== String(u.id)) return;
     H._chat._editingMsgId   = msgId;
     H._chat._editingOrigText = msgText(m);
     const old = document.getElementById('chatEditBar'); if (old) old.remove();
@@ -2116,10 +2118,11 @@
   H._chat._doEditMsg = async function (newText) {
     const msgId = H._chat._editingMsgId;
     H._chat.cancelEdit();
+    const u = H.currentUser(); if (!u) return;
     const c = conversations().find(function (x) { return x.id === H._activeChat; });
     if (!c) return;
     const m = (c.messages || []).find(function (x) { return x.id === msgId; });
-    if (!m) return;
+    if (!m || String(m.from) !== String(u.id)) return;
     m.text = newText; m.edited = true;
     H.saveState();
     // Update bubble in DOM without re-render
