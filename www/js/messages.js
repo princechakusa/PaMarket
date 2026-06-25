@@ -239,6 +239,8 @@
       holder.innerHTML = offerCardHtml(_of, false, m.id, H._activeOtherName || '');
       if (holder.firstChild) row.appendChild(holder.firstChild);
     } else {
+      const bwrap = document.createElement('div');
+      bwrap.className = 'msg-bwrap msg-bwrap-them';
       const bubble = document.createElement('div');
       bubble.className = 'chat-bubble them' + (m.image ? ' chat-bubble-img' : '');
       if (m.image) {
@@ -247,7 +249,10 @@
         bubble.innerHTML = replyQuoteHtml(m) + escHtml(msgText(m));
       }
       bubble.innerHTML += '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>';
-      row.appendChild(bubble);
+      bwrap.appendChild(bubble);
+      const _rhtml = _reactionsHtml(m, H.currentUser() && H.currentUser().id);
+      if (_rhtml) bwrap.insertAdjacentHTML('beforeend', _rhtml);
+      row.appendChild(bwrap);
     }
     const typing = thread.querySelector('#chatTyping');
     if (typing) thread.insertBefore(row, typing); else thread.appendChild(row);
@@ -560,7 +565,7 @@
         if (mine) {
           return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
             + '<div class="msg-bwrap msg-bwrap-me">'
-            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" oncontextmenu="event.preventDefault();event.stopPropagation();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
+            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
             + content
             + '<div class="chat-bubble-meta" style="text-align:right">Sent to ' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
             + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
@@ -568,7 +573,7 @@
         return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-row-av">' + otherAvatar + '</div>'
           + '<div class="msg-bwrap msg-bwrap-them">'
-          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" oncontextmenu="event.preventDefault();event.stopPropagation();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
+          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
           + content
           + '<div class="chat-bubble-meta">' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
           + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
@@ -581,7 +586,7 @@
         if (mine) {
           return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
             + '<div class="msg-bwrap msg-bwrap-me">'
-            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" oncontextmenu="event.preventDefault();event.stopPropagation();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
+            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
             + content
             + '<div class="chat-bubble-meta" style="text-align:right">' + _shopLabel + ' · ' + timeAgo(m.t) + ' ' + chatTick(!!m.read) + '</div>'
             + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
@@ -589,7 +594,7 @@
         return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-row-av">' + otherAvatar + '</div>'
           + '<div class="msg-bwrap msg-bwrap-them">'
-          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" oncontextmenu="event.preventDefault();event.stopPropagation();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
+          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
           + content
           + '<div class="chat-bubble-meta">' + _buyerLabel + ' · ' + timeAgo(m.t) + '</div>'
           + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
@@ -597,7 +602,7 @@
       if (mine) {
         return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="msg-bwrap msg-bwrap-me">'
-          + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" oncontextmenu="event.preventDefault();event.stopPropagation();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
+          + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '">'
           + content
           + (m.edited ? '<span style="font-size:10px;opacity:.55"> · edited</span>' : '')
           + '<div class="chat-bubble-meta" style="text-align:right">' + timeAgo(m.t) + ' ' + chatTick(!!m.read) + '</div>'
@@ -606,7 +611,7 @@
       return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
         + '<div class="chat-row-av">' + otherAvatar + '</div>'
         + '<div class="msg-bwrap msg-bwrap-them">'
-        + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" oncontextmenu="event.preventDefault();event.stopPropagation();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
+        + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '">'
         + content
         + (m.edited ? '<span style="font-size:10px;opacity:.55"> · edited</span>' : '')
         + '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>'
@@ -1513,13 +1518,28 @@
       const { data: msgs, error } = await query;
       if (error || !msgs || !msgs.length) return;
 
-      // Merge new messages into state
+      // Merge new messages into state; also update reactions/edited/deleted on existing ones
       if (!conv) return;
       if (!Array.isArray(conv.messages)) conv.messages = [];
       msgs.forEach(function(m) {
         const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
-        if (!conv.messages.find(function(x){ return x.id === m.id; })) {
+        const existing = conv.messages.find(function(x){ return x.id === m.id; });
+        if (!existing) {
           conv.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, image: m.image||null, t, read: !!m.read, edited: !!m.edited, deleted: !!m.deleted, reactions: m.reactions || {} });
+        } else {
+          // Keep remote reactions/edited/deleted in sync
+          existing.reactions = m.reactions || existing.reactions || {};
+          if (m.edited) existing.edited = true;
+          if (m.deleted) { existing.deleted = true; existing.text = m.text; }
+          // Refresh reaction chips in DOM for this message
+          const _row = document.querySelector('.chat-msg-row[data-msg-id="' + m.id + '"]');
+          if (_row) {
+            const _bw = _row.querySelector('.msg-bwrap');
+            const _ex = _row.querySelector('.msg-reactions');
+            const _rh = _reactionsHtml(existing, u.id);
+            if (_ex) { if (_rh) _ex.outerHTML = _rh; else _ex.remove(); }
+            else if (_bw && _rh) _bw.insertAdjacentHTML('beforeend', _rh);
+          }
         }
         if (m.sender_id && m.sender_id !== u.id && !(conv.members||[]).includes(m.sender_id)) {
           conv.members = conv.members || [];
@@ -1897,10 +1917,13 @@
       const row = document.createElement('div');
       row.className = 'chat-msg-row me';
       row.setAttribute('data-msg-id', msgId);
+      const bwrapMe = document.createElement('div');
+      bwrapMe.className = 'msg-bwrap msg-bwrap-me';
       const bubble = document.createElement('div');
       bubble.className = 'chat-bubble me';
       bubble.innerHTML = (rt ? replyQuoteHtml({ text: storeText }) : '') + escHtml(text) + '<div class="chat-bubble-meta" style="text-align:right">just now ' + chatTick(false) + '</div>';
-      row.appendChild(bubble);
+      bwrapMe.appendChild(bubble);
+      row.appendChild(bwrapMe);
       const typing = thread.querySelector('#chatTyping');
       if (typing) thread.insertBefore(row, typing); else thread.appendChild(row);
       thread.scrollTop = thread.scrollHeight;
@@ -2016,7 +2039,11 @@
   };
   H._chat._lpEnd = function () { clearTimeout(H._chat._lpTimer); };
 
+  H._chat._lastMsgActionsAt = 0;
   H._chat.showMsgActions = function (msgId, isMine) {
+    const _now = Date.now();
+    if (_now - H._chat._lastMsgActionsAt < 600) return;
+    H._chat._lastMsgActionsAt = _now;
     const c = conversations().find(function (x) { return x.id === H._activeChat; });
     if (!c) return;
     const m = (c.messages || []).find(function (x) { return x.id === msgId; });
