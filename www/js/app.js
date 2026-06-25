@@ -860,6 +860,7 @@ window.H = {
     if(typeof H._setupRealtimeMessages==='function') H._setupRealtimeMessages();
     if(typeof H._setupRealtimeListings==='function') H._setupRealtimeListings();
     if(typeof H._setupRealtimeBusinesses==='function') H._setupRealtimeBusinesses();
+    if(typeof H._setupRealtimeAds==='function') H._setupRealtimeAds();
     if(typeof H.syncReports==='function') H.syncReports();
     if(typeof H.syncConversations==='function') H.syncConversations();
     if(typeof H.syncApplications==='function') H.syncApplications();
@@ -1934,6 +1935,66 @@ window.H = {
           if (H.RT && typeof H.RT._onChannelStatus === 'function') H.RT._onChannelStatus('businesses', status);
         });
     } catch(e) { console.warn('_setupRealtimeBusinesses:', e.message); }
+  },
+
+  _setupRealtimeAds() {
+    try {
+      const sb = window.supabase;
+      if (!sb || typeof sb.channel !== 'function') return;
+      if (window._adsRtChannel) { try { sb.removeChannel(window._adsRtChannel); } catch(e) {} }
+      window._adsRtChannel = sb.channel('paid-ads-live')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'paid_ads' }, function(payload) {
+          var r = payload.new;
+          if (!r || r.active === false) return;
+          var ad = {
+            id: r.id, type: r.type || 'banner',
+            businessName: r.business_name || '', headline: r.headline || '',
+            tagline: r.tagline || '', imageUrl: r.image_url || '',
+            bgColor: r.bg_color || '', linkUrl: r.link_url || '',
+            targetCat: r.target_cat || '', listingId: r.listing_id || null,
+            startsAt: r.starts_at ? new Date(r.starts_at).getTime() : null,
+            endsAt: r.ends_at ? new Date(r.ends_at).getTime() : null,
+            priority: r.priority || 0, impressions: r.impressions || 0, clicks: r.clicks || 0
+          };
+          if (!Array.isArray(H.state.paidAds)) H.state.paidAds = [];
+          if (!H.state.paidAds.find(function(x) { return String(x.id) === String(ad.id); })) {
+            H.state.paidAds.push(ad);
+            if (r.type === 'announcement' && typeof H._showAnnouncementPopups === 'function') {
+              setTimeout(function() { H._showAnnouncementPopups(); }, 600);
+            }
+          }
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'paid_ads' }, function(payload) {
+          var r = payload.new; if (!r) return;
+          if (!Array.isArray(H.state.paidAds)) H.state.paidAds = [];
+          var idx = H.state.paidAds.findIndex(function(x) { return String(x.id) === String(r.id); });
+          if (idx !== -1) {
+            Object.assign(H.state.paidAds[idx], {
+              headline: r.headline || H.state.paidAds[idx].headline,
+              tagline: r.tagline || H.state.paidAds[idx].tagline,
+              imageUrl: r.image_url || H.state.paidAds[idx].imageUrl,
+              active: r.active
+            });
+            if (r.active === false) H.state.paidAds.splice(idx, 1);
+          } else if (r.active !== false) {
+            var ad2 = {
+              id: r.id, type: r.type || 'banner',
+              businessName: r.business_name || '', headline: r.headline || '',
+              tagline: r.tagline || '', imageUrl: r.image_url || '',
+              bgColor: r.bg_color || '', linkUrl: r.link_url || '',
+              targetCat: r.target_cat || '', listingId: r.listing_id || null,
+              startsAt: r.starts_at ? new Date(r.starts_at).getTime() : null,
+              endsAt: r.ends_at ? new Date(r.ends_at).getTime() : null,
+              priority: r.priority || 0, impressions: r.impressions || 0, clicks: r.clicks || 0
+            };
+            H.state.paidAds.push(ad2);
+            if (r.type === 'announcement' && typeof H._showAnnouncementPopups === 'function') {
+              setTimeout(function() { H._showAnnouncementPopups(); }, 600);
+            }
+          }
+        })
+        .subscribe();
+    } catch(e) { console.warn('_setupRealtimeAds:', e.message); }
   },
 
   async syncApplications() {

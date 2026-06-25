@@ -1838,7 +1838,8 @@
     // along to every device with no schema change.
     const rt = H._chat && H._chat.replyTarget;
     const storeText = rt ? JSON.stringify({ _reply: { i: rt.id, n: rt.name, t: rt.text }, t: text }) : text;
-    c.messages.push({ id: msgId, from: u.id, senderName: u.name||'', text: storeText, t: msgT, read: false });
+    var msgObj = { id: msgId, from: u.id, senderName: u.name||'', text: storeText, t: msgT, read: false };
+    c.messages.push(msgObj);
     H.saveState();
     inp.value = '';
     if (typeof H._clearChatDraft === 'function') H._clearChatDraft(c.id);
@@ -1851,7 +1852,7 @@
     if (typeof H.stopTyping === 'function') H.stopTyping();
     // Append to DOM directly — no full page re-render to avoid flicker
     const thread = document.getElementById('chatThread');
-    if (thread) {
+    if (thread && !thread.querySelector('[data-msg-id="' + msgId + '"]')) {
       const row = document.createElement('div');
       row.className = 'chat-msg-row me';
       row.setAttribute('data-msg-id', msgId);
@@ -1871,7 +1872,7 @@
       // Save the message — this is what matters
       var msgSaved = false;
       if (typeof H.saveMessageToCloud === 'function') {
-        var cloudResult = await H.saveMessageToCloud(c.id, c.messages[c.messages.length - 1]);
+        var cloudResult = await H.saveMessageToCloud(c.id, msgObj);
         if (cloudResult && cloudResult.ok === false) throw new Error(cloudResult.error || 'Message sync failed');
         msgSaved = true;
       }

@@ -2306,18 +2306,34 @@
           + '<div style="font-size:13.5px;color:var(--text);line-height:1.75;white-space:pre-wrap">' + H.escHtml(app.message) + '</div>'
           + '</div>' : '')
 
-      // Screening answers
-      + (app.answers && app.answers.length
-          ? '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px">'
-            + '<div style="font-size:10px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Screening Answers</div>'
-            + app.answers.map(function(qa) {
-                return '<div style="margin-bottom:12px">'
-                  + '<div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:4px">' + H.escHtml(qa.question || '') + '</div>'
-                  + '<div style="font-size:13.5px;color:var(--text);line-height:1.55">' + H.escHtml(qa.answer || '—') + '</div>'
+      // Profile summary (generic fields like qualification, city, title, etc.)
+      + (function() {
+          var profileQA = (app.answers || []).filter(function(qa) { return !qa.questionId; });
+          if (!profileQA.length) return '';
+          return '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px">'
+            + '<div style="font-size:10px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Profile Summary</div>'
+            + profileQA.map(function(qa) {
+                return qa.answer ? '<div style="display:flex;padding:7px 0;border-bottom:1px solid var(--border)">'
+                  + '<div style="font-size:12px;color:var(--sub);width:120px;flex-shrink:0;padding-top:1px">' + H.escHtml(qa.question || '') + '</div>'
+                  + '<div style="font-size:13px;font-weight:600;color:var(--text);flex:1">' + H.escHtml(qa.answer || '—') + '</div>'
+                  + '</div>' : '';
+              }).join('')
+            + '</div>';
+        }())
+      // Screening questions from the employer — matched to candidate's answers
+      + (function() {
+          var customQA = (app.answers || []).filter(function(qa) { return !!qa.questionId; });
+          if (!customQA.length) return '';
+          return '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px">'
+            + '<div style="font-size:10px;font-weight:800;color:#1A3A8F;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Screening Questions</div>'
+            + customQA.map(function(qa) {
+                return '<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">'
+                  + '<div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:5px">' + H.escHtml(qa.question || '') + '</div>'
+                  + '<div style="font-size:13.5px;color:var(--text);line-height:1.55;font-weight:500">' + H.escHtml(qa.answer || '—') + '</div>'
                   + '</div>';
               }).join('')
-            + '</div>'
-          : '')
+            + '</div>';
+        }())
 
       + '</div>'
 

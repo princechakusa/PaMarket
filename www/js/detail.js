@@ -414,7 +414,7 @@
         H.state.reports.push({id:H.uid(), reporterId:cu.id, targetType:'listing', targetId:id, reason:reason+(note?' - '+note:''), t:Date.now(), status:'open'});
         H.saveState();
         var _sb = window.supabase;
-        if (_sb) _sb.from('reports').insert({target_type:'listing', target_id:id, reason:reason+(note?' - '+note:''), reporter_id:String(cu.id), status:'open'}).then(function(r){ if(r&&r.error) console.warn('report save:',r.error.message); });
+        if (_sb) _sb.from('reports').insert({id:H.uid(), target_type:'listing', target_id:id, reason:reason+(note?' - '+note:''), reporter_id:String(cu.id), status:'open', created_at:new Date().toISOString()}).then(function(r){ if(r&&r.error) console.warn('report save:',r.error.message); });
         H.toast('Report submitted. Thank you.');
       }
     });
@@ -436,7 +436,7 @@
         H.state.reports.push({id:H.uid(), reporterId:cu.id, targetType:'user', targetId:id, reason:reason+(note?' - '+note:''), t:Date.now(), status:'open'});
         H.saveState();
         var _sb = window.supabase;
-        if (_sb) _sb.from('reports').insert({target_type:'user', target_id:id, reason:reason+(note?' - '+note:''), reporter_id:String(cu.id), status:'open'}).then(function(r){ if(r&&r.error) console.warn('report save:',r.error.message); });
+        if (_sb) _sb.from('reports').insert({id:H.uid(), target_type:'user', target_id:id, reason:reason+(note?' - '+note:''), reporter_id:String(cu.id), status:'open', created_at:new Date().toISOString()}).then(function(r){ if(r&&r.error) console.warn('report save:',r.error.message); });
         H.toast('Report submitted');
       }
     });
