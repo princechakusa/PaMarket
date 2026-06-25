@@ -55,8 +55,9 @@ Deno.serve(async (req) => {
       },
     })
 
-    const bucket = isVerification
-      ? Deno.env.get('R2_PRIVATE_BUCKET')!
+    const privateBucket = Deno.env.get('R2_PRIVATE_BUCKET')
+    const bucket = (isVerification && privateBucket)
+      ? privateBucket
       : Deno.env.get('R2_PUBLIC_BUCKET')!
 
     const cmd = isGet

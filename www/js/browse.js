@@ -89,7 +89,7 @@
   }
 
   pages.Browse = function () {
-    const activeListings = (state.listings || []).filter(l => l.status === 'active');
+    const activeListings = (state.listings || []).filter(l => l.status === 'active' && l.cat !== 'jobs');
     const u = H.currentUser();
     const recentSearches = (u && u.recentSearches) || [];
 
@@ -237,7 +237,7 @@
         H._browse._searchTimer = setTimeout(() => {
           const q = document.getElementById('searchIn')?.value || '';
           browseState.lastSearch = q;
-          const activeListings = (state.listings || []).filter(l => l.status === 'active');
+          const activeListings = (state.listings || []).filter(l => l.status === 'active' && l.cat !== 'jobs');
           const filtered = applyBrowseFilters(activeListings, q);
           const el = document.getElementById('listingList');
           if (el) el.innerHTML = filtered.length

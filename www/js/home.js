@@ -40,7 +40,7 @@
   H._renderHomeCatSections = function () {
     const el = document.getElementById('catSections');
     if (!el) return;
-    const active   = (H.state.listings || []).filter(l => l.status === 'active');
+    const active   = (H.state.listings || []).filter(l => l.status === 'active' && l.cat !== 'jobs');
     const filtered = filterListings(active);
     el.innerHTML   = buildCatSectionsHTML(filtered);
     const s = document.getElementById('homeLoadMore');

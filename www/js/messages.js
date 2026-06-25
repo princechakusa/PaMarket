@@ -1044,9 +1044,9 @@
       if (el) el.scrollTop = el.scrollHeight;
     };
     jump();
-    requestAnimationFrame(jump);
-    [40, 120, 250, 450, 750].forEach(function (d) { setTimeout(jump, d); });
-    // Re-pin when images that were still loading at mount finish and grow the thread.
+    setTimeout(jump, 80);
+    setTimeout(jump, 400);
+    // Re-pin once after late-loading images grow the thread.
     var imgs = th.querySelectorAll('img');
     for (var i = 0; i < imgs.length; i++) {
       if (!imgs[i].complete) {
@@ -1094,16 +1094,25 @@
       if (ma) { ma.style.position = 'relative'; ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
       const KB = window.Capacitor.Plugins && window.Capacitor.Plugins.Keyboard;
       if (KB) {
+        var _kbSession = (window._chatKBSession = (window._chatKBSession || 0) + 1);
         KB.addListener('keyboardWillShow', function(info) {
+          if (window._chatKBSession !== _kbSession) return;
           const w = document.getElementById('chatPageWrap');
           if (w) w.style.bottom = (info.keyboardHeight || 0) + 'px';
           const th = document.getElementById('chatThread');
           if (th) setTimeout(function() { th.scrollTop = th.scrollHeight; }, 50);
-        }).then(function(h) { window._chatKBShow = h; });
+        }).then(function(h) {
+          if (window._chatKBSession !== _kbSession) { try { h.remove(); } catch(e) {} return; }
+          window._chatKBShow = h;
+        });
         KB.addListener('keyboardWillHide', function() {
+          if (window._chatKBSession !== _kbSession) return;
           const w = document.getElementById('chatPageWrap');
           if (w) w.style.bottom = '0px';
-        }).then(function(h) { window._chatKBHide = h; });
+        }).then(function(h) {
+          if (window._chatKBSession !== _kbSession) { try { h.remove(); } catch(e) {} return; }
+          window._chatKBHide = h;
+        });
       } else {
         // Fallback: window resize fires when the soft keyboard appears (adjustResize mode)
         var _baseH = window.innerHeight;
