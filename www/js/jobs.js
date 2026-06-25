@@ -204,7 +204,7 @@
       + '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px">Browse by Category</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
       + JOB_CATS.map(function (cat) {
-        var cnt = jobs.filter(function (j) { return (j.title + ' ' + (j.desc || '')).toLowerCase().includes(cat.split(' ')[0].toLowerCase()); }).length;
+        var cnt = _catCount(jobs, cat);
         return '<div onclick="H.openInner(\'JobResults\',{cat:\'' + cat + '\'})" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:8px 14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text)">' + H.escHtml(cat) + '<span style="color:var(--sub);margin-left:4px">(' + cnt + ')</span></div>';
       }).join('')
       + '</div></div>'
@@ -266,14 +266,17 @@
   function _jobIndustry(l) { return parseLine((l.desc || '').split('\n'), 'INDUSTRY') || l.subcat || ''; }
   function _jobTypeOf(l)   { return parseLine((l.desc || '').split('\n'), 'JOB TYPE') || ''; }
   // A job belongs to a category when its stored INDUSTRY matches exactly, or
-  // (for distinctive category words ≥3 chars) the title/desc mentions it as a
-  // whole word. Short tokens like "IT" rely on the exact industry to avoid
-  // matching substrings such as "site" or "with".
+  // ANY significant token (≥3 chars) from the category name matches as a whole
+  // word in the title/description. Trying all tokens handles categories like
+  // "IT & Technology" where the first token "IT" is only 2 chars.
   function _jobInCat(l, cat) {
     if (_jobIndustry(l) === cat) return true;
-    var tok = cat.split(/\s*&\s*|\s+/)[0].toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '');
-    if (tok.length < 3) return false;
-    return new RegExp('\\b' + tok + '\\b').test((l.title + ' ' + (l.desc || '')).toLowerCase());
+    var hay = (l.title + ' ' + (l.desc || '')).toLowerCase();
+    return cat.split(/\s*&\s*|\s+/).some(function (part) {
+      var tok = part.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '');
+      if (tok.length < 3) return false;
+      return new RegExp('\\b' + tok + '\\b').test(hay);
+    });
   }
   function _catCount(jobs, cat) {
     return jobs.filter(function (l) { return _jobInCat(l, cat); }).length;

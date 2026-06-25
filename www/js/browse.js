@@ -215,7 +215,7 @@
         const el = document.getElementById('listingList');
         if (!el || H.currentPageName !== 'Browse') return;
         const q = document.getElementById('searchIn')?.value || '';
-        const active = (state.listings || []).filter(l => l.status === 'active');
+        const active = (state.listings || []).filter(l => l.status === 'active' && (l.cat || '').toLowerCase() !== 'jobs');
         el.innerHTML = active.length
           ? renderListingsWithSponsored(applyBrowseFilters(active, q))
           : H.emptyState('No listings yet', 'Listings will appear here once people start posting', null, null);
