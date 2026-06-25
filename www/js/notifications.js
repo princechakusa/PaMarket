@@ -92,9 +92,12 @@
       if (res.error || !res.data) return;
       H.state.notifs = H.state.notifs || {};
       const local = H.state.notifs[u.id] || [];
+      const clearedAt = (H.state.notifsClearedAt && H.state.notifsClearedAt[u.id]) || 0;
       const localIds = new Set(local.map(n => n.id));
       res.data.forEach(r => {
         const t = new Date(r.created_at).getTime();
+        // Skip notifications that existed before the last clear
+        if (clearedAt && t <= clearedAt) return;
         const existing = local.find(n => n.id === r.id);
         if (existing) {
           if (r.read && !existing.read) existing.read = true;
@@ -228,15 +231,16 @@
     const u = H.currentUser(); if (!u) return;
     const list = H.state.notifs[u.id] || [];
     if (!list.length) { toast('No notifications to clear'); return; }
-    const ids = list.map(n => n.id);
     H.state.notifs[u.id] = [];
+    H.state.notifsClearedAt = H.state.notifsClearedAt || {};
+    H.state.notifsClearedAt[u.id] = Date.now();
     saveState();
     H._updateNotifBadge();
     H.renderPage('Notifications');
     toast('Cleared all notifications');
     const c = sb();
     if (c) {
-      c.from('notifications').delete().eq('user_id', u.id).in('id', ids)
+      c.from('notifications').delete().eq('user_id', u.id)
         .then(r => { if (r && r.error) console.warn('notif clear failed:', r.error.message); });
     }
   };

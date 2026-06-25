@@ -560,7 +560,7 @@
         if (mine) {
           return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
             + '<div class="msg-bwrap msg-bwrap-me">'
-            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',true)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
+            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" oncontextmenu="event.preventDefault();event.stopPropagation();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
             + content
             + '<div class="chat-bubble-meta" style="text-align:right">Sent to ' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
             + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
@@ -568,7 +568,7 @@
         return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-row-av">' + otherAvatar + '</div>'
           + '<div class="msg-bwrap msg-bwrap-them">'
-          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',false)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
+          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" oncontextmenu="event.preventDefault();event.stopPropagation();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
           + content
           + '<div class="chat-bubble-meta">' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
           + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
@@ -581,7 +581,7 @@
         if (mine) {
           return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
             + '<div class="msg-bwrap msg-bwrap-me">'
-            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',true)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
+            + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" oncontextmenu="event.preventDefault();event.stopPropagation();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
             + content
             + '<div class="chat-bubble-meta" style="text-align:right">' + _shopLabel + ' · ' + timeAgo(m.t) + ' ' + chatTick(!!m.read) + '</div>'
             + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
@@ -589,7 +589,7 @@
         return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-row-av">' + otherAvatar + '</div>'
           + '<div class="msg-bwrap msg-bwrap-them">'
-          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',false)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
+          + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" oncontextmenu="event.preventDefault();event.stopPropagation();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
           + content
           + '<div class="chat-bubble-meta">' + _buyerLabel + ' · ' + timeAgo(m.t) + '</div>'
           + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
@@ -597,7 +597,7 @@
       if (mine) {
         return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="msg-bwrap msg-bwrap-me">'
-          + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',true)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
+          + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" oncontextmenu="event.preventDefault();event.stopPropagation();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
           + content
           + (m.edited ? '<span style="font-size:10px;opacity:.55"> · edited</span>' : '')
           + '<div class="chat-bubble-meta" style="text-align:right">' + timeAgo(m.t) + ' ' + chatTick(!!m.read) + '</div>'
@@ -606,7 +606,7 @@
       return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
         + '<div class="chat-row-av">' + otherAvatar + '</div>'
         + '<div class="msg-bwrap msg-bwrap-them">'
-        + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',false)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
+        + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" oncontextmenu="event.preventDefault();event.stopPropagation();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
         + content
         + (m.edited ? '<span style="font-size:10px;opacity:.55"> · edited</span>' : '')
         + '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>'
@@ -759,20 +759,30 @@
     if (!thread || thread._replyBound) return;
     thread._replyBound = true;
     let row = null, sx = 0, sy = 0, dx = 0, active = false, decided = false, isReply = false;
+    let _lpRowTimer = null;
     thread.addEventListener('touchstart', function (e) {
       const r = e.target.closest && e.target.closest('.chat-msg-row');
       if (!r || !e.touches || !e.touches[0]) { row = null; active = false; return; }
       row = r; sx = e.touches[0].clientX; sy = e.touches[0].clientY;
       dx = 0; active = true; decided = false; isReply = false;
+      // Delegated long-press — works on all Android versions including MagicOS
+      clearTimeout(_lpRowTimer);
+      _lpRowTimer = setTimeout(function() {
+        if (!row) return;
+        const msgId = row.getAttribute('data-msg-id');
+        const mine = row.classList.contains('me');
+        if (msgId) H._chat.showMsgActions(msgId, mine);
+        row = null; active = false;
+      }, 350);
     }, { passive: true });
     thread.addEventListener('touchmove', function (e) {
       if (!active || !row || !e.touches || !e.touches[0]) return;
       dx = e.touches[0].clientX - sx;
       const dy = e.touches[0].clientY - sy;
+      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) clearTimeout(_lpRowTimer);
       if (!decided) {
         if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
         decided = true;
-        // Only a clear rightward drag becomes a reply; otherwise let it scroll.
         isReply = dx > 0 && Math.abs(dx) > Math.abs(dy);
         if (!isReply) { active = false; row = null; return; }
       }
@@ -785,6 +795,7 @@
       }
     }, { passive: false });
     function end() {
+      clearTimeout(_lpRowTimer);
       if (!row) { active = false; return; }
       const r = row, fire = isReply && dx > 48;
       row = null; active = false;
