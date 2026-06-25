@@ -8831,16 +8831,28 @@ H.init();
     verifyCompany(uid_) {
       if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
-      u.companyVerified = true; u.companyVerifiedAt = Date.now();
+      u.companyVerified = true; u.company_verified = true;
+      u.companyVerifiedAt = Date.now();
+      u.company_verification_pending = false; u.companyVerificationPending = false;
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ company_verified: true, company_verification_pending: false }).eq('id', uid_).catch(()=>{});
+        sb.from('company_verifications').update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('user_id', uid_).catch(()=>{});
+      }
       alog(`Company verified: ${u.name}`);
-      pushNotif(uid_,'Company Verified ✓','Your company account has been verified on PaMarket.','verify');
+      pushNotif(uid_,'Company Verified ✓','Your account has been verified. You can now post jobs on PaMarket.','verify');
       saveState(); toast(`${u.name||'User'} company verified`); this.setTab('users');
     },
 
     revokeCompany(uid_) {
       if (!adminGuard()) return;
       const u = (H.state.users||[]).find(x=>x.id===uid_); if (!u) return;
-      u.companyVerified = false;
+      u.companyVerified = false; u.company_verified = false;
+      const sb = window.supabase;
+      if (sb && typeof sb.from === 'function') {
+        sb.from('profiles').update({ company_verified: false }).eq('id', uid_).catch(()=>{});
+        sb.from('company_verifications').update({ status: 'revoked' }).eq('user_id', uid_).catch(()=>{});
+      }
       alog(`Company verification revoked: ${u.name}`);
       saveState(); toast(`Company verification revoked`); this.setTab('users');
     },

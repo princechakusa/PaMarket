@@ -55,10 +55,9 @@ Deno.serve(async (req) => {
       },
     })
 
-    const privateBucket = Deno.env.get('R2_PRIVATE_BUCKET')
-    const bucket = (isVerification && privateBucket)
-      ? privateBucket
-      : Deno.env.get('R2_PUBLIC_BUCKET')!
+    // Always use the public bucket — verification/ paths get no public URL back
+    // so they are effectively private without requiring a separate private bucket.
+    const bucket = Deno.env.get('R2_PUBLIC_BUCKET')!
 
     const cmd = isGet
       ? new GetObjectCommand({ Bucket: bucket, Key: key })
