@@ -559,17 +559,19 @@
       if (showBizBrand) {
         if (mine) {
           return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
+            + '<div class="msg-bwrap msg-bwrap-me">'
             + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',true)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
             + content
             + '<div class="chat-bubble-meta" style="text-align:right">Sent to ' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
-            + '</div></div>';
+            + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
         }
         return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-row-av">' + otherAvatar + '</div>'
+          + '<div class="msg-bwrap msg-bwrap-them">'
           + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',false)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
           + content
           + '<div class="chat-bubble-meta">' + escHtml(chatDisplayName) + ' · ' + timeAgo(m.t) + '</div>'
-          + '</div></div>';
+          + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
       }
       // Owner's view of a business inbox chat: label bubbles by shop name vs buyer name
       const _isOwnerBizChat = !!(_bizChat && _bizChatId);
@@ -578,33 +580,37 @@
         const _buyerLabel = escHtml(otherDisplayName);
         if (mine) {
           return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
+            + '<div class="msg-bwrap msg-bwrap-me">'
             + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',true)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
             + content
             + '<div class="chat-bubble-meta" style="text-align:right">' + _shopLabel + ' · ' + timeAgo(m.t) + ' ' + chatTick(!!m.read) + '</div>'
-            + '</div></div>';
+            + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
         }
         return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
           + '<div class="chat-row-av">' + otherAvatar + '</div>'
+          + '<div class="msg-bwrap msg-bwrap-them">'
           + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',false)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
           + content
           + '<div class="chat-bubble-meta">' + _buyerLabel + ' · ' + timeAgo(m.t) + '</div>'
-          + '</div></div>';
+          + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
       }
       if (mine) {
         return sep + '<div class="chat-msg-row me" data-msg-id="' + escHtml(m.id) + '">'
+          + '<div class="msg-bwrap msg-bwrap-me">'
           + '<div class="chat-bubble me' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',true)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',true)">'
           + content
           + (m.edited ? '<span style="font-size:10px;opacity:.55"> · edited</span>' : '')
           + '<div class="chat-bubble-meta" style="text-align:right">' + timeAgo(m.t) + ' ' + chatTick(!!m.read) + '</div>'
-          + '</div></div>';
+          + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
       }
       return sep + '<div class="chat-msg-row them" data-msg-id="' + escHtml(m.id) + '">'
         + '<div class="chat-row-av">' + otherAvatar + '</div>'
+        + '<div class="msg-bwrap msg-bwrap-them">'
         + '<div class="chat-bubble them' + (m.image ? ' chat-bubble-img' : '') + '" ontouchstart="H._chat._lpStart(event,\'' + escHtml(m.id) + '\',false)" ontouchend="H._chat._lpEnd()" ontouchmove="H._chat._lpEnd()" oncontextmenu="event.preventDefault();H._chat.showMsgActions(\'' + escHtml(m.id) + '\',false)">'
         + content
         + (m.edited ? '<span style="font-size:10px;opacity:.55"> · edited</span>' : '')
         + '<div class="chat-bubble-meta">' + timeAgo(m.t) + '</div>'
-        + '</div></div>';
+        + '</div>' + _reactionsHtml(m, u.id) + '</div></div>';
     }).join('');
 
     const otherIdSafe = escHtml(otherId || '');
@@ -715,6 +721,19 @@
   // The text a message actually shows (unwraps a reply envelope).
   function msgText(m) { const r = parseReply(m && m.text); return r ? r.text : ((m && m.text) || ''); }
   H._msgText = msgText;
+  const _REACTION_EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
+  function _reactionsHtml(m, uid) {
+    const r = (m && m.reactions && typeof m.reactions === 'object') ? m.reactions : {};
+    const keys = Object.keys(r).filter(function(k){ return Array.isArray(r[k]) && r[k].length > 0; });
+    if (!keys.length) return '';
+    return '<div class="msg-reactions">' + keys.map(function(e) {
+      const users = r[e];
+      const isMine = users.indexOf(uid) !== -1;
+      return '<span class="react-chip' + (isMine ? ' mine' : '') + '" onclick="H._chat.toggleReaction(\'' + escHtml(m.id) + '\',\'' + e + '\')">'
+        + e + (users.length > 1 ? '<span class="react-cnt">' + users.length + '</span>' : '')
+        + '</span>';
+    }).join('') + '</div>';
+  }
   // The quoted block rendered above a reply's own text.
   function replyQuoteHtml(m) {
     const r = parseReply(m && m.text);
@@ -1474,7 +1493,7 @@
         ? new Date(Math.max.apply(null, conv.messages.map(function(m){ return m.t || 0; }))).toISOString()
         : null;
       var query = sb.from('messages')
-        .select('id, sender_id, sender_name, text, image, read, created_at, edited, deleted')
+        .select('id, sender_id, sender_name, text, image, read, created_at, edited, deleted, reactions')
         .eq('conversation_id', convId)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -1489,7 +1508,7 @@
       msgs.forEach(function(m) {
         const t = m.created_at ? new Date(m.created_at).getTime() : Date.now();
         if (!conv.messages.find(function(x){ return x.id === m.id; })) {
-          conv.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, image: m.image||null, t, read: !!m.read, edited: !!m.edited, deleted: !!m.deleted });
+          conv.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, image: m.image||null, t, read: !!m.read, edited: !!m.edited, deleted: !!m.deleted, reactions: m.reactions || {} });
         }
         if (m.sender_id && m.sender_id !== u.id && !(conv.members||[]).includes(m.sender_id)) {
           conv.members = conv.members || [];
@@ -1996,7 +2015,14 @@
     if (!sheet || !bg) return;
     const _ico = function (path) { return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">' + path + '</svg>'; };
     const mid = escHtml(msgId);
-    sheet.innerHTML = '<div class="sheet-header">Message</div>'
+    const _myReactions = (m.reactions && typeof m.reactions === 'object') ? m.reactions : {};
+    const _emojiRow = '<div class="emoji-picker-row">'
+      + _REACTION_EMOJIS.map(function(e) {
+          const active = Array.isArray(_myReactions[e]) && _myReactions[e].indexOf(H.currentUser() && H.currentUser().id) !== -1;
+          return '<button class="emoji-pick-btn' + (active ? ' active' : '') + '" onclick="H.closeSheet();H._chat.toggleReaction(\'' + mid + '\',\'' + e + '\')">' + e + '</button>';
+        }).join('')
+      + '</div>';
+    sheet.innerHTML = _emojiRow + '<div class="sheet-header">Message</div>'
       + '<button class="sheet-item" onclick="H.closeSheet();H._chat.startReply(\'' + mid + '\')">'
       + _ico('<polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>')
       + '<span class="sheet-label">Reply</span></button>'
@@ -2106,6 +2132,36 @@
         } catch (e) { console.warn('delete msg sync:', e); }
       }
     });
+  };
+
+  H._chat.toggleReaction = async function(msgId, emoji) {
+    const u = H.currentUser();
+    if (!u) return;
+    const c = conversations().find(function(x){ return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function(x){ return x.id === msgId; });
+    if (!m || m.deleted) return;
+    if (!m.reactions || typeof m.reactions !== 'object') m.reactions = {};
+    if (!Array.isArray(m.reactions[emoji])) m.reactions[emoji] = [];
+    const idx = m.reactions[emoji].indexOf(u.id);
+    if (idx === -1) { m.reactions[emoji].push(u.id); }
+    else {
+      m.reactions[emoji].splice(idx, 1);
+      if (m.reactions[emoji].length === 0) delete m.reactions[emoji];
+    }
+    H.saveState();
+    // Update reaction chips in DOM without full re-render
+    const row = document.querySelector('.chat-msg-row[data-msg-id="' + msgId + '"]');
+    if (row) {
+      const bwrap = row.querySelector('.msg-bwrap');
+      const existing = row.querySelector('.msg-reactions');
+      const html = _reactionsHtml(m, u.id);
+      if (existing) { if (html) existing.outerHTML = html; else existing.remove(); }
+      else if (bwrap && html) { bwrap.insertAdjacentHTML('beforeend', html); }
+    }
+    try {
+      if (window.supabase) await window.supabase.from('messages').update({ reactions: m.reactions }).eq('id', msgId);
+    } catch(e) { console.warn('reaction sync:', e); }
   };
 
   Object.assign(H._chat, {

@@ -1482,6 +1482,24 @@ select.fi {
   .det-photo { height: 180px; }
 }
 
+/* ── Emoji reactions ─────────────────────────────────── */
+.emoji-picker-row { display: flex; justify-content: center; gap: 2px; padding: 10px 8px 14px; border-bottom: .5px solid var(--border); margin-bottom: 4px; }
+.emoji-pick-btn { font-size: 25px; background: var(--bg); border: none; border-radius: 50%; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .15s, background .15s; touch-action: manipulation; line-height: 1; }
+.emoji-pick-btn:active, .emoji-pick-btn.active { transform: scale(1.25); background: rgba(26,58,143,.12); }
+.msg-bwrap { display: flex; flex-direction: column; max-width: 78%; }
+.msg-bwrap-me { align-items: flex-end; }
+.msg-bwrap-them { align-items: flex-start; }
+.msg-bwrap .chat-bubble { max-width: 100%; }
+.msg-reactions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; padding: 0 2px; }
+.react-chip { display: inline-flex; align-items: center; gap: 3px; background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 2px 8px 2px 6px; font-size: 15px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.08); touch-action: manipulation; -webkit-user-select: none; user-select: none; transition: background .15s; }
+.react-chip.mine { background: #e8eeff; border-color: #1A3A8F; }
+.react-chip .react-cnt { font-size: 11px; font-weight: 700; color: #555; line-height: 1; }
+.react-chip.mine .react-cnt { color: #1A3A8F; }
+[data-theme="dark"] .react-chip { background: #1e2d3d; border-color: #2e3d4e; }
+[data-theme="dark"] .react-chip.mine { background: rgba(26,58,143,.35); border-color: #3a5fcc; }
+[data-theme="dark"] .react-chip .react-cnt { color: #aaa; }
+[data-theme="dark"] .react-chip.mine .react-cnt { color: #90aaff; }
+
 /* On the narrowest common phones (320 px) tighten the category grid so each
    tile label stays readable without horizontal overflow. */
 @media (max-width: 320px) {
