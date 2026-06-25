@@ -69,7 +69,12 @@
         </div>
 
         <div class="help-section">
-          <div class="section-title">Documentation</div>
+          <div class="section-title">Legal & Documentation</div>
+          <button class="help-item" onclick="H.openInner('LegalHub')">
+            <span class="help-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+            <span class="help-label">Legal Hub</span>
+            <span class="help-arrow">${S.chevron}</span>
+          </button>
           <button class="help-item" onclick="H.openInner('HelpTerms')">
             <span class="help-icon">${S.doc}</span>
             <span class="help-label">Terms & Conditions</span>
