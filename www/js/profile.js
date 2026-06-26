@@ -196,10 +196,10 @@
       <div class="avatar-edit-section">
         <div class="profile-pic" style="width:72px;height:72px;flex-shrink:0">
           ${u.avatar
-            ? `<img id="avatarPreview" src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\\"profile-initials\\" style=\\"font-size:22px\\">${H.initials(u.name || '')}</div>'">`
+            ? `<img id="avatarPreview" src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=&quot;profile-initials&quot; style=&quot;font-size:22px&quot;>${H.initials(u.name || '')}</div>'">`
             : `<div class="profile-initials" style="font-size:22px" id="avatarPreview">${H.initials(u.name || '')}</div>`}
         </div>
-        <div>
+        <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:3px">Profile Photo</div>
           <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">Tap to change your photo</div>
           <label for="profilePicFile" style="font-size:13px;font-weight:600;color:var(--blue);cursor:pointer">Change Photo</label>
