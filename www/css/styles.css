@@ -639,7 +639,28 @@ select.fi {
 .review-text { font-size: 13px; color: var(--text-sub); line-height: 1.5; }
 .review-date { font-size: 11px; color: var(--text-hint); margin-top: 4px; }
 
-/* ── SETTINGS ────────────────────────────────────────────────── */
+/* ── SETTINGS (redesign) ─────────────────────────────────────── */
+.settings-topbar { background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: center; height: 52px; padding: 0 16px; flex-shrink: 0; }
+.settings-topbar-title { font-size: 17px; font-weight: 800; color: var(--text-primary); letter-spacing: -.02em; }
+.settings-user-card { background: var(--card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; padding: 14px 16px; cursor: pointer; }
+.settings-user-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: #fff; flex-shrink: 0; box-shadow: 0 2px 8px rgba(26,58,143,.2); overflow: hidden; }
+.settings-user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.settings-user-name { font-size: 15px; font-weight: 800; color: var(--text-primary); margin-bottom: 2px; }
+.settings-user-email { font-size: 12px; color: var(--text-sub); }
+.settings-user-badge { display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: #DCFCE7; color: #16A34A; }
+.settings-signout { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--card); border: none; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); color: #DC2626; font-size: 14px; font-weight: 700; padding: 15px; cursor: pointer; font-family: var(--font); }
+.pi-gold { background: #FEF9C3; color: #B45309; }
+.pi-purple { background: #F3E8FF; color: #7C3AED; }
+.theme-option-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.theme-option-row:last-child { border-bottom: none; }
+.theme-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.theme-radio.on { border-color: var(--blue); }
+.theme-radio.on::after { content: ''; display: block; width: 10px; height: 10px; border-radius: 50%; background: var(--blue); }
+.theme-preview { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.theme-option-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.theme-option-desc { font-size: 12px; color: var(--text-sub); margin-top: 1px; }
+
+/* ── SETTINGS (legacy, kept for other pages) ─────────────────── */
 .settings-section { padding: 0 16px; margin-bottom: 14px; }
 .settings-section > .section-title { padding: 14px 0 6px; margin-bottom: 0; }
 .settings-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; background: var(--card); border: none; border-bottom: .5px solid var(--border); text-align: left; cursor: pointer; font-family: var(--font); font-size: 14px; color: var(--text-primary); transition: background .15s; }
@@ -1745,6 +1766,15 @@ select.fi {
 [data-theme="dark"] .edit-form-section { background: var(--card); border-color: var(--border); }
 [data-theme="dark"] .btn-danger { background: var(--red-light); border-color: #7F1D1D; }
 [data-theme="dark"] .stat-n { color: var(--blue-light); }
+[data-theme="dark"] .settings-topbar { background: var(--card); border-color: var(--border); }
+[data-theme="dark"] .settings-user-card { background: var(--card); border-color: var(--border); }
+[data-theme="dark"] .settings-user-name { color: var(--n1); }
+[data-theme="dark"] .settings-signout { background: var(--card); border-color: var(--border); }
+[data-theme="dark"] .pi-gold { background: var(--gold-light); }
+[data-theme="dark"] .pi-purple { background: #1E1035; color: #A855F7; }
+[data-theme="dark"] .theme-option-row { border-color: var(--border); }
+[data-theme="dark"] .theme-option-name { color: var(--n1); }
+[data-theme="dark"] .theme-option-desc { color: var(--text-sub); }
 [data-theme="dark"] .ml-title { color: var(--n1); }
 [data-theme="dark"] .ml-meta { color: var(--n3); }
 [data-theme="dark"] .empty-title { color: var(--n1); }
