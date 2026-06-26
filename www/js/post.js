@@ -525,7 +525,8 @@
       if (typeof p !== 'string' || p.indexOf('data:') !== 0) { out.push(p); continue; }
       try {
         const key = 'listings/' + userId + '/' + H.uid() + '.jpg';
-        const blob = await (await fetch(p)).blob();
+        const b64p = p.split(',')[1];
+        const blob = new Blob([Uint8Array.from(atob(b64p), c => c.charCodeAt(0))], { type: 'image/jpeg' });
         const url = await H.uploadToR2(blob, key, 'image/jpeg');
         out.push(url || p);
       } catch (e) { out.push(p); }

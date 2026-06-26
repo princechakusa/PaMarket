@@ -215,7 +215,10 @@
         // Upload to R2 — base64 must never be stored in the DB
         let avatarUrl = null;
         try {
-          const avatarBlob = await (await fetch(compressed)).blob();
+          // Convert data URL → Blob without fetch() (fetch on data: violates CSP)
+          const b64 = compressed.split(',')[1];
+          const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+          const avatarBlob = new Blob([bytes], { type: 'image/jpeg' });
           const avatarKey = 'profiles/' + u.id + '/avatar_' + Date.now() + '.jpg';
           avatarUrl = await H.uploadToR2(avatarBlob, avatarKey, 'image/jpeg');
         } catch (uploadErr) { console.warn('Avatar R2 upload failed:', uploadErr); }

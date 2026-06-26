@@ -1672,7 +1672,8 @@
       try {
         if (typeof H.uploadToR2 === 'function') {
           const key = 'chat/' + u.id + '/' + H.uid() + '.jpg';
-          const blob = await (await fetch(dataUrl)).blob();
+          const b64m = dataUrl.split(',')[1];
+          const blob = new Blob([Uint8Array.from(atob(b64m), c => c.charCodeAt(0))], { type: 'image/jpeg' });
           const url = await H.uploadToR2(blob, key, 'image/jpeg');
           if (url) imageUrl = url;
         }
