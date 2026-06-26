@@ -254,6 +254,35 @@
     if (H.currentPageName === 'Notifications') H.renderPage('Notifications');
   };
 
+  // ── Date section label ────────────────────────────────────
+  function _dayLabel(t) {
+    const d = new Date(t), now = new Date();
+    const same = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    if (same(d, now)) return 'Today';
+    const y = new Date(now); y.setDate(now.getDate() - 1);
+    if (same(d, y)) return 'Yesterday';
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: d.getFullYear() === now.getFullYear() ? undefined : 'numeric' });
+  }
+
+  // ── CSS class helpers ─────────────────────────────────────
+  function _notifTypeClass(type) {
+    const m = { boost:'ni-boost', verify:'ni-verify', message:'ni-msg', ban:'ni-ban', report:'ni-report', sale:'ni-sale', review:'ni-review', info:'ni-info', job_alert:'ni-job', security:'ni-security' };
+    return m[type] || 'ni-info';
+  }
+  function _notifNavClass(type) {
+    const m = { message:'nn-msg', sale:'nn-blue', verify:'nn-blue', boost:'nn-gold', ban:'nn-red', report:'nn-red', review:'nn-purple', job_alert:'nn-job', security:'nn-red', info:'nn-blue' };
+    return m[type] || 'nn-blue';
+  }
+  function _notifDotColor(type) {
+    const m = { message:'#16A34A', sale:'#1D4ED8', boost:'#CA8A04', job_alert:'#475569', verify:'#1A3A8F', ban:'#DC2626', report:'#C2410C', review:'#7C3AED', security:'#DC2626', info:'#1A3A8F' };
+    return m[type] || '#1A3A8F';
+  }
+  function _notifNavHint(type, deepLink) {
+    if (deepLink && /^https?:\/\//i.test(deepLink)) return 'Open ›';
+    const m = { message:'Messages ›', sale:'View listing ›', boost:'Boost again ›', verify:'View profile ›', ban:'View account ›', report:'View report ›', review:'Review ›', job_alert:'View job ›', security:'Security ›' };
+    return m[type] || (deepLink ? 'Open ›' : 'View ›');
+  }
+
   // ── Type inference & visual mapping ───────────────────────
   function _inferType(title) {
     const t = (title || '').toLowerCase();
@@ -430,9 +459,7 @@
     }
     document.querySelectorAll('[data-notif-tab]').forEach(function(el) {
       var active = el.dataset.notifTab === tabId;
-      el.style.background = active ? '#1A3A8F' : 'transparent';
-      el.style.color = active ? '#fff' : 'var(--sub)';
-      el.style.borderColor = active ? '#1A3A8F' : 'var(--border)';
+      el.classList.toggle('active', active);
     });
   };
 
@@ -448,36 +475,40 @@
     var filtered = list.filter(function(n) { return _matchesTab(n, tabId); });
     if (!filtered.length) {
       return '<div style="text-align:center;padding:60px 20px">'
-        + '<svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--sub)" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'
-        + '<div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px">No notifications in this category</div>'
-        + '<div style="font-size:13px;color:var(--sub)">Check back later or view All notifications.</div>'
+        + '<div style="width:64px;height:64px;border-radius:50%;background:#EEF2FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'
+        + '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#1A3A8F" stroke-width="1.6" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'
+        + '</div>'
+        + '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px">Nothing here</div>'
+        + '<div style="font-size:13px;color:var(--sub)">No notifications in this category yet.</div>'
         + '</div>';
     }
+    var lastDay = '';
     return filtered.map(function(n) {
       var type = n.type || _inferType(n.title);
-      var color = _notifColor(type);
       var safeLink = n.deepLink ? escHtml(n.deepLink) : '';
-      var tapAction = 'H.markNotifRead(\'' + n.id + '\');this.querySelector(\'[data-unread-dot]\')&&this.querySelector(\'[data-unread-dot]\').remove();this.style.background=\'var(--card)\';H._notifNavigate(' + (safeLink ? '\'' + safeLink + '\'' : 'null') + ',\'' + type + '\',\'' + n.id + '\');';
-      var navHint = type === 'message' ? 'Messages ›'
-        : type === 'sale' ? 'Account ›'
-        : n.deepLink ? 'Open ›'
-        : type === 'info' || type === 'system' ? 'View ›'
-        : 'Open ›';
-      return '<div onclick="' + tapAction + '" style="background:' + (n.read ? 'var(--card)' : 'rgba(26,58,143,.04)') + ';border-bottom:1px solid var(--border);padding:14px 40px 14px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;position:relative">'
-        + (n.imageUrl
-          ? '<img src="' + escHtml(n.imageUrl) + '" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'">'
-          : '<div style="width:38px;height:38px;border-radius:50%;background:' + _notifBg(type) + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + color + '">' + _notifIcon(type) + '</div>')
-        + '<div style="flex:1;min-width:0">'
-        + '<div style="font-size:14px;font-weight:' + (n.read ? '600' : '800') + ';color:var(--text);margin-bottom:3px;line-height:1.3">' + escHtml(n.title || '') + '</div>'
-        + '<div style="font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:4px">' + escHtml(n.body || '') + '</div>'
-        + '<div style="display:flex;align-items:center;gap:8px">'
-        + '<div style="font-size:11px;color:var(--sub2);font-weight:500">' + timeAgo(n.t) + '</div>'
-        + '<div style="font-size:11px;color:' + color + ';font-weight:600">' + navHint + '</div>'
+      var tapAction = 'H.markNotifRead(\'' + n.id + '\');var el=this;el.classList.remove(\'unread\');var dot=el.querySelector(\'[data-unread-dot]\');if(dot)dot.remove();H._notifNavigate(' + (safeLink ? '\'' + safeLink + '\'' : 'null') + ',\'' + type + '\',\'' + n.id + '\');';
+      var day = _dayLabel(n.t);
+      var sep = '';
+      if (day !== lastDay) { lastDay = day; sep = '<div class="notif-section-label">' + escHtml(day) + '</div>'; }
+      var iconHtml = n.imageUrl
+        ? '<img src="' + escHtml(n.imageUrl) + '" class="notif-thumb" onerror="this.style.display=\'none\'">'
+        : '<div class="notif-icon ' + _notifTypeClass(type) + '">' + _notifIcon(type) + '</div>';
+      var dotColor = _notifDotColor(type);
+      var delBtn = '<button class="notif-del" onclick="event.stopPropagation();H.deleteNotif(\'' + n.id + '\')" aria-label="Delete">'
+        + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>'
+        + '</button>';
+      return sep + '<div class="notif-item' + (n.read ? '' : ' unread') + '" onclick="' + tapAction + '">'
+        + iconHtml
+        + '<div class="notif-body">'
+        + '<div class="notif-title">' + escHtml(n.title || '') + '</div>'
+        + '<div class="notif-desc">' + escHtml(n.body || '') + '</div>'
+        + '<div class="notif-footer">'
+        + '<span class="notif-time">' + timeAgo(n.t) + '</span>'
+        + '<span class="notif-nav ' + _notifNavClass(type) + '">' + _notifNavHint(type, n.deepLink) + '</span>'
         + '</div></div>'
-        + (n.read ? '' : '<span data-unread-dot style="width:9px;height:9px;border-radius:50%;background:' + color + ';margin-top:6px;flex-shrink:0"></span>')
-        + '<button onclick="event.stopPropagation();H.deleteNotif(\'' + n.id + '\')" aria-label="Delete" style="position:absolute;top:50%;right:10px;transform:translateY(-50%);background:none;border:none;padding:6px;cursor:pointer;color:var(--sub);border-radius:6px;display:flex;align-items:center;justify-content:center;opacity:0.55">'
-        + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>'
-        + '</button></div>';
+        + (n.read ? '' : '<span data-unread-dot class="notif-unread-dot" style="background:' + dotColor + '"></span>')
+        + delBtn
+        + '</div>';
     }).join('');
   }
 
@@ -496,10 +527,10 @@
     const tabsHtml = _NOTIF_TABS.map(t => {
       const tabCount = t.types ? list.filter(n => !n.read && t.types.indexOf(n.type || _inferType(n.title)) !== -1).length : unreadCount;
       const isActive = t.id === activeTab;
-      return `<button data-notif-tab="${t.id}" onclick="H._setNotifTab('${t.id}')"
-        style="flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid ${isActive ? '#1A3A8F' : 'var(--border)'};background:${isActive ? '#1A3A8F' : 'transparent'};color:${isActive ? '#fff' : 'var(--sub)'};font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;display:flex;align-items:center;gap:5px">
-        ${escHtml(t.label)}${tabCount > 0 ? `<span style="background:${isActive ? 'rgba(255,255,255,.3)' : '#1A3A8F'};color:${isActive ? '#fff' : '#fff'};border-radius:10px;padding:0 5px;font-size:10px;font-weight:800">${tabCount > 9 ? '9+' : tabCount}</span>` : ''}
-      </button>`;
+      return '<button data-notif-tab="' + t.id + '" class="notif-tab-pill' + (isActive ? ' active' : '') + '" onclick="H._setNotifTab(\'' + t.id + '\')">'
+        + escHtml(t.label)
+        + (tabCount > 0 ? '<span class="notif-tab-badge">' + (tabCount > 9 ? '9+' : tabCount) + '</span>' : '')
+        + '</button>';
     }).join('');
 
     return `<div class="page active">
@@ -507,31 +538,29 @@
         <button class="back" onclick="H.goBack()" aria-label="Go back">
           <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <div class="inner-topbar-title">Notifications${unreadCount ? ` <span style="background:#F5A623;color:#1A3A8F;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:800;margin-left:6px">${unreadCount}</span>` : ''}</div>
-        <div style="display:flex;gap:4px">
-          ${unreadCount ? '<button onclick="H.markAllNotifsRead()" style="background:none;border:none;color:#1A3A8F;font-size:12px;font-weight:600;cursor:pointer;padding:6px 4px">Read all</button>' : ''}
-          ${list.length ? '<button onclick="H.clearAllNotifs()" style="background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;padding:6px 4px">Clear</button>' : ''}
+        <div class="inner-topbar-title">Notifications${unreadCount ? ' <span class="notif-count-badge">' + unreadCount + '</span>' : ''}</div>
+        <div style="display:flex;gap:2px">
+          ${unreadCount ? '<button class="notif-hdr-btn" onclick="H.markAllNotifsRead()">Read all</button>' : ''}
+          ${list.length ? '<button class="notif-hdr-btn dim" onclick="H.clearAllNotifs()">Clear</button>' : ''}
         </div>
       </div>
 
-      <div style="overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;padding:10px 16px;display:flex;gap:8px;border-bottom:1px solid var(--border);background:var(--card)">
+      <div class="notif-tab-strip">
         ${tabsHtml}
       </div>
 
-      <div id="notifList" style="padding-bottom:90px">
+      <div id="notifList" style="padding-bottom:16px">
         ${_renderNotifItems(list, activeTab)}
       </div>
 
-      <div class="menu-group-label">Notification Settings</div>
-      <div class="menu-items" style="padding-bottom:90px">
-        <div class="mi" onclick="H.openInner('NotifSettings')">
-          <div class="mi-icon blue-ic">
-            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          </div>
-          <div class="mi-label">Notification Preferences</div>
-          <div class="mi-arrow">›</div>
+      <div class="notif-settings-row" onclick="H.openInner('NotifSettings')">
+        <div class="nsr-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </div>
+        <span class="nsr-label">Notification Preferences</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
+      <div style="height:32px"></div>
     </div>`;
   };
 
