@@ -59,10 +59,8 @@
   pages.Detail = function ({ id }) {
     const l = (H.state.listings||[]).find(x => x.id === id);
     if (!l) {
-      // Genuinely gone after an on-demand fetch attempt → show not-found.
       if (H._detailFetchFailed === id)
         return `<div class="page active">${H.innerTopbar('Listing')}<div class="empty-state"><div class="empty-icon">${S.crossCircle}</div><div class="empty-title">Listing not found</div><div class="empty-sub">This listing may have been removed or is no longer available.</div></div></div>`;
-      // Not in the local cache yet — show a loader; Detail_after fetches it by id.
       return `<div class="page active">${H.innerTopbar('Listing')}<div class="empty-state" id="detailLoading"><div class="empty-title">Loading…</div></div></div>`;
     }
 
@@ -74,122 +72,181 @@
     const sellerPhone = seller.phone || l.sellerPhone || '';
     const sellerName  = seller.name  || l.sellerName  || 'Seller';
 
-    // Increment view count once per render, but not for the seller's own listing
     if (!isMine) {
       l.views = (l.views || 0) + 1;
       H.saveState();
     }
 
-    return `<div class="page active">
-      <div class="det-topbar">
-        <button class="back" onclick="H.goBack()">
-          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <div class="det-topbar-title">${H.escHtml(l.title)}</div>
-        <button class="share-btn" onclick="H.shareListing('${l.id}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-        </button>
-        <button class="fav-btn ${saved?'saved':''}" onclick="H.toggleSave('${l.id}')">
-          ${saved ? S.heartFill : S.heart}
-        </button>
-      </div>
+    // Condition label + colour
+    const COND_LABEL = { 'new':'New', 'like-new':'Like New', 'used':'Used', 'refurbished':'Refurbished' };
+    const condRaw  = l.condition || (l.attrs && l.attrs.condition) || '';
+    const condText = COND_LABEL[condRaw] || '';
+    const condGood = condRaw === 'new' || condRaw === 'like-new';
 
-      <div class="det-photo" id="dPhoto">
-        ${photos.length
-          ? `<img src="${photos[0]}" id="dPhotoImg" data-photos="${H.escHtml(JSON.stringify(photos))}" onclick="H.openPhotoViewer(JSON.parse(this.dataset.photos),0)" style="cursor:zoom-in">`
-          : `<div class="ph">${H.categoryIcon(l.cat)}</div>`}
+    // Location string
+    const locStr = H.escHtml(([l.suburb, l.city, l.prov].filter(Boolean)[0] || ''));
+
+    // Seller stats
+    const sellerListings = (H.state.listings||[]).filter(x => x.sellerId === seller.id && x.status === 'active').length;
+    const ratings        = (H.state.ratings && H.state.ratings[seller.id]) || [];
+    const avgRating      = ratings.length ? (ratings.reduce((s,r) => s + r.rating, 0) / ratings.length).toFixed(1) : '—';
+
+    // Photo HTML
+    const photoHtml = photos.length
+      ? `<img src="${photos[0]}" id="dPhotoImg" data-photos="${H.escHtml(JSON.stringify(photos))}" onclick="H.openPhotoViewer(JSON.parse(this.dataset.photos),0)" style="cursor:zoom-in;position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`
+      : `<div class="ph">${H.categoryIcon(l.cat)}</div>`;
+
+    // Rate-seller section (buyer only, SVG stars)
+    let rateSection = '';
+    if (u && u.id !== seller.id) {
+      const myRating = ratings.find(r => r.userId === u.id);
+      const avgLine  = ratings.length ? `<div style="font-size:11px;color:#71717A;margin-bottom:8px">${avgRating} avg · ${ratings.length} rating${ratings.length===1?'':'s'}</div>` : '';
+      const stars    = [1,2,3,4,5].map(n => {
+        const on = myRating && myRating.rating >= n;
+        return `<button onclick="H._rateSeller('${seller.id}',${n},'${l.id}')" style="background:none;border:none;cursor:pointer;padding:2px;flex-shrink:0;line-height:1"><svg viewBox="0 0 24 24" width="28" height="28" fill="${on?'#F5A623':'none'}" stroke="${on?'#F5A623':'#D4D4D8'}" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>`;
+      }).join('');
+      rateSection = `<div style="background:var(--card);padding:14px 16px;margin-bottom:8px"><div class="det-sec-title">Rate this Seller</div>${avgLine}<div style="display:flex;gap:2px;align-items:center">${stars}</div>${myRating?`<div style="font-size:11px;color:#71717A;margin-top:6px">Your rating: ${myRating.rating}/5</div>`:''}</div>`;
+    }
+
+    // Owner performance + actions
+    let ownerSection = '';
+    if (isMine) {
+      ownerSection = `
+        <div style="background:var(--card);padding:14px 16px;margin-bottom:8px">
+          <div class="det-sec-title">Performance</div>
+          <div class="det-perf-grid">
+            <div class="det-perf-item"><div class="det-perf-val">${l.views||0}</div><div class="det-perf-label">Views</div></div>
+            <div class="det-perf-item"><div class="det-perf-val">${l.saves||0}</div><div class="det-perf-label">Saves</div></div>
+            <div class="det-perf-item"><div class="det-perf-val" style="color:var(--blue)">${l.messages||0}</div><div class="det-perf-label">Messages</div></div>
+          </div>
+          <div class="det-boost-banner">
+            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <div style="flex:1"><div style="font-size:12px;font-weight:800;color:#92400E">Boost this ad</div><div style="font-size:11px;color:#B45309;margin-top:1px">Get 5× more views for $2/day</div></div>
+            <button class="det-boost-btn" onclick="H.boostListing&&H.boostListing('${l.id}')">Boost</button>
+          </div>
+        </div>
+        <div class="owner-actions">
+          <button class="oa-btn oa-edit" onclick="H._myListings&&H._myListings.edit('${l.id}')">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Edit Ad
+          </button>
+          <button class="oa-btn oa-sold" onclick="H._myListings&&H._myListings.markSold('${l.id}')">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Mark Sold
+          </button>
+          <button class="oa-btn oa-del" onclick="H._myListings&&H._myListings.del('${l.id}')">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Remove
+          </button>
+        </div>`;
+    }
+
+    // CTA bar
+    const sellerPrivacy = seller.privacySettings || {};
+    const msgDisabled   = sellerPrivacy.allowMessages === false;
+    const cm            = l.contactMethod || 'chat';
+    let ctaBar;
+    if (isMine) {
+      ctaBar = `<div class="det-cta-bar det-cta-owner"><span style="font-size:12px;color:#A1A1AA;font-weight:600">This is your listing</span></div>`;
+    } else {
+      const waBtn = `<button class="cta-wa-btn" onclick="H.openWA('${l.id}')" title="Chat on WhatsApp">${S.wa}</button>`;
+      const callBtn = sellerPhone
+        ? `<button class="cta-call-btn" onclick="H.callSeller('${H.escHtml(sellerPhone)}')" title="Call seller"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.6a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.07 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.05 9.9a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21 16.92z"/></svg></button>`
+        : '';
+      const msgBtn = msgDisabled
+        ? `<button class="cta-msg-btn" disabled style="opacity:.5;cursor:not-allowed"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messaging Off</button>`
+        : `<button class="cta-msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Message Seller</button>`;
+      ctaBar = cm === 'phone'
+        ? `<div class="det-cta-bar">${callBtn}${waBtn}${msgBtn}</div>`
+        : `<div class="det-cta-bar">${msgBtn}${waBtn}${callBtn}</div>`;
+    }
+
+    return `<div class="page active det-page">
+      <div class="det-photo-wrap" id="dPhoto">
+        ${photoHtml}
+        <div class="det-photo-overlay"></div>
         ${photos.length > 1 ? `
           <div class="photo-dots">${photos.map((_,i)=>`<div class="pdot ${i===0?'on':''}" onclick="H.setPhoto('${l.id}',${i})"></div>`).join('')}</div>
-          <div style="position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.5);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600" id="photoCount">1 / ${photos.length}</div>
+          <div class="photo-counter" id="photoCount">1 / ${photos.length}</div>
         ` : ''}
+        ${l.boost ? '<div class="feat-badge-abs">Featured</div>' : ''}
+        <div class="det-topbar">
+          <button class="det-icon-btn" onclick="H.goBack()" aria-label="Back">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="det-topbar-title">${H.escHtml(l.title)}</div>
+          <button class="det-icon-btn" onclick="H.shareListing('${l.id}')" aria-label="Share">
+            <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+          <button class="det-icon-btn${saved?' saved':''}" onclick="H.toggleSave('${l.id}')" aria-label="${saved?'Unsave':'Save'}">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"${saved?' fill="#1A3A8F" stroke="#1A3A8F"':''}/></svg>
+          </button>
+        </div>
       </div>
 
       <div class="det-content">
-        <div class="det-price-row">
-          <div class="det-price">${H.escHtml(H.fmtPrice(l.price, l.currency))}</div>
-          ${l.negotiable ? '<div class="nego-pill">Negotiable</div>' : ''}
+        <div class="det-card">
+          <div class="det-price-row">
+            <div class="det-price">${H.escHtml(H.fmtPrice(l.price, l.currency))}</div>
+            ${l.negotiable ? '<div class="nego-pill">Negotiable</div>' : ''}
+          </div>
+          <div class="det-listing-title">${H.escHtml(l.title)}</div>
+          <div class="qf-row">
+            ${condText ? `<div class="qf-chip${condGood?' qf-green':''}"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${H.escHtml(condText)}</div>` : ''}
+            ${locStr ? `<div class="qf-chip"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${locStr}</div>` : ''}
+            <div class="qf-chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${H.timeAgo(l.createdAt)}</div>
+            <div class="qf-chip qf-blue"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${l.views||0} views</div>
+          </div>
         </div>
-        <div class="det-listing-title">${H.escHtml(l.title)}</div>
-        ${H.attrQuickFactsHtml ? H.attrQuickFactsHtml(l) : ''}
-        <div class="det-loc-row">${S.location} ${H.escHtml((l.suburb||l.city||'')+(l.prov?', '+l.prov:''))} · ${H.timeAgo(l.createdAt)} · ${S.eye} ${l.views||0} views</div>
 
+        ${H.attrQuickFactsHtml ? H.attrQuickFactsHtml(l) : ''}
         ${H.attrOverviewHtml ? H.attrOverviewHtml(l) : ''}
         ${H._variationsHtml ? H._variationsHtml(l) : ''}
 
-        <div class="det-section">
+        <div class="det-desc-wrap">
           <div class="det-sec-title">Description</div>
-          <div class="desc-text" style="white-space:pre-line">${H.escHtml(l.desc||'No description provided.')}</div>
+          <div class="desc-text">${H.escHtml(l.desc||'No description provided.')}</div>
+          <div style="font-size:11px;color:#71717A;margin-top:10px;display:flex;align-items:center;gap:4px">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#A1A1AA" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            Posted in <strong style="color:#3F3F46;margin-left:3px">${H.escHtml((l.cat||'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()))}</strong>
+          </div>
         </div>
 
         ${H.attrAmenitiesHtml ? H.attrAmenitiesHtml(l) : ''}
 
-        <div class="seller-card" onclick="H.openUserProfile('${seller.id}')">
-          <div style="position:relative;flex-shrink:0">
-            <div class="seller-av" style="background:#1A3A8F;color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center">
-              ${seller.avatar
-                ? `<img src="${seller.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`
-                : H.initials(sellerName)}
+        <div class="det-seller-section">
+          <div class="seller-card" onclick="H.openUserProfile('${seller.id}')">
+            <div style="position:relative;flex-shrink:0">
+              <div class="seller-av">
+                ${seller.avatar ? `<img src="${seller.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(sellerName)}
+              </div>
+              ${(seller.privacySettings && seller.privacySettings.showActivity) ? '<div class="seller-online-dot"></div>' : ''}
             </div>
-            ${(seller.privacySettings && seller.privacySettings.showActivity) ? `<div style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid var(--card,#fff)"></div>` : ''}
-          </div>
-          <div class="seller-info">
-            <div class="seller-name-row">
-              <div class="seller-name">${H.escHtml(sellerName)}</div>
-              ${seller.verified ? `<div class="blue-check" style="width:16px;height:16px">${H.verifiedBadge(16)}</div>` : ''}
+            <div class="seller-body">
+              <div class="seller-name-row">
+                <div class="seller-name">${H.escHtml(sellerName)}</div>
+                ${seller.verified ? `<div class="verified-badge-det"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Verified</div>` : ''}
+              </div>
+              <div class="seller-meta">Member since ${new Date(seller.joinedAt||Date.now()).getFullYear()}${seller.verified?' · ID Verified':''}</div>
             </div>
-            <div class="seller-phone" style="color:var(--sub);font-size:13px">${H.escHtml(sellerPhone)||'No phone listed'}</div>
-            <div class="seller-meta">Member since ${new Date(seller.joinedAt||Date.now()).toLocaleDateString()}${seller.verified?' · ID Verified':''}</div>
+            <div class="seller-profile-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
           </div>
-          <div style="color:var(--sub);font-size:20px">›</div>
+          <div class="seller-stats">
+            <div class="seller-stat"><div class="ss-val">${sellerListings||'—'}</div><div class="ss-label">Listings</div></div>
+            <div class="seller-stat"><div class="ss-val">${avgRating}</div><div class="ss-label">Rating</div></div>
+            <div class="seller-stat"><div class="ss-val">${ratings.length||'—'}</div><div class="ss-label">Reviews</div></div>
+          </div>
         </div>
 
-        ${isMine ? `
-          <div style="display:flex;gap:8px;margin-bottom:4px">
-            <button onclick="H._myListings.edit('${l.id}')" style="flex:1;padding:11px 4px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#EFF6FF;color:#1A3A8F;border:1.5px solid #BFDBFE;font-family:Inter,sans-serif">Edit Ad</button>
-            <button onclick="H._myListings.markSold('${l.id}')" style="flex:1;padding:11px 4px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#dcfce7;color:#16a34a;border:1.5px solid #bbf7d0;font-family:Inter,sans-serif">Stop It</button>
-            <button onclick="H._myListings.del('${l.id}')" style="flex:1;padding:11px 4px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#fef2f2;color:#ef4444;border:1.5px solid #fecaca;font-family:Inter,sans-serif">Remove</button>
-          </div>
-        ` : (function(){
-          const cm = l.contactMethod || 'chat';
-          const waBtn   = `<button class="wa-btn" onclick="H.openWA('${l.id}')">${S.wa} Chat on WhatsApp</button>`;
-          const sellerPrivacy = seller.privacySettings || {};
-          const msgDisabled = sellerPrivacy.allowMessages === false;
-          const chatBtn = msgDisabled
-            ? `<button class="msg-btn" disabled style="opacity:0.5;cursor:not-allowed">${S.message} Messaging turned off</button>`
-            : `<button class="msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')">${S.message} Message in App</button>`;
-          const callBtn = sellerPhone ? `<button class="call-btn" onclick="H.callSeller('${sellerPhone}')">${S.phone} Call ${H.escHtml(sellerPhone)}</button>` : '';
-          const rptBtn  = `<button class="report-btn" onclick="H.reportListing('${l.id}')">${S.flag} Report this Listing</button>`;
+        ${!isMine ? `<div class="safety-tip">
+          <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div class="safety-tip-text">Never pay in advance or transfer money before seeing the item. Meet in a public place and inspect before purchasing.</div>
+        </div>` : ''}
 
-          const shareLink = 'https://princechakusa.github.io/PaMarket/?listing=' + encodeURIComponent(l.id);
-          const shareText = encodeURIComponent('Check out this listing on PaMarket:\n*' + l.title + '*\n\u{1F4B0} ' + H.fmtPrice(l.price, l.currency) + '\n\n' + shareLink);
-          const shareWaBtn = `<button onclick="window.open('https://wa.me/?text=${shareText}','_blank')" style="width:100%;padding:13px;background:transparent;color:var(--text);border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share via WhatsApp</button>`;
+        ${ownerSection}
+        ${rateSection}
 
-          const cu = H.currentUser();
-          let rateSection = '';
-          if (cu && cu.id !== seller.id) {
-            const ratings = H.state.ratings && H.state.ratings[seller.id] ? H.state.ratings[seller.id] : [];
-            const myRating = ratings.find(r => r.userId === cu.id);
-            let avgLine = '';
-            if (ratings.length) {
-              const avg = (ratings.reduce((s, r) => s + r.rating, 0) / ratings.length).toFixed(1);
-              avgLine = `<div style="font-size:12px;color:var(--sub);margin-bottom:8px">${avg} avg from ${ratings.length} rating${ratings.length===1?'':'s'}</div>`;
-            }
-            const stars = [1,2,3,4,5].map(n => {
-              const filled = myRating && myRating.rating >= n;
-              return `<span onclick="H._rateSeller('${seller.id}',${n},'${l.id}')" style="font-size:28px;cursor:pointer;color:${filled?'#F5A623':'var(--border)'};line-height:1">${filled?'&#9733;':'&#9734;'}</span>`;
-            }).join('');
-            rateSection = `<div style="margin-top:16px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px"><div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">Rate this Seller</div>${avgLine}<div style="display:flex;gap:4px;align-items:center">${stars}</div>${myRating?`<div style="font-size:12px;color:var(--sub);margin-top:6px">Your rating: ${myRating.rating}/5</div>`:''}</div>`;
-          }
-
-          let buttons = '';
-          if (cm === 'phone') buttons = callBtn + waBtn + chatBtn + rptBtn;
-          else buttons = chatBtn + waBtn + callBtn + rptBtn;
-          return buttons + shareWaBtn + rateSection;
-        })()}
-
-        <div id="similarListingsPlaceholder" class="similar-loading" style="height:120px;background:var(--card);border-radius:14px;margin:16px 0;opacity:.5;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--sub)">Loading similar listings...</div>
+        <div style="background:#F5F5F7;padding-top:4px" id="similarListingsPlaceholder"></div>
       </div>
+
+      ${ctaBar}
     </div>`;
   };
 
@@ -241,11 +298,25 @@
       .map(function(id){ return (H.state.listings||[]).find(function(x){ return x.id === id; }); })
       .filter(function(x){ return x && x.status === 'active'; })
       .slice(0, 4);
+    function simCardHtml(s) {
+      const thumb = s.photos && s.photos[0]
+        ? `<img src="${s.photos[0]}" style="width:100%;height:100%;object-fit:cover">`
+        : `<div style="display:flex;align-items:center;justify-content:center;height:100%;opacity:.35">${H.categoryIcon(s.cat)}</div>`;
+      return `<div class="sim-card" onclick="H.openListing('${s.id}')">
+        <div class="sim-img">${thumb}</div>
+        <div class="sim-body">
+          <div class="sim-price">${H.escHtml(H.fmtPrice(s.price,s.currency))}</div>
+          <div class="sim-title">${H.escHtml(s.title)}</div>
+        </div>
+      </div>`;
+    }
     let html = '';
-    if (similar.length) html += '<div class="sec-head" style="margin-top:24px"><div class="sec-title">Similar Listings</div></div><div class="listing-list">' + similar.map(H.renderListCard).join('') + '</div>';
-    if (recent.length) html += '<div class="sec-head" style="margin-top:24px"><div class="sec-title">Recently Viewed</div></div><div class="listing-list">' + recent.map(H.renderListCard).join('') + '</div>';
+    if (similar.length) html += `<div style="padding:12px 16px 6px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;font-weight:800;color:#18181B;letter-spacing:-.2px">Similar Listings</span></div><div class="det-similar-scroll">${similar.map(simCardHtml).join('')}</div>`;
+    if (recent.length)  html += `<div style="padding:12px 16px 6px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;font-weight:800;color:#18181B;letter-spacing:-.2px">Recently Viewed</span></div><div class="det-similar-scroll">${recent.map(simCardHtml).join('')}</div>`;
     if (!html) { if (placeholder) placeholder.remove(); return; }
     const sec = document.createElement('div');
+    sec.style.background = '#F5F5F7';
+    sec.style.paddingBottom = '8px';
     sec.innerHTML = html;
     if (placeholder) {
       placeholder.replaceWith(sec);
