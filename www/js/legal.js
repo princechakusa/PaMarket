@@ -52,7 +52,7 @@
   // ── Document content functions ───────────────────────────
 
   function _docAUP() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('This Acceptable Use Policy ("AUP") defines what you may and may not do on PaMarket. It applies to all users — buyers, sellers, employers, and visitors. Violations may result in content removal, account suspension, or referral to law enforcement.')
       + _s(1, 'Prohibited Listings', 'You may not list, offer, or facilitate the sale of:' + _li([
           'Illegal drugs, controlled substances, or drug paraphernalia',
@@ -102,7 +102,7 @@
   }
 
   function _docCookie() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('This Cookie & Data Policy explains what data PaMarket stores on your device, how we use it, and the controls you have. PaMarket is a mobile-first app — we primarily use device local storage rather than browser cookies.')
       + _s(1, 'What We Store Locally', '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:6px"><tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 4px;font-weight:700;color:var(--text)">Item</td><td style="padding:8px 4px;font-weight:700;color:var(--text)">Purpose</td><td style="padding:8px 4px;font-weight:700;color:var(--text)">Stored until</td></tr><tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 4px">Auth session token</td><td style="padding:8px 4px">Keeps you signed in</td><td style="padding:8px 4px">Sign out or expiry</td></tr><tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 4px">App preferences</td><td style="padding:8px 4px">Theme, language, notification settings</td><td style="padding:8px 4px">Until changed</td></tr><tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 4px">Recently viewed</td><td style="padding:8px 4px">Your listing history</td><td style="padding:8px 4px">Until cleared</td></tr><tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 4px">Recent searches</td><td style="padding:8px 4px">Search suggestions</td><td style="padding:8px 4px">Until cleared</td></tr><tr><td style="padding:8px 4px">Cached listing data</td><td style="padding:8px 4px">Faster loading, reduced data use</td><td style="padding:8px 4px">App restart</td></tr></table>')
       + _s(2, 'Analytics & Performance', _p('We collect anonymised usage data to understand how the app is used and where we can improve. This includes:') + _li([
@@ -134,7 +134,7 @@
   }
 
   function _docJobsTerms() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('These Job Platform Terms govern use of the PaMarket jobs feature by all employers and job seekers. They supplement our main Terms of Use and are binding on all users of the jobs module.')
       + _s(1, 'Employer Verification', _p('Before posting a job, your company or sole trader profile must be verified. Verification requires:') + _li([
           'Certificate of Incorporation (companies) or National ID (sole traders)',
@@ -171,7 +171,7 @@
   }
 
   function _docBuyingSelling() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('These Buying & Selling Terms govern all marketplace transactions on PaMarket. By posting a listing or contacting a seller you agree to these terms.')
       + _s(1, 'Seller Responsibilities', 'All sellers must:' + _li([
           'Own the item outright or have legal authority to sell it',
@@ -209,7 +209,7 @@
   }
 
   function _docRefund() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('PaMarket is a free classified advertising platform — we do not process payments or hold funds. This policy explains how to handle disputes and what PaMarket can and cannot do.')
       + _s(1, 'PaMarket\'s Role in Disputes', _p('PaMarket is not a party to any transaction between a buyer and a seller. We do not hold escrow, process payments, or guarantee delivery. As a result, we cannot:') + _li([
           'Force a seller to issue a refund',
@@ -244,7 +244,7 @@
   }
 
   function _docServiceTerms() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('These Service Platform Terms apply to all users who advertise or hire services on PaMarket, including domestic services, professional services, repairs, transport, and freelance work.')
       + _s(1, 'For Service Providers', 'By advertising a service on PaMarket you agree to:' + _li([
           'Provide services honestly matching your advertised description and pricing',
@@ -275,7 +275,7 @@
   }
 
   function _docFraud() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('PaMarket is committed to being a safe platform for Zimbabweans to buy, sell, and find work. This policy explains how we detect and prevent fraud, and how you can protect yourself.')
       + _s(1, 'Common Scams on Classified Platforms', _p('Be alert to:') + _li([
           '<strong>Non-delivery fraud</strong> — seller takes payment and disappears without delivering goods',
@@ -325,7 +325,7 @@
   }
 
   function _docProhibited() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('This policy lists items that may not be bought, sold, or advertised on PaMarket under any circumstances. This list reflects Zimbabwean law, our platform values, and widely accepted marketplace standards.')
       + _s(1, 'Absolutely Prohibited (Zero Tolerance)', 'These items result in immediate permanent ban and possible law enforcement referral:' + _li([
           'Illegal drugs, narcotics, controlled substances, or drug paraphernalia of any kind',
@@ -365,7 +365,7 @@
   }
 
   function _docSuspension() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('This policy explains when and how PaMarket may suspend or permanently ban accounts, what options you have if you believe an action was taken in error, and how reinstatement works.')
       + _s(1, 'Grounds for Account Action', 'PaMarket may take action on your account for:' + _li([
           'Violation of our Terms of Use, Acceptable Use Policy, or Community Guidelines',
@@ -405,7 +405,7 @@
   }
 
   function _docModeration() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('This policy explains how PaMarket moderates content, how decisions are made, and how you can engage with the moderation process.')
       + _s(1, 'What We Moderate', _p('PaMarket moderates:') + _li([
           'All new listings before or shortly after they go live',
@@ -433,7 +433,7 @@
   }
 
   function _docReviews() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('Reviews and ratings on PaMarket help buyers and sellers make informed decisions. This policy governs how reviews work, what is and isn\'t allowed, and how disputes are handled.')
       + _s(1, 'Who Can Leave a Review', _li([
           'Any registered user who has had a genuine interaction with the reviewee (buyer/seller/employer/job seeker)',
@@ -475,7 +475,7 @@
   }
 
   function _docVehicle() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('These Vehicle Listing Terms apply to all listings in the Motors & Vehicles category on PaMarket, including cars, trucks, minibuses, motorcycles, tractors, and other motorised vehicles.')
       + _s(1, 'Seller Requirements', 'To list a vehicle you must:' + _li([
           'Be the registered owner of the vehicle, or have written authority from the owner to sell',
@@ -513,7 +513,7 @@
   }
 
   function _docProperty() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('These Property Listing Terms apply to all listings in the Property & Accommodation category, including properties for sale, residential rentals, commercial lets, and short-term accommodation.')
       + _s(1, 'Seller & Landlord Requirements', 'To list a property you must:' + _li([
           'Be the property owner, a legally appointed agent, or have written authority from the owner',
@@ -552,7 +552,7 @@
   }
 
   function _docVerifiedBiz() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('These rules apply to all businesses that have been granted Verified Business status on PaMarket. Verified status carries additional trust signals and responsibilities.')
       + _s(1, 'How to Get Verified', _p('Business Verification requires:') + _li([
           'Certificate of Incorporation from the Companies and Other Business Entities Act (COBE) registry',
@@ -587,7 +587,7 @@
   }
 
   function _docBoosted() {
-    return _dateChip('1 January 2026')
+    return _dateChip('June 2026')
       + _p('These rules apply to all PaMarket Boost packages, featured listings, and paid promotional tools. Boosted listings receive greater visibility but must comply with all standard listing requirements.')
       + _s(1, 'What Boosting Does', _li([
           'Moves your listing to the top of search results and category pages',
@@ -626,24 +626,24 @@
 
   // ── Document Registry ────────────────────────────────────
   H._legalDocs = {
-    terms_of_use:            { title: 'Terms of Use',             updated: '1 January 2026', icon: IC.doc,     content: function() { return typeof H._termsText === 'function' ? H._termsText() : ''; } },
-    privacy_policy:          { title: 'Privacy Policy',           updated: '1 January 2026', icon: IC.shield,  content: function() { return typeof H._privacyText === 'function' ? H._privacyText() : ''; } },
-    community_guidelines:    { title: 'Community Guidelines',     updated: '1 January 2026', icon: IC.users,   content: function() { return typeof H._guidelinesText === 'function' ? H._guidelinesText() : ''; } },
-    acceptable_use_policy:   { title: 'Acceptable Use Policy',    updated: '1 January 2026', icon: IC.ban,     content: _docAUP },
-    cookie_data_policy:      { title: 'Cookie & Data Policy',     updated: '1 January 2026', icon: IC.cookie,  content: _docCookie },
-    buying_selling_terms:    { title: 'Buying & Selling Terms',   updated: '1 January 2026', icon: IC.cart,    content: _docBuyingSelling },
-    refund_dispute_policy:   { title: 'Refund & Dispute Policy',  updated: '1 January 2026', icon: IC.refund,  content: _docRefund },
-    job_platform_terms:      { title: 'Job Platform Terms',       updated: '1 January 2026', icon: IC.brief,   content: _docJobsTerms },
-    service_platform_terms:  { title: 'Service Platform Terms',   updated: '1 January 2026', icon: IC.check,   content: _docServiceTerms },
-    fraud_prevention_policy: { title: 'Fraud & Scam Prevention',  updated: '1 January 2026', icon: IC.warn,    content: _docFraud },
-    prohibited_items_policy: { title: 'Prohibited Items Policy',  updated: '1 January 2026', icon: IC.ban,     content: _docProhibited },
-    account_suspension_policy:{ title: 'Account Suspension Rules', updated: '1 January 2026', icon: IC.lock,   content: _docSuspension },
-    content_moderation_policy:{ title: 'Content Moderation Policy',updated: '1 January 2026', icon: IC.flag,   content: _docModeration },
-    reviews_ratings_policy:  { title: 'Reviews & Ratings Policy', updated: '1 January 2026', icon: IC.star,    content: _docReviews },
-    vehicle_listing_terms:   { title: 'Vehicle Listing Terms',    updated: '1 January 2026', icon: IC.car,     content: _docVehicle },
-    property_listing_terms:  { title: 'Property Listing Terms',   updated: '1 January 2026', icon: IC.home,    content: _docProperty },
-    verified_business_rules: { title: 'Verified Business Rules',  updated: '1 January 2026', icon: IC.check,   content: _docVerifiedBiz },
-    boosted_listing_rules:   { title: 'Boosted Listings Rules',   updated: '1 January 2026', icon: IC.zap,     content: _docBoosted },
+    terms_of_use:            { title: 'Terms of Use',             updated: 'June 2026', icon: IC.doc,     content: function() { return typeof H._termsText === 'function' ? H._termsText() : ''; } },
+    privacy_policy:          { title: 'Privacy Policy',           updated: 'June 2026', icon: IC.shield,  content: function() { return typeof H._privacyText === 'function' ? H._privacyText() : ''; } },
+    community_guidelines:    { title: 'Community Guidelines',     updated: 'June 2026', icon: IC.users,   content: function() { return typeof H._guidelinesText === 'function' ? H._guidelinesText() : ''; } },
+    acceptable_use_policy:   { title: 'Acceptable Use Policy',    updated: 'June 2026', icon: IC.ban,     content: _docAUP },
+    cookie_data_policy:      { title: 'Cookie & Data Policy',     updated: 'June 2026', icon: IC.cookie,  content: _docCookie },
+    buying_selling_terms:    { title: 'Buying & Selling Terms',   updated: 'June 2026', icon: IC.cart,    content: _docBuyingSelling },
+    refund_dispute_policy:   { title: 'Refund & Dispute Policy',  updated: 'June 2026', icon: IC.refund,  content: _docRefund },
+    job_platform_terms:      { title: 'Job Platform Terms',       updated: 'June 2026', icon: IC.brief,   content: _docJobsTerms },
+    service_platform_terms:  { title: 'Service Platform Terms',   updated: 'June 2026', icon: IC.check,   content: _docServiceTerms },
+    fraud_prevention_policy: { title: 'Fraud & Scam Prevention',  updated: 'June 2026', icon: IC.warn,    content: _docFraud },
+    prohibited_items_policy: { title: 'Prohibited Items Policy',  updated: 'June 2026', icon: IC.ban,     content: _docProhibited },
+    account_suspension_policy:{ title: 'Account Suspension Rules', updated: 'June 2026', icon: IC.lock,   content: _docSuspension },
+    content_moderation_policy:{ title: 'Content Moderation Policy',updated: 'June 2026', icon: IC.flag,   content: _docModeration },
+    reviews_ratings_policy:  { title: 'Reviews & Ratings Policy', updated: 'June 2026', icon: IC.star,    content: _docReviews },
+    vehicle_listing_terms:   { title: 'Vehicle Listing Terms',    updated: 'June 2026', icon: IC.car,     content: _docVehicle },
+    property_listing_terms:  { title: 'Property Listing Terms',   updated: 'June 2026', icon: IC.home,    content: _docProperty },
+    verified_business_rules: { title: 'Verified Business Rules',  updated: 'June 2026', icon: IC.check,   content: _docVerifiedBiz },
+    boosted_listing_rules:   { title: 'Boosted Listings Rules',   updated: 'June 2026', icon: IC.zap,     content: _docBoosted },
   };
 
   // ── Hub section config ───────────────────────────────────
@@ -651,150 +651,136 @@
     {
       id: 'legal_terms',
       title: 'Legal Terms',
-      desc: 'Your core agreements with PaMarket',
-      color: '#1A3A8F', bg: '#EEF2FF',
-      icon: IC.doc,
+      iconClass: 'pi-blue',
       docs: ['terms_of_use','privacy_policy','acceptable_use_policy','cookie_data_policy','community_guidelines'],
     },
     {
       id: 'marketplace_rules',
       title: 'Marketplace Rules',
-      desc: 'How buying, selling, and services work',
-      color: '#059669', bg: '#ECFDF5',
-      icon: IC.cart,
+      iconClass: 'pi-green',
       docs: ['buying_selling_terms','refund_dispute_policy','job_platform_terms','service_platform_terms'],
     },
     {
       id: 'trust_safety',
-      title: 'Trust & Safety',
-      desc: 'How we keep PaMarket safe for everyone',
-      color: '#DC2626', bg: '#FEF2F2',
-      icon: IC.shield,
+      title: 'Trust &amp; Safety',
+      iconClass: 'pi-red',
       docs: ['fraud_prevention_policy','prohibited_items_policy','account_suspension_policy','content_moderation_policy','reviews_ratings_policy'],
     },
     {
       id: 'platform_extensions',
       title: 'Platform Extensions',
-      desc: 'Category-specific rules for listings',
-      color: '#D97706', bg: '#FFFBEB',
-      icon: IC.zap,
+      iconClass: 'pi-gold',
       docs: ['vehicle_listing_terms','property_listing_terms','verified_business_rules','boosted_listing_rules'],
     },
   ];
 
   // ── Helpers ──────────────────────────────────────────────
-  function _docRow(key) {
+  const _chev = `<svg class="pinfo-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>`;
+
+  function _docRow(key, iconClass) {
     const doc = H._legalDocs[key];
     if (!doc) return '';
-    return `<button onclick="H.openInner('LegalReader',{doc:'${key}'})" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
-      <span style="font-size:13px;font-weight:600;color:var(--text);flex:1">${doc.title}</span>
-      <span style="color:var(--sub)">${IC.chevron}</span>
-    </button>`;
+    return `<div class="pinfo-row" onclick="H.openInner('LegalReader',{doc:'${key}'})">
+      <div class="pinfo-icon ${iconClass || 'pi-blue'}">${doc.icon}</div>
+      <div style="flex:1"><div class="pinfo-label">${doc.title}</div></div>
+      ${_chev}
+    </div>`;
   }
 
   const SOCIALS = [
-    { name:'Facebook',  url:'https://www.facebook.com/profile.php?id=61591000371129', bg:'#1877F2', svg:'<svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M24 12a12 12 0 1 0-13.88 11.85v-8.38H7.08V12h3.04V9.36c0-3 1.79-4.67 4.53-4.67 1.31 0 2.68.24 2.68.24v2.95h-1.51c-1.49 0-1.96.93-1.96 1.87V12h3.33l-.53 3.47h-2.8v8.38A12 12 0 0 0 24 12z"/></svg>' },
-    { name:'Instagram', url:'https://www.instagram.com/pamarketzim/',                  bg:'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)', svg:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg>' },
-    { name:'TikTok',   url:'https://www.tiktok.com/@pamarketzimbabwe',                 bg:'#010101', svg:'<svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M16.6 5.82a4.28 4.28 0 0 1-1.05-2.82h-3.07v12.2a2.43 2.43 0 1 1-2.43-2.43c.2 0 .4.02.59.06v-3.13a5.57 5.57 0 0 0-.59-.03 5.56 5.56 0 1 0 5.56 5.56V9.01a7.33 7.33 0 0 0 4.28 1.37V7.3a4.28 4.28 0 0 1-3.3-1.48z"/></svg>' },
-    { name:'YouTube',  url:'https://www.youtube.com/@PaMarketZim',                     bg:'#FF0000', svg:'<svg viewBox="0 0 24 24" width="19" height="17" fill="#fff"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.8a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 23.5 12 31 31 0 0 0 23 7.2zM9.8 15.3V8.7l5.7 3.3z"/></svg>' },
-    { name:'X',        url:'https://twitter.com/PaMarketZim',                          bg:'#000', svg:'<svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.261 5.632 5.902-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' },
-    { name:'LinkedIn', url:'https://www.linkedin.com/company/pamarket',                 bg:'#0A66C2', svg:'<svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>' },
-    { name:'WhatsApp', url:'https://wa.me/971589772645',                                bg:'#25D366', svg:'<svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>' },
+    { name:'Facebook',  url:'https://www.facebook.com/profile.php?id=61591000371129', svg:'<svg viewBox="0 0 24 24" width="14" height="14" fill="#1877F2"><path d="M24 12a12 12 0 1 0-13.88 11.85v-8.38H7.08V12h3.04V9.36c0-3 1.79-4.67 4.53-4.67 1.31 0 2.68.24 2.68.24v2.95h-1.51c-1.49 0-1.96.93-1.96 1.87V12h3.33l-.53 3.47h-2.8v8.38A12 12 0 0 0 24 12z"/></svg>' },
+    { name:'Instagram', url:'https://www.instagram.com/pamarketzim/',                  svg:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#E1306C" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5" stroke-width="3"/></svg>' },
+    { name:'TikTok',   url:'https://www.tiktok.com/@pamarketzimbabwe',                 svg:'<svg viewBox="0 0 24 24" width="14" height="14" fill="#010101"><path d="M16.6 5.82a4.28 4.28 0 0 1-1.05-2.82h-3.07v12.2a2.43 2.43 0 1 1-2.43-2.43c.2 0 .4.02.59.06v-3.13a5.57 5.57 0 0 0-.59-.03 5.56 5.56 0 1 0 5.56 5.56V9.01a7.33 7.33 0 0 0 4.28 1.37V7.3a4.28 4.28 0 0 1-3.3-1.48z"/></svg>' },
+    { name:'YouTube',  url:'https://www.youtube.com/@PaMarketZim',                     svg:'<svg viewBox="0 0 24 24" width="14" height="14" fill="#FF0000"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.8a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 23.5 12 31 31 0 0 0 23 7.2zM9.8 15.3V8.7l5.7 3.3z"/></svg>' },
+    { name:'X',        url:'https://twitter.com/PaMarketZim',                          svg:'<svg viewBox="0 0 24 24" width="14" height="14" fill="#000"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.261 5.632 5.902-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' },
+    { name:'LinkedIn', url:'https://www.linkedin.com/company/pamarket',                svg:'<svg viewBox="0 0 24 24" width="14" height="14" fill="#0A66C2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>' },
+    { name:'WhatsApp', url:'https://wa.me/971589772645',                               svg:'<svg viewBox="0 0 24 24" width="14" height="14" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>' },
   ];
 
   // ── Legal Hub Landing ────────────────────────────────────
   pages.LegalHub = function () {
+    const docCount = Object.keys(H._legalDocs).length;
+
     const sectionCards = SECTIONS.map(function(sec) {
-      const rows = sec.docs.map(_docRow).join('');
-      return `<div style="margin:0 16px 16px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:var(--card)">
-        <div style="padding:14px 16px 12px;border-bottom:1px solid var(--border);background:${sec.bg}">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:34px;height:34px;border-radius:10px;background:${sec.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff">${sec.icon}</div>
-            <div style="flex:1">
-              <div style="font-size:14px;font-weight:800;color:${sec.color}">${sec.title}</div>
-              <div style="font-size:11px;color:var(--sub);margin-top:1px">${sec.desc}</div>
-            </div>
-          </div>
-        </div>
-        ${rows}
-      </div>`;
+      const rows = sec.docs.map(function(key) { return _docRow(key, sec.iconClass); }).join('');
+      return `<div style="height:8px"></div>
+        <div class="profile-section-label">${sec.title}</div>
+        <div class="pinfo-card">${rows}</div>`;
     }).join('');
 
-    const socialLinks = SOCIALS.map(s =>
+    const socialPills = SOCIALS.map(s =>
       `<a href="${s.url}" onclick="event.preventDefault();(window.open('${s.url}','_blank','noopener'))" title="${s.name}"
-         style="width:38px;height:38px;border-radius:50%;background:${s.bg};display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 2px 6px -1px rgba(0,0,0,.3);flex-shrink:0">
-         ${s.svg}
+         style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);font-size:12px;font-weight:600;color:var(--text-primary);cursor:pointer;text-decoration:none;-webkit-tap-highlight-color:transparent">
+         ${s.svg} ${s.name}
        </a>`
     ).join('');
 
     return `<div class="page active">
       ${H.innerTopbar('Legal Hub')}
 
-      <!-- Hero -->
-      <div style="margin:0 16px 20px;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#1A3A8F 0%,#2952cc 60%,#1e4db7 100%);padding:26px 20px 22px;position:relative">
-        <div style="position:absolute;top:-20px;right:-20px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
-        <div style="position:absolute;bottom:-30px;right:16px;width:90px;height:90px;border-radius:50%;background:rgba(245,166,35,.1)"></div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:rgba(255,255,255,.55);text-transform:uppercase;margin-bottom:7px">PaMarket Zimbabwe</div>
-        <div style="font-size:22px;font-weight:900;color:#fff;line-height:1.2;margin-bottom:7px">Legal Hub</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.72);line-height:1.55;margin-bottom:14px">All our policies, terms, and safety guidelines in one place. Transparency is the foundation of trust.</div>
-        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:5px 10px">
-          <div style="width:7px;height:7px;border-radius:50%;background:#4ADE80"></div>
-          <span style="font-size:11px;color:rgba(255,255,255,.9);font-weight:600">${Object.keys(H._legalDocs).length} documents available</span>
+      <div style="background:var(--card);border-bottom:1px solid var(--border);padding:18px 16px 16px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">PaMarket Zimbabwe</div>
+        <div style="font-size:24px;font-weight:900;color:var(--text-primary);letter-spacing:-.03em;margin-bottom:6px">Legal Hub</div>
+        <div style="font-size:13px;color:var(--text-sub);line-height:1.55">All our policies, terms, and safety guidelines in one place. Transparency is the foundation of trust.</div>
+        <div style="margin-top:12px;display:inline-flex;align-items:center;gap:6px;background:#EEF2FF;border:1px solid #C7D7FE;border-radius:6px;padding:4px 10px">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--blue)"></div>
+          <span style="font-size:11px;font-weight:700;color:var(--blue)">${docCount} documents &middot; Updated June 2026</span>
         </div>
       </div>
 
       ${sectionCards}
 
-      <!-- Support -->
-      <div style="margin:0 16px 8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)">Support</div>
-      <div style="margin:0 16px 16px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:var(--card)">
-        <a href="mailto:support@pamarket.app" style="display:flex;align-items:center;gap:12px;padding:13px 16px;text-decoration:none;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent">
-          <div style="width:34px;height:34px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">${IC.mail}</div>
+      <div style="height:8px"></div>
+      <div class="profile-section-label">Contact</div>
+      <div class="pinfo-card">
+        <a href="mailto:support@pamarket.app" class="pinfo-row" style="text-decoration:none">
+          <div class="pinfo-icon pi-blue">${IC.mail}</div>
           <div style="flex:1">
-            <div style="font-size:11px;color:var(--sub);font-weight:500">General &amp; Terms</div>
-            <div style="font-size:13px;font-weight:700;color:#1A3A8F">support@pamarket.app</div>
+            <div class="pinfo-label" style="color:var(--blue)">support@pamarket.app</div>
+            <div class="pinfo-value">General &amp; Terms</div>
           </div>
-          <span style="color:var(--sub)">${IC.chevron}</span>
+          ${_chev}
         </a>
-        <a href="mailto:privacy@pamarket.app" style="display:flex;align-items:center;gap:12px;padding:13px 16px;text-decoration:none;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent">
-          <div style="width:34px;height:34px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">${IC.shield}</div>
+        <a href="mailto:privacy@pamarket.app" class="pinfo-row" style="text-decoration:none">
+          <div class="pinfo-icon pi-blue">${IC.shield}</div>
           <div style="flex:1">
-            <div style="font-size:11px;color:var(--sub);font-weight:500">Privacy &amp; Data</div>
-            <div style="font-size:13px;font-weight:700;color:#1A3A8F">privacy@pamarket.app</div>
+            <div class="pinfo-label" style="color:var(--blue)">privacy@pamarket.app</div>
+            <div class="pinfo-value">Privacy &amp; Data</div>
           </div>
-          <span style="color:var(--sub)">${IC.chevron}</span>
+          ${_chev}
         </a>
-        <button onclick="H.openInner('ReportProblem')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;background:transparent;border:none;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
-          <div style="width:34px;height:34px;border-radius:10px;background:#FEF2F2;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#DC2626">${IC.bug}</div>
+        <div class="pinfo-row" onclick="H.openInner('ReportProblem')">
+          <div class="pinfo-icon pi-red">${IC.bug}</div>
           <div style="flex:1">
-            <div style="font-size:11px;color:var(--sub);font-weight:500">Something wrong?</div>
-            <div style="font-size:13px;font-weight:700;color:#DC2626">Report a Problem</div>
+            <div class="pinfo-label" style="color:#DC2626">Report a Problem</div>
+            <div class="pinfo-value">Something wrong?</div>
           </div>
-          <span style="color:var(--sub)">${IC.chevron}</span>
-        </button>
+          ${_chev}
+        </div>
       </div>
 
-      <!-- Company & Social -->
-      <div style="margin:0 16px 8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)">Company</div>
-      <div style="margin:0 16px 16px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:var(--card)">
-        <button onclick="H.openInner('About')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
-          <span style="font-size:13px;font-weight:600;color:var(--text);flex:1">About PaMarket</span>
-          <span style="color:var(--sub)">${IC.chevron}</span>
-        </button>
-        <button onclick="H.openInner('Help')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;background:transparent;border:none;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
-          <span style="font-size:13px;font-weight:600;color:var(--text);flex:1">Help Center</span>
-          <span style="color:var(--sub)">${IC.chevron}</span>
-        </button>
+      <div style="height:8px"></div>
+      <div class="profile-section-label">Company</div>
+      <div class="pinfo-card">
+        <div class="pinfo-row" onclick="H.openInner('About')">
+          <div class="pinfo-icon pi-gray">${IC.doc}</div>
+          <div style="flex:1"><div class="pinfo-label">About PaMarket</div></div>
+          ${_chev}
+        </div>
+        <div class="pinfo-row" onclick="H.openInner('Help')">
+          <div class="pinfo-icon pi-gray">${IC.shield}</div>
+          <div style="flex:1"><div class="pinfo-label">Help Center</div></div>
+          ${_chev}
+        </div>
       </div>
 
-      <!-- Social links -->
-      <div style="margin:0 16px 8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)">Follow Us</div>
-      <div style="margin:0 16px 24px;display:flex;flex-wrap:wrap;gap:12px">${socialLinks}</div>
+      <div style="height:8px"></div>
+      <div class="profile-section-label">Follow Us</div>
+      <div style="padding:6px 16px 4px;display:flex;flex-wrap:wrap;gap:8px">${socialPills}</div>
 
-      <!-- Footer -->
-      <div style="text-align:center;padding:4px 16px 36px">
-        <div style="font-size:11px;color:var(--sub)">© ${new Date().getFullYear()} PaMarket Zimbabwe · Made in Zimbabwe</div>
-        <div style="font-size:10px;color:var(--sub);margin-top:3px">All rights reserved</div>
+      <div style="text-align:center;padding:20px 16px 40px;font-size:11px;color:var(--text-sub);line-height:1.8">
+        &copy; ${new Date().getFullYear()} PaMarket Zimbabwe &middot; Made in Zimbabwe
+        <div style="font-size:10px;color:var(--text-hint);margin-top:3px">All rights reserved</div>
       </div>
     </div>`;
   };
