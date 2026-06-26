@@ -32,79 +32,110 @@
       : H.currentUser();
 
     if (!u && viewId) {
-      // Viewing another user we don't hold locally yet — Profile_after fetches it.
-      return '<div class="page active">' + H.innerTopbar('Profile') + '<div style="padding:64px 20px;text-align:center;color:var(--sub);font-size:14px">Loading profile…</div></div>';
+      return `<div class="page active"><div class="profile-topbar">
+        <button class="profile-topbar-back" onclick="H.goBack()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="profile-topbar-title">Profile</div><div style="width:44px"></div></div>
+        <div style="padding:64px 20px;text-align:center;color:var(--text-sub);font-size:14px">Loading profile…</div></div>`;
     }
     if (!u) return H.emptyState('Not logged in', 'Please sign in to continue', 'Sign In', "H.authPage()");
 
-    const isOwn      = !viewId || (H.currentUser() && viewId === H.currentUser().id);
-    const uPrivacy   = u.privacySettings || {};
-    const verified   = u.verified
-      ? `<span class="verified">${IC.check} Verified</span>`
-      : `<span class="unverified">${IC.alert} Not Verified</span>`;
-    const avgRating  = (u.ratings && u.ratings.length)
-      ? (u.ratings.reduce((a,b) => a+b, 0) / u.ratings.length).toFixed(1) : '0';
+    const isOwn       = !viewId || (H.currentUser() && viewId === H.currentUser().id);
+    const uPrivacy    = u.privacySettings || {};
+    const verifiedBadge = u.verified
+      ? `<span class="verified"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>`
+      : `<span class="unverified"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Not Verified</span>`;
+    const avgRating   = (u.ratings && u.ratings.length)
+      ? (u.ratings.reduce((a, b) => a + b, 0) / u.ratings.length).toFixed(1) : '0';
     const ratingCount = u.ratings ? u.ratings.length : 0;
     const showActivityDot = uPrivacy.showActivity === true;
+    const joinDate    = (u.joinedAt || u.createdAt)
+      ? new Date(u.joinedAt || u.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : '';
+    const metaParts   = [u.city ? H.escHtml(u.city) : '', joinDate ? `Member since ${joinDate}` : ''].filter(Boolean);
+    const verifyStatus = u.verified
+      ? `<span style="color:#16A34A">Verified — National ID</span>`
+      : `<span style="color:#B45309">Not verified — tap to verify</span>`;
+
+    const topbar = `<div class="profile-topbar">
+      <button class="profile-topbar-back" onclick="H.goBack()" aria-label="Go back">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="profile-topbar-title">${isOwn ? 'My Profile' : H.escHtml(u.name || 'Profile')}</div>
+      ${isOwn
+        ? `<button class="profile-topbar-action" onclick="H.navTo('Settings')" aria-label="Settings">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>`
+        : `<div style="width:44px"></div>`}
+    </div>`;
+
+    const sellerListings = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active');
 
     return `<div class="page active">
-      ${H.innerTopbar(isOwn ? 'My Profile' : H.escHtml(u.name))}
+      ${topbar}
+
       <div class="profile-hero">
-        <div class="profile-pic" style="position:relative">
+        <div class="profile-pic" style="position:relative;margin-bottom:14px">
           ${u.avatar
-            ? `<img src="${u.avatar}" alt="${H.escHtml(u.name||'')}" onclick="H.viewImage('${(u.avatar||'').replace(/'/g, "\\'")}')" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">`
+            ? `<img src="${u.avatar}" alt="${H.escHtml(u.name || '')}" onclick="H.viewImage('${(u.avatar || '').replace(/'/g, "\\'")}')" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name || '').replace(/'/g, "\\'")}'))">`
             : `<div class="profile-initials">${H.initials(u.name)}</div>`}
-          ${showActivityDot ? `<div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid var(--card,#fff)"></div>` : ''}
+          ${showActivityDot ? `<div style="position:absolute;bottom:3px;right:3px;width:14px;height:14px;border-radius:50%;background:#22C55E;border:2.5px solid var(--card)"></div>` : ''}
         </div>
-        <div class="profile-info">
-          <div class="profile-name">${H.escHtml(u.name || 'User')}</div>
-          <div class="profile-phone">${IC.phone} ${H.escHtml(u.phone || 'No phone')}</div>
-          <div class="profile-status">${verified}</div>
-          ${isOwn && uPrivacy.profilePublic === false ? `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:20px;font-size:11px;font-weight:700;color:#92400e"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Your profile is set to private</div>` : ''}
-        </div>
+        <div class="profile-name">${H.escHtml(u.name || 'User')}</div>
+        ${metaParts.length ? `<div class="profile-meta">${metaParts.map((p, i) => i === 0 ? p : `<div class="profile-meta-dot"></div>${p}`).join('')}</div>` : ''}
+        ${verifiedBadge}
+        ${u.bio ? `<div class="profile-bio">${H.escHtml(u.bio)}</div>` : ''}
+        ${isOwn && uPrivacy.profilePublic === false ? `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:4px 10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:20px;font-size:11px;font-weight:700;color:#92400e"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Profile is private</div>` : ''}
       </div>
 
       <div class="profile-stats">
         <div class="stat-box"><div class="stat-val">${activeCount(u.id)}</div><div class="stat-label">Active Ads</div></div>
-        <div class="stat-box" style="cursor:pointer" onclick="H.openInner('Reviews'${viewId ? ",{id:'" + u.id + "'}" : ''})"><div class="stat-val">★ ${avgRating}</div><div class="stat-label">Rating (${ratingCount})</div></div>
+        <div class="stat-box" onclick="H.openInner('Reviews'${viewId ? ",{id:'" + u.id + "'}" : ''})"><div class="stat-val" style="color:#F59E0B">★ ${avgRating}</div><div class="stat-label">Rating (${ratingCount})</div></div>
         <div class="stat-box"><div class="stat-val">${soldCount(u.id)}</div><div class="stat-label">Sold</div></div>
       </div>
 
-      ${isOwn ? `
-      <div class="form-wrap">
+      <div class="profile-cta">
+        ${isOwn ? `
         <button class="btn-pri" onclick="H.openInner('EditProfile')">${IC.pencil} Edit Profile</button>
-        <button class="btn-sec" onclick="H.openInner('ProfileVerify')">${IC.shield} Verify Identity</button>
-        <button class="btn-sec" onclick="H.openInner('Reviews')">${IC.star} Reviews & Ratings</button>
-      </div>` : `
-      <div class="form-wrap">
+        <div class="cta-row">
+          <button class="btn-sec" onclick="H.openInner('ProfileVerify')">${IC.shield} Verify Identity</button>
+          <button class="btn-sec" onclick="H.openInner('Reviews')">${IC.star} Reviews</button>
+        </div>` : `
         ${uPrivacy.allowMessages === false
           ? `<button class="btn-pri" disabled style="opacity:0.5;cursor:not-allowed">Messaging turned off</button>`
-          : `<button class="btn-pri" onclick="H.startChatWith('${u.id}', null)">Message ${H.escHtml(u.name || 'User')}</button>`}
-        <button class="btn-sec" onclick="H.openInner('Reviews',{id:'${u.id}'})">${IC.star} Reviews &amp; Ratings (${ratingCount})</button>
-        <button class="btn-sec" onclick="H.reportUser('${u.id}')">Report User</button>
-      </div>`}
-
-      <div class="section-box">
-        <div class="section-title">Account Info</div>
-        <div class="info-row"><span class="info-label">Email</span><span class="info-val">${H.escHtml(u.email || 'N/A')}</span></div>
-        <div class="info-row"><span class="info-label">Joined</span><span class="info-val">${new Date(u.joinedAt || u.createdAt || Date.now()).toLocaleDateString()}</span></div>
-        <div class="info-row"><span class="info-label">Status</span><span class="info-val">${H.escHtml(u.status || 'Active')}</span></div>
-        ${u.bio ? `<div style="padding:12px 0 2px"><div class="info-label" style="margin-bottom:6px">Bio</div><div style="font-size:13px;color:var(--text-primary);line-height:1.6;font-weight:400">${H.escHtml(u.bio)}</div></div>` : ''}
+          : `<button class="btn-pri" onclick="H.startChatWith('${u.id}', null)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message ${H.escHtml(u.name || 'User')}</button>`}
+        <div class="cta-row">
+          <button class="btn-sec" onclick="H.openInner('Reviews',{id:'${u.id}'})">${IC.star} Reviews (${ratingCount})</button>
+          <button class="btn-sec" style="color:#DC2626;border-color:#FCA5A5" onclick="H.reportUser('${u.id}')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Report</button>
+        </div>`}
       </div>
 
-      ${(() => {
-        const sellerListings = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active');
-        return `<div class="section-box">
-        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-          <span>${isOwn ? 'My Listings' : 'Listings'} (${sellerListings.length})</span>
-          ${sellerListings.length > 6 ? `<span style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer" onclick="H.openInner('UserProfile',{id:'${u.id}'})">See all</span>` : ''}
+      ${isOwn ? `
+      <div class="profile-section-label">Account</div>
+      <div class="pinfo-card">
+        <div class="pinfo-row">
+          <div class="pinfo-icon pi-blue"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="pinfo-content"><div class="pinfo-label">Email</div><div class="pinfo-value">${H.escHtml(u.email || 'N/A')}</div></div>
         </div>
-        <div class="listing-list">
-          ${sellerListings.slice(0,6).map(H.renderListCard).join('')
-            || '<div style="color:var(--sub);padding:16px;font-size:13px">No active listings</div>'}
+        <div class="pinfo-row">
+          <div class="pinfo-icon pi-gray"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="pinfo-content"><div class="pinfo-label">Joined</div><div class="pinfo-value">${new Date(u.joinedAt || u.createdAt || Date.now()).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</div></div>
         </div>
-      </div>`;
-      })()}
+        <div class="pinfo-row" style="cursor:pointer" onclick="H.openInner('ProfileVerify')">
+          <div class="pinfo-icon pi-green"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div class="pinfo-content"><div class="pinfo-label">Identity Verification</div><div class="pinfo-value">${verifyStatus}</div></div>
+          <div class="pinfo-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="pinfo-row" style="cursor:pointer" onclick="H.navTo('Settings')">
+          <div class="pinfo-icon pi-gray"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="pinfo-content"><div class="pinfo-label">Privacy Settings</div><div class="pinfo-value">Profile ${uPrivacy.profilePublic === false ? 'private' : 'public'}</div></div>
+          <div class="pinfo-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>` : ''}
+
+      <div class="profile-section-label">${isOwn ? 'My Listings' : 'Listings'} (${sellerListings.length})</div>
+      <div class="listing-list" style="padding:0 14px 14px">
+        ${sellerListings.slice(0, 6).map(H.renderListCard).join('')
+          || `<div style="color:var(--text-sub);padding:16px 0;font-size:13px">No active listings</div>`}
+      </div>
       <div style="height:24px"></div>
     </div>`;
   };
@@ -154,49 +185,92 @@
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
 
+    const uPrivacy = u.privacySettings || {};
+    const toggle = (on) => on
+      ? `<svg viewBox="0 0 42 24" width="42" height="24" style="flex-shrink:0"><rect x="0" y="0" width="42" height="24" rx="12" fill="#1A3A8F"/><circle cx="30" cy="12" r="9" fill="white"/></svg>`
+      : `<svg viewBox="0 0 42 24" width="42" height="24" style="flex-shrink:0"><rect x="0" y="0" width="42" height="24" rx="12" fill="#CBD5E1"/><circle cx="12" cy="12" r="9" fill="white"/></svg>`;
+
     return `<div class="page active">
       ${H.innerTopbar('Edit Profile')}
-      <div class="form-wrap">
-        <div style="display:flex;flex-direction:column;align-items:center;padding:8px 0 16px">
-          <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;background:#1A3A8F14;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#1A3A8F;margin-bottom:10px;border:2.5px solid #1A3A8F22">
-            ${u.avatar ? `<img id="avatarPreview" src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name||'').replace(/'/g, "\\'")}'))">` : `<span id="avatarPreview">${H.initials(u.name||'')}</span>`}
-          </div>
-          <label for="profilePicFile" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer;background:#1A3A8F14;padding:7px 16px;border-radius:20px">Change Photo</label>
+
+      <div class="avatar-edit-section">
+        <div class="profile-pic" style="width:72px;height:72px;flex-shrink:0">
+          ${u.avatar
+            ? `<img id="avatarPreview" src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\\"profile-initials\\" style=\\"font-size:22px\\">${H.initials(u.name || '')}</div>'">`
+            : `<div class="profile-initials" style="font-size:22px" id="avatarPreview">${H.initials(u.name || '')}</div>`}
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:3px">Profile Photo</div>
+          <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">Tap to change your photo</div>
+          <label for="profilePicFile" style="font-size:13px;font-weight:600;color:var(--blue);cursor:pointer">Change Photo</label>
           <input type="file" id="profilePicFile" accept="image/*" style="display:none" onchange="H._editProfile.onPicChange(event)">
         </div>
+      </div>
+
+      <div class="edit-form-section">
+        <div class="edit-form-section-title">Basic Info</div>
         <div class="fg"><div class="fl">Full Name <span style="color:#EF4444">*</span></div>
           <input class="fi" id="editName" value="${H.escHtml(u.name || '')}" placeholder="Your full name" maxlength="60">
         </div>
         <div class="fg"><div class="fl">Phone Number</div>
           <input class="fi" id="editPhone" value="${H.escHtml(u.phone || '')}" placeholder="+263 77 123 4567" type="tel" maxlength="16">
-          <div style="font-size:11px;color:var(--sub);margin-top:4px">International format, e.g. +263 77 123 4567</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:4px">International format, e.g. +263 77 123 4567</div>
         </div>
-        <div class="fg"><div class="fl">Email</div>
-          <div style="position:relative">
-            <input class="fi" value="${H.escHtml(u.email || '')}" disabled style="background:var(--bg);color:var(--sub);cursor:not-allowed;padding-right:40px">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </div>
-          <div style="font-size:11px;color:var(--sub);margin-top:5px;display:flex;align-items:center;gap:5px">
-            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            Your login email is locked for security. Contact support to change it.
-          </div>
-        </div>
-        <div class="fg"><div class="fl">Bio</div>
+        <div class="fg" style="margin-bottom:0"><div class="fl">Bio</div>
           <textarea class="fi" rows="3" id="editBio" placeholder="Tell buyers about yourself..." maxlength="200">${H.escHtml(u.bio || '')}</textarea>
         </div>
-        <div id="editSaveMsg" style="display:none;font-size:13px;color:#16A34A;text-align:center;padding:8px 0;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#16A34A" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Saved!</div>
-        <div id="editErrMsg"  style="display:none;font-size:13px;color:#EF4444;text-align:center;padding:8px 0"></div>
-        <div class="btn-group">
-          <button id="editSaveBtn" class="btn-pri" onclick="H._editProfile.save()">Save Changes</button>
-          <button class="btn-sec" onclick="H.openInner('ChangePassword')">Change Password</button>
-          <button class="btn-sec" onclick="H.goBack()">Cancel</button>
-        </div>
-        <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px">
-          <div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Danger Zone</div>
-          <button onclick="H._editProfile.deleteCV()" style="width:100%;padding:13px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">Delete My CV / Candidate Profile</button>
-          <button onclick="H._editProfile.deleteAccount()" style="width:100%;padding:13px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#DC2626" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Delete Account</button>
+      </div>
+
+      <div class="edit-form-section">
+        <div class="edit-form-section-title">Login</div>
+        <div class="fg" style="margin-bottom:0"><div class="fl">Email</div>
+          <div style="position:relative">
+            <input class="fi" value="${H.escHtml(u.email || '')}" disabled style="background:var(--bg);color:var(--text-sub);cursor:not-allowed;padding-right:40px">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-sub)"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:5px">Login email is locked for security. Contact support to change.</div>
         </div>
       </div>
+
+      <div class="profile-section-label">Privacy</div>
+      <div class="pinfo-card">
+        <div class="pinfo-row">
+          <div class="pinfo-icon pi-gray"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="pinfo-content"><div class="pinfo-label">Profile Visibility</div><div class="pinfo-value">${uPrivacy.profilePublic === false ? 'Private' : 'Public'}</div></div>
+          ${toggle(uPrivacy.profilePublic !== false)}
+        </div>
+        <div class="pinfo-row">
+          <div class="pinfo-icon pi-gray"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 2.1.74 3.26a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c1.16.38 2.3.61 3.26.74a2 2 0 0 1 1.72 2.03z"/></svg></div>
+          <div class="pinfo-content"><div class="pinfo-label">Show Phone Number</div><div class="pinfo-value">${uPrivacy.showPhone ? 'Visible to buyers' : 'Hidden'}</div></div>
+          ${toggle(!!uPrivacy.showPhone)}
+        </div>
+        <div class="pinfo-row">
+          <div class="pinfo-icon pi-gray"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="pinfo-content"><div class="pinfo-label">Show Online Status</div><div class="pinfo-value">${uPrivacy.showActivity ? 'Visible' : 'Off'}</div></div>
+          ${toggle(!!uPrivacy.showActivity)}
+        </div>
+      </div>
+
+      <div class="edit-form-section" style="margin-bottom:0">
+        <div id="editSaveMsg" style="display:none;font-size:13px;color:#16A34A;text-align:center;padding:0 0 10px;font-weight:600"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#16A34A" stroke-width="3" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>Saved!</div>
+        <div id="editErrMsg" style="display:none;font-size:13px;color:#EF4444;text-align:center;padding:0 0 10px"></div>
+        <button id="editSaveBtn" class="btn-pri" onclick="H._editProfile.save()">Save Changes</button>
+        <button class="btn-sec" style="margin-top:10px" onclick="H.openInner('ChangePassword')">Change Password</button>
+        <button class="btn-sec" style="margin-top:10px" onclick="H.goBack()">Cancel</button>
+      </div>
+
+      <div class="profile-section-label" style="color:#DC2626">Danger Zone</div>
+      <div class="profile-danger-zone">
+        <button onclick="H._editProfile.deleteCV()" class="btn-danger">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Delete CV / Candidate Profile
+        </button>
+        <button onclick="H._editProfile.deleteAccount()" class="btn-danger">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Delete My Account
+        </button>
+      </div>
+      <div style="height:24px"></div>
     </div>`;
   };
 
