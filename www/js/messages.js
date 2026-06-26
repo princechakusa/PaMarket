@@ -331,10 +331,10 @@
       if (!convos.length) return H.emptyState('No messages yet', 'When buyers message you about a listing, it will show up here.', null, null);
       const totalUnread = convos.reduce((sum, c) => sum + (c.messages || []).filter(m => m.from !== u.id && !m.read).length, 0);
       const summary = `${convos.length} chat${convos.length === 1 ? '' : 's'}${totalUnread > 0 ? ` · ${totalUnread} unread` : ''}`;
-      return `<div class="msg-search-wrap">
+      return `<div class="msg-search-bar"><div class="msg-search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
           <input id="msgSearch" type="text" placeholder="Search conversations" autocomplete="off" oninput="H._filterMsgList(this.value)">
-        </div>
+        </div></div>
         <div class="msg-summary"><b>${summary}</b>${totalUnread > 0 ? '<button onclick="H._markAllRead()" class="msg-markall">Mark all read</button>' : ''}</div>
         ${convos.map(c => {
           const otherId = Array.isArray(c.members) ? c.members.find(m => m !== u.id) : null;
@@ -623,11 +623,11 @@
     return '<div id="chatPageWrap" class="page active" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;overflow:hidden;">'
       + '<div class="chat-header">'
       + '<button class="chat-hdr-back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
-      + '<div class="chat-hdr-av" onclick="' + (showBizBrand ? 'H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')' : 'H._chat.showProfile(\'' + otherIdSafe + '\')') + '">' + otherAvatar + '</div>'
+      + '<div class="chat-hdr-av" onclick="' + (showBizBrand ? 'H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')' : 'H._chat.showProfile(\'' + otherIdSafe + '\')') + '">' + otherAvatar + (onlineNow ? '<span style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:#22C55E;border:2px solid var(--card);display:block"></span>' : '') + '</div>'
       + '<div class="chat-hdr-info" onclick="' + (showBizBrand ? 'H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')' : 'H._chat.showProfile(\'' + otherIdSafe + '\')') + '">'
       + '<div class="chat-hdr-name">' + escHtml(chatDisplayName) + '</div>'
-      + '<div class="chat-hdr-sub" id="chatHdrSub">' + (showBizBrand ? '<span style="color:#9baec8">Official Shop' + ((_bizChat && _bizChat.category) ? ' | ' + escHtml(_bizChat.category) : '') + '</span>' : chatHdrSubHtml(other, onlineNow)) + '</div>'
-      + (showBizBrand ? '<div onclick="H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')" style="font-size:11px;color:#4A90E2;cursor:pointer;margin-top:1px">View Shop &gt;</div>' : '')
+      + '<div class="chat-hdr-sub" id="chatHdrSub">' + (showBizBrand ? '<span style="color:var(--sub)">Official Shop' + ((_bizChat && _bizChat.category) ? ' | ' + escHtml(_bizChat.category) : '') + '</span>' : chatHdrSubHtml(other, onlineNow)) + '</div>'
+      + (showBizBrand ? '<div onclick="H.openBusinessShop&&H.openBusinessShop(\'' + escHtml(_bizChatId||'') + '\')" style="font-size:11px;color:var(--blue);cursor:pointer;margin-top:1px">View Shop &gt;</div>' : '')
       + '</div>'
       + '<button class="chat-hdr-menu" onclick="H._chat.openMenu(\'' + otherIdSafe + '\'' + (showBizBrand ? ',\'' + escHtml(_bizChatId || '') + '\'' : '') + ')"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
       + '</div>'
@@ -672,18 +672,18 @@
     // Use other.id when available, fall back to the active chat partner id.
     var oid = (other && other.id) || H._activeOtherId;
     var sharing = !(other && other.privacySettings && other.privacySettings.showActivity === false);
-    if (sharing && H._otherTyping) return '<span style="color:#FFD27A">Typing...</span>';
-    if (sharing && online) return '<span class="chat-presence-dot"></span><span style="color:#7CF6B0">Online now</span>';
+    if (sharing && H._otherTyping) return '<span style="color:#B45309;font-weight:700">Typing...</span>';
+    if (sharing && online) return '<span class="chat-presence-dot"></span><span style="color:#16A34A;font-weight:700">Online now</span>';
     if (sharing && oid && H._lastSeen) {
       var ts = H._lastSeen[oid];
       if (ts > 0 && typeof H.formatLastSeen === 'function') {
         var ls = H.formatLastSeen(ts);
-        if (ls) return '<span style="color:#cfe0ff">' + ls + '</span>';
+        if (ls) return '<span style="color:var(--sub)">' + ls + '</span>';
       }
       // ts === 0 means fetched but no data at all — show a generic indicator
-      if (ts === 0) return '<span style="color:#9baec8">Seen a while ago</span>';
+      if (ts === 0) return '<span style="color:var(--sub)">Seen a while ago</span>';
     }
-    if (sharing) return '<span style="color:#9baec8">Offline</span>';
+    if (sharing) return '<span style="color:var(--sub)">Offline</span>';
     return 'Tap to view profile';
   }
   H._chatHdrSubHtml = chatHdrSubHtml;
