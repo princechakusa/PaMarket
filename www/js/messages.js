@@ -739,6 +739,7 @@
         + '</span>';
     }).join('') + '</div>';
   }
+  H._reactionsHtml = _reactionsHtml;
   // The quoted block rendered above a reply's own text.
   function replyQuoteHtml(m) {
     const r = parseReply(m && m.text);
@@ -2065,7 +2066,7 @@
       + '<button class="sheet-item" onclick="H.closeSheet();H._chat.startReply(\'' + mid + '\')">'
       + _ico('<polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>')
       + '<span class="sheet-label">Reply</span></button>'
-      + (isMine && !m.deleted ? '<button class="sheet-item" onclick="H.closeSheet();setTimeout(function(){H._chat.startEdit(\'' + mid + '\')},80)">'
+      + (isMine && !m.deleted && (Date.now() - m.t < 7 * 60 * 1000) ? '<button class="sheet-item" onclick="H.closeSheet();setTimeout(function(){H._chat.startEdit(\'' + mid + '\')},80)">'
       + _ico('<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>')
       + '<span class="sheet-label">Edit</span></button>' : '')
       + (!m.image && !m.deleted ? '<button class="sheet-item" onclick="H.closeSheet();H._chat.copyMsg(\'' + mid + '\')">'
@@ -2074,6 +2075,9 @@
       + (isMine && !m.deleted ? '<button class="sheet-item danger" onclick="H.closeSheet();H._chat.deleteMsg(\'' + mid + '\')">'
       + _ico('<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>')
       + '<span class="sheet-label">Delete</span></button>' : '')
+      + (!isMine && !m.deleted ? '<button class="sheet-item" onclick="H.closeSheet();H._chat.reportMsg(\'' + mid + '\')">'
+      + _ico('<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>')
+      + '<span class="sheet-label">Report</span></button>' : '')
       + '<button class="sheet-close" onclick="H.closeSheet()">Cancel</button>';
     sheet.classList.add('open');
     bg.classList.add('open');
@@ -2086,6 +2090,7 @@
     const m = (c.messages || []).find(function (x) { return x.id === msgId; });
     if (!m || m.deleted) return;
     if (String(m.from) !== String(u.id)) return;
+    if (Date.now() - m.t > 7 * 60 * 1000) { H.toast('Messages can only be edited within 7 minutes of sending'); return; }
     H._chat._editingMsgId   = msgId;
     H._chat._editingOrigText = msgText(m);
     const old = document.getElementById('chatEditBar'); if (old) old.remove();
@@ -2124,6 +2129,7 @@
     if (!c) return;
     const m = (c.messages || []).find(function (x) { return x.id === msgId; });
     if (!m || String(m.from) !== String(u.id)) return;
+    if (Date.now() - m.t > 7 * 60 * 1000) { H.toast('Edit window has expired'); return; }
     m.text = newText; m.edited = true;
     H.saveState();
     // Update bubble in DOM without re-render
@@ -2137,7 +2143,11 @@
       }
     }
     try {
-      if (window.supabase) await window.supabase.from('messages').update({ text: newText, edited: true }).eq('id', msgId);
+      if (window.supabase) {
+        const editCutoff = new Date(Date.now() - 7 * 60 * 1000).toISOString();
+        await window.supabase.from('messages').update({ text: newText, edited: true })
+          .eq('id', msgId).gte('created_at', editCutoff);
+      }
     } catch (e) { console.warn('edit msg sync:', e); }
   };
 
@@ -2174,6 +2184,25 @@
         } catch (e) { console.warn('delete msg sync:', e); }
       }
     });
+  };
+
+  H._chat.reportMsg = function(msgId) {
+    const c = conversations().find(function(x){ return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function(x){ return x.id === msgId; });
+    if (!m) return;
+    const u = H.currentUser(); if (!u) return;
+    if (!Array.isArray(H.state.reports)) H.state.reports = [];
+    const rep = { id: H.uid(), reporterId: u.id, targetType: 'message', targetId: msgId,
+      reason: 'Reported message in chat', t: Date.now(), status: 'open' };
+    H.state.reports.push(rep);
+    H.saveState();
+    H.toast('Message reported — our team will review within 24 hours');
+    if (window.supabase && typeof window.supabase.from === 'function') {
+      window.supabase.from('reports').insert({ id: rep.id, reporter_id: u.id,
+        target_type: 'message', target_id: msgId, reason: rep.reason,
+        created_at: new Date(rep.t).toISOString(), status: 'open' }).catch(function(){});
+    }
   };
 
   H._chat.toggleReaction = async function(msgId, emoji) {

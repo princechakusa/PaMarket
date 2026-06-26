@@ -1853,20 +1853,28 @@ window.H = {
           if(!lm) return;
           if(msg.deleted){lm.text='';lm.deleted=true;}
           else if(msg.edited){lm.text=msg.text||'';lm.edited=true;}
+          if(msg.reactions&&typeof msg.reactions==='object') lm.reactions=msg.reactions;
           H.saveState();
           if(H.currentPageName==='Chat'&&H.currentPageParams&&H.currentPageParams.id===msg.conversation_id){
             var row=document.querySelector('[data-msg-id="'+msg.id+'"]');
             if(row){
               var bubble=row.querySelector('.chat-bubble');
-              if(bubble){
-                if(msg.deleted){
-                  bubble.innerHTML='<span style="font-style:italic;opacity:.5;font-size:13px">This message was deleted</span>';
-                } else {
-                  var meta=bubble.querySelector('.chat-bubble-meta');
-                  var mh=meta?meta.outerHTML:'';
-                  var et=(msg.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                  bubble.innerHTML=et+'<span style="font-size:10px;opacity:.55"> · edited</span>'+mh;
-                }
+              if(bubble&&msg.deleted){
+                bubble.innerHTML='<span style="font-style:italic;opacity:.5;font-size:13px">This message was deleted</span>';
+              } else if(bubble&&msg.edited){
+                var meta=bubble.querySelector('.chat-bubble-meta');
+                var mh=meta?meta.outerHTML:'';
+                var displayText=typeof H._msgText==='function'?H._msgText(lm):(msg.text||'');
+                var et=displayText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                bubble.innerHTML=et+'<span style="font-size:10px;opacity:.55"> · edited</span>'+mh;
+              }
+              if(!msg.deleted){
+                var u2=H.currentUser();
+                var bw=row.querySelector('.msg-bwrap');
+                var exr=row.querySelector('.msg-reactions');
+                var rh=typeof H._reactionsHtml==='function'?H._reactionsHtml(lm,u2&&u2.id):'';
+                if(exr){if(rh) exr.outerHTML=rh; else exr.remove();}
+                else if(bw&&rh) bw.insertAdjacentHTML('beforeend',rh);
               }
             }
           }
@@ -2647,25 +2655,19 @@ window.H = {
     if(!bg||!box) return;
     box.classList.add('login-modal');
     box.innerHTML=`
-      <button class="login-modal-close" onclick="H.closeLoginModal()" aria-label="Close">&times;</button>
-      <div class="login-modal-brand">
-        <div>Pa<em>Market</em></div>
+      <div class="lm-header">
+        <button class="lm-back" id="lmBackBtn" onclick="H.closeLoginModal()" aria-label="Go back">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="lm-logo">Pa<em>Market</em></div>
+        <button class="lm-close" onclick="H.closeLoginModal()" aria-label="Close">&times;</button>
       </div>
-      <div class="login-modal-illustration">
-        <svg viewBox="0 0 120 90" fill="none" aria-hidden="true">
-          <rect x="22" y="36" width="52" height="40" rx="8" fill="#EEF2FF" stroke="#1A3A8F" stroke-width="4.5"/>
-          <path d="M35 36V28a13 13 0 0 1 26 0v8" stroke="#1A3A8F" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-          <circle cx="87" cy="27" r="16" fill="#F5A623"/>
-          <path d="M87 19v16M79 27h16" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div class="auth-card" id="authCard"></div>
-      <div class="login-modal-foot">
+      <div class="auth-card lm-body" id="authCard"></div>
+      <div class="lm-terms">
         By continuing you agree to our
-        <span onclick="H.authShowDoc('terms')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Terms &amp; Conditions</span>,
-        <span onclick="H.authShowDoc('privacy')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Privacy Policy</span>
-        and
-        <span onclick="H.authShowDoc('guidelines')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Community Guidelines</span>
+        <span onclick="H.authShowDoc('terms')">Terms &amp; Conditions</span>,
+        <span onclick="H.authShowDoc('privacy')">Privacy Policy</span>
+        and <span onclick="H.authShowDoc('guidelines')">Community Guidelines</span>
       </div>`;
     bg.classList.add('open');
     bg.scrollTop = 0;
