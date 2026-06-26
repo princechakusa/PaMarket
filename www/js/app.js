@@ -1887,7 +1887,7 @@ window.H = {
             if (!Array.isArray(conv.messages)) conv.messages = [];
             const ex=conv.messages.find(m=>m.id===msg.id);
             if(!ex){
-              const localMsg = {id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,image:msg.image||null,t:new Date(msg.created_at).getTime(),read:false};
+              const localMsg = {id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,image:msg.image||null,t:new Date(msg.created_at).getTime(),read:false,edited:!!msg.edited,deleted:!!msg.deleted,reactions:msg.reactions||{}};
               // Keep membership accurate so the chat resolves the correct "other"
               // user: a real incoming sender that isn't us must be a member.
               if (!Array.isArray(conv.members)) conv.members = [];
@@ -2345,7 +2345,7 @@ window.H = {
         await Promise.all(toSync.map(async (local) => {
           if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
           const { data: msgs, error: msgErr } = await sb.from('messages')
-            .select('id, sender_id, sender_name, text, image, read, created_at')
+            .select('id, sender_id, sender_name, text, image, read, created_at, edited, deleted, reactions')
             .eq('conversation_id', local.id)
             .order('created_at', { ascending: false })
             .limit(20);
@@ -2356,14 +2356,18 @@ window.H = {
             const found = existing.get(m.id);
             const read = found && found.read ? true : !!m.read;
             if (!found) {
-              local.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, image: m.image||null, t, read });
+              local.messages.push({ id: m.id, from: m.sender_id, senderName: m.sender_name||'', text: m.text, image: m.image||null, t, read, edited: !!m.edited, deleted: !!m.deleted, reactions: m.reactions||{} });
               changed = true;
-            } else if (found.read !== read || found.from !== m.sender_id || found.senderName !== (m.sender_name||'') || (m.image && !found.image)) {
-              found.from = m.sender_id;
-              found.senderName = m.sender_name || found.senderName || '';
-              if (m.image && !found.image) found.image = m.image;
-              found.read = read;
-              changed = true;
+            } else {
+              let fc = false;
+              if (found.read !== read) { found.read = read; fc = true; }
+              if (found.from !== m.sender_id) { found.from = m.sender_id; fc = true; }
+              if ((m.sender_name||'') && found.senderName !== m.sender_name) { found.senderName = m.sender_name||''; fc = true; }
+              if (m.image && !found.image) { found.image = m.image; fc = true; }
+              if (m.edited && !found.edited) { found.edited = true; found.text = m.text||found.text; fc = true; }
+              if (m.deleted && !found.deleted) { found.deleted = true; found.text = ''; fc = true; }
+              if (m.reactions && typeof m.reactions === 'object') { found.reactions = m.reactions; fc = true; }
+              if (fc) changed = true;
             }
           });
           local.messages.sort((a,b) => (a.t||0) - (b.t||0));

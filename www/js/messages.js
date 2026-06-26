@@ -2066,12 +2066,18 @@
       + '<button class="sheet-item" onclick="H.closeSheet();H._chat.startReply(\'' + mid + '\')">'
       + _ico('<polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>')
       + '<span class="sheet-label">Reply</span></button>'
-      + (isMine && !m.deleted && (Date.now() - m.t < 7 * 60 * 1000) ? '<button class="sheet-item" onclick="H.closeSheet();setTimeout(function(){H._chat.startEdit(\'' + mid + '\')},80)">'
-      + _ico('<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>')
-      + '<span class="sheet-label">Edit</span></button>' : '')
       + (!m.image && !m.deleted ? '<button class="sheet-item" onclick="H.closeSheet();H._chat.copyMsg(\'' + mid + '\')">'
       + _ico('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>')
       + '<span class="sheet-label">Copy</span></button>' : '')
+      + (isMine && !m.deleted && (Date.now() - m.t < 7 * 60 * 1000) ? '<button class="sheet-item" onclick="H.closeSheet();setTimeout(function(){H._chat.startEdit(\'' + mid + '\')},80)">'
+      + _ico('<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>')
+      + '<span class="sheet-label">Edit</span></button>' : '')
+      + (!m.deleted ? '<button class="sheet-item" onclick="H.closeSheet();setTimeout(function(){H._chat.forwardMsg(\'' + mid + '\')},80)">'
+      + _ico('<polyline points="17 11 21 7 17 3"/><line x1="21" y1="7" x2="9" y2="7"/><path d="M3 17v-3a4 4 0 0 1 4-4h14"/>')
+      + '<span class="sheet-label">Forward</span></button>' : '')
+      + (!m.image && !m.deleted ? '<button class="sheet-item" onclick="H.closeSheet();H._chat.shareMsg(\'' + mid + '\')">'
+      + _ico('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>')
+      + '<span class="sheet-label">Share</span></button>' : '')
       + (isMine && !m.deleted ? '<button class="sheet-item danger" onclick="H.closeSheet();H._chat.deleteMsg(\'' + mid + '\')">'
       + _ico('<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>')
       + '<span class="sheet-label">Delete</span></button>' : '')
@@ -2163,27 +2169,119 @@
   };
 
   H._chat.deleteMsg = function (msgId) {
+    const mid = escHtml(msgId);
     H.modal({
       title: 'Delete Message',
-      body: 'Delete this message for everyone?',
-      confirmText: 'Delete', danger: true,
-      onConfirm: async function () {
-        const c = conversations().find(function (x) { return x.id === H._activeChat; });
-        if (!c) return;
-        const m = (c.messages || []).find(function (x) { return x.id === msgId; });
-        if (!m) return;
-        m.text = ''; m.deleted = true;
-        H.saveState();
-        const row = document.querySelector('[data-msg-id="' + msgId + '"]');
-        if (row) {
-          const bubble = row.querySelector('.chat-bubble');
-          if (bubble) bubble.innerHTML = '<span style="font-style:italic;opacity:.5;font-size:13px">This message was deleted</span>';
-        }
-        try {
-          if (window.supabase) await window.supabase.from('messages').update({ text: '', deleted: true }).eq('id', msgId);
-        } catch (e) { console.warn('delete msg sync:', e); }
-      }
+      body: '<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">'
+        + '<button onclick="H.closeModal();H._chat._deleteForMe(\'' + mid + '\')" style="width:100%;padding:13px;background:var(--bg);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:600;color:var(--text-primary);cursor:pointer;font-family:inherit;text-align:center">Delete for Me</button>'
+        + '<button onclick="H.closeModal();setTimeout(function(){H._chat._deleteForEveryone(\'' + mid + '\')},80)" style="width:100%;padding:13px;background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;font-size:15px;font-weight:600;color:#DC2626;cursor:pointer;font-family:inherit;text-align:center">Delete for Everyone</button>'
+        + '</div>',
+      confirmText: null,
+      cancelText: 'Cancel',
     });
+  };
+  H._chat._deleteForMe = function (msgId) {
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function (x) { return x.id === msgId; });
+    if (!m) return;
+    m.text = ''; m.deleted = true;
+    H.saveState();
+    const row = document.querySelector('[data-msg-id="' + msgId + '"]');
+    if (row) {
+      const bubble = row.querySelector('.chat-bubble');
+      if (bubble) bubble.innerHTML = '<span style="font-style:italic;opacity:.5;font-size:13px">This message was deleted</span>';
+    }
+  };
+  H._chat._deleteForEveryone = async function (msgId) {
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function (x) { return x.id === msgId; });
+    if (!m) return;
+    m.text = ''; m.deleted = true;
+    H.saveState();
+    const row = document.querySelector('[data-msg-id="' + msgId + '"]');
+    if (row) {
+      const bubble = row.querySelector('.chat-bubble');
+      if (bubble) bubble.innerHTML = '<span style="font-style:italic;opacity:.5;font-size:13px">This message was deleted</span>';
+    }
+    try {
+      if (window.supabase) await window.supabase.from('messages').update({ text: '', deleted: true }).eq('id', msgId);
+    } catch (e) { console.warn('delete msg sync:', e); }
+  };
+  H._chat.forwardMsg = function (msgId) {
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function (x) { return x.id === msgId; });
+    if (!m || m.deleted) return;
+    const text = msgText(m);
+    if (!text) return;
+    const u = H.currentUser(); if (!u) return;
+    const convList = (H.state.conversations || []).filter(function (cv) {
+      return cv.id !== c.id && Array.isArray(cv.members) && cv.members.includes(u.id) && Array.isArray(cv.messages) && cv.messages.length;
+    });
+    if (!convList.length) { H.toast('No other conversations to forward to'); return; }
+    H._chat._pendingForwardText = text;
+    const rows = convList.slice(0, 8).map(function (cv) {
+      const otherId = (cv.members || []).find(function (x) { return x !== u.id; });
+      const other = otherId ? (H.state.users || []).find(function (x) { return x.id === otherId; }) : null;
+      const name = (other && other.name) || cv.otherName || 'Unknown';
+      const ini = escHtml(H.initials ? H.initials(name) : name.slice(0, 2).toUpperCase());
+      const color = H.avatarColorFor ? H.avatarColorFor(otherId || name) : '#1A3A8F';
+      return '<button onclick="H.closeModal();H._chat._doForward(\'' + escHtml(cv.id) + '\')" style="width:100%;display:flex;align-items:center;gap:12px;padding:10px 16px;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:inherit;text-align:left">'
+        + '<div style="width:40px;height:40px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">' + ini + '</div>'
+        + '<div style="flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(name) + '</div>'
+        + '</button>';
+    }).join('');
+    H.modal({
+      title: 'Forward to',
+      body: '<div style="max-height:50vh;overflow-y:auto;margin:0 -16px">' + rows + '</div>',
+      confirmText: null,
+      cancelText: 'Cancel'
+    });
+  };
+  H._chat._doForward = async function (convId) {
+    const text = H._chat._pendingForwardText;
+    H._chat._pendingForwardText = null;
+    if (!text || !convId) return;
+    const conv = (H.state.conversations || []).find(function (x) { return x.id === convId; });
+    if (!conv) return;
+    const u = H.currentUser(); if (!u) return;
+    const msgId = H.uid();
+    const msgT = Date.now();
+    const msgObj = { id: msgId, from: u.id, senderName: u.name || '', text: text, t: msgT, read: false };
+    if (!Array.isArray(conv.messages)) conv.messages = [];
+    conv.messages.push(msgObj);
+    H.saveState();
+    H.toast('Forwarded');
+    try {
+      if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(conv).catch(function () {});
+      if (window.supabase && typeof window.supabase.from === 'function') {
+        var r = await window.supabase.from('messages').insert({
+          id: msgId, conversation_id: convId,
+          sender_id: u.id, sender_name: u.name || '',
+          text: text, created_at: new Date(msgT).toISOString(), read: false
+        });
+        if (r && r.error) throw new Error(r.error.message);
+        const otherId = (conv.members || []).find(function (m) { return m !== u.id; });
+        if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Message', (u.name || 'Someone') + ': ' + text.slice(0, 80), 'message', null, 'Chat?id=' + convId);
+      }
+    } catch (e) { console.warn('forward sync:', e); }
+  };
+  H._chat.shareMsg = function (msgId) {
+    const c = conversations().find(function (x) { return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function (x) { return x.id === msgId; });
+    if (!m || m.deleted) return;
+    const text = msgText(m);
+    if (!text) return;
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ text: text, title: 'PaMarket' }).catch(function () {});
+    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function () { H.toast('Copied to clipboard'); }).catch(function () { H.toast('Could not copy'); });
+    } else {
+      H.toast('Sharing not supported on this device');
+    }
   };
 
   H._chat.reportMsg = function(msgId) {
@@ -2392,7 +2490,7 @@
     });
     H.saveState();
     H.updateMsgBadge && H.updateMsgBadge();
-    H.openInner('Messages');
+    H.renderPage('Messages');
   };
 
 })(window.H);
