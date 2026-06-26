@@ -55,9 +55,7 @@
       ? `<div class="settings-user-badge"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verified</div>` : '';
 
     return `<div class="page active">
-      <div class="settings-topbar">
-        <div class="settings-topbar-title">Settings</div>
-      </div>
+      ${_st('Settings')}
 
       <div style="height:8px"></div>
       ${u ? `<div class="settings-user-card" onclick="H.openInner('Profile')">
