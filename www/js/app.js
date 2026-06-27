@@ -201,6 +201,10 @@ window.H = {
         businesses:      Array.isArray(loaded.businesses)      ? loaded.businesses      : base.businesses,
       });
       merged._v = this.STATE_VERSION;
+      // Purge any legacy plain-text passwords that may exist in old snapshots
+      if (Array.isArray(merged.users)) {
+        merged.users.forEach(function(u) { delete u._localPassword; });
+      }
       return merged;
     } catch(e) { return JSON.parse(JSON.stringify(this.defaultState)); }
   },
@@ -234,6 +238,7 @@ window.H = {
       const selfProfile = uid && (this.state.users || []).find(u => u.id === uid);
       if (selfProfile) {
         const su = Object.assign({}, selfProfile);
+        // Never persist plain-text passwords — purge legacy field unconditionally
         delete su._localPassword;
         snap.users = [su];
       } else {
@@ -320,6 +325,15 @@ window.H = {
     return user;
   },
   isAdmin() { const u=this.currentUser(); return !!(u&&u.role==='admin'); },
+  // Server-authoritative admin check — call this before any sensitive admin operation
+  // to prevent client-side localStorage role manipulation from taking effect.
+  verifyAdmin: async function() {
+    try {
+      if (!window.supabase || typeof window.supabase.rpc !== 'function') return false;
+      const { data, error } = await window.supabase.rpc('is_admin');
+      return !error && data === true;
+    } catch(e) { return false; }
+  },
   escHtml(s) {
     return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   },
@@ -1865,7 +1879,7 @@ window.H = {
                 var meta=bubble.querySelector('.chat-bubble-meta');
                 var mh=meta?meta.outerHTML:'';
                 var displayText=typeof H._msgText==='function'?H._msgText(lm):(msg.text||'');
-                var et=displayText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                var et=H.escHtml(displayText);
                 bubble.innerHTML=et+'<span style="font-size:10px;opacity:.55"> · edited</span>'+mh;
               }
               if(!msg.deleted){
@@ -3083,7 +3097,9 @@ H.openAppRating = function() {
 
       PN.addListener('registration', function(token) {
         if (!token || !token.value) return;
-        c.from('profiles').update({ push_token: token.value }).eq('id', u.id)
+        // Write token to the isolated push_tokens table (not profiles) so it
+        // is not exposed via the public profiles read policy.
+        c.from('push_tokens').upsert({ user_id: u.id, token: token.value, updated_at: new Date().toISOString() })
           .then(function(r) { if (r && r.error) console.warn('push_token save:', r.error.message); });
       });
 

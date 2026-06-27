@@ -117,17 +117,26 @@
     return          { label:'Strong', color:'#22c55e', width:'100%' };
   }
 
+  var STR_COLORS = ['#D92D20','#F59E0B','#F5A623','#12B76A'];
+  var STR_LABELS = ['Weak','Fair','Good','Strong'];
+
   function updatePassStrength() {
     var p   = document.getElementById('newPass');
-    var bar = document.getElementById('passStrengthBar');
     var lbl = document.getElementById('passStrengthLabel');
-    if (!p || !bar || !lbl) return;
-    if (!p.value) { bar.style.width='0'; lbl.textContent=''; return; }
+    if (!p) return;
+    var segs = [document.getElementById('str0'),document.getElementById('str1'),document.getElementById('str2'),document.getElementById('str3')];
+    if (!p.value) {
+      segs.forEach(function(s){ if(s) s.style.background=''; });
+      if (lbl) { lbl.textContent=''; lbl.style.color=''; }
+      return;
+    }
     var s = passwordStrength(p.value);
-    bar.style.width      = s.width;
-    bar.style.background = s.color;
-    lbl.textContent      = s.label;
-    lbl.style.color      = s.color;
+    var lvl = s.label==='Weak'?0:s.label==='Fair'?1:s.label==='Good'?2:3;
+    segs.forEach(function(seg,i){ if(seg) seg.style.background = i<=lvl ? STR_COLORS[lvl] : ''; });
+    if (lbl) { lbl.textContent=STR_LABELS[lvl]; lbl.style.color=STR_COLORS[lvl]; }
+    // keep legacy passStrengthBar working if it exists
+    var bar = document.getElementById('passStrengthBar');
+    if (bar) { bar.style.width=s.width; bar.style.background=s.color; }
   }
   H._updatePassStrength = updatePassStrength;
 
@@ -135,31 +144,60 @@
     H.logoTap && H.logoTap();
   };
 
+  var GSVG = '<svg viewBox="0 0 24 24" width="20" height="20" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>';
+  var EYESVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+  function setLmBack(fn) {
+    var btn = document.getElementById('lmBackBtn');
+    if (!btn) return;
+    btn.onclick = fn || function(){ H.closeLoginModal(); };
+  }
+
   H.authStepEmail = function() {
     var card = document.getElementById('authCard');
     if (!card) return;
-    var ill = document.querySelector('.login-modal-illustration');
-    if (ill) ill.style.display = '';
+    setLmBack(null);
     card.innerHTML = ''
-      + '<button class="social-auth-btn google" onclick="H.authGoogle()"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Continue with Google</button>'
-      + '<div class="auth-divider"><span>or</span></div>'
-      + '<button class="social-auth-btn email" onclick="H.authShowEmailForm()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Login with email</button>'
-      + '<div style="text-align:center;margin-top:16px;font-size:13px;color:var(--text-sub)">Don\'t have an account? <span onclick="H.authShowRegister()" style="color:#1A3A8F;font-weight:700;cursor:pointer">Create one</span></div>';
+      + '<div class="lm-heading">Welcome back</div>'
+      + '<div class="lm-sub">Sign in to continue buying and selling</div>'
+      + '<button class="auth-social-btn" onclick="H.authGoogle()">' + GSVG + 'Continue with Google</button>'
+      + '<div class="auth-divider"><span>or continue with email</span></div>'
+      + '<div class="lm-fg"><label class="lm-label">Email address</label><input class="lm-input" id="emailIn" type="email" placeholder="you@example.com" autocomplete="email" inputmode="email"></div>'
+      + '<div class="lm-fg"><div class="lm-label-row"><label class="lm-label" style="margin:0">Password</label><span class="lm-forgot" onclick="H.authForgotPassword()">Forgot?</span></div>'
+      + '<div class="lm-input-wrap"><input class="lm-input" id="passIn" type="password" placeholder="Your password" onkeydown="if(event.key===\'Enter\')H.authSignIn()" autocomplete="current-password"><button type="button" class="lm-eye" onclick="H._toggleLmPw(\'passIn\',this)">' + EYESVG + '</button></div></div>'
+      + '<div id="authErrBanner" style="display:none" class="auth-error-banner"><svg viewBox="0 0 20 20" width="18" height="18" fill="#D92D20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg><p id="authErrText"></p></div>'
+      + '<div id="authWarnBanner" style="display:none" class="auth-warn-banner"></div>'
+      + '<button class="auth-btn" onclick="H.authSignIn()">Sign In</button>'
+      + '<div class="lm-foot-link">Don\'t have an account? <span onclick="H.authShowRegister()">Create one</span></div>';
+    setTimeout(function(){ var e=document.getElementById('emailIn'); if(e) e.focus(); }, 80);
   };
 
-  H.authShowEmailForm = function() {
-    var card = document.getElementById('authCard');
-    if (!card) return;
-    card.innerHTML = ''
-      + '<div style="text-align:center;margin-bottom:16px"><div style="font-size:20px;font-weight:700;color:var(--text)">Sign In</div></div>'
-      + '<div class="fg"><div class="fl">Email</div><input class="fi" id="emailIn" type="email" placeholder="you@example.com" autocomplete="email"></div>'
-      + '<div class="fg"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span class="fl" style="margin-bottom:0">Password</span><span onclick="H.authForgotPassword()" style="font-size:12px;color:#F5A623;cursor:pointer;font-weight:500">Forgot password?</span></div><div style="position:relative"><input class="fi" id="passIn" type="password" placeholder="Password" onkeydown="if(event.key===\'Enter\')H.authSignIn()" autocomplete="current-password" style="padding-right:44px"><button type="button" onclick="H._togglePw(\'passIn\')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-hint);padding:4px;line-height:1"><svg id="passIn_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>'
-      + '<button class="auth-btn" onclick="H.authSignIn()">Sign In</button>'
-      + '<button class="auth-btn secondary" onclick="H.authStepEmail()">&larr; Back</button>';
-    setTimeout(function(){ var e=document.getElementById('emailIn'); if(e) e.focus(); }, 100);
-  };
+  H.authShowEmailForm = function() { H.authStepEmail(); };
 
   H.authShowRegister = function() { H.authStepSignUp(); };
+
+  H._toggleLmPw = function(id, btn) {
+    var inp = document.getElementById(id);
+    if (!inp) return;
+    var isText = inp.type === 'text';
+    inp.type = isText ? 'password' : 'text';
+    if (btn) btn.style.color = isText ? '' : '#1A3A8F';
+  };
+
+  H._showAuthError = function(msg) {
+    var b = document.getElementById('authErrBanner');
+    var t = document.getElementById('authErrText');
+    if (b) b.style.display = 'flex';
+    if (t) t.textContent = msg;
+  };
+  H._hideAuthError = function() {
+    var b = document.getElementById('authErrBanner');
+    if (b) b.style.display = 'none';
+  };
+  H._showAuthWarn = function(msg) {
+    var b = document.getElementById('authWarnBanner');
+    if (b) { b.style.display = ''; b.textContent = msg; }
+  };
 
   H.authShow2FA = function(userId) {
     H._pendingTwoFactorUserId = userId;
@@ -169,11 +207,14 @@
       card = document.getElementById('authCard');
     }
     if (!card) return;
+    setLmBack(H.authCancel2FA);
     card.innerHTML = ''
-      + '<div style="text-align:center;margin-bottom:16px"><div style="font-size:20px;font-weight:800;color:var(--text-primary)">Enter authentication code</div><div style="font-size:13px;color:var(--text-sub);margin-top:6px;line-height:1.5">Open your authenticator app and enter the 6-digit code for PaMarket.</div></div>'
-      + '<div class="fg"><div class="fl">6-digit code</div><input class="fi" id="twoFactorLoginCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456"></div>'
-      + '<button class="auth-btn" onclick="H.authVerify2FA()">Verify & Continue</button>'
-      + '<button class="auth-btn secondary" onclick="H.authCancel2FA()">Cancel</button>';
+      + '<div class="lm-icon" style="background:#EEF2FF"><svg viewBox="0 0 32 32" width="28" height="28" fill="none"><rect x="6" y="13" width="20" height="16" rx="3" stroke="#1A3A8F" stroke-width="1.8"/><path d="M10 13V9a6 6 0 0112 0v4" stroke="#1A3A8F" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="21" r="2" fill="#1A3A8F"/></svg></div>'
+      + '<div class="lm-heading" style="text-align:center;font-size:22px">Two-factor auth</div>'
+      + '<div class="lm-sub" style="text-align:center">Open your authenticator app and enter the 6-digit code for PaMarket.</div>'
+      + '<div class="lm-fg"><label class="lm-label">Authentication code</label><input class="lm-input" id="twoFactorLoginCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="text-align:center;letter-spacing:6px;font-size:20px;font-weight:800"></div>'
+      + '<button class="auth-btn" onclick="H.authVerify2FA()">Verify &amp; Continue</button>'
+      + '<button class="auth-btn secondary" style="margin-top:8px" onclick="H.authCancel2FA()">Cancel</button>';
     setTimeout(function(){ var e=document.getElementById('twoFactorLoginCode'); if(e) e.focus(); }, 100);
   };
 
@@ -187,10 +228,17 @@
 
   H.authVerify2FA = async function() {
     var userId = H._pendingTwoFactorUserId;
-    var u = (H.state.users || []).find(function(x){ return x.id === userId; });
     var code = ((document.getElementById('twoFactorLoginCode') || {}).value || '').trim();
-    if (!u || !u.twoFactorEnabled || !u.twoFactorSecret) { H.toast('2FA setup not found'); return; }
-    if (!H._twoFactorVerify || !await H._twoFactorVerify(u.twoFactorSecret, code)) {
+    if (code.length !== 6 || !/^\d{6}$/.test(code)) { H.toast('Enter the 6-digit code from your authenticator'); return; }
+    var c = sb();
+    if (!c) { H.toast('Connection error — try again'); return; }
+    // Always fetch 2FA status fresh from Supabase — never trust localStorage state
+    var pr = await c.from('profiles').select('two_factor_enabled,two_factor_secret').eq('id', userId).single();
+    if (pr.error || !pr.data || !pr.data.two_factor_enabled || !pr.data.two_factor_secret) {
+      H.toast('2FA setup not found');
+      return;
+    }
+    if (!H._twoFactorVerify || !await H._twoFactorVerify(pr.data.two_factor_secret, code)) {
       H.toast('Invalid authentication code');
       return;
     }
@@ -204,40 +252,89 @@
   H.authStepSignUp = function() {
     var card = document.getElementById('authCard');
     if (!card) return;
-    var ill = document.querySelector('.login-modal-illustration');
-    if (ill) ill.style.display = 'none';
+    setLmBack(H.authStepEmail);
     card.innerHTML = ''
-      + '<div class="fg"><div class="fl">Full Name</div><input class="fi" id="newName" placeholder="e.g. Tendai Moyo" autocomplete="name"></div>'
-      + '<div class="fg"><div class="fl">Email</div><input class="fi" id="newEmail" type="email" placeholder="you@example.com" autocomplete="email"></div>'
-      + '<div class="fg"><div class="fl">Phone (optional)</div><input class="fi" id="newPhone" type="tel" placeholder="+263 77 123 4567" autocomplete="tel"></div>'
-      + '<div class="fg"><div class="fl">Password</div><div style="position:relative"><input class="fi" id="newPass" type="password" placeholder="8+ chars, uppercase &amp; number" oninput="H._updatePassStrength()" autocomplete="new-password" style="padding-right:44px"><button type="button" onclick="H._togglePw(\'newPass\')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-hint);padding:4px;line-height:1"><svg id="newPass_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div><div style="height:4px;background:var(--border);border-radius:2px;margin-top:6px"><div id="passStrengthBar" style="height:100%;border-radius:2px;transition:all .3s;width:0"></div></div><div id="passStrengthLabel" style="font-size:11px;margin-top:3px;text-align:right;height:14px;color:var(--text-sub)"></div></div>'
-      + '<div class="fg"><div class="fl">Confirm Password</div><div style="position:relative"><input class="fi" id="newPass2" type="password" placeholder="re-enter password" autocomplete="new-password" style="padding-right:44px"><button type="button" onclick="H._togglePw(\'newPass2\')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-hint);padding:4px;line-height:1"><svg id="newPass2_eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>'
-      + '<label style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#667085;margin-bottom:10px;cursor:pointer"><input id="ageConsent" type="checkbox" style="margin-top:2px"><span>I am 18+ and agree to <span onclick="event.stopPropagation();H.authShowDoc(\'terms\')" style="color:#1A3A8F;text-decoration:underline;cursor:pointer">Terms &amp; Conditions</span> and <span onclick="event.stopPropagation();H.authShowDoc(\'privacy\')" style="color:#1A3A8F;text-decoration:underline;cursor:pointer">Privacy Policy</span></span></label>'
+      + '<div class="lm-heading">Create account</div>'
+      + '<div class="lm-sub">Join Zimbabwe\'s largest marketplace</div>'
+      + '<button class="auth-social-btn" onclick="H.authGoogle()">' + GSVG + 'Sign up with Google</button>'
+      + '<div class="auth-divider"><span>or use email</span></div>'
+      + '<div class="lm-fg"><label class="lm-label">Full name</label><input class="lm-input" id="newName" placeholder="e.g. Tendai Moyo" autocomplete="name"></div>'
+      + '<div class="lm-fg"><label class="lm-label">Email address</label><input class="lm-input" id="newEmail" type="email" placeholder="you@example.com" autocomplete="email"></div>'
+      + '<div class="lm-fg"><label class="lm-label">Phone <span style="font-weight:400;color:var(--text-hint)">(optional)</span></label><input class="lm-input" id="newPhone" type="tel" placeholder="+263 77 123 4567" autocomplete="tel"></div>'
+      + '<div class="lm-fg"><label class="lm-label">Password</label>'
+      + '<div class="lm-input-wrap"><input class="lm-input" id="newPass" type="password" placeholder="8+ chars, uppercase &amp; number" oninput="H._updatePassStrength()" autocomplete="new-password"><button type="button" class="lm-eye" onclick="H._toggleLmPw(\'newPass\',this)">' + EYESVG + '</button></div>'
+      + '<div class="lm-strength"><div class="lm-strength-seg" id="str0"></div><div class="lm-strength-seg" id="str1"></div><div class="lm-strength-seg" id="str2"></div><div class="lm-strength-seg" id="str3"></div></div>'
+      + '<div class="lm-strength-lbl" id="passStrengthLabel"></div></div>'
+      + '<div class="lm-fg"><label class="lm-label">Confirm password</label><div class="lm-input-wrap"><input class="lm-input" id="newPass2" type="password" placeholder="Re-enter password" autocomplete="new-password"><button type="button" class="lm-eye" onclick="H._toggleLmPw(\'newPass2\',this)">' + EYESVG + '</button></div></div>'
+      + '<label style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--text-sub);margin-bottom:14px;cursor:pointer;line-height:1.5"><input id="ageConsent" type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:#1A3A8F"><span>I am 18+ and agree to <span onclick="event.stopPropagation();H.authShowDoc(\'terms\')" style="color:#1A3A8F;font-weight:600;cursor:pointer">Terms &amp; Conditions</span> and <span onclick="event.stopPropagation();H.authShowDoc(\'privacy\')" style="color:#1A3A8F;font-weight:600;cursor:pointer">Privacy Policy</span></span></label>'
       + '<button class="auth-btn" onclick="H.authSignUp()">Create Account</button>'
-      + '<button class="auth-btn secondary" onclick="H.authStepEmail()">&larr; Back to Sign In</button>';
-    setTimeout(function(){ var e=document.getElementById('newName'); if(e) e.focus(); }, 100);
+      + '<div class="lm-foot-link" style="margin-bottom:8px">Already have an account? <span onclick="H.authStepEmail()">Sign in</span></div>';
+    setTimeout(function(){ var e=document.getElementById('newName'); if(e) e.focus(); }, 80);
   };
 
   H.authShowOtp = function(email) {
     var card = document.getElementById('authCard');
     if (!card) return;
     H._otpEmail = email;
+    setLmBack(H.authStepEmail);
+    var masked = email ? email.replace(/^(.)(.*)(@.+)$/, function(_,a,b,c){ return a + b.replace(/./g,'*').slice(0,6) + c; }) : '';
     card.innerHTML = ''
-      + '<div style="text-align:center;margin-bottom:20px">'
-      + '<div style="margin-bottom:10px;color:#1A3A8F"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>'
-      + '<div style="font-size:20px;font-weight:700;color:var(--text)">Verify Your Email</div>'
-      + '<div style="font-size:13px;color:var(--sub);margin-top:8px;line-height:1.6">We sent a 6-digit code to<br><strong style="color:var(--text)">' + H.escHtml(email) + '</strong></div>'
+      + '<div class="lm-icon" style="margin-top:20px"><svg viewBox="0 0 36 36" width="32" height="32" fill="none"><rect x="4" y="2" width="28" height="32" rx="5" stroke="#1A3A8F" stroke-width="1.8"/><rect x="11" y="28" width="14" height="2" rx="1" fill="#1A3A8F" fill-opacity=".3"/><path d="M10 14h16M10 19h11" stroke="#1A3A8F" stroke-width="1.8" stroke-linecap="round"/></svg></div>'
+      + '<div class="lm-heading" style="text-align:center;font-size:22px;margin-top:16px">Verify your email</div>'
+      + '<div class="lm-sub" style="text-align:center">Enter the 6-digit code sent to<br><strong style="color:var(--text-primary)">' + H.escHtml(masked) + '</strong></div>'
+      + '<div class="otp-boxes">'
+      + [0,1,2,3,4,5].map(function(i){ return '<input class="otp-box-in" id="otp'+i+'" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="'+(i===0?'one-time-code':'off')+'" onclick="this.select()">'; }).join('')
       + '</div>'
-      + '<div class="fg"><div class="fl" style="text-align:center">Verification Code</div><input class="fi" id="otpIn" type="text" inputmode="numeric" maxlength="6" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" style="letter-spacing:10px;text-align:center;font-size:24px;font-weight:700" onkeydown="if(event.key===\'Enter\')H.authVerifyOtp()"></div>'
-      + '<button class="auth-btn" onclick="H.authVerifyOtp()">Verify &amp; Continue</button>'
-      + '<div style="text-align:center;margin-top:12px;font-size:13px;color:var(--sub)">Didn\'t get the code? <span onclick="H.authResendOtp()" style="color:#F5A623;font-weight:600;cursor:pointer">Resend</span></div>'
-      + '<div style="text-align:center;margin-top:6px;font-size:12px;color:var(--sub)">Check spam if not received within 2 minutes</div>'
-      + '<button class="auth-btn secondary" style="margin-top:16px" onclick="H.authStepEmail()">&larr; Back to Sign In</button>';
-    setTimeout(function(){ var e=document.getElementById('otpIn'); if(e) e.focus(); }, 100);
+      + '<div style="text-align:center;font-size:12px;color:var(--text-hint);margin-bottom:8px">Code submits automatically on last digit</div>'
+      + '<div style="text-align:center;margin-top:4px;font-size:13px;color:var(--text-sub)">Didn\'t get it? <span onclick="H.authResendOtp()" style="color:#1A3A8F;font-weight:700;cursor:pointer">Resend code</span></div>'
+      + '<div style="text-align:center;margin-top:4px;font-size:11px;color:var(--text-hint)">Check spam if not received within 2 minutes</div>'
+      + '<button class="auth-btn" id="otpSubmitBtn" onclick="H.authVerifyOtp()" style="margin-top:20px" disabled>Verify Email</button>';
+    setTimeout(function(){ H._initOtpBoxes(); }, 80);
+  };
+
+  H._initOtpBoxes = function() {
+    var inputs = [0,1,2,3,4,5].map(function(i){ return document.getElementById('otp'+i); }).filter(Boolean);
+    if (!inputs.length) return;
+    inputs[0] && inputs[0].focus();
+    inputs.forEach(function(inp, idx) {
+      inp.addEventListener('input', function(e) {
+        var v = inp.value.replace(/\D/g,'');
+        inp.value = v ? v[0] : '';
+        if (v) {
+          inp.classList.add('otp-filled');
+          if (idx < 5) inputs[idx+1].focus();
+        } else {
+          inp.classList.remove('otp-filled');
+        }
+        var full = inputs.map(function(x){ return x.value; }).join('');
+        var btn = document.getElementById('otpSubmitBtn');
+        if (btn) btn.disabled = full.length < 6;
+        if (full.length === 6) setTimeout(H.authVerifyOtp, 120);
+      });
+      inp.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && !inp.value && idx > 0) {
+          inputs[idx-1].focus(); inputs[idx-1].value=''; inputs[idx-1].classList.remove('otp-filled');
+        }
+        if (e.key === 'ArrowLeft' && idx > 0) inputs[idx-1].focus();
+        if (e.key === 'ArrowRight' && idx < 5) inputs[idx+1].focus();
+      });
+      inp.addEventListener('paste', function(e) {
+        e.preventDefault();
+        var pasted = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+        pasted.split('').forEach(function(ch,i){ if(inputs[idx+i]){ inputs[idx+i].value=ch; inputs[idx+i].classList.add('otp-filled'); } });
+        var next = Math.min(idx + pasted.length, 5);
+        inputs[next].focus();
+        var full = inputs.map(function(x){ return x.value; }).join('');
+        var btn = document.getElementById('otpSubmitBtn');
+        if (btn) btn.disabled = full.length < 6;
+        if (full.length === 6) setTimeout(H.authVerifyOtp, 120);
+      });
+    });
   };
 
   H.authVerifyOtp = async function() {
-    var otp = ((document.getElementById('otpIn')||{}).value||'').trim().replace(/\s/g,'');
+    var otp = [0,1,2,3,4,5].map(function(i){ var el=document.getElementById('otp'+i); return el?el.value:''; }).join('').trim();
+    if (!otp) { var old=((document.getElementById('otpIn')||{}).value||'').trim(); if(old) otp=old; }
     if (otp.length !== 6 || !/^\d{6}$/.test(otp)) { H.toast('Enter the 6-digit code from your email'); return; }
     var c = sb();
     if (!c) { H.toast('Connection error — try again'); return; }
@@ -273,12 +370,15 @@
   H.authForgotPassword = function() {
     var card = document.getElementById('authCard');
     if (!card) return;
+    setLmBack(H.authStepEmail);
     card.innerHTML = ''
-      + '<div style="text-align:center;margin-bottom:16px"><div style="font-size:20px;font-weight:700;color:var(--text)">Reset Password</div><div style="font-size:13px;color:var(--sub);margin-top:4px">Enter your email to receive a reset link</div></div>'
-      + '<div class="fg"><div class="fl">Email</div><input class="fi" id="resetEmail" type="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key===\'Enter\')H.authSendReset()"></div>'
+      + '<div class="lm-icon" style="background:#EEF2FF"><svg viewBox="0 0 36 36" width="32" height="32" fill="none"><circle cx="18" cy="18" r="13" stroke="#1A3A8F" stroke-width="1.8"/><path d="M12 16l5.5 5.5 9-9" stroke="#1A3A8F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
+      + '<div class="lm-heading" style="text-align:center;font-size:22px;margin-top:16px">Reset password</div>'
+      + '<div class="lm-sub" style="text-align:center">Enter your email and we\'ll send a reset link</div>'
+      + '<div class="lm-fg"><label class="lm-label">Email address</label><input class="lm-input" id="resetEmail" type="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key===\'Enter\')H.authSendReset()"></div>'
       + '<button class="auth-btn" onclick="H.authSendReset()">Send Reset Link</button>'
-      + '<button class="auth-btn secondary" onclick="H.authShowEmailForm()">&larr; Back to Sign In</button>';
-    setTimeout(function(){ var e=document.getElementById('resetEmail'); if(e) e.focus(); }, 100);
+      + '<div class="lm-foot-link">Remembered it? <span onclick="H.authStepEmail()">Sign in</span></div>';
+    setTimeout(function(){ var e=document.getElementById('resetEmail'); if(e) e.focus(); }, 80);
   };
 
   H.authSendReset = async function() {
@@ -306,22 +406,27 @@
     if (res.error) { H.toast(res.error.message); return; }
     var card = document.getElementById('authCard');
     if (!card) return;
+    setLmBack(H.authStepEmail);
     card.innerHTML = ''
-      + '<div style="text-align:center;padding:24px 0">'
-      + '<div style="margin-bottom:14px;color:#1A3A8F"><svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></div>'
-      + '<div style="font-size:18px;font-weight:700;color:var(--text)">Check Your Email</div>'
-      + '<div style="font-size:14px;color:var(--sub);margin-top:10px;line-height:1.6">A reset link was sent to<br><strong style="color:var(--text)">' + H.escHtml(email) + '</strong><br><br>Click the link in the email to set a new password. Check your spam folder if you don\'t see it.</div>'
+      + '<div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 0 8px">'
+      + '<div style="width:72px;height:72px;border-radius:50%;background:#DCFCE7;display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg viewBox="0 0 32 32" width="36" height="36" fill="none"><path d="M8 16l5.5 5.5 11-11" stroke="#12B76A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
+      + '<div style="font-size:22px;font-weight:800;color:var(--text-primary);letter-spacing:-.4px">Check your email</div>'
+      + '<div style="font-size:14px;color:var(--text-sub);margin-top:8px;line-height:1.6">Reset link sent to<br><strong style="color:var(--text-primary)">' + H.escHtml(email) + '</strong></div>'
+      + '<div style="font-size:12px;color:var(--text-hint);margin-top:8px">Check your spam folder if you don\'t see it</div>'
       + '</div>'
-      + '<button class="auth-btn secondary" onclick="H.authShowEmailForm()">&larr; Back to Sign In</button>';
+      + '<button class="auth-btn" style="margin-top:8px" onclick="H.authStepEmail()">Back to Sign In</button>';
   };
 
   H.authSignIn = async function() {
     if (authBusy) return;
     if (isLocked()) return;
-    var email    = document.getElementById('emailIn').value.trim();
-    var password = document.getElementById('passIn').value;
-    if (!validateEmail(email)) { H.toast('Enter a valid email address'); return; }
-    if (!password) { H.toast('Enter your password'); return; }
+    H._hideAuthError && H._hideAuthError();
+    var emailEl = document.getElementById('emailIn');
+    var passEl  = document.getElementById('passIn');
+    var email    = emailEl ? emailEl.value.trim() : '';
+    var password = passEl  ? passEl.value : '';
+    if (!validateEmail(email)) { H._showAuthError ? H._showAuthError('Enter a valid email address') : H.toast('Enter a valid email address'); return; }
+    if (!password) { H._showAuthError ? H._showAuthError('Enter your password') : H.toast('Enter your password'); return; }
     setAuthBusy(true);
     var c = sb();
     if (c) {
@@ -329,15 +434,18 @@
       var res = await c.auth.signInWithPassword({email:email, password:password, options: capTok ? {captchaToken: capTok} : {}});
       if (res.error) {
         var msg = res.error.message;
-        if (msg==='Invalid login credentials') msg = 'Wrong email or password';
+        if (msg==='Invalid login credentials') msg = 'Wrong email or password. Please try again.';
         if (msg.includes('Email not confirmed')) msg = 'Please verify your email first';
         recordFailure();
-        H.toast(msg); setAuthBusy(false); return;
+        if (H._showAuthError) H._showAuthError(msg); else H.toast(msg);
+        setAuthBusy(false); return;
       }
       H.state.currentUserId = res.data.user.id;
       await H.loadProfile(res.data.user.id);
+      // 2FA state is loaded from Supabase inside loadProfile (two_factor_enabled column)
       var su = H.currentUser();
       if (su && su.twoFactorEnabled && su.twoFactorSecret) {
+        // Hold the Supabase session but clear local currentUserId until 2FA is verified
         H._pendingTwoFactorUserId = res.data.user.id;
         H.state.currentUserId = null;
         H.saveState();
@@ -352,19 +460,10 @@
       H.boot();
       return;
     }
-    var user = (H.state.users||[]).find(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase() && u._localPassword===password; });
-    if (!user) { recordFailure(); H.toast('Wrong email or password'); setAuthBusy(false); return; }
-    recordSuccess();
-    if (user.twoFactorEnabled && user.twoFactorSecret) {
-      H._pendingTwoFactorUserId = user.id;
-      H.state.currentUserId = null;
-      H.saveState();
-      setAuthBusy(false);
-      H.authShow2FA(user.id);
-      return;
-    }
-    H.state.currentUserId = user.id;
-    H.saveState(); setAuthBusy(false); if (H.closeLoginModal) H.closeLoginModal(); H.boot();
+    // Supabase unavailable — never fall back to local credentials
+    if (H._showAuthError) H._showAuthError('Connection error — check your internet and try again.');
+    else H.toast('Connection error — check your internet and try again.');
+    setAuthBusy(false);
   };
 
   H.authSignUp = async function() {
@@ -426,27 +525,23 @@
       }
       return;
     }
-    var exists = (H.state.users||[]).some(function(u){ return (u.email||'').toLowerCase()===email.toLowerCase(); });
-    if (exists) { H.toast('Email already registered. Sign in instead.'); setAuthBusy(false); return; }
-    var uid2 = H.uid();
-    (H.state.users = H.state.users||[]).push({id:uid2,email:email,name:name,phone:phone||'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[],_localPassword:password});
-    H.state.currentUserId = uid2;
-    H.saveState(); setAuthBusy(false);
-    H.toast('Account created! Welcome to PaMarket');
-    if (H.closeLoginModal) H.closeLoginModal();
-    H.boot();
+    // Supabase unavailable — never create accounts locally
+    H.toast('Connection error — check your internet and try again.');
+    setAuthBusy(false);
   };
 
   H.authAdminPage = function() {
     var card = document.getElementById('authCard');
     if (!card) return;
+    setLmBack(H.authStepEmail);
     card.innerHTML = ''
-      + '<div style="text-align:center;margin-bottom:16px"><div style="font-size:20px;font-weight:700;color:var(--text)">Admin Portal</div><div style="font-size:13px;color:var(--sub)">Restricted access</div></div>'
-      + '<div class="fg"><div class="fl">Admin Email</div><input class="fi" id="admEmailPage" type="email" autocomplete="username"></div>'
-      + '<div class="fg"><div class="fl">Password</div><input class="fi" id="admPassPage" type="password" placeholder="Password" onkeydown="if(event.key===\'Enter\')H.authAdminSignInPage()" autocomplete="current-password"></div>'
-      + '<button class="auth-btn" onclick="H.authAdminSignInPage()">Admin Sign In</button>'
-      + '<button class="auth-btn secondary" onclick="H.authStepEmail()">&larr; Back</button>';
-    setTimeout(function(){ var p=document.getElementById('admEmailPage'); if(p) p.focus(); }, 100);
+      + '<div class="lm-icon" style="background:#FEE4E2"><svg viewBox="0 0 32 32" width="28" height="28" fill="none"><rect x="6" y="13" width="20" height="16" rx="3" stroke="#D92D20" stroke-width="1.8"/><path d="M10 13V9a6 6 0 0112 0v4" stroke="#D92D20" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="21" r="2" fill="#D92D20"/></svg></div>'
+      + '<div class="lm-heading" style="text-align:center;font-size:22px;margin-top:16px">Admin Portal</div>'
+      + '<div class="lm-sub" style="text-align:center">Restricted access — authorised personnel only</div>'
+      + '<div class="lm-fg"><label class="lm-label">Admin email</label><input class="lm-input" id="admEmailPage" type="email" autocomplete="username" placeholder="admin@pamarket.app"></div>'
+      + '<div class="lm-fg"><label class="lm-label">Password</label><div class="lm-input-wrap"><input class="lm-input" id="admPassPage" type="password" placeholder="Password" onkeydown="if(event.key===\'Enter\')H.authAdminSignInPage()" autocomplete="current-password"><button type="button" class="lm-eye" onclick="H._toggleLmPw(\'admPassPage\',this)">' + EYESVG + '</button></div></div>'
+      + '<button class="auth-btn" onclick="H.authAdminSignInPage()">Admin Sign In</button>';
+    setTimeout(function(){ var p=document.getElementById('admEmailPage'); if(p) p.focus(); }, 80);
   };
 
   H.authAdminSignInPage = async function() {
@@ -516,9 +611,12 @@
       if (profile.linkedin_url  != null) u.linkedinUrl    = profile.linkedin_url;
       if (profile.github_url    != null) u.githubUrl      = profile.github_url;
       if (profile.website_url   != null) u.websiteUrl     = profile.website_url;
-      if (profile.cv_file_url   != null) u.cvFileUrl      = profile.cv_file_url;
-      if (profile.cv_file_name  != null) u.cvFileName     = profile.cv_file_name;
-      if (profile.cv            != null) u.cv             = profile.cv;
+      if (profile.cv_file_url       != null) u.cvFileUrl        = profile.cv_file_url;
+      if (profile.cv_file_name      != null) u.cvFileName       = profile.cv_file_name;
+      if (profile.cv                != null) u.cv               = profile.cv;
+      // 2FA state — always sourced from Supabase, never overridden by local state
+      if (profile.two_factor_enabled != null) u.twoFactorEnabled = !!profile.two_factor_enabled;
+      if (profile.two_factor_secret  != null) u.twoFactorSecret  = profile.two_factor_secret;
     }
     H.saveState();
     } catch(e) { console.warn('loadProfile:', e && e.message); }

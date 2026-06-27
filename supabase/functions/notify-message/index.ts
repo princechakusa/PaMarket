@@ -4,12 +4,23 @@
 // Required Edge Function secrets:
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  (provided automatically)
 //   FIREBASE_SERVICE_ACCOUNT                 (service-account JSON)
-//   NOTIFY_WEBHOOK_SECRET                    (must match the webhook header)
+//   NOTIFY_WEBHOOK_SECRET                    (must match the webhook header — REQUIRED)
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-secret',
-};
+// Allowed request origins — tightened from wildcard (*)
+const ALLOWED_ORIGINS = new Set([
+  'https://pamarket.app',
+  'https://www.pamarket.app',
+])
+
+function corsHeaders(req: Request) {
+  const origin = req.headers.get('origin') ?? ''
+  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarket.app'
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-secret',
+    'Vary': 'Origin',
+  }
+}
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -18,7 +29,7 @@ let _tokenCache: { value: string; exp: number } | null = null;
 
 async function getFCMAccessToken(sa: any): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
-  if (_tokenCache && _tokenCache.exp - 120 > now) return _tokenCache.value; // reuse until ~2 min before expiry
+  if (_tokenCache && _tokenCache.exp - 120 > now) return _tokenCache.value;
 
   const b64url = (o: object) => btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   const header = { alg: 'RS256', typ: 'JWT' };
@@ -39,7 +50,6 @@ async function getFCMAccessToken(sa: any): Promise<string> {
 
 type FCMResult = { ok: boolean; invalid: boolean; status: number; error?: string };
 
-// Send one FCM message, retrying transient failures (network / 5xx / 429).
 async function sendFCM(pushToken: string, projectId: string, accessToken: string, title: string, body: string, data: Record<string, string>): Promise<FCMResult> {
   const message = {
     token: pushToken,
@@ -61,14 +71,12 @@ async function sendFCM(pushToken: string, projectId: string, accessToken: string
       });
       result = await res.json().catch(() => ({}));
     } catch (e) {
-      // Network error — transient. Retry with backoff, else give up.
       if (attempt < MAX) { await sleep(attempt * 400); continue; }
       console.error('FCM fetch threw (gave up):', (e as Error).message);
       return { ok: false, invalid: false, status: 0, error: (e as Error).message };
     }
 
     if (res.ok && !result['error']) {
-      console.log('FCM ok →', pushToken.slice(0, 12) + '…');
       return { ok: true, invalid: false, status: res.status };
     }
 
@@ -83,19 +91,18 @@ async function sendFCM(pushToken: string, projectId: string, accessToken: string
 
     if (transient && attempt < MAX) { await sleep(attempt * 400); continue; }
 
-    console.warn('FCM fail →', pushToken.slice(0, 12) + '…', 'http:', res.status, 'status:', fcmStatus, 'code:', errorCode, 'invalid:', invalid);
+    console.warn('FCM fail', 'http:', res.status, 'status:', fcmStatus, 'code:', errorCode, 'invalid:', invalid);
     return { ok: false, invalid, status: res.status, error: fcmStatus || errorCode || ('http_' + res.status) };
   }
   return { ok: false, invalid: false, status: 0, error: 'exhausted' };
 }
 
-// Clean preview text (offers/replies are stored as JSON).
 function preview(text: string | null, hasImage: boolean): string {
-  if (hasImage) return '📷 Photo';
+  if (hasImage) return 'New photo';
   if (typeof text === 'string' && text.charAt(0) === '{') {
     try {
       const o = JSON.parse(text);
-      if (o && o._offer) return '💰 Sent an offer';
+      if (o && o._offer) return 'Sent an offer';
       if (o && o._reply && o.t) return String(o.t);
     } catch (_) { /* fall through */ }
   }
@@ -103,12 +110,20 @@ function preview(text: string | null, hasImage: boolean): string {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
-  const json = (d: unknown, s?: number) => new Response(JSON.stringify(d), { status: s || 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+  const cors = corsHeaders(req)
+
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  const json = (d: unknown, s?: number) => new Response(JSON.stringify(d), { status: s || 200, headers: { ...cors, 'Content-Type': 'application/json' } });
 
   try {
+    // Webhook secret is REQUIRED — fail hard if not configured (prevents
+    // unauthenticated callers from triggering push notifications)
     const expected = Deno.env.get('NOTIFY_WEBHOOK_SECRET');
-    if (expected && req.headers.get('x-webhook-secret') !== expected) {
+    if (!expected) {
+      console.error('NOTIFY_WEBHOOK_SECRET is not set — function is misconfigured');
+      return json({ error: 'misconfigured' }, 500);
+    }
+    if (req.headers.get('x-webhook-secret') !== expected) {
       console.warn('Rejected: bad or missing x-webhook-secret');
       return json({ error: 'unauthorized' }, 401);
     }
@@ -123,26 +138,22 @@ Deno.serve(async (req) => {
     const convId = String(record.conversation_id);
     const senderId = String(record.sender_id);
 
-    // ── Recipients: the conversation members who aren't the sender ──
-    // Canonical source is conversations.members. (For this to work reliably,
-    // conversations.id must be TEXT — matching the app's "conv_/job_" ids.)
     let recipients: string[] = [];
     const convRes = await db.from('conversations').select('members').eq('id', convId).maybeSingle();
     if (convRes.error) console.warn('conversation lookup:', convRes.error.message);
     const members: string[] = (convRes.data && Array.isArray(convRes.data.members)) ? convRes.data.members : [];
     recipients = members.filter((m) => m && m !== senderId);
 
-    // Fallback (bounded): other participants who have posted in the thread.
     if (!recipients.length) {
       const others = await db.from('messages').select('sender_id').eq('conversation_id', convId).neq('sender_id', senderId).limit(10);
       recipients = [...new Set((others.data || []).map((r: any) => String(r.sender_id)))];
     }
     if (!recipients.length) { console.log('skipped: no recipient for', convId); return json({ skipped: 'no recipient' }); }
 
-    const profRes = await db.from('profiles').select('id, push_token').in('id', recipients);
-    if (profRes.error) console.warn('profiles lookup error:', profRes.error.message);
-    const tokens = (profRes.data || []).filter((p: any) => p.push_token);
-    console.log('conversation:', convId, '| recipients:', recipients.length, '| with token:', tokens.length);
+    // Read tokens from the isolated push_tokens table (not from the public profiles row)
+    const tokRes = await db.from('push_tokens').select('user_id, token').in('user_id', recipients);
+    if (tokRes.error) console.warn('push_tokens lookup error:', tokRes.error.message);
+    const tokens = (tokRes.data || []).filter((p: any) => p.token);
     if (!tokens.length) return json({ skipped: 'no push tokens' });
 
     const saEnv = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
@@ -155,21 +166,21 @@ Deno.serve(async (req) => {
     const data = { type: 'message', deepLink: 'chat:' + convId, conversationId: convId };
 
     let sent = 0, failed = 0;
-    const deadTokenIds: string[] = [];
+    const deadUserIds: string[] = [];
     await Promise.all(tokens.map(async (p: any) => {
-      const r = await sendFCM(p.push_token, sa['project_id'], accessToken, title, body, data);
-      if (r.ok) { sent++; } else { failed++; if (r.invalid) deadTokenIds.push(p.id); }
+      const r = await sendFCM(p.token, sa['project_id'], accessToken, title, body, data);
+      if (r.ok) { sent++; } else { failed++; if (r.invalid) deadUserIds.push(p.user_id); }
     }));
 
-    // Prune dead/expired tokens so we stop pushing to them.
-    if (deadTokenIds.length) {
-      const del = await db.from('profiles').update({ push_token: null }).in('id', deadTokenIds);
+    // Prune dead/expired tokens from push_tokens
+    if (deadUserIds.length) {
+      const del = await db.from('push_tokens').delete().in('user_id', deadUserIds);
       if (del.error) console.warn('failed to clear dead tokens:', del.error.message);
-      else console.log('cleared dead push tokens for', deadTokenIds.length, 'profile(s)');
+      else console.log('cleared dead push tokens for', deadUserIds.length, 'user(s)');
     }
 
-    console.log('done → sent:', sent, 'failed:', failed, 'pruned:', deadTokenIds.length);
-    return json({ success: true, sent, failed, pruned: deadTokenIds.length });
+    console.log('done → sent:', sent, 'failed:', failed, 'pruned:', deadUserIds.length);
+    return json({ success: true, sent, failed, pruned: deadUserIds.length });
   } catch (err) {
     console.error('notify-message error:', (err as Error).message);
     return json({ error: (err as Error).message }, 500);

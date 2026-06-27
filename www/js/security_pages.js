@@ -129,9 +129,10 @@
             return;
           }
         } else {
-          // Fallback for local-only mode
-          const u = H.currentUser();
-          if (u) { u._localPassword = nw; H.saveState(); }
+          // Supabase unavailable — cannot change password offline
+          if (btn) { btn.disabled = false; btn.textContent = 'Update Password'; }
+          showErr('Connection error — check your internet and try again.');
+          return;
         }
 
         if (btn) { btn.disabled = false; btn.textContent = 'Update Password'; }
@@ -218,11 +219,20 @@
       enable: async () => {
         const u = H.currentUser();
         const code = (document.getElementById('twoFactorCode')?.value || '').trim();
-        if (!await H._twoFactorVerify(u._pendingTwoFactorSecret, code)) {
+        const secret = u._pendingTwoFactorSecret;
+        if (!secret || !await H._twoFactorVerify(secret, code)) {
           H.toast('Invalid authenticator code');
           return;
         }
-        u.twoFactorSecret = u._pendingTwoFactorSecret;
+        // Persist to Supabase so it cannot be bypassed via localStorage manipulation
+        const c = window.supabase;
+        if (!c || typeof c.from !== 'function') { H.toast('Connection error — try again'); return; }
+        const { error } = await c.from('profiles').update({
+          two_factor_enabled: true,
+          two_factor_secret: secret
+        }).eq('id', u.id);
+        if (error) { H.toast('Failed to enable 2FA — try again'); return; }
+        u.twoFactorSecret = secret;
         u.twoFactorEnabled = true;
         delete u._pendingTwoFactorSecret;
         H.saveState();
@@ -232,10 +242,20 @@
       disable: async () => {
         const u = H.currentUser();
         const code = (document.getElementById('twoFactorCode')?.value || '').trim();
-        if (!await H._twoFactorVerify(u.twoFactorSecret, code)) {
+        // Fetch current secret from Supabase (not localStorage) to verify before disabling
+        const c = window.supabase;
+        if (!c || typeof c.from !== 'function') { H.toast('Connection error — try again'); return; }
+        const pr = await c.from('profiles').select('two_factor_secret').eq('id', u.id).single();
+        const serverSecret = pr.data && pr.data.two_factor_secret;
+        if (!serverSecret || !await H._twoFactorVerify(serverSecret, code)) {
           H.toast('Invalid authenticator code');
           return;
         }
+        const { error } = await c.from('profiles').update({
+          two_factor_enabled: false,
+          two_factor_secret: null
+        }).eq('id', u.id);
+        if (error) { H.toast('Failed to disable 2FA — try again'); return; }
         u.twoFactorEnabled = false;
         u.twoFactorSecret = null;
         delete u._pendingTwoFactorSecret;
