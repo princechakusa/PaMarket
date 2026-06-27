@@ -1190,16 +1190,16 @@ pages.HelpCommunity = function () {
 
     const sec = (title) => `<p style="font-size:16px;font-weight:800;color:var(--text);margin:28px 0 10px;letter-spacing:-.2px">${title}</p>`;
 
-    const featureCard = ([icon, title, desc]) => `
+    const featureCard = ([svg, color, bg, title, desc]) => `
       <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px;text-align:center">
-        <div style="font-size:26px;margin-bottom:7px">${icon}</div>
+        <div style="width:44px;height:44px;border-radius:12px;background:${bg};display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:${color}">${svg}</div>
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${title}</div>
         <div style="font-size:11px;color:var(--sub);line-height:1.55">${desc}</div>
       </div>`;
 
-    const valueCard = ([icon, title, body]) => `
+    const valueCard = ([svg, color, bg, title, body]) => `
       <div style="display:flex;align-items:flex-start;gap:14px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px">
-        <div style="font-size:22px;flex-shrink:0;margin-top:1px">${icon}</div>
+        <div style="width:40px;height:40px;border-radius:11px;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${color}">${svg}</div>
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">${title}</div>
           <div style="font-size:12px;color:var(--sub);line-height:1.6">${body}</div>
@@ -1239,7 +1239,7 @@ pages.HelpCommunity = function () {
             <div style="font-size:10px;color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Always</div>
           </div>
         </div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:18px;font-weight:600">Version 2.0.0</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:18px;font-weight:600">v1.22.0</div>
       </div>
 
       <div class="doc-content" style="padding-top:4px">
@@ -1254,16 +1254,16 @@ pages.HelpCommunity = function () {
         ${sec('What We Offer')}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
           ${[
-            ['🛒','Buy and Sell','Post ads and find deals on goods across all categories'],
-            ['💼','Jobs Board','Post vacancies and find work across all industries'],
-            ['🏠','Property and Rooms','Houses, flats, rooms, and commercial spaces for rent or sale'],
-            ['🚗','Vehicles','Cars, trucks, motorbikes, and farming equipment'],
-            ['👗','Fashion','Clothes, shoes, and accessories at local prices'],
-            ['📱','Electronics','Phones, laptops, appliances, and gadgets'],
-            ['🛋️','Furniture','Home furniture, office furniture, and decor'],
-            ['🐾','Pets and Agriculture','Animals, livestock, seeds, and farming supplies'],
-            ['🔧','Services','Plumbers, electricians, drivers, and skilled tradespeople'],
-            ['👶','Baby and Kids','Baby gear, toys, and children\'s items']
+            ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>','#1A3A8F','#EEF2FF','Buy and Sell','Post ads and find deals on goods across all categories'],
+            ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>','#059669','#ECFDF5','Jobs Board','Post vacancies and find work across all industries'],
+            ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>','#1A3A8F','#EEF2FF','Property and Rooms','Houses, flats, rooms, and commercial spaces for rent or sale'],
+            ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>','#D97706','#FFFBEB','Vehicles','Cars, trucks, motorbikes, and farming equipment'],
+            ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>','#DC2626','#FEF2F2','Fashion','Clothes, shoes, and accessories at local prices'],
+            ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>','#7C3AED','#F5F3FF','Electronics','Phones, laptops, appliances, and gadgets'],
+            ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>','#D97706','#FFFBEB','Furniture','Home furniture, office furniture, and decor'],
+            ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 8C8 10 5.9 16.17 3.82 22c4.21-2 8-3.5 11-7 2.5-2.9 3-7 2.18-10z"/></svg>','#059669','#ECFDF5','Pets and Agriculture','Animals, livestock, seeds, and farming supplies'],
+            ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>','#1A3A8F','#EEF2FF','Services','Plumbers, electricians, drivers, and skilled tradespeople'],
+            ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>','#DC2626','#FEF2F2','Baby and Kids','Baby gear, toys, and children\'s items']
           ].map(featureCard).join('')}
         </div>
 
@@ -1276,34 +1276,34 @@ pages.HelpCommunity = function () {
 
         ${sec('Who Is PaMarket For?')}
         ${[
-          ['👤', 'Individuals', 'Sell items you no longer need, find second-hand bargains, or rent out a spare room.'],
-          ['🏢', 'Small Businesses', 'Promote your products and services to active buyers in your city and province.'],
-          ['👔', 'Employers', 'Post job vacancies and find qualified candidates from across Zimbabwe.'],
-          ['🔍', 'Job Seekers', 'Browse real job listings and apply directly through the app.'],
-          ['🏗️', 'Property Owners', 'List properties and rooms for rent or sale and manage enquiries in one place.'],
-          ['🚜', 'Farmers and Traders', 'Buy and sell agricultural produce, livestock, and equipment.']
+          ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>','#1A3A8F','#EEF2FF','Individuals','Sell items you no longer need, find second-hand bargains, or rent out a spare room.'],
+          ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>','#059669','#ECFDF5','Small Businesses','Promote your products and services to active buyers in your city and province.'],
+          ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>','#D97706','#FFFBEB','Employers','Post job vacancies and find qualified candidates from across Zimbabwe.'],
+          ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>','#7C3AED','#F5F3FF','Job Seekers','Browse real job listings and apply directly through the app.'],
+          ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>','#1A3A8F','#EEF2FF','Property Owners','List properties and rooms for rent or sale and manage enquiries in one place.'],
+          ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 8C8 10 5.9 16.17 3.82 22c4.21-2 8-3.5 11-7 2.5-2.9 3-7 2.18-10z"/></svg>','#059669','#ECFDF5','Farmers and Traders','Buy and sell agricultural produce, livestock, and equipment.']
         ].map(valueCard).join('')}
 
         ${sec('Our Values')}
         ${[
-          ['🇿🇼', 'Made for Zimbabwe', 'Every feature is designed with Zimbabwean users in mind, from province-based filtering to ZiG and USD pricing support.'],
-          ['🆓', 'Free to Use', 'Posting and browsing are always free. We believe access to a marketplace should not cost money.'],
-          ['🔒', 'Safety First', 'We verify seller identities, moderate listings, and give users tools to report and block bad actors.'],
-          ['⚡', 'Simple and Fast', 'The app is lightweight and designed to work well on any smartphone and connection speed.'],
-          ['🤝', 'Community Driven', 'PaMarket grows through the trust of its community. We listen to feedback and improve constantly.']
+          ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>','#1A3A8F','#EEF2FF','Made for Zimbabwe','Every feature is designed with Zimbabwean users in mind, from province-based filtering to ZiG and USD pricing support.'],
+          ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>','#059669','#ECFDF5','Free to Use','Posting and browsing are always free. We believe access to a marketplace should not cost money.'],
+          ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>','#DC2626','#FEF2F2','Safety First','We verify seller identities, moderate listings, and give users tools to report and block bad actors.'],
+          ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>','#D97706','#FFFBEB','Simple and Fast','The app is lightweight and designed to work well on any smartphone and connection speed.'],
+          ['<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>','#7C3AED','#F5F3FF','Community Driven','PaMarket grows through the trust of its community. We listen to feedback and improve constantly.']
         ].map(valueCard).join('')}
 
         ${sec('Legal')}
         <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;overflow:hidden">
-          <div onclick="H.openInner('HelpPrivacy')" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer">
+          <div onclick="H.openInner('LegalReader',{doc:'privacy_policy'})" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer">
             <span style="font-size:14px;font-weight:600;color:var(--text)">Privacy Policy</span>
             <span style="color:var(--sub)">›</span>
           </div>
-          <div onclick="H.openInner('HelpTerms')" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer">
+          <div onclick="H.openInner('LegalReader',{doc:'terms_of_use'})" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer">
             <span style="font-size:14px;font-weight:600;color:var(--text)">Terms of Service</span>
             <span style="color:var(--sub)">›</span>
           </div>
-          <div onclick="H.openInner('HelpCommunity')" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer">
+          <div onclick="H.openInner('LegalReader',{doc:'community_guidelines'})" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer">
             <span style="font-size:14px;font-weight:600;color:var(--text)">Community Guidelines</span>
             <span style="color:var(--sub)">›</span>
           </div>
@@ -1312,13 +1312,13 @@ pages.HelpCommunity = function () {
 
         ${sec('Contact Us')}
         <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;overflow:hidden">
-          <a href="mailto:chakusaprince@gmail.com" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;border-bottom:1px solid var(--border)">
+          <a href="mailto:support@pamarket.app" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;border-bottom:1px solid var(--border)">
             <div style="width:36px;height:36px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             </div>
             <div>
               <div style="font-size:11px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Support Email</div>
-              <div style="font-size:13px;font-weight:700;color:#1A3A8F;margin-top:2px">chakusaprince@gmail.com</div>
+              <div style="font-size:13px;font-weight:700;color:#1A3A8F;margin-top:2px">support@pamarket.app</div>
             </div>
           </a>
           <a href="https://wa.me/971589772645" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none">
@@ -1339,37 +1339,11 @@ pages.HelpCommunity = function () {
         </div>
 
         <div style="text-align:center;padding:32px 0 8px">
-          <div style="font-size:12px;color:var(--sub)">© ${year} PaMarket · Made in Zimbabwe 🇿🇼</div>
-          <div style="font-size:11px;color:var(--text-hint,#bbb);margin-top:4px">Version 2.0.0 · Built with care for Zimbabwe</div>
+          <div style="font-size:12px;color:var(--sub)">© ${year} PaMarket Zimbabwe · Made in Zimbabwe</div>
+          <div style="font-size:11px;color:var(--text-hint,#bbb);margin-top:4px">v1.22.0 · Built with care for Zimbabwe</div>
         </div>
       </div>
     </div>`;
   };
 
 })(window.H = window.H || {});
-
-H.pages.LegalHub = function() {
-  var sections = [
-    { title: 'Terms', items: ['Terms of Use','Acceptable Use Policy','Seller Terms','Buyer Protection'] },
-    { title: 'Privacy', items: ['Privacy Policy','Cookie Policy','Data Deletion','GDPR Compliance'] },
-    { title: 'Platform Policies', items: ['Community Guidelines','Prohibited Items','Anti-Fraud Policy','Dispute Resolution'] }
-  ];
-  var emailLink = 'mailto:chakusaprince@gmail.com';
-  var waLink = 'https://wa.me/971589772645';
-  var html = '<div class="page active">' + H.innerTopbar('Legal Hub');
-  html += '<div class="legal-hero"><div class="legal-hero-title">Welcome to<br><strong>PaMarket Legal Hub</strong></div><div class="legal-hero-sub">Legal information for PaMarket products and services</div></div>';
-  sections.forEach(function(sec) {
-    html += '<div class="legal-section-title">' + sec.title + '</div><div class="legal-list">';
-    sec.items.forEach(function(item) { html += '<div class="legal-item"><div class="legal-item-title">' + item + '</div><div class="legal-item-arrow">&rsaquo;</div></div>'; });
-    html += '</div>';
-  });
-  html += '<div class="legal-contact"><div class="legal-contact-title">Need to contact us?</div>';
-  html += '<div class="legal-contact-body">Email: <span onclick="window.open(emailLink)" style="color:#1A3A8F;font-weight:600;cursor:pointer">chakusaprince@gmail.com</span></div>';
-  html += '<div class="legal-contact-body" style="margin-top:6px">WhatsApp: <span onclick="window.open(waLink)" style="color:#25D366;font-weight:600;cursor:pointer">+971 589 772 645</span></div>';
-  html += '</div>';
-  html += '<div class="legal-footer"><div class="legal-footer-links">';
-  ['About Us','Advertise','Terms of Use','Privacy Policy'].forEach(function(l) { html += '<span class="legal-footer-link" onclick="H.openInner(\x27About\x27)">' + l + '</span>'; });
-  html += '</div><div class="legal-footer-copy">PaMarket &copy; 2026 &middot; Zimbabwe\'s #1 Free Marketplace</div></div>';
-  html += '</div></div>';
-  return html;
-};
