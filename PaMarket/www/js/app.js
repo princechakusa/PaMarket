@@ -807,6 +807,7 @@ window.H = {
         var pageName = H.currentPageName;
         if (typeof H.fetchListingsFromSupabase === 'function') await H.fetchListingsFromSupabase();
         if (H.currentUser()) {
+          H.touchLastActive();
           if (typeof H.syncConversations === 'function') await H.syncConversations();
           if (typeof H.syncNotifications === 'function') await H.syncNotifications();
           if (typeof H.syncApplications  === 'function') H.syncApplications();
@@ -866,6 +867,7 @@ window.H = {
   async saveListingToCloud(listing) {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
+      this.touchLastActive();
       const {error}=await window.supabase.from('listings').upsert({
         id:listing.id, seller_id:listing.sellerId,
         seller_name:listing.sellerName||'', seller_phone:listing.sellerPhone||'',
@@ -975,6 +977,7 @@ window.H = {
       window._msgChannel=window.supabase.channel('messages-rt')
         .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
           const msg=payload.new; if(!msg) return;
+          if ((H.state.deletedConvIds || []).includes(msg.conversation_id)) return;
           if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
           const conv=H.state.conversations.find(c=>c.id===msg.conversation_id);
           if(conv){
@@ -1107,6 +1110,7 @@ window.H = {
       let changed = false;
 
       // Phase 1: discover from conversations table (may not exist — silent fail)
+      const deletedIds = new Set(H.state.deletedConvIds || []);
       const knownIds = new Set(H.state.conversations.map(c => c.id));
       try {
         const { data: convs, error } = await sb.from('conversations')
@@ -1115,6 +1119,7 @@ window.H = {
           .limit(50);
         if (!error && convs) {
           for (const c of convs) {
+            if (deletedIds.has(c.id)) continue;
             knownIds.add(c.id);
             let local = H.state.conversations.find(x => x.id === c.id);
             if (!local) {
@@ -1138,7 +1143,7 @@ window.H = {
           sb.from('messages').select('conversation_id,sender_id,sender_name').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(50)
         ]);
         for (const row of [...(sentRes.data||[]), ...(recvRes.data||[])]) {
-          if (!row.conversation_id || knownIds.has(row.conversation_id)) continue;
+          if (!row.conversation_id || knownIds.has(row.conversation_id) || deletedIds.has(row.conversation_id)) continue;
           knownIds.add(row.conversation_id);
           const otherId = row.sender_id !== u.id ? row.sender_id : null;
           const members = otherId ? [u.id, otherId] : [u.id];
@@ -1184,6 +1189,7 @@ window.H = {
 
       // Phase 4: sync messages for EVERY known conversation
       for (const local of H.state.conversations) {
+        if (deletedIds.has(local.id)) continue;
         if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
         const { data: msgs, error: msgErr } = await sb.from('messages')
           .select('id, sender_id, sender_name, text, read, created_at')
@@ -1240,10 +1246,22 @@ window.H = {
   },
 
 
+  touchLastActive() {
+    const u = this.currentUser();
+    if (!u) return;
+    const now = Date.now();
+    if (now - (this._lastActiveTouched || 0) < 5 * 60 * 1000) return;
+    this._lastActiveTouched = now;
+    const sb = window.supabase;
+    if (!sb || typeof sb.rpc !== 'function') return;
+    sb.rpc('touch_last_active').catch(function() {});
+  },
+
   async saveMessageToCloud(convId, msg) {
     try {
       const sb = window.supabase;
       if (!sb || typeof sb.from !== 'function') return { ok:false, error:'Connection unavailable' };
+      this.touchLastActive();
       const { error } = await sb.from('messages').upsert({
         id: msg.id, conversation_id: convId,
         sender_id: msg.from, sender_name: msg.senderName || '',
@@ -1649,6 +1667,7 @@ window.H = {
       window.addEventListener('beforeunload',()=>H.stopCam());
       document.addEventListener('keydown',e=>{if(e.key==='Escape')H.closeModal();});
       H.boot();
+      if (H.currentUser()) H.touchLastActive();
     });
   }
 };

@@ -82,6 +82,7 @@
         }
         window.H.state.currentUserId = userId;
         if (typeof window.H.saveState === 'function') window.H.saveState();
+        if (typeof window.H.touchLastActive === 'function') window.H.touchLastActive();
         if (typeof window.H.closeLoginModal === 'function') window.H.closeLoginModal();
         var nav = document.getElementById('bottomNav');
         if (nav) nav.style.display = 'flex';

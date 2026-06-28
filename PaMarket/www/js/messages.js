@@ -178,8 +178,15 @@
 
   
   pages.Chat = function ({ id }) {
+    if ((H.state.deletedConvIds || []).includes(id)) {
+      setTimeout(function() { H.openInner('Messages'); }, 0);
+      return '<div class="page active">' + H.innerTopbar('Chat') + '</div>';
+    }
     const c = conversations().find(x => x.id === id);
-    if (!c) return '<div class="page active">' + H.innerTopbar('Chat') + '<div class="empty-state"><div class="empty-title">Conversation not found</div></div></div>';
+    if (!c) {
+      setTimeout(function() { H.openInner('Messages'); }, 0);
+      return '<div class="page active">' + H.innerTopbar('Chat') + '</div>';
+    }
     const u = currentUser();
     if (!u) {
       return `<div class="page active">${H.innerTopbar('Chat')}
@@ -350,6 +357,12 @@
     window._chatPoll = setInterval(async function() {
       if (H.currentPageName !== 'Chat' || H._activeChat !== convId) {
         clearInterval(window._chatPoll);
+        return;
+      }
+      if ((H.state.deletedConvIds || []).includes(convId)) {
+        clearInterval(window._chatPoll);
+        window._chatPoll = null;
+        if (H.currentPageName === 'Chat') H.openInner('Messages');
         return;
       }
       const conv = conversations().find(c => c.id === convId);
