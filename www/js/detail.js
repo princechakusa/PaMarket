@@ -843,4 +843,115 @@
 
   H.pages.SellerProfile = H.pages.UserProfile;
 
+  // ── Boost listing ─────────────────────────────────────────────────────────
+  var BOOST_PLANS = [
+    { days: 1,  price: 2,  label: '1 day',  tag: '' },
+    { days: 7,  price: 10, label: '7 days', tag: 'Popular' },
+    { days: 30, price: 30, label: '30 days',tag: 'Best value' },
+  ];
+
+  H.boostListing = async function(id) {
+    var u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in to boost your listing'); return; }
+
+    var balance = 0;
+    var sb = window.supabase;
+    if (sb && typeof sb.from === 'function') {
+      try {
+        var br = await sb.from('profiles').select('wallet_usd').eq('id', u.id).single();
+        if (br && br.data) balance = Number(br.data.wallet_usd) || 0;
+      } catch(e) {}
+    }
+
+    var old = document.getElementById('_boostSheet');
+    if (old) old.remove();
+
+    var sheet = document.createElement('div');
+    sheet.id = '_boostSheet';
+    sheet.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
+    sheet.addEventListener('click', function(ev) { if (ev.target === sheet) sheet.remove(); });
+
+    var planHtml = BOOST_PLANS.map(function(p) {
+      var canAfford = balance >= p.price;
+      var bg = canAfford ? 'linear-gradient(135deg,#1A3A8F,#2952cc)' : '#F3F4F6';
+      var col = canAfford ? '#fff' : '#9CA3AF';
+      var cur = canAfford ? 'pointer' : 'default';
+      return '<button onclick="H._doBoost(\'' + id + '\',' + p.days + ',' + p.price + ')" '
+        + 'style="background:' + bg + ';color:' + col + ';border:none;border-radius:14px;padding:14px 16px;'
+        + 'display:flex;justify-content:space-between;align-items:center;cursor:' + cur + ';font-family:inherit;width:100%">'
+        + '<div><div style="font-size:15px;font-weight:800">' + p.label + '</div>'
+        + (p.tag ? '<div style="font-size:11px;font-weight:700;opacity:.75;margin-top:2px">' + p.tag + '</div>' : '')
+        + '</div>'
+        + '<div style="text-align:right"><div style="font-size:17px;font-weight:800">$' + p.price + '</div>'
+        + '<div style="font-size:11px;opacity:.7">$2/day</div></div>'
+        + '</button>';
+    }).join('');
+
+    var topupBanner = balance < 2
+      ? '<div style="margin-top:14px;padding:12px;background:#FFF8EC;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px">'
+        + '<div style="font-size:12.5px;color:#92400E;font-weight:600;flex:1">Top up your wallet to boost ads</div>'
+        + '<button onclick="H._boostTopup(\'' + id + '\')" style="background:#F59E0B;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap">Top Up</button>'
+        + '</div>'
+      : '';
+
+    sheet.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px calc(env(safe-area-inset-bottom,0px)+20px);box-sizing:border-box">'
+      + '<div style="width:36px;height:4px;background:#E8ECF4;border-radius:4px;margin:0 auto 18px"></div>'
+      + '<div style="font-size:17px;font-weight:800;color:#111;margin-bottom:4px">Boost your listing</div>'
+      + '<div style="font-size:13px;color:#666;margin-bottom:16px">Get 5\xD7 more views. Wallet: <strong style="color:#1A3A8F">$' + balance.toFixed(2) + '</strong></div>'
+      + '<div style="display:flex;flex-direction:column;gap:10px">' + planHtml + '</div>'
+      + topupBanner
+      + '<button onclick="document.getElementById(\'_boostSheet\')&&document.getElementById(\'_boostSheet\').remove()" '
+      + 'style="margin-top:12px;width:100%;padding:12px;border:1.5px solid #E8ECF4;border-radius:12px;background:#fff;font-size:14px;font-weight:700;color:#666;cursor:pointer;font-family:inherit">Cancel</button>'
+      + '</div>';
+
+    document.body.appendChild(sheet);
+  };
+
+  H._doBoost = async function(id, days, price) {
+    var sheet = document.getElementById('_boostSheet');
+    if (sheet) sheet.remove();
+
+    var sb = window.supabase;
+    if (!sb || typeof sb.rpc !== 'function') { H.toast('Not connected — try again'); return; }
+
+    H.toast('Applying boost…', 2000, true);
+
+    try {
+      var res = await sb.rpc('apply_listing_boost', { p_listing_id: id, p_days: days });
+      if (res.error) { H.toast('Boost failed: ' + (res.error.message || 'error')); return; }
+      var d = res.data || {};
+      if (!d.ok) {
+        if ((d.msg || '').toLowerCase().includes('balance')) {
+          H.toast('Not enough balance');
+          H._boostTopup(id);
+        } else {
+          H.toast(d.msg || 'Could not apply boost');
+        }
+        return;
+      }
+      // Update listing in local state
+      var listing = (H.state.listings || []).find(function(l) { return l.id === id; });
+      if (listing) {
+        listing.boost = true;
+        listing.featuredUntil = d.until ? new Date(d.until).getTime() : Date.now() + days * 86400000;
+      }
+      // Sync wallet back into local user state
+      var u = H.currentUser();
+      if (u && d.balance != null) { u.wallet_usd = Number(d.balance); u.walletUsd = u.wallet_usd; }
+      H.saveState();
+      H.toast('Boosted for ' + days + (days === 1 ? ' day' : ' days') + '! Your listing is now featured.');
+      if (H.currentPageName === 'Detail') H.renderPage('Detail', { id: id });
+    } catch(e) {
+      H.toast('Boost failed: ' + (e.message || 'network error'));
+    }
+  };
+
+  H._boostTopup = function(listingId) {
+    var support = H.state.supportWhatsapp || '';
+    if (!support) { H.toast('Contact support to top up your wallet'); return; }
+    var phone = support.replace(/[^\d]/g, '');
+    var msg = 'Hi PaMarket, I want to top up my wallet to boost a listing.\nListing ID: ' + listingId;
+    window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+  };
+
 })(window.H);
