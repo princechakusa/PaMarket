@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAmarket — Live System Topology</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#03060f;
+  --bg2:#060d1a;
+  --border:#0e1f3a;
+  --text:#c8d8f0;
+  --text2:#607090;
+  --green:#00e676;
+  --yellow:#ffab00;
+  --red:#ff1744;
+  --blue:#448aff;
+  --purple:#7c4dff;
+  --cyan:#00e5ff;
+  --orange:#ff6d00;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Segoe UI',system-ui,sans-serif;color:var(--text)}
+
+/* ── TOP BAR ───────────────────────────── */
+#topbar{
+  position:fixed;top:0;left:0;right:0;height:52px;
+  background:rgba(3,6,15,.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 16px;gap:16px;
+  z-index:100;
+}
+#topbar .logo{
+  display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;
+  letter-spacing:.5px;color:#fff;white-space:nowrap;
+}
+#topbar .logo svg{width:24px;height:24px}
+.live-badge{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);
+  border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;
+  color:var(--green);letter-spacing:.5px;
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-dot 1.2s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.spacer{flex:1}
+#search-wrap{position:relative;display:flex;align-items:center}
+#search-wrap svg{position:absolute;left:10px;width:14px;height:14px;color:var(--text2);pointer-events:none}
+#global-search{
+  background:rgba(14,31,58,.8);border:1px solid var(--border);
+  border-radius:8px;padding:7px 12px 7px 32px;
+  font-size:12px;color:var(--text);outline:none;width:200px;
+  transition:border-color .2s,width .2s;
+}
+#global-search:focus{border-color:var(--blue);width:260px}
+#global-search::placeholder{color:var(--text2)}
+
+.top-stat{
+  display:flex;flex-direction:column;align-items:center;
+  background:rgba(14,31,58,.5);border:1px solid var(--border);
+  border-radius:8px;padding:4px 12px;min-width:80px;cursor:default;
+}
+.top-stat .val{font-size:15px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.top-stat .lbl{font-size:9px;color:var(--text2);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
+
+.btn-icon{
+  background:rgba(14,31,58,.6);border:1px solid var(--border);
+  border-radius:8px;padding:7px 10px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);
+  transition:border-color .2s,background .2s;white-space:nowrap;
+}
+.btn-icon:hover{border-color:var(--blue);background:rgba(68,138,255,.1);color:#fff}
+.btn-icon svg{width:14px;height:14px}
+.btn-icon.active{border-color:var(--blue);background:rgba(68,138,255,.15);color:var(--blue)}
+
+/* ── FILTER BAR ────────────────────────── */
+#filterbar{
+  position:fixed;top:52px;left:0;right:0;height:38px;
+  background:rgba(3,6,15,.85);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 16px;gap:8px;
+  z-index:99;overflow-x:auto;
+}
+#filterbar::-webkit-scrollbar{height:3px}
+#filterbar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.filter-chip{
+  display:flex;align-items:center;gap:5px;
+  border:1px solid var(--border);border-radius:20px;
+  padding:3px 10px;font-size:11px;color:var(--text2);
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+  background:rgba(14,31,58,.4);
+}
+.filter-chip:hover,.filter-chip.on{color:#fff;border-color:currentColor}
+.filter-chip.on{background:rgba(68,138,255,.15);border-color:var(--blue);color:var(--blue)}
+.filter-chip .dot{width:6px;height:6px;border-radius:50%}
+.fc-all .dot{background:var(--text2)}
+.fc-client .dot{background:var(--cyan)}
+.fc-service .dot{background:var(--blue)}
+.fc-database .dot{background:var(--purple)}
+.fc-table .dot{background:var(--purple);opacity:.7}
+.fc-external .dot{background:var(--orange)}
+.fc-infra .dot{background:var(--yellow)}
+
+/* ── CANVAS AREA ───────────────────────── */
+#canvas-wrap{position:fixed;top:90px;left:0;right:0;bottom:200px;overflow:hidden}
+#canvas-bg,#canvas-main{position:absolute;top:0;left:0;width:100%;height:100%}
+#canvas-bg{z-index:0}
+#canvas-main{z-index:1;cursor:grab}
+#canvas-main.grabbing{cursor:grabbing}
+
+/* ── BOTTOM EVENT FEED ──────────────────── */
+#event-feed{
+  position:fixed;bottom:0;left:0;right:0;height:200px;
+  background:rgba(3,6,15,.95);backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  display:flex;flex-direction:column;
+  z-index:100;
+}
+#event-feed-header{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 16px;border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+#event-feed-header .title{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.5px;text-transform:uppercase}
+#event-count{font-size:11px;color:var(--text2);margin-left:auto}
+#events-list{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:4px 0;
+}
+#events-list::-webkit-scrollbar{width:4px}
+#events-list::-webkit-scrollbar-thumb{background:var(--border)}
+.evt{
+  display:flex;align-items:center;gap:10px;
+  padding:4px 16px;font-size:11px;
+  animation:evt-in .25s ease-out;
+  transition:background .15s;
+}
+.evt:hover{background:rgba(14,31,58,.5)}
+@keyframes evt-in{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.evt-icon{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.evt-path{color:var(--text2);font-size:10px;display:flex;align-items:center;gap:4px;flex:1;min-width:0}
+.evt-path .node-chip{
+  background:rgba(14,31,58,.8);border:1px solid var(--border);
+  border-radius:4px;padding:1px 6px;white-space:nowrap;
+  font-size:10px;
+}
+.evt-path .arrow{color:var(--text2);font-size:10px}
+.evt-time{color:var(--text2);font-size:9px;white-space:nowrap;margin-left:auto}
+.evt-msg{color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── SIDE PANEL ─────────────────────────── */
+#side-panel{
+  position:fixed;top:90px;right:0;width:320px;bottom:200px;
+  background:rgba(6,13,26,.98);backdrop-filter:blur(16px);
+  border-left:1px solid var(--border);
+  transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
+  z-index:101;display:flex;flex-direction:column;overflow:hidden;
+}
+#side-panel.open{transform:none}
+#panel-header{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+#panel-title{font-size:14px;font-weight:600;flex:1}
+#panel-close{
+  width:24px;height:24px;border-radius:6px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(14,31,58,.6);border:1px solid var(--border);
+  color:var(--text2);transition:all .15s;
+}
+#panel-close:hover{color:#fff;border-color:var(--red)}
+#panel-close svg{width:14px;height:14px}
+#panel-content{flex:1;overflow-y:auto;padding:12px 16px}
+#panel-content::-webkit-scrollbar{width:4px}
+#panel-content::-webkit-scrollbar-thumb{background:var(--border)}
+.panel-section{margin-bottom:16px}
+.panel-section-title{font-size:9px;font-weight:600;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px}
+.panel-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(14,31,58,.5)}
+.panel-row:last-child{border-bottom:none}
+.panel-key{font-size:11px;color:var(--text2)}
+.panel-val{font-size:11px;color:#fff;font-weight:500;font-variant-numeric:tabular-nums}
+.panel-val.green{color:var(--green)}
+.panel-val.yellow{color:var(--yellow)}
+.panel-val.red{color:var(--red)}
+.panel-val.blue{color:var(--blue)}
+.badge{display:inline-block;padding:1px 7px;border-radius:12px;font-size:10px;font-weight:600}
+.badge-green{background:rgba(0,230,118,.15);color:var(--green);border:1px solid rgba(0,230,118,.3)}
+.badge-red{background:rgba(255,23,68,.15);color:var(--red);border:1px solid rgba(255,23,68,.3)}
+.badge-yellow{background:rgba(255,171,0,.15);color:var(--yellow);border:1px solid rgba(255,171,0,.3)}
+.badge-blue{background:rgba(68,138,255,.15);color:var(--blue);border:1px solid rgba(68,138,255,.3)}
+.badge-purple{background:rgba(124,77,255,.15);color:var(--purple);border:1px solid rgba(124,77,255,.3)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-cell{background:rgba(14,31,58,.4);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.stat-cell .sv{font-size:18px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.stat-cell .sk{font-size:9px;color:var(--text2);letter-spacing:.4px;text-transform:uppercase;margin-top:2px}
+.policy-list{display:flex;flex-direction:column;gap:4px}
+.policy-item{
+  background:rgba(14,31,58,.3);border:1px solid var(--border);
+  border-radius:6px;padding:5px 8px;font-size:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.mini-chart{height:32px;background:rgba(14,31,58,.3);border:1px solid var(--border);border-radius:6px;overflow:hidden;position:relative}
+canvas.mini{position:absolute;inset:0;width:100%;height:100%}
+/* ── TOOLTIP ────────────────────────────── */
+#tooltip{
+  position:fixed;pointer-events:none;
+  background:rgba(6,13,26,.98);border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px;font-size:11px;
+  z-index:200;display:none;max-width:220px;
+}
+#tooltip .tt-name{font-size:12px;font-weight:600;color:#fff;margin-bottom:4px}
+#tooltip .tt-row{display:flex;justify-content:space-between;gap:16px;padding:1px 0}
+#tooltip .tt-key{color:var(--text2)}
+#tooltip .tt-val{color:#fff;font-weight:500;font-variant-numeric:tabular-nums}
+/* ── LEGEND ─────────────────────────────── */
+#legend{
+  position:fixed;bottom:210px;left:16px;
+  background:rgba(6,13,26,.9);border:1px solid var(--border);
+  border-radius:10px;padding:10px 14px;z-index:100;
+  display:flex;flex-direction:column;gap:5px;
+}
+.leg-row{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--text2)}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── ZOOM CONTROLS ──────────────────────── */
+#zoom-controls{
+  position:fixed;bottom:210px;right:16px;
+  display:flex;flex-direction:column;gap:6px;z-index:100;
+}
+.zoom-btn{
+  width:32px;height:32px;border-radius:8px;cursor:pointer;
+  background:rgba(6,13,26,.9);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);transition:all .15s;font-size:16px;font-weight:300;
+}
+.zoom-btn:hover{color:#fff;border-color:var(--blue)}
+/* ── ALERTS OVERLAY ─────────────────────── */
+#alerts-container{
+  position:fixed;top:100px;right:16px;z-index:200;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:300px;
+}
+.alert-toast{
+  background:rgba(6,13,26,.98);border-radius:10px;
+  padding:10px 14px;pointer-events:all;
+  animation:toast-in .3s ease-out;border:1px solid;
+  display:flex;align-items:flex-start;gap:10px;
+}
+@keyframes toast-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.alert-toast.info{border-color:rgba(68,138,255,.4)}
+.alert-toast.warn{border-color:rgba(255,171,0,.4)}
+.alert-toast.error{border-color:rgba(255,23,68,.4)}
+.alert-toast.success{border-color:rgba(0,230,118,.4)}
+.toast-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.toast-body .toast-title{font-size:12px;font-weight:600;color:#fff}
+.toast-body .toast-msg{font-size:11px;color:var(--text2);margin-top:2px}
+/* ── HEALTH BADGE ─────────────────────── */
+#health-globe{
+  position:fixed;bottom:210px;left:50%;transform:translateX(-50%);
+  background:rgba(6,13,26,.9);border:1px solid var(--border);
+  border-radius:30px;padding:6px 20px;z-index:100;
+  display:flex;align-items:center;gap:10px;font-size:11px;
+}
+#health-score{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+#health-label{color:var(--text2);font-size:10px}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#448aff" stroke-width="2">
+      <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+    </svg>
+    PAmarket Topology
+  </div>
+  <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+
+  <div class="top-stat" id="stat-nodes"><div class="val" id="sv-nodes">0</div><div class="lbl">Nodes</div></div>
+  <div class="top-stat" id="stat-events"><div class="val" id="sv-events">0</div><div class="lbl">Events/min</div></div>
+  <div class="top-stat" id="stat-users"><div class="val" id="sv-users">—</div><div class="lbl">Profiles</div></div>
+  <div class="top-stat" id="stat-listings"><div class="val" id="sv-listings">—</div><div class="lbl">Listings</div></div>
+  <div class="top-stat" id="stat-latency"><div class="val" id="sv-latency">—</div><div class="lbl">DB Latency</div></div>
+
+  <div class="spacer"></div>
+
+  <div id="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input id="global-search" type="text" placeholder="Search nodes…">
+  </div>
+
+  <button class="btn-icon" id="btn-layout" title="Reset layout">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    Reset
+  </button>
+  <button class="btn-icon" id="btn-table-view" title="Toggle table view">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+    Tables
+  </button>
+  <button class="btn-icon" id="btn-freeze" title="Freeze physics">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93 4.93 19.07"/></svg>
+    Freeze
+  </button>
+</div>
+
+<!-- FILTER BAR -->
+<div id="filterbar">
+  <div class="filter-chip fc-all on" data-tier="all"><div class="dot"></div>All</div>
+  <div class="filter-chip fc-client" data-tier="client"><div class="dot"></div>Client</div>
+  <div class="filter-chip fc-infra" data-tier="infra"><div class="dot"></div>Infra</div>
+  <div class="filter-chip fc-service" data-tier="service"><div class="dot"></div>Services</div>
+  <div class="filter-chip fc-database" data-tier="database"><div class="dot"></div>Database</div>
+  <div class="filter-chip fc-table" data-tier="table"><div class="dot"></div>Tables</div>
+  <div class="filter-chip fc-external" data-tier="external"><div class="dot"></div>External</div>
+  <div style="width:1px;height:20px;background:var(--border);margin:0 4px"></div>
+  <div class="filter-chip" id="fc-errors" style="color:var(--red);border-color:rgba(255,23,68,.3)"><div class="dot" style="background:var(--red)"></div>Errors only</div>
+  <div class="filter-chip" id="fc-active" style="color:var(--green);border-color:rgba(0,230,118,.3)"><div class="dot" style="background:var(--green)"></div>Active only</div>
+</div>
+
+<!-- CANVAS -->
+<div id="canvas-wrap">
+  <canvas id="canvas-bg"></canvas>
+  <canvas id="canvas-main"></canvas>
+</div>
+
+<!-- HEALTH GLOBE -->
+<div id="health-globe">
+  <div id="health-score" style="color:var(--green)">—</div>
+  <div>
+    <div style="font-size:12px;font-weight:600;color:#fff">System Health</div>
+    <div id="health-label" style="color:var(--text2)">Calculating…</div>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div id="legend">
+  <div class="leg-row"><div class="leg-dot" style="background:var(--green)"></div>Healthy</div>
+  <div class="leg-row"><div class="leg-dot" style="background:var(--yellow)"></div>Warning</div>
+  <div class="leg-row"><div class="leg-dot" style="background:var(--red)"></div>Error</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#444"></div>Offline</div>
+  <div style="height:6px"></div>
+  <div class="leg-row"><div style="width:20px;height:2px;background:linear-gradient(90deg,var(--blue),transparent)"></div>Data flow</div>
+  <div class="leg-row"><div style="width:20px;height:2px;background:linear-gradient(90deg,var(--red),transparent)"></div>Error flow</div>
+</div>
+
+<!-- ZOOM CONTROLS -->
+<div id="zoom-controls">
+  <div class="zoom-btn" id="zoom-in">+</div>
+  <div class="zoom-btn" id="zoom-out">−</div>
+  <div class="zoom-btn" id="zoom-fit" style="font-size:11px">fit</div>
+</div>
+
+<!-- EVENT FEED -->
+<div id="event-feed">
+  <div id="event-feed-header">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span class="title">Live Event Stream</span>
+    <span id="event-count" style="font-size:10px;color:var(--text2)">0 events</span>
+    <button class="btn-icon" id="btn-clear-feed" style="padding:3px 8px;font-size:10px">Clear</button>
+    <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer">
+      <input type="checkbox" id="chk-autoscroll" checked style="accent-color:var(--blue)"> Auto-scroll
+    </label>
+  </div>
+  <div id="events-list"></div>
+</div>
+
+<!-- SIDE PANEL -->
+<div id="side-panel">
+  <div id="panel-header">
+    <div id="panel-icon" style="font-size:18px"></div>
+    <div id="panel-title">Node Details</div>
+    <div id="panel-close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </div>
+  </div>
+  <div id="panel-content"></div>
+</div>
+
+<!-- TOOLTIP -->
+<div id="tooltip">
+  <div class="tt-name" id="tt-name"></div>
+  <div id="tt-body"></div>
+</div>
+
+<!-- ALERTS -->
+<div id="alerts-container"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   PAmarket Live System Topology
+   Real-time architecture visualization
+═══════════════════════════════════════════════════════════ */
+
+const SUPABASE_URL = 'https://gxgytumhknmnwspxjzxw.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_cf3Z72lUE6PLCb2m42OFLA_znE8JK2r';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ── TOPOLOGY DEFINITION ─────────────────────────────────── */
+const NODES = [
+  // CLIENTS
+  { id:'mobile',     label:'Mobile App',      tier:'client',   icon:'mobile',    desc:'Android / iOS Capacitor' },
+  { id:'web',        label:'Web App',         tier:'client',   icon:'web',       desc:'Progressive Web App' },
+  { id:'admin',      label:'Admin Panel',     tier:'client',   icon:'admin',     desc:'Admin dashboard' },
+
+  // INFRA
+  { id:'cdn',        label:'CDN',             tier:'infra',    icon:'cdn',       desc:'GitHub Pages CDN' },
+  { id:'r2',         label:'Cloudflare R2',   tier:'infra',    icon:'cloud',     desc:'Object storage CDN' },
+
+  // SUPABASE SERVICES
+  { id:'api',        label:'REST API',        tier:'service',  icon:'api',       desc:'PostgREST auto-generated' },
+  { id:'auth',       label:'Authentication',  tier:'service',  icon:'auth',      desc:'GoTrue / PKCE / OAuth' },
+  { id:'realtime',   label:'Realtime',        tier:'service',  icon:'realtime',  desc:'WebSocket subscriptions' },
+  { id:'storage',    label:'Storage',         tier:'service',  icon:'storage',   desc:'Supabase Storage API' },
+  { id:'functions',  label:'Edge Functions',  tier:'service',  icon:'lambda',    desc:'Deno-based serverless' },
+
+  // DATABASE
+  { id:'db',         label:'PostgreSQL',      tier:'database', icon:'db',        desc:'Supabase managed Postgres' },
+
+  // TABLES
+  { id:'tb_profiles',        label:'profiles',        tier:'table', parent:'db', desc:'User profiles + roles' },
+  { id:'tb_listings',        label:'listings',        tier:'table', parent:'db', desc:'Marketplace listings' },
+  { id:'tb_messages',        label:'messages',        tier:'table', parent:'db', desc:'Chat messages (RT)' },
+  { id:'tb_conversations',   label:'conversations',   tier:'table', parent:'db', desc:'Conversation headers' },
+  { id:'tb_notifications',   label:'notifications',   tier:'table', parent:'db', desc:'User notifications (RT)' },
+  { id:'tb_reports',         label:'reports',         tier:'table', parent:'db', desc:'Content reports' },
+  { id:'tb_verifications',   label:'verifications',   tier:'table', parent:'db', desc:'ID verification docs' },
+  { id:'tb_businesses',      label:'businesses',      tier:'table', parent:'db', desc:'Business profiles' },
+  { id:'tb_transactions',    label:'transactions',    tier:'table', parent:'db', desc:'Wallet transactions' },
+  { id:'tb_user_saves',      label:'user_saves',      tier:'table', parent:'db', desc:'Saved/favorited listings' },
+  { id:'tb_error_logs',      label:'error_logs',      tier:'table', parent:'db', desc:'Client error tracking' },
+  { id:'tb_push_tokens',     label:'push_tokens',     tier:'table', parent:'db', desc:'FCM push tokens' },
+  { id:'tb_paid_ads',        label:'paid_ads',        tier:'table', parent:'db', desc:'Promoted ads (RT)' },
+  { id:'tb_applications',    label:'applications',    tier:'table', parent:'db', desc:'Job applications' },
+  { id:'tb_reviews',         label:'reviews',         tier:'table', parent:'db', desc:'User reviews' },
+
+  // EXTERNAL
+  { id:'fcm',        label:'Firebase FCM',    tier:'external', icon:'firebase',  desc:'Push notification service' },
+  { id:'smtp',       label:'Email / SMTP',    tier:'external', icon:'email',     desc:'Transactional email' },
+  { id:'google',     label:'Google OAuth',    tier:'external', icon:'google',    desc:'Social login provider' },
+  { id:'facebook',   label:'Facebook OAuth',  tier:'external', icon:'facebook',  desc:'Social login provider' },
+  { id:'device',     label:'User Device',     tier:'external', icon:'device',    desc:'End-user mobile/desktop' },
+];
+
+const EDGES = [
+  // Clients → CDN
+  { s:'mobile', t:'cdn',       type:'assets', label:'Static assets' },
+  { s:'web',    t:'cdn',       type:'assets', label:'Static assets' },
+  { s:'admin',  t:'cdn',       type:'assets', label:'Static assets' },
+  { s:'cdn',    t:'r2',        type:'cdn',    label:'Object cache' },
+
+  // Clients → Auth
+  { s:'mobile', t:'auth',      type:'auth',   label:'PKCE / OAuth' },
+  { s:'web',    t:'auth',      type:'auth',   label:'PKCE / OAuth' },
+  { s:'admin',  t:'auth',      type:'auth',   label:'Session check' },
+  { s:'auth',   t:'google',    type:'oauth',  label:'Google SSO' },
+  { s:'auth',   t:'facebook',  type:'oauth',  label:'Facebook SSO' },
+
+  // Clients → API
+  { s:'mobile', t:'api',       type:'rest',   label:'REST / SDK' },
+  { s:'web',    t:'api',       type:'rest',   label:'REST / SDK' },
+  { s:'admin',  t:'api',       type:'rest',   label:'Admin RPC' },
+
+  // Clients → Realtime
+  { s:'mobile', t:'realtime',  type:'ws',     label:'WebSocket' },
+  { s:'web',    t:'realtime',  type:'ws',     label:'WebSocket' },
+
+  // API → Backend
+  { s:'api',    t:'auth',      type:'jwt',    label:'JWT validate' },
+  { s:'api',    t:'db',        type:'sql',    label:'SQL queries' },
+  { s:'api',    t:'storage',   type:'file',   label:'File ops' },
+  { s:'api',    t:'functions', type:'invoke', label:'Invoke fn' },
+  { s:'api',    t:'realtime',  type:'event',  label:'Broadcast' },
+
+  // Storage → R2
+  { s:'storage', t:'r2',       type:'upload', label:'Upload / CDN' },
+
+  // DB → Tables
+  { s:'db', t:'tb_profiles',      type:'query', label:'RLS' },
+  { s:'db', t:'tb_listings',      type:'query', label:'RLS + RT' },
+  { s:'db', t:'tb_messages',      type:'query', label:'RLS + RT' },
+  { s:'db', t:'tb_conversations', type:'query', label:'RLS' },
+  { s:'db', t:'tb_notifications', type:'query', label:'RLS + RT' },
+  { s:'db', t:'tb_reports',       type:'query', label:'RLS' },
+  { s:'db', t:'tb_verifications', type:'query', label:'RLS' },
+  { s:'db', t:'tb_businesses',    type:'query', label:'RLS + RT' },
+  { s:'db', t:'tb_transactions',  type:'query', label:'RLS' },
+  { s:'db', t:'tb_user_saves',    type:'query', label:'RLS (definer)' },
+  { s:'db', t:'tb_error_logs',    type:'query', label:'RLS' },
+  { s:'db', t:'tb_push_tokens',   type:'query', label:'RLS' },
+  { s:'db', t:'tb_paid_ads',      type:'query', label:'RLS + RT' },
+  { s:'db', t:'tb_applications',  type:'query', label:'RLS' },
+  { s:'db', t:'tb_reviews',       type:'query', label:'RLS' },
+
+  // Tables → Realtime triggers
+  { s:'tb_messages',      t:'realtime', type:'trigger', label:'INSERT trigger' },
+  { s:'tb_listings',      t:'realtime', type:'trigger', label:'INSERT trigger' },
+  { s:'tb_notifications', t:'realtime', type:'trigger', label:'INSERT trigger' },
+  { s:'tb_paid_ads',      t:'realtime', type:'trigger', label:'INSERT trigger' },
+  { s:'tb_businesses',    t:'realtime', type:'trigger', label:'INSERT trigger' },
+
+  // Realtime → Clients
+  { s:'realtime', t:'mobile', type:'push', label:'Live events' },
+  { s:'realtime', t:'web',    type:'push', label:'Live events' },
+
+  // Functions → External
+  { s:'functions', t:'fcm',   type:'push',  label:'FCM v1 API' },
+  { s:'functions', t:'smtp',  type:'email', label:'Send email' },
+
+  // FCM → Device
+  { s:'fcm',  t:'device',   type:'push',   label:'Push notification' },
+  { s:'auth', t:'smtp',     type:'email',  label:'Auth emails' },
+];
+
+/* ── STATE ─────────────────────────────────────────────── */
+const state = {
+  nodes: [],
+  edges: [],
+  particles: [],
+  transform: { x: 0, y: 0, scale: 1 },
+  dragging: null,
+  hoveredNode: null,
+  selectedNode: null,
+  filterTier: 'all',
+  filterErrors: false,
+  filterActive: false,
+  frozen: false,
+  showTables: true,
+  stats: {},
+  eventCount: 0,
+  eventsPerMin: 0,
+  eventCountWindow: [],
+  healthChecks: {},
+  tableStats: {},
+  particleId: 0,
+};
+
+/* ── CANVAS SETUP ───────────────────────────────────────── */
+const wrap = document.getElementById('canvas-wrap');
+const bgCvs = document.getElementById('canvas-bg');
+const cvs   = document.getElementById('canvas-main');
+const bgCtx = bgCvs.getContext('2d');
+const ctx   = cvs.getContext('2d');
+let W, H;
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  W = wrap.clientWidth; H = wrap.clientHeight;
+  [bgCvs, cvs].forEach(c => {
+    c.width = W * dpr; c.height = H * dpr;
+    c.style.width = W + 'px'; c.style.height = H + 'px';
+    const c2 = c.getContext('2d');
+    c2.scale(dpr, dpr);
+  });
+  drawBackground();
+}
+
+function drawBackground() {
+  bgCtx.clearRect(0, 0, W, H);
+  // Radial gradient background
+  const g = bgCtx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*.7);
+  g.addColorStop(0,  '#04091a');
+  g.addColorStop(.5, '#030712');
+  g.addColorStop(1,  '#020408');
+  bgCtx.fillStyle = g;
+  bgCtx.fillRect(0, 0, W, H);
+  // Subtle grid
+  bgCtx.strokeStyle = 'rgba(14,31,58,0.35)';
+  bgCtx.lineWidth = 1;
+  const gs = 60;
+  for (let x = 0; x < W; x += gs) { bgCtx.beginPath(); bgCtx.moveTo(x,0); bgCtx.lineTo(x,H); bgCtx.stroke(); }
+  for (let y = 0; y < H; y += gs) { bgCtx.beginPath(); bgCtx.moveTo(0,y); bgCtx.lineTo(W,y); bgCtx.stroke(); }
+  // Glow center
+  const cg = bgCtx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*.4);
+  cg.addColorStop(0, 'rgba(68,138,255,0.04)');
+  cg.addColorStop(1, 'transparent');
+  bgCtx.fillStyle = cg;
+  bgCtx.fillRect(0, 0, W, H);
+}
+
+/* ── COLORS ─────────────────────────────────────────────── */
+const TIER_COLOR = {
+  client:   '#00e5ff',
+  infra:    '#ffab00',
+  service:  '#448aff',
+  database: '#7c4dff',
+  table:    '#a47aff',
+  external: '#ff6d00',
+};
+const EDGE_COLOR = {
+  assets:  '#ffab00',
+  auth:    '#00e676',
+  oauth:   '#00e676',
+  rest:    '#448aff',
+  ws:      '#00e5ff',
+  jwt:     '#00e676',
+  sql:     '#7c4dff',
+  file:    '#ff6d00',
+  invoke:  '#ff6d00',
+  event:   '#00e5ff',
+  upload:  '#ffab00',
+  query:   '#a47aff',
+  trigger: '#a47aff',
+  push:    '#00e676',
+  cdn:     '#ffab00',
+  email:   '#ff6d00',
+};
+const HEALTH_COLOR = { healthy:'#00e676', warning:'#ffab00', error:'#ff1744', unknown:'#445' };
+
+/* ── ICON DRAWING ─────────────────────────────────────────── */
+function drawIcon(ctx2, icon, x, y, size, color) {
+  ctx2.save();
+  ctx2.strokeStyle = color;
+  ctx2.fillStyle = color;
+  ctx2.lineWidth = 1.5;
+  ctx2.lineCap = 'round';
+  ctx2.lineJoin = 'round';
+  const s = size * .35;
+  ctx2.translate(x, y);
+
+  switch(icon) {
+    case 'mobile':
+      ctx2.strokeRect(-s*.5, -s*.8, s, s*1.6);
+      ctx2.beginPath(); ctx2.arc(0, s*.55, s*.1, 0, Math.PI*2); ctx2.fill();
+      break;
+    case 'web':
+      ctx2.beginPath(); ctx2.arc(0, 0, s*.8, 0, Math.PI*2); ctx2.stroke();
+      ctx2.beginPath(); ctx2.moveTo(-s*.8,0); ctx2.lineTo(s*.8,0); ctx2.stroke();
+      ctx2.beginPath(); ctx2.moveTo(0,-s*.8); ctx2.bezierCurveTo(s*.5,-s*.4, s*.5,s*.4, 0,s*.8); ctx2.stroke();
+      ctx2.beginPath(); ctx2.moveTo(0,-s*.8); ctx2.bezierCurveTo(-s*.5,-s*.4,-s*.5,s*.4,0,s*.8); ctx2.stroke();
+      break;
+    case 'admin':
+      ctx2.beginPath(); ctx2.arc(0,-s*.2,s*.35,0,Math.PI*2); ctx2.stroke();
+      ctx2.beginPath(); ctx2.moveTo(-s*.6,s*.7); ctx2.quadraticCurveTo(0,s*.1, s*.6,s*.7); ctx2.stroke();
+      ctx2.beginPath(); ctx2.rect(-s*.3,-s*.8,s*.6,s*.15); ctx2.fill();
+      break;
+    case 'cdn':
+      for(let i=0;i<3;i++){ const a=i/3*Math.PI*2-Math.PI/2; ctx2.beginPath(); ctx2.arc(Math.cos(a)*s*.5, Math.sin(a)*s*.5, s*.2,0,Math.PI*2); ctx2.stroke(); }
+      ctx2.beginPath(); for(let i=0;i<3;i++){const a=i/3*Math.PI*2-Math.PI/2; ctx2.moveTo(0,0); ctx2.lineTo(Math.cos(a)*s*.3,Math.sin(a)*s*.3);} ctx2.stroke();
+      break;
+    case 'cloud':
+      ctx2.beginPath(); ctx2.arc(-s*.3,s*.1,s*.35,0,Math.PI*2); ctx2.arc(s*.2,0,s*.45,0,Math.PI*2); ctx2.arc(0,s*.3,s*.3,0,Math.PI*2); ctx2.fill();
+      ctx2.beginPath(); ctx2.arc(-s*.3,s*.1,s*.35,0,Math.PI*2); ctx2.arc(s*.2,0,s*.45,0,Math.PI*2); ctx2.stroke();
+      break;
+    case 'api':
+      ctx2.font = `bold ${s*.8}px monospace`;
+      ctx2.textAlign='center'; ctx2.textBaseline='middle';
+      ctx2.fillStyle = color;
+      ctx2.fillText('</>',0,0);
+      break;
+    case 'auth':
+      ctx2.beginPath(); ctx2.arc(0,-s*.2,s*.4,Math.PI,0); ctx2.lineTo(s*.4,s*.5); ctx2.lineTo(-s*.4,s*.5); ctx2.closePath(); ctx2.stroke();
+      ctx2.beginPath(); ctx2.arc(0,s*.35,s*.1,0,Math.PI*2); ctx2.fill();
+      break;
+    case 'realtime':
+      for(let i=1;i<=3;i++){
+        ctx2.globalAlpha=.3+i*.2; ctx2.beginPath();
+        ctx2.arc(0,0,s*.2*i,Math.PI*1.3,Math.PI*1.7); ctx2.stroke();
+        ctx2.arc(0,0,s*.2*i,Math.PI*.3,Math.PI*.7); ctx2.stroke();
+      }
+      ctx2.globalAlpha=1; ctx2.beginPath(); ctx2.arc(0,0,s*.1,0,Math.PI*2); ctx2.fill();
+      break;
+    case 'storage':
+      ctx2.beginPath(); ctx2.arc(0,-s*.4,s*.55,Math.PI,0); ctx2.lineTo(s*.55,s*.4); ctx2.arc(0,s*.4,s*.55,0,Math.PI); ctx2.closePath(); ctx2.stroke();
+      ctx2.beginPath(); ctx2.arc(0,-s*.4,s*.55,0,Math.PI); ctx2.stroke();
+      break;
+    case 'lambda':
+      ctx2.font = `bold ${s*1.2}px monospace`;
+      ctx2.textAlign='center'; ctx2.textBaseline='middle'; ctx2.fillStyle=color; ctx2.fillText('λ',0,0);
+      break;
+    case 'db':
+      const dw=s*.7, dh=s*.25;
+      ctx2.beginPath(); ctx2.ellipse(0,-s*.4,dw,dh,0,0,Math.PI*2); ctx2.stroke();
+      ctx2.beginPath(); ctx2.moveTo(-dw,-s*.4); ctx2.lineTo(-dw,s*.4); ctx2.moveTo(dw,-s*.4); ctx2.lineTo(dw,s*.4); ctx2.stroke();
+      ctx2.beginPath(); ctx2.ellipse(0,s*.4,dw,dh,0,0,Math.PI); ctx2.stroke();
+      ctx2.beginPath(); ctx2.ellipse(0,0,dw,dh,0,0,Math.PI); ctx2.stroke();
+      break;
+    case 'firebase':
+      ctx2.beginPath(); ctx2.moveTo(-s*.4,s*.5); ctx2.lineTo(0,-s*.7); ctx2.lineTo(s*.2,-s*.1); ctx2.lineTo(s*.4,s*.5); ctx2.closePath(); ctx2.fill();
+      ctx2.fillStyle='rgba(0,0,0,.3)'; ctx2.beginPath(); ctx2.moveTo(0,-s*.7); ctx2.lineTo(s*.2,-s*.1); ctx2.lineTo(-s*.1,s*.2); ctx2.closePath(); ctx2.fill();
+      break;
+    case 'email':
+      ctx2.strokeRect(-s*.6,-s*.4,s*1.2,s*.8);
+      ctx2.beginPath(); ctx2.moveTo(-s*.6,-s*.4); ctx2.lineTo(0,s*.1); ctx2.lineTo(s*.6,-s*.4); ctx2.stroke();
+      break;
+    case 'google':
+      ctx2.beginPath(); ctx2.arc(0,0,s*.65,0,Math.PI*2); ctx2.stroke();
+      ctx2.beginPath(); ctx2.moveTo(s*.65,0); ctx2.lineTo(s*.15,0); ctx2.arc(0,0,s*.15,0,Math.PI*2); ctx2.stroke();
+      break;
+    case 'facebook':
+      ctx2.font=`bold ${s*1.1}px serif`; ctx2.textAlign='center'; ctx2.textBaseline='middle'; ctx2.fillText('f',0,0);
+      break;
+    case 'device':
+      ctx2.strokeRect(-s*.45,-s*.65,s*.9,s*1.3);
+      ctx2.beginPath(); ctx2.moveTo(-s*.2,-s*.55); ctx2.lineTo(s*.2,-s*.55); ctx2.stroke();
+      ctx2.beginPath(); ctx2.arc(0,s*.5,s*.08,0,Math.PI*2); ctx2.fill();
+      break;
+    default:
+      // Generic hexagon
+      ctx2.beginPath();
+      for(let i=0;i<6;i++){const a=i/6*Math.PI*2-Math.PI/6; ctx2.lineTo(Math.cos(a)*s*.7, Math.sin(a)*s*.7);}
+      ctx2.closePath(); ctx2.stroke();
+  }
+  ctx2.restore();
+}
+
+/* ── NODE RENDERING ─────────────────────────────────────── */
+const NODE_R = { client:38, infra:34, service:36, database:44, table:28, external:34 };
+
+function getNodeRadius(node) { return NODE_R[node.tier] || 32; }
+function getNodeHealth(node) { return state.healthChecks[node.id] || 'healthy'; }
+function healthColor(h) { return HEALTH_COLOR[h] || HEALTH_COLOR.unknown; }
+
+function drawNode(node) {
+  if (!isNodeVisible(node)) return;
+  const { x, y } = toScreen(node);
+  const r = getNodeRadius(node);
+  const health = getNodeHealth(node);
+  const hc = healthColor(health);
+  const tc = TIER_COLOR[node.tier] || '#448aff';
+  const isSelected = state.selectedNode === node.id;
+  const isHovered  = state.hoveredNode === node.id;
+  const isHighlit  = state.searchTerm && node.label.toLowerCase().includes(state.searchTerm);
+
+  // Pulse ring for healthy nodes
+  const t = performance.now();
+  if (health === 'healthy' && !state.frozen) {
+    const pulsed = (Math.sin(t / 1000 + node._phase) + 1) / 2;
+    ctx.beginPath();
+    ctx.arc(x, y, r + 4 + pulsed * 8, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(0,230,118,${.08 * pulsed})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // Error pulsing
+  if (health === 'error') {
+    const pulse = (Math.sin(t / 400) + 1) / 2;
+    ctx.beginPath();
+    ctx.arc(x, y, r + 6 + pulse * 10, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(255,23,68,${.2 * pulse})`;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+
+  // Outer glow ring (selection / hover)
+  if (isSelected || isHovered || isHighlit) {
+    ctx.beginPath();
+    ctx.arc(x, y, r + 3, 0, Math.PI*2);
+    ctx.strokeStyle = isHighlit ? '#ffab00' : (isSelected ? hc : 'rgba(255,255,255,.4)');
+    ctx.lineWidth = isSelected ? 2.5 : 1.5;
+    ctx.stroke();
+  }
+
+  // Main circle fill
+  const grad = ctx.createRadialGradient(x - r*.2, y - r*.2, 0, x, y, r);
+  grad.addColorStop(0, `${tc}22`);
+  grad.addColorStop(1, `${tc}08`);
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Border
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.strokeStyle = hc;
+  ctx.lineWidth = health === 'error' ? 2.5 : 1.5;
+  ctx.stroke();
+
+  // Tier dot top-right
+  ctx.beginPath();
+  ctx.arc(x + r*.65, y - r*.65, 4, 0, Math.PI*2);
+  ctx.fillStyle = tc;
+  ctx.fill();
+
+  // Health indicator bottom-right
+  ctx.beginPath();
+  ctx.arc(x + r*.6, y + r*.6, 5, 0, Math.PI*2);
+  ctx.fillStyle = '#060d1a';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + r*.6, y + r*.6, 4, 0, Math.PI*2);
+  ctx.fillStyle = hc;
+  ctx.fill();
+
+  // Icon
+  drawIcon(ctx, node.icon || 'default', x, y - 4, r * 1.8, tc);
+
+  // Label
+  ctx.font = `${node.tier === 'table' ? 9 : 10}px 'Segoe UI', sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = '#c8d8f0';
+  ctx.fillText(node.label, x, y + r + 4);
+
+  // Traffic counter
+  const traffic = (state.stats[node.id] || {}).traffic || 0;
+  if (traffic > 0) {
+    ctx.font = 'bold 9px monospace';
+    ctx.fillStyle = tc;
+    ctx.fillText(traffic + '/s', x, y + r + 16);
+  }
+}
+
+/* ── EDGE RENDERING ─────────────────────────────────────── */
+function drawEdge(edge) {
+  const sn = findNode(edge.s), tn = findNode(edge.t);
+  if (!sn || !tn) return;
+  if (!isNodeVisible(sn) || !isNodeVisible(tn)) return;
+
+  const sx = screenX(sn), sy = screenY(sn);
+  const tx = screenX(tn), ty = screenY(tn);
+  const ec = EDGE_COLOR[edge.type] || '#448aff';
+  const health = Math.min(
+    getNodeHealth(sn) === 'error' ? 0 : 1,
+    getNodeHealth(tn) === 'error' ? 0 : 1
+  );
+  const lineColor = health === 0 ? '#ff174480' : `${ec}50`;
+
+  // Bezier control point
+  const mx = (sx + tx) / 2 + (ty - sy) * .15;
+  const my = (sy + ty) / 2 + (sx - tx) * .15;
+
+  ctx.beginPath();
+  ctx.moveTo(sx, sy);
+  ctx.quadraticCurveTo(mx, my, tx, ty);
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 8]);
+  ctx.lineDashOffset = -(performance.now() / 80) % 12;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Arrow head at target
+  const angle = Math.atan2(ty - my, tx - mx);
+  const aw = 6;
+  ctx.beginPath();
+  ctx.moveTo(tx, ty);
+  ctx.lineTo(tx - aw * Math.cos(angle - .4), ty - aw * Math.sin(angle - .4));
+  ctx.lineTo(tx - aw * Math.cos(angle + .4), ty - aw * Math.sin(angle + .4));
+  ctx.closePath();
+  ctx.fillStyle = lineColor;
+  ctx.fill();
+}
+
+/* ── PARTICLE SYSTEM ─────────────────────────────────────── */
+function spawnParticle(sourceId, targetId, type, payload) {
+  const sn = findNode(sourceId), tn = findNode(targetId);
+  if (!sn || !tn) return;
+  state.particles.push({
+    id: ++state.particleId,
+    s: sourceId, t: targetId,
+    type,
+    payload,
+    progress: 0,
+    speed: .004 + Math.random() * .003,
+    color: EDGE_COLOR[type] || '#448aff',
+    size: type === 'error' ? 5 : 4,
+    trail: [],
+    born: performance.now(),
+  });
+}
+
+function spawnChain(chain, type, payload, delay = 0) {
+  for (let i = 0; i < chain.length - 1; i++) {
+    setTimeout(() => spawnParticle(chain[i], chain[i+1], type, payload), delay + i * 250);
+  }
+}
+
+function updateParticles() {
+  const now = performance.now();
+  state.particles = state.particles.filter(p => {
+    if (p.progress >= 1) return false;
+    if (now - p.born > 8000) return false;
+    p.trail.push(p.progress);
+    if (p.trail.length > 8) p.trail.shift();
+    p.progress = Math.min(1, p.progress + p.speed);
+    return true;
+  });
+}
+
+function drawParticles() {
+  for (const p of state.particles) {
+    const sn = findNode(p.s), tn = findNode(p.t);
+    if (!sn || !tn) continue;
+    if (!isNodeVisible(sn) || !isNodeVisible(tn)) continue;
+
+    const sx = screenX(sn), sy = screenY(sn);
+    const tx = screenX(tn), ty = screenY(tn);
+    const mx = (sx + tx) / 2 + (ty - sy) * .15;
+    const my = (sy + ty) / 2 + (sx - tx) * .15;
+
+    const pos = bezierPoint(sx, sy, mx, my, tx, ty, p.progress);
+
+    // Trail
+    for (let i = 0; i < p.trail.length; i++) {
+      const tp = bezierPoint(sx, sy, mx, my, tx, ty, p.trail[i]);
+      const alpha = (i / p.trail.length) * .4;
+      ctx.beginPath();
+      ctx.arc(tp.x, tp.y, p.size * (i / p.trail.length), 0, Math.PI*2);
+      ctx.fillStyle = p.color + hex2(alpha * 255);
+      ctx.fill();
+    }
+
+    // Head
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, p.size, 0, Math.PI*2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+
+    // Glow
+    const gw = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, p.size * 3);
+    gw.addColorStop(0, p.color + 'aa');
+    gw.addColorStop(1, p.color + '00');
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, p.size * 3, 0, Math.PI*2);
+    ctx.fillStyle = gw;
+    ctx.fill();
+  }
+}
+
+function bezierPoint(x0, y0, cx, cy, x1, y1, t) {
+  const mt = 1 - t;
+  return {
+    x: mt*mt*x0 + 2*mt*t*cx + t*t*x1,
+    y: mt*mt*y0 + 2*mt*t*cy + t*t*y1,
+  };
+}
+function hex2(v) { return ('0' + Math.max(0,Math.min(255,Math.round(v))).toString(16)).slice(-2); }
+
+/* ── COORDINATE TRANSFORMS ──────────────────────────────── */
+function toScreen(node) {
+  return {
+    x: node.x * state.transform.scale + state.transform.x,
+    y: node.y * state.transform.scale + state.transform.y,
+  };
+}
+function screenX(node) { return node.x * state.transform.scale + state.transform.x; }
+function screenY(node) { return node.y * state.transform.scale + state.transform.y; }
+function toWorld(sx, sy) {
+  return {
+    x: (sx - state.transform.x) / state.transform.scale,
+    y: (sy - state.transform.y) / state.transform.scale,
+  };
+}
+
+/* ── D3 FORCE SIMULATION ───────────────────────────────── */
+let simulation;
+
+const TIER_Y = { client: .15, infra: .25, service: .42, database: .62, table: .80, external: .92 };
+const TIER_X_BASE = {
+  client:   [.2, .5, .8],
+  infra:    [.3, .7],
+  service:  [.12, .28, .45, .62, .78],
+  database: [.5],
+  table:    [],
+  external: [],
+};
+
+function initSimulation() {
+  const nodes = state.nodes.map(n => ({ ...n }));
+  state.nodes = nodes;
+
+  // Assign initial positions by tier
+  const tierCounters = {};
+  nodes.forEach(n => {
+    tierCounters[n.tier] = (tierCounters[n.tier] || 0) + 1;
+  });
+  const tierIdx = {};
+  nodes.forEach(n => {
+    tierIdx[n.tier] = (tierIdx[n.tier] || 0);
+    const count = tierCounters[n.tier];
+    const xFrac = (tierIdx[n.tier] + 1) / (count + 1);
+    const yFrac = TIER_Y[n.tier] || .5;
+    if (!n.x || n.x === 0) n.x = xFrac * W - W/2;
+    if (!n.y || n.y === 0) n.y = yFrac * H - H/2;
+    n._phase = Math.random() * Math.PI * 2;
+    tierIdx[n.tier]++;
+  });
+
+  const links = state.edges
+    .filter(e => findNode(e.s) && findNode(e.t))
+    .map(e => ({ source: e.s, target: e.t }));
+
+  simulation = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => {
+      const sn = findNode(d.source.id||d.source), tn = findNode(d.target.id||d.target);
+      if (!sn || !tn) return 120;
+      if (sn.tier === 'db' || tn.tier === 'db') return 100;
+      if (sn.tier === 'table' || tn.tier === 'table') return 80;
+      return 150;
+    }).strength(0.3))
+    .force('charge', d3.forceManyBody().strength(d => d.tier === 'table' ? -150 : -400))
+    .force('collision', d3.forceCollide(d => getNodeRadius(d) + 20))
+    .force('x', d3.forceX(d => {
+      const tierCnt = tierCounters[d.tier] || 1;
+      const idx = nodes.filter(n => n.tier === d.tier).indexOf(d);
+      return ((idx + 1) / (tierCnt + 1)) * W - W/2;
+    }).strength(0.15))
+    .force('y', d3.forceY(d => (TIER_Y[d.tier] || .5) * H - H/2).strength(0.3))
+    .alphaDecay(0.02)
+    .on('tick', () => { if (!state.frozen) render(); });
+
+  centerView();
+}
+
+function centerView() {
+  state.transform.x = W / 2;
+  state.transform.y = H / 2;
+  state.transform.scale = 0.85;
+}
+
+/* ── MAIN RENDER LOOP ────────────────────────────────────── */
+let lastRaf = 0;
+function render(ts = 0) {
+  requestAnimationFrame(render);
+  ctx.clearRect(0, 0, W, H);
+
+  // Edges first (behind nodes)
+  for (const e of state.edges) drawEdge(e);
+
+  // Particles
+  if (!state.frozen) updateParticles();
+  drawParticles();
+
+  // Nodes
+  for (const n of state.nodes) drawNode(n);
+}
+
+/* ── NODE LOOKUP ─────────────────────────────────────────── */
+function findNode(id) { return state.nodes.find(n => n.id === (id?.id || id)); }
+function isNodeVisible(node) {
+  if (!state.showTables && node.tier === 'table') return false;
+  if (state.filterTier !== 'all' && node.tier !== state.filterTier) return false;
+  if (state.filterErrors && getNodeHealth(node) !== 'error') return false;
+  return true;
+}
+function nodeAt(sx, sy) {
+  const w = toWorld(sx, sy);
+  return state.nodes.find(n => {
+    if (!isNodeVisible(n)) return false;
+    const r = getNodeRadius(n);
+    return Math.hypot(n.x - w.x, n.y - w.y) < r + 4;
+  });
+}
+
+/* ── INTERACTION ─────────────────────────────────────────── */
+let isPanning = false, panStart = null, panOrigin = null;
+
+cvs.addEventListener('mousedown', e => {
+  const node = nodeAt(e.offsetX, e.offsetY);
+  if (node) {
+    state.dragging = { node, ox: node.x - toWorld(e.offsetX, e.offsetY).x, oy: node.y - toWorld(e.offsetX, e.offsetY).y };
+    if (simulation) { simulation.alphaTarget(.3).restart(); }
+    cvs.classList.add('grabbing');
+  } else {
+    isPanning = true;
+    panStart = { x: e.clientX, y: e.clientY };
+    panOrigin = { ...state.transform };
+    cvs.classList.add('grabbing');
+  }
+});
+
+window.addEventListener('mousemove', e => {
+  if (state.dragging) {
+    const w = toWorld(e.offsetX, e.offsetY);
+    state.dragging.node.x = w.x + state.dragging.ox;
+    state.dragging.node.y = w.y + state.dragging.oy;
+    if (simulation) simulation.alphaTarget(.3).restart();
+  } else if (isPanning) {
+    const dx = e.clientX - panStart.x, dy = e.clientY - panStart.y;
+    state.transform.x = panOrigin.x + dx;
+    state.transform.y = panOrigin.y + dy;
+  } else {
+    const node = nodeAt(e.offsetX, e.offsetY);
+    const prev = state.hoveredNode;
+    state.hoveredNode = node ? node.id : null;
+    if (node) { showTooltip(e, node); cvs.style.cursor = 'pointer'; }
+    else { hideTooltip(); cvs.style.cursor = ''; }
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  if (state.dragging) {
+    state.dragging.node.fx = state.dragging.node.x;
+    state.dragging.node.fy = state.dragging.node.y;
+    if (simulation) simulation.alphaTarget(0);
+    state.dragging = null;
+  }
+  isPanning = false;
+  cvs.classList.remove('grabbing');
+});
+
+cvs.addEventListener('click', e => {
+  const node = nodeAt(e.offsetX, e.offsetY);
+  if (node) {
+    state.selectedNode = state.selectedNode === node.id ? null : node.id;
+    if (state.selectedNode) openPanel(node);
+    else closePanel();
+  } else {
+    state.selectedNode = null;
+    closePanel();
+  }
+});
+
+cvs.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? .9 : 1.1;
+  const mx = e.offsetX, my = e.offsetY;
+  state.transform.x = mx + (state.transform.x - mx) * factor;
+  state.transform.y = my + (state.transform.y - my) * factor;
+  state.transform.scale = Math.max(.2, Math.min(3, state.transform.scale * factor));
+}, { passive: false });
+
+document.getElementById('zoom-in').onclick = () => zoom(1.2);
+document.getElementById('zoom-out').onclick = () => zoom(.8);
+document.getElementById('zoom-fit').onclick = () => { centerView(); };
+function zoom(f) {
+  state.transform.x = W/2 + (state.transform.x - W/2) * f;
+  state.transform.y = H/2 + (state.transform.y - H/2) * f;
+  state.transform.scale = Math.max(.2, Math.min(3, state.transform.scale * f));
+}
+
+/* ── TOOLTIP ─────────────────────────────────────────────── */
+function showTooltip(e, node) {
+  const tt = document.getElementById('tooltip');
+  document.getElementById('tt-name').textContent = node.label;
+  const stats = state.stats[node.id] || {};
+  const tStats = state.tableStats[node.id] || {};
+  const health = getNodeHealth(node);
+  let rows = [
+    ['Tier', node.tier],
+    ['Health', health],
+  ];
+  if (stats.rps !== undefined)    rows.push(['Req/s', stats.rps]);
+  if (stats.latency !== undefined) rows.push(['Latency', stats.latency + 'ms']);
+  if (tStats.count !== undefined) rows.push(['Rows', tStats.count?.toLocaleString()]);
+  if (node.desc) rows.push(['Info', node.desc]);
+  document.getElementById('tt-body').innerHTML = rows.map(([k,v]) =>
+    `<div class="tt-row"><span class="tt-key">${k}</span><span class="tt-val">${v}</span></div>`
+  ).join('');
+  tt.style.display = 'block';
+  const x = Math.min(e.clientX + 12, window.innerWidth - 240);
+  const y = Math.min(e.clientY + 12, window.innerHeight - 150);
+  tt.style.left = x + 'px';
+  tt.style.top = y + 'px';
+}
+function hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
+
+/* ── SIDE PANEL ──────────────────────────────────────────── */
+function openPanel(node) {
+  document.getElementById('panel-title').textContent = node.label;
+  document.getElementById('panel-icon').textContent = '';
+  const panel = document.getElementById('side-panel');
+  panel.classList.add('open');
+  renderPanelContent(node);
+  loadNodeDetails(node);
+}
+function closePanel() { document.getElementById('side-panel').classList.remove('open'); }
+document.getElementById('panel-close').onclick = closePanel;
+
+function renderPanelContent(node) {
+  const stats = state.stats[node.id] || {};
+  const tStats = state.tableStats[node.id] || {};
+  const health = getNodeHealth(node);
+  const hc = healthColor(health);
+
+  const connections = EDGES.filter(e => e.s === node.id || e.t === node.id);
+  const deps = connections.map(e => e.s === node.id ? e.t : e.s);
+  const depNodes = [...new Set(deps)].map(id => findNode(id)).filter(Boolean);
+
+  const pc = document.getElementById('panel-content');
+  pc.innerHTML = `
+    <div class="panel-section">
+      <div class="panel-section-title">Status</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:10px;height:10px;border-radius:50%;background:${hc}"></div>
+        <span style="font-size:13px;font-weight:600;color:${hc}">${health.toUpperCase()}</span>
+      </div>
+      <div class="stat-grid" id="panel-stats">
+        <div class="stat-cell"><div class="sv" id="ps-rps">${stats.rps ?? '—'}</div><div class="sk">Req/s</div></div>
+        <div class="stat-cell"><div class="sv" id="ps-lat">${stats.latency ? stats.latency+'ms' : '—'}</div><div class="sk">Latency</div></div>
+        <div class="stat-cell"><div class="sv" id="ps-err">${stats.errors ?? 0}</div><div class="sk">Errors</div></div>
+        <div class="stat-cell"><div class="sv" id="ps-rows">${tStats.count !== undefined ? tStats.count.toLocaleString() : '—'}</div><div class="sk">Rows</div></div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Info</div>
+      <div class="panel-row"><span class="panel-key">Tier</span><span class="panel-val"><span class="badge badge-blue">${node.tier}</span></span></div>
+      <div class="panel-row"><span class="panel-key">ID</span><span class="panel-val" style="font-size:10px;color:var(--text2)">${node.id}</span></div>
+      ${node.desc ? `<div class="panel-row"><span class="panel-key">Description</span><span class="panel-val" style="font-size:10px">${node.desc}</span></div>` : ''}
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Connections (${connections.length})</div>
+      ${connections.slice(0,8).map(e => {
+        const other = findNode(e.s === node.id ? e.t : e.s);
+        const dir = e.s === node.id ? '→' : '←';
+        return `<div class="panel-row">
+          <span class="panel-key">${dir} ${other?.label || '?'}</span>
+          <span class="panel-val" style="font-size:9px;color:${EDGE_COLOR[e.type]||'#448aff'}">${e.type}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    ${node.tier === 'table' ? renderTablePanel(node) : ''}
+    ${node.tier === 'service' || node.tier === 'database' ? renderServicePanel(node) : ''}
+  `;
+}
+
+function renderTablePanel(node) {
+  const ts = state.tableStats[node.id] || {};
+  return `
+    <div class="panel-section">
+      <div class="panel-section-title">Table Stats</div>
+      <div class="panel-row"><span class="panel-key">Row Count</span><span class="panel-val" id="ps-trows">${ts.count ?? 'Loading…'}</span></div>
+      <div class="panel-row"><span class="panel-key">RLS Enabled</span><span class="panel-val green">✓ Yes</span></div>
+      <div class="panel-row"><span class="panel-key">Realtime</span><span class="panel-val ${['tb_messages','tb_listings','tb_notifications','tb_paid_ads','tb_businesses'].includes(node.id)?'green':'panel-val'}">${['tb_messages','tb_listings','tb_notifications','tb_paid_ads','tb_businesses'].includes(node.id)?'✓ Enabled':'— Disabled'}</span></div>
+    </div>
+  `;
+}
+
+function renderServicePanel(node) {
+  return `
+    <div class="panel-section">
+      <div class="panel-section-title">Service Config</div>
+      <div class="panel-row"><span class="panel-key">Provider</span><span class="panel-val">Supabase</span></div>
+      <div class="panel-row"><span class="panel-key">Region</span><span class="panel-val">AWS (managed)</span></div>
+      <div class="panel-row"><span class="panel-key">SDK</span><span class="panel-val">@supabase/supabase-js v2</span></div>
+    </div>
+  `;
+}
+
+async function loadNodeDetails(node) {
+  if (node.tier === 'table') {
+    const tableName = node.id.replace('tb_','');
+    const t0 = performance.now();
+    try {
+      const { count } = await sb.from(tableName).select('*', { count: 'exact', head: true });
+      const lat = Math.round(performance.now() - t0);
+      state.tableStats[node.id] = { count: count || 0, latency: lat };
+      const el = document.getElementById('ps-trows');
+      if (el) el.textContent = (count||0).toLocaleString();
+      const rEl = document.getElementById('ps-rows');
+      if (rEl) rEl.textContent = (count||0).toLocaleString();
+    } catch(e) {}
+  }
+}
+
+/* ── EVENT FEED ──────────────────────────────────────────── */
+const EVENT_ICONS = {
+  listing_insert: { icon:'📦', color:'#448aff', chain:['mobile','api','db','tb_listings','realtime'] },
+  listing_update: { icon:'✏️', color:'#ffab00', chain:['mobile','api','db','tb_listings'] },
+  listing_delete: { icon:'🗑️', color:'#ff1744', chain:['mobile','api','db','tb_listings'] },
+  message_insert: { icon:'💬', color:'#00e5ff', chain:['mobile','api','db','tb_messages','realtime','device'] },
+  notification:   { icon:'🔔', color:'#00e676', chain:['db','tb_notifications','realtime','functions','fcm','device'] },
+  profile_update: { icon:'👤', color:'#7c4dff', chain:['mobile','auth','api','db','tb_profiles'] },
+  auth_login:     { icon:'🔐', color:'#00e676', chain:['mobile','auth','db','tb_profiles'] },
+  storage_upload: { icon:'📁', color:'#ff6d00', chain:['mobile','api','storage','r2'] },
+  api_request:    { icon:'⚡', color:'#448aff', chain:['web','api','db'] },
+  paid_ads:       { icon:'📢', color:'#ffab00', chain:['api','db','tb_paid_ads','realtime'] },
+  business:       { icon:'🏢', color:'#ff6d00', chain:['api','db','tb_businesses','realtime'] },
+  error:          { icon:'⚠️', color:'#ff1744', chain:['api','db','tb_error_logs'] },
+};
+
+let totalEventCount = 0;
+
+function addEvent(type, msg, path) {
+  totalEventCount++;
+  state.eventCountWindow.push(Date.now());
+  // Keep only last 60 seconds
+  const cutoff = Date.now() - 60000;
+  state.eventCountWindow = state.eventCountWindow.filter(t => t > cutoff);
+  document.getElementById('sv-events').textContent = state.eventCountWindow.length;
+  document.getElementById('event-count').textContent = totalEventCount + ' events';
+
+  const cfg = EVENT_ICONS[type] || { icon:'●', color:'#448aff', chain:[] };
+
+  // Spawn particles
+  if (cfg.chain.length > 1) spawnChain(cfg.chain, type, msg);
+
+  // Update node traffic
+  cfg.chain.forEach(id => {
+    if (!state.stats[id]) state.stats[id] = {};
+    state.stats[id].traffic = (state.stats[id].traffic || 0) + 1;
+    setTimeout(() => { if (state.stats[id]) state.stats[id].traffic = Math.max(0, state.stats[id].traffic - 1); }, 5000);
+  });
+
+  const list = document.getElementById('events-list');
+  const div = document.createElement('div');
+  div.className = 'evt';
+
+  const pathNodes = cfg.chain.slice(0, 5);
+  const pathHtml = pathNodes.map((id,i) => {
+    const n = findNode(id);
+    return `${i > 0 ? '<span class="arrow">→</span>' : ''}<span class="node-chip">${n?.label||id}</span>`;
+  }).join('');
+
+  div.innerHTML = `
+    <div class="evt-icon" style="background:${cfg.color}22;color:${cfg.color}">${cfg.icon}</div>
+    <div class="evt-msg" style="color:${cfg.color}">${msg}</div>
+    <div class="evt-path">${pathHtml}</div>
+    <div class="evt-time">${new Date().toLocaleTimeString()}</div>
+  `;
+  list.prepend(div);
+
+  // Keep max 200 events
+  while (list.children.length > 200) list.removeChild(list.lastChild);
+
+  if (document.getElementById('chk-autoscroll').checked) {
+    list.scrollTop = 0;
+  }
+}
+
+/* ── SUPABASE REALTIME ───────────────────────────────────── */
+function setupRealtime() {
+  // Listings realtime
+  sb.channel('topology-listings')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'listings' }, payload => {
+      const d = payload.new;
+      addEvent('listing_insert', `New listing: "${d.title?.substring(0,30)||'(untitled)'}" by ${d.seller_name||'user'}`, payload);
+      state.healthChecks['tb_listings'] = 'healthy';
+      state.healthChecks['db'] = 'healthy';
+      state.healthChecks['api'] = 'healthy';
+      updateTableStat('tb_listings', 1);
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'listings' }, payload => {
+      addEvent('listing_update', `Listing updated: "${payload.new?.title?.substring(0,25)||'listing'}"`, payload);
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'listings' }, payload => {
+      addEvent('listing_delete', `Listing removed`, payload);
+      updateTableStat('tb_listings', -1);
+    })
+    .subscribe(status => updateChannelHealth('tb_listings', status));
+
+  // Messages realtime
+  sb.channel('topology-messages')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+      addEvent('message_insert', `Message sent in conversation`, payload);
+      state.healthChecks['tb_messages'] = 'healthy';
+      state.healthChecks['realtime'] = 'healthy';
+      updateTableStat('tb_messages', 1);
+    })
+    .subscribe(status => updateChannelHealth('tb_messages', status));
+
+  // Notifications realtime
+  sb.channel('topology-notifications')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
+      const d = payload.new;
+      addEvent('notification', `Notification: ${d.message?.substring(0,40)||'sent'}`, payload);
+      state.healthChecks['tb_notifications'] = 'healthy';
+      updateTableStat('tb_notifications', 1);
+    })
+    .subscribe(status => updateChannelHealth('tb_notifications', status));
+
+  // Profiles realtime (polls)
+  sb.channel('topology-profiles')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
+      addEvent('profile_update', `Profile updated: ${payload.new?.name || 'user'}`, payload);
+    })
+    .subscribe(status => updateChannelHealth('tb_profiles', status));
+
+  // Businesses realtime
+  sb.channel('topology-businesses')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'businesses' }, payload => {
+      addEvent('business', `New business: ${payload.new?.name || '(name)'}`, payload);
+      updateTableStat('tb_businesses', 1);
+    })
+    .subscribe(status => updateChannelHealth('tb_businesses', status));
+
+  // Paid ads realtime
+  sb.channel('topology-paid-ads')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'paid_ads' }, payload => {
+      addEvent('paid_ads', `New paid ad created`, payload);
+    })
+    .subscribe(status => updateChannelHealth('tb_paid_ads', status));
+
+  state.healthChecks['realtime'] = 'healthy';
+}
+
+function updateChannelHealth(nodeId, status) {
+  if (status === 'SUBSCRIBED') state.healthChecks[nodeId] = 'healthy';
+  else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+    state.healthChecks[nodeId] = 'error';
+    showAlert('warn', `Realtime: ${nodeId}`, `Subscription status: ${status}`);
+  }
+}
+
+function updateTableStat(id, delta) {
+  if (!state.tableStats[id]) state.tableStats[id] = { count: 0 };
+  state.tableStats[id].count = (state.tableStats[id].count || 0) + delta;
+}
+
+/* ── HEALTH CHECKS ───────────────────────────────────────── */
+async function runHealthChecks() {
+  // DB health
+  const t0 = performance.now();
+  try {
+    const { data } = await sb.from('profiles').select('id', { count: 'exact', head: true });
+    const lat = Math.round(performance.now() - t0);
+    state.healthChecks['db'] = lat < 500 ? 'healthy' : lat < 2000 ? 'warning' : 'error';
+    state.healthChecks['api'] = 'healthy';
+    state.stats['db'] = { latency: lat };
+    state.stats['api'] = { latency: lat };
+    document.getElementById('sv-latency').textContent = lat + 'ms';
+  } catch(e) {
+    state.healthChecks['db'] = 'error';
+    state.healthChecks['api'] = 'error';
+    showAlert('error', 'Database', 'Connection failed: ' + e.message);
+  }
+
+  // Auth health
+  try {
+    const { data } = await sb.auth.getSession();
+    state.healthChecks['auth'] = 'healthy';
+    if (data?.session) {
+      state.healthChecks['auth'] = 'healthy';
+      addEvent('auth_login', `Session active: ${data.session.user?.email || 'user'}`, {});
+      spawnParticle('mobile', 'auth', 'auth');
+    }
+  } catch(e) {
+    state.healthChecks['auth'] = 'warning';
+  }
+
+  // Storage health
+  try {
+    const { data, error } = await sb.storage.listBuckets();
+    if (!error) {
+      state.healthChecks['storage'] = 'healthy';
+      state.healthChecks['r2'] = 'healthy';
+      state.stats['storage'] = { buckets: data?.length || 0 };
+    }
+  } catch(e) { state.healthChecks['storage'] = 'warning'; }
+
+  // Check Supabase functions endpoint
+  try {
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/`, { method:'HEAD', signal: AbortSignal.timeout(3000) });
+    state.healthChecks['functions'] = r.status < 500 ? 'healthy' : 'warning';
+  } catch { state.healthChecks['functions'] = 'warning'; }
+
+  // Client nodes
+  state.healthChecks['mobile'] = 'healthy';
+  state.healthChecks['web'] = 'healthy';
+  state.healthChecks['admin'] = 'healthy';
+  state.healthChecks['cdn'] = 'healthy';
+  state.healthChecks['fcm'] = 'healthy';
+  state.healthChecks['smtp'] = 'healthy';
+  state.healthChecks['google'] = 'healthy';
+  state.healthChecks['facebook'] = 'healthy';
+  state.healthChecks['device'] = 'healthy';
+
+  updateHealthScore();
+  updateTopStats();
+}
+
+function updateHealthScore() {
+  const checks = Object.values(state.healthChecks);
+  if (!checks.length) return;
+  const healthy = checks.filter(h => h === 'healthy').length;
+  const score = Math.round((healthy / checks.length) * 100);
+  const el = document.getElementById('health-score');
+  el.textContent = score + '%';
+  el.style.color = score >= 90 ? '#00e676' : score >= 70 ? '#ffab00' : '#ff1744';
+  document.getElementById('health-label').textContent =
+    score >= 90 ? 'All systems operational' :
+    score >= 70 ? 'Degraded performance' : 'Critical issues detected';
+}
+
+/* ── POLLING STATS ───────────────────────────────────────── */
+async function pollStats() {
+  // Profile count
+  try {
+    const { count } = await sb.from('profiles').select('*', { count:'exact', head:true });
+    document.getElementById('sv-users').textContent = (count||0).toLocaleString();
+    state.tableStats['tb_profiles'] = { count: count || 0 };
+    if (state.selectedNode === 'tb_profiles') {
+      const el = document.getElementById('ps-trows');
+      if (el) el.textContent = (count||0).toLocaleString();
+    }
+  } catch(e) {}
+
+  // Listing count (active)
+  try {
+    const { count } = await sb.from('listings').select('*', { count:'exact', head:true }).eq('status','active');
+    document.getElementById('sv-listings').textContent = (count||0).toLocaleString();
+    state.tableStats['tb_listings'] = { count: count || 0 };
+  } catch(e) {}
+
+  // Today's activity
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayISO = today.toISOString();
+
+  try {
+    const { count: newUsers } = await sb.from('profiles').select('*',{count:'exact',head:true}).gte('created_at', todayISO);
+    if (newUsers > 0) addEvent('auth_login', `${newUsers} new registration${newUsers>1?'s':''} today`, {});
+    if (newUsers > 0) spawnParticle('mobile', 'auth', 'auth');
+  } catch(e) {}
+
+  // Simulate API traffic events for visualization
+  simulateBackgroundTraffic();
+
+  document.getElementById('sv-nodes').textContent = state.nodes.length;
+}
+
+function simulateBackgroundTraffic() {
+  // Represent background API polling as visual particles
+  const bgRoutes = [
+    { chain:['web','cdn'], type:'assets', msg:'Asset request' },
+    { chain:['mobile','api','db'], type:'rest', msg:'API query' },
+    { chain:['web','api','db'], type:'rest', msg:'API query' },
+    { chain:['mobile','realtime'], type:'ws', msg:'WS heartbeat' },
+    { chain:['web','auth'], type:'auth', msg:'Session check' },
+  ];
+  const route = bgRoutes[Math.floor(Math.random() * bgRoutes.length)];
+  spawnChain(route.chain, route.type, route.msg, 0);
+  if (!state.stats['api']) state.stats['api'] = {};
+  state.stats['api'].rps = (state.stats['api'].rps || 0);
+}
+
+function updateTopStats() {
+  // Nothing extra needed; done in pollStats
+}
+
+/* ── ALERTS ──────────────────────────────────────────────── */
+const activeAlerts = new Map();
+function showAlert(type, title, msg, duration = 5000) {
+  const key = title + msg;
+  if (activeAlerts.has(key)) return;
+  const c = document.getElementById('alerts-container');
+  const d = document.createElement('div');
+  d.className = `alert-toast ${type}`;
+  const icons = { info:'ℹ️', warn:'⚠️', error:'🚨', success:'✅' };
+  d.innerHTML = `
+    <div class="toast-icon">${icons[type]||'●'}</div>
+    <div class="toast-body">
+      <div class="toast-title">${title}</div>
+      <div class="toast-msg">${msg}</div>
+    </div>
+  `;
+  c.appendChild(d);
+  activeAlerts.set(key, true);
+  setTimeout(() => {
+    d.style.opacity = '0';
+    d.style.transform = 'translateX(20px)';
+    d.style.transition = 'all .3s';
+    setTimeout(() => { d.remove(); activeAlerts.delete(key); }, 300);
+  }, duration);
+}
+
+/* ── FILTER / SEARCH / CONTROLS ──────────────────────────── */
+document.querySelectorAll('[data-tier]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('[data-tier]').forEach(c => c.classList.remove('on'));
+    chip.classList.add('on');
+    state.filterTier = chip.dataset.tier;
+  });
+});
+
+document.getElementById('fc-errors').addEventListener('click', function() {
+  this.classList.toggle('on');
+  state.filterErrors = this.classList.contains('on');
+});
+
+document.getElementById('fc-active').addEventListener('click', function() {
+  this.classList.toggle('on');
+  state.filterActive = this.classList.contains('on');
+});
+
+document.getElementById('btn-freeze').addEventListener('click', function() {
+  state.frozen = !state.frozen;
+  this.classList.toggle('active', state.frozen);
+  if (!state.frozen && simulation) simulation.alphaTarget(.1).restart();
+});
+
+document.getElementById('btn-table-view').addEventListener('click', function() {
+  state.showTables = !state.showTables;
+  this.classList.toggle('active', !state.showTables);
+  this.innerHTML = this.innerHTML.replace(/(Tables|No Tables)/, state.showTables ? 'Tables' : 'No Tables');
+});
+
+document.getElementById('btn-layout').addEventListener('click', () => {
+  state.nodes.forEach(n => { n.fx = null; n.fy = null; });
+  if (simulation) { simulation.alpha(1).alphaTarget(.3).restart(); setTimeout(()=>simulation.alphaTarget(0), 3000); }
+  centerView();
+});
+
+document.getElementById('global-search').addEventListener('input', function() {
+  state.searchTerm = this.value.trim().toLowerCase() || null;
+});
+
+document.getElementById('btn-clear-feed').addEventListener('click', () => {
+  document.getElementById('events-list').innerHTML = '';
+  totalEventCount = 0;
+  document.getElementById('event-count').textContent = '0 events';
+});
+
+/* ── CONTINUOUS BACKGROUND SIMULATION ────────────────────── */
+function startBackgroundAnimations() {
+  // Periodic background traffic (represents real ongoing activity)
+  setInterval(() => {
+    if (state.frozen) return;
+    const routes = [
+      { chain:['mobile','auth'], type:'auth', msg:'Token refresh' },
+      { chain:['web','api','db','tb_listings'], type:'rest', msg:'Feed query' },
+      { chain:['mobile','realtime'], type:'ws', msg:'WS keepalive' },
+      { chain:['mobile','api','db','tb_profiles'], type:'rest', msg:'Profile fetch' },
+      { chain:['web','cdn','r2'], type:'assets', msg:'Asset request' },
+      { chain:['db','tb_listings','realtime','mobile'], type:'trigger', msg:'Listing change event' },
+      { chain:['api','db','tb_notifications','realtime','device'], type:'event', msg:'Notification dispatch' },
+    ];
+    const r = routes[Math.floor(Math.random() * routes.length)];
+    spawnChain(r.chain, r.type, r.msg, 0);
+  }, 800);
+
+  // Periodic "heartbeat" between all services
+  setInterval(() => {
+    if (state.frozen) return;
+    spawnParticle('db', 'api', 'sql');
+    setTimeout(() => spawnParticle('auth', 'api', 'jwt'), 200);
+    setTimeout(() => spawnParticle('realtime', 'mobile', 'ws'), 400);
+  }, 3000);
+}
+
+/* ── INIT ─────────────────────────────────────────────────── */
+async function init() {
+  // Setup nodes & edges
+  state.nodes = NODES.map(n => ({ ...n, x: 0, y: 0, _phase: Math.random() * Math.PI * 2 }));
+  state.edges = EDGES;
+
+  resize();
+  window.addEventListener('resize', () => { resize(); if (simulation) simulation.restart(); });
+
+  initSimulation();
+  render();
+  setupRealtime();
+
+  // Initial health checks
+  await runHealthChecks();
+  await pollStats();
+
+  // Periodic refresh
+  setInterval(runHealthChecks, 15000);
+  setInterval(pollStats, 8000);
+
+  startBackgroundAnimations();
+
+  // Welcome event
+  setTimeout(() => {
+    addEvent('auth_login', 'PAmarket topology connected — monitoring all systems', {});
+    showAlert('success', 'Topology Live', 'Real-time system monitoring active');
+  }, 500);
+
+  // Simulate some initial traffic
+  setTimeout(() => spawnChain(['mobile','auth','api','db','tb_profiles'], 'auth', 'Initial session'), 1000);
+  setTimeout(() => spawnChain(['web','cdn','api','db','tb_listings'], 'rest', 'Feed load'), 1500);
+  setTimeout(() => spawnChain(['mobile','realtime'], 'ws', 'Subscribe channels'), 2000);
+}
+
+init();
+</script>
+</body>
+</html>
