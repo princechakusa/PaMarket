@@ -175,7 +175,7 @@
           <button class="det-icon-btn" onclick="H.shareListing('${l.id}')" aria-label="Share">
             <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
-          <button class="det-icon-btn${saved?' saved':''}" onclick="H.toggleSave('${l.id}')" aria-label="${saved?'Unsave':'Save'}">
+          <button class="det-icon-btn${saved?' saved':''}" data-save-id="${l.id}" onclick="H.toggleSave('${l.id}')" aria-label="${saved?'Unsave':'Save'}">
             <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"${saved?' fill="#1A3A8F" stroke="#1A3A8F"':''}/></svg>
           </button>
         </div>
@@ -359,33 +359,50 @@
     else { if (navigator.clipboard) navigator.clipboard.writeText(text+' '+location.href).catch(()=>{}); H.toast('Link copied'); }
   };
 
-  H.toggleSave = function(id) {
+  H.toggleSave = function(id, event) {
+    if (event && event.stopPropagation) event.stopPropagation();
     const u = H.currentUser();
     if (!u) { H.requireAuth('Sign in to save listings'); return; }
     H.state.saves[u.id] = H.state.saves[u.id] || [];
     const i = H.state.saves[u.id].indexOf(id);
     const removing = i >= 0;
-    if (removing) { H.state.saves[u.id].splice(i,1); H.toast('Removed from saved'); }
-    else {
+    if (removing) {
+      H.state.saves[u.id].splice(i, 1);
+      H.toast('Removed from saved');
+    } else {
       H.state.saves[u.id].push(id);
-      H.toast('Saved');
-      // Track price at save time for price-drop alerts
+      H.toast('Saved!');
       if (!H.state.savedPrices) H.state.savedPrices = {};
       var listing = (H.state.listings || []).find(function(l) { return l.id === id; });
       if (listing) H.state.savedPrices[id] = listing.price;
     }
     H.saveState();
+
+    // Update every heart button for this listing in the DOM — no full re-render.
+    var nowSaved = !removing;
+    document.querySelectorAll('[data-save-id="' + id + '"]').forEach(function(btn) {
+      var svg = btn.querySelector('svg path, svg > path');
+      if (svg) {
+        svg.setAttribute('fill', nowSaved ? '#1A3A8F' : 'none');
+        svg.setAttribute('stroke', nowSaved ? '#1A3A8F' : 'currentColor');
+      }
+      if (nowSaved) btn.classList.add('saved'); else btn.classList.remove('saved');
+      btn.setAttribute('aria-label', nowSaved ? 'Unsave' : 'Save');
+    });
+
+    // Use security-definer RPCs — auth.uid() is resolved server-side so
+    // there is no risk of a client-side session/state mismatch causing RLS
+    // to reject the request with a 401.
     var _sb = window.supabase;
-    if (_sb && typeof _sb.from === 'function') {
+    if (_sb && typeof _sb.rpc === 'function') {
       if (removing) {
-        _sb.from('user_saves').delete().eq('user_id', u.id).eq('listing_id', id)
+        _sb.rpc('unsave_listing', { p_listing_id: id })
           .then(function(res) { if (res && res.error) console.warn('Save sync failed:', res.error.message); });
       } else {
-        _sb.from('user_saves').upsert({ user_id: u.id, listing_id: id, saved_at: new Date().toISOString() })
+        _sb.rpc('save_listing', { p_listing_id: id })
           .then(function(res) { if (res && res.error) console.warn('Save sync failed:', res.error.message); });
       }
     }
-    H.renderPage('Detail', {id});
   };
 
   H.deleteListing = function(id) {
