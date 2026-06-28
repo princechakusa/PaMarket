@@ -107,10 +107,13 @@
 .sugg-item:last-child{border-bottom:none}
 .sugg-item:active{background:var(--bg)}
 
-/* ── LISTING CARD SHARE ──────────────────────────── */
+/* ── LISTING CARD SHARE + SAVE ───────────────────── */
 .list-card-wrap{position:relative}
 .share-card-btn{position:absolute;top:8px;right:8px;z-index:2;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15)}
 .share-card-btn:active{background:#f0f0f0}
+.fav-card-btn{position:absolute;top:8px;left:8px;z-index:2;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15);transition:transform .15s}
+.fav-card-btn:active{transform:scale(.88)}
+.fav-card-btn svg{width:18px;height:18px;transition:fill .15s,stroke .15s}
 
 /* ── AUTH SOCIAL BUTTONS ─────────────────────────── */
 .social-auth-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px;border-radius:14px;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;margin-bottom:12px;border:none}

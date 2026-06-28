@@ -310,13 +310,19 @@ window.H = {
 
   renderListCard(l) {
     const H      = window.H;
+    const cu     = H.currentUser();
     const seller = (H.state.users||[]).find(u=>u.id===l.sellerId);
     const photo  = (l.photos&&l.photos[0])
       ? `<img src="${l.photos[0]}" alt="${H.escHtml(l.title)}" loading="lazy">`
       : `<div class="ph">${H.categoryIcon(l.cat)}</div>`;
     const boosted = l.boost&&l.boost.until>Date.now();
+    const isSaved = cu && ((H.state.saves||{})[cu.id]||[]).includes(l.id);
+    const heartSvg = isSaved
+      ? `<svg viewBox="0 0 24 24" width="20" height="20" fill="#1A3A8F" stroke="#1A3A8F" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`
+      : `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
     return `<div class="list-card-wrap" onclick="H.openListing('${l.id}')">
       <button class="share-card-btn" onclick="event.stopPropagation();H.shareListing&&H.shareListing('${l.id}')" title="Share">${H.ICONS.share}</button>
+      <button class="fav-card-btn${isSaved?' saved':''}" data-save-id="${l.id}" onclick="event.stopPropagation();H.toggleSave('${l.id}',event)" title="${isSaved?'Remove from saved':'Save listing'}">${heartSvg}</button>
       <div class="list-card">
         <div class="list-thumb">${photo}</div>
         <div class="list-body">
