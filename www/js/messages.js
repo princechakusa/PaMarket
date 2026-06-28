@@ -1388,9 +1388,9 @@
         if (H.state.deletedConvMeta) revived.forEach(function (id) { delete H.state.deletedConvMeta[id]; });
         H.saveState();
         var _sbU = window.supabase;
-        if (_sbU && typeof _sbU.from === 'function') {
+        if (_sbU && typeof _sbU.rpc === 'function') {
           revived.forEach(function (id) {
-            _sbU.from('conversation_deletions').delete().eq('user_id', myId).eq('conversation_id', id).then(function () {});
+            _sbU.rpc('revoke_conversation_deletion', { p_conversation_id: id }).then(function () {});
           });
         }
         // Pull the old thread + history back from the cloud, then refresh the open chat.
@@ -2016,10 +2016,9 @@
     H.state.conversations = (H.state.conversations || []).filter(function (c) { return c.id !== convId; });
     H.saveState();
     // Persist the deletion server-side so it stays hidden after logout/login.
-    var sb = window.supabase, u = H.currentUser();
-    if (sb && u && typeof sb.from === 'function') {
-      sb.from('conversation_deletions')
-        .upsert({ user_id: u.id, conversation_id: convId }, { onConflict: 'user_id,conversation_id' })
+    var sb = window.supabase;
+    if (sb && typeof sb.rpc === 'function') {
+      sb.rpc('record_conversation_deletion', { p_conversation_id: convId })
         .then(function (r) { if (r && r.error) console.warn('conversation deletion persist failed:', r.error.message); });
     }
     if (H.currentPageName === 'Messages') H.renderPage('Messages');
