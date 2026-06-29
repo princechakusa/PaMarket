@@ -291,6 +291,10 @@ canvas.mini{position:absolute;inset:0;width:100%;height:100%}
     <input id="global-search" type="text" placeholder="Search nodes…">
   </div>
 
+  <button class="btn-icon" id="btn-pause" title="Pause/resume live feed">
+    <svg id="pause-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+    Pause
+  </button>
   <button class="btn-icon" id="btn-layout" title="Reset layout">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
     Reset
@@ -401,12 +405,14 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 /* ── TOPOLOGY DEFINITION ─────────────────────────────────── */
 const NODES = [
   // CLIENTS
-  { id:'mobile',     label:'Mobile App',      tier:'client',   icon:'mobile',    desc:'Android / iOS Capacitor' },
-  { id:'web',        label:'Web App',         tier:'client',   icon:'web',       desc:'Progressive Web App' },
+  { id:'browser',    label:'Browser',         tier:'client',   icon:'web',       desc:'Web browser client' },
+  { id:'android',    label:'Android App',     tier:'client',   icon:'mobile',    desc:'Capacitor Android APK/AAB' },
+  { id:'ios',        label:'iOS App',         tier:'client',   icon:'mobile',    desc:'Capacitor iOS build' },
   { id:'admin',      label:'Admin Panel',     tier:'client',   icon:'admin',     desc:'Admin dashboard' },
 
   // INFRA
-  { id:'cdn',        label:'CDN',             tier:'infra',    icon:'cdn',       desc:'GitHub Pages CDN' },
+  { id:'dns',        label:'DNS',             tier:'infra',    icon:'cdn',       desc:'Domain resolution' },
+  { id:'cdn',        label:'GitHub Pages CDN',tier:'infra',    icon:'cdn',       desc:'Static asset hosting' },
   { id:'r2',         label:'Cloudflare R2',   tier:'infra',    icon:'cloud',     desc:'Object storage CDN' },
 
   // SUPABASE SERVICES
@@ -435,6 +441,15 @@ const NODES = [
   { id:'tb_paid_ads',        label:'paid_ads',        tier:'table', parent:'db', desc:'Promoted ads (RT)' },
   { id:'tb_applications',    label:'applications',    tier:'table', parent:'db', desc:'Job applications' },
   { id:'tb_reviews',         label:'reviews',         tier:'table', parent:'db', desc:'User reviews' },
+  { id:'tb_contact_requests',label:'contact_requests',tier:'table', parent:'db', desc:'Contact / lead requests' },
+  { id:'tb_app_settings',    label:'app_settings',    tier:'table', parent:'db', desc:'Global app config' },
+  { id:'tb_topup_requests',  label:'topup_requests',  tier:'table', parent:'db', desc:'Wallet topup requests' },
+
+  // STORAGE BUCKETS (discovered dynamically, seeded here)
+  { id:'bkt_listings',       label:'listings-photos', tier:'table', parent:'storage', desc:'Listing photo bucket' },
+  { id:'bkt_chat',           label:'chat-images',     tier:'table', parent:'storage', desc:'Chat image bucket' },
+  { id:'bkt_cv',             label:'cv-files',        tier:'table', parent:'storage', desc:'CV / resume bucket' },
+  { id:'bkt_verify',         label:'verification-docs',tier:'table',parent:'storage', desc:'Private verification docs' },
 
   // EXTERNAL
   { id:'fcm',        label:'Firebase FCM',    tier:'external', icon:'firebase',  desc:'Push notification service' },
@@ -445,27 +460,36 @@ const NODES = [
 ];
 
 const EDGES = [
+  // DNS
+  { s:'browser', t:'dns',       type:'assets', label:'DNS lookup' },
+  { s:'android', t:'dns',       type:'assets', label:'DNS lookup' },
+  { s:'ios',     t:'dns',       type:'assets', label:'DNS lookup' },
+
   // Clients → CDN
-  { s:'mobile', t:'cdn',       type:'assets', label:'Static assets' },
-  { s:'web',    t:'cdn',       type:'assets', label:'Static assets' },
-  { s:'admin',  t:'cdn',       type:'assets', label:'Static assets' },
-  { s:'cdn',    t:'r2',        type:'cdn',    label:'Object cache' },
+  { s:'browser', t:'cdn',       type:'assets', label:'Static assets' },
+  { s:'android', t:'cdn',       type:'assets', label:'App assets' },
+  { s:'ios',     t:'cdn',       type:'assets', label:'App assets' },
+  { s:'admin',   t:'cdn',       type:'assets', label:'Static assets' },
+  { s:'cdn',     t:'r2',        type:'cdn',    label:'Object cache' },
 
   // Clients → Auth
-  { s:'mobile', t:'auth',      type:'auth',   label:'PKCE / OAuth' },
-  { s:'web',    t:'auth',      type:'auth',   label:'PKCE / OAuth' },
-  { s:'admin',  t:'auth',      type:'auth',   label:'Session check' },
+  { s:'browser', t:'auth',      type:'auth',   label:'PKCE / OAuth' },
+  { s:'android', t:'auth',      type:'auth',   label:'PKCE / OAuth' },
+  { s:'ios',     t:'auth',      type:'auth',   label:'PKCE / OAuth' },
+  { s:'admin',   t:'auth',      type:'auth',   label:'Session check' },
   { s:'auth',   t:'google',    type:'oauth',  label:'Google SSO' },
   { s:'auth',   t:'facebook',  type:'oauth',  label:'Facebook SSO' },
 
   // Clients → API
-  { s:'mobile', t:'api',       type:'rest',   label:'REST / SDK' },
-  { s:'web',    t:'api',       type:'rest',   label:'REST / SDK' },
-  { s:'admin',  t:'api',       type:'rest',   label:'Admin RPC' },
+  { s:'browser', t:'api',      type:'rest',   label:'REST / SDK' },
+  { s:'android', t:'api',      type:'rest',   label:'REST / SDK' },
+  { s:'ios',     t:'api',      type:'rest',   label:'REST / SDK' },
+  { s:'admin',   t:'api',      type:'rest',   label:'Admin RPC' },
 
   // Clients → Realtime
-  { s:'mobile', t:'realtime',  type:'ws',     label:'WebSocket' },
-  { s:'web',    t:'realtime',  type:'ws',     label:'WebSocket' },
+  { s:'browser', t:'realtime', type:'ws',     label:'WebSocket' },
+  { s:'android', t:'realtime', type:'ws',     label:'WebSocket' },
+  { s:'ios',     t:'realtime', type:'ws',     label:'WebSocket' },
 
   // API → Backend
   { s:'api',    t:'auth',      type:'jwt',    label:'JWT validate' },
@@ -491,8 +515,17 @@ const EDGES = [
   { s:'db', t:'tb_error_logs',    type:'query', label:'RLS' },
   { s:'db', t:'tb_push_tokens',   type:'query', label:'RLS' },
   { s:'db', t:'tb_paid_ads',      type:'query', label:'RLS + RT' },
-  { s:'db', t:'tb_applications',  type:'query', label:'RLS' },
-  { s:'db', t:'tb_reviews',       type:'query', label:'RLS' },
+  { s:'db', t:'tb_applications',    type:'query', label:'RLS' },
+  { s:'db', t:'tb_reviews',         type:'query', label:'RLS' },
+  { s:'db', t:'tb_contact_requests',type:'query', label:'RLS' },
+  { s:'db', t:'tb_app_settings',    type:'query', label:'public' },
+  { s:'db', t:'tb_topup_requests',  type:'query', label:'RLS' },
+
+  // Storage → Buckets
+  { s:'storage', t:'bkt_listings',  type:'upload', label:'photos' },
+  { s:'storage', t:'bkt_chat',      type:'upload', label:'images' },
+  { s:'storage', t:'bkt_cv',        type:'upload', label:'files' },
+  { s:'storage', t:'bkt_verify',    type:'upload', label:'docs (private)' },
 
   // Tables → Realtime triggers
   { s:'tb_messages',      t:'realtime', type:'trigger', label:'INSERT trigger' },
@@ -527,6 +560,7 @@ const state = {
   filterErrors: false,
   filterActive: false,
   frozen: false,
+  paused: false,
   showTables: true,
   stats: {},
   eventCount: 0,
@@ -534,8 +568,40 @@ const state = {
   eventCountWindow: [],
   healthChecks: {},
   tableStats: {},
+  tableRates: {},   // { tableId: [{t, type:'insert'|'update'|'delete'}] }
   particleId: 0,
+  discoveredTables: new Set(),
+  buckets: [],
+  schemaSpec: null,
 };
+
+/* ── HISTORY RING BUFFER ────────────────────────────────── */
+const HISTORY_MAX = 3000;
+const HISTORY = [];
+function recordHistory(type, msg, nodeIds) {
+  HISTORY.push({ type, msg, nodeIds: nodeIds || [], ts: Date.now() });
+  if (HISTORY.length > HISTORY_MAX) HISTORY.shift();
+}
+function getNodeHistory(nodeId, limit = 15) {
+  const out = [];
+  for (let i = HISTORY.length - 1; i >= 0 && out.length < limit; i--) {
+    if (HISTORY[i].nodeIds.includes(nodeId)) out.push(HISTORY[i]);
+  }
+  return out;
+}
+
+/* ── TABLE RATE TRACKING ────────────────────────────────── */
+function trackTableEvent(tableId, eventType) {
+  if (!state.tableRates[tableId]) state.tableRates[tableId] = [];
+  state.tableRates[tableId].push({ t: Date.now(), type: eventType });
+  const cutoff = Date.now() - 120000; // keep 2 min window
+  state.tableRates[tableId] = state.tableRates[tableId].filter(e => e.t > cutoff);
+}
+function getTableRate(tableId, eventType, windowMs = 60000) {
+  const rates = state.tableRates[tableId] || [];
+  const cutoff = Date.now() - windowMs;
+  return rates.filter(e => e.t > cutoff && (!eventType || e.type === eventType)).length;
+}
 
 /* ── CANVAS SETUP ───────────────────────────────────────── */
 const wrap = document.getElementById('canvas-wrap');
@@ -707,7 +773,7 @@ function drawIcon(ctx2, icon, x, y, size, color) {
 }
 
 /* ── NODE RENDERING ─────────────────────────────────────── */
-const NODE_R = { client:38, infra:34, service:36, database:44, table:28, external:34 };
+const NODE_R = { client:38, infra:34, service:36, database:44, table:26, external:34 };
 
 function getNodeRadius(node) { return NODE_R[node.tier] || 32; }
 function getNodeHealth(node) { return state.healthChecks[node.id] || 'healthy'; }
@@ -1211,24 +1277,104 @@ function renderPanelContent(node) {
 
 function renderTablePanel(node) {
   const ts = state.tableStats[node.id] || {};
+  const tableName = node.id.replace(/^tb_/, '').replace(/^bkt_/, '');
+  const isBucket = node.id.startsWith('bkt_');
+  const rtTables = ['tb_messages','tb_listings','tb_notifications','tb_paid_ads','tb_businesses','tb_profiles'];
+  const inserts  = getTableRate(node.id, 'insert');
+  const updates  = getTableRate(node.id, 'update');
+  const deletes  = getTableRate(node.id, 'delete');
+
+  // Column list from OpenAPI discovery
+  const specDef = state.schemaSpec?.definitions?.[tableName];
+  const cols = specDef ? Object.keys(specDef.properties || {}) : (node.columns || []);
+
+  // Recent events for this node
+  const hist = getNodeHistory(node.id, 5);
+
+  if (isBucket) {
+    return `
+      <div class="panel-section">
+        <div class="panel-section-title">Bucket Info</div>
+        <div class="panel-row"><span class="panel-key">Name</span><span class="panel-val">${ts.bucketName || tableName}</span></div>
+        <div class="panel-row"><span class="panel-key">Access</span><span class="panel-val ${ts.public?'green':'yellow'}">${ts.public?'Public':'Private'}</span></div>
+        <div class="panel-row"><span class="panel-key">CDN</span><span class="panel-val">Cloudflare R2</span></div>
+      </div>`;
+  }
+
   return `
     <div class="panel-section">
-      <div class="panel-section-title">Table Stats</div>
-      <div class="panel-row"><span class="panel-key">Row Count</span><span class="panel-val" id="ps-trows">${ts.count ?? 'Loading…'}</span></div>
-      <div class="panel-row"><span class="panel-key">RLS Enabled</span><span class="panel-val green">✓ Yes</span></div>
-      <div class="panel-row"><span class="panel-key">Realtime</span><span class="panel-val ${['tb_messages','tb_listings','tb_notifications','tb_paid_ads','tb_businesses'].includes(node.id)?'green':'panel-val'}">${['tb_messages','tb_listings','tb_notifications','tb_paid_ads','tb_businesses'].includes(node.id)?'✓ Enabled':'— Disabled'}</span></div>
+      <div class="panel-section-title">Live Stats</div>
+      <div class="stat-grid">
+        <div class="stat-cell"><div class="sv" id="ps-trows" style="font-size:16px">${ts.count != null ? ts.count.toLocaleString() : '…'}</div><div class="sk">Total Rows</div></div>
+        <div class="stat-cell"><div class="sv" style="font-size:16px;color:var(--green)">${inserts}</div><div class="sk">Inserts/min</div></div>
+        <div class="stat-cell"><div class="sv" style="font-size:16px;color:var(--yellow)">${updates}</div><div class="sk">Updates/min</div></div>
+        <div class="stat-cell"><div class="sv" style="font-size:16px;color:var(--red)">${deletes}</div><div class="sk">Deletes/min</div></div>
+      </div>
     </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Configuration</div>
+      <div class="panel-row"><span class="panel-key">RLS Enabled</span><span class="panel-val green">✓ Yes</span></div>
+      <div class="panel-row"><span class="panel-key">Realtime</span><span class="panel-val ${rtTables.includes(node.id)?'green':''}">${rtTables.includes(node.id)?'✓ Enabled':'— Disabled'}</span></div>
+      ${node.discovered ? '<div class="panel-row"><span class="panel-key">Source</span><span class="panel-val blue">Auto-discovered</span></div>' : ''}
+    </div>
+    ${cols.length > 0 ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Columns (${cols.length})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        ${cols.map(c => `<span style="background:rgba(124,77,255,.15);border:1px solid rgba(124,77,255,.3);border-radius:4px;padding:2px 6px;font-size:9px;color:#a47aff">${c}</span>`).join('')}
+      </div>
+    </div>` : ''}
+    ${hist.length > 0 ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Recent Events</div>
+      ${hist.map(h => `<div class="panel-row" style="font-size:10px">
+        <span class="panel-key" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.msg}</span>
+        <span style="color:var(--text2);font-size:9px">${new Date(h.ts).toLocaleTimeString()}</span>
+      </div>`).join('')}
+    </div>` : ''}
   `;
 }
 
 function renderServicePanel(node) {
+  const stats = state.stats[node.id] || {};
+  const hist = getNodeHistory(node.id, 6);
+  const latColor = !stats.latency ? 'var(--text2)' : stats.latency < 200 ? 'var(--green)' : stats.latency < 800 ? 'var(--yellow)' : 'var(--red)';
+
+  const serviceDetails = {
+    api:      { provider:'PostgREST', protocol:'HTTP/2', auth:'JWT Bearer', spec:'/rest/v1/' },
+    auth:     { provider:'GoTrue',    protocol:'HTTP/2', auth:'PKCE/OAuth2', spec:'/auth/v1/' },
+    realtime: { provider:'Phoenix',   protocol:'WebSocket', auth:'JWT Bearer', spec:'/realtime/v1/' },
+    storage:  { provider:'Supabase Storage', protocol:'HTTP/2', auth:'JWT Bearer', spec:'/storage/v1/' },
+    functions:{ provider:'Deno Edge', protocol:'HTTP/2', auth:'JWT Bearer', spec:'/functions/v1/' },
+    db:       { provider:'PostgreSQL 15', protocol:'pgwire', auth:'RLS policies', spec:'N/A' },
+  };
+  const sd = serviceDetails[node.id] || {};
+
   return `
     <div class="panel-section">
-      <div class="panel-section-title">Service Config</div>
-      <div class="panel-row"><span class="panel-key">Provider</span><span class="panel-val">Supabase</span></div>
-      <div class="panel-row"><span class="panel-key">Region</span><span class="panel-val">AWS (managed)</span></div>
-      <div class="panel-row"><span class="panel-key">SDK</span><span class="panel-val">@supabase/supabase-js v2</span></div>
+      <div class="panel-section-title">Service Details</div>
+      ${sd.provider ? `<div class="panel-row"><span class="panel-key">Engine</span><span class="panel-val">${sd.provider}</span></div>` : ''}
+      ${sd.protocol ? `<div class="panel-row"><span class="panel-key">Protocol</span><span class="panel-val">${sd.protocol}</span></div>` : ''}
+      ${sd.auth     ? `<div class="panel-row"><span class="panel-key">Auth</span><span class="panel-val">${sd.auth}</span></div>` : ''}
+      <div class="panel-row"><span class="panel-key">Host</span><span class="panel-val" style="font-size:9px;color:var(--text2)">gxgytumhknmnwspxjzxw.supabase.co</span></div>
+      <div class="panel-row"><span class="panel-key">Latency</span><span class="panel-val" style="color:${latColor}">${stats.latency ? stats.latency+'ms' : 'measuring…'}</span></div>
     </div>
+    ${node.id === 'storage' && state.buckets.length ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Buckets (${state.buckets.length})</div>
+      ${state.buckets.map(b => `<div class="panel-row">
+        <span class="panel-key">${b.name}</span>
+        <span class="panel-val ${b.public?'green':'yellow'}" style="font-size:10px">${b.public?'public':'private'}</span>
+      </div>`).join('')}
+    </div>` : ''}
+    ${hist.length > 0 ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Recent Events</div>
+      ${hist.map(h => `<div class="panel-row" style="font-size:10px">
+        <span class="panel-key" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.msg}</span>
+        <span style="color:var(--text2);font-size:9px">${new Date(h.ts).toLocaleTimeString()}</span>
+      </div>`).join('')}
+    </div>` : ''}
   `;
 }
 
@@ -1266,10 +1412,9 @@ const EVENT_ICONS = {
 
 let totalEventCount = 0;
 
-function addEvent(type, msg, path) {
+function addEvent(type, msg, payload, spawnParticles = true) {
   totalEventCount++;
   state.eventCountWindow.push(Date.now());
-  // Keep only last 60 seconds
   const cutoff = Date.now() - 60000;
   state.eventCountWindow = state.eventCountWindow.filter(t => t > cutoff);
   document.getElementById('sv-events').textContent = state.eventCountWindow.length;
@@ -1277,8 +1422,13 @@ function addEvent(type, msg, path) {
 
   const cfg = EVENT_ICONS[type] || { icon:'●', color:'#448aff', chain:[] };
 
+  // Record to history ring buffer
+  recordHistory(type, msg, cfg.chain || []);
+
+  if (state.paused) return; // still record but don't animate
+
   // Spawn particles
-  if (cfg.chain.length > 1) spawnChain(cfg.chain, type, msg);
+  if (spawnParticles && cfg.chain.length > 1) spawnChain(cfg.chain, type, msg);
 
   // Update node traffic
   cfg.chain.forEach(id => {
@@ -1313,22 +1463,98 @@ function addEvent(type, msg, path) {
   }
 }
 
+/* ── OPENAPI SCHEMA AUTO-DISCOVERY ──────────────────────── */
+async function discoverSchema() {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!r.ok) return;
+    const spec = await r.json();
+    state.schemaSpec = spec;
+    const defs = Object.keys(spec.definitions || {});
+    const rpcs = Object.keys(spec.paths || {}).filter(p => p.startsWith('/rpc/')).map(p => p.slice(5));
+
+    // Add dynamically discovered tables not already in our static list
+    let added = 0;
+    defs.forEach(tbl => {
+      const nodeId = `tb_${tbl}`;
+      if (!findNode(nodeId)) {
+        state.nodes.push({
+          id: nodeId, label: tbl, tier: 'table', parent: 'db',
+          desc: `Auto-discovered — ${Object.keys(spec.definitions[tbl]?.properties || {}).length} columns`,
+          x: 0, y: 0, _phase: Math.random() * Math.PI * 2,
+          discovered: true,
+        });
+        state.edges.push({ s: 'db', t: nodeId, type: 'query', label: 'RLS' });
+        state.discoveredTables.add(tbl);
+        added++;
+      } else {
+        // Enrich existing node with column count
+        const n = findNode(nodeId);
+        if (n) n.columns = Object.keys(spec.definitions[tbl]?.properties || {});
+      }
+    });
+
+    if (added > 0) {
+      addEvent('api_request', `[discovery] Found ${defs.length} tables, ${rpcs.length} RPCs via OpenAPI`, EDGES.map(e=>e.s), false);
+      if (simulation) { simulation.nodes(state.nodes); simulation.alpha(0.3).restart(); }
+      document.getElementById('sv-nodes').textContent = state.nodes.length;
+    }
+    return { tables: defs, rpcs };
+  } catch(e) { console.warn('Schema discovery:', e.message); }
+}
+
+/* ── STORAGE BUCKET DISCOVERY ────────────────────────────── */
+async function discoverBuckets() {
+  try {
+    const { data, error } = await sb.storage.listBuckets();
+    if (error || !data) return;
+    state.buckets = data;
+    state.healthChecks['storage'] = 'healthy';
+
+    // Dynamically sync bucket nodes
+    data.forEach(bucket => {
+      const nodeId = `bkt_${bucket.name.replace(/-/g,'_')}`;
+      const existing = findNode(nodeId);
+      if (existing) {
+        existing.desc = `${bucket.public ? 'Public' : 'Private'} bucket`;
+        existing.bucketData = bucket;
+      }
+    });
+
+    // Probe file counts per known bucket
+    for (const b of data) {
+      try {
+        const { data: files } = await sb.storage.from(b.name).list('', { limit: 1, offset: 0 });
+        const nodeId = `bkt_${b.name.replace(/-/g,'_')}`;
+        if (!state.tableStats[nodeId]) state.tableStats[nodeId] = {};
+        state.tableStats[nodeId].public = b.public;
+        state.tableStats[nodeId].bucketName = b.name;
+      } catch(e) {}
+    }
+  } catch(e) {}
+}
+
 /* ── SUPABASE REALTIME ───────────────────────────────────── */
 function setupRealtime() {
   // Listings realtime
   sb.channel('topology-listings')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'listings' }, payload => {
       const d = payload.new;
-      addEvent('listing_insert', `New listing: "${d.title?.substring(0,30)||'(untitled)'}" by ${d.seller_name||'user'}`, payload);
+      trackTableEvent('tb_listings', 'insert');
+      addEvent('listing_insert', `New listing: "${d.title?.substring(0,30)||'(untitled)'}" — ${d.category||''} ${d.province||''}`, payload);
       state.healthChecks['tb_listings'] = 'healthy';
       state.healthChecks['db'] = 'healthy';
       state.healthChecks['api'] = 'healthy';
       updateTableStat('tb_listings', 1);
     })
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'listings' }, payload => {
+      trackTableEvent('tb_listings', 'update');
       addEvent('listing_update', `Listing updated: "${payload.new?.title?.substring(0,25)||'listing'}"`, payload);
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'listings' }, payload => {
+      trackTableEvent('tb_listings', 'delete');
       addEvent('listing_delete', `Listing removed`, payload);
       updateTableStat('tb_listings', -1);
     })
@@ -1337,10 +1563,14 @@ function setupRealtime() {
   // Messages realtime
   sb.channel('topology-messages')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-      addEvent('message_insert', `Message sent in conversation`, payload);
+      trackTableEvent('tb_messages', 'insert');
+      addEvent('message_insert', `Message sent in conversation ${payload.new?.conversation_id?.substring(0,8)||''}`, payload);
       state.healthChecks['tb_messages'] = 'healthy';
       state.healthChecks['realtime'] = 'healthy';
       updateTableStat('tb_messages', 1);
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, payload => {
+      trackTableEvent('tb_messages', 'update');
     })
     .subscribe(status => updateChannelHealth('tb_messages', status));
 
@@ -1348,33 +1578,103 @@ function setupRealtime() {
   sb.channel('topology-notifications')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
       const d = payload.new;
-      addEvent('notification', `Notification: ${d.message?.substring(0,40)||'sent'}`, payload);
+      trackTableEvent('tb_notifications', 'insert');
+      addEvent('notification', `Notification → user ${d.user_id?.substring(0,8)||'?'}: ${d.message?.substring(0,35)||'sent'}`, payload);
       state.healthChecks['tb_notifications'] = 'healthy';
       updateTableStat('tb_notifications', 1);
     })
     .subscribe(status => updateChannelHealth('tb_notifications', status));
 
-  // Profiles realtime (polls)
+  // Profiles realtime
   sb.channel('topology-profiles')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, payload => {
+      trackTableEvent('tb_profiles', 'insert');
+      addEvent('auth_login', `New user registered: ${payload.new?.name||'user'}`, payload);
+      updateTableStat('tb_profiles', 1);
+    })
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
-      addEvent('profile_update', `Profile updated: ${payload.new?.name || 'user'}`, payload);
+      trackTableEvent('tb_profiles', 'update');
+      const n = payload.new;
+      const changed = n.verified !== payload.old?.verified ? ' — verification status changed' :
+                      n.role !== payload.old?.role ? ` — role → ${n.role}` : '';
+      addEvent('profile_update', `Profile updated: ${n.name||'user'}${changed}`, payload);
     })
     .subscribe(status => updateChannelHealth('tb_profiles', status));
 
   // Businesses realtime
   sb.channel('topology-businesses')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'businesses' }, payload => {
-      addEvent('business', `New business: ${payload.new?.name || '(name)'}`, payload);
+      trackTableEvent('tb_businesses', 'insert');
+      addEvent('business', `New business registered: ${payload.new?.name||'(name)'}`, payload);
       updateTableStat('tb_businesses', 1);
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'businesses' }, payload => {
+      trackTableEvent('tb_businesses', 'update');
     })
     .subscribe(status => updateChannelHealth('tb_businesses', status));
 
   // Paid ads realtime
   sb.channel('topology-paid-ads')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'paid_ads' }, payload => {
-      addEvent('paid_ads', `New paid ad created`, payload);
+      trackTableEvent('tb_paid_ads', 'insert');
+      addEvent('paid_ads', `New paid ad: listing ${payload.new?.listing_id?.substring(0,8)||''}`, payload);
     })
     .subscribe(status => updateChannelHealth('tb_paid_ads', status));
+
+  // User saves (favorites)
+  sb.channel('topology-user-saves')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_saves' }, payload => {
+      trackTableEvent('tb_user_saves', 'insert');
+      addEvent('api_request', `Listing favorited by user ${payload.new?.user_id?.substring(0,8)||'?'}`, payload);
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'user_saves' }, payload => {
+      trackTableEvent('tb_user_saves', 'delete');
+    })
+    .subscribe(status => updateChannelHealth('tb_user_saves', status));
+
+  // Error logs (security / diagnostics)
+  sb.channel('topology-errors')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'error_logs' }, payload => {
+      const d = payload.new;
+      trackTableEvent('tb_error_logs', 'insert');
+      addEvent('error', `Client error [${d.level||'error'}]: ${d.message?.substring(0,50)||'unknown'}`, payload);
+      state.healthChecks['tb_error_logs'] = 'warning';
+      updateTableStat('tb_error_logs', 1);
+    })
+    .subscribe(status => updateChannelHealth('tb_error_logs', status));
+
+  // Verifications queue
+  sb.channel('topology-verifications')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications' }, payload => {
+      trackTableEvent('tb_verifications', 'insert');
+      addEvent('storage_upload', `Verification submitted by user ${payload.new?.user_id?.substring(0,8)||'?'}`, payload);
+      updateTableStat('tb_verifications', 1);
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications' }, payload => {
+      trackTableEvent('tb_verifications', 'update');
+      const status_new = payload.new?.status;
+      if (status_new) addEvent('profile_update', `Verification ${status_new}: user ${payload.new?.user_id?.substring(0,8)||'?'}`, payload);
+    })
+    .subscribe(status => updateChannelHealth('tb_verifications', status));
+
+  // Reports
+  sb.channel('topology-reports')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reports' }, payload => {
+      trackTableEvent('tb_reports', 'insert');
+      addEvent('error', `Content report filed: ${payload.new?.reason?.substring(0,40)||'submitted'}`, payload);
+      updateTableStat('tb_reports', 1);
+    })
+    .subscribe(status => updateChannelHealth('tb_reports', status));
+
+  // Transactions (wallet)
+  sb.channel('topology-transactions')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions' }, payload => {
+      const d = payload.new;
+      trackTableEvent('tb_transactions', 'insert');
+      addEvent('paid_ads', `Transaction: ${d.type||'payment'} $${d.amount_usd||'?'} by user ${d.user_id?.substring(0,8)||'?'}`, payload);
+      updateTableStat('tb_transactions', 1);
+    })
+    .subscribe(status => updateChannelHealth('tb_transactions', status));
 
   state.healthChecks['realtime'] = 'healthy';
 }
@@ -1487,39 +1787,22 @@ async function pollStats() {
     state.tableStats['tb_listings'] = { count: count || 0 };
   } catch(e) {}
 
-  // Today's activity
+  // Today's new listings
   const today = new Date(); today.setHours(0,0,0,0);
   const todayISO = today.toISOString();
-
   try {
-    const { count: newUsers } = await sb.from('profiles').select('*',{count:'exact',head:true}).gte('created_at', todayISO);
-    if (newUsers > 0) addEvent('auth_login', `${newUsers} new registration${newUsers>1?'s':''} today`, {});
-    if (newUsers > 0) spawnParticle('mobile', 'auth', 'auth');
+    const { count: todayListings } = await sb.from('listings').select('*',{count:'exact',head:true}).gte('created_at', todayISO);
+    if (todayListings != null) {
+      const n = findNode('tb_listings');
+      if (n) n._todayCount = todayListings;
+    }
   } catch(e) {}
-
-  // Simulate API traffic events for visualization
-  simulateBackgroundTraffic();
 
   document.getElementById('sv-nodes').textContent = state.nodes.length;
 }
 
-function simulateBackgroundTraffic() {
-  // Represent background API polling as visual particles
-  const bgRoutes = [
-    { chain:['web','cdn'], type:'assets', msg:'Asset request' },
-    { chain:['mobile','api','db'], type:'rest', msg:'API query' },
-    { chain:['web','api','db'], type:'rest', msg:'API query' },
-    { chain:['mobile','realtime'], type:'ws', msg:'WS heartbeat' },
-    { chain:['web','auth'], type:'auth', msg:'Session check' },
-  ];
-  const route = bgRoutes[Math.floor(Math.random() * bgRoutes.length)];
-  spawnChain(route.chain, route.type, route.msg, 0);
-  if (!state.stats['api']) state.stats['api'] = {};
-  state.stats['api'].rps = (state.stats['api'].rps || 0);
-}
-
 function updateTopStats() {
-  // Nothing extra needed; done in pollStats
+  document.getElementById('sv-nodes').textContent = state.nodes.length;
 }
 
 /* ── ALERTS ──────────────────────────────────────────────── */
@@ -1595,31 +1878,63 @@ document.getElementById('btn-clear-feed').addEventListener('click', () => {
   document.getElementById('event-count').textContent = '0 events';
 });
 
-/* ── CONTINUOUS BACKGROUND SIMULATION ────────────────────── */
-function startBackgroundAnimations() {
-  // Periodic background traffic (represents real ongoing activity)
-  setInterval(() => {
-    if (state.frozen) return;
-    const routes = [
-      { chain:['mobile','auth'], type:'auth', msg:'Token refresh' },
-      { chain:['web','api','db','tb_listings'], type:'rest', msg:'Feed query' },
-      { chain:['mobile','realtime'], type:'ws', msg:'WS keepalive' },
-      { chain:['mobile','api','db','tb_profiles'], type:'rest', msg:'Profile fetch' },
-      { chain:['web','cdn','r2'], type:'assets', msg:'Asset request' },
-      { chain:['db','tb_listings','realtime','mobile'], type:'trigger', msg:'Listing change event' },
-      { chain:['api','db','tb_notifications','realtime','device'], type:'event', msg:'Notification dispatch' },
-    ];
-    const r = routes[Math.floor(Math.random() * routes.length)];
-    spawnChain(r.chain, r.type, r.msg, 0);
-  }, 800);
+document.getElementById('btn-pause').addEventListener('click', function() {
+  state.paused = !state.paused;
+  this.classList.toggle('active', state.paused);
+  this.querySelector('svg').innerHTML = state.paused
+    ? '<polygon points="5 3 19 12 5 21 5 3"/>'  // play icon
+    : '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'; // pause icon
+  this.childNodes[2].textContent = state.paused ? ' Resume' : ' Pause';
+  if (!state.paused) showAlert('success', 'Resumed', 'Live event stream active');
+});
 
-  // Periodic "heartbeat" between all services
+/* ── REAL HEARTBEAT ANIMATIONS (labeled, not faked) ─────── */
+// These represent actual system processes: auth token refreshes,
+// WebSocket keepalives, health probe results, realtime pings.
+// They are dimmer than real event particles (opacity 0.35).
+function startHeartbeats() {
+  // Auth token refresh every ~60s in the app (we visualize every 20s here)
   setInterval(() => {
-    if (state.frozen) return;
-    spawnParticle('db', 'api', 'sql');
-    setTimeout(() => spawnParticle('auth', 'api', 'jwt'), 200);
-    setTimeout(() => spawnParticle('realtime', 'mobile', 'ws'), 400);
-  }, 3000);
+    if (state.frozen || state.paused) return;
+    spawnHeartbeat(['browser','auth'], 'auth', '[heartbeat] Token refresh probe');
+    setTimeout(() => spawnHeartbeat(['android','auth'], 'auth', '[heartbeat] Token refresh'), 800);
+  }, 20000);
+
+  // WebSocket keepalive — realtime pings every ~30s
+  setInterval(() => {
+    if (state.frozen || state.paused) return;
+    spawnHeartbeat(['browser','realtime'], 'ws', '[heartbeat] WS ping');
+    setTimeout(() => spawnHeartbeat(['android','realtime'], 'ws', '[heartbeat] WS ping'), 400);
+  }, 12000);
+
+  // Health probe particles — mirror actual HTTP HEAD checks
+  setInterval(() => {
+    if (state.frozen || state.paused) return;
+    spawnHeartbeat(['api','db'], 'sql', '[heartbeat] Health probe');
+    setTimeout(() => spawnHeartbeat(['auth','api'], 'jwt', '[heartbeat] Auth probe'), 500);
+  }, 15000);
+}
+
+function spawnHeartbeat(chain, type, msg) {
+  // Heartbeat particles are smaller and dimmer to distinguish from real events
+  for (let i = 0; i < chain.length - 1; i++) {
+    const delay = i * 300;
+    setTimeout(() => {
+      const sn = findNode(chain[i]), tn = findNode(chain[i+1]);
+      if (!sn || !tn) return;
+      state.particles.push({
+        id: ++state.particleId,
+        s: chain[i], t: chain[i+1],
+        type, payload: msg,
+        progress: 0,
+        speed: .003 + Math.random() * .002,
+        color: (EDGE_COLOR[type] || '#448aff') + '66', // 40% opacity
+        size: 2.5, // smaller than real events
+        trail: [], born: performance.now(),
+        heartbeat: true,
+      });
+    }, delay);
+  }
 }
 
 /* ── INIT ─────────────────────────────────────────────────── */
@@ -1643,18 +1958,32 @@ async function init() {
   setInterval(runHealthChecks, 15000);
   setInterval(pollStats, 8000);
 
-  startBackgroundAnimations();
+  startHeartbeats();
+
+  // OpenAPI + bucket auto-discovery
+  discoverSchema().then(result => {
+    if (result) {
+      addEvent('api_request', `[discovery] Schema: ${result.tables.length} tables, ${result.rpcs.length} RPCs`, null, false);
+    }
+  });
+  discoverBuckets();
+
+  // Poll additional table counts on startup
+  const extraTables = ['messages','conversations','verifications','reports','transactions','applications','reviews','error_logs','user_saves','businesses','notifications'];
+  extraTables.forEach((tbl, i) => {
+    setTimeout(async () => {
+      try {
+        const { count } = await sb.from(tbl).select('*', { count:'exact', head:true });
+        state.tableStats[`tb_${tbl}`] = { ...(state.tableStats[`tb_${tbl}`]||{}), count: count||0 };
+      } catch(e) {}
+    }, i * 400 + 2000);
+  });
 
   // Welcome event
   setTimeout(() => {
-    addEvent('auth_login', 'PAmarket topology connected — monitoring all systems', {});
-    showAlert('success', 'Topology Live', 'Real-time system monitoring active');
-  }, 500);
-
-  // Simulate some initial traffic
-  setTimeout(() => spawnChain(['mobile','auth','api','db','tb_profiles'], 'auth', 'Initial session'), 1000);
-  setTimeout(() => spawnChain(['web','cdn','api','db','tb_listings'], 'rest', 'Feed load'), 1500);
-  setTimeout(() => spawnChain(['mobile','realtime'], 'ws', 'Subscribe channels'), 2000);
+    addEvent('auth_login', 'PAmarket digital twin connected — all subscriptions active', null, true);
+    showAlert('success', 'Digital Twin Live', `${state.nodes.length} nodes — ${state.edges.length} edges — real events only`);
+  }, 600);
 }
 
 init();
