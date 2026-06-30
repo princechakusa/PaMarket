@@ -55,7 +55,7 @@ async function sendFCM(pushToken: string, projectId: string, accessToken: string
     token: pushToken,
     notification: { title, body },
     data,
-    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default' } },
+    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', tag: data['conversationId'] || undefined } },
   };
   const url = 'https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send';
   const MAX = 3;
