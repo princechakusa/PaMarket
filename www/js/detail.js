@@ -73,8 +73,25 @@
     const sellerName  = seller.name  || l.sellerName  || 'Seller';
 
     if (!isMine) {
-      l.views = (l.views || 0) + 1;
-      H.saveState();
+      // Only count once per session — gates BOTH the local increment and the DB
+      // write so re-renders (e.g. triggered by the ratings fetch) never double-count.
+      window._viewedListings = window._viewedListings || new Set();
+      if (!window._viewedListings.has(id)) {
+        window._viewedListings.add(id);
+        l.views = (l.views || 0) + 1;
+        H.saveState();
+        (function() {
+          const _sb = window.supabase;
+          if (_sb && typeof _sb.rpc === 'function') {
+            _sb.rpc('increment_listing_view', { listing_id: id }).then(function(res) {
+              if (res && res.data && typeof res.data.views === 'number') {
+                l.views = res.data.views;
+                H.saveState();
+              }
+            }).catch(function(){});
+          }
+        })();
+      }
     }
 
     // Condition label + colour
@@ -263,6 +280,17 @@
       H.saveState();
       H.toast('Thanks for your rating!');
       H.openInner('Detail', { id: listingId || params.id });
+      const _sb = window.supabase;
+      if (_sb && typeof _sb.from === 'function') {
+        // Omit 'text' so an existing written review is preserved on rating change.
+        // PostgREST only updates the columns present in the payload on conflict.
+        _sb.from('reviews').upsert({
+          seller_id: sellerId, reviewer_id: u.id,
+          reviewer_name: u.name || 'User', rating: rating
+        }, { onConflict: 'seller_id,reviewer_id' }).then(function(res) {
+          if (res && res.error) console.warn('Rating DB sync failed:', res.error.message);
+        });
+      }
     };
 
     const l = H.state.listings.find(x => x.id === params.id);
@@ -288,6 +316,31 @@
     }
     // Reaching a valid listing clears any stale not-found marker.
     if (H._detailFetchFailed === params.id) H._detailFetchFailed = null;
+
+    // Fetch ratings from Supabase once per seller per session so the star display
+    // is never stuck on stale local state. Re-renders only when data changed.
+    (function() {
+      const _sb = window.supabase;
+      const _sellerId = l.sellerId || l.seller_id;
+      if (!_sb || !_sellerId) return;
+      H._ratingsFetched = H._ratingsFetched || {};
+      const _lastRF = H._ratingsFetched[_sellerId];
+      if (_lastRF && (Date.now() - _lastRF) < 120000) return;
+      H._ratingsFetched[_sellerId] = Date.now();
+      _sb.from('reviews').select('reviewer_id,rating,created_at').eq('seller_id', _sellerId)
+        .then(function(res) {
+          if (!res || !res.data) return;
+          H.state.ratings = H.state.ratings || {};
+          H.state.ratings[_sellerId] = res.data.map(function(r) {
+            return { userId: r.reviewer_id, rating: r.rating, at: new Date(r.created_at).getTime() };
+          });
+          H.saveState();
+          if (H.currentPageName === 'Detail' && H.currentPageParams && H.currentPageParams.id === params.id) {
+            H.renderPage('Detail', params);
+          }
+        }).catch(function(){});
+    })();
+
     const similar = (H.state.listings||[]).filter(x => x.id!==l.id && x.cat===l.cat && x.status==='active').slice(0,4);
     // Recently viewed (tracked in localStorage by openListing) — skip the current
     // listing and anything already shown under "Similar".

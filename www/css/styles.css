@@ -876,6 +876,7 @@ select.fi {
 .cam-wrap .cam-instr { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; color: #fff; font-size: 12px; text-shadow: 0 1px 4px rgba(0,0,0,.7); }
 .chat-bubble-img { padding: 4px !important; background: transparent !important; }
 .chat-img { display: block; max-width: 220px; max-height: 280px; width: auto; height: auto; border-radius: 12px; object-fit: cover; cursor: pointer; }
+.chat-caption { font-size: 13px; color: inherit; padding: 5px 6px 2px; max-width: 220px; word-break: break-word; line-height: 1.4; }
 .chat-img-viewer { position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 9999; display: flex; align-items: center; justify-content: center; }
 .chat-img-viewer img { max-width: 96vw; max-height: 92vh; border-radius: 8px; object-fit: contain; }
 .chat-img-viewer-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }

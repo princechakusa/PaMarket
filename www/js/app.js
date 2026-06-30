@@ -3123,16 +3123,111 @@ H.openAppRating = function() {
         }).catch(function(){ /* best-effort */ });
       }
 
-      // User tapped a notification — open broadcasts straight to their detail
-      // (full message + image) from the payload, else follow the deep link, else
-      // open the Notifications list. Wrapped so a cold start waits until ready.
+      // Foreground push: the WebView is active so Android won't show a system
+      // notification. Sync conversations immediately AND relay as a local
+      // notification with an inline-reply action (requires @capacitor/local-notifications).
+      PN.addListener('pushNotificationReceived', function(notification) {
+        var data = (notification && notification.data) || {};
+        if (data.type === 'message' && typeof H.syncConversations === 'function') {
+          H.syncConversations({ silent: true }).catch(function(){});
+        }
+        // Relay as local notification with reply action when app is foreground
+        var LN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications;
+        if (LN && data.type === 'message' && notification.title && notification.body) {
+          LN.schedule({
+            notifications: [{
+              id: Math.abs(((notification.id || data.conversationId || '') + '').split('').reduce(function(h,c){return (h*31+c.charCodeAt(0))|0;},0)) || 1,
+              title: notification.title,
+              body: notification.body,
+              channelId: 'pamarket_default',
+              actionTypeId: 'PAMARKET_REPLY',
+              extra: { conversationId: data.conversationId || '', deepLink: data.deepLink || '' }
+            }]
+          }).catch(function(){});
+        }
+      });
+
+      // User tapped a notification — sync messages immediately before routing
+      // so the conversation is populated when the Chat page opens.
       PN.addListener('pushNotificationActionPerformed', function(action) {
         var data = (action && action.notification && action.notification.data) || {};
+        if (data.type === 'message' && typeof H.syncConversations === 'function') {
+          H.syncConversations({ silent: true }).catch(function(){});
+        }
         H._routeNotifTapWhenReady(data);
       });
     }
 
     await PN.register();
+
+    // Register local notification action types for inline reply.
+    // Requires @capacitor/local-notifications — gracefully skipped if not installed.
+    var LN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications;
+    if (LN && typeof LN.registerActionTypes === 'function') {
+      LN.registerActionTypes({
+        types: [{
+          id: 'PAMARKET_REPLY',
+          actions: [{
+            id: 'REPLY',
+            title: 'Reply',
+            input: true,
+            inputButtonTitle: 'Send',
+            inputPlaceholder: 'Type a reply…'
+          }, {
+            id: 'MARK_READ',
+            title: 'Mark as Read'
+          }]
+        }]
+      }).catch(function(){});
+
+      if (!H._localNotifListeners) {
+        H._localNotifListeners = true;
+        LN.addListener('localNotificationActionPerformed', function(event) {
+          var action = event && event.actionId;
+          var extra = (event && event.notification && event.notification.extra) || {};
+          var convId = extra.conversationId;
+          if (action === 'REPLY' && event.inputValue && convId) {
+            // Send the reply without opening the app
+            var u = H.currentUser();
+            var c = (H.state.conversations || []).find(function(x){ return x.id === convId; });
+            if (u && c) {
+              var msgId = H.uid();
+              var msgT = Date.now();
+              var replyText = String(event.inputValue);
+              var msgObj = { id: msgId, from: u.id, senderName: u.name || '', text: replyText, t: msgT, read: false };
+              c.messages = c.messages || [];
+              c.messages.push(msgObj);
+              H.saveState();
+              // Prefer saveMessageToCloud (handles conversation sync + error recovery)
+              if (typeof H.saveMessageToCloud === 'function') {
+                H.saveMessageToCloud(convId, msgObj).catch(function(){});
+              } else if (window.supabase && typeof window.supabase.from === 'function') {
+                window.supabase.from('messages').insert({
+                  id: msgId, conversation_id: convId,
+                  sender_id: u.id, sender_name: u.name || '',
+                  text: replyText, created_at: new Date(msgT).toISOString(), read: false
+                }).catch(function(){});
+              }
+              // Notify the other party so they receive the reply
+              var otherId = Array.isArray(c.members) ? c.members.find(function(m){ return m !== u.id; }) : null;
+              if (otherId && typeof H.pushNotif === 'function') {
+                H.pushNotif(otherId, 'New Message', (u.name || 'Someone') + ': ' + replyText.slice(0, 80), 'message', null, 'Chat?id=' + convId, convId);
+              }
+            }
+          } else if (action === 'MARK_READ' && convId) {
+            var u2 = H.currentUser();
+            var c2 = (H.state.conversations || []).find(function(x){ return x.id === convId; });
+            if (u2 && c2 && Array.isArray(c2.messages)) {
+              c2.messages.forEach(function(m){ if (m.from !== u2.id) m.read = true; });
+              H.saveState();
+              H.updateMsgBadge && H.updateMsgBadge();
+            }
+          } else if (extra.deepLink) {
+            H._routeDeepLinkWhenReady(extra.deepLink);
+          }
+        });
+      }
+    }
   }
 
   // Web / PWA: use Web Push (VAPID) and save push_subscription.

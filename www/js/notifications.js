@@ -15,27 +15,30 @@
   }
 
   // ── Push helper (called from anywhere) ────────────────────
-  H.pushNotif = function (uid_, title, body, type, imageUrl, deepLink) {
+  H.pushNotif = function (uid_, title, body, type, imageUrl, deepLink, conversationId) {
     H.state.notifs = H.state.notifs || {};
     H.state.notifs[uid_] = H.state.notifs[uid_] || [];
     const n = {
       id: uid(), t: Date.now(), read: false,
       title, body, type: type || _inferType(title),
       imageUrl: imageUrl || null,
-      deepLink: deepLink || null
+      deepLink: deepLink || null,
+      conversationId: conversationId || null
     };
     H.state.notifs[uid_].unshift(n);
     if (H.state.notifs[uid_].length > 100) H.state.notifs[uid_].length = 100;
     saveState();
     H._updateNotifBadge();
 
-    // Persist to Supabase so the user gets it on other devices
+    // Persist to Supabase so the user gets it on other devices.
+    // conversationId is included in meta so the FCM server can use Android
+    // notification tag grouping (one notification per conversation).
     const c = sb();
     if (c) {
       c.from('notifications').insert({
         id: n.id, user_id: uid_, title: n.title, body: n.body,
         type: n.type, read: false, created_at: n.t,
-        meta: { deepLink: deepLink || null, imageUrl: imageUrl || null }
+        meta: { deepLink: deepLink || null, imageUrl: imageUrl || null, conversationId: conversationId || null }
       }).then(r => { if (r && r.error) console.warn('notif insert failed:', r.error.message); });
     }
   };

@@ -149,8 +149,9 @@
     const sb = window.supabase;
     if (!sb || typeof sb.from !== 'function') return;
     H._profileFetched = H._profileFetched || {};
-    if (H._profileFetched[viewId]) return;
-    H._profileFetched[viewId] = true;
+    const _lastFetch = H._profileFetched[viewId];
+    if (_lastFetch && (Date.now() - _lastFetch) < 300000) return;
+    H._profileFetched[viewId] = Date.now();
     sb.from('profiles')
       .select('id,name,phone,email,avatar,verified,bio,city,created_at')
       .eq('id', viewId).maybeSingle()
@@ -170,8 +171,8 @@
           if (p.avatar && ex.avatar !== p.avatar) { ex.avatar = p.avatar; changed = true; }
           if (p.phone  && !ex.phone)              { ex.phone = p.phone; changed = true; }
           if (!!p.verified !== !!ex.verified)     { ex.verified = !!p.verified; changed = true; }
-          if (p.bio    && !ex.bio)                { ex.bio = p.bio; changed = true; }
-          if (p.city   && !ex.city)               { ex.city = p.city; changed = true; }
+          if (p.bio  !== undefined && ex.bio  !== p.bio)  { ex.bio  = p.bio  || ''; changed = true; }
+          if (p.city !== undefined && ex.city !== p.city) { ex.city = p.city || ''; changed = true; }
         }
         if (changed) {
           H.saveState();
@@ -905,11 +906,11 @@
     H.saveState();
     var _sb = window.supabase;
     if (_sb && typeof _sb.from === 'function') {
-      _sb.from('reviews').insert({
+      _sb.from('reviews').upsert({
         seller_id: sellerId, reviewer_id: me.id,
         reviewer_name: me.name || 'User', rating: rating,
-        body: text || null, created_at: new Date().toISOString()
-      }).then(function(res) {
+        text: text || '', created_at: new Date().toISOString()
+      }, { onConflict: 'seller_id,reviewer_id' }).then(function(res) {
         if (res && res.error) console.warn('Review sync failed:', res.error.message);
       });
     }

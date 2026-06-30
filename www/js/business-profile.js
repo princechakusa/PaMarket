@@ -1130,27 +1130,52 @@
     H.state.followedBusinesses = H.state.followedBusinesses || [];
     const b = getBiz(id);
     const sb = window.supabase;
-    if (H.isFollowingBusiness(id)) {
+    const wasFollowing = H.isFollowingBusiness(id);
+    const prevCount = b ? (b.followerCount || 0) : 0;
+
+    // Optimistic update
+    if (wasFollowing) {
       H.state.followedBusinesses = H.state.followedBusinesses.filter(x => x !== id);
-      if (b) b.followerCount = Math.max(0, (b.followerCount || 1) - 1);
-      if (sb) { try { sb.from('business_followers').delete().eq('business_id', id).eq('user_id', u.id).then(() => {}, () => {}); } catch (e) {} }
+      if (b) b.followerCount = Math.max(0, prevCount - 1);
     } else {
       H.state.followedBusinesses.push(id);
-      if (b) b.followerCount = (b.followerCount || 0) + 1;
-      if (sb) { try { sb.from('business_followers').insert({ business_id: id, user_id: u.id }).then(() => {}, () => {}); } catch (e) {} }
+      if (b) b.followerCount = prevCount + 1;
       try { if (b && b.ownerUserId && b.ownerUserId !== u.id && H.pushNotif) H.pushNotif(b.ownerUserId, 'New follower', (u.name || 'Someone') + ' followed ' + (b.name || 'your business'), 'info', null, 'BusinessView'); } catch (e) {}
     }
     saveState();
-    const f = H.isFollowingBusiness(id);
-    // BusinessProfile button (pill style)
-    const btn = document.getElementById('bizFollowBtn');
-    if (btn) { btn.textContent = f ? 'Following' : 'Follow'; btn.style.cssText = 'flex-shrink:0;border-radius:20px;padding:9px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;' + (f ? 'background:var(--bg,#EEF2FB);color:#1A3A8F;border:1.5px solid #1A3A8F' : 'background:#1A3A8F;color:#fff;border:none'); }
-    // BusinessShop button (square style) — was previously never updated, so the
-    // tap appeared to do nothing on the storefront page.
-    const bsBtn = document.getElementById('bsFollowBtn');
-    if (bsBtn) { bsBtn.textContent = f ? 'Following' : 'Follow Shop'; bsBtn.style.cssText = 'flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.2px;' + (f ? 'background:var(--bg,#EEF2FB);color:#1A3A8F;border:1.5px solid #1A3A8F' : 'background:#1A3A8F;color:#fff;border:none'); }
-    const cnt = document.getElementById('bizFollowerCount');
-    if (cnt && b) cnt.textContent = b.followerCount || 0;
+
+    function _applyFollowUI() {
+      const f = H.isFollowingBusiness(id);
+      const btn = document.getElementById('bizFollowBtn');
+      if (btn) { btn.textContent = f ? 'Following' : 'Follow'; btn.style.cssText = 'flex-shrink:0;border-radius:20px;padding:9px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;' + (f ? 'background:var(--bg,#EEF2FB);color:#1A3A8F;border:1.5px solid #1A3A8F' : 'background:#1A3A8F;color:#fff;border:none'); }
+      const bsBtn = document.getElementById('bsFollowBtn');
+      if (bsBtn) { bsBtn.textContent = f ? 'Following' : 'Follow Shop'; bsBtn.style.cssText = 'flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.2px;' + (f ? 'background:var(--bg,#EEF2FB);color:#1A3A8F;border:1.5px solid #1A3A8F' : 'background:#1A3A8F;color:#fff;border:none'); }
+      const cnt = document.getElementById('bizFollowerCount');
+      if (cnt && b) cnt.textContent = b.followerCount || 0;
+    }
+    _applyFollowUI();
+
+    function _rollback() {
+      if (wasFollowing) {
+        if (H.state.followedBusinesses.indexOf(id) === -1) H.state.followedBusinesses.push(id);
+      } else {
+        H.state.followedBusinesses = H.state.followedBusinesses.filter(x => x !== id);
+      }
+      if (b) b.followerCount = prevCount;
+      saveState();
+      _applyFollowUI();
+    }
+
+    if (sb) {
+      if (wasFollowing) {
+        sb.from('business_followers').delete().eq('business_id', id).eq('user_id', u.id)
+          .then(function(res) { if (res && res.error) _rollback(); }, _rollback);
+      } else {
+        // ignoreDuplicates generates ON CONFLICT DO NOTHING — no UPDATE RLS needed.
+        sb.from('business_followers').upsert({ business_id: id, user_id: u.id }, { onConflict: 'business_id,user_id', ignoreDuplicates: true })
+          .then(function(res) { if (res && res.error) _rollback(); }, _rollback);
+      }
+    }
   };
 
   H.fetchBusinessFollow = function (id) {

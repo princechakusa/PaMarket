@@ -44,6 +44,7 @@ ORDERED=(
   www/js/pets.js
   www/js/other.js
   www/js/supabase.js
+  www/js/business-profile.js
 )
 
 for f in "${ORDERED[@]}"; do
