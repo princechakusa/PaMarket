@@ -1127,6 +1127,9 @@
 
   H.toggleFollowBusiness = function (id) {
     const u = H.currentUser(); if (!u) { H.requireAuth && H.requireAuth('Sign in to follow businesses'); return; }
+    H._followInFlight = H._followInFlight || {};
+    if (H._followInFlight[id]) return;
+    H._followInFlight[id] = true;
     H.state.followedBusinesses = H.state.followedBusinesses || [];
     const b = getBiz(id);
     const sb = window.supabase;
@@ -1164,17 +1167,20 @@
       if (b) b.followerCount = prevCount;
       saveState();
       _applyFollowUI();
+      H._followInFlight[id] = false;
     }
 
     if (sb) {
       if (wasFollowing) {
         sb.from('business_followers').delete().eq('business_id', id).eq('user_id', u.id)
-          .then(function(res) { if (res && res.error) _rollback(); }, _rollback);
+          .then(function(res) { if (res && res.error) _rollback(); else H._followInFlight[id] = false; }, _rollback);
       } else {
         // ignoreDuplicates generates ON CONFLICT DO NOTHING — no UPDATE RLS needed.
         sb.from('business_followers').upsert({ business_id: id, user_id: u.id }, { onConflict: 'business_id,user_id', ignoreDuplicates: true })
-          .then(function(res) { if (res && res.error) _rollback(); }, _rollback);
+          .then(function(res) { if (res && res.error) _rollback(); else H._followInFlight[id] = false; }, _rollback);
       }
+    } else {
+      H._followInFlight[id] = false;
     }
   };
 
