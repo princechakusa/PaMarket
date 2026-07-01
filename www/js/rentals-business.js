@@ -673,27 +673,28 @@
 
   RB.submitSetup = async function (bizId) {
     const sb = window.supabase; if (!sb) return;
-    const bio   = document.getElementById('rcSetupBio')?.value?.trim() || null;
+    const bio   = document.getElementById('rcSetupBio')?.value?.trim()   || null;
     const phone = document.getElementById('rcSetupPhone')?.value?.trim() || null;
-    const wa    = document.getElementById('rcSetupWA')?.value?.trim() || null;
+    const wa    = document.getElementById('rcSetupWA')?.value?.trim()    || null;
     const btn   = document.querySelector('.btn-pri');
     if (btn) { btn.disabled = true; btn.textContent = 'Setting up…'; }
     try {
-      const { data: rc, error } = await sb.from('rental_companies').insert({ business_id: bizId, status: 'pending' }).select('id').single();
-      if (error && error.code !== '23505') throw error;
-      const compId = rc ? rc.id : (await sb.from('rental_companies').select('id').eq('business_id', bizId).single()).data?.id;
-      if (compId) {
-        await sb.from('rental_company_profiles').upsert({ company_id: compId, bio: bio || null }, { onConflict: 'company_id' });
-      }
-      if (phone || wa) {
-        await sb.from('businesses').update({ phone: phone || null, whatsapp: wa || null }).eq('id', bizId);
-      }
+      const { data, error } = await sb.rpc('rental_setup_company', {
+        p_business_id: bizId,
+        p_bio:         bio,
+        p_phone:       phone,
+        p_whatsapp:    wa,
+      });
+      if (error) throw error;
       H.toast('Rental company set up! Pending admin approval.');
       RB.company = null;
       H.openInner('RentalDashboard');
     } catch (e) {
       console.warn('rental setup:', e);
-      H.toast('Setup failed. Please try again.', 4000, true);
+      const msg = e && e.message && e.message.includes('Not authenticated')
+        ? 'Please sign in again and try once more.'
+        : 'Setup failed. Please try again.';
+      H.toast(msg, 4000, true);
       if (btn) { btn.disabled = false; btn.textContent = 'Activate Rental Portal'; }
     }
   };
