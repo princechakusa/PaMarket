@@ -679,6 +679,20 @@
     const btn   = document.querySelector('.btn-pri');
     if (btn) { btn.disabled = true; btn.textContent = 'Setting up…'; }
     try {
+      // Ensure the Supabase session is valid before calling the RPC.
+      // If the stored token is expired, refreshSession() fetches a new one.
+      let sessionRes = await sb.auth.getSession();
+      let token = sessionRes?.data?.session?.access_token;
+      if (!token) {
+        const refreshed = await sb.auth.refreshSession();
+        token = refreshed?.data?.session?.access_token;
+      }
+      if (!token) {
+        H.toast('Your session has expired. Please sign out and sign in again.', 5000, true);
+        if (btn) { btn.disabled = false; btn.textContent = 'Activate Rental Portal'; }
+        return;
+      }
+
       const { data, error } = await sb.rpc('rental_setup_company', {
         p_business_id: bizId,
         p_bio:         bio,
@@ -691,10 +705,7 @@
       H.openInner('RentalDashboard');
     } catch (e) {
       console.warn('rental setup:', e);
-      const msg = e && e.message && e.message.includes('Not authenticated')
-        ? 'Please sign in again and try once more.'
-        : 'Setup failed. Please try again.';
-      H.toast(msg, 4000, true);
+      H.toast('Setup failed. Please sign out, sign back in, and try again.', 5000, true);
       if (btn) { btn.disabled = false; btn.textContent = 'Activate Rental Portal'; }
     }
   };
