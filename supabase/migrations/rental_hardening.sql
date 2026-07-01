@@ -257,10 +257,9 @@ begin
   if NEW.admin_status not in ('approved','rejected') then return NEW; end if;
 
   -- Find business owner
-  select u.id into v_owner_id
+  select b.owner_user_id into v_owner_id
   from public.rental_companies rc
   join public.businesses b on b.id = rc.business_id
-  join auth.users u on u.id = b.owner_id
   where rc.id = NEW.company_id
   limit 1;
 
@@ -305,9 +304,8 @@ begin
   if OLD.status is not distinct from NEW.status then return NEW; end if;
   if NEW.status not in ('active','suspended','rejected') then return NEW; end if;
 
-  select u.id into v_owner_id
+  select b.owner_user_id into v_owner_id
   from public.businesses b
-  join auth.users u on u.id = b.owner_id
   where b.id = NEW.business_id
   limit 1;
 
@@ -346,10 +344,9 @@ returns trigger language plpgsql security definer as $$
 declare v_owner_id uuid;
 begin
   if TG_OP = 'INSERT' and NEW.status = 'published' then
-    select u.id into v_owner_id
+    select b.owner_user_id into v_owner_id
     from public.rental_companies rc
     join public.businesses b on b.id = rc.business_id
-    join auth.users u on u.id = b.owner_id
     where rc.id = NEW.company_id limit 1;
 
     if v_owner_id is not null then
@@ -381,10 +378,9 @@ create or replace function public.rental_review_not_own_company()
 returns trigger language plpgsql security definer as $$
 declare v_owner_id uuid;
 begin
-  select u.id into v_owner_id
+  select b.owner_user_id into v_owner_id
   from public.rental_companies rc
   join public.businesses b on b.id = rc.business_id
-  join auth.users u on u.id = b.owner_id
   where rc.id = NEW.company_id limit 1;
 
   if v_owner_id = auth.uid() then
@@ -408,7 +404,6 @@ begin
   from public.rental_vehicle_listings l
   join public.rental_companies rc on rc.id = l.company_id
   join public.businesses b on b.id = rc.business_id
-  join auth.users u on u.id = b.owner_id
   where l.id = NEW.listing_id limit 1;
 
   if v_company_owner = auth.uid() then
@@ -478,7 +473,7 @@ create policy "rental_listings: owner insert"
       select 1 from public.rental_companies rc
       join public.businesses b on b.id = rc.business_id
       where rc.id = company_id
-        and b.owner_id = auth.uid()
+        and b.owner_user_id = auth.uid()
         and rc.status = 'active'
     )
   );
@@ -495,7 +490,7 @@ create policy "rental_listings: owner update"
       select 1 from public.rental_companies rc
       join public.businesses b on b.id = rc.business_id
       where rc.id = company_id
-        and b.owner_id = auth.uid()
+        and b.owner_user_id = auth.uid()
     )
   )
   with check (
@@ -575,10 +570,9 @@ declare
   v_since    timestamptz := now() - interval '30 days';
 begin
   -- Auth: must be the company owner or an admin
-  select u.id into v_owner_id
+  select b.owner_user_id into v_owner_id
   from public.rental_companies rc
   join public.businesses b on b.id = rc.business_id
-  join auth.users u on u.id = b.owner_id
   where rc.id = p_company_id
   limit 1;
 
