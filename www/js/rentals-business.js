@@ -214,7 +214,12 @@
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
             <button onclick="H.openInner('RentalEditVehicle',{id:'${esc(v.id)}',bizId:'${esc(biz.id)}'})" style="padding:7px 12px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);font-size:12px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit">Edit</button>
             <button onclick="H._rentalBiz.toggleFleetStatus('${esc(v.id)}','${isActive ? 'paused' : 'active'}')" style="padding:7px 12px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);font-size:12px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit">${isActive ? 'Pause' : 'Activate'}</button>
-            <button onclick="H.openInner('RentalAvailability',{id:'${esc(v.id)}',bizId:'${esc(biz.id)}'})" style="padding:7px 12px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);font-size:12px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit">Availability</button>
+            <label style="padding:7px 12px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);font-size:12px;font-weight:700;color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:5px">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>Photo</span>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none" onchange="H._rentalBiz.handlePhotoUpload('${esc(v.id)}',this)">
+            </label>
+            <button onclick="H.openInner('RentalAvailability',{id:'${esc(v.id)}',bizId:'${esc(biz.id)}'})" style="padding:7px 12px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);font-size:12px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit">Dates</button>
             <button onclick="H._rentalBiz.removeVehicle('${esc(v.id)}')" style="padding:7px 12px;border-radius:9px;border:1px solid #FECACA;background:#FFF1F0;font-size:12px;font-weight:700;color:#EF4444;cursor:pointer;font-family:inherit">Remove</button>
           </div>
         </div>
@@ -464,21 +469,24 @@
     const biz = _requireBiz();
     if (!biz) return `<div class="page active">${H.innerTopbar('Analytics')}${H.emptyState('Business required', '')}</div>`;
 
-    const fleet   = RB.fleet;
-    const leads   = RB.leads;
-    const rc      = RB.company || {};
+    const rc  = RB.company || {};
+    const a   = RB._analytics;   // from rental_business_analytics RPC
 
-    const totalViews    = fleet.reduce((n, v) => n + (v.view_count || 0), 0);
-    const totalSaves    = fleet.reduce((n, v) => n + (v.save_count || 0), 0);
-    const totalInquiries= fleet.reduce((n, v) => n + (v.inquiry_count || 0), 0);
-    const convRate      = totalViews ? Math.round((totalInquiries / totalViews) * 100) : 0;
-
-    const statCard = (val, label) => `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:14px;text-align:center">
+    const statCard = (val, label, sub) => `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:14px;text-align:center">
       <div style="font-size:22px;font-weight:800;color:#1A3A8F">${val}</div>
       <div style="font-size:11.5px;font-weight:600;color:var(--sub);margin-top:3px">${label}</div>
+      ${sub ? `<div style="font-size:10.5px;color:var(--sub);margin-top:1px">${sub}</div>` : ''}
     </div>`;
 
-    const topByViews = fleet.slice().sort((a,b)=>(b.view_count||0)-(a.view_count||0)).slice(0,5);
+    // Fallback: compute from fleet cache while RPC loads
+    const fleet = RB.fleet;
+    const totalViews     = a ? a.views_30d      : fleet.reduce((n, v) => n + (v.view_count || 0), 0);
+    const totalInquiries = a ? (a.chats_30d + a.whatsapp_30d + a.calls_30d) : fleet.reduce((n, v) => n + (v.inquiry_count || 0), 0);
+    const totalSaves     = a ? a.saves_30d      : fleet.reduce((n, v) => n + (v.save_count || 0), 0);
+    const convRate       = totalViews ? Math.round((totalInquiries / totalViews) * 100) : 0;
+    const period         = a ? '30d' : 'all time';
+
+    const topByViews = fleet.slice().sort((x,y)=>(y.view_count||0)-(x.view_count||0)).slice(0,5);
     const maxV = Math.max(1, ...(topByViews.map(v=>v.view_count||0)));
     const barRows = topByViews.map(v => {
       const pct = Math.round(((v.view_count||0)/maxV)*100);
@@ -494,12 +502,21 @@
     return `<div class="page active">
       ${H.innerTopbar('Analytics')}
       <div class="inner-content">
+        ${!a ? `<div style="background:#EEF2FB;border-radius:10px;padding:10px 14px;font-size:12px;color:#1A3A8F;margin-bottom:12px">Loading 30-day analytics…</div>` : ''}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-          ${statCard(fmt(totalViews),     'Total Views')}
-          ${statCard(fmt(totalInquiries), 'Inquiries')}
-          ${statCard(fmt(totalSaves),     'Saves')}
-          ${statCard(convRate + '%',      'Conversion')}
+          ${statCard(fmt(totalViews),     'Views',     period)}
+          ${statCard(fmt(totalInquiries), 'Inquiries', period)}
+          ${statCard(fmt(totalSaves),     'Saves',     period)}
+          ${statCard(convRate + '%',      'Conversion', 'Inquiry/View')}
         </div>
+        ${a ? `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:14px;margin-bottom:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Channel Breakdown (30d)</div>
+          ${[['chat_open','In-app Chat',a.chats_30d],['whatsapp','WhatsApp',a.whatsapp_30d],['call','Phone Call',a.calls_30d]].map(([,label,val])=>`
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.04)">
+            <span style="font-size:13px;color:var(--sub)">${label}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--text)">${fmt(val||0)}</span>
+          </div>`).join('')}
+        </div>` : ''}
         ${topByViews.length ? `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:16px;margin-bottom:16px">
           <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:14px">Top Vehicles by Views</div>
           ${barRows}
@@ -793,6 +810,127 @@
       H.toast('Dates unblocked.');
       RB.loadAvailability(vehicleId);
     } catch (e) { H.toast('Could not remove block.', 4000, true); }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // TASK 2: Image Upload Pipeline
+  // Uploads to Supabase Storage bucket "rental-media", stores URL in
+  // rental_vehicle_media, refreshes cover_url in fleet cache.
+  // ─────────────────────────────────────────────────────────────────────────
+  RB.uploadMedia = async function (listingId, file, isCover) {
+    const sb = window.supabase; if (!sb) return;
+    const u  = H.currentUser(); if (!u) return;
+
+    // Validate client-side before hitting storage (matches bucket policy)
+    const ALLOWED = ['image/jpeg','image/png','image/webp','image/heic','image/heif'];
+    if (!ALLOWED.includes(file.type)) { H.toast('Only JPEG, PNG, WebP, or HEIC images allowed.', 4000, true); return; }
+    if (file.size > 8 * 1024 * 1024)  { H.toast('Image must be under 8 MB.', 4000, true); return; }
+
+    const ext  = file.name.split('.').pop().toLowerCase() || 'jpg';
+    const path = `${u.id}/${listingId}/${Date.now()}.${ext}`;
+
+    try {
+      const { error: upErr } = await sb.storage.from('rental-media').upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+      if (upErr) throw upErr;
+
+      const { data: signed } = await sb.storage.from('rental-media').createSignedUrl(path, 60 * 60 * 24 * 365);
+      const url = signed && signed.signedUrl;
+      if (!url) throw new Error('Could not get image URL');
+
+      // If this is the first photo or explicitly cover, set is_cover
+      const { count } = await sb.from('rental_vehicle_media').select('id', { count: 'exact', head: true }).eq('listing_id', listingId);
+      const willBeCover = isCover || count === 0;
+
+      if (willBeCover) {
+        // Demote any existing cover
+        await sb.from('rental_vehicle_media').update({ is_cover: false }).eq('listing_id', listingId).eq('is_cover', true);
+      }
+
+      await sb.from('rental_vehicle_media').insert({
+        listing_id: listingId,
+        url,
+        storage_path: path,
+        is_cover: willBeCover,
+        sort_order: count || 0,
+      });
+
+      // Refresh cover in fleet cache
+      if (willBeCover) {
+        const v = RB.fleet.find(x => x.id === listingId);
+        if (v) v.cover_url = url;
+      }
+
+      return { url, path };
+    } catch (e) {
+      console.warn('rental upload:', e);
+      if (e.statusCode === 409) H.toast('File already exists. Please try again.', 4000, true);
+      else H.toast('Upload failed: ' + (e.message || 'Unknown error'), 4000, true);
+      return null;
+    }
+  };
+
+  RB.deleteMedia = async function (mediaId, storagePath, listingId) {
+    const sb = window.supabase; if (!sb) return;
+    try {
+      await sb.from('rental_vehicle_media').delete().eq('id', mediaId);
+      if (storagePath) await sb.storage.from('rental-media').remove([storagePath]);
+      // Reassign cover to next photo if needed
+      const { data: remaining } = await sb.from('rental_vehicle_media').select('id').eq('listing_id', listingId).eq('is_cover', false).order('sort_order').limit(1);
+      if (remaining && remaining.length) {
+        await sb.from('rental_vehicle_media').update({ is_cover: true }).eq('id', remaining[0].id);
+      }
+      H.toast('Photo removed.');
+    } catch (e) {
+      H.toast('Could not delete photo.', 4000, true);
+    }
+  };
+
+  // Handle file input change (called from inline onchange in the fleet manage UI)
+  RB.handlePhotoUpload = async function (listingId, input) {
+    const file = input && input.files && input.files[0];
+    if (!file) return;
+    const label = input.parentElement && input.parentElement.querySelector('span');
+    if (label) label.textContent = 'Uploading…';
+    const result = await RB.uploadMedia(listingId, file, false);
+    if (result) H.toast('Photo uploaded.');
+    if (label) label.textContent = 'Add Photo';
+    input.value = '';
+    // Refresh manage fleet to show new photo count
+    if (H.currentPageName === 'RentalManageFleet') {
+      H.renderPage('RentalManageFleet', { bizId: RB.company && RB.company.business_id });
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // TASK 8: Wire rental_business_analytics RPC into analytics page
+  // ─────────────────────────────────────────────────────────────────────────
+  RB._analytics   = null;
+  RB._analyticsId = null;
+
+  RB.loadAnalytics = async function (companyId) {
+    const sb = window.supabase; if (!sb) return;
+    try {
+      const { data, error } = await sb.rpc('rental_business_analytics', { p_company_id: companyId });
+      if (error) throw error;
+      RB._analytics   = data;
+      RB._analyticsId = companyId;
+    } catch (e) {
+      console.warn('rental analytics rpc:', e);
+      RB._analytics = null;
+    }
+    if (H.currentPageName === 'RentalBusinessAnalytics') {
+      H.renderPage('RentalBusinessAnalytics', { bizId: RB.company && RB.company.business_id });
+    }
+  };
+
+  H.pages.RentalBusinessAnalytics_after = function (params) {
+    const rc = RB.company;
+    if (rc && rc.id && rc.id !== RB._analyticsId) {
+      RB.loadAnalytics(rc.id);
+    }
   };
 
   window.RB = RB;
