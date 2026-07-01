@@ -189,7 +189,8 @@
   };
 
   H.pages.RentalListings_after = function () {
-    if (!R.browse.length && !R._loading && !R._loadFailed) H._rental.loadBrowse(true);
+    // R._attempted prevents infinite re-trigger when DB is empty (0 results ≠ error)
+    if (!R.browse.length && !R._loading && !R._loadFailed && !R._attempted) H._rental.loadBrowse(true);
     window._rentalSearchTimer = null;
   };
 
@@ -455,7 +456,7 @@
   R.loadBrowse = async function (reset) {
     if (R._loading) return;
     const sb = window.supabase; if (!sb) return;
-    if (reset) { R.page = 0; R.browse = []; R.featured = []; R.hasMore = true; }
+    if (reset) { R.page = 0; R.browse = []; R.featured = []; R.hasMore = true; R._attempted = false; }
     R._loading = true;
     R._loadFailed = false;
     H.renderPage('RentalListings', {});
@@ -493,7 +494,7 @@
       H.toast(msg, 4000, true);
     }
     R._loading = false;
-    // Re-render whether or not navigation happened — DOM check is reliable
+    R._attempted = true;  // mark as attempted so _after never re-triggers on empty result
     if (document.getElementById('rentalListingsPage')) H.renderPage('RentalListings', {});
   };
 
