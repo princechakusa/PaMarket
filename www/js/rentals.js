@@ -458,10 +458,11 @@
     if (reset) { R.page = 0; R.browse = []; R.featured = []; R.hasMore = true; }
     R._loading = true;
     R._loadFailed = false;
-    H.renderPage('RentalListings', H._currentParams || {});
+    H.renderPage('RentalListings', {});
     try {
       const f = R.filters;
-      const { data, error } = await sb.rpc('rental_search_listings', {
+      // Race the RPC against a 12-second timeout so the page never hangs forever
+      const rpcPromise = sb.rpc('rental_search_listings', {
         p_category_slug:  f.cat   || null,
         p_city:           (f.city && f.city !== 'All Zimbabwe') ? f.city : null,
         p_transmission:   f.trans || null,
@@ -471,6 +472,10 @@
         p_limit:          21,
         p_offset:         R.page * 20,
       });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out')), 12000)
+      );
+      const { data, error } = await Promise.race([rpcPromise, timeoutPromise]);
       if (error) throw error;
       const rows = data || [];
       const feat = rows.filter(r => r.is_featured && R.page === 0);
@@ -482,10 +487,14 @@
     } catch (e) {
       console.warn('rental browse:', e);
       R._loadFailed = true;
-      H.toast('Could not load vehicles. Try again.', 4000, true);
+      const msg = e && e.message && e.message.includes('timed out')
+        ? 'Connection timed out. Check your internet and try again.'
+        : 'Could not load vehicles. Try again.';
+      H.toast(msg, 4000, true);
     }
     R._loading = false;
-    if (H.currentPageName === 'RentalListings') H.renderPage('RentalListings', {});
+    // Re-render whether or not navigation happened — DOM check is reliable
+    if (document.getElementById('rentalListingsPage')) H.renderPage('RentalListings', {});
   };
 
   R.loadMore = function () {

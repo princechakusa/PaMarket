@@ -586,88 +586,10 @@ $$;
 
 grant execute on function public.rental_business_analytics(uuid) to authenticated;
 
--- ================================================================
--- TASK 8b: Browse search RPC (performance-safe version)
--- Replaces any draft version with parameter-safe implementation
--- ================================================================
-
-create or replace function public.rental_search_listings(
-  p_location_id  uuid    default null,
-  p_category_id  uuid    default null,
-  p_brand_id     uuid    default null,
-  p_min_rate     numeric default null,
-  p_max_rate     numeric default null,
-  p_min_seats    int     default null,
-  p_query        text    default null,
-  p_limit        int     default 20,
-  p_offset       int     default 0
-)
-returns table (
-  id            uuid,
-  model         text,
-  year          int,
-  daily_rate    numeric,
-  weekly_rate   numeric,
-  brand_label   text,
-  category_label text,
-  city          text,
-  company_name  text,
-  company_id    uuid,
-  cover_url     text,
-  view_count    bigint,
-  avg_rating    numeric,
-  review_count  int,
-  is_featured   boolean
-) language sql stable security definer as $$
-  select
-    l.id,
-    l.model,
-    l.year,
-    l.daily_rate,
-    l.weekly_rate,
-    rb.label  as brand_label,
-    rc2.label as category_label,
-    rl.city,
-    b.name    as company_name,
-    l.company_id,
-    vm.url    as cover_url,
-    coalesce(l.view_count, 0),
-    coalesce(co.avg_rating, 0),
-    coalesce(co.review_count, 0),
-    exists(
-      select 1 from public.rental_featured_listings f
-      where f.listing_id = l.id
-        and f.is_active   = true
-        and f.starts_at  <= now()
-        and f.ends_at    >= now()
-    ) as is_featured
-  from public.rental_vehicle_listings l
-  join public.rental_companies      co  on co.id  = l.company_id
-  join public.businesses             b   on b.id   = co.business_id
-  left join public.rental_brands    rb  on rb.id  = l.brand_id
-  left join public.rental_categories rc2 on rc2.id = l.category_id
-  left join public.rental_locations  rl  on rl.id  = l.location_id
-  left join public.rental_vehicle_media vm on vm.listing_id = l.id and vm.is_cover = true
-  where l.deleted_at   is null
-    and l.status        = 'active'
-    and l.admin_status  = 'approved'
-    and co.status       = 'active'
-    and (p_location_id is null  or l.location_id  = p_location_id)
-    and (p_category_id is null  or l.category_id  = p_category_id)
-    and (p_brand_id    is null  or l.brand_id      = p_brand_id)
-    and (p_min_rate    is null  or l.daily_rate    >= p_min_rate)
-    and (p_max_rate    is null  or l.daily_rate    <= p_max_rate)
-    and (p_min_seats   is null  or l.seats         >= p_min_seats)
-    and (p_query       is null  or l.model ilike '%' || p_query || '%')
-  order by
-    is_featured desc,
-    l.view_count desc,
-    l.created_at desc
-  limit  least(p_limit,  50)
-  offset greatest(p_offset, 0);
-$$;
-
-grant execute on function public.rental_search_listings(uuid,uuid,uuid,numeric,numeric,int,text,int,int) to anon, authenticated;
+-- NOTE: rental_search_listings is defined in rental_marketplace_schema.sql
+-- with text-based slug parameters matching the JS client. Do NOT redefine
+-- it here with different parameter types — that creates an incompatible
+-- PostgreSQL overload that breaks PostgREST routing.
 
 -- Increment view count (idempotent RPC called from app)
 create or replace function public.rental_increment_view(p_listing_id uuid)
