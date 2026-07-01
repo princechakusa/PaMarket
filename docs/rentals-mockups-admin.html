@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PaMarket Vehicle Rentals — Phase 1 Mockups (Admin Portal)</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#E8EAED;padding:32px 20px;color:#18181B}
+h1{font-size:22px;font-weight:800;color:#1A3A8F;margin-bottom:8px}
+.section-label{font-size:11px;font-weight:700;color:#52525B;letter-spacing:.08em;text-transform:uppercase;margin:40px 0 16px}
+.screen-row{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:40px}
+.screen-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.screen-title{font-size:12px;font-weight:700;color:#52525B;letter-spacing:.04em;text-transform:uppercase}
+/* Admin uses a wider desktop-style panel */
+.admin-panel{width:900px;min-height:640px;background:#F0F2F5;border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.18),0 0 0 1px rgba(0,0,0,.06);display:flex}
+/* Sidebar */
+.admin-sidebar{width:220px;background:#1A3A8F;display:flex;flex-direction:column;flex-shrink:0}
+.admin-logo{padding:20px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.1)}
+.admin-logo-txt{font-size:16px;font-weight:800;color:#fff}.admin-logo-txt span{color:#F5A623}
+.admin-logo-badge{font-size:10px;font-weight:700;background:rgba(255,255,255,.15);color:#fff;padding:2px 8px;border-radius:999px;margin-left:4px}
+.nav-group-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.08em;text-transform:uppercase;padding:16px 18px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;border-radius:0;color:rgba(255,255,255,.7);font-size:13px;font-weight:600;transition:.15s}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left:3px solid #F5A623}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:rgba(217,45,32,.8);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:999px}
+/* Main area */
+.admin-main{flex:1;display:flex;flex-direction:column;min-width:0}
+/* Top bar */
+.admin-topbar{height:56px;background:#fff;border-bottom:1px solid #E4E4E7;display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0}
+.admin-topbar .page-title{font-size:16px;font-weight:800;color:#18181B;flex:1}
+/* Content area */
+.admin-content{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+/* Stat cards */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat-card{background:#fff;border:1px solid #E4E4E7;border-radius:12px;padding:16px}
+.stat-card .num{font-size:24px;font-weight:800;color:#18181B}
+.stat-card .lbl{font-size:12px;color:#A1A1AA;font-weight:600;margin-top:2px}
+.stat-card .delta{font-size:12px;font-weight:700;margin-top:8px}
+.delta-up{color:#12B76A}.delta-down{color:#D92D20}
+/* Section card */
+.card{background:#fff;border:1px solid #E4E4E7;border-radius:12px;overflow:hidden}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #E4E4E7}
+.card-hdr h3{font-size:14px;font-weight:700;color:#18181B}
+.card-hdr .action{font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer}
+/* Table */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{background:#F9F9FB;border-bottom:1px solid #E4E4E7;text-align:left;padding:10px 16px;font-size:11px;font-weight:700;color:#A1A1AA;text-transform:uppercase;letter-spacing:.04em}
+.data-table td{padding:12px 16px;border-bottom:1px solid #E4E4E7;font-size:13px;color:#18181B;vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:#F9FAFB;cursor:pointer}
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.badge.active{background:#ECFDF5;color:#12B76A}
+.badge.pending{background:#FEF3C7;color:#92400E}
+.badge.rejected{background:#FEF2F2;color:#D92D20}
+.badge.verified{background:#EEF2FF;color:#1A3A8F}
+.badge.flagged{background:#FFF7ED;color:#EA580C}
+.badge.removed{background:#F4F4F5;color:#A1A1AA}
+/* Action buttons in table */
+.tbl-btn{padding:5px 12px;border-radius:6px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;border:none}
+.tbl-btn.approve{background:#ECFDF5;color:#12B76A}
+.tbl-btn.reject{background:#FEF2F2;color:#D92D20}
+.tbl-btn.view{background:#EEF2FF;color:#1A3A8F}
+.tbl-btn.warn{background:#FEF3C7;color:#92400E}
+.tbl-btn.remove{background:#FEF2F2;color:#D92D20}
+/* Tab nav */
+.tab-row{display:flex;gap:0;border-bottom:1px solid #E4E4E7}
+.tab-item{padding:12px 18px;font-size:13px;font-weight:600;color:#A1A1AA;cursor:pointer;border-bottom:2px solid transparent}
+.tab-item.active{color:#1A3A8F;border-bottom-color:#1A3A8F}
+/* Search bar */
+.search-bar{display:flex;gap:10px;margin-bottom:14px}
+.search-input{flex:1;height:38px;border:1.5px solid #E4E4E7;border-radius:8px;padding:0 12px;font-family:inherit;font-size:13px;color:#18181B;outline:none}
+.search-input:focus{border-color:#1A3A8F}
+.filter-select{height:38px;border:1.5px solid #E4E4E7;border-radius:8px;padding:0 10px;font-family:inherit;font-size:13px;color:#52525B;outline:none;background:#fff}
+/* Verification doc card */
+.doc-card{border:1px solid #E4E4E7;border-radius:8px;overflow:hidden}
+.doc-img{height:100px;background:#E4E4E7;display:flex;align-items:center;justify-content:center}
+.doc-label{padding:8px 10px;font-size:12px;font-weight:700;color:#52525B;background:#F9F9FB;border-top:1px solid #E4E4E7}
+/* Review text */
+.review-text{font-size:13px;color:#52525B;line-height:1.5;padding:12px 16px;border-bottom:1px solid #E4E4E7}
+/* KPI bar */
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kpi-card{background:#fff;border:1px solid #E4E4E7;border-radius:10px;padding:14px}
+.kpi-num{font-size:22px;font-weight:800}
+.kpi-lbl{font-size:11px;color:#A1A1AA;font-weight:600;margin-top:2px}
+/* Chart placeholder */
+.chart-placeholder{height:120px;background:#F9F9FB;border:1px solid #E4E4E7;border-radius:8px;display:flex;align-items:flex-end;padding:10px;gap:5px}
+.bar{border-radius:3px 3px 0 0;background:#DBEAFE;flex:1}
+.bar.hi{background:#1A3A8F}
+/* Alert row */
+.alert-row{background:#FEF3C7;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:#92400E}
+/* Moderaton image thumbnails */
+.thumb-row{display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid #E4E4E7}
+.thumb{width:80px;height:64px;border-radius:6px;background:#94a3b8;flex-shrink:0}
+.thumb.flagged-img{border:2px solid #D92D20}
+/* Right panel for detail view */
+.detail-pane{width:300px;background:#F9F9FB;border-left:1px solid #E4E4E7;padding:20px;flex-shrink:0;display:flex;flex-direction:column;gap:14px}
+.detail-pane h4{font-size:13px;font-weight:700;color:#18181B}
+.detail-pane .row{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid #E4E4E7}
+.detail-pane .row .key{color:#A1A1AA;font-weight:600}
+.detail-pane .row .val{font-weight:700;color:#18181B}
+</style>
+</head>
+<body>
+
+<h1>Vehicle Rentals — Phase 1 Mockups</h1>
+<p style="color:#52525B;font-size:14px;margin-bottom:8px">Admin Portal screens · Desktop dashboard · Rentals management</p>
+
+<!-- ============================== SCREEN 15 — Admin Rental Overview Dashboard ============================== -->
+<div class="section-label">Screen 15 — Admin Rental Overview Dashboard</div>
+<div class="screen-row">
+<div class="screen-wrap">
+  <div class="screen-title">Platform overview</div>
+  <div class="admin-panel">
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+      <div class="admin-logo">
+        <div class="admin-logo-txt">Pa<span>Market</span></div>
+        <div class="admin-logo-badge">Admin</div>
+      </div>
+      <div class="nav-group-lbl">Rentals</div>
+      <div class="nav-item active">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Overview
+      </div>
+      <div class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Companies
+        <div class="nav-badge">8</div>
+      </div>
+      <div class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Listings
+      </div>
+      <div class="nav-group-lbl">Moderation</div>
+      <div class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Verification
+        <div class="nav-badge">5</div>
+      </div>
+      <div class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Reports
+        <div class="nav-badge">14</div>
+      </div>
+      <div class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Moderation
+      </div>
+      <div class="nav-group-lbl">Insights</div>
+      <div class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analytics
+      </div>
+      <div class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export Data
+      </div>
+    </div>
+    <!-- Main -->
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <div class="page-title">Rentals Overview</div>
+        <div style="font-size:12px;color:#A1A1AA">June 2026</div>
+        <button style="height:34px;background:#1A3A8F;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;padding:0 14px;cursor:pointer">Export Report</button>
+      </div>
+      <div class="admin-content">
+        <!-- Alert -->
+        <div class="alert-row">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          5 companies pending verification · 14 reports need review
+        </div>
+        <!-- Stats -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="num">47</div>
+            <div class="lbl">Rental Companies</div>
+            <div class="delta delta-up">+3 this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="num">1,248</div>
+            <div class="lbl">Active Listings</div>
+            <div class="delta delta-up">+82 this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="num">38,400</div>
+            <div class="lbl">Monthly Views</div>
+            <div class="delta delta-up">+18% vs May</div>
+          </div>
+          <div class="stat-card">
+            <div class="num">2,840</div>
+            <div class="lbl">Total Inquiries</div>
+            <div class="delta delta-up">+24%</div>
+          </div>
+        </div>
+        <!-- Charts row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="card">
+            <div class="card-hdr"><h3>New Listings — Last 30 Days</h3></div>
+            <div style="padding:14px">
+              <div class="chart-placeholder">
+                <div class="bar" style="height:40%"></div>
+                <div class="bar hi" style="height:70%"></div>
+                <div class="bar" style="height:55%"></div>
+                <div class="bar hi" style="height:80%"></div>
+                <div class="bar" style="height:65%"></div>
+                <div class="bar" style="height:72%"></div>
+                <div class="bar hi" style="height:90%"></div>
+                <div class="bar" style="height:78%"></div>
+                <div class="bar" style="height:68%"></div>
+                <div class="bar" style="height:82%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><h3>Companies by City</h3></div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+              <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="font-weight:600">Harare</span><span style="font-weight:800">28</span></div><div style="height:6px;background:#E4E4E7;border-radius:999px"><div style="height:100%;width:60%;background:#1A3A8F;border-radius:999px"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="font-weight:600">Bulawayo</span><span style="font-weight:800">11</span></div><div style="height:6px;background:#E4E4E7;border-radius:999px"><div style="height:100%;width:23%;background:#1A3A8F;border-radius:999px"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="font-weight:600">Victoria Falls</span><span style="font-weight:800">5</span></div><div style="height:6px;background:#E4E4E7;border-radius:999px"><div style="height:100%;width:11%;background:#F5A623;border-radius:999px"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="font-weight:600">Mutare</span><span style="font-weight:800">3</span></div><div style="height:6px;background:#E4E4E7;border-radius:999px"><div style="height:100%;width:6%;background:#F5A623;border-radius:999px"></div></div></div>
+            </div>
+          </div>
+        </div>
+        <!-- Recent companies -->
+        <div class="card">
+          <div class="card-hdr"><h3>Recently Registered Companies</h3><div class="action">View all</div></div>
+          <table class="data-table">
+            <thead><tr><th>Company</th><th>City</th><th>Fleet Size</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><b>AAA Car Hire</b></td><td>Harare</td><td>32</td><td><span class="badge verified">Verified</span></td><td>Jun 10</td><td><button class="tbl-btn view">View</button></td></tr>
+              <tr><td><b>Express Rentals</b></td><td>Bulawayo</td><td>18</td><td><span class="badge pending">Pending</span></td><td>Jun 15</td><td><button class="tbl-btn approve">Approve</button> <button class="tbl-btn reject">Reject</button></td></tr>
+              <tr><td><b>ZimRide Fleet</b></td><td>Harare</td><td>24</td><td><span class="badge active">Active</span></td><td>Jun 18</td><td><button class="tbl-btn view">View</button></td></tr>
+              <tr><td><b>Luxury Rides Zim</b></td><td>Harare</td><td>8</td><td><span class="badge pending">Pending</span></td><td>Jun 22</td><td><button class="tbl-btn approve">Approve</button> <button class="tbl-btn reject">Reject</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================== SCREEN 16 — Company Verification ============================== -->
+<div class="section-label">Screen 16 — Company Verification Screen</div>
+<div class="screen-row">
+<div class="screen-wrap">
+  <div class="screen-title">Verification queue + detail</div>
+  <div class="admin-panel">
+    <div class="admin-sidebar">
+      <div class="admin-logo"><div class="admin-logo-txt">Pa<span>Market</span></div><div class="admin-logo-badge">Admin</div></div>
+      <div class="nav-group-lbl">Rentals</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Overview</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Companies</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/></svg>Listings</div>
+      <div class="nav-group-lbl">Moderation</div>
+      <div class="nav-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Verification<div class="nav-badge">5</div></div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>Reports<div class="nav-badge">14</div></div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Moderation</div>
+      <div class="nav-group-lbl">Insights</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</div>
+    </div>
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <div class="page-title">Company Verification</div>
+        <span style="font-size:13px;color:#A1A1AA">5 pending · 2 rejected · 40 verified</span>
+      </div>
+      <div class="admin-content" style="flex-direction:row;padding:0;gap:0">
+        <!-- Left: queue -->
+        <div style="flex:1;overflow-y:auto;border-right:1px solid #E4E4E7">
+          <div class="tab-row">
+            <div class="tab-item active">Pending (5)</div>
+            <div class="tab-item">Verified (40)</div>
+            <div class="tab-item">Rejected (2)</div>
+          </div>
+          <div style="padding:12px 16px">
+            <div class="search-bar">
+              <input class="search-input" placeholder="Search companies…">
+              <select class="filter-select"><option>All Cities</option><option>Harare</option><option>Bulawayo</option></select>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Company</th><th>City</th><th>Submitted</th><th>Docs</th></tr></thead>
+            <tbody>
+              <tr style="background:#EEF2FF">
+                <td><div style="font-weight:700">Express Rentals</div><div style="font-size:11px;color:#A1A1AA">info@expressrentals.co.zw</div></td>
+                <td>Bulawayo</td>
+                <td>Jun 15</td>
+                <td><span class="badge active">3 docs</span></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:700">Luxury Rides Zim</div><div style="font-size:11px;color:#A1A1AA">luxuryrides@mail.com</div></td>
+                <td>Harare</td>
+                <td>Jun 22</td>
+                <td><span class="badge active">2 docs</span></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:700">Capital Car Hire</div><div style="font-size:11px;color:#A1A1AA">hire@capital.co.zw</div></td>
+                <td>Harare</td>
+                <td>Jun 24</td>
+                <td><span class="badge pending">1 doc</span></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:700">Safari Fleet Co.</div><div style="font-size:11px;color:#A1A1AA">safari@fleet.co.zw</div></td>
+                <td>Vic Falls</td>
+                <td>Jun 25</td>
+                <td><span class="badge active">3 docs</span></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:700">Horizon Car Hire</div><div style="font-size:11px;color:#A1A1AA">horizon@cars.co.zw</div></td>
+                <td>Mutare</td>
+                <td>Jun 27</td>
+                <td><span class="badge pending">2 docs</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Right: detail panel -->
+        <div class="detail-pane">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#18181B">Express Rentals</div>
+            <div style="font-size:12px;color:#A1A1AA;margin-top:2px">Bulawayo · Submitted Jun 15, 2026</div>
+          </div>
+          <div class="card" style="margin:0">
+            <div class="card-hdr" style="padding:10px 14px"><h3>Company Info</h3></div>
+            <div style="padding:0 14px">
+              <div class="row"><span class="key">Email</span><span class="val">info@expressrentals.co.zw</span></div>
+              <div class="row"><span class="key">Phone</span><span class="val">+263 77 xxx xxxx</span></div>
+              <div class="row"><span class="key">Type</span><span class="val">Car Hire Company</span></div>
+              <div class="row" style="border:none"><span class="key">Fleet size</span><span class="val">18 vehicles</span></div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">Submitted Documents</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+              <div class="doc-card">
+                <div class="doc-img"><svg width="28" height="28" fill="none" stroke="#A1A1AA" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                <div class="doc-label">Business Reg.</div>
+              </div>
+              <div class="doc-card">
+                <div class="doc-img"><svg width="28" height="28" fill="none" stroke="#A1A1AA" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                <div class="doc-label">Owner ID</div>
+              </div>
+              <div class="doc-card">
+                <div class="doc-img"><svg width="28" height="28" fill="none" stroke="#A1A1AA" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+                <div class="doc-label">Tax Clearance</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px">Admin Note (optional)</div>
+            <textarea style="width:100%;height:60px;border:1.5px solid #E4E4E7;border-radius:8px;padding:8px 10px;font-family:inherit;font-size:12px;resize:none;outline:none" placeholder="Add internal note…"></textarea>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button style="height:40px;background:#12B76A;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">Approve &amp; Verify</button>
+            <button style="height:40px;background:#FEF2F2;color:#D92D20;border:1.5px solid #D92D20;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">Reject Application</button>
+            <button style="height:36px;background:#F9F9FB;color:#52525B;border:1.5px solid #E4E4E7;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Request More Docs</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================== SCREEN 17 — Listing Moderation ============================== -->
+<div class="section-label">Screen 17 — Listing Moderation UI</div>
+<div class="screen-row">
+<div class="screen-wrap">
+  <div class="screen-title">Moderation queue</div>
+  <div class="admin-panel">
+    <div class="admin-sidebar">
+      <div class="admin-logo"><div class="admin-logo-txt">Pa<span>Market</span></div><div class="admin-logo-badge">Admin</div></div>
+      <div class="nav-group-lbl">Rentals</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Overview</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Companies</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/></svg>Listings</div>
+      <div class="nav-group-lbl">Moderation</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Verification<div class="nav-badge">5</div></div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>Reports<div class="nav-badge">14</div></div>
+      <div class="nav-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Moderation</div>
+      <div class="nav-group-lbl">Insights</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</div>
+    </div>
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <div class="page-title">Listing Moderation</div>
+        <span style="background:#FEF2F2;color:#D92D20;font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px">6 flagged listings</span>
+      </div>
+      <div class="admin-content">
+        <div class="search-bar">
+          <input class="search-input" placeholder="Search listings by title, company, city…">
+          <select class="filter-select"><option>All Status</option><option>Flagged</option><option>Active</option><option>Removed</option></select>
+          <select class="filter-select"><option>All Cities</option><option>Harare</option><option>Bulawayo</option></select>
+        </div>
+        <div class="card">
+          <div class="tab-row" style="padding-left:4px">
+            <div class="tab-item active">Flagged (6)</div>
+            <div class="tab-item">All Listings</div>
+            <div class="tab-item">Removed</div>
+          </div>
+          <!-- Flagged listing 1 -->
+          <div style="border-bottom:1px solid #E4E4E7">
+            <div style="padding:14px 18px;display:flex;gap:14px;align-items:flex-start">
+              <div style="width:96px;height:72px;border-radius:8px;background:#94a3b8;flex-shrink:0;border:2px solid #D92D20"></div>
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                  <div style="font-size:14px;font-weight:700">Toyota Hilux 2021 — Pickup</div>
+                  <span class="badge flagged">Reported ×3</span>
+                </div>
+                <div style="font-size:12px;color:#A1A1AA;margin-bottom:6px">by ZimRide Fleet · Harare · $80/day</div>
+                <div style="font-size:13px;color:#52525B;background:#FFF7ED;border-left:3px solid #EA580C;padding:6px 10px;border-radius:0 6px 6px 0">
+                  <b>Report reason:</b> Fraudulent listing — price does not match vehicle condition described
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+                <button class="tbl-btn view">View</button>
+                <button class="tbl-btn warn">Warn</button>
+                <button class="tbl-btn remove">Remove</button>
+              </div>
+            </div>
+          </div>
+          <!-- Flagged listing 2 -->
+          <div style="border-bottom:1px solid #E4E4E7">
+            <div style="padding:14px 18px;display:flex;gap:14px;align-items:flex-start">
+              <div style="width:96px;height:72px;border-radius:8px;background:#cbd5e1;flex-shrink:0;border:2px solid #D92D20"></div>
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                  <div style="font-size:14px;font-weight:700">Luxury Bus — 45 Seater</div>
+                  <span class="badge flagged">Reported ×1</span>
+                </div>
+                <div style="font-size:12px;color:#A1A1AA;margin-bottom:6px">by Coach Travel Zim · Harare · $250/day</div>
+                <div style="font-size:13px;color:#52525B;background:#FFF7ED;border-left:3px solid #EA580C;padding:6px 10px;border-radius:0 6px 6px 0">
+                  <b>Report reason:</b> Wrong category — this is not a car rental listing
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+                <button class="tbl-btn view">View</button>
+                <button class="tbl-btn warn">Warn</button>
+                <button class="tbl-btn remove">Remove</button>
+              </div>
+            </div>
+          </div>
+          <!-- Normal row -->
+          <div style="padding:12px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #E4E4E7">
+            <div style="width:72px;height:52px;border-radius:6px;background:#dde5f0;flex-shrink:0"></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:700">Nissan X-Trail 2019</div><div style="font-size:11px;color:#A1A1AA">Capital Car Hire · Harare · $55/day</div></div>
+            <span class="badge active">Active</span>
+            <button class="tbl-btn view">View</button>
+          </div>
+          <div style="padding:12px 18px;display:flex;align-items:center;gap:12px">
+            <div style="width:72px;height:52px;border-radius:6px;background:#e2e8f0;flex-shrink:0"></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:700">Honda CR-V 2020</div><div style="font-size:11px;color:#A1A1AA">Express Rentals · Bulawayo · $70/day</div></div>
+            <span class="badge removed">Removed</span>
+            <button class="tbl-btn view">View</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================== SCREEN 18 — Reports Management ============================== -->
+<div class="section-label">Screen 18 — Reports Management UI</div>
+<div class="screen-row">
+<div class="screen-wrap">
+  <div class="screen-title">Reports queue</div>
+  <div class="admin-panel">
+    <div class="admin-sidebar">
+      <div class="admin-logo"><div class="admin-logo-txt">Pa<span>Market</span></div><div class="admin-logo-badge">Admin</div></div>
+      <div class="nav-group-lbl">Rentals</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Overview</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Companies</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/></svg>Listings</div>
+      <div class="nav-group-lbl">Moderation</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Verification<div class="nav-badge">5</div></div>
+      <div class="nav-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>Reports<div class="nav-badge">14</div></div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/></svg>Moderation</div>
+      <div class="nav-group-lbl">Insights</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</div>
+    </div>
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <div class="page-title">Reports Management</div>
+        <span style="font-size:13px;color:#A1A1AA">14 open · 3 resolved today</span>
+      </div>
+      <div class="admin-content">
+        <div class="search-bar">
+          <input class="search-input" placeholder="Search reports…">
+          <select class="filter-select"><option>All Types</option><option>Fraud</option><option>Wrong Category</option><option>Offensive</option><option>Unavailable</option></select>
+          <select class="filter-select"><option>Open</option><option>Resolved</option><option>Dismissed</option></select>
+        </div>
+        <div class="card">
+          <table class="data-table">
+            <thead>
+              <tr><th>Listing</th><th>Report Type</th><th>Reporter</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div style="font-weight:700">Toyota Hilux 2021</div><div style="font-size:11px;color:#A1A1AA">ZimRide Fleet</div></td>
+                <td><span class="badge flagged">Fraudulent</span></td>
+                <td>Tatenda M.</td>
+                <td>Jun 28</td>
+                <td><span class="badge pending">Open</span></td>
+                <td><button class="tbl-btn view">Review</button> <button class="tbl-btn remove">Remove Listing</button></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:700">Luxury Bus 45 Seat</div><div style="font-size:11px;color:#A1A1AA">Coach Travel Zim</div></td>
+                <td><span class="badge pending">Wrong Category</span></td>
+                <td>Simba C.</td>
+                <td>Jun 27</td>
+                <td><span class="badge pending">Open</span></td>
+                <td><button class="tbl-btn view">Review</button> <button class="tbl-btn warn">Move Category</button></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:700">Nissan Navara 2018</div><div style="font-size:11px;color:#A1A1AA">Budget Rentals</div></td>
+                <td><span class="badge flagged">Offensive Content</span></td>
+                <td>Ruth N.</td>
+                <td>Jun 26</td>
+                <td><span class="badge pending">Open</span></td>
+                <td><button class="tbl-btn view">Review</button> <button class="tbl-btn remove">Remove</button></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:700">Toyota Aqua 2019</div><div style="font-size:11px;color:#A1A1AA">Capital Car Hire</div></td>
+                <td><span class="badge" style="background:#F4F4F5;color:#A1A1AA">Not Available</span></td>
+                <td>Munashe K.</td>
+                <td>Jun 25</td>
+                <td><span class="badge active">Resolved</span></td>
+                <td><button class="tbl-btn view">View</button></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:700">Honda Fit 2020</div><div style="font-size:11px;color:#A1A1AA">ZimRide Fleet</div></td>
+                <td><span class="badge flagged">Fraudulent</span></td>
+                <td>Brian P.</td>
+                <td>Jun 24</td>
+                <td><span class="badge active">Resolved</span></td>
+                <td><button class="tbl-btn view">View</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================== SCREEN 19 — Admin Analytics Overview ============================== -->
+<div class="section-label">Screen 19 — Admin Analytics Overview</div>
+<div class="screen-row">
+<div class="screen-wrap">
+  <div class="screen-title">Platform analytics</div>
+  <div class="admin-panel">
+    <div class="admin-sidebar">
+      <div class="admin-logo"><div class="admin-logo-txt">Pa<span>Market</span></div><div class="admin-logo-badge">Admin</div></div>
+      <div class="nav-group-lbl">Rentals</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Overview</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Companies</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/></svg>Listings</div>
+      <div class="nav-group-lbl">Moderation</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Verification<div class="nav-badge">5</div></div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>Reports<div class="nav-badge">14</div></div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/></svg>Moderation</div>
+      <div class="nav-group-lbl">Insights</div>
+      <div class="nav-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</div>
+      <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Data</div>
+    </div>
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <div class="page-title">Rentals Analytics</div>
+        <div style="display:flex;gap:8px">
+          <select style="height:34px;border:1.5px solid #E4E4E7;border-radius:8px;padding:0 10px;font-family:inherit;font-size:13px;color:#52525B;outline:none"><option>June 2026</option><option>May 2026</option><option>Last 90 days</option></select>
+          <button style="height:34px;background:#1A3A8F;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;padding:0 14px;cursor:pointer">Export CSV</button>
+        </div>
+      </div>
+      <div class="admin-content">
+        <!-- Top KPIs -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="num">38,400</div>
+            <div class="lbl">Total Views</div>
+            <div class="delta delta-up">↑ +18% vs May</div>
+          </div>
+          <div class="stat-card">
+            <div class="num">2,840</div>
+            <div class="lbl">Total Inquiries</div>
+            <div class="delta delta-up">↑ +24%</div>
+          </div>
+          <div class="stat-card">
+            <div class="num">7.4%</div>
+            <div class="lbl">Avg. Inquiry Rate</div>
+            <div class="delta delta-down">↓ -0.8%</div>
+          </div>
+          <div class="stat-card">
+            <div class="num">47</div>
+            <div class="lbl">Active Companies</div>
+            <div class="delta delta-up">↑ +3</div>
+          </div>
+        </div>
+        <!-- Charts row -->
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+          <div class="card">
+            <div class="card-hdr"><h3>Platform Views — Daily (June 2026)</h3></div>
+            <div style="padding:14px">
+              <div class="chart-placeholder" style="height:130px">
+                <div class="bar" style="height:42%"></div>
+                <div class="bar" style="height:58%"></div>
+                <div class="bar hi" style="height:72%"></div>
+                <div class="bar" style="height:64%"></div>
+                <div class="bar" style="height:55%"></div>
+                <div class="bar hi" style="height:80%"></div>
+                <div class="bar" style="height:70%"></div>
+                <div class="bar" style="height:75%"></div>
+                <div class="bar hi" style="height:88%"></div>
+                <div class="bar" style="height:82%"></div>
+                <div class="bar" style="height:79%"></div>
+                <div class="bar hi" style="height:95%"></div>
+                <div class="bar" style="height:87%"></div>
+                <div class="bar" style="height:90%"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#A1A1AA;margin-top:6px">
+                <span>Jun 1</span><span>Jun 8</span><span>Jun 15</span><span>Jun 22</span><span>Jun 30</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><h3>Inquiries by Channel</h3></div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="font-weight:600">In-app Chat</span><span style="font-weight:800">52% · 1,477</span></div>
+                <div style="height:8px;background:#E4E4E7;border-radius:999px;overflow:hidden"><div style="height:100%;width:52%;background:#1A3A8F;border-radius:999px"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="font-weight:600">WhatsApp</span><span style="font-weight:800">34% · 966</span></div>
+                <div style="height:8px;background:#E4E4E7;border-radius:999px;overflow:hidden"><div style="height:100%;width:34%;background:#25D366;border-radius:999px"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="font-weight:600">Direct Call</span><span style="font-weight:800">14% · 397</span></div>
+                <div style="height:8px;background:#E4E4E7;border-radius:999px;overflow:hidden"><div style="height:100%;width:14%;background:#12B76A;border-radius:999px"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Top companies table -->
+        <div class="card">
+          <div class="card-hdr"><h3>Top Companies by Inquiries</h3><div class="action">Download CSV</div></div>
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Company</th><th>City</th><th>Fleet</th><th>Views</th><th>Inquiries</th><th>Inq. Rate</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td><b>AAA Car Hire</b></td><td>Harare</td><td>32</td><td>8,240</td><td>612</td><td><span class="delta-up" style="font-weight:700">7.4%</span></td></tr>
+              <tr><td>2</td><td><b>ZimRide Fleet</b></td><td>Harare</td><td>24</td><td>6,180</td><td>430</td><td><span class="delta-up" style="font-weight:700">7.0%</span></td></tr>
+              <tr><td>3</td><td><b>Express Rentals</b></td><td>Bulawayo</td><td>18</td><td>4,920</td><td>318</td><td><span class="delta-up" style="font-weight:700">6.5%</span></td></tr>
+              <tr><td>4</td><td><b>Safari Fleet Co.</b></td><td>Vic Falls</td><td>12</td><td>3,640</td><td>280</td><td><span class="delta-up" style="font-weight:700">7.7%</span></td></tr>
+              <tr><td>5</td><td><b>Luxury Rides Zim</b></td><td>Harare</td><td>8</td><td>2,810</td><td>198</td><td><span class="delta-down" style="font-weight:700">7.0%</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div style="height:48px"></div>
+<div style="text-align:center;font-size:12px;color:#52525B;padding-bottom:32px">
+  Phase 1 Admin Portal Screens — 5 screens (15–19) · All 19 screens complete
+</div>
+</body>
+</html>

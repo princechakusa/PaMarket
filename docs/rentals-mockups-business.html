@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PaMarket Vehicle Rentals — Phase 1 Mockups (Business Portal)</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#E8EAED;padding:32px 20px;color:#18181B}
+h1{font-size:22px;font-weight:800;color:#1A3A8F;margin-bottom:8px}
+.section-label{font-size:11px;font-weight:700;color:#52525B;letter-spacing:.08em;text-transform:uppercase;margin:40px 0 16px}
+.screen-row{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:40px}
+.screen-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.screen-title{font-size:12px;font-weight:700;color:#52525B;letter-spacing:.04em;text-transform:uppercase}
+.phone{width:375px;min-height:700px;background:#FAFAFA;border-radius:40px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.18),0 0 0 1px rgba(0,0,0,.06);position:relative;display:flex;flex-direction:column}
+:root{
+  --blue:#1A3A8F;--blue-mid:#2550C0;--blue-light:#EEF2FF;--blue-soft:#DBEAFE;
+  --gold:#F5A623;--gold-light:#FEF3C7;
+  --green:#12B76A;--red:#D92D20;
+  --bg:#FAFAFA;--card:#FFFFFF;
+  --txt:#18181B;--sub:#52525B;--hint:#A1A1AA;--border:#E4E4E7;
+  --r-sm:10px;--r-md:14px;--r-lg:18px;--r-xl:22px;--r-pill:999px;
+}
+.inner-topbar{height:52px;background:#fff;display:flex;align-items:center;padding:0 16px;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.back-btn{width:32px;height:32px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.topbar-title{font-size:16px;font-weight:700;color:var(--txt);flex:1}
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden}
+/* Business portal header — blue bar */
+.biz-hdr{background:var(--blue);padding:16px;flex-shrink:0}
+.biz-hdr-row{display:flex;align-items:center;gap:12px}
+.biz-hdr-logo{width:44px;height:44px;border-radius:var(--r-md);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0}
+.biz-hdr-name{font-size:16px;font-weight:800;color:#fff}
+.biz-hdr-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:1px}
+/* Stat cards row */
+.stat-cards{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;flex-shrink:0}
+.stat-cards::-webkit-scrollbar{display:none}
+.stat-card{flex-shrink:0;width:110px;background:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:12px}
+.stat-card .num{font-size:22px;font-weight:800;color:var(--txt)}
+.stat-card .lbl{font-size:11px;color:var(--hint);font-weight:600;margin-top:2px}
+.stat-card .delta{font-size:11px;font-weight:700;margin-top:6px}
+.delta.up{color:var(--green)}
+.delta.down{color:var(--red)}
+/* Menu grid */
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px}
+.menu-card{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;cursor:pointer}
+.menu-card:active{background:#F4F4F5}
+.menu-icon{width:40px;height:40px;border-radius:var(--r-sm);background:var(--blue-light);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.menu-title{font-size:14px;font-weight:700;color:var(--txt)}
+.menu-sub{font-size:12px;color:var(--hint);margin-top:2px}
+/* Table */
+.table-wrap{margin:0 16px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:#fff}
+.table-hdr{display:grid;grid-template-columns:2fr 1fr 1fr 80px;background:#F4F4F5;border-bottom:1px solid var(--border)}
+.th{padding:10px 12px;font-size:11px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.04em}
+.table-row{display:grid;grid-template-columns:2fr 1fr 1fr 80px;border-bottom:1px solid var(--border);align-items:center}
+.table-row:last-child{border-bottom:none}
+.td{padding:12px;font-size:13px;color:var(--txt)}
+.td.hint{color:var(--hint)}
+/* Status pill */
+.spill{display:inline-flex;align-items:center;padding:3px 8px;border-radius:var(--r-pill);font-size:11px;font-weight:700}
+.spill.active{background:#ECFDF5;color:var(--green)}
+.spill.draft{background:#F4F4F5;color:var(--hint)}
+.spill.paused{background:#FEF3C7;color:#92400E}
+/* Form */
+.form-group{padding:0 16px 16px}
+.form-label{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px;letter-spacing:.02em}
+.form-input{width:100%;height:46px;border:1.5px solid var(--border);border-radius:var(--r-md);padding:0 14px;font-family:inherit;font-size:14px;color:var(--txt);outline:none;background:#fff}
+.form-input:focus{border-color:var(--blue)}
+.form-textarea{width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 14px;font-family:inherit;font-size:14px;color:var(--txt);outline:none;resize:none;background:#fff}
+.form-select{width:100%;height:46px;border:1.5px solid var(--border);border-radius:var(--r-md);padding:0 14px;font-family:inherit;font-size:14px;color:var(--txt);outline:none;background:#fff;appearance:none}
+.form-row{display:flex;gap:10px}
+.form-row .form-group{flex:1;padding:0}
+/* Step indicator */
+.step-bar{display:flex;align-items:center;padding:12px 16px;gap:0;flex-shrink:0;background:#fff;border-bottom:1px solid var(--border)}
+.step-dot{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-dot.done{background:var(--green)}
+.step-dot.todo{background:var(--border);color:var(--hint)}
+.step-line{flex:1;height:2px;background:var(--border)}
+.step-line.done{background:var(--green)}
+/* Image upload grid */
+.upload-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px}
+.upload-box{aspect-ratio:1;border:1.5px dashed var(--border);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;cursor:pointer;background:#F9F9FB}
+.upload-box.filled{border:none;background:#94a3b8;border-radius:var(--r-md);overflow:hidden}
+.upload-box .add-icon{width:24px;height:24px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center}
+.upload-box .add-lbl{font-size:11px;color:var(--hint);font-weight:600}
+/* Calendar grid */
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);background:#fff;flex-shrink:0}
+.cal-title{font-size:15px;font-weight:700;color:var(--txt)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:10px 12px}
+.cal-day-hdr{text-align:center;font-size:10px;font-weight:700;color:var(--hint);padding:4px 0}
+.cal-day{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--txt);cursor:pointer;position:relative}
+.cal-day.avail{background:#ECFDF5;color:var(--green)}
+.cal-day.rented{background:var(--blue-soft);color:var(--blue)}
+.cal-day.blocked{background:#F4F4F5;color:var(--hint)}
+.cal-day.today{border:2px solid var(--blue)}
+.cal-day.empty{background:none;color:transparent;cursor:default}
+/* Legend */
+.cal-legend{display:flex;gap:14px;padding:8px 16px 12px;flex-shrink:0}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--sub)}
+.legend-dot{width:10px;height:10px;border-radius:2px}
+/* Analytics chart placeholder */
+.chart-area{height:140px;background:#F9FAFB;border:1px solid var(--border);border-radius:var(--r-md);margin:0 16px;display:flex;align-items:flex-end;padding:12px;gap:6px;overflow:hidden}
+.bar{border-radius:4px 4px 0 0;background:var(--blue-soft);flex:1;transition:height .3s}
+.bar.highlight{background:var(--blue)}
+/* Message list */
+.msg-item{display:flex;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid var(--border);cursor:pointer}
+.msg-avatar{width:44px;height:44px;border-radius:50%;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--blue);flex-shrink:0}
+.msg-body{flex:1;min-width:0}
+.msg-name{font-size:14px;font-weight:700;color:var(--txt)}
+.msg-prev{font-size:13px;color:var(--hint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.msg-right{text-align:right;flex-shrink:0}
+.msg-time{font-size:11px;color:var(--hint)}
+.msg-badge{width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:4px 0 0 auto}
+/* Btn */
+.btn-pri{height:48px;background:var(--blue);color:#fff;border:none;border-radius:var(--r-md);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.btn-sec{height:46px;background:#fff;color:var(--blue);border:2px solid var(--blue);border-radius:var(--r-md);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.btn-danger{height:46px;background:#fff;color:var(--red);border:1.5px solid var(--red);border-radius:var(--r-md);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.cta-bar{padding:12px 16px;background:#fff;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0}
+/* Profile pic upload */
+.profile-upload{margin:16px;border:1.5px dashed var(--border);border-radius:var(--r-lg);padding:24px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;background:#F9F9FB}
+/* Toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);background:#fff}
+.toggle-info{flex:1}
+.toggle-lbl{font-size:14px;font-weight:600;color:var(--txt)}
+.toggle-sub{font-size:12px;color:var(--hint);margin-top:2px}
+.toggle{width:44px;height:26px;background:var(--blue);border-radius:var(--r-pill);position:relative;cursor:pointer;flex-shrink:0}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;right:3px;transition:.2s}
+.toggle.off{background:var(--border)}
+.toggle.off::after{left:3px;right:auto}
+/* Sec div */
+.sec-div{height:8px;background:#F4F4F5;flex-shrink:0}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;background:#fff}
+.sec-hdr h2{font-size:14px;font-weight:700;color:var(--txt)}
+.sec-hdr a{font-size:13px;color:var(--blue);font-weight:600}
+/* Sidebar for analytics */
+.analytics-kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px;background:#fff;border-bottom:1px solid var(--border)}
+.kpi-card{background:#F9F9FB;border:1px solid var(--border);border-radius:var(--r-md);padding:12px}
+.kpi-num{font-size:20px;font-weight:800;color:var(--txt)}
+.kpi-lbl{font-size:11px;color:var(--hint);font-weight:600;margin-top:2px}
+.kpi-delta{font-size:11px;font-weight:700;margin-top:4px;color:var(--green)}
+/* Tab nav */
+.tab-nav{display:flex;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0}
+.tab-item{flex:1;padding:12px 0;text-align:center;font-size:13px;font-weight:600;color:var(--hint);cursor:pointer;border-bottom:2.5px solid transparent}
+.tab-item.active{color:var(--blue);border-bottom-color:var(--blue)}
+/* Notification dot */
+.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--red)}
+/* Fleet list item */
+.fleet-item{display:flex;gap:12px;padding:12px 16px;background:#fff;border-bottom:1px solid var(--border);align-items:center}
+.fleet-img{width:72px;height:52px;border-radius:var(--r-sm);background:#94a3b8;flex-shrink:0}
+.fleet-body{flex:1}
+.fleet-name{font-size:14px;font-weight:700;color:var(--txt)}
+.fleet-meta{font-size:12px;color:var(--hint);margin-top:2px}
+.fleet-price{font-size:14px;font-weight:800;color:var(--blue)}
+.fleet-actions{display:flex;gap:8px}
+.icon-btn{width:34px;height:34px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+</style>
+</head>
+<body>
+
+<h1>Vehicle Rentals — Phase 1 Mockups</h1>
+<p style="color:#52525B;font-size:14px;margin-bottom:8px">Business Portal screens · Vehicles → Rentals management</p>
+
+<!-- ============================== SCREEN 8 — Rental Dashboard Home ============================== -->
+<div class="section-label">Screen 8 — Rental Dashboard Home</div>
+<div class="screen-row">
+<div class="screen-wrap">
+  <div class="screen-title">Dashboard overview</div>
+  <div class="phone">
+    <!-- Blue header -->
+    <div class="biz-hdr">
+      <div class="biz-hdr-row">
+        <div class="biz-hdr-logo">A</div>
+        <div style="flex:1">
+          <div class="biz-hdr-name">AAA Car Hire</div>
+          <div class="biz-hdr-sub">Rentals Dashboard</div>
+        </div>
+        <div style="display:flex;gap:12px">
+          <svg width="22" height="22" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <svg width="22" height="22" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+        </div>
+      </div>
+    </div>
+    <!-- Stat cards -->
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="num">32</div>
+        <div class="lbl">Total Vehicles</div>
+        <div class="delta up">+3 this month</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">24</div>
+        <div class="lbl">Active Listings</div>
+        <div class="delta up">↑ 2</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">87</div>
+        <div class="lbl">Views Today</div>
+        <div class="delta up">+18%</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">12</div>
+        <div class="lbl">New Inquiries</div>
+        <div class="delta up">+4</div>
+      </div>
+    </div>
+    <div class="scroll-area">
+      <!-- Quick actions -->
+      <div class="sec-div"></div>
+      <div class="sec-hdr" style="padding-bottom:12px"><h2>Quick Actions</h2></div>
+      <div class="menu-grid">
+        <div class="menu-card">
+          <div class="menu-icon"><svg width="20" height="20" fill="none" stroke="var(--blue)" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div class="menu-title">Add Vehicle</div>
+          <div class="menu-sub">List a new rental</div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-icon"><svg width="20" height="20" fill="none" stroke="var(--blue)" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="22" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+          <div class="menu-title">Manage Fleet</div>
+          <div class="menu-sub">Edit or archive vehicles</div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-icon"><svg width="20" height="20" fill="none" stroke="var(--blue)" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="menu-title">Messages</div>
+          <div class="menu-sub">12 unread inquiries</div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-icon"><svg width="20" height="20" fill="none" stroke="var(--blue)" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+          <div class="menu-title">Analytics</div>
+          <div class="menu-sub">Views, leads, trends</div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-icon"><svg width="20" height="20" fill="none" stroke="var(--gold)" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+          <div class="menu-title">Promotions</div>
+          <div class="menu-sub">Boost listings</div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-icon"><svg width="20" height="20" fill="none" stroke="var(--blue)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="menu-title">Verification</div>
+          <div class="menu-sub">Documents &amp; status</div>
+        </div>
+      </div>
+      <!-- Recent inquiries -->
+      <div class="sec-div" style="margin-top:16px"></div>
+      <div class="sec-hdr"><h2>Recent Inquiries</h2><a>View all</a></div>
+      <div class="msg-item">
+        <div class="msg-avatar">TM</div>
+        <div class="msg-body">
+          <div class="msg-name">Tatenda M.</div>
+          <div class="msg-prev">Is the Fortuner available this Friday?</div>
+        </div>
+        <div class="msg-right">
+          <div class="msg-time">2m ago</div>
+          <div class="msg-badge">3</div>
+        </div>
+      </div>
+      <div class="msg-item">
+        <div class="msg-avatar" style="background:#FEF3C7;color:#92400E">SC</div>
+        <div class="msg-body">
+          <div class="msg-name">Simba C.</div>
+          <div class="msg-prev">What's the deposit for the Prado?</div>
+        </div>
+        <div class="msg-right">
+          <div class="msg-time">1h ago</div>
+          <div class="msg-badge">1</div>
+        </div>
+      </div>
+      <div class="msg-item">
+        <div class="msg-avatar" style="background:#ECFDF5;color:var(--green)">RN</div>
+        <div class="msg-body">
+          <div class="msg-name">Ruth N.</div>
+          <div class="msg-prev">Can you arrange a driver?</div>
+        </div>
+        <div class="msg-right">
+          <div class="msg-time">3h ago</div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================== SCREEN 9 — Add Vehicle Flow ============================== -->
+<div class="section-label">Screen 9 — Add Vehicle Flow (Multi-step)</div>
+<div class="screen-row">
+<!-- Step 1 -->
+<div class="screen-wrap">
+  <div class="screen-title">Step 1 — Basic Info</div>
+  <div class="phone">
+    <div class="inner-topbar">
+      <div class="back-btn"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="topbar-title">Add Rental Vehicle</div>
+    </div>
+    <!-- Step bar -->
+    <div class="step-bar">
+      <div class="step-dot">1</div>
+      <div class="step-line"></div>
+      <div class="step-dot todo">2</div>
+      <div class="step-line"></div>
+      <div class="step-dot todo">3</div>
+      <div class="step-line"></div>
+      <div class="step-dot todo">4</div>
+    </div>
+    <div style="padding:12px 16px 4px;flex-shrink:0">
+      <div style="font-size:16px;font-weight:800;color:var(--txt)">Basic Information</div>
+      <div style="font-size:13px;color:var(--hint);margin-top:2px">Vehicle details and category</div>
+    </div>
+    <div class="scroll-area" style="padding:16px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div class="form-label">Vehicle Category *</div>
+        <select class="form-select">
+          <option>SUV / 4x4</option>
+          <option>Sedan</option>
+          <option>Pickup / Truck</option>
+          <option>Minibus / Van</option>
+          <option>Luxury</option>
+          <option>Motorbike</option>
+          <option>Bus / Coach</option>
+        </select>
+      </div>
+      <div>
+        <div class="form-label">Brand *</div>
+        <select class="form-select"><option>Toyota</option><option>Honda</option><option>Nissan</option><option>Mercedes-Benz</option><option>BMW</option></select>
+      </div>
+      <div>
+        <div class="form-label">Model *</div>
+        <input class="form-input" placeholder="e.g. Fortuner, Aqua, Hilux" readonly>
+      </div>
+      <div class="form-row">
+        <div>
+          <div class="form-label">Year *</div>
+          <select class="form-select"><option>2022</option><option>2021</option><option>2020</option></select>
+        </div>
+        <div>
+          <div class="form-label">Seats *</div>
+          <select class="form-select"><option>5</option><option>7</option><option>8</option><option>12+</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <div class="form-label">Transmission *</div>
+          <select class="form-select"><option>Automatic</option><option>Manual</option></select>
+        </div>
+        <div>
+          <div class="form-label">Fuel Type *</div>
+          <select class="form-select"><option>Diesel</option><option>Petrol</option><option>Hybrid</option></select>
+        </div>
+      </div>
+      <div>
+        <div class="form-label">Engine Capacity</div>
+        <input class="form-input" placeholder="e.g. 2.8L" readonly>
+      </div>
+      <div>
+        <div class="form-label">Drive Type</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <div style="padding:7px 14px;border:1.5px solid var(--blue);border-radius:var(--r-pill);font-size:13px;font-weight:600;color:var(--blue);background:var(--blue-light)">4WD</div>
+          <div style="padding:7px 14px;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:13px;font-weight:600;color:var(--sub)">AWD</div>
+          <div style="padding:7px 14px;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:13px;font-weight:600;color:var(--sub)">FWD</div>
+          <div style="padding:7px 14px;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:13px;font-weight:600;color:var(--sub)">RWD</div>
+        </div>
+      </div>
+    </div>
+    <div class="cta-bar">
+      <button class="btn-pri">Continue — Step 2 of 4</button>
+    </div>
+  </div>
+</div>
+<!-- Step 2 -->
+<div class="screen-wrap">
+  <div class="screen-title">Step 2 — Pricing &amp; Terms</div>
+  <div class="phone">
+    <div class="inner-topbar">
+      <div class="back-btn"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="topbar-title">Add Rental Vehicle</div>
+    </div>
+    <div class="step-bar">
+      <div class="step-dot done"><svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="step-line done"></div>
+      <div class="step-dot">2</div>
+      <div class="step-line"></div>
+      <div class="step-dot todo">3</div>
+      <div class="step-line"></div>
+      <div class="step-dot todo">4</div>
+    </div>
+    <div style="padding:12px 16px 4px;flex-shrink:0">
+      <div style="font-size:16px;font-weight:800;color:var(--txt)">Pricing &amp; Rental Terms</div>
+      <div style="font-size:13px;color:var(--hint);margin-top:2px">Set your daily rates and deposit</div>
+    </div>
+    <div class="scroll-area" style="padding:16px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div class="form-label">Daily Rate (USD) *</div>
+        <div style="position:relative">
+          <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:700;color:var(--sub)">$</span>
+          <input class="form-input" style="padding-left:28px" placeholder="0.00" readonly>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <div class="form-label">Weekly Rate</div>
+          <div style="position:relative">
+            <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:700;color:var(--sub)">$</span>
+            <input class="form-input" style="padding-left:28px" placeholder="Optional" readonly>
+          </div>
+        </div>
+        <div>
+          <div class="form-label">Monthly Rate</div>
+          <div style="position:relative">
+            <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:700;color:var(--sub)">$</span>
+            <input class="form-input" style="padding-left:28px" placeholder="Optional" readonly>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="form-label">Security Deposit *</div>
+        <div style="position:relative">
+          <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:700;color:var(--sub)">$</span>
+          <input class="form-input" style="padding-left:28px" placeholder="0.00" readonly>
+        </div>
+      </div>
+      <div>
+        <div class="form-label">Minimum Rental Period</div>
+        <select class="form-select"><option>1 day</option><option>3 days</option><option>1 week</option></select>
+      </div>
+      <div>
+        <div class="form-label">Included Options</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+          <div class="toggle-row" style="padding:10px 0;border:none;border-bottom:1px solid var(--border)">
+            <div class="toggle-info"><div class="toggle-lbl">Insurance included</div></div>
+            <div class="toggle"></div>
+          </div>
+          <div class="toggle-row" style="padding:10px 0;border:none;border-bottom:1px solid var(--border)">
+            <div class="toggle-info"><div class="toggle-lbl">Driver available</div></div>
+            <div class="toggle off"></div>
+          </div>
+          <div class="toggle-row" style="padding:10px 0;border:none">
+            <div class="toggle-info"><div class="toggle-lbl">Cross-border allowed</div></div>
+            <div class="toggle off"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="form-label">Additional Notes</div>
+        <textarea class="form-textarea" placeholder="Any specific rental conditions, pickup location, hours of operation…"></textarea>
+      </div>
+    </div>
+    <div class="cta-bar">
+      <button class="btn-sec" style="flex:none;width:80px;font-size:14px">Back</button>
+      <button class="btn-pri">Continue — Step 3</button>
+    </div>
+  </div>
+</div>
+<!-- Step 3 — Photos -->
+<div class="screen-wrap">
+  <div class="screen-title">Step 3 — Photos</div>
+  <div class="phone">
+    <div class="inner-topbar">
+      <div class="back-btn"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="topbar-title">Add Rental Vehicle</div>
+    </div>
+    <div class="step-bar">
+      <div class="step-dot done"><svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="step-line done"></div>
+      <div class="step-dot done"><svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="step-line done"></div>
+      <div class="step-dot">3</div>
+      <div class="step-line"></div>
+      <div class="step-dot todo">4</div>
+    </div>
+    <div style="padding:12px 16px 4px;flex-shrink:0">
+      <div style="font-size:16px;font-weight:800;color:var(--txt)">Vehicle Photos</div>
+      <div style="font-size:13px;color:var(--hint);margin-top:2px">Add up to 12 photos · First photo is cover</div>
+    </div>
+    <div class="scroll-area" style="padding:16px">
+      <!-- Tip -->
+      <div style="background:var(--blue-light);border-left:3px solid var(--blue);padding:10px 14px;border-radius:0 var(--r-sm) var(--r-sm) 0;margin-bottom:14px">
+        <div style="font-size:12px;color:var(--blue);font-weight:600">Listings with 6+ photos get 3× more inquiries</div>
+      </div>
+      <div class="upload-grid">
+        <div class="upload-box filled" style="background:#94a3b8;position:relative">
+          <div style="position:absolute;top:4px;left:4px;background:var(--gold);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">COVER</div>
+        </div>
+        <div class="upload-box filled" style="background:#b8c7e0"></div>
+        <div class="upload-box filled" style="background:#cbd5e1"></div>
+        <div class="upload-box filled" style="background:#dde5f0"></div>
+        <div class="upload-box filled" style="background:#c9d8ea"></div>
+        <div class="upload-box">
+          <div class="add-icon"><svg width="14" height="14" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div class="add-lbl">Add photo</div>
+        </div>
+        <div class="upload-box">
+          <div class="add-icon"><svg width="14" height="14" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div class="add-lbl">Add photo</div>
+        </div>
+        <div class="upload-box">
+          <div class="add-icon"><svg width="14" height="14" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div class="add-lbl">Add photo</div>
+        </div>
+        <div class="upload-box">
+          <div class="add-icon"><svg width="14" height="14" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div class="add-lbl">Add photo</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--hint);text-align:center;margin-top:12px">5 / 12 photos added · Drag to reorder</div>
+    </div>
+    <div class="cta-bar">
+      <button class="btn-sec" style="flex:none;width:80px;font-size:14px">Back</button>
+      <button class="btn-pri">Continue — Step 4</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================== SCREEN 10 — Manage Fleet ============================== -->
+<div class="section-label">Screen 10 — Manage Fleet</div>
+<div class="screen-row">
+<div class="screen-wrap">
+  <div class="screen-title">Fleet list view</div>
+  <div class="phone">
+    <div class="inner-topbar">
+      <div class="back-btn"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="topbar-title">Manage Fleet</div>
+      <div style="font-size:13px;font-weight:600;color:var(--blue)">+ Add</div>
+    </div>
+    <!-- Tabs -->
+    <div class="tab-nav">
+      <div class="tab-item active">All (32)</div>
+      <div class="tab-item">Active (24)</div>
+      <div class="tab-item">Paused (5)</div>
+      <div class="tab-item">Draft (3)</div>
+    </div>
+    <!-- Search -->
+    <div style="padding:10px 16px;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="height:38px;border:1.5px solid var(--border);border-radius:var(--r-pill);display:flex;align-items:center;padding:0 12px;gap:8px">
+        <svg width="14" height="14" fill="none" stroke="var(--hint)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span style="font-size:13px;color:var(--hint)">Search fleet…</span>
+      </div>
+    </div>
+    <div class="scroll-area">
+      <div class="fleet-item">
+        <div class="fleet-img"></div>
+        <div class="fleet-body">
+          <div class="fleet-name">Toyota Fortuner 2022</div>
+          <div class="fleet-meta">SUV · Harare CBD</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div class="fleet-price">$95/day</div>
+            <span class="spill active">Active</span>
+          </div>
+        </div>
+        <div class="fleet-actions">
+          <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="var(--sub)" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="var(--sub)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+        </div>
+      </div>
+      <div class="fleet-item">
+        <div class="fleet-img" style="background:#cbd5e1"></div>
+        <div class="fleet-body">
+          <div class="fleet-name">Toyota Aqua 2020</div>
+          <div class="fleet-meta">Sedan · Harare CBD</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div class="fleet-price">$45/day</div>
+            <span class="spill active">Active</span>
+          </div>
+        </div>
+        <div class="fleet-actions">
+          <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="var(--sub)" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="var(--sub)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+        </div>
+      </div>
+      <div class="fleet-item">
+        <div class="fleet-img" style="background:#e2e8f0"></div>
+        <div class="fleet-body">
+          <div class="fleet-name">Toyota Hilux 2021</div>
+          <div class="fleet-meta">Pickup · Harare CBD</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div class="fleet-price">$80/day</div>
+            <span class="spill paused">Paused</span>
+          </div>
+        </div>
+        <div class="fleet-actions">
+          <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="var(--sub)" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="var(--sub)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+        </div>
+      </div>
+      <div class="fleet-item">
+        <div class="fleet-img" style="background:#b8c7e0"></div>
+        <div class="fleet-body">
+          <div class="fleet-name">Mercedes C-Class 2022</div>
+          <div class="fleet-meta">Luxury · Borrowdale</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div class="fleet-price">$120/day</div>
+            <span class="spill active">Active</span>
+          </div>
+        </div>
+        <div class="fleet-actions">
+          <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="var(--sub)" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="var(--sub)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+        </div>
+      </div>
+      <div class="fleet-item">
+        <div class="fleet-img" style="background:#dde5f0"></div>
+        <div class="fleet-body">
+          <div class="fleet-name">Nissan X-Trail 2019</div>
+          <div class="fleet-meta">SUV · Harare CBD</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div class="fleet-price">$55/day</div>
+            <span class="spill draft">Draft</span>
+          </div>
+        </div>
+        <div class="fleet-actions">
+          <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="var(--sub)" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="var(--sub)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================== SCREEN 11 — Calendar Availability ============================== -->
+<div class="section-label">Screen 11 — Calendar Availability (Visual only)</div>
+<div class="screen-row">
+<div class="screen-wrap">
+  <div class="screen-title">Availability calendar</div>
+  <div class="phone">
+    <div class="inner-topbar">
+      <div class="back-btn"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="topbar-title">Fortuner 2022 — Availability</div>
+    </div>
+    <!-- Vehicle mini card -->
+    <div style="padding:12px 16px;background:#fff;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0">
+      <div style="width:56px;height:42px;border-radius:var(--r-sm);background:#94a3b8;flex-shrink:0"></div>
+      <div><div style="font-size:14px;font-weight:700">Toyota Fortuner 2022</div><div style="font-size:12px;color:var(--hint)">SUV · $95/day</div></div>
+      <div class="spill active" style="margin-left:auto">Active</div>
+    </div>
+    <!-- Cal header -->
+    <div class="cal-hdr">
+      <svg width="20" height="20" fill="none" stroke="var(--sub)" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      <div class="cal-title">July 2026</div>
+      <svg width="20" height="20" fill="none" stroke="var(--sub)" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div style="background:#fff;flex-shrink:0">
+      <div class="cal-grid">
+        <div class="cal-day-hdr">S</div><div class="cal-day-hdr">M</div><div class="cal-day-hdr">T</div><div class="cal-day-hdr">W</div><div class="cal-day-hdr">T</div><div class="cal-day-hdr">F</div><div class="cal-day-hdr">S</div>
+        <!-- Row 1 -->
+        <div class="cal-day empty"></div><div class="cal-day avail">1</div><div class="cal-day avail">2</div><div class="cal-day avail">3</div><div class="cal-day avail">4</div><div class="cal-day avail">5</div><div class="cal-day avail">6</div>
+        <!-- Row 2 -->
+        <div class="cal-day rented">7</div><div class="cal-day rented">8</div><div class="cal-day rented">9</div><div class="cal-day rented">10</div><div class="cal-day avail">11</div><div class="cal-day avail">12</div><div class="cal-day avail">13</div>
+        <!-- Row 3 -->
+        <div class="cal-day avail">14</div><div class="cal-day today avail">15</div><div class="cal-day avail">16</div><div class="cal-day blocked">17</div><div class="cal-day blocked">18</div><div class="cal-day avail">19</div><div class="cal-day avail">20</div>
+        <!-- Row 4 -->
+        <div class="cal-day rented">21</div><div class="cal-day rented">22</div><div class="cal-day rented">23</div><div class="cal-day rented">24</div><div class="cal-day rented">25</div><div class="cal-day avail">26</div><div class="cal-day avail">27</div>
+        <!-- Row 5 -->
+        <div class="cal-day avail">28</div><div class="cal-day avail">29</div><div class="cal-day avail">30</div><div class="cal-day avail">31</div>
+      </div>
+    </div>
+    <!-- Legend -->
+    <div class="cal-legend" style="background:#fff;border-top:1px solid var(--border)">
+      <div class="legend-item"><div class="legend-dot" style="background:#ECFDF5;border:1px solid var(--green)"></div>Available</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue-soft);border:1px solid var(--blue)"></div>Rented</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#F4F4F5;border:1px solid var(--border)"></div>Blocked</div>
+    </div>
+    <div class="scroll-area">
+      <!-- Block dates section -->
+      <div class="sec-div"></div>
+      <div class="sec-hdr" style="padding-bottom:12px"><h2>Block Dates</h2></div>
+      <div style="padding:0 16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:10px">
+          <div style="flex:1">
+            <div class="form-label">From</div>
+            <input class="form-input" placeholder="Jul 17, 2026" readonly>
+          </div>
+          <div style="flex:1">
+            <div class="form-label">To</div>
+            <input class="form-input" placeholder="Jul 18, 2026" readonly>
+          </div>
+        </div>
+        <div>
+          <div class="form-label">Reason (optional)</div>
+          <input class="form-input" placeholder="Maintenance, personal use…" readonly>
+        </div>
+        <button class="btn-sec">Block Selected Dates</button>
+      </div>
+      <!-- Existing blocks -->
+      <div class="sec-hdr" style="margin-top:8px"><h2>Blocked Periods</h2></div>
+      <div style="padding:0 16px 16px">
+        <div style="border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:#fff">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border)">
+            <div><div style="font-size:13px;font-weight:700">Jul 17 – Jul 18</div><div style="font-size:12px;color:var(--hint);margin-top:2px">Maintenance</div></div>
+            <div style="font-size:12px;font-weight:700;color:var(--red);cursor:pointer">Remove</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================== SCREEN 12 — Business Messaging ============================== -->
+<div class="section-label">Screen 12 — Business Messaging View</div>
+<div class="screen-row">
+<div class="screen-wrap">
+  <div class="screen-title">Inbox view</div>
+  <div class="phone">
+    <div class="inner-topbar">
+      <div class="topbar-title">Messages</div>
+      <div style="display:flex;align-items:center;gap:6px;background:var(--blue-light);padding:4px 10px;border-radius:var(--r-pill)">
+        <div class="notif-dot"></div>
+        <span style="font-size:12px;font-weight:700;color:var(--blue)">12 unread</span>
+      </div>
+    </div>
+    <!-- Filter tabs -->
+    <div class="tab-nav">
+      <div class="tab-item active">All (28)</div>
+      <div class="tab-item">Unread (12)</div>
+      <div class="tab-item">Archived</div>
+    </div>
+    <div class="scroll-area">
+      <!-- Context hint -->
+      <div style="padding:10px 16px;background:var(--gold-light);border-bottom:1px solid #fde68a;font-size:12px;font-weight:600;color:#92400E;flex-shrink:0">Reply quickly — customers expect responses within 1 hour</div>
+      <div class="msg-item" style="border-left:3px solid var(--blue)">
+        <div class="msg-avatar">TM</div>
+        <div class="msg-body">
+          <div style="display:flex;align-items:center;gap:6px"><div class="msg-name">Tatenda M.</div><div style="font-size:10px;background:var(--blue-light);color:var(--blue);padding:2px 6px;border-radius:3px;font-weight:700">Fortuner</div></div>
+          <div class="msg-prev">Is the Fortuner available this Friday?</div>
+        </div>
+        <div class="msg-right">
+          <div class="msg-time">2m ago</div>
+          <div class="msg-badge">3</div>
+        </div>
+      </div>
+      <div class="msg-item" style="border-left:3px solid var(--blue)">
+        <div class="msg-avatar" style="background:#FEF3C7;color:#92400E">SC</div>
+        <div class="msg-body">
+          <div style="display:flex;align-items:center;gap:6px"><div class="msg-name">Simba C.</div><div style="font-size:10px;background:var(--blue-light);color:var(--blue);padding:2px 6px;border-radius:3px;font-weight:700">Prado</div></div>
+          <div class="msg-prev">What's the deposit amount?</div>
+        </div>
+        <div class="msg-right">
+          <div class="msg-time">1h ago</div>
+          <div class="msg-badge">1</div>
+        </div>
+      </div>
+      <div class="msg-item">
+        <div class="msg-avatar" style="background:#ECFDF5;color:var(--green)">RN</div>
+        <div class="msg-body">
+          <div class="msg-name">Ruth N.</div>
+          <div class="msg-prev">Can you arrange a driver for Vic Falls?</div>
+        </div>
+        <div class="msg-right">
+          <div class="msg-time">3h ago</div>
+        </div>
+      </div>
+      <div class="msg-item">
+        <div class="msg-avatar" style="background:#F0FDF4;color:#15803D">MK</div>
+        <div class="msg-body">
+          <div class="msg-name">Munashe K.</div>
+          <div class="msg-prev">Thanks, I'll collect Monday morning.</div>
+        </div>
+        <div class="msg-right">
+          <div class="msg-time">Yesterday</div>
+        </div>
+      </div>
+      <div class="msg-item">
+        <div class="msg-avatar" style="background:#FFF7ED;color:#EA580C">BP</div>
+        <div class="msg-body">
+          <div class="msg-name">Brian P.</div>
+          <div class="msg-prev">Do you allow cross-border into SA?</div>
+        </div>
+        <div class="msg-right">
+          <div class="msg-time">Yesterday</div>
+        </div>
+      </div>
+      <div class="msg-item">
+        <div class="msg-avatar" style="background:#F5F3FF;color:#7C3AED">CZ</div>
+        <div class="msg-body">
+          <div class="msg-name">Chido Z.</div>
+          <div class="msg-prev">Can I get a weekly rate for the Aqua?</div>
+        </div>
+        <div class="msg-right">
+          <div class="msg-time">2 days ago</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================== SCREEN 13 — Analytics Dashboard ============================== -->
+<div class="section-label">Screen 13 — Analytics Dashboard</div>
+<div class="screen-row">
+<div class="screen-wrap">
+  <div class="screen-title">Analytics view</div>
+  <div class="phone">
+    <div class="inner-topbar">
+      <div class="back-btn"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="topbar-title">Fleet Analytics</div>
+      <div style="font-size:12px;font-weight:600;color:var(--blue);background:var(--blue-light);padding:4px 10px;border-radius:var(--r-pill)">June 2026</div>
+    </div>
+    <div class="scroll-area">
+      <!-- KPI grid -->
+      <div class="analytics-kpi">
+        <div class="kpi-card">
+          <div class="kpi-num">1,240</div>
+          <div class="kpi-lbl">Total Views</div>
+          <div class="kpi-delta">↑ +18% vs last month</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num">87</div>
+          <div class="kpi-lbl">Inquiries</div>
+          <div class="kpi-delta">↑ +24%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num">7.0%</div>
+          <div class="kpi-lbl">Inquiry Rate</div>
+          <div class="kpi-delta" style="color:var(--red)">↓ -1.2%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num">24</div>
+          <div class="kpi-lbl">Active Listings</div>
+          <div class="kpi-delta">↑ +3</div>
+        </div>
+      </div>
+      <!-- Views chart -->
+      <div style="padding:14px 16px 8px;background:#fff;border-bottom:1px solid var(--border)">
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px">Daily Views — Last 30 Days</div>
+        <div class="chart-area">
+          <div class="bar" style="height:40%"></div>
+          <div class="bar" style="height:55%"></div>
+          <div class="bar" style="height:48%"></div>
+          <div class="bar highlight" style="height:70%"></div>
+          <div class="bar" style="height:62%"></div>
+          <div class="bar" style="height:50%"></div>
+          <div class="bar highlight" style="height:85%"></div>
+          <div class="bar" style="height:72%"></div>
+          <div class="bar" style="height:66%"></div>
+          <div class="bar" style="height:78%"></div>
+          <div class="bar" style="height:60%"></div>
+          <div class="bar highlight" style="height:90%"></div>
+          <div class="bar" style="height:82%"></div>
+          <div class="bar" style="height:75%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--hint);margin-top:6px;padding:0 4px">
+          <span>Jun 1</span><span>Jun 10</span><span>Jun 20</span><span>Jun 30</span>
+        </div>
+      </div>
+      <!-- Top vehicles -->
+      <div class="sec-hdr"><h2>Top Performing Vehicles</h2></div>
+      <div style="padding:0 16px 8px;background:#fff">
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
+          <div>
+            <div style="font-weight:700">Toyota Fortuner 2022</div>
+            <div style="color:var(--hint);font-size:12px">SUV · $95/day</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:800;color:var(--blue)">342 views</div>
+            <div style="color:var(--hint);font-size:12px">28 inquiries</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
+          <div>
+            <div style="font-weight:700">Mercedes C-Class</div>
+            <div style="color:var(--hint);font-size:12px">Luxury · $120/day</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:800;color:var(--blue)">298 views</div>
+            <div style="color:var(--hint);font-size:12px">19 inquiries</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px">
+          <div>
+            <div style="font-weight:700">Toyota Aqua 2020</div>
+            <div style="color:var(--hint);font-size:12px">Sedan · $45/day</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:800;color:var(--blue)">241 views</div>
+            <div style="color:var(--hint);font-size:12px">15 inquiries</div>
+          </div>
+        </div>
+      </div>
+      <!-- Inquiry sources -->
+      <div class="sec-div"></div>
+      <div class="sec-hdr" style="padding-bottom:12px"><h2>Inquiry Sources</h2></div>
+      <div style="padding:0 16px 16px;background:#fff;display:flex;flex-direction:column;gap:10px">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="font-weight:600">In-app Chat</span><span style="font-weight:800">52%</span></div>
+          <div style="height:8px;background:var(--border);border-radius:var(--r-pill);overflow:hidden"><div style="height:100%;width:52%;background:var(--blue);border-radius:var(--r-pill)"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="font-weight:600">WhatsApp</span><span style="font-weight:800">34%</span></div>
+          <div style="height:8px;background:var(--border);border-radius:var(--r-pill);overflow:hidden"><div style="height:100%;width:34%;background:#25D366;border-radius:var(--r-pill)"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="font-weight:600">Direct Call</span><span style="font-weight:800">14%</span></div>
+          <div style="height:8px;background:var(--border);border-radius:var(--r-pill);overflow:hidden"><div style="height:100%;width:14%;background:var(--green);border-radius:var(--r-pill)"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============================== SCREEN 14 — Profile Settings ============================== -->
+<div class="section-label">Screen 14 — Business Profile Settings</div>
+<div class="screen-row">
+<div class="screen-wrap">
+  <div class="screen-title">Profile editor</div>
+  <div class="phone">
+    <div class="inner-topbar">
+      <div class="back-btn"><svg width="18" height="18" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="topbar-title">Company Profile</div>
+      <div style="font-size:13px;font-weight:700;color:var(--blue)">Save</div>
+    </div>
+    <div class="scroll-area">
+      <!-- Cover / Logo -->
+      <div style="position:relative;background:#fff;border-bottom:1px solid var(--border);padding-bottom:56px;flex-shrink:0">
+        <div style="height:100px;background:linear-gradient(135deg,#1A3A8F,#2550C0);position:relative">
+          <div style="position:absolute;bottom:8px;right:10px;background:rgba(0,0,0,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:var(--r-pill);cursor:pointer">Change Cover</div>
+        </div>
+        <div style="position:absolute;bottom:16px;left:16px;display:flex;align-items:flex-end;gap:10px">
+          <div style="width:64px;height:64px;border-radius:var(--r-lg);background:var(--blue);border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;position:relative">
+            A
+            <div style="position:absolute;bottom:-4px;right:-4px;width:22px;height:22px;background:var(--blue);border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center">
+              <svg width="11" height="11" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Form fields -->
+      <div style="padding:16px;background:#fff;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div class="form-label">Company Name *</div>
+          <input class="form-input" value="AAA Car Hire Zimbabwe" readonly>
+        </div>
+        <div>
+          <div class="form-label">Business Type</div>
+          <select class="form-select"><option>Car Hire Company</option><option>Individual Owner</option><option>Fleet Operator</option></select>
+        </div>
+        <div>
+          <div class="form-label">Description</div>
+          <textarea class="form-textarea">Premium car hire company serving Zimbabwe since 2015. Airport transfers, corporate fleet, and long-term rentals available.</textarea>
+        </div>
+        <div class="form-row">
+          <div>
+            <div class="form-label">City *</div>
+            <select class="form-select"><option>Harare</option><option>Bulawayo</option></select>
+          </div>
+          <div>
+            <div class="form-label">Area</div>
+            <input class="form-input" placeholder="CBD, Borrowdale…" readonly>
+          </div>
+        </div>
+        <div>
+          <div class="form-label">WhatsApp Number</div>
+          <input class="form-input" placeholder="+263 77 xxx xxxx" readonly>
+        </div>
+        <div>
+          <div class="form-label">Business Hours</div>
+          <div style="display:flex;gap:10px">
+            <input class="form-input" placeholder="Opens 6:00 AM" style="flex:1" readonly>
+            <input class="form-input" placeholder="Closes 10:00 PM" style="flex:1" readonly>
+          </div>
+        </div>
+      </div>
+      <!-- Notifications toggles -->
+      <div class="sec-div"></div>
+      <div class="sec-hdr" style="padding-bottom:0"><h2>Notifications</h2></div>
+      <div class="toggle-row"><div class="toggle-info"><div class="toggle-lbl">New inquiry alerts</div></div><div class="toggle"></div></div>
+      <div class="toggle-row"><div class="toggle-info"><div class="toggle-lbl">New review notifications</div></div><div class="toggle"></div></div>
+      <div class="toggle-row" style="border:none"><div class="toggle-info"><div class="toggle-lbl">Weekly analytics report</div></div><div class="toggle off"></div></div>
+      <div style="height:16px"></div>
+    </div>
+    <div class="cta-bar">
+      <button class="btn-pri">Save Profile</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div style="height:48px"></div>
+<div style="text-align:center;font-size:12px;color:var(--hint);padding-bottom:32px">
+  Phase 1 Business Portal Screens — 7 screens (8–14) · Continue to Admin Portal
+</div>
+</body>
+</html>
