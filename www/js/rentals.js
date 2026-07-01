@@ -780,7 +780,7 @@
       let compBiz = {};
       if (companyRes.data && !companyRes.error) {
         const bizRes  = await sb.from('businesses').select('name,phone,whatsapp,owner_user_id').eq('id', companyRes.data.business_id).single();
-        const profRes = await sb.from('rental_company_profiles').select('logo_url,cover_url,bio').eq('company_id', companyId).single();
+        const profRes = await sb.from('rental_company_profiles').select('logo_url,cover_url,about').eq('company_id', companyId).single();
         compBiz = {
           id:            companyId,
           name:          bizRes.data && bizRes.data.name,
@@ -788,7 +788,7 @@
           whatsapp:      bizRes.data && bizRes.data.whatsapp,
           owner_user_id: bizRes.data && bizRes.data.owner_user_id,
           logo_url:      profRes.data && profRes.data.logo_url,
-          bio:           profRes.data && profRes.data.bio,
+          bio:           profRes.data && (profRes.data.about || profRes.data.bio),
           avg_rating:    companyRes.data.avg_rating,
           review_count:  companyRes.data.review_count,
           fleet_count:   companyRes.data.fleet_count,
@@ -824,7 +824,7 @@
 
       const [bRes, pRes, rvRes, flRes] = await Promise.all([
         sb.from('businesses').select('name,phone,whatsapp,owner_user_id').eq('id', rc.business_id).single(),
-        sb.from('rental_company_profiles').select('logo_url,cover_url,bio').eq('company_id', id).single(),
+        sb.from('rental_company_profiles').select('logo_url,cover_url,about').eq('company_id', id).single(),
         sb.from('rental_reviews').select('id,rating,body,created_at,reviewer_id').eq('company_id', id).eq('status','published').order('created_at', {ascending:false}).limit(10),
         sb.rpc('rental_search_listings', { p_available_only: false, p_limit: 8, p_offset: 0 }),
       ]);
@@ -843,7 +843,7 @@
         whatsapp:      bRes.data && bRes.data.whatsapp,
         owner_user_id: bRes.data && bRes.data.owner_user_id,
         logo_url:      pRes.data && pRes.data.logo_url,
-        bio:           pRes.data && pRes.data.bio,
+        bio:           pRes.data && (pRes.data.about || pRes.data.bio),
         avg_rating:    rc.avg_rating,
         review_count:  rc.review_count,
         fleet_count:   rc.fleet_count,
