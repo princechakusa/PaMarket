@@ -3039,17 +3039,19 @@ function renderRentalLookups() {
   } else if (tab==='brands') {
     html += '<div class="notif-form" style="padding:16px;margin-bottom:16px"><div style="display:flex;gap:8px;margin-bottom:8px"><input id="raBrandSlug" placeholder="Slug e.g. toyota" class="form-input" style="flex:1"><input id="raBrandLabel" placeholder="Label e.g. Toyota" class="form-input" style="flex:1"></div><button class="btn-send" onclick="raAddLookup(\'rental_brands\')" style="padding:10px 24px">Add Brand</button></div>';
   } else {
-    html += '<div class="notif-form" style="padding:16px;margin-bottom:16px"><div style="display:flex;gap:8px;margin-bottom:8px"><input id="raLocCity" placeholder="City" class="form-input" style="flex:1"><input id="raLocSlug" placeholder="Slug" class="form-input" style="flex:1"><input id="raLocProv" placeholder="Province" class="form-input" style="flex:1"></div><button class="btn-send" onclick="raAddLookup(\'rental_locations\')" style="padding:10px 24px">Add Location</button></div>';
+    html += '<div class="notif-form" style="padding:16px;margin-bottom:16px"><div style="display:flex;gap:8px;margin-bottom:8px"><input id="raLocCity" placeholder="City e.g. Marondera" class="form-input" style="flex:1"><input id="raLocProv" placeholder="Province e.g. Mashonaland East" class="form-input" style="flex:1"></div><button class="btn-send" onclick="raAddLookup(\'rental_locations\')" style="padding:10px 24px">Add Location</button></div>';
   }
-  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Label</th><th>Slug</th>'+(tab==='locations'?'<th>Province</th>':'')+'<th>Active</th><th>Action</th></tr></thead><tbody>';
-  if (!items.length) html += '<tr><td colspan="5"><div class="loading-msg">Loading…</div></td></tr>';
+  var colspan = tab==='locations' ? 4 : 5;
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th>'+(tab!=='locations'?'<th>Slug</th>':'')+(tab==='locations'?'<th>Province</th>':'')+'<th>Active</th><th>Action</th></tr></thead><tbody>';
+  if (!items.length) html += '<tr><td colspan="'+colspan+'"><div class="loading-msg">Loading…</div></td></tr>';
+  var tblKey = tab==='categories'?'rental_categories':tab==='brands'?'rental_brands':'rental_locations';
   items.forEach(function(item) {
     html += '<tr>'
       + '<td style="font-weight:600">'+esc(item.label||item.city||item.name||'—')+'</td>'
-      + '<td style="color:var(--sub);font-size:12px">'+esc(item.slug||'')+'</td>'
+      + (tab!=='locations' ? '<td style="color:var(--sub);font-size:12px">'+esc(item.slug||'')+'</td>' : '')
       + (tab==='locations' ? '<td style="color:var(--sub);font-size:12px">'+esc(item.province||'')+'</td>' : '')
       + '<td><span class="badge '+(item.is_active?'badge-active':'badge-rejected')+'">'+(item.is_active?'Active':'Disabled')+'</span></td>'
-      + '<td><button class="ab '+(item.is_active?'ab-reject':'ab-approve')+'" onclick="raToggleLookupActive(\''+esc(item.id)+'\',\''+tab==='categories'?'rental_categories':tab==='brands'?'rental_brands':'rental_locations'+'\','+(item.is_active?'false':'true')+')">'+(item.is_active?'Disable':'Enable')+'</button></td></tr>';
+      + '<td><button class="ab '+(item.is_active?'ab-reject':'ab-approve')+'" onclick="raToggleLookupActive(\''+esc(item.id)+'\',\''+tblKey+'\','+(item.is_active?'false':'true')+')">'+(item.is_active?'Disable':'Enable')+'</button></td></tr>';
   });
   html += '</tbody></table></div>';
   document.getElementById('mainContent').innerHTML = html;
@@ -3164,7 +3166,7 @@ async function raLoadReports() {
   if (!sb) return;
   try {
     var {data, error} = await sb.from('rental_reports')
-      .select('id,listing_id,reason,notes,status,created_at').order('created_at',{ascending:false}).limit(50);
+      .select('id,listing_id,reason,detail,status,created_at').order('created_at',{ascending:false}).limit(50);
     if (error) throw error;
     var lids = [...new Set((data||[]).map(function(r){return r.listing_id;}))];
     var lstRes = lids.length ? await sb.from('rental_vehicle_listings').select('id,model,year,brand_id').in('id',lids) : {data:[]};
@@ -3264,7 +3266,7 @@ async function raLoadLookups() {
     var [cats, brands, locs] = await Promise.all([
       sb.from('rental_categories').select('id,slug,label,is_active,sort_order').order('sort_order'),
       sb.from('rental_brands').select('id,slug,label,is_active').order('label'),
-      sb.from('rental_locations').select('id,slug,city,province,is_active').order('city'),
+      sb.from('rental_locations').select('id,city,province,is_active').order('city'),
     ]);
     RA_DATA.categories = cats.data||[];
     RA_DATA.brands     = brands.data||[];
@@ -3407,10 +3409,10 @@ async function raAddLookup(table) {
       payload={slug:slug.trim().toLowerCase(),label:label.trim(),is_active:true};
     } else {
       var city=(document.getElementById('raLocCity')||{}).value||'';
-      var slug=(document.getElementById('raLocSlug')||{}).value||'';
       var prov=(document.getElementById('raLocProv')||{}).value||'';
-      if (!city||!slug) { toast('City and slug required','error'); return; }
-      payload={city:city.trim(),slug:slug.trim().toLowerCase(),province:prov.trim()||null,is_active:true};
+      if (!city) { toast('City name required','error'); return; }
+      var autoSlug = city.trim().toLowerCase().replace(/\s+/g,'-');
+      payload={city:city.trim(),slug:autoSlug,province:prov.trim()||null,is_active:true};
     }
     var r = await sb.from(table).insert(payload);
     if (r.error) throw r.error;

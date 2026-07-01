@@ -6,7 +6,10 @@ import { getSignedUrl } from 'npm:@aws-sdk/s3-request-presigner'
 const ALLOWED_ORIGINS = new Set([
   'https://pamarket.app',
   'https://www.pamarket.app',
-  'com.pamarket.app',  // Capacitor deep-link scheme treated as origin
+  'com.pamarket.app',       // Capacitor deep-link scheme treated as origin
+  'http://127.0.0.1:5500',  // Local dev (Live Server)
+  'http://localhost:5500',
+  'http://localhost:3000',
 ])
 
 function corsHeaders(req: Request) {

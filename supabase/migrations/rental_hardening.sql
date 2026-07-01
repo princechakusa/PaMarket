@@ -13,6 +13,24 @@
 -- ═══════════════════════════════════════════════════════════════════
 
 -- ================================================================
+-- SCHEMA PATCH: Add slug column to rental_locations
+-- (missed in rental_marketplace_schema.sql)
+-- ================================================================
+
+alter table public.rental_locations
+  add column if not exists slug text;
+
+-- Backfill slugs from city names (lowercase, spaces to hyphens)
+update public.rental_locations
+  set slug = lower(replace(city, ' ', '-'))
+  where slug is null;
+
+-- Add unique index after backfill
+create unique index if not exists rental_locations_slug_idx
+  on public.rental_locations (slug)
+  where slug is not null;
+
+-- ================================================================
 -- TASK 1: STORAGE ARCHITECTURE
 -- Bucket: rental-media (private, 8 MB max per file, image types only)
 -- ================================================================
