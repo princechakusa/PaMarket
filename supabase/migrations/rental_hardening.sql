@@ -30,6 +30,34 @@ create unique index if not exists rental_locations_slug_idx
   on public.rental_locations (slug)
   where slug is not null;
 
+-- ── Idempotency: drop hardening policies before recreating ───────
+do $drop_hardening_policies$ declare r record; begin
+  for r in
+    select policyname, tablename
+    from pg_policies
+    where schemaname = 'public'
+      and policyname in (
+        'rental_listings: owner insert',
+        'rental_listings: owner update'
+      )
+  loop
+    execute format('drop policy if exists %I on public.%I', r.policyname, r.tablename);
+  end loop;
+  -- Storage bucket policies (storage schema)
+  for r in
+    select policyname, tablename
+    from pg_policies
+    where schemaname = 'storage'
+      and policyname in (
+        'rental-media: authenticated upload',
+        'rental-media: authenticated read',
+        'rental-media: owner delete'
+      )
+  loop
+    execute format('drop policy if exists %I on storage.%I', r.policyname, r.tablename);
+  end loop;
+end $drop_hardening_policies$;
+
 -- ================================================================
 -- TASK 1: STORAGE ARCHITECTURE
 -- Bucket: rental-media (private, 8 MB max per file, image types only)

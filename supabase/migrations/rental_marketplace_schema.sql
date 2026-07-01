@@ -40,6 +40,21 @@
 -- ── Admin helper (already defined in businesses.sql) ───────────
 -- public.is_admin() already exists — not redefined.
 
+-- ── Idempotency: drop all rental RLS policies before recreating ─
+-- PostgreSQL has no "CREATE POLICY IF NOT EXISTS". Running this file
+-- a second time would fail on duplicate policy names. Drop them all
+-- first so the file is safe to re-run on an existing schema.
+do $drop_rental_policies$ declare r record; begin
+  for r in
+    select policyname, tablename
+    from pg_policies
+    where schemaname = 'public'
+      and tablename like 'rental_%'
+  loop
+    execute format('drop policy if exists %I on public.%I', r.policyname, r.tablename);
+  end loop;
+end $drop_rental_policies$;
+
 
 -- ═══════════════════════════════════════════════════════════════
 -- TABLE 1 — rental_categories
