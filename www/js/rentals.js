@@ -189,7 +189,7 @@
   };
 
   H.pages.RentalListings_after = function () {
-    if (!R.browse.length && !R._loading) H._rental.loadBrowse(true);
+    if (!R.browse.length && !R._loading && !R._loadFailed) H._rental.loadBrowse(true);
     window._rentalSearchTimer = null;
   };
 
@@ -457,6 +457,7 @@
     const sb = window.supabase; if (!sb) return;
     if (reset) { R.page = 0; R.browse = []; R.featured = []; R.hasMore = true; }
     R._loading = true;
+    R._loadFailed = false;
     H.renderPage('RentalListings', H._currentParams || {});
     try {
       const f = R.filters;
@@ -480,6 +481,7 @@
       if (R.hasMore) R.browse = R.browse.slice(0, 20);
     } catch (e) {
       console.warn('rental browse:', e);
+      R._loadFailed = true;
       H.toast('Could not load vehicles. Try again.', 4000, true);
     }
     R._loading = false;

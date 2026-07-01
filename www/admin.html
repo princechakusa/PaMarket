@@ -320,6 +320,49 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
           Businesses
           <span class="nav-badge" id="badge-biz-upgrades" style="display:none">0</span>
         </button>
+        <div class="nav-section">Rentals</div>
+        <button class="nav-item" data-tab="rentalDashboard" onclick="showTab('rentalDashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2M7 17h10"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/></svg>
+          Rental Admin
+        </button>
+        <button class="nav-item" data-tab="rentalApprovals" onclick="showTab('rentalApprovals')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+          Approvals
+          <span class="nav-badge" id="badge-rental-pending" style="display:none">0</span>
+        </button>
+        <button class="nav-item" data-tab="rentalCompanies" onclick="showTab('rentalCompanies')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9l2-5h14l2 5"/></svg>
+          Companies
+        </button>
+        <button class="nav-item" data-tab="rentalListings" onclick="showTab('rentalListings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          All Listings
+        </button>
+        <button class="nav-item" data-tab="rentalReports" onclick="showTab('rentalReports')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          Rental Reports
+          <span class="nav-badge" id="badge-rental-reports" style="display:none">0</span>
+        </button>
+        <button class="nav-item" data-tab="rentalReviews" onclick="showTab('rentalReviews')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Reviews
+        </button>
+        <button class="nav-item" data-tab="rentalFeatured" onclick="showTab('rentalFeatured')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Featured
+        </button>
+        <button class="nav-item" data-tab="rentalAnalytics" onclick="showTab('rentalAnalytics')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Rental Analytics
+        </button>
+        <button class="nav-item" data-tab="rentalAuditLogs" onclick="showTab('rentalAuditLogs')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Audit Logs
+        </button>
+        <button class="nav-item" data-tab="rentalLookups" onclick="showTab('rentalLookups')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Lookups
+        </button>
         <div class="nav-section">Config</div>
         <button class="nav-item" data-tab="maintenance" onclick="showTab('maintenance')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
@@ -500,7 +543,12 @@ var TAB_TITLES = {
   overview:'Overview', listings:'Listings', users:'Users', verifications:'Verifications',
   notifications:'Send Notification', reports:'Reports', contacts:'Contact Requests',
   ads:'Ads & Boosts', chats:'User Chats', analytics:'Analytics', settings:'Settings',
-  businesses:'Business Platform', maintenance:'Maintenance'
+  businesses:'Business Platform', maintenance:'Maintenance',
+  rentalDashboard:'Rental Admin', rentalApprovals:'Rental Approvals',
+  rentalCompanies:'Rental Companies', rentalListings:'Rental Listings',
+  rentalReports:'Rental Reports', rentalReviews:'Rental Reviews',
+  rentalFeatured:'Featured Listings', rentalAnalytics:'Rental Analytics',
+  rentalAuditLogs:'Rental Audit Logs', rentalLookups:'Lookup Tables'
 };
 function showTab(name) {
   currentTab = name;
@@ -517,7 +565,12 @@ function renderTab() {
     verifications: renderVerifications, notifications: renderNotifications,
     reports: renderReports, contacts: renderContactRequests, ads: renderAds,
     chats: renderChats, analytics: renderAnalytics, settings: renderSettings,
-    businesses: renderBusinesses, maintenance: renderMaintenance
+    businesses: renderBusinesses, maintenance: renderMaintenance,
+    rentalDashboard: renderRentalDashboard, rentalApprovals: renderRentalApprovals,
+    rentalCompanies: renderRentalCompanies, rentalListings: renderRentalListings,
+    rentalReports: renderRentalReports, rentalReviews: renderRentalReviews,
+    rentalFeatured: renderRentalFeatured, rentalAnalytics: renderRentalAnalytics,
+    rentalAuditLogs: renderRentalAuditLogs, rentalLookups: renderRentalLookups
   }[currentTab];
   if(fn) fn();
 }
@@ -585,7 +638,7 @@ async function showDash() {
 // ── Data loading ──────────────────────────────────────────
 async function loadAllData() {
   document.getElementById('mainContent').innerHTML = '<div class="loading-msg">Loading dashboard data…</div>';
-  await Promise.allSettled([loadUsers(), loadListings(), loadVerifications(), loadReports(), loadContactRequests(), loadAds(), loadSettings(), loadNotifHistory(), loadChats(), loadBusinesses()]);
+  await Promise.allSettled([loadUsers(), loadListings(), loadVerifications(), loadReports(), loadContactRequests(), loadAds(), loadSettings(), loadNotifHistory(), loadChats(), loadBusinesses(), raLoadSummary()]);
   updateBadges();
   renderTab();
 }
@@ -998,6 +1051,8 @@ function updateBadges() {
   setBadge('badge-reports', openR);
   setBadge('badge-contacts', pendingC);
   setBadge('badge-biz-upgrades', pendingUpgrades);
+  setBadge('badge-rental-pending', RA_DATA.summary ? RA_DATA.summary.pending_listings : 0);
+  setBadge('badge-rental-reports', RA_DATA.summary ? RA_DATA.summary.open_reports : 0);
   document.getElementById('badge-overview').style.display = (pendingL||pendingV||openR||pendingC) ? '' : 'none';
 }
 
@@ -2663,6 +2718,709 @@ async function runPurgeOrphanedPhotos() {
   }
   _maintLog('Done. Deleted ' + deleted + ' orphaned photo(s).');
   toast('Purged ' + deleted + ' orphaned photos');
+}
+
+// ════════════════════════════════════════════════════════════
+// VEHICLE RENTAL MARKETPLACE ADMIN
+// ════════════════════════════════════════════════════════════
+var RA_DATA = {
+  summary: null, pendingListings: [], companies: [], allListings: [],
+  reports: [], reviews: [], featured: [], analytics: null, auditLogs: [],
+  categories: [], brands: [], locations: []
+};
+var _raListingsFilter = 'all';
+var _raReportsFilter  = 'open';
+var _raLookupsTab     = 'categories';
+var _raLoadingApprovals = false;
+
+function raPill(s) {
+  var map = {
+    active:'#10B981,rgba(16,185,129,.15)', approved:'#10B981,rgba(16,185,129,.15)',
+    published:'#10B981,rgba(16,185,129,.15)', pending_review:'#F59E0B,rgba(245,158,11,.15)',
+    pending:'#F59E0B,rgba(245,158,11,.15)', paused:'#F59E0B,rgba(245,158,11,.15)',
+    draft:'#64748B,rgba(100,116,139,.15)', archived:'#64748B,rgba(100,116,139,.15)',
+    rejected:'#EF4444,rgba(239,68,68,.15)', suspended:'#EF4444,rgba(239,68,68,.15)',
+    removed:'#EF4444,rgba(239,68,68,.15)', hidden:'#64748B,rgba(100,116,139,.15)',
+    open:'#F59E0B,rgba(245,158,11,.15)', reviewing:'#3B82F6,rgba(59,130,246,.15)',
+    resolved:'#10B981,rgba(16,185,129,.15)', dismissed:'#64748B,rgba(100,116,139,.15)'
+  };
+  var c = (map[s]||'#64748B,rgba(100,116,139,.15)').split(',');
+  return '<span style="font-size:10px;font-weight:800;color:'+c[0]+';background:'+c[1]+';border-radius:20px;padding:2px 8px;white-space:nowrap">'+esc(s||'—')+'</span>';
+}
+
+function raStatCard(val, label, sub) {
+  return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center">'
+    + '<div style="font-size:22px;font-weight:800;color:var(--accent)">'+val+'</div>'
+    + '<div style="font-size:12px;font-weight:600;color:var(--text);margin-top:2px">'+esc(label)+'</div>'
+    + (sub ? '<div style="font-size:11px;color:var(--sub);margin-top:1px">'+esc(sub)+'</div>' : '')
+    + '</div>';
+}
+
+function raBtn(label, onclick, variant) {
+  var styles = {
+    approve:'background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)',
+    reject:'background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)',
+    suspend:'background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)',
+    restore:'background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)',
+    default:'background:rgba(255,255,255,.06);color:var(--sub);border:1px solid var(--border)'
+  };
+  var s = styles[variant] || styles.default;
+  return '<button onclick="'+onclick+'" style="flex:1;padding:7px 10px;border-radius:9px;'+s+';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">'+esc(label)+'</button>';
+}
+
+// ── Render: Rental Dashboard ──────────────────────────────
+function renderRentalDashboard() {
+  var s = RA_DATA.summary;
+  if (!s) {
+    raLoadSummary();
+    document.getElementById('mainContent').innerHTML = '<div class="loading-msg">Loading rental summary…</div>';
+    return;
+  }
+  var nav = function(tab, label, badge) {
+    return '<button onclick="showTab(\''+tab+'\')" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;font-family:inherit;margin-bottom:8px">'
+      + '<span style="font-size:14px;font-weight:700;color:var(--text)">'+label+(badge?' <span class="nav-badge">'+badge+'</span>':'')+'</span>'
+      + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--sub)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>'
+      + '</button>';
+  };
+  var html = '<div class="stats-grid">';
+  html += raStatCard(s.pending_listings, 'Pending Listings', 'Awaiting review');
+  html += raStatCard(s.pending_companies, 'Pending Companies', 'Awaiting verify');
+  html += raStatCard(s.open_reports, 'Open Reports', 'Need action');
+  html += raStatCard(s.active_listings, 'Live Listings', 'Active & approved');
+  html += raStatCard(s.total_companies, 'Companies', 'All statuses');
+  html += raStatCard(s.total_reviews, 'Reviews', 'Published');
+  html += '</div>';
+  html += '<div class="sec-head"><div class="sec-title">Admin Sections</div><button class="btn-refresh" onclick="raLoadSummary()">Refresh</button></div>';
+  html += nav('rentalApprovals', 'Pending Approvals', s.pending_listings || null);
+  html += nav('rentalCompanies', 'Company Management', null);
+  html += nav('rentalListings',  'All Listings', null);
+  html += nav('rentalReports',   'Reports Queue', s.open_reports || null);
+  html += nav('rentalReviews',   'Review Moderation', null);
+  html += nav('rentalFeatured',  'Featured Listings', null);
+  html += nav('rentalAnalytics', 'Platform Analytics', null);
+  html += nav('rentalAuditLogs', 'Audit Logs', null);
+  html += nav('rentalLookups',   'Categories / Brands / Locations', null);
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Render: Approvals ─────────────────────────────────────
+function renderRentalApprovals() {
+  if (_raLoadingApprovals && !RA_DATA.pendingListings.length) {
+    document.getElementById('mainContent').innerHTML = '<div class="loading-msg">Loading pending listings…</div>'; return;
+  }
+  if (!RA_DATA.pendingListings.length && !_raLoadingApprovals) { raLoadPendingListings(); }
+  var rows = RA_DATA.pendingListings;
+  var html = '<div class="sec-head"><div class="sec-title">Pending Approvals ('+rows.length+')</div><button class="btn-refresh" onclick="raLoadPendingListings()">Refresh</button></div>';
+  if (!rows.length && !_raLoadingApprovals) {
+    html += '<div class="empty-msg">No listings pending review.</div>';
+  }
+  rows.forEach(function(v) {
+    html += '<div class="verif-card">'
+      + '<div class="verif-header"><div class="verif-user">'
+      + (v.cover_url ? '<img src="'+esc(v.cover_url)+'" style="width:56px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0">' : '<div class="verif-avatar" style="border-radius:10px;width:56px;height:48px"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2M7 17h10"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/></svg></div>')
+      + '<div style="margin-left:12px"><div class="verif-name">'+esc((v.brand_label||'')+' '+v.model+' '+v.year)+'</div>'
+      + '<div class="verif-meta">$'+fmt(v.daily_rate)+'/day · '+esc(v.company_name||'')+(v.city?' · '+esc(v.city):'')+'</div></div>'
+      + '</div>'+raPill(v.admin_status||'pending_review')+'</div>'
+      + (v.description ? '<p style="font-size:12.5px;color:var(--sub);line-height:1.55;border-left:2px solid var(--border);padding-left:10px;margin:0 0 12px">'+esc(v.description.slice(0,200))+(v.description.length>200?'…':'')+'</p>' : '')
+      + '<div class="verif-actions">'
+      + '<button class="btn-verif-approve" onclick="raApproveListing(\''+esc(v.id)+'\')">Approve</button>'
+      + '<button class="btn-verif-reject" onclick="raModerateListing(\''+esc(v.id)+'\',\'rejected\')">Reject</button>'
+      + '</div></div>';
+  });
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Render: Companies ─────────────────────────────────────
+function renderRentalCompanies() {
+  if (!RA_DATA.companies.length) { raLoadCompanies(); }
+  var companies = RA_DATA.companies;
+  var pending   = companies.filter(function(c){return c.status==='pending';});
+  var active    = companies.filter(function(c){return c.status==='active';});
+  var suspended = companies.filter(function(c){return c.status==='suspended';});
+
+  function coCard(c) {
+    return '<div class="verif-card">'
+      + '<div class="verif-header"><div class="verif-user"><div class="verif-avatar">'+initials(c.name||'C')+'</div>'
+      + '<div><div class="verif-name">'+esc(c.name||'Unnamed')+'</div>'
+      + '<div class="verif-meta">'+fmt(c.fleet_count||0)+' vehicles · '+(c.avg_rating?Number(c.avg_rating).toFixed(1)+' avg':'no rating')+'</div></div></div>'
+      + raPill(c.status)+'</div>'
+      + '<div class="verif-actions" style="gap:6px">'
+      + (c.status==='pending'   ? '<button class="btn-verif-approve" onclick="raSetCompanyStatus(\''+esc(c.id)+'\',\'active\')">Verify</button>' : '')
+      + (c.status==='pending'   ? '<button class="btn-verif-reject" onclick="raSetCompanyStatus(\''+esc(c.id)+'\',\'rejected\')">Reject</button>' : '')
+      + (c.status==='active'    ? '<button class="btn-verif-reject" onclick="raSetCompanyStatus(\''+esc(c.id)+'\',\'suspended\')">Suspend</button>' : '')
+      + (c.status==='suspended' ? '<button class="btn-verif-approve" onclick="raSetCompanyStatus(\''+esc(c.id)+'\',\'active\')">Restore</button>' : '')
+      + '</div></div>';
+  }
+
+  var html = '<div class="sec-head"><div class="sec-title">Companies</div><button class="btn-refresh" onclick="raLoadCompanies()">Refresh</button></div>';
+  if (pending.length)   html += '<div class="sec-head" style="margin-top:8px"><div class="sec-title" style="font-size:13px;color:var(--amber)">Pending Verification ('+pending.length+')</div></div>' + pending.map(coCard).join('');
+  if (suspended.length) html += '<div class="sec-head" style="margin-top:8px"><div class="sec-title" style="font-size:13px;color:var(--red)">Suspended ('+suspended.length+')</div></div>' + suspended.map(coCard).join('');
+  if (active.length)    html += '<div class="sec-head" style="margin-top:8px"><div class="sec-title" style="font-size:13px">Active ('+active.length+')</div></div>' + active.map(coCard).join('');
+  if (!companies.length) html += '<div class="empty-msg">Loading…</div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Render: All Listings ──────────────────────────────────
+function renderRentalListings() {
+  if (!RA_DATA.allListings.length) { raLoadAllListings(); }
+  var listings = RA_DATA.allListings;
+  var filter   = _raListingsFilter;
+  var filtered = filter === 'all' ? listings : listings.filter(function(l){return l.admin_status===filter||l.status===filter;});
+  var pending  = listings.filter(function(l){return l.admin_status==='pending_review';}).length;
+  var rejected = listings.filter(function(l){return l.admin_status==='rejected';}).length;
+
+  function fBtn(val, label, count) {
+    return '<button onclick="_raListingsFilter=\''+val+'\';renderRentalListings()" class="filter-btn'+(_raListingsFilter===val?' on':'')+'">'+label+(count?' ('+count+')':'')+'</button>';
+  }
+  var html = '<div class="sec-head"><div class="sec-title">All Rental Listings</div><div class="sec-actions">'
+    + fBtn('all','All',listings.length)+fBtn('pending_review','Pending',pending)+fBtn('approved','Approved',null)+fBtn('rejected','Rejected',rejected)+fBtn('paused','Paused',null)
+    + '<button class="btn-refresh" onclick="RA_DATA.allListings=[];raLoadAllListings()">Refresh</button></div></div>';
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Vehicle</th><th>Company</th><th>Rate</th><th>Status</th><th>Views</th><th>Actions</th></tr></thead><tbody>';
+  if (!filtered.length) html += '<tr><td colspan="6"><div class="empty-msg">No listings in this filter.</div></td></tr>';
+  filtered.forEach(function(v) {
+    html += '<tr>'
+      + '<td style="font-weight:600">'+esc((v.brand_label||'')+' '+v.model+' '+(v.year||''))+'</td>'
+      + '<td style="color:var(--sub);font-size:12px">'+esc(v.company_name||'—')+'</td>'
+      + '<td style="font-weight:700">$'+fmt(v.daily_rate)+'/day</td>'
+      + '<td>'+raPill(v.admin_status||'pending_review')+'</td>'
+      + '<td style="color:var(--sub)">'+fmt(v.view_count||0)+'</td>'
+      + '<td><div style="display:flex;gap:4px">'
+      + (v.admin_status!=='approved' ? '<button class="ab ab-approve" onclick="raApproveListing(\''+esc(v.id)+'\')">Approve</button>' : '')
+      + (v.admin_status!=='rejected' ? '<button class="ab ab-reject" onclick="raModerateListing(\''+esc(v.id)+'\',\'rejected\')">Reject</button>' : '')
+      + '</div></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  if (!RA_DATA.allListings.length) html += '<div class="loading-msg">Loading…</div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Render: Reports ───────────────────────────────────────
+function renderRentalReports() {
+  if (!RA_DATA.reports.length) { raLoadReports(); }
+  var reports  = RA_DATA.reports;
+  var filter   = _raReportsFilter;
+  var filtered = filter === 'all' ? reports : reports.filter(function(r){return r.status===filter;});
+
+  function fBtn(val, label) {
+    return '<button onclick="_raReportsFilter=\''+val+'\';renderRentalReports()" class="filter-btn'+(_raReportsFilter===val?' on':'')+'">'+label+'</button>';
+  }
+  var html = '<div class="sec-head"><div class="sec-title">Rental Reports</div><div class="sec-actions">'
+    + fBtn('open','Open')+fBtn('reviewing','Reviewing')+fBtn('resolved','Resolved')+fBtn('dismissed','Dismissed')+fBtn('all','All')
+    + '<button class="btn-refresh" onclick="raLoadReports()">Refresh</button></div></div>';
+  if (!filtered.length) { html += '<div class="empty-msg">No reports in this category.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Reason</th><th>Listing</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+  filtered.forEach(function(r) {
+    html += '<tr>'
+      + '<td style="font-weight:600;max-width:160px">'+esc(r.reason||'No reason')+'</td>'
+      + '<td style="color:var(--sub);font-size:12px">'+esc(r.listing_title||r.listing_id||'')+'</td>'
+      + '<td>'+raPill(r.status)+'</td>'
+      + '<td style="color:var(--sub);font-size:12px">'+fmtDate(r.created_at)+'</td>'
+      + '<td><div style="display:flex;gap:4px">'
+      + (r.status==='open' ? '<button class="ab ab-view" onclick="raSetReportStatus(\''+esc(r.id)+'\',\'reviewing\')">Review</button>' : '')
+      + (r.status!=='resolved' ? '<button class="ab ab-approve" onclick="raSetReportStatus(\''+esc(r.id)+'\',\'resolved\')">Resolve</button>' : '')
+      + (r.status!=='dismissed' ? '<button class="ab ab-reject" onclick="raSetReportStatus(\''+esc(r.id)+'\',\'dismissed\')">Dismiss</button>' : '')
+      + '</div></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Render: Reviews ───────────────────────────────────────
+function renderRentalReviews() {
+  if (!RA_DATA.reviews.length) { raLoadReviews(); }
+  var reviews = RA_DATA.reviews;
+  var html = '<div class="sec-head"><div class="sec-title">Review Moderation</div><button class="btn-refresh" onclick="raLoadReviews()">Refresh</button></div>';
+  if (!reviews.length) { html += '<div class="loading-msg">Loading…</div>'; document.getElementById('mainContent').innerHTML=html; return; }
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Company</th><th>Rating</th><th>Body</th><th>Reviewer</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  reviews.forEach(function(r) {
+    var stars = [1,2,3,4,5].map(function(n){return '<svg viewBox="0 0 24 24" width="10" height="10" fill="'+(n<=r.rating?'var(--amber)':'none')+'" stroke="var(--amber)" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';}).join('');
+    html += '<tr>'
+      + '<td style="font-weight:600">'+esc(r.company_name||'—')+'</td>'
+      + '<td style="white-space:nowrap">'+stars+' '+r.rating+'/5</td>'
+      + '<td style="color:var(--sub);font-size:12px;max-width:180px">'+esc((r.body||'').slice(0,80))+'</td>'
+      + '<td style="color:var(--sub);font-size:12px">'+esc(r.reviewer_name||'—')+'</td>'
+      + '<td>'+raPill(r.status)+'</td>'
+      + '<td><div style="display:flex;gap:4px">'
+      + (r.status!=='published' ? '<button class="ab ab-approve" onclick="raSetReviewStatus(\''+esc(r.id)+'\',\'published\')">Publish</button>' : '')
+      + (r.status!=='hidden'    ? '<button class="ab ab-view" onclick="raSetReviewStatus(\''+esc(r.id)+'\',\'hidden\')">Hide</button>' : '')
+      + (r.status!=='removed'   ? '<button class="ab ab-reject" onclick="raSetReviewStatus(\''+esc(r.id)+'\',\'removed\')">Remove</button>' : '')
+      + '</div></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Render: Featured ──────────────────────────────────────
+function renderRentalFeatured() {
+  if (!RA_DATA.featured.length) { raLoadFeatured(); }
+  var html = '<div class="sec-head"><div class="sec-title">Featured Listings</div><button class="btn-refresh" onclick="raLoadFeatured()">Refresh</button></div>';
+  html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px">';
+  html += '<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px">Add Featured Listing</div>';
+  html += '<input id="raFeatId" placeholder="Listing ID (UUID)" style="width:100%;padding:9px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:8px">';
+  html += '<div style="display:flex;gap:8px;margin-bottom:8px"><input id="raFeatStart" type="date" style="flex:1;padding:9px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit"><input id="raFeatEnd" type="date" style="flex:1;padding:9px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit"></div>';
+  html += '<input id="raFeatPriority" type="number" min="1" max="100" placeholder="Priority (1-100)" style="width:100%;padding:9px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:8px">';
+  html += '<button class="btn-verif-approve" onclick="raAddFeatured()" style="width:100%">Feature This Listing</button></div>';
+  if (!RA_DATA.featured.length) { html += '<div class="empty-msg">No featured listings.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Listing</th><th>Company</th><th>Period</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  RA_DATA.featured.forEach(function(f) {
+    html += '<tr>'
+      + '<td style="font-weight:600">'+esc(f.listing_title||f.listing_id)+'</td>'
+      + '<td style="color:var(--sub);font-size:12px">'+esc(f.company_name||'—')+'</td>'
+      + '<td style="color:var(--sub);font-size:12px">'+fmtDate(f.starts_at)+' → '+fmtDate(f.ends_at)+'</td>'
+      + '<td>'+esc(String(f.priority||0))+'</td>'
+      + '<td><span class="badge '+(f.is_active?'badge-active':'badge-pending')+'">'+(f.is_active?'Active':'Inactive')+'</span></td>'
+      + '<td><div style="display:flex;gap:4px">'
+      + (f.is_active ? '<button class="ab ab-reject" onclick="raSetFeaturedActive(\''+esc(f.id)+'\',false)">Deactivate</button>' : '<button class="ab ab-approve" onclick="raSetFeaturedActive(\''+esc(f.id)+'\',true)">Activate</button>')
+      + '<button class="ab ab-delete" onclick="raRemoveFeatured(\''+esc(f.id)+'\')">Remove</button>'
+      + '</div></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Render: Analytics ─────────────────────────────────────
+function renderRentalAnalytics() {
+  if (!RA_DATA.analytics) { raLoadAnalytics(); }
+  var a = RA_DATA.analytics || {};
+  function row(label, val) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.05)">'
+      + '<span style="font-size:13px;color:var(--sub)">'+esc(label)+'</span>'
+      + '<span style="font-size:14px;font-weight:800;color:var(--text)">'+val+'</span></div>';
+  }
+  var html = '<div class="sec-head"><div class="sec-title">Rental Analytics</div><button class="btn-refresh" onclick="raLoadAnalytics()">Refresh</button></div>';
+  html += '<div class="stats-grid">';
+  html += raStatCard(fmt(a.total_views_7d||0),'Views (7d)',null);
+  html += raStatCard(fmt(a.total_inquiries_7d||0),'Inquiries (7d)',null);
+  html += raStatCard(fmt(a.total_favorites_7d||0),'Saves (7d)',null);
+  html += raStatCard((a.conversion_rate_7d||0)+'%','Conversion','Inquiry / View');
+  html += '</div>';
+  html += '<div class="tbl-wrap" style="margin-bottom:16px"><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;padding:12px 14px;border-bottom:1px solid var(--border)">Platform Stats</div>';
+  html += row('Active listings', fmt(a.active_listings||0));
+  html += row('Active companies', fmt(a.active_companies||0));
+  html += row('Total reviews', fmt(a.total_reviews||0));
+  html += row('Avg daily rate', '$'+fmt(a.avg_daily_rate||0));
+  html += '</div>';
+  if (!RA_DATA.analytics) html += '<div class="loading-msg">Loading…</div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Render: Audit Logs ────────────────────────────────────
+function renderRentalAuditLogs() {
+  if (!RA_DATA.auditLogs.length) { raLoadAuditLogs(); }
+  var logs = RA_DATA.auditLogs;
+  var html = '<div class="sec-head"><div class="sec-title">Rental Audit Logs</div><button class="btn-refresh" onclick="RA_DATA.auditLogs=[];raLoadAuditLogs()">Refresh</button></div>';
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Action</th><th>Table</th><th>Target</th><th>Actor</th><th>When</th></tr></thead><tbody>';
+  if (!logs.length) html += '<tr><td colspan="5"><div class="loading-msg">Loading…</div></td></tr>';
+  logs.forEach(function(l) {
+    html += '<tr>'
+      + '<td style="font-weight:700">'+esc(l.action||'')+'</td>'
+      + '<td style="color:var(--sub);font-size:12px">'+esc(l.target_table||'')+'</td>'
+      + '<td style="color:var(--sub);font-size:12px">'+esc(String(l.target_id||'').slice(0,8))+'…</td>'
+      + '<td style="color:var(--sub);font-size:12px">'+esc(l.actor_id?String(l.actor_id).slice(0,8)+'…':'system')+'</td>'
+      + '<td style="color:var(--sub);font-size:12px">'+fmtDateTime(l.created_at)+'</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="margin-top:12px;text-align:center"><button class="btn-refresh" onclick="raLoadAuditLogs()">Load More</button></div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Render: Lookups ───────────────────────────────────────
+function renderRentalLookups() {
+  if (!RA_DATA.categories.length) { raLoadLookups(); }
+  var tab   = _raLookupsTab;
+  var items = tab==='categories' ? RA_DATA.categories : tab==='brands' ? RA_DATA.brands : RA_DATA.locations;
+  var html = '<div class="sec-head"><div class="sec-title">Lookup Tables</div><div class="sec-actions">';
+  ['categories','brands','locations'].forEach(function(t){
+    html += '<button class="filter-btn'+(_raLookupsTab===t?' on':'')+'" onclick="_raLookupsTab=\''+t+'\';renderRentalLookups()">'+t.charAt(0).toUpperCase()+t.slice(1)+'</button>';
+  });
+  html += '<button class="btn-refresh" onclick="raLoadLookups()">Refresh</button></div></div>';
+  if (tab==='categories') {
+    html += '<div class="notif-form" style="padding:16px;margin-bottom:16px"><div style="display:flex;gap:8px;margin-bottom:8px"><input id="raCatSlug" placeholder="Slug e.g. minivan" class="form-input" style="flex:1"><input id="raCatLabel" placeholder="Label e.g. Minivan" class="form-input" style="flex:1"></div><button class="btn-send" onclick="raAddLookup(\'rental_categories\')" style="padding:10px 24px">Add Category</button></div>';
+  } else if (tab==='brands') {
+    html += '<div class="notif-form" style="padding:16px;margin-bottom:16px"><div style="display:flex;gap:8px;margin-bottom:8px"><input id="raBrandSlug" placeholder="Slug e.g. toyota" class="form-input" style="flex:1"><input id="raBrandLabel" placeholder="Label e.g. Toyota" class="form-input" style="flex:1"></div><button class="btn-send" onclick="raAddLookup(\'rental_brands\')" style="padding:10px 24px">Add Brand</button></div>';
+  } else {
+    html += '<div class="notif-form" style="padding:16px;margin-bottom:16px"><div style="display:flex;gap:8px;margin-bottom:8px"><input id="raLocCity" placeholder="City" class="form-input" style="flex:1"><input id="raLocSlug" placeholder="Slug" class="form-input" style="flex:1"><input id="raLocProv" placeholder="Province" class="form-input" style="flex:1"></div><button class="btn-send" onclick="raAddLookup(\'rental_locations\')" style="padding:10px 24px">Add Location</button></div>';
+  }
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Label</th><th>Slug</th>'+(tab==='locations'?'<th>Province</th>':'')+'<th>Active</th><th>Action</th></tr></thead><tbody>';
+  if (!items.length) html += '<tr><td colspan="5"><div class="loading-msg">Loading…</div></td></tr>';
+  items.forEach(function(item) {
+    html += '<tr>'
+      + '<td style="font-weight:600">'+esc(item.label||item.city||item.name||'—')+'</td>'
+      + '<td style="color:var(--sub);font-size:12px">'+esc(item.slug||'')+'</td>'
+      + (tab==='locations' ? '<td style="color:var(--sub);font-size:12px">'+esc(item.province||'')+'</td>' : '')
+      + '<td><span class="badge '+(item.is_active?'badge-active':'badge-rejected')+'">'+(item.is_active?'Active':'Disabled')+'</span></td>'
+      + '<td><button class="ab '+(item.is_active?'ab-reject':'ab-approve')+'" onclick="raToggleLookupActive(\''+esc(item.id)+'\',\''+tab==='categories'?'rental_categories':tab==='brands'?'rental_brands':'rental_locations'+'\','+(item.is_active?'false':'true')+')">'+(item.is_active?'Disable':'Enable')+'</button></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Data loaders ──────────────────────────────────────────
+async function raLoadSummary() {
+  if (!sb) return;
+  try {
+    var [pendingL, pendingC, openR, activeL, totalC, totalRev] = await Promise.all([
+      sb.from('rental_vehicle_listings').select('id',{count:'exact',head:true}).eq('admin_status','pending_review').is('deleted_at',null),
+      sb.from('rental_companies').select('id',{count:'exact',head:true}).eq('status','pending').is('deleted_at',null),
+      sb.from('rental_reports').select('id',{count:'exact',head:true}).eq('status','open'),
+      sb.from('rental_vehicle_listings').select('id',{count:'exact',head:true}).eq('status','active').eq('admin_status','approved').is('deleted_at',null),
+      sb.from('rental_companies').select('id',{count:'exact',head:true}).is('deleted_at',null),
+      sb.from('rental_reviews').select('id',{count:'exact',head:true}).eq('status','published'),
+    ]);
+    RA_DATA.summary = {
+      pending_listings:  pendingL.count||0, pending_companies: pendingC.count||0,
+      open_reports:      openR.count||0,    active_listings:   activeL.count||0,
+      total_companies:   totalC.count||0,   total_reviews:     totalRev.count||0,
+    };
+  } catch(e) { console.warn('ra summary:', e); }
+  updateBadges();
+  if (currentTab === 'rentalDashboard') renderRentalDashboard();
+}
+
+async function raLoadPendingListings() {
+  if (!sb) return;
+  _raLoadingApprovals = true;
+  try {
+    var {data, error} = await sb.from('rental_vehicle_listings')
+      .select('id,model,year,daily_rate,description,admin_status,status,created_at,brand_id,company_id,location_id')
+      .eq('admin_status','pending_review').is('deleted_at',null).order('created_at',{ascending:true}).limit(30);
+    if (error) throw error;
+    var rows = data||[];
+    var brandIds = [...new Set(rows.map(function(r){return r.brand_id;}).filter(Boolean))];
+    var coIds    = [...new Set(rows.map(function(r){return r.company_id;}).filter(Boolean))];
+    var locIds   = [...new Set(rows.map(function(r){return r.location_id;}).filter(Boolean))];
+    var listIds  = rows.map(function(r){return r.id;});
+    var [brands, companies, locs, covers] = await Promise.all([
+      sb.from('rental_brands').select('id,slug,label').in('id', brandIds.length?brandIds:['00000000-0000-0000-0000-000000000000']),
+      sb.from('rental_companies').select('id,business_id').in('id', coIds.length?coIds:['00000000-0000-0000-0000-000000000000']),
+      sb.from('rental_locations').select('id,city').in('id', locIds.length?locIds:['00000000-0000-0000-0000-000000000000']),
+      sb.from('rental_vehicle_media').select('listing_id,url').eq('is_cover',true).in('listing_id', listIds.length?listIds:['00000000-0000-0000-0000-000000000000']),
+    ]);
+    var bizIds = (companies.data||[]).map(function(c){return c.business_id;}).filter(Boolean);
+    var bizRes = bizIds.length ? await sb.from('businesses').select('id,name').in('id',bizIds) : {data:[]};
+    var brandMap = Object.fromEntries((brands.data||[]).map(function(b){return [b.id,b];}));
+    var coMap    = Object.fromEntries((companies.data||[]).map(function(c){return [c.id,c];}));
+    var locMap   = Object.fromEntries((locs.data||[]).map(function(l){return [l.id,l];}));
+    var coverMap = Object.fromEntries((covers.data||[]).map(function(m){return [m.listing_id,m.url];}));
+    var bizMap   = Object.fromEntries((bizRes.data||[]).map(function(b){return [b.id,b.name];}));
+    RA_DATA.pendingListings = rows.map(function(r){
+      return Object.assign({},r,{
+        brand_label:  brandMap[r.brand_id]&&brandMap[r.brand_id].label,
+        city:         locMap[r.location_id]&&locMap[r.location_id].city,
+        company_name: bizMap[coMap[r.company_id]&&coMap[r.company_id].business_id],
+        cover_url:    coverMap[r.id]||null,
+      });
+    });
+  } catch(e) { console.warn('ra pending:', e); }
+  _raLoadingApprovals = false;
+  if (currentTab === 'rentalApprovals') renderRentalApprovals();
+}
+
+async function raLoadCompanies() {
+  if (!sb) return;
+  try {
+    var {data, error} = await sb.from('rental_companies')
+      .select('id,status,avg_rating,review_count,fleet_count,created_at,business_id')
+      .is('deleted_at',null).order('created_at',{ascending:false}).limit(50);
+    if (error) throw error;
+    var bizIds = (data||[]).map(function(c){return c.business_id;}).filter(Boolean);
+    var bizRes = bizIds.length ? await sb.from('businesses').select('id,name').in('id',bizIds) : {data:[]};
+    var bizMap = Object.fromEntries((bizRes.data||[]).map(function(b){return [b.id,b.name];}));
+    RA_DATA.companies = (data||[]).map(function(c){return Object.assign({},c,{name:bizMap[c.business_id]||'—'});});
+  } catch(e) { console.warn('ra companies:', e); }
+  if (currentTab === 'rentalCompanies') renderRentalCompanies();
+}
+
+async function raLoadAllListings() {
+  if (!sb) return;
+  var offset = RA_DATA.allListings.length;
+  try {
+    var {data, error} = await sb.from('rental_vehicle_listings')
+      .select('id,model,year,daily_rate,admin_status,status,created_at,view_count,brand_id,company_id,location_id')
+      .is('deleted_at',null).order('created_at',{ascending:false}).range(offset, offset+29);
+    if (error) throw error;
+    var rows = data||[];
+    var brandIds = [...new Set(rows.map(function(r){return r.brand_id;}).filter(Boolean))];
+    var coIds    = [...new Set(rows.map(function(r){return r.company_id;}).filter(Boolean))];
+    var locIds   = [...new Set(rows.map(function(r){return r.location_id;}).filter(Boolean))];
+    var [brands, companies, locs] = await Promise.all([
+      sb.from('rental_brands').select('id,label').in('id', brandIds.length?brandIds:['00000000-0000-0000-0000-000000000000']),
+      sb.from('rental_companies').select('id,business_id').in('id', coIds.length?coIds:['00000000-0000-0000-0000-000000000000']),
+      sb.from('rental_locations').select('id,city').in('id', locIds.length?locIds:['00000000-0000-0000-0000-000000000000']),
+    ]);
+    var bizIds = (companies.data||[]).map(function(c){return c.business_id;}).filter(Boolean);
+    var bizRes = bizIds.length ? await sb.from('businesses').select('id,name').in('id',bizIds) : {data:[]};
+    var brandMap = Object.fromEntries((brands.data||[]).map(function(b){return [b.id,b.label];}));
+    var coMap    = Object.fromEntries((companies.data||[]).map(function(c){return [c.id,c.business_id];}));
+    var locMap   = Object.fromEntries((locs.data||[]).map(function(l){return [l.id,l.city];}));
+    var bizMap   = Object.fromEntries((bizRes.data||[]).map(function(b){return [b.id,b.name];}));
+    var mapped   = rows.map(function(r){return Object.assign({},r,{brand_label:brandMap[r.brand_id],city:locMap[r.location_id],company_name:bizMap[coMap[r.company_id]]});});
+    RA_DATA.allListings = offset===0 ? mapped : RA_DATA.allListings.concat(mapped);
+  } catch(e) { console.warn('ra all listings:', e); }
+  if (currentTab === 'rentalListings') renderRentalListings();
+}
+
+async function raLoadReports() {
+  if (!sb) return;
+  try {
+    var {data, error} = await sb.from('rental_reports')
+      .select('id,listing_id,reason,notes,status,created_at').order('created_at',{ascending:false}).limit(50);
+    if (error) throw error;
+    var lids = [...new Set((data||[]).map(function(r){return r.listing_id;}))];
+    var lstRes = lids.length ? await sb.from('rental_vehicle_listings').select('id,model,year,brand_id').in('id',lids) : {data:[]};
+    var brandIds = [...new Set((lstRes.data||[]).map(function(l){return l.brand_id;}).filter(Boolean))];
+    var bRes = brandIds.length ? await sb.from('rental_brands').select('id,label').in('id',brandIds) : {data:[]};
+    var bMap = Object.fromEntries((bRes.data||[]).map(function(b){return [b.id,b.label];}));
+    var lstMap = Object.fromEntries((lstRes.data||[]).map(function(l){return [l.id,(bMap[l.brand_id]||'')+' '+(l.model||'')];}));
+    RA_DATA.reports = (data||[]).map(function(r){return Object.assign({},r,{listing_title:lstMap[r.listing_id]});});
+  } catch(e) { console.warn('ra reports:', e); }
+  if (currentTab === 'rentalReports') renderRentalReports();
+}
+
+async function raLoadReviews() {
+  if (!sb) return;
+  try {
+    var {data, error} = await sb.from('rental_reviews')
+      .select('id,company_id,reviewer_id,rating,body,status,created_at').order('created_at',{ascending:false}).limit(50);
+    if (error) throw error;
+    var coIds = [...new Set((data||[]).map(function(r){return r.company_id;}))];
+    var uIds  = [...new Set((data||[]).map(function(r){return r.reviewer_id;}).filter(Boolean))];
+    var coRes = coIds.length ? await sb.from('rental_companies').select('id,business_id').in('id',coIds) : {data:[]};
+    var bizIds = (coRes.data||[]).map(function(c){return c.business_id;}).filter(Boolean);
+    var [bRes, pRes] = await Promise.all([
+      bizIds.length ? sb.from('businesses').select('id,name').in('id',bizIds) : Promise.resolve({data:[]}),
+      uIds.length ? sb.from('profiles').select('id,name').in('id',uIds) : Promise.resolve({data:[]}),
+    ]);
+    var coMap   = Object.fromEntries((coRes.data||[]).map(function(c){return [c.id,c.business_id];}));
+    var bizMap  = Object.fromEntries((bRes.data||[]).map(function(b){return [b.id,b.name];}));
+    var profMap = Object.fromEntries((pRes.data||[]).map(function(p){return [p.id,p.name||'User'];}));
+    RA_DATA.reviews = (data||[]).map(function(r){return Object.assign({},r,{company_name:bizMap[coMap[r.company_id]],reviewer_name:profMap[r.reviewer_id]});});
+  } catch(e) { console.warn('ra reviews:', e); }
+  if (currentTab === 'rentalReviews') renderRentalReviews();
+}
+
+async function raLoadFeatured() {
+  if (!sb) return;
+  try {
+    var {data, error} = await sb.from('rental_featured_listings')
+      .select('id,listing_id,company_id,starts_at,ends_at,priority,is_active').order('starts_at',{ascending:false}).limit(40);
+    if (error) throw error;
+    var lids = [...new Set((data||[]).map(function(f){return f.listing_id;}))];
+    var lstRes = lids.length ? await sb.from('rental_vehicle_listings').select('id,model,year').in('id',lids) : {data:[]};
+    var lstMap = Object.fromEntries((lstRes.data||[]).map(function(l){return [l.id,l.model+' '+(l.year||'')];}));
+    var coIds  = [...new Set((data||[]).map(function(f){return f.company_id;}).filter(Boolean))];
+    var coRes  = coIds.length ? await sb.from('rental_companies').select('id,business_id').in('id',coIds) : {data:[]};
+    var bizIds = (coRes.data||[]).map(function(c){return c.business_id;}).filter(Boolean);
+    var bRes   = bizIds.length ? await sb.from('businesses').select('id,name').in('id',bizIds) : {data:[]};
+    var coMap  = Object.fromEntries((coRes.data||[]).map(function(c){return [c.id,c.business_id];}));
+    var bizMap = Object.fromEntries((bRes.data||[]).map(function(b){return [b.id,b.name];}));
+    RA_DATA.featured = (data||[]).map(function(f){return Object.assign({},f,{listing_title:lstMap[f.listing_id],company_name:bizMap[coMap[f.company_id]]});});
+  } catch(e) { console.warn('ra featured:', e); }
+  if (currentTab === 'rentalFeatured') renderRentalFeatured();
+}
+
+async function raLoadAnalytics() {
+  if (!sb) return;
+  try {
+    var since7d = new Date(Date.now()-7*86400000).toISOString();
+    var [evtsRes, activeL, activeC, reviews, avgRate] = await Promise.all([
+      sb.from('rental_activity_logs').select('event_type').gte('created_at',since7d).limit(5000),
+      sb.from('rental_vehicle_listings').select('id',{count:'exact',head:true}).eq('status','active').eq('admin_status','approved').is('deleted_at',null),
+      sb.from('rental_companies').select('id',{count:'exact',head:true}).eq('status','active').is('deleted_at',null),
+      sb.from('rental_reviews').select('id',{count:'exact',head:true}).eq('status','published'),
+      sb.from('rental_vehicle_listings').select('daily_rate').eq('status','active').eq('admin_status','approved').is('deleted_at',null).limit(200),
+    ]);
+    var evts  = evtsRes.data||[];
+    var v7d   = evts.filter(function(e){return e.event_type==='view';}).length;
+    var inq7d = evts.filter(function(e){return ['chat_open','whatsapp_click','call_click'].includes(e.event_type);}).length;
+    var fav7d = evts.filter(function(e){return e.event_type==='save';}).length;
+    var rates = (avgRate.data||[]).map(function(r){return r.daily_rate;}).filter(Boolean);
+    var avgDR = rates.length ? Math.round(rates.reduce(function(a,b){return a+b;},0)/rates.length) : 0;
+    RA_DATA.analytics = {
+      total_views_7d:v7d, total_inquiries_7d:inq7d, total_favorites_7d:fav7d,
+      conversion_rate_7d: v7d ? Math.round((inq7d/v7d)*100) : 0,
+      active_listings: activeL.count||0, active_companies: activeC.count||0,
+      total_reviews: reviews.count||0, avg_daily_rate: avgDR,
+    };
+  } catch(e) { console.warn('ra analytics:', e); }
+  if (currentTab === 'rentalAnalytics') renderRentalAnalytics();
+}
+
+async function raLoadAuditLogs() {
+  if (!sb) return;
+  var offset = RA_DATA.auditLogs.length;
+  try {
+    var {data, error} = await sb.from('rental_audit_logs')
+      .select('id,actor_id,action,target_table,target_id,created_at').order('created_at',{ascending:false}).range(offset,offset+49);
+    if (error) throw error;
+    RA_DATA.auditLogs = offset===0 ? (data||[]) : RA_DATA.auditLogs.concat(data||[]);
+  } catch(e) { console.warn('ra audit:', e); }
+  if (currentTab === 'rentalAuditLogs') renderRentalAuditLogs();
+}
+
+async function raLoadLookups() {
+  if (!sb) return;
+  try {
+    var [cats, brands, locs] = await Promise.all([
+      sb.from('rental_categories').select('id,slug,label,is_active,sort_order').order('sort_order'),
+      sb.from('rental_brands').select('id,slug,label,is_active').order('label'),
+      sb.from('rental_locations').select('id,slug,city,province,is_active').order('city'),
+    ]);
+    RA_DATA.categories = cats.data||[];
+    RA_DATA.brands     = brands.data||[];
+    RA_DATA.locations  = locs.data||[];
+  } catch(e) { console.warn('ra lookups:', e); }
+  if (currentTab === 'rentalLookups') renderRentalLookups();
+}
+
+// ── Action handlers ───────────────────────────────────────
+async function raApproveListing(id) {
+  var ok = await confirm2('Approve Listing','Approve and publish this vehicle listing?','Approve','green');
+  if (!ok) return;
+  try {
+    var r = await sb.from('rental_vehicle_listings').update({admin_status:'approved',status:'active'}).eq('id',id);
+    if (r.error) throw r.error;
+    try { await sb.from('rental_audit_logs').insert({action:'approve_listing',target_table:'rental_vehicle_listings',target_id:id}); } catch(e){}
+    RA_DATA.pendingListings = RA_DATA.pendingListings.filter(function(l){return l.id!==id;});
+    RA_DATA.summary = null; RA_DATA.allListings = [];
+    toast('Listing approved and published');
+    updateBadges();
+    if (currentTab==='rentalApprovals') renderRentalApprovals();
+    if (currentTab==='rentalListings')  renderRentalListings();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function raModerateListing(id, newStatus) {
+  var reason = await confirm2(newStatus==='rejected'?'Reject Listing':'Remove Listing','Reason (optional):',newStatus==='rejected'?'Reject':'Remove','red',true,'e.g. Prohibited content');
+  if (reason===null) return;
+  try {
+    var update = newStatus==='rejected'
+      ? {admin_status:'rejected',status:'paused'}
+      : {admin_status:'rejected',status:'archived',deleted_at:new Date().toISOString()};
+    var r = await sb.from('rental_vehicle_listings').update(update).eq('id',id);
+    if (r.error) throw r.error;
+    try { await sb.from('rental_audit_logs').insert({action:newStatus+'_listing',target_table:'rental_vehicle_listings',target_id:id}); } catch(e){}
+    RA_DATA.pendingListings = RA_DATA.pendingListings.filter(function(l){return l.id!==id;});
+    RA_DATA.summary = null; RA_DATA.allListings = [];
+    toast('Listing '+newStatus,'info');
+    updateBadges();
+    if (currentTab==='rentalApprovals') renderRentalApprovals();
+    if (currentTab==='rentalListings')  renderRentalListings();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function raSetCompanyStatus(id, newStatus) {
+  var ok = await confirm2('Update Company','Set status to '+newStatus+'?',newStatus==='active'?'Activate':'Suspend/Reject',newStatus==='active'?'green':'red');
+  if (!ok) return;
+  try {
+    var r = await sb.from('rental_companies').update({status:newStatus}).eq('id',id);
+    if (r.error) throw r.error;
+    try { await sb.from('rental_audit_logs').insert({action:newStatus+'_company',target_table:'rental_companies',target_id:id}); } catch(e){}
+    var co = RA_DATA.companies.find(function(c){return c.id===id;}); if (co) co.status=newStatus;
+    toast('Company status: '+newStatus);
+    if (currentTab==='rentalCompanies') renderRentalCompanies();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function raSetReportStatus(id, newStatus) {
+  try {
+    var r = await sb.from('rental_reports').update({status:newStatus}).eq('id',id);
+    if (r.error) throw r.error;
+    var rp = RA_DATA.reports.find(function(r){return r.id===id;}); if (rp) rp.status=newStatus;
+    toast('Report: '+newStatus);
+    if (currentTab==='rentalReports') renderRentalReports();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function raSetReviewStatus(id, newStatus) {
+  try {
+    var r = await sb.from('rental_reviews').update({status:newStatus}).eq('id',id);
+    if (r.error) throw r.error;
+    var rv = RA_DATA.reviews.find(function(r){return r.id===id;}); if (rv) rv.status=newStatus;
+    toast('Review: '+newStatus);
+    if (currentTab==='rentalReviews') renderRentalReviews();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function raSetFeaturedActive(id, active) {
+  try {
+    var r = await sb.from('rental_featured_listings').update({is_active:active}).eq('id',id);
+    if (r.error) throw r.error;
+    var f = RA_DATA.featured.find(function(f){return f.id===id;}); if (f) f.is_active=active;
+    toast('Featured listing '+(active?'activated':'deactivated'));
+    if (currentTab==='rentalFeatured') renderRentalFeatured();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function raRemoveFeatured(id) {
+  var ok = await confirm2('Remove Featured','Remove this listing from featured?','Remove','red');
+  if (!ok) return;
+  try {
+    var r = await sb.from('rental_featured_listings').delete().eq('id',id);
+    if (r.error) throw r.error;
+    RA_DATA.featured = RA_DATA.featured.filter(function(f){return f.id!==id;});
+    toast('Removed from featured');
+    if (currentTab==='rentalFeatured') renderRentalFeatured();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function raAddFeatured() {
+  var listingId = (document.getElementById('raFeatId')||{}).value||'';
+  var starts    = (document.getElementById('raFeatStart')||{}).value||'';
+  var ends      = (document.getElementById('raFeatEnd')||{}).value||'';
+  var priority  = parseInt((document.getElementById('raFeatPriority')||{}).value)||10;
+  if (!listingId||!starts||!ends) { toast('Fill in all fields','error'); return; }
+  if (starts>=ends) { toast('Start must be before end','error'); return; }
+  try {
+    var lstRes = await sb.from('rental_vehicle_listings').select('company_id').eq('id',listingId.trim()).single();
+    if (lstRes.error) { toast('Listing not found','error'); return; }
+    var r = await sb.from('rental_featured_listings').insert({listing_id:listingId.trim(),company_id:lstRes.data.company_id,starts_at:starts,ends_at:ends,priority:priority,is_active:true});
+    if (r.error) throw r.error;
+    toast('Listing featured');
+    RA_DATA.featured = [];
+    raLoadFeatured();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function raToggleLookupActive(id, table, active) {
+  try {
+    var r = await sb.from(table).update({is_active:active}).eq('id',id);
+    if (r.error) throw r.error;
+    toast(active?'Enabled':'Disabled');
+    RA_DATA.categories=[]; RA_DATA.brands=[]; RA_DATA.locations=[];
+    raLoadLookups();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function raAddLookup(table) {
+  try {
+    var payload;
+    if (table==='rental_categories') {
+      var slug=(document.getElementById('raCatSlug')||{}).value||'';
+      var label=(document.getElementById('raCatLabel')||{}).value||'';
+      if (!slug||!label) { toast('Slug and label required','error'); return; }
+      payload={slug:slug.trim().toLowerCase(),label:label.trim(),sort_order:99,is_active:true};
+    } else if (table==='rental_brands') {
+      var slug=(document.getElementById('raBrandSlug')||{}).value||'';
+      var label=(document.getElementById('raBrandLabel')||{}).value||'';
+      if (!slug||!label) { toast('Slug and label required','error'); return; }
+      payload={slug:slug.trim().toLowerCase(),label:label.trim(),is_active:true};
+    } else {
+      var city=(document.getElementById('raLocCity')||{}).value||'';
+      var slug=(document.getElementById('raLocSlug')||{}).value||'';
+      var prov=(document.getElementById('raLocProv')||{}).value||'';
+      if (!city||!slug) { toast('City and slug required','error'); return; }
+      payload={city:city.trim(),slug:slug.trim().toLowerCase(),province:prov.trim()||null,is_active:true};
+    }
+    var r = await sb.from(table).insert(payload);
+    if (r.error) throw r.error;
+    toast('Added successfully');
+    RA_DATA.categories=[]; RA_DATA.brands=[]; RA_DATA.locations=[];
+    raLoadLookups();
+  } catch(e) {
+    if (e.code==='23505') toast('Duplicate slug — already exists','error');
+    else toast('Error: '+e.message,'error');
+  }
 }
 
 // ── Session init ──────────────────────────────────────────
