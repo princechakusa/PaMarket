@@ -297,15 +297,47 @@
   };
 
   // ─────────────────────────────────────────────────────────────────────────
+  // ── "List your fleet" CTA banner ─────────────────────────────────────────
+  function _listYourFleetBanner() {
+    return `<div onclick="H._rental.openBusinessPortal()" style="margin:16px 16px 0;background:linear-gradient(135deg,#1A3A8F 0%,#2D5BE3 100%);border-radius:16px;padding:16px;cursor:pointer;display:flex;align-items:center;gap:14px">
+      <div style="width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2M7 17h10"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="M5 9l2-4h10l2 4"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:800;color:#fff">Own a rental fleet?</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px">Register your company and list your vehicles free</div>
+      </div>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`;
+  }
+
+  // ── Empty state for rentals (no listings yet) ─────────────────────────────
+  function _rentalEmptyState(hasFilters) {
+    if (hasFilters) {
+      return `<div style="padding:40px 24px;text-align:center">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#CBD5E1" stroke-width="1.5" style="margin-bottom:16px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px">No vehicles match your filters</div>
+        <div style="font-size:14px;color:var(--sub);margin-bottom:20px">Try removing some filters to see more results.</div>
+        <button onclick="H._rental.clearFilters()" style="padding:12px 28px;border-radius:12px;border:none;background:#1A3A8F;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Clear Filters</button>
+      </div>`;
+    }
+    return `<div style="padding:32px 24px 0;text-align:center">
+      <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="#CBD5E1" stroke-width="1.3" style="margin-bottom:16px"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2M7 17h10"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="M5 9l2-4h10l2 4"/></svg>
+      <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">No rental listings yet</div>
+      <div style="font-size:14px;color:var(--sub);line-height:1.6">Be the first rental company on PaMarket Zimbabwe. Register your fleet and reach thousands of customers.</div>
+    </div>`;
+  }
+
   // PAGE: RentalListings
   // ─────────────────────────────────────────────────────────────────────────
   H.pages.RentalListings = function () {
     const allCards = [...R.featured, ...R.browse];
     const activeCount = _activeFilterCount();
+    const hasFilters = activeCount > 0;
 
     const gridHtml = allCards.length
       ? `<div style="display:flex;flex-direction:column;gap:12px;padding:16px">${allCards.map(_browseCard).join('')}</div>`
-      : (!R._loading ? H.emptyState('No vehicles found', 'Try adjusting your filters or search.', 'Clear Filters', "H._rental.clearFilters()") : '');
+      : (!R._loading ? _rentalEmptyState(hasFilters) : '');
 
     const skels = R._loading && !allCards.length
       ? `<div style="display:flex;flex-direction:column;gap:12px;padding:16px">${_skelCards(4)}</div>`
@@ -334,6 +366,8 @@
       ${gridHtml}
       ${R._loading && allCards.length ? `<div style="display:flex;flex-direction:column;gap:12px;padding:0 16px 16px">${_skelCards(2)}</div>` : ''}
       ${!R._loading && R.hasMore && allCards.length ? `<div style="padding:16px;text-align:center"><button onclick="H._rental.loadMore()" class="btn-sec" style="min-width:160px">Load more</button></div>` : ''}
+      ${!R._loading ? _listYourFleetBanner() : ''}
+      <div style="height:24px"></div>
       <div style="height:90px"></div>
     </div>`;
   };
@@ -884,6 +918,22 @@
       R.filters[key] = val || null;
     }
     R.loadBrowse(true);
+  };
+
+  R.openBusinessPortal = function () {
+    const u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in to list your rental vehicles'); return; }
+    const biz = (H.state && H.state.businesses || []).find(b => b.ownerUserId === u.id);
+    if (!biz) {
+      H.modal({
+        title: 'Business Account Required',
+        body: '<div style="font-size:14px;color:var(--text);line-height:1.65">To list rental vehicles you need to register a business on PaMarket first. It only takes a minute.</div>',
+        confirmText: 'Register Business',
+        onConfirm: () => H.openInner('BusinessOnboarding'),
+      });
+      return;
+    }
+    H.openInner('RentalDashboard');
   };
 
   R.clearFilters = function () {
