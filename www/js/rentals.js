@@ -18,8 +18,20 @@
   R.favIds      = R.favIds      || new Set();
   R.detailCache = R.detailCache || {};
   R.compCache   = R.compCache   || {};
-  R.filters     = R.filters     || { cat: null, city: null, trans: null, fuel: null, avail: false };
+  R.filters     = R.filters     || { cat: null, city: null, trans: null, fuel: null, avail: false, brand: null, pmin: null, pmax: null };
   R.sortBy      = R.sortBy      || 'featured';
+
+  // ── Recent searches / locations (device-local) ───────────────────────────
+  function _lsGet(key) { try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; } }
+  function _lsPush(key, val, max) {
+    if (!val) return;
+    const list = _lsGet(key).filter(x => x.toLowerCase() !== val.toLowerCase());
+    list.unshift(val);
+    try { localStorage.setItem(key, JSON.stringify(list.slice(0, max || 6))); } catch (e) {}
+  }
+  const RECENT_SEARCH_KEY = 'pmRentalRecentSearches';
+  const RECENT_CITY_KEY   = 'pmRentalRecentCities';
+  const POPULAR_SEARCHES  = ['Toyota Hilux', 'SUV', 'Fortuner', 'Mercedes', 'Automatic', 'Minibus'];
   R.page        = 0;
   R.hasMore     = true;
   R._loading    = false;
@@ -80,10 +92,32 @@
 
   function _activeFilterCount() {
     const f = R.filters;
-    return [f.cat, f.city, f.trans, f.fuel, f.avail].filter(Boolean).length;
+    return [f.cat, f.city, f.trans, f.fuel, f.avail, f.brand, (f.pmin != null || f.pmax != null)].filter(Boolean).length;
   }
 
-  // ── Browse listing card — full-width Dubizzle-inspired layout ─────────────
+  // Cities and brands for the filter sheet, loaded once from the DB so the
+  // options always match what listings can actually contain.
+  R._cityList  = R._cityList  || null;
+  R._brandList = R._brandList || null;
+  R._loadFilterLookups = async function () {
+    if (R._cityList || R._lookupsLoading) return;
+    const sb = window.supabase; if (!sb) return;
+    R._lookupsLoading = true;
+    try {
+      const [locs, brands] = await Promise.all([
+        sb.from('rental_locations').select('city').order('sort_order'),
+        sb.from('rental_brands').select('slug,label').order('label'),
+      ]);
+      R._cityList  = (locs.data   || []).map(r => r.city);
+      R._brandList = (brands.data || []).map(r => [r.slug, r.label]);
+    } catch (e) { console.warn('rental filter lookups:', e); }
+    R._lookupsLoading = false;
+  };
+
+  // ── Browse listing card ────────────────────────────────────────────────────
+  // Built strictly from fields rental_search_listings returns: cover_url,
+  // is_featured, is_available, brand_slug, model, year, category_slug, city,
+  // company_name, daily_rate, view_count. No dead UI for fields that never load.
   function _browseCard(v) {
     const lid    = esc(v.id);
     const saved  = R.favIds.has(v.id);
@@ -92,51 +126,37 @@
       ? `<img src="${esc(v.cover_url)}" alt="${name}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`
       : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94A3B8;background:#EEF2FB">${I.car}</div>`;
 
-    const specStrip = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 8px">
-      ${v.year ? `<span style="display:flex;align-items:center;gap:3px;font-size:12px;color:var(--sub)">${I.calendar}${esc(String(v.year))}</span>` : ''}
-      ${v.seats ? `<span style="display:flex;align-items:center;gap:3px;font-size:12px;color:var(--sub)">${I.seats}${esc(String(v.seats))} seats</span>` : ''}
-      ${v.transmission ? `<span style="display:flex;align-items:center;gap:3px;font-size:12px;color:var(--sub)">${I.gear}${esc(v.transmission)}</span>` : ''}
-    </div>`;
+    const availPill = v.is_available
+      ? `<div style="position:absolute;bottom:10px;left:10px;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.94);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;color:#16A34A;box-shadow:0 1px 4px rgba(0,0,0,.12)"><span style="width:7px;height:7px;border-radius:50%;background:#16A34A"></span>Available</div>`
+      : `<div style="position:absolute;bottom:10px;left:10px;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.94);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;color:#DC2626;box-shadow:0 1px 4px rgba(0,0,0,.12)"><span style="width:7px;height:7px;border-radius:50%;background:#DC2626"></span>Booked</div>`;
 
-    const dailyBox  = v.daily_rate  ? `<div style="flex:1;padding:8px 10px;background:#F8FAFF;border-radius:8px"><div style="font-size:9px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.4px">Daily Rate</div><div style="font-size:16px;font-weight:800;color:#1A3A8F;margin-top:2px">$${fmt(v.daily_rate)}</div></div>` : '';
-    const weekBox   = v.weekly_rate ? `<div style="flex:1;padding:8px 10px;background:#F8FAFF;border-radius:8px"><div style="font-size:9px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.4px">Weekly Rate</div><div style="font-size:16px;font-weight:800;color:#1A3A8F;margin-top:2px">$${fmt(v.weekly_rate)}</div></div>` : '';
-    const priceRow  = (dailyBox || weekBox) ? `<div style="display:flex;gap:8px;margin-bottom:10px">${dailyBox}${weekBox}</div>` : '';
+    const metaChip = (icon, label) => label
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--sub);background:var(--bg,#F0F4FF);border-radius:8px;padding:4px 8px">${icon}${esc(String(label))}</span>`
+      : '';
 
-    const availDot = v.is_available
-      ? '<span style="width:7px;height:7px;border-radius:50%;background:#16A34A;display:inline-block;flex-shrink:0"></span><span style="font-size:11px;color:#16A34A;font-weight:600">Available</span>'
-      : '<span style="width:7px;height:7px;border-radius:50%;background:#DC2626;display:inline-block;flex-shrink:0"></span><span style="font-size:11px;color:#DC2626;font-weight:600">Unavailable</span>';
-
-    const compPhone = v.company_phone;
-    const compWA    = v.company_whatsapp;
-
-    const cardCtaBar = `<div style="display:flex;align-items:center;gap:8px;padding-top:10px;border-top:1px solid var(--border,#E8ECF4)">
-      <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">
-        <div style="width:28px;height:28px;border-radius:8px;background:#EEF2FB;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#1A3A8F;font-size:10px;font-weight:700;overflow:hidden">
-          ${v.company_logo ? `<img src="${esc(v.company_logo)}" style="width:100%;height:100%;object-fit:cover">` : I.bldg}
-        </div>
-        <span style="font-size:12px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.company_name || '')}</span>
-      </div>
-      ${compPhone ? `<button onclick="event.stopPropagation();H._rental._callDirect('${esc(compPhone)}')" style="display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">${I.phoneSm}Call</button>` : ''}
-      ${compWA    ? `<button onclick="event.stopPropagation();H._rental._waDirect('${esc(compWA)}','${esc(v.company_name||'')}')" style="display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:8px;border:none;background:#25D366;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">${I.waSm}WhatsApp</button>` : ''}
-    </div>`;
-
-    return `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:16px;overflow:hidden;cursor:pointer" onclick="H._rental.openDetail('${lid}')">
+    return `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 1px 3px rgba(16,24,40,.05)" onclick="H._rental.openDetail('${lid}')">
       <div style="position:relative;width:100%;padding-top:56%;background:#EEF2FB;overflow:hidden">
         ${img}
-        ${v.is_featured ? '<div style="position:absolute;top:10px;left:10px;background:#F5A623;color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:3px 8px;letter-spacing:.3px">FEATURED</div>' : ''}
-        <button onclick="event.stopPropagation();H._rental.toggleFav('${lid}')" aria-label="${saved ? 'Remove from saved' : 'Save'}" style="position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.92);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.12)">${saved ? I.heartF : I.heart}</button>
-        ${v.photo_count > 1 ? `<div style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:600;border-radius:6px;padding:2px 7px;display:flex;align-items:center;gap:4px">${I.photo}${esc(String(v.photo_count))}</div>` : ''}
+        ${v.is_featured ? '<div style="position:absolute;top:10px;left:10px;background:#F5A623;color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:3px 8px;letter-spacing:.4px">FEATURED</div>' : ''}
+        <button onclick="event.stopPropagation();H._rental.toggleFav('${lid}')" aria-label="${saved ? 'Remove from saved' : 'Save vehicle'}" style="position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.94);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.12)">${saved ? I.heartF : I.heart}</button>
+        ${availPill}
       </div>
-      <div style="padding:12px">
-        <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:0">${name}</div>
-        ${specStrip}
-        ${priceRow}
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-          ${availDot}
-          <span style="color:#CBD5E1;font-size:11px">·</span>
-          <span style="display:flex;align-items:center;gap:3px;font-size:12px;color:var(--sub)">${I.loc}${esc(v.city || '')}</span>
+      <div style="padding:12px 14px 14px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+          <div style="font-size:15.5px;font-weight:800;color:var(--text);line-height:1.3;min-width:0">${name}</div>
+          ${v.daily_rate ? `<div style="text-align:right;flex-shrink:0"><span style="font-size:17px;font-weight:800;color:#1A3A8F">$${fmt(v.daily_rate)}</span><span style="font-size:11px;color:var(--sub);font-weight:600">/day</span></div>` : ''}
         </div>
-        ${cardCtaBar}
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px">
+          ${metaChip(I.calendar, v.year)}
+          ${metaChip(I.carSm, catLabel(v.category_slug))}
+          ${metaChip(I.loc, v.city)}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border,#E8ECF4)">
+          <div style="width:24px;height:24px;border-radius:7px;background:#EEF2FB;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#1A3A8F">${I.bldg}</div>
+          <span style="flex:1;font-size:12px;color:var(--sub);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.company_name || '')}</span>
+          ${v.view_count ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--sub)">${I.eye}${fmt(v.view_count)}</span>` : ''}
+          <span style="font-size:12px;font-weight:700;color:#1A3A8F;display:inline-flex;align-items:center">View${I.chevR.replace('#94A3B8','#1A3A8F')}</span>
+        </div>
       </div>
     </div>`;
   }
@@ -154,100 +174,265 @@
     return Array(n || 4).fill(c).join('');
   }
 
-  // ── Compact filter bar — category chips + Filters button ──────────────────
+  // ── Quick filter bar — one-tap filters + Filters/Sort buttons ─────────────
   function _filterBar() {
-    const f    = R.filters;
-    const cats = [['All',''],['SUV','suv'],['Sedan','sedan'],['Pickup','pickup'],['Minibus','minibus'],['Luxury','luxury'],['Bus','bus'],['Motorbike','motorbike']];
+    const f = R.filters;
     const activeCount = _activeFilterCount();
 
-    const catChips = cats.map(([l, v]) => {
-      const active = f.cat === (v || null);
-      return `<button onclick="H._rental.setCat('${v}')" style="flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid ${active ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${active ? '#1A3A8F' : 'var(--card,#fff)'};color:${active ? '#fff' : 'var(--text)'};font-size:13px;font-weight:${active ? '700' : '500'};cursor:pointer;white-space:nowrap;font-family:inherit">${l}</button>`;
-    }).join('');
+    const pill = (label, active, onclick) =>
+      `<button onclick="${onclick}" style="flex-shrink:0;min-height:36px;padding:7px 14px;border-radius:20px;border:1.5px solid ${active ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${active ? '#1A3A8F' : 'var(--card,#fff)'};color:${active ? '#fff' : 'var(--text)'};font-size:13px;font-weight:${active ? '700' : '500'};cursor:pointer;white-space:nowrap;font-family:inherit">${label}</button>`;
 
-    const filterBtn = `<button onclick="H._rental.openFilters()" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;border:1.5px solid ${activeCount > 0 ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${activeCount > 0 ? '#EEF2FB' : 'var(--card,#fff)'};color:${activeCount > 0 ? '#1A3A8F' : 'var(--text)'};font-size:13px;font-weight:${activeCount > 0 ? '700' : '500'};cursor:pointer;font-family:inherit">${I.filter}Filters${activeCount > 0 ? ` <span style="background:#1A3A8F;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center">${activeCount}</span>` : ''}</button>`;
+    // One-tap quick filters: vehicle types + the most common needs.
+    const quick = [
+      pill('SUV',        f.cat === 'suv',      "H._rental.quickFilter('cat','suv')"),
+      pill('Sedan',      f.cat === 'sedan',    "H._rental.quickFilter('cat','sedan')"),
+      pill('Pickup',     f.cat === 'pickup',   "H._rental.quickFilter('cat','pickup')"),
+      pill('Minibus',    f.cat === 'minibus',  "H._rental.quickFilter('cat','minibus')"),
+      pill('Luxury',     f.cat === 'luxury',   "H._rental.quickFilter('cat','luxury')"),
+      pill('Automatic',  f.trans === 'Automatic', "H._rental.quickFilter('trans','Automatic')"),
+      pill('Available Today', !!f.avail,       "H._rental.quickFilter('avail','')"),
+      pill('Under $50/day', f.pmax === 50,     "H._rental.quickFilter('pmax','50')"),
+    ].join('');
 
-    const sortLabels = { featured:'Featured', price_asc:'Price ↑', price_desc:'Price ↓' };
-    const sortBtn = `<button onclick="H._rental.openSort()" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit">${I.sort}${sortLabels[R.sortBy] || 'Sort'}</button>`;
+    const filterBtn = `<button onclick="H._rental.openFilters()" aria-label="All filters" style="flex-shrink:0;display:flex;align-items:center;gap:5px;min-height:36px;padding:7px 14px;border-radius:20px;border:1.5px solid ${activeCount > 0 ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${activeCount > 0 ? '#EEF2FB' : 'var(--card,#fff)'};color:${activeCount > 0 ? '#1A3A8F' : 'var(--text)'};font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">${I.filter}Filters${activeCount > 0 ? ` <span style="background:#1A3A8F;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center">${activeCount}</span>` : ''}</button>`;
+
+    const sortLabels = { featured:'Recommended', price_asc:'Price: Low', price_desc:'Price: High', most_viewed:'Most Viewed', newest:'Newest' };
+    const sortBtn = `<button onclick="H._rental.openSort()" aria-label="Sort" style="flex-shrink:0;display:flex;align-items:center;gap:5px;min-height:36px;padding:7px 14px;border-radius:20px;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">${I.sort}${sortLabels[R.sortBy] || 'Sort'}</button>`;
 
     return `<div style="background:var(--card,#fff);border-bottom:1px solid var(--border,#E8ECF4)">
       <div style="display:flex;gap:8px;overflow-x:auto;padding:10px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;align-items:center">
-        ${catChips}
-        <div style="width:1px;height:24px;background:var(--border,#E8ECF4);flex-shrink:0"></div>
         ${filterBtn}
         ${sortBtn}
+        <div style="width:1px;height:24px;background:var(--border,#E8ECF4);flex-shrink:0"></div>
+        ${quick}
       </div>
     </div>`;
   }
 
-  // ── Filter sheet ──────────────────────────────────────────────────────────
-  R.openFilters = function () {
-    R._draft = Object.assign({}, R.filters);
-    _renderFilterOverlay();
+  // One-tap toggle from the quick filter row — applies immediately.
+  R.quickFilter = function (key, val) {
+    const f = R.filters;
+    if (key === 'avail')      f.avail = !f.avail;
+    else if (key === 'pmax')  f.pmax  = f.pmax === Number(val) ? null : Number(val);
+    else                      f[key]  = f[key] === val ? null : val;
+    R.loadBrowse(true);
   };
 
+  // ── Active filter chips (removable) shown above results ───────────────────
+  function _activeChips() {
+    const f = R.filters;
+    const chips = [];
+    const chip = (label, onRemove) =>
+      `<button onclick="${onRemove}" aria-label="Remove filter ${esc(label)}" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:5px 8px 5px 12px;border-radius:16px;border:none;background:#1A3A8F;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">${esc(label)}<span style="width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.25);display:inline-flex;align-items:center;justify-content:center;font-size:11px;line-height:1">&#215;</span></button>`;
+
+    if (R._searchQuery) chips.push(chip('"' + R._searchQuery + '"', "H._rental.removeFilter('q')"));
+    if (f.city)  chips.push(chip(f.city,                "H._rental.removeFilter('city')"));
+    if (f.cat)   chips.push(chip(catLabel(f.cat),       "H._rental.removeFilter('cat')"));
+    if (f.brand) chips.push(chip(brandLabel(f.brand),   "H._rental.removeFilter('brand')"));
+    if (f.trans) chips.push(chip(f.trans,               "H._rental.removeFilter('trans')"));
+    if (f.fuel)  chips.push(chip(f.fuel,                "H._rental.removeFilter('fuel')"));
+    if (f.avail) chips.push(chip('Available Today',     "H._rental.removeFilter('avail')"));
+    if (f.pmin != null || f.pmax != null) {
+      const label = (f.pmin != null && f.pmax != null) ? `$${f.pmin}-$${f.pmax}`
+                  : (f.pmax != null) ? `Under $${f.pmax}` : `Over $${f.pmin}`;
+      chips.push(chip(label, "H._rental.removeFilter('price')"));
+    }
+    if (!chips.length) return '';
+    return `<div style="display:flex;gap:6px;overflow-x:auto;padding:10px 16px 0;scrollbar-width:none;-webkit-overflow-scrolling:touch;align-items:center">
+      ${chips.join('')}
+      <button onclick="H._rental.clearFilters()" style="flex-shrink:0;min-height:32px;padding:5px 10px;border-radius:16px;border:none;background:none;color:#1A3A8F;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;text-decoration:underline">Clear all</button>
+    </div>`;
+  }
+
+  R.removeFilter = function (key) {
+    if (key === 'q') { R._searchQuery = ''; }
+    else if (key === 'avail') R.filters.avail = false;
+    else if (key === 'price') { R.filters.pmin = null; R.filters.pmax = null; }
+    else R.filters[key] = null;
+    R.loadBrowse(true);
+  };
+
+  // ── Advanced filter sheet ──────────────────────────────────────────────────
+  // Sectioned bottom sheet: Location (search + popular + recent), Daily Price
+  // (inputs + slider with live preview), Vehicle Type (icon cards), Brand,
+  // Transmission / Fuel (segmented), Availability. Sticky footer with Reset
+  // beside a live-count Apply button.
+  R.openFilters = function () {
+    R._draft = Object.assign({}, R.filters);
+    R._citySearch = '';
+    R._loadFilterLookups();
+    _renderFilterOverlay();
+    R._updateDraftCount();
+  };
+
+  const PRICE_MAX_CAP = 500;
+
   function _renderFilterOverlay() {
+    const prev = document.getElementById('rentalFilterBody');
+    const prevScroll = prev ? prev.scrollTop : 0;
     document.getElementById('rentalFilterSheet')?.remove();
     const f = R._draft || R.filters;
-    const cities = ['Harare','Bulawayo','Mutare','Gweru','Masvingo','Victoria Falls','Chinhoyi','Bindura','Marondera','Kadoma'];
-    const trans  = ['Manual','Automatic','CVT'];
-    const fuels  = ['Petrol','Diesel','Hybrid','Electric'];
 
-    function chip(label, active, onclick) {
-      return `<button onclick="${onclick}" style="padding:7px 14px;border-radius:20px;border:1.5px solid ${active ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${active ? '#1A3A8F' : 'var(--card,#fff)'};color:${active ? '#fff' : 'var(--text)'};font-size:13px;font-weight:${active ? '700' : '500'};cursor:pointer;font-family:inherit;white-space:nowrap">${label}</button>`;
-    }
+    const chip = (label, active, onclick) =>
+      `<button onclick="${onclick}" style="min-height:36px;padding:7px 14px;border-radius:20px;border:1.5px solid ${active ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${active ? '#1A3A8F' : 'var(--card,#fff)'};color:${active ? '#fff' : 'var(--text)'};font-size:13px;font-weight:${active ? '700' : '500'};cursor:pointer;font-family:inherit;white-space:nowrap">${label}</button>`;
 
-    const cityChips  = cities.map(c  => chip(c,  f.city  === c,  `H._rental._draftToggle('city','${c}')`)).join('');
-    const transChips = trans.map(t   => chip(t,  f.trans === t,  `H._rental._draftToggle('trans','${t}')`)).join('');
-    const fuelChips  = fuels.map(fl  => chip(fl, f.fuel  === fl, `H._rental._draftToggle('fuel','${fl}')`)).join('');
-    const availChip  = chip('Available Now', !!f.avail, "H._rental._draftToggle('avail','')");
-
-    const section = (title, content) => `<div style="padding:16px;border-bottom:1px solid var(--border,#E8ECF4)">
-      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">${title}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">${content}</div>
+    const section = (title, content) => `<div style="padding:16px;border-bottom:1px solid var(--border,#E8ECF4);background:var(--card,#fff)">
+      <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">${title}</div>
+      ${content}
     </div>`;
+
+    // ── Location: search + recent + popular ─────────────────────────────────
+    const allCities  = R._cityList || ['Harare','Bulawayo','Mutare','Gweru','Masvingo','Victoria Falls','Chinhoyi','Kwekwe'];
+    const q          = (R._citySearch || '').toLowerCase();
+    const shownCities = q ? allCities.filter(c => c.toLowerCase().includes(q)) : allCities;
+    const recentCities = _lsGet(RECENT_CITY_KEY).filter(c => allCities.includes(c));
+    const locationHtml = `
+      <div style="display:flex;align-items:center;gap:8px;border:1.5px solid var(--border,#E8ECF4);border-radius:12px;padding:0 12px;margin-bottom:12px;background:var(--card,#fff)">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#94A3B8" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="rfCitySearch" placeholder="Search city" value="${esc(R._citySearch || '')}" autocomplete="off" oninput="H._rental._citySearchInput(this.value)" style="flex:1;border:none;outline:none;padding:11px 0;font-size:14px;background:transparent;color:var(--text);font-family:inherit">
+      </div>
+      ${recentCities.length && !q ? `<div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Recent</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">${recentCities.map(c => chip(c, f.city === c, `H._rental._draftToggle('city','${esc(c)}')`)).join('')}</div>` : ''}
+      <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${q ? 'Matches' : 'Popular Cities'}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${shownCities.length ? shownCities.map(c => chip(c, f.city === c, `H._rental._draftToggle('city','${esc(c)}')`)).join('') : '<span style="font-size:13px;color:var(--sub)">No matching city</span>'}</div>`;
+
+    // ── Daily price: min/max inputs + max slider with live preview ──────────
+    const pmin = f.pmin != null ? f.pmin : '';
+    const pmax = f.pmax != null ? f.pmax : '';
+    const sliderVal = f.pmax != null ? f.pmax : PRICE_MAX_CAP;
+    const priceHtml = `
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <div style="flex:1"><div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:5px">MIN ($/day)</div>
+          <input id="rfPmin" type="number" min="0" inputmode="numeric" placeholder="0" value="${pmin}" onchange="H._rental._draftPrice()" style="width:100%;border:1.5px solid var(--border,#E8ECF4);border-radius:12px;padding:11px 12px;font-size:14px;color:var(--text);background:var(--card,#fff);box-sizing:border-box;font-family:inherit"></div>
+        <div style="flex:1"><div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:5px">MAX ($/day)</div>
+          <input id="rfPmax" type="number" min="0" inputmode="numeric" placeholder="Any" value="${pmax}" onchange="H._rental._draftPrice()" style="width:100%;border:1.5px solid var(--border,#E8ECF4);border-radius:12px;padding:11px 12px;font-size:14px;color:var(--text);background:var(--card,#fff);box-sizing:border-box;font-family:inherit"></div>
+      </div>
+      <input id="rfPriceSlider" type="range" min="10" max="${PRICE_MAX_CAP}" step="10" value="${sliderVal}" oninput="document.getElementById('rfPriceLive').textContent = this.value >= ${PRICE_MAX_CAP} ? 'Any price' : 'Up to $' + this.value + '/day'" onchange="H._rental._draftSlider(this.value)" style="width:100%;accent-color:#1A3A8F">
+      <div id="rfPriceLive" style="text-align:center;font-size:13px;font-weight:700;color:#1A3A8F;margin-top:6px">${f.pmax != null ? 'Up to $' + f.pmax + '/day' : 'Any price'}</div>`;
+
+    // ── Vehicle type: selectable icon cards ──────────────────────────────────
+    const types = [['suv','SUV'],['sedan','Sedan'],['pickup','Pickup'],['minibus','Minibus'],['luxury','Luxury'],['bus','Bus'],['motorbike','Motorbike'],['other','Other']];
+    const typeHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">` + types.map(([v, l]) => {
+      const active = f.cat === v;
+      return `<button onclick="H._rental._draftToggle('cat','${v}')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:14px;border:1.5px solid ${active ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${active ? '#EEF2FB' : 'var(--card,#fff)'};color:${active ? '#1A3A8F' : 'var(--text)'};cursor:pointer;font-family:inherit">
+        <span style="color:${active ? '#1A3A8F' : '#94A3B8'}">${I.car}</span>
+        <span style="font-size:11.5px;font-weight:${active ? '800' : '600'}">${l}</span>
+      </button>`;
+    }).join('') + `</div>`;
+
+    // ── Brand ────────────────────────────────────────────────────────────────
+    const brands = R._brandList || Object.entries(BRAND_LABELS).map(([s, l]) => [s, l]);
+    const brandHtml = `<div style="display:flex;flex-wrap:wrap;gap:8px">${brands.map(([slug, label]) => chip(esc(label), f.brand === slug, `H._rental._draftToggle('brand','${esc(slug)}')`)).join('')}</div>`;
+
+    // ── Segmented controls ──────────────────────────────────────────────────
+    const seg = (opts, key, cur) => `<div style="display:flex;border:1.5px solid var(--border,#E8ECF4);border-radius:12px;overflow:hidden">${opts.map((o, i) => {
+      const active = cur === o;
+      return `<button onclick="H._rental._draftToggle('${key}','${o}')" style="flex:1;min-height:42px;padding:10px 4px;border:none;${i > 0 ? 'border-left:1.5px solid var(--border,#E8ECF4);' : ''}background:${active ? '#1A3A8F' : 'var(--card,#fff)'};color:${active ? '#fff' : 'var(--text)'};font-size:13px;font-weight:${active ? '800' : '600'};cursor:pointer;font-family:inherit">${o}</button>`;
+    }).join('')}</div>`;
+
+    const availHtml = chip('Available Today', !!f.avail, "H._rental._draftToggle('avail','')");
 
     const html = `<div id="rentalFilterSheet" style="position:fixed;inset:0;z-index:200;display:flex;flex-direction:column">
       <div onclick="H._rental.closeFilters()" style="flex:1;background:rgba(0,0,0,.45)"></div>
-      <div style="background:var(--bg,#F0F4FF);border-radius:20px 20px 0 0;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--card,#fff);border-bottom:1px solid var(--border,#E8ECF4);border-radius:20px 20px 0 0">
-          <button onclick="H._rental.closeFilters()" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);cursor:pointer;display:flex;align-items:center;justify-content:center">${I.close}</button>
+      <div style="background:var(--bg,#F0F4FF);border-radius:20px 20px 0 0;max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--card,#fff);border-bottom:1px solid var(--border,#E8ECF4);border-radius:20px 20px 0 0;flex-shrink:0">
+          <button onclick="H._rental.closeFilters()" aria-label="Close filters" style="width:38px;height:38px;border-radius:50%;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center">${I.close}</button>
           <span style="font-size:16px;font-weight:800;color:var(--text)">Filters</span>
-          <button onclick="H._rental._resetDraft()" style="background:none;border:none;font-size:14px;font-weight:700;color:#1A3A8F;cursor:pointer;font-family:inherit">Reset</button>
+          <span style="width:38px"></span>
         </div>
-        <div style="overflow-y:auto;flex:1">
-          ${section('City', cityChips)}
-          ${section('Transmission', transChips)}
-          ${section('Fuel Type', fuelChips)}
-          ${section('Availability', availChip)}
+        <div id="rentalFilterBody" style="overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch">
+          ${section('Location', locationHtml)}
+          ${section('Daily Price', priceHtml)}
+          ${section('Vehicle Type', typeHtml)}
+          ${section('Brand', brandHtml)}
+          ${section('Transmission', seg(['Automatic','Manual','CVT'], 'trans', f.trans))}
+          ${section('Fuel Type', seg(['Petrol','Diesel','Hybrid','Electric'], 'fuel', f.fuel))}
+          ${section('Availability', `<div style="display:flex;gap:8px">${availHtml}</div>`)}
+          <div style="height:8px"></div>
         </div>
-        <div style="padding:16px;background:var(--card,#fff);border-top:1px solid var(--border,#E8ECF4);padding-bottom:calc(16px + var(--safe-bottom,0px))">
-          <button onclick="H._rental.applyFilters()" style="width:100%;padding:15px;border-radius:14px;border:none;background:#1A3A8F;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Show Results</button>
+        <div style="display:flex;gap:10px;align-items:center;padding:14px 16px;background:var(--card,#fff);border-top:1px solid var(--border,#E8ECF4);padding-bottom:calc(14px + var(--safe-bottom,0px));flex-shrink:0">
+          <button onclick="H._rental._resetDraft()" style="flex-shrink:0;padding:14px 18px;border-radius:14px;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Reset</button>
+          <button id="rfApplyBtn" onclick="H._rental.applyFilters()" style="flex:1;padding:14px;border-radius:14px;border:none;background:#1A3A8F;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Show Vehicles</button>
         </div>
       </div>
     </div>`;
     document.body.insertAdjacentHTML('beforeend', html);
+    const body = document.getElementById('rentalFilterBody');
+    if (body && prevScroll) body.scrollTop = prevScroll;
   }
+
+  R._citySearchInput = function (val) {
+    R._citySearch = val;
+    // Re-render only the sheet, preserving focus in the city input.
+    _renderFilterOverlay();
+    const inp = document.getElementById('rfCitySearch');
+    if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+  };
 
   R._draftToggle = function (key, val) {
     if (!R._draft) R._draft = Object.assign({}, R.filters);
-    if (key === 'avail') {
-      R._draft.avail = !R._draft.avail;
-    } else {
-      R._draft[key] = R._draft[key] === val ? null : val;
-    }
+    if (key === 'avail') R._draft.avail = !R._draft.avail;
+    else R._draft[key] = R._draft[key] === val ? null : val;
     _renderFilterOverlay();
+    R._updateDraftCount();
+  };
+
+  R._draftPrice = function () {
+    if (!R._draft) R._draft = Object.assign({}, R.filters);
+    const vmin = parseFloat(document.getElementById('rfPmin')?.value);
+    const vmax = parseFloat(document.getElementById('rfPmax')?.value);
+    R._draft.pmin = isNaN(vmin) || vmin <= 0 ? null : vmin;
+    R._draft.pmax = isNaN(vmax) || vmax <= 0 ? null : vmax;
+    _renderFilterOverlay();
+    R._updateDraftCount();
+  };
+
+  R._draftSlider = function (val) {
+    if (!R._draft) R._draft = Object.assign({}, R.filters);
+    const n = Number(val);
+    R._draft.pmax = n >= PRICE_MAX_CAP ? null : n;
+    _renderFilterOverlay();
+    R._updateDraftCount();
   };
 
   R._resetDraft = function () {
-    R._draft = { cat: R.filters.cat, city: null, trans: null, fuel: null, avail: false };
+    R._draft = { cat: null, city: null, trans: null, fuel: null, avail: false, brand: null, pmin: null, pmax: null };
+    R._citySearch = '';
     _renderFilterOverlay();
+    R._updateDraftCount();
+  };
+
+  // Live result count for the Apply button — debounced RPC with draft filters.
+  R._updateDraftCount = function () {
+    clearTimeout(R._countTimer);
+    R._countTimer = setTimeout(async () => {
+      const sb = window.supabase; if (!sb || !R._draft) return;
+      const f = R._draft;
+      try {
+        const { data } = await sb.rpc('rental_search_listings', {
+          p_category_slug: f.cat || null,
+          p_city:          f.city || null,
+          p_brand_slug:    f.brand || null,
+          p_price_min:     f.pmin,
+          p_price_max:     f.pmax,
+          p_transmission:  f.trans || null,
+          p_fuel_type:     f.fuel || null,
+          p_available_only: !!f.avail,
+          p_featured_first: false,
+          p_limit: 100, p_offset: 0,
+        });
+        const n = (data || []).length;
+        const btn = document.getElementById('rfApplyBtn');
+        if (btn) btn.textContent = n === 0 ? 'No Vehicles Match' : `Show ${n}${n === 100 ? '+' : ''} Vehicle${n === 1 ? '' : 's'}`;
+      } catch (e) { /* count is best-effort */ }
+    }, 450);
   };
 
   R.applyFilters = function () {
     if (R._draft) {
       R.filters = Object.assign({}, R._draft);
       R._draft = null;
+      if (R.filters.city) _lsPush(RECENT_CITY_KEY, R.filters.city, 4);
     }
     document.getElementById('rentalFilterSheet')?.remove();
     R.loadBrowse(true);
@@ -259,14 +444,31 @@
   };
 
   // ── Sort sheet ─────────────────────────────────────────────────────────────
+  // Every option maps to data the search RPC actually returns; nothing fake.
+  const SORT_OPTIONS = [
+    ['featured',    'Recommended',          'Featured vehicles first'],
+    ['price_asc',   'Price: Low to High',   ''],
+    ['price_desc',  'Price: High to Low',   ''],
+    ['most_viewed', 'Most Popular',         'By view count'],
+    ['newest',      'Newest Models',        'By vehicle year'],
+  ];
+
+  function _applySort(rows, sortBy) {
+    const r = rows.slice();
+    if (sortBy === 'price_asc')   r.sort((a, b) => (a.daily_rate || 999999) - (b.daily_rate || 999999));
+    if (sortBy === 'price_desc')  r.sort((a, b) => (b.daily_rate || 0) - (a.daily_rate || 0));
+    if (sortBy === 'most_viewed') r.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
+    if (sortBy === 'newest')      r.sort((a, b) => (b.year || 0) - (a.year || 0));
+    return r;
+  }
+
   R.openSort = function () {
     document.getElementById('rentalSortSheet')?.remove();
-    const opts = [['featured','Featured first'],['price_asc','Price: Low to High'],['price_desc','Price: High to Low']];
-    const rows = opts.map(([v, l]) => {
+    const rows = SORT_OPTIONS.map(([v, l, sub]) => {
       const active = R.sortBy === v;
-      return `<button onclick="H._rental._setSort('${v}')" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:14px 0;border:none;background:none;font-size:14px;font-weight:${active ? '700' : '500'};color:${active ? '#1A3A8F' : 'var(--text)'};cursor:pointer;font-family:inherit;border-bottom:1px solid var(--border,#E8ECF4)">
-        <span>${l}</span>
-        ${active ? `<span style="width:20px;height:20px;border-radius:50%;background:#1A3A8F;display:flex;align-items:center;justify-content:center">${I.check.replace('stroke="currentColor"','stroke="#fff"')}</span>` : ''}
+      return `<button onclick="H._rental._setSort('${v}')" style="display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;padding:13px 0;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid var(--border,#E8ECF4);text-align:left">
+        <span><span style="display:block;font-size:14px;font-weight:${active ? '800' : '600'};color:${active ? '#1A3A8F' : 'var(--text)'}">${l}</span>${sub ? `<span style="display:block;font-size:11.5px;color:var(--sub);margin-top:1px">${sub}</span>` : ''}</span>
+        ${active ? `<span style="width:22px;height:22px;border-radius:50%;background:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0">${I.check.replace('stroke="currentColor"','stroke="#fff"')}</span>` : ''}
       </button>`;
     }).join('');
 
@@ -283,17 +485,12 @@
   R._setSort = function (val) {
     R.sortBy = val;
     document.getElementById('rentalSortSheet')?.remove();
-    // Client-side sort of current results
-    if (val === 'price_asc')  { const all = [...R.featured, ...R.browse]; all.sort((a,b)=>(a.daily_rate||999999)-(b.daily_rate||999999)); R.featured=[]; R.browse=all; }
-    if (val === 'price_desc') { const all = [...R.featured, ...R.browse]; all.sort((a,b)=>(b.daily_rate||0)-(a.daily_rate||0)); R.featured=[]; R.browse=all; }
-    if (val === 'featured')   R.loadBrowse(true);
-    else if (document.getElementById('rentalListingsPage')) H.renderPage('RentalListings', {});
-  };
-
-  // helper for R.setFilter (category only from inline chip row)
-  R.setCat = function (val) {
-    R.filters.cat = val || null;
-    R.loadBrowse(true);
+    if (val === 'featured') { R.loadBrowse(true); return; }
+    // Client-side re-sort of everything loaded so far; loadBrowse keeps new
+    // pages consistent with the same ordering.
+    R.browse = _applySort([...R.featured, ...R.browse], val);
+    R.featured = [];
+    if (document.getElementById('rentalListingsPage')) H.renderPage('RentalListings', {});
   };
 
 
@@ -317,41 +514,48 @@
   // PAGE: RentalListings
   // ─────────────────────────────────────────────────────────────────────────
   H.pages.RentalListings = function () {
-    const allCards = [...R.featured, ...R.browse];
+    const allCards = _searchFilter([...R.featured, ...R.browse]);
     const activeCount = _activeFilterCount();
-    const hasFilters = activeCount > 0;
+    const hasFilters = activeCount > 0 || !!R._searchQuery;
 
     const gridHtml = allCards.length
-      ? `<div style="display:flex;flex-direction:column;gap:12px;padding:16px">${allCards.map(_browseCard).join('')}</div>`
+      ? `<div style="display:flex;flex-direction:column;gap:12px;padding:12px 16px 16px">${allCards.map(_browseCard).join('')}</div>`
       : (!R._loading ? _rentalEmptyState(hasFilters) : '');
 
     const skels = R._loading && !allCards.length
-      ? `<div style="display:flex;flex-direction:column;gap:12px;padding:16px">${_skelCards(4)}</div>`
+      ? `<div style="display:flex;flex-direction:column;gap:12px;padding:12px 16px 16px">${_skelCards(4)}</div>`
       : '';
 
     const countBadge = allCards.length
-      ? `<div style="font-size:12px;color:var(--sub);padding:10px 16px 0;font-weight:500">${allCards.length}${R.hasMore ? '+' : ''} vehicle${allCards.length === 1 ? '' : 's'} found${activeCount > 0 ? ' · Filters active' : ''}</div>`
+      ? `<div style="font-size:12px;color:var(--sub);padding:10px 16px 0;font-weight:600">${allCards.length}${R.hasMore ? '+' : ''} vehicle${allCards.length === 1 ? '' : 's'} available</div>`
       : '';
 
     return `<div class="page active" id="rentalListingsPage">
       <div style="position:sticky;top:0;z-index:20;background:var(--bg,#F0F4FF)">
         <div style="background:#1A3A8F;padding:0 12px">
-          <div style="display:flex;align-items:center;gap:8px;padding:10px 0">
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 0;position:relative">
             <button class="back" onclick="H.goBack()" style="color:#fff;flex-shrink:0" aria-label="Back"><svg viewBox="0 0 24 24" width="22" height="22"><polyline points="15 18 9 12 15 6" stroke="#fff" stroke-width="2.5" fill="none"/></svg></button>
-            <div style="flex:1;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;gap:8px;padding:0 12px">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input id="rentalSearch" placeholder='e.g. "Toyota Hilux" or "SUV"' autocomplete="off" oninput="H._rental.onSearch(this.value)" style="flex:1;border:none;outline:none;padding:11px 0;font-size:14px;background:transparent;color:#fff;caret-color:#F5A623;font-family:inherit">
+            <div style="flex:1;background:#fff;border-radius:12px;display:flex;align-items:center;gap:8px;padding:0 12px;box-shadow:0 1px 3px rgba(0,0,0,.15)">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#94A3B8" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input id="rentalSearch" placeholder="Search brand, model or company" autocomplete="off" value="${esc(R._searchQuery || '')}"
+                oninput="H._rental.onSearch(this.value)"
+                onfocus="H._rental._showSearchPanel()"
+                onkeydown="if(event.key==='Enter'){this.blur();H._rental._commitSearch(this.value)}"
+                style="flex:1;border:none;outline:none;padding:12px 0;font-size:14px;background:transparent;color:#18181B;caret-color:#1A3A8F;font-family:inherit">
+              ${R._searchQuery ? `<button onclick="H._rental._commitSearch('')" aria-label="Clear search" style="border:none;background:none;color:#94A3B8;cursor:pointer;display:flex;padding:4px">${I.close}</button>` : ''}
             </div>
-            <button onclick="H.openInner('RentalFavorites')" style="color:#fff;background:rgba(255,255,255,.15);border:none;border-radius:10px;padding:9px 11px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;font-family:inherit;flex-shrink:0">${I.heart}</button>
+            <button onclick="H.openInner('RentalFavorites')" aria-label="Saved vehicles" style="color:#fff;background:rgba(255,255,255,.15);border:none;border-radius:12px;padding:10px 11px;cursor:pointer;display:flex;align-items:center;font-family:inherit;flex-shrink:0">${I.heart}</button>
+            <div id="rentalSearchPanel" style="display:none;position:absolute;top:100%;left:30px;right:0;background:var(--card,#fff);border-radius:14px;box-shadow:0 8px 24px rgba(16,24,40,.18);z-index:30;overflow:hidden;margin-top:2px"></div>
           </div>
         </div>
         ${_filterBar()}
       </div>
+      ${_activeChips()}
       ${countBadge}
       ${skels}
       ${gridHtml}
       ${R._loading && allCards.length ? `<div style="display:flex;flex-direction:column;gap:12px;padding:0 16px 16px">${_skelCards(2)}</div>` : ''}
-      ${!R._loading && R.hasMore && allCards.length ? `<div style="padding:16px;text-align:center"><button onclick="H._rental.loadMore()" class="btn-sec" style="min-width:160px">Load more</button></div>` : ''}
+      ${!R._loading && R.hasMore && allCards.length ? `<div style="padding:16px;text-align:center"><button onclick="H._rental.loadMore()" class="btn-sec" style="min-width:160px;min-height:44px">Load more</button></div>` : ''}
       <div style="height:24px"></div>
       <div style="height:90px"></div>
     </div>`;
@@ -359,7 +563,54 @@
 
   H.pages.RentalListings_after = function () {
     if (!R.browse.length && !R._loading && !R._loadFailed && !R._attempted) H._rental.loadBrowse(true);
+    R._loadFilterLookups();
     window._rentalSearchTimer = null;
+    // Close the suggestion panel when tapping anywhere outside the search area
+    if (!R._panelDismissBound) {
+      R._panelDismissBound = true;
+      document.addEventListener('click', function (ev) {
+        const panel = document.getElementById('rentalSearchPanel');
+        if (!panel || panel.style.display === 'none') return;
+        if (!ev.target.closest || (!ev.target.closest('#rentalSearchPanel') && ev.target.id !== 'rentalSearch')) {
+          panel.style.display = 'none';
+        }
+      }, true);
+    }
+  };
+
+  // ── Search — matches brand, model, category and company on loaded rows ────
+  function _searchFilter(rows) {
+    const q = (R._searchQuery || '').trim().toLowerCase();
+    if (!q) return rows;
+    const terms = q.split(/\s+/).filter(Boolean);
+    return rows.filter(v => {
+      const hay = (brandLabel(v.brand_slug) + ' ' + (v.model || '') + ' ' + catLabel(v.category_slug) + ' ' + (v.company_name || '') + ' ' + (v.city || '')).toLowerCase();
+      return terms.every(t => hay.includes(t));
+    });
+  }
+
+  R._showSearchPanel = function () {
+    const panel = document.getElementById('rentalSearchPanel');
+    if (!panel) return;
+    const recents = _lsGet(RECENT_SEARCH_KEY);
+    const sugRow = (label, icon) =>
+      `<button onclick="H._rental._commitSearch('${esc(label)}')" style="display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:11px 16px;border:none;background:none;font-size:13.5px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left;border-bottom:1px solid var(--border,#E8ECF4)">${icon}${esc(label)}</button>`;
+    const clockIcon  = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+    const trendIcon  = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#94A3B8" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>';
+    const header = (t) => `<div style="font-size:10.5px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;padding:12px 16px 6px">${t}</div>`;
+    let html = '';
+    if (recents.length) html += header('Recent Searches') + recents.map(s => sugRow(s, clockIcon)).join('');
+    html += header('Popular') + POPULAR_SEARCHES.map(s => sugRow(s, trendIcon)).join('');
+    panel.innerHTML = html;
+    panel.style.display = 'block';
+  };
+
+  R._commitSearch = function (q) {
+    R._searchQuery = (q || '').trim();
+    if (R._searchQuery) _lsPush(RECENT_SEARCH_KEY, R._searchQuery, 6);
+    const panel = document.getElementById('rentalSearchPanel');
+    if (panel) panel.style.display = 'none';
+    H.renderPage('RentalListings', {});
   };
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -700,6 +951,9 @@
       const rpcPromise = sb.rpc('rental_search_listings', {
         p_category_slug:  f.cat   || null,
         p_city:           (f.city && f.city !== 'All Zimbabwe') ? f.city : null,
+        p_brand_slug:     f.brand || null,
+        p_price_min:      f.pmin,
+        p_price_max:      f.pmax,
         p_transmission:   f.trans || null,
         p_fuel_type:      f.fuel  || null,
         p_available_only: !!f.avail,
@@ -713,9 +967,8 @@
       const { data, error } = await Promise.race([rpcPromise, timeoutPromise]);
       if (error) throw error;
       let rows = data || [];
-      // Client-side sort when not using server-side featured ordering
-      if (R.sortBy === 'price_asc')  rows.sort((a,b)=>(a.daily_rate||999999)-(b.daily_rate||999999));
-      if (R.sortBy === 'price_desc') rows.sort((a,b)=>(b.daily_rate||0)-(a.daily_rate||0));
+      // Keep newly loaded pages consistent with the active client-side sort
+      if (R.sortBy !== 'featured') rows = _applySort(rows, R.sortBy);
       const feat = (R.sortBy === 'featured') ? rows.filter(r => r.is_featured && R.page === 0) : [];
       R.featured = feat;
       const rest = reset ? rows.filter(r => R.sortBy !== 'featured' || !r.is_featured) : rows;
@@ -931,17 +1184,25 @@
   };
 
   R.clearFilters = function () {
-    R.filters = { cat: null, city: null, trans: null, fuel: null, avail: false };
+    R.filters = { cat: null, city: null, trans: null, fuel: null, avail: false, brand: null, pmin: null, pmax: null };
+    R._searchQuery = '';
     R.sortBy = 'featured';
     R.loadBrowse(true);
   };
 
+  // Live search-as-you-type: filters the loaded rows client-side and re-renders,
+  // then restores focus and caret so typing is never interrupted.
   R.onSearch = function (q) {
+    const panel = document.getElementById('rentalSearchPanel');
+    if (panel) panel.style.display = 'none';
     clearTimeout(window._rentalSearchTimer);
     window._rentalSearchTimer = setTimeout(() => {
       R._searchQuery = q;
-      R.loadBrowse(true);
-    }, 420);
+      if (!document.getElementById('rentalListingsPage')) return;
+      H.renderPage('RentalListings', {});
+      const inp = document.getElementById('rentalSearch');
+      if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+    }, 250);
   };
 
   R.openDetail = function (id) {
