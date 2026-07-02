@@ -437,8 +437,10 @@
   H.pages.RentalManageFleet_after = function (params) {
     const biz = _requireBiz();
     if (!biz) return;
+    // Same loop guard as Dashboard: loaders set _lastAccessLoad before renderPage
+    if (Date.now() - RB._lastAccessLoad < 3000) return;
     if (!RB._access) RB.loadAccess();
-    if (!RB.company || !RB.fleet.length) RB.loadCompanyData(biz.id);
+    if (!RB.company) RB.loadCompanyData(biz.id);
   };
 
   RB.setFleetTab = function (tab) {
