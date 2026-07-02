@@ -551,15 +551,17 @@
     const sb = window.supabase; if (!sb) return;
     RB._loadingLookups = true;
     try {
+      // Column names differ per table: categories/brands use `label`;
+      // locations use `city` for the display name and `sort_order` to order.
       const [cats, brands, locs] = await Promise.all([
         sb.from('rental_categories').select('slug,label').order('label'),
         sb.from('rental_brands').select('slug,label').order('label'),
-        sb.from('rental_locations').select('slug,label').order('label'),
+        sb.from('rental_locations').select('slug,city').order('sort_order'),
       ]);
       RB._lookups = {
         cats:   (cats.data   || []).map(r => [r.slug, r.label]),
         brands: (brands.data || []).map(r => [r.slug, r.label]),
-        cities: (locs.data   || []).map(r => [r.slug, r.label]),
+        cities: (locs.data   || []).map(r => [r.slug, r.city]),
       };
     } catch (e) {
       console.warn('rental wiz lookups:', e);
