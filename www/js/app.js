@@ -2859,6 +2859,10 @@ window.H = {
       if (/invalid input syntax for type uuid|JWT expired|PGRST|supabase|realtime/i.test(msg)) return true;
       // Browser/runtime noise that never reflects a real app failure.
       if (/ResizeObserver loop|Script error\.?$|^Object$|^undefined$|^null$/i.test(msg)) return true;
+      // ServiceWorker/PWA registration hiccups — common on dev servers
+      // (Live Server serves sw.js with the wrong scope/MIME) and on flaky
+      // networks. The app works fine without the SW; never actionable.
+      if (/ServiceWorker|service worker|sw\.js|Failed to (register|update) a? ?ServiceWorker/i.test(msg)) return true;
       return false;
     }
 

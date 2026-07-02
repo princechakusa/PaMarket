@@ -312,14 +312,21 @@
     return `<div class="page active" id="rentalDashPage">
       <div style="background:#1A3A8F;padding:16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
+          <div onclick="H.goBack()" role="button" aria-label="Back" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+            <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
           <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0">${initial}</div>
-          <div style="flex:1">
-            <div style="font-size:16px;font-weight:800;color:#fff">${esc(bizName)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:16px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(bizName)}</div>
             <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:1px">Rentals Dashboard</div>
           </div>
-          <div style="display:flex;gap:12px">
-            <svg width="22" height="22" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <svg width="22" height="22" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+          <div style="display:flex;gap:12px;flex-shrink:0">
+            <div onclick="H.openInner('Notifications')" role="button" aria-label="Notifications" style="cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:28px">
+              <svg width="22" height="22" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div onclick="H.openInner('Profile')" role="button" aria-label="Profile" style="cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:28px">
+              <svg width="22" height="22" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+            </div>
           </div>
         </div>
       </div>

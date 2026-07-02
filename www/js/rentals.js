@@ -861,6 +861,7 @@
   R.loadFavorites = async function () {
     const u = H.currentUser(); if (!u) return;
     const sb = window.supabase; if (!sb) return;
+    if (R._favLoading) return;              // guard against overlapping loads
     R._favLoading = true;
     if (H.currentPageName === 'RentalFavorites') H.renderPage('RentalFavorites', {});
     try {
@@ -868,14 +869,22 @@
       if (error) throw error;
       const ids = (favRows || []).map(r => r.listing_id);
       R.favIds = new Set(ids);
-      if (!ids.length) { R._favListings = []; R._favLoading = false; if (H.currentPageName === 'RentalFavorites') H.renderPage('RentalFavorites', {}); return; }
-      const { data: listings } = await sb.rpc('rental_search_listings', { p_limit: 60, p_offset: 0 });
-      R._favListings = (listings || []).filter(l => ids.includes(l.id));
+      if (!ids.length) {
+        R._favListings = [];
+      } else {
+        const { data: listings } = await sb.rpc('rental_search_listings', { p_limit: 60, p_offset: 0 });
+        R._favListings = (listings || []).filter(l => ids.includes(l.id));
+      }
     } catch (e) {
       console.warn('rental favorites:', e);
+      // On error, drop to the empty state instead of stranding the skeleton.
+      if (!Array.isArray(R._favListings)) R._favListings = [];
+    } finally {
+      // Always clear the flag and re-render so the skeleton never sticks,
+      // even if the page name changed or a query threw.
+      R._favLoading = false;
+      if (H.currentPageName === 'RentalFavorites') H.renderPage('RentalFavorites', {});
     }
-    R._favLoading = false;
-    if (H.currentPageName === 'RentalFavorites') H.renderPage('RentalFavorites', {});
   };
 
   R._incrementView = async function (id) {
