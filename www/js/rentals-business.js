@@ -20,8 +20,9 @@
   RB._loading   = false;
   RB._wizState  = null;
   RB._fleetTab  = RB._fleetTab || 'all';
-  RB._access         = null;   // result of get_user_rental_access()
-  RB._lastAccessLoad = 0;      // timestamp of last loadAccess() completion (loop guard)
+  RB._access          = null;   // result of get_user_rental_access()
+  RB._loadingAccess   = false;  // true while loadAccess() RPC is in flight
+  RB._loadingCompany  = false;  // true while loadCompanyData() is in flight
 
   const WIZARD_STEPS = ['Basic Info', 'Pricing', 'Description', 'Review'];
 
@@ -94,26 +95,51 @@
   // Result is cached in RB._access and refreshed on every dashboard load.
   // ─────────────────────────────────────────────────────────────────────────
 
+  // Build an access object from a rental_companies status value.
+  // Used as fallback when the get_user_rental_access RPC is unavailable
+  // (migration not yet run) so pages never hang on the loading skeleton.
+  function _accessFromStatus(companyId, status) {
+    return {
+      has_business:         true,
+      has_rental_company:   true,
+      company_id:           companyId,
+      company_status:       status,
+      can_access_dashboard: status === 'active' || status === 'pending',
+      can_create_fleet:     status === 'active',
+      can_create_vehicle:   status === 'active',
+    };
+  }
+
   RB.loadAccess = async function () {
-    const sb = window.supabase; if (!sb) return null;
+    if (RB._loadingAccess) return RB._access;
+    RB._loadingAccess = true;
+    const sb = window.supabase;
+    if (!sb) { RB._loadingAccess = false; return null; }
     try {
       const { data, error } = await sb.rpc('get_user_rental_access');
       if (error) throw error;
       RB._access = data || null;
     } catch (e) {
       console.warn('rental access check:', e);
-      RB._access = null;
+      // RPC missing or failed: derive access from company data so the
+      // dashboard never hangs on the skeleton. RLS still enforces server-side.
+      if (RB.company) {
+        RB._access = _accessFromStatus(RB.company.id, RB.company.status);
+      } else {
+        RB._access = null;
+      }
     }
-    // Mark load time BEFORE renderPage so _after loop guard fires correctly
-    RB._lastAccessLoad = Date.now();
-    // Re-render whichever rental business page is currently open
+    // Re-render current page. Flag stays true during renderPage so _after
+    // sees it and skips re-entry. Flag clears AFTER renderPage returns.
     const page = H.currentPageName;
     const biz  = _requireBiz();
-    if (!biz) return RB._access;
-    if (page === 'RentalDashboard')          H.renderPage('RentalDashboard', {});
-    if (page === 'RentalManageFleet')         H.renderPage('RentalManageFleet', { bizId: biz.id });
-    if (page === 'RentalAddVehicle')          H.renderPage('RentalAddVehicle',  { bizId: biz.id });
-    if (page === 'RentalBusinessAnalytics')   H.renderPage('RentalBusinessAnalytics', { bizId: biz.id });
+    if (biz) {
+      if (page === 'RentalDashboard')        H.renderPage('RentalDashboard', {});
+      if (page === 'RentalManageFleet')       H.renderPage('RentalManageFleet', { bizId: biz.id });
+      if (page === 'RentalAddVehicle')        H.renderPage('RentalAddVehicle',  { bizId: biz.id });
+      if (page === 'RentalBusinessAnalytics') H.renderPage('RentalBusinessAnalytics', { bizId: biz.id });
+    }
+    RB._loadingAccess = false;
     return RB._access;
   };
 
@@ -335,14 +361,10 @@
   H.pages.RentalDashboard_after = function (params) {
     const biz = _requireBiz();
     if (!biz) return;
-    // Guard: if a loader just triggered this re-render (within 3s), don't loop back
-    if (Date.now() - RB._lastAccessLoad < 3000) {
-      if (!RB.company) RB.loadCompanyData(biz.id);
-      return;
-    }
-    // Fresh navigation: always re-fetch access so status changes are reflected
+    // If a loader is already in flight (it triggered this re-render), skip
+    if (RB._loadingAccess || RB._loadingCompany) return;
+    // Fresh navigation: always re-fetch access so status changes reflect immediately
     RB._access = null;
-    RB._lastAccessLoad = Date.now();
     RB.loadAccess();
     if (!RB.company) RB.loadCompanyData(biz.id);
   };
@@ -437,8 +459,7 @@
   H.pages.RentalManageFleet_after = function (params) {
     const biz = _requireBiz();
     if (!biz) return;
-    // Same loop guard as Dashboard: loaders set _lastAccessLoad before renderPage
-    if (Date.now() - RB._lastAccessLoad < 3000) return;
+    if (RB._loadingAccess || RB._loadingCompany) return;
     if (!RB._access) RB.loadAccess();
     if (!RB.company) RB.loadCompanyData(biz.id);
   };
@@ -986,7 +1007,9 @@
   // Data loaders and action handlers
   // ─────────────────────────────────────────────────────────────────────────
   RB.loadCompanyData = async function (bizId) {
-    const sb = window.supabase; if (!sb) return;
+    if (RB._loadingCompany) return;
+    RB._loadingCompany = true;
+    const sb = window.supabase; if (!sb) { RB._loadingCompany = false; return; }
     RB._loading = true;
     try {
       const { data: rc, error } = await sb.from('rental_companies')
@@ -997,6 +1020,7 @@
         RB.company = null; RB.fleet = []; RB.leads = [];
         RB._loading = false;
         const curPage = H.currentPageName;
+        RB._loadingCompany = false;
         if (curPage === 'RentalDashboard' || curPage === 'RentalManageFleet') {
           H.openInner('RentalCompanySetup');
         }
@@ -1015,6 +1039,10 @@
         fleet_count:  rc.fleet_count,
         company_name: bizRes.data && bizRes.data.name,
       };
+
+      // If the access RPC failed or has not returned, derive access from the
+      // company record so pages render instead of hanging on the skeleton
+      if (!RB._access) RB._access = _accessFromStatus(rc.id, rc.status);
 
       const [fleetRes, leadsRes] = await Promise.all([
         sb.from('rental_vehicle_listings')
@@ -1068,11 +1096,12 @@
       H.toast('Could not load rental data.', 4000, true);
     }
     RB._loading = false;
-    RB._lastAccessLoad = Date.now(); // prevent _after loop when this re-render fires
+    // Flag stays true during renderPage so _after sees it and skips re-entry
     const curPage = H.currentPageName;
     if (curPage === 'RentalDashboard')        H.renderPage('RentalDashboard', {});
     if (curPage === 'RentalManageFleet')       H.renderPage('RentalManageFleet', { bizId });
     if (curPage === 'RentalBusinessAnalytics') H.renderPage('RentalBusinessAnalytics', { bizId });
+    RB._loadingCompany = false;
   };
 
   RB.submitSetup = async function (bizId) {
