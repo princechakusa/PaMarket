@@ -1006,12 +1006,31 @@
         });
       } catch (e) {}
     }
+    R._logLead(det, 'chat');
     H.startChatWith(ownerId, listingId);
+  };
+
+  // Record a customer inquiry so it surfaces in the company's dashboard.
+  // Best-effort: a logging failure must never block the contact action, and
+  // we skip logging a company owner contacting their own listing.
+  R._logLead = function (det, source) {
+    const u = H.currentUser();
+    const sb = window.supabase;
+    if (!u || !sb || !det || !det.company || !det.company.id) return;
+    if (det.company.owner_user_id === u.id) return;
+    sb.from('rental_vehicle_leads').insert({
+      listing_id:  det.id,
+      company_id:  det.company.id,
+      user_id:     u.id,
+      lead_source: source,
+      status:      'new',
+    }).then(function () {}, function () {});
   };
 
   R.waCompany = function (listingId) {
     const det = R.detailCache[listingId];
     if (!det || !det.company) return;
+    R._logLead(det, 'whatsapp');
     R._waDirect(det.company.whatsapp, det.company.name, det);
   };
 
@@ -1026,6 +1045,7 @@
   R.callCompany = function (listingId) {
     const det = R.detailCache[listingId];
     if (!det || !det.company || !det.company.phone) { H.toast('No phone number available'); return; }
+    R._logLead(det, 'call');
     R._callDirect(det.company.phone);
   };
 

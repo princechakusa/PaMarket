@@ -538,16 +538,46 @@
 
   H.pages.RentalAddVehicle_after = function () {
     if (!RB._access) RB.loadAccess();
+    RB.loadWizLookups();
     window.RB = RB;
+  };
+
+  // Load category/brand/location options from the DB so the wizard's dropdown
+  // slugs always match what _wizSubmit looks up. Hardcoding them caused vehicle
+  // creation to crash whenever a slug drifted (e.g. 'vw' vs 'volkswagen').
+  RB._lookups = null;
+  RB.loadWizLookups = async function () {
+    if (RB._lookups || RB._loadingLookups) return;
+    const sb = window.supabase; if (!sb) return;
+    RB._loadingLookups = true;
+    try {
+      const [cats, brands, locs] = await Promise.all([
+        sb.from('rental_categories').select('slug,label').order('label'),
+        sb.from('rental_brands').select('slug,label').order('label'),
+        sb.from('rental_locations').select('slug,label').order('label'),
+      ]);
+      RB._lookups = {
+        cats:   (cats.data   || []).map(r => [r.slug, r.label]),
+        brands: (brands.data || []).map(r => [r.slug, r.label]),
+        cities: (locs.data   || []).map(r => [r.slug, r.label]),
+      };
+    } catch (e) {
+      console.warn('rental wiz lookups:', e);
+    }
+    RB._loadingLookups = false;
+    if (H.currentPageName === 'RentalAddVehicle') {
+      H.renderPage('RentalAddVehicle', { bizId: RB._wizState && RB._wizState.bizId });
+    }
   };
 
   RB._renderWizStep = function (step) {
     const d    = (RB._wizState && RB._wizState.data) || {};
     const bizId= (RB._wizState && RB._wizState.bizId) || '';
 
-    const BRANDS = [['', 'Select brand'], ['toyota', 'Toyota'], ['honda', 'Honda'], ['nissan', 'Nissan'], ['mercedes', 'Mercedes-Benz'], ['bmw', 'BMW'], ['ford', 'Ford'], ['isuzu', 'Isuzu'], ['hyundai', 'Hyundai'], ['kia', 'Kia'], ['vw', 'Volkswagen'], ['mitsubishi', 'Mitsubishi'], ['suzuki', 'Suzuki'], ['mazda', 'Mazda'], ['other', 'Other']];
-    const CATS   = [['', 'Select category'], ['suv', 'SUV / 4x4'], ['sedan', 'Sedan'], ['pickup', 'Pickup / Truck'], ['minibus', 'Minibus / Van'], ['luxury', 'Luxury'], ['bus', 'Bus / Coach'], ['motorbike', 'Motorbike'], ['other', 'Other']];
-    const CITIES = [['', 'Select city'], ['harare', 'Harare'], ['bulawayo', 'Bulawayo'], ['mutare', 'Mutare'], ['gweru', 'Gweru'], ['masvingo', 'Masvingo'], ['victoria-falls', 'Victoria Falls'], ['kwekwe', 'Kwekwe'], ['kadoma', 'Kadoma'], ['chinhoyi', 'Chinhoyi']];
+    const L = RB._lookups;
+    const BRANDS = [['', 'Select brand']].concat(L ? L.brands : []);
+    const CATS   = [['', 'Select category']].concat(L ? L.cats : []);
+    const CITIES = [['', 'Select city']].concat(L ? L.cities : []);
     const TRANS  = [['', 'Select'], ['Automatic', 'Automatic'], ['Manual', 'Manual'], ['CVT', 'CVT'], ['Semi-Automatic', 'Semi-Automatic']];
     const FUELS  = [['', 'Select'], ['Diesel', 'Diesel'], ['Petrol', 'Petrol'], ['Hybrid', 'Hybrid'], ['Electric', 'Electric']];
     const SEATS  = [['', 'Select'], ['4', '4'], ['5', '5'], ['7', '7'], ['8', '8'], ['12', '12+']];
@@ -713,21 +743,26 @@
 
     const btn = document.querySelector('.btn-pri');
     if (btn) { btn.disabled = true; btn.textContent = 'Creating...'; }
+    let navigatedAway = false;
 
     try {
       const [catRes, brandRes, locRes, compRes] = await Promise.all([
-        sb.from('rental_categories').select('id').eq('slug', d.category_slug).single(),
-        sb.from('rental_brands').select('id').eq('slug', d.brand_slug).single(),
-        sb.from('rental_locations').select('id').eq('slug', d.city_slug).single(),
-        sb.from('rental_companies').select('id').eq('business_id', biz.id).single(),
+        sb.from('rental_categories').select('id').eq('slug', d.category_slug).maybeSingle(),
+        sb.from('rental_brands').select('id').eq('slug', d.brand_slug).maybeSingle(),
+        sb.from('rental_locations').select('id').eq('slug', d.city_slug).maybeSingle(),
+        sb.from('rental_companies').select('id').eq('business_id', biz.id).maybeSingle(),
       ]);
 
       if (!compRes.data) {
         H.toast('Rental company not set up. Please complete setup first.', 5000, true);
+        navigatedAway = true;
         H.openInner('RentalCompanySetup');
         return;
       }
-      if (catRes.error || brandRes.error) throw (catRes.error || brandRes.error);
+      if (!catRes.data || !brandRes.data) {
+        H.toast('Selected category or brand is no longer available. Please reselect.', 5000, true);
+        return;
+      }
 
       const desc = [d.description, d.notes].filter(Boolean).join('\n\n') || null;
 
@@ -769,17 +804,22 @@
 
       RB._wizState = null;
       RB.fleet = [];
+      navigatedAway = true;
       H.toast('Vehicle created! It will appear in the marketplace once approved.');
       H.openInner('RentalManageFleet', { bizId: biz.id });
     } catch (e) {
       console.warn('vehicle create:', e);
       // RLS block from backend — company not active
-      if (e.code === '42501') {
+      if (e && e.code === '42501') {
         H.toast('Access denied. Your company must be active to add vehicles.', 5000, true);
       } else {
         H.toast('Could not create vehicle. Check your details and try again.', 5000, true);
       }
-      if (btn) { btn.disabled = false; btn.textContent = 'Create Vehicle'; }
+    } finally {
+      // Re-enable the button on every path that stays on the wizard, so a
+      // failed or blocked submit is always retryable (previously some early
+      // returns left it stuck on "Creating...").
+      if (!navigatedAway && btn) { btn.disabled = false; btn.textContent = 'Create Vehicle'; }
     }
   };
 
@@ -1164,15 +1204,16 @@
   RB.toggleFleetStatus = async function (vehicleId, newStatus) {
     const sb = window.supabase; if (!sb) return;
     try {
-      const { error } = await sb.from('rental_vehicle_listings').update({ status: newStatus }).eq('id', vehicleId);
+      const { data, error } = await sb.from('rental_vehicle_listings').update({ status: newStatus }).eq('id', vehicleId).select('id');
       if (error) throw error;
+      if (!data || !data.length) throw new Error('Update matched 0 rows — your company must be active to change a listing.');
       const v = RB.fleet.find(x => x.id === vehicleId);
       if (v) v.status = newStatus;
       H.renderPage('RentalManageFleet', { bizId: RB.company && RB.company.business_id });
       H.toast(newStatus === 'active' ? 'Vehicle activated.' : 'Vehicle paused.');
     } catch (e) {
-      if (e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
-      else H.toast('Could not update status.', 4000, true);
+      if (e && e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
+      else H.toast((e && e.message) ? e.message : 'Could not update status.', 4000, true);
     }
   };
 
@@ -1185,13 +1226,15 @@
       onConfirm: async () => {
         const sb = window.supabase; if (!sb) return;
         try {
-          await sb.from('rental_vehicle_listings').update({ status: 'archived', deleted_at: new Date().toISOString() }).eq('id', vehicleId);
+          const { data, error } = await sb.from('rental_vehicle_listings').update({ status: 'archived', deleted_at: new Date().toISOString() }).eq('id', vehicleId).select('id');
+          if (error) throw error;
+          if (!data || !data.length) throw new Error('Update matched 0 rows — your company must be active to remove a listing.');
           RB.fleet = RB.fleet.filter(v => v.id !== vehicleId);
           H.renderPage('RentalManageFleet', { bizId: RB.company && RB.company.business_id });
           H.toast('Vehicle removed.');
         } catch (e) {
-          if (e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
-          else H.toast('Could not remove vehicle.', 4000, true);
+          if (e && e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
+          else H.toast((e && e.message) ? e.message : 'Could not remove vehicle.', 4000, true);
         }
       },
     });
@@ -1224,10 +1267,14 @@
         seats:        parseInt(document.getElementById('evSeats')?.value) || null,
         mileage_km:   parseInt(document.getElementById('evMile')?.value)  || null,
       };
-      await Promise.all([
-        sb.from('rental_vehicle_listings').update(listingUpdate).eq('id', vehicleId),
+      const [lstRes] = await Promise.all([
+        sb.from('rental_vehicle_listings').update(listingUpdate).eq('id', vehicleId).select('id'),
         sb.from('rental_vehicle_specs').upsert({ listing_id: vehicleId, ...specsUpdate }, { onConflict: 'listing_id' }),
       ]);
+      if (lstRes.error) throw lstRes.error;
+      if (!lstRes.data || !lstRes.data.length) {
+        throw new Error('Update matched 0 rows — your company must be active to edit vehicles.');
+      }
       const v = RB.fleet.find(x => x.id === vehicleId);
       if (v) Object.assign(v, listingUpdate, specsUpdate);
       if (H._rental && H._rental.detailCache) delete H._rental.detailCache[vehicleId];
@@ -1235,8 +1282,8 @@
       H.goBack();
     } catch (e) {
       console.warn('rental edit:', e);
-      if (e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
-      else H.toast('Could not save changes.', 4000, true);
+      if (e && e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
+      else H.toast((e && e.message) ? e.message : 'Could not save changes.', 4000, true);
       if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
     }
   };

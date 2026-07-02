@@ -1,4 +1,4 @@
-const CACHE = 'pamarket-v242';
+const CACHE = 'pamarket-v243';
 
 // Never cache these — auth tokens, API data, realtime
 const NO_CACHE = [
@@ -14,18 +14,28 @@ function shouldCache(url) {
   return !NO_CACHE.some(p => url.includes(p));
 }
 
+// App-shell assets to precache. Keep this list in sync with the files that
+// actually exist under www/ — a URL that 404s here would abort an atomic
+// cache.addAll(), so we cache each entry individually (best-effort) instead.
+const PRECACHE = [
+  './', './index.html', './manifest.json', './css/styles.css', './css/pages-patch.css', './offline.html',
+  './js/app.js',  './js/auth.js', './js/home.js', './js/post.js',
+  './js/messages.js', './js/detail.js', './js/browse.js',
+  './js/account.js', './js/profile.js', './js/verify.js', './js/business-onboarding.js', './js/business-profile.js',
+  './js/rentals.js', './js/rentals-business.js', './js/vehicles.js',
+  './js/lib/supabase.umd.js', './js/supabase.js', './js/categories.js', './js/attributes.js', './js/ads-carousel.js', './js/refresh-manager.js',
+  './img/icon-192.png', './img/icon-512.png'
+];
+
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE).then(cache =>
-      cache.addAll([
-        './', './index.html', './manifest.json', './css/styles.css', './offline.html',
-        './js/app.js',  './js/auth.js', './js/home.js', './js/post.js',
-        './js/messages.js', './js/detail.js', './js/browse.js',
-        './js/account.js', './js/profile.js', './js/verify.js', './js/business-onboarding.js', './js/business-profile.js',
-        './js/lib/supabase.umd.js', './js/supabase.js', './js/admin.js', './js/categories.js', './js/attributes.js', './js/ads-carousel.js', './js/refresh-manager.js',
-        './img/icon-192.png', './img/icon-512.png'
-      ]).catch(() => {})
+      // Cache each asset independently so one missing/renamed file never
+      // aborts the whole precache the way cache.addAll() would.
+      Promise.all(PRECACHE.map(url =>
+        cache.add(url).catch(() => {})
+      ))
     ).catch(() => {})
   );
 });

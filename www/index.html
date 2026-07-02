@@ -368,8 +368,8 @@
   <script src="js/categories.js?v=8"></script>
   <script src="js/property.js?v=2"></script>
   <script src="js/vehicles.js?v=2"></script>
-  <script src="js/rentals.js?v=7"></script>
-  <script src="js/rentals-business.js?v=11"></script>
+  <script src="js/rentals.js?v=8"></script>
+  <script src="js/rentals-business.js?v=12"></script>
   <script src="js/rooms.js?v=2"></script>
   <script src="js/electronics.js?v=1"></script>
   <script src="js/furniture.js?v=1"></script>
@@ -450,7 +450,12 @@
       });
 
       navigator.serviceWorker.register('sw.js').then(function(reg) {
-        if (reg.active) reg.update(); // background update check on every load
+        // Background update check. reg.update() returns its own promise; if it
+        // is not caught, a transient fetch failure (offline, or a dev server
+        // like Live Server that serves sw.js with an unexpected response)
+        // surfaces as an unhandled rejection. Swallow it — the app runs fine
+        // on the currently-installed worker.
+        if (reg.active) { reg.update().catch(function() {}); }
       }).catch(function() {});
     }
 

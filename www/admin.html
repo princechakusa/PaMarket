@@ -3329,8 +3329,9 @@ async function raSetCompanyStatus(id, newStatus) {
 
 async function raSetReportStatus(id, newStatus) {
   try {
-    var r = await sb.from('rental_reports').update({status:newStatus}).eq('id',id);
+    var r = await sb.from('rental_reports').update({status:newStatus}).eq('id',id).select('id');
     if (r.error) throw r.error;
+    if (!r.data || !r.data.length) throw new Error('Update matched 0 rows — RLS blocked it (check your admin role)');
     var rp = RA_DATA.reports.find(function(r){return r.id===id;}); if (rp) rp.status=newStatus;
     toast('Report: '+newStatus);
     if (currentTab==='rentalReports') renderRentalReports();
@@ -3339,8 +3340,9 @@ async function raSetReportStatus(id, newStatus) {
 
 async function raSetReviewStatus(id, newStatus) {
   try {
-    var r = await sb.from('rental_reviews').update({status:newStatus}).eq('id',id);
+    var r = await sb.from('rental_reviews').update({status:newStatus}).eq('id',id).select('id');
     if (r.error) throw r.error;
+    if (!r.data || !r.data.length) throw new Error('Update matched 0 rows — RLS blocked it (check your admin role)');
     var rv = RA_DATA.reviews.find(function(r){return r.id===id;}); if (rv) rv.status=newStatus;
     toast('Review: '+newStatus);
     if (currentTab==='rentalReviews') renderRentalReviews();
@@ -3349,8 +3351,9 @@ async function raSetReviewStatus(id, newStatus) {
 
 async function raSetFeaturedActive(id, active) {
   try {
-    var r = await sb.from('rental_featured_listings').update({is_active:active}).eq('id',id);
+    var r = await sb.from('rental_featured_listings').update({is_active:active}).eq('id',id).select('id');
     if (r.error) throw r.error;
+    if (!r.data || !r.data.length) throw new Error('Update matched 0 rows — RLS blocked it (check your admin role)');
     var f = RA_DATA.featured.find(function(f){return f.id===id;}); if (f) f.is_active=active;
     toast('Featured listing '+(active?'activated':'deactivated'));
     if (currentTab==='rentalFeatured') renderRentalFeatured();
