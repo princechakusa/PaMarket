@@ -217,8 +217,22 @@
         ${_field('rcSetupBio', 'Company Description', `<textarea id="rcSetupBio" rows="4" placeholder="Tell customers about your rental services, coverage areas, and fleet..." style="width:100%;min-height:80px;border:1.5px solid #E4E4E7;border-radius:14px;padding:12px 14px;font-family:inherit;font-size:14px;color:#18181B;background:#fff;resize:none;box-sizing:border-box"></textarea>`)}
         ${_textField('rcSetupPhone', 'Contact Phone', '+263 77 000 0000', 'tel', biz.phone || '')}
         ${_textField('rcSetupWA', 'WhatsApp Number', '+263 77 000 0000', 'tel', biz.phone || '')}
-        <div style="height:8px"></div>
-        <button class="btn-pri" style="width:100%" onclick="H._rentalBiz.submitSetup('${esc(biz.id)}')">Activate Rental Portal</button>
+
+        <div style="margin-top:6px;background:#F9FAFB;border:1.5px solid #E4E4E7;border-radius:14px;padding:14px">
+          <div style="font-size:13px;font-weight:800;color:#18181B;margin-bottom:6px">Verification Documents</div>
+          <div style="font-size:12.5px;color:#52525B;line-height:1.6;margin-bottom:12px">
+            To be approved, email us clear photos or PDFs of your:
+            <ul style="margin:6px 0 0 16px;padding:0">
+              <li>Company registration certificate</li>
+              <li>Vehicle registration book(s)</li>
+              <li>Owner's national ID</li>
+            </ul>
+          </div>
+          <button type="button" class="btn-sec" style="width:100%" onclick="H._rentalBiz.emailDocuments('${esc(biz.id)}')">Email Documents</button>
+        </div>
+
+        <div style="height:12px"></div>
+        <button class="btn-pri" style="width:100%" onclick="H._rentalBiz.submitSetup('${esc(biz.id)}')">Submit for Approval</button>
       </div>
     </div>`;
   };
@@ -1166,6 +1180,25 @@
     RB._loadingCompany = false;
   };
 
+  // Opens the user's email app pre-addressed to PaMarket so they can attach
+  // their verification documents. Uses the same inbox as ad inquiries.
+  RB.emailDocuments = function (bizId) {
+    const u   = H.currentUser();
+    const biz = (H.state.businesses || []).find(b => b.id === bizId) || {};
+    const subject = encodeURIComponent('Rental Verification Documents — ' + (biz.name || 'Company'));
+    const body = encodeURIComponent(
+      'Business name: ' + (biz.name || '') + '\n' +
+      'Owner: ' + ((u && u.name) || '') + '\n' +
+      'Contact: ' + ((u && (u.email || u.phone)) || '') + '\n' +
+      'Business ID: ' + bizId + '\n\n' +
+      'Please attach the following before sending:\n' +
+      '  1. Company registration certificate\n' +
+      '  2. Vehicle registration book(s)\n' +
+      "  3. Owner's national ID\n"
+    );
+    window.location.href = 'mailto:chakusaprince@gmail.com?subject=' + subject + '&body=' + body;
+  };
+
   RB.submitSetup = async function (bizId) {
     const sb = window.supabase; if (!sb) return;
     const bio   = document.getElementById('rcSetupBio')?.value?.trim()   || null;
@@ -1192,7 +1225,7 @@
         p_whatsapp:    wa,
       });
       if (error) throw error;
-      H.toast('Rental company set up! Pending admin approval.');
+      H.toast('Submitted! Email your documents so we can approve you.', 5000);
       RB.company = null;
       RB._access = null;   // force re-fetch on next dashboard entry
       H.openInner('RentalDashboard');
@@ -1329,38 +1362,46 @@
   };
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Image Upload Pipeline
+  // Image Upload Pipeline — Cloudflare R2 (same path as listings/chat).
+  // Photos are compressed client-side then PUT to R2 via H.uploadToR2; the
+  // returned public URL is stored in rental_vehicle_media.url. This avoids
+  // Supabase Storage egress entirely, matching the rest of the app.
   // ─────────────────────────────────────────────────────────────────────────
   RB.uploadMedia = async function (listingId, file, isCover) {
-    const sb = window.supabase; if (!sb) return;
-    const u  = H.currentUser(); if (!u) return;
+    const sb = window.supabase; if (!sb) return null;
+    const u  = H.currentUser(); if (!u) return null;
+    if (typeof H.uploadToR2 !== 'function') { H.toast('Uploads unavailable right now.', 4000, true); return null; }
     const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
-    if (!ALLOWED.includes(file.type)) { H.toast('Only JPEG, PNG, WebP, or HEIC images allowed.', 4000, true); return; }
-    if (file.size > 8 * 1024 * 1024) { H.toast('Image must be under 8 MB.', 4000, true); return; }
-    const ext  = file.name.split('.').pop().toLowerCase() || 'jpg';
-    const path = `${u.id}/${listingId}/${Date.now()}.${ext}`;
+    if (file.type && !ALLOWED.includes(file.type)) { H.toast('Only JPEG, PNG, WebP, or HEIC images allowed.', 4000, true); return null; }
+    if (file.size > 12 * 1024 * 1024) { H.toast('Image is too large. Please choose a smaller photo.', 4000, true); return null; }
     try {
-      const { error: upErr } = await sb.storage.from('rental-media').upload(path, file, { cacheControl: '3600', upsert: false });
-      if (upErr) throw upErr;
-      const { data: signed } = await sb.storage.from('rental-media').createSignedUrl(path, 60 * 60 * 24 * 365);
-      const url = signed && signed.signedUrl;
-      if (!url) throw new Error('Could not get image URL');
+      // Compress to a JPEG data URL (handles HEIC/large phone photos), then
+      // convert to a Blob for the R2 PUT.
+      const dataUrl = await H.compressImage(file, 1400, 0.8);
+      const b64  = dataUrl.split(',')[1];
+      const blob = new Blob([Uint8Array.from(atob(b64), c => c.charCodeAt(0))], { type: 'image/jpeg' });
+      const key  = 'rentals/' + u.id + '/' + listingId + '/' + H.uid() + '.jpg';
+      const url  = await H.uploadToR2(blob, key, 'image/jpeg');
+      if (!url) throw new Error('Upload did not return a URL');
+
       const { count } = await sb.from('rental_vehicle_media').select('id', { count: 'exact', head: true }).eq('listing_id', listingId);
       const willBeCover = isCover || count === 0;
       if (willBeCover) {
         await sb.from('rental_vehicle_media').update({ is_cover: false }).eq('listing_id', listingId).eq('is_cover', true);
       }
-      await sb.from('rental_vehicle_media').insert({ listing_id: listingId, url, storage_path: path, is_cover: willBeCover, sort_order: count || 0 });
+      const { error: insErr } = await sb.from('rental_vehicle_media')
+        .insert({ listing_id: listingId, url, is_cover: willBeCover, sort_order: count || 0 })
+        .select('id');
+      if (insErr) throw insErr;
       if (willBeCover) {
         const v = RB.fleet.find(x => x.id === listingId);
         if (v) v.cover_url = url;
       }
-      return { url, path };
+      return { url, path: key };
     } catch (e) {
       console.warn('rental upload:', e);
-      if (e.statusCode === 409) H.toast('File already exists. Please try again.', 4000, true);
-      else if (e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
-      else H.toast('Upload failed: ' + (e.message || 'Unknown error'), 4000, true);
+      if (e && e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
+      else H.toast('Upload failed. Please try again.', 4000, true);
       return null;
     }
   };

@@ -296,20 +296,6 @@
     R.loadBrowse(true);
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // ── "List your fleet" CTA banner ─────────────────────────────────────────
-  function _listYourFleetBanner() {
-    return `<div onclick="H._rental.openBusinessPortal()" style="margin:16px 16px 0;background:linear-gradient(135deg,#1A3A8F 0%,#2D5BE3 100%);border-radius:16px;padding:16px;cursor:pointer;display:flex;align-items:center;gap:14px">
-      <div style="width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2M7 17h10"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="M5 9l2-4h10l2 4"/></svg>
-      </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:800;color:#fff">Own a rental fleet?</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px">Register your company and list your vehicles free</div>
-      </div>
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-    </div>`;
-  }
 
   // ── Empty state for rentals (no listings yet) ─────────────────────────────
   function _rentalEmptyState(hasFilters) {
@@ -366,7 +352,6 @@
       ${gridHtml}
       ${R._loading && allCards.length ? `<div style="display:flex;flex-direction:column;gap:12px;padding:0 16px 16px">${_skelCards(2)}</div>` : ''}
       ${!R._loading && R.hasMore && allCards.length ? `<div style="padding:16px;text-align:center"><button onclick="H._rental.loadMore()" class="btn-sec" style="min-width:160px">Load more</button></div>` : ''}
-      ${!R._loading ? _listYourFleetBanner() : ''}
       <div style="height:24px"></div>
       <div style="height:90px"></div>
     </div>`;
