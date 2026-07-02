@@ -113,6 +113,9 @@
       <div style="height:8px"></div>
       <div class="profile-section-label">My Business</div>
       ${bizCard}
+      ${biz.length ? `<div class="pinfo-card" style="margin-top:8px">
+        ${row('pi-blue','<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2M7 17h10"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="M5 9l2-4h10l2 4"/></svg>','My Rental Fleet','RentalDashboard','','')}
+      </div>` : ''}
 
       <div style="height:8px"></div>
       <div class="profile-section-label">Selling</div>

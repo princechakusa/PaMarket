@@ -614,8 +614,15 @@
     var rows = '<button class="subcat-row subcat-all" onclick="H._openCatPage(\'' + cid + '\',null)">'
       + '<span>All in ' + H.escHtml(name) + '</span>' + check + '</button>';
     rows += subs.map(function (s) {
-      return '<button class="subcat-row" onclick="H._openCatPage(\'' + cid + '\',\'' + H.escHtml(s.key) + '\')">'
+      var row = '<button class="subcat-row" onclick="H._openCatPage(\'' + cid + '\',\'' + H.escHtml(s.key) + '\')">'
         + '<span>' + H.escHtml(s.label) + '</span>' + chev + '</button>';
+      // Vehicle Rental entry sits between Kombis & Buses and Motorbikes.
+      // Bold, same font; opens the rental marketplace instead of a filter.
+      if (cid === 'vehicles' && s.key === 'kombis') {
+        row += '<button class="subcat-row" onclick="H.openInner(\'RentalListings\')">'
+          + '<span style="font-weight:800">Vehicle Rental</span>' + chev + '</button>';
+      }
+      return row;
     }).join('');
     return '<div class="page active">'
       + H.innerTopbar(name)

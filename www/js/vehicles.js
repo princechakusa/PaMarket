@@ -33,16 +33,9 @@
       }
     ], 'vehicles');
 
-    var rentalBanner = '<div onclick="H.openInner(\'RentalListings\')" style="margin:10px 12px 0;background:#1A3A8F;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer">'
-      + '<div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2M7 17h10"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="M5 9l2-4h10l2 4"/></svg></div>'
-      + '<div style="flex:1"><div style="font-size:14px;font-weight:800;color:#fff">Vehicle Rental</div><div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">Browse cars, SUVs, pickups &amp; more for rent</div></div>'
-      + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>'
-      + '</div>';
-
     return '<div class="page active">'
       + H._catTopbar('Vehicles', '#e53935')
       + H._catHeader('vehicles', 'Vehicles', '#e53935', f)
-      + rentalBanner
       + (H.adCarousel && H.activeAds ? H.adCarousel(H.activeAds('vehicles')) : '')
       + '<div id="cl_vehicles" style="padding-bottom:88px">'
       + (ls.length ? '<div class="listing-list">' + ls.map(H.renderListCard).join('') + '</div>' : H.emptyState('No vehicles listed', 'Be the first to sell!', 'Post an Ad', "H.navTo('Post')"))
