@@ -123,52 +123,62 @@
     const saved  = R.favIds.has(v.id);
     const name   = esc((brandLabel(v.brand_slug) + ' ' + (v.model || '')).trim());
     const img    = v.cover_url
-      ? `<img src="${esc(v.cover_url)}" alt="${name}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`
-      : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94A3B8;background:#EEF2FB">${I.car}</div>`;
+      ? `<img src="${esc(v.cover_url)}" alt="${name}" loading="lazy" class="rvl-card-img-fade" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onload="this.classList.add('on')">`
+      : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#A8B4D0;background:linear-gradient(135deg,#EEF2FB,#DCE4F7)">${I.car}</div>`;
 
     const availPill = v.is_available
-      ? `<div style="position:absolute;bottom:10px;left:10px;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.94);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;color:#16A34A;box-shadow:0 1px 4px rgba(0,0,0,.12)"><span style="width:7px;height:7px;border-radius:50%;background:#16A34A"></span>Available</div>`
-      : `<div style="position:absolute;bottom:10px;left:10px;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.94);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;color:#DC2626;box-shadow:0 1px 4px rgba(0,0,0,.12)"><span style="width:7px;height:7px;border-radius:50%;background:#DC2626"></span>Booked</div>`;
+      ? `<div style="position:absolute;bottom:10px;left:10px;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.96);border-radius:999px;padding:5px 10px 5px 8px;font-size:11px;font-weight:700;color:#16A34A;box-shadow:0 2px 6px rgba(16,24,40,.12)"><span style="width:7px;height:7px;border-radius:50%;background:#16A34A"></span>Available</div>`
+      : `<div style="position:absolute;bottom:10px;left:10px;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.96);border-radius:999px;padding:5px 10px 5px 8px;font-size:11px;font-weight:700;color:#DC2626;box-shadow:0 2px 6px rgba(16,24,40,.12)"><span style="width:7px;height:7px;border-radius:50%;background:#DC2626"></span>Booked</div>`;
 
-    const metaChip = (icon, label) => label
-      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--sub);background:var(--bg,#F0F4FF);border-radius:8px;padding:4px 8px">${icon}${esc(String(label))}</span>`
+    const metaChip = (emoji, label) => label
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:#5C6480;background:#F5F7FC;border-radius:7px;padding:4px 8px;font-weight:600">${emoji}${esc(String(label))}</span>`
       : '';
 
-    return `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 1px 3px rgba(16,24,40,.05)" onclick="H._rental.openDetail('${lid}')">
-      <div style="position:relative;width:100%;padding-top:56%;background:#EEF2FB;overflow:hidden">
+    return `<div class="rvl-card" style="background:var(--card,#fff);border:1px solid #F0F1F3;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.04),0 4px 14px rgba(16,24,40,.06)" onclick="H._rental.openDetail('${lid}')">
+      <div style="position:relative;width:100%;padding-top:62%;background:#EEF2FB;overflow:hidden">
         ${img}
-        ${v.is_featured ? '<div style="position:absolute;top:10px;left:10px;background:#F5A623;color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:3px 8px;letter-spacing:.4px">FEATURED</div>' : ''}
-        <button onclick="event.stopPropagation();H._rental.toggleFav('${lid}')" aria-label="${saved ? 'Remove from saved' : 'Save vehicle'}" style="position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.94);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.12)">${saved ? I.heartF : I.heart}</button>
+        ${v.is_featured ? '<div style="position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#F5A623,#F09819);color:#fff;font-size:10px;font-weight:800;border-radius:8px;padding:5px 9px;letter-spacing:.4px;box-shadow:0 2px 6px rgba(245,166,35,.4);display:flex;align-items:center;gap:4px">⭐ FEATURED</div>' : ''}
+        <button onclick="event.stopPropagation();H._rental.toggleFav('${lid}')" aria-label="${saved ? 'Remove from saved' : 'Save vehicle'}" class="rvl-fav-btn${saved ? ' rvl-fav-pop' : ''}" style="position:absolute;top:10px;right:10px;width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.96);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 8px rgba(16,24,40,.14)">${saved ? I.heartF : I.heart}</button>
         ${availPill}
       </div>
-      <div style="padding:12px 14px 14px">
+      <div style="padding:13px 14px 14px">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
-          <div style="font-size:15.5px;font-weight:800;color:var(--text);line-height:1.3;min-width:0">${name}</div>
-          ${v.daily_rate ? `<div style="text-align:right;flex-shrink:0"><span style="font-size:17px;font-weight:800;color:#1A3A8F">$${fmt(v.daily_rate)}</span><span style="font-size:11px;color:var(--sub);font-weight:600">/day</span></div>` : ''}
+          <div style="font-size:16px;font-weight:800;color:#151A2C;line-height:1.25;letter-spacing:-.2px;min-width:0">${name}</div>
+          ${v.daily_rate ? `<div style="text-align:right;flex-shrink:0;white-space:nowrap"><span style="font-size:18px;font-weight:800;color:#1A3A8F">$${fmt(v.daily_rate)}</span><span style="font-size:11px;color:#8992A9;font-weight:600">/day</span></div>` : ''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px">
-          ${metaChip(I.calendar, v.year)}
-          ${metaChip(I.carSm, catLabel(v.category_slug))}
-          ${metaChip(I.loc, v.city)}
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:9px">
+          ${metaChip('📅 ', v.year)}
+          ${metaChip('🚙 ', catLabel(v.category_slug))}
+          ${metaChip('📍 ', v.city)}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border,#E8ECF4)">
-          <div style="width:24px;height:24px;border-radius:7px;background:#EEF2FB;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#1A3A8F">${I.bldg}</div>
-          <span style="flex:1;font-size:12px;color:var(--sub);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.company_name || '')}</span>
-          ${v.view_count ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--sub)">${I.eye}${fmt(v.view_count)}</span>` : ''}
-          <span style="font-size:12px;font-weight:700;color:#1A3A8F;display:inline-flex;align-items:center">View${I.chevR.replace('#94A3B8','#1A3A8F')}</span>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:11px;padding-top:11px;border-top:1px solid #F0F1F3">
+          <div style="width:22px;height:22px;border-radius:6px;background:#EEF2FB;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#1A3A8F">${I.bldg}</div>
+          <span style="flex:1;font-size:12px;color:#8992A9;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.company_name || '')}</span>
+          ${v.view_count ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#B4BACB">👁 ${fmt(v.view_count)}</span>` : ''}
+          <span style="font-size:12px;font-weight:800;color:#1A3A8F;display:inline-flex;align-items:center">View${I.chevR.replace('#94A3B8','#1A3A8F')}</span>
         </div>
       </div>
     </div>`;
   }
 
   // ── Skeleton card — full-width ─────────────────────────────────────────────
+  // Mirrors the real card's exact proportions (62% image, name+price row,
+  // meta chips, footer) so loading never causes a layout jump.
   function _skelCards(n) {
-    const c = `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:16px;overflow:hidden">
-      <div class="skel" style="width:100%;padding-top:56%;"></div>
-      <div style="padding:12px">
-        <div class="skel skel-line w70" style="margin-bottom:8px"></div>
-        <div class="skel skel-line w40" style="margin-bottom:12px"></div>
-        <div style="display:flex;gap:8px"><div class="skel" style="flex:1;height:52px;border-radius:8px"></div><div class="skel" style="flex:1;height:52px;border-radius:8px"></div></div>
+    const c = `<div style="background:var(--card,#fff);border:1px solid #F0F1F3;border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.04),0 4px 14px rgba(16,24,40,.06)">
+      <div class="skel" style="width:100%;padding-top:62%"></div>
+      <div style="padding:13px 14px 14px">
+        <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:9px">
+          <div class="skel skel-line" style="width:55%;height:18px"></div>
+          <div class="skel skel-line" style="width:22%;height:18px"></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:11px">
+          <div class="skel" style="width:60px;height:22px;border-radius:7px"></div>
+          <div class="skel" style="width:70px;height:22px;border-radius:7px"></div>
+          <div class="skel" style="width:64px;height:22px;border-radius:7px"></div>
+        </div>
+        <div class="skel" style="height:1px;width:100%;margin-bottom:11px;opacity:.5"></div>
+        <div class="skel skel-line" style="width:100%;height:22px"></div>
       </div>
     </div>`;
     return Array(n || 4).fill(c).join('');
@@ -260,26 +270,50 @@
   R.openFilters = function () {
     R._draft = Object.assign({}, R.filters);
     R._citySearch = '';
+    // Location and Price are the most-used filters, so they open expanded;
+    // the rest start collapsed to cut scrolling (per approved design).
+    R._openGroups = { loc: true, price: true, type: false, brand: false, trans: false, fuel: false, avail: false };
     R._loadFilterLookups();
     _renderFilterOverlay();
     R._updateDraftCount();
   };
 
   const PRICE_MAX_CAP = 500;
+  const GROUP_ICONS = {
+    loc:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    price: '$',
+    type:  '🚙',
+    brand: '🏷️',
+    trans: '⚙️',
+    fuel:  '⛽',
+    avail: '📅',
+  };
 
   function _renderFilterOverlay() {
     const prev = document.getElementById('rentalFilterBody');
     const prevScroll = prev ? prev.scrollTop : 0;
     document.getElementById('rentalFilterSheet')?.remove();
     const f = R._draft || R.filters;
+    const open = R._openGroups || {};
 
     const chip = (label, active, onclick) =>
-      `<button onclick="${onclick}" style="min-height:36px;padding:7px 14px;border-radius:20px;border:1.5px solid ${active ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${active ? '#1A3A8F' : 'var(--card,#fff)'};color:${active ? '#fff' : 'var(--text)'};font-size:13px;font-weight:${active ? '700' : '500'};cursor:pointer;font-family:inherit;white-space:nowrap">${label}</button>`;
+      `<button onclick="${onclick}" class="rvl-chip-tap" style="min-height:36px;padding:7px 14px;border-radius:20px;border:1.5px solid ${active ? '#1A3A8F' : '#EEF0F4'};background:${active ? '#1A3A8F' : '#fff'};color:${active ? '#fff' : '#3B4256'};font-size:13px;font-weight:${active ? '700' : '600'};cursor:pointer;font-family:inherit;white-space:nowrap">${label}</button>`;
 
-    const section = (title, content) => `<div style="padding:16px;border-bottom:1px solid var(--border,#E8ECF4);background:var(--card,#fff)">
-      <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">${title}</div>
-      ${content}
-    </div>`;
+    // Collapsible group: header shows an icon, title, a live value summary
+    // when collapsed, and a chevron. Body only renders when open, so closed
+    // sections cost nothing in scroll height (matches the approved mockup).
+    function group(key, title, valueSummary, content) {
+      const isOpen = !!open[key];
+      return `<div style="border-bottom:1px solid #F0F1F3;background:#fff">
+        <div onclick="H._rental._toggleGroup('${key}')" style="display:flex;align-items:center;gap:10px;padding:15px 18px;cursor:pointer">
+          <div style="width:32px;height:32px;border-radius:9px;background:#EEF2FB;color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px">${GROUP_ICONS[key] || ''}</div>
+          <div style="flex:1;font-size:14.5px;font-weight:700;color:#151A2C">${title}</div>
+          ${!isOpen && valueSummary ? `<span style="font-size:12.5px;color:#1A3A8F;font-weight:700;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${valueSummary}</span>` : ''}
+          <span class="rvl-fgroup-chev" style="color:#B4BACB;transform:rotate(${isOpen ? '180deg' : '0deg'})">${I.chevD}</span>
+        </div>
+        ${isOpen ? `<div style="padding:0 18px 18px">${content}</div>` : ''}
+      </div>`;
+    }
 
     // ── Location: search + recent + popular ─────────────────────────────────
     const allCities  = R._cityList || ['Harare','Bulawayo','Mutare','Gweru','Masvingo','Victoria Falls','Chinhoyi','Kwekwe'];
@@ -287,13 +321,13 @@
     const shownCities = q ? allCities.filter(c => c.toLowerCase().includes(q)) : allCities;
     const recentCities = _lsGet(RECENT_CITY_KEY).filter(c => allCities.includes(c));
     const locationHtml = `
-      <div style="display:flex;align-items:center;gap:8px;border:1.5px solid var(--border,#E8ECF4);border-radius:12px;padding:0 12px;margin-bottom:12px;background:var(--card,#fff)">
+      <div style="display:flex;align-items:center;gap:8px;border:1.5px solid #EEF0F4;border-radius:12px;padding:0 12px;margin-bottom:12px;background:#F9FAFC">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#94A3B8" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input id="rfCitySearch" placeholder="Search city" value="${esc(R._citySearch || '')}" autocomplete="off" oninput="H._rental._citySearchInput(this.value)" style="flex:1;border:none;outline:none;padding:11px 0;font-size:14px;background:transparent;color:var(--text);font-family:inherit">
       </div>
-      ${recentCities.length && !q ? `<div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Recent</div>
+      ${recentCities.length && !q ? `<div style="font-size:11px;font-weight:700;color:#8992A9;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Recent</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">${recentCities.map(c => chip(c, f.city === c, `H._rental._draftToggle('city','${esc(c)}')`)).join('')}</div>` : ''}
-      <div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${q ? 'Matches' : 'Popular Cities'}</div>
+      <div style="font-size:11px;font-weight:700;color:#8992A9;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${q ? 'Matches' : 'Popular Cities'}</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px">${shownCities.length ? shownCities.map(c => chip(c, f.city === c, `H._rental._draftToggle('city','${esc(c)}')`)).join('') : '<span style="font-size:13px;color:var(--sub)">No matching city</span>'}</div>`;
 
     // ── Daily price: min/max inputs + max slider with live preview ──────────
@@ -302,20 +336,20 @@
     const sliderVal = f.pmax != null ? f.pmax : PRICE_MAX_CAP;
     const priceHtml = `
       <div style="display:flex;gap:10px;margin-bottom:14px">
-        <div style="flex:1"><div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:5px">MIN ($/day)</div>
-          <input id="rfPmin" type="number" min="0" inputmode="numeric" placeholder="0" value="${pmin}" onchange="H._rental._draftPrice()" style="width:100%;border:1.5px solid var(--border,#E8ECF4);border-radius:12px;padding:11px 12px;font-size:14px;color:var(--text);background:var(--card,#fff);box-sizing:border-box;font-family:inherit"></div>
-        <div style="flex:1"><div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:5px">MAX ($/day)</div>
-          <input id="rfPmax" type="number" min="0" inputmode="numeric" placeholder="Any" value="${pmax}" onchange="H._rental._draftPrice()" style="width:100%;border:1.5px solid var(--border,#E8ECF4);border-radius:12px;padding:11px 12px;font-size:14px;color:var(--text);background:var(--card,#fff);box-sizing:border-box;font-family:inherit"></div>
+        <div style="flex:1"><div style="font-size:11px;font-weight:700;color:#8992A9;margin-bottom:5px">MIN ($/day)</div>
+          <input id="rfPmin" type="number" min="0" inputmode="numeric" placeholder="0" value="${pmin}" onchange="H._rental._draftPrice()" style="width:100%;border:1.5px solid #EEF0F4;border-radius:12px;padding:11px 12px;font-size:14px;color:var(--text);background:#fff;box-sizing:border-box;font-family:inherit"></div>
+        <div style="flex:1"><div style="font-size:11px;font-weight:700;color:#8992A9;margin-bottom:5px">MAX ($/day)</div>
+          <input id="rfPmax" type="number" min="0" inputmode="numeric" placeholder="Any" value="${pmax}" onchange="H._rental._draftPrice()" style="width:100%;border:1.5px solid #EEF0F4;border-radius:12px;padding:11px 12px;font-size:14px;color:var(--text);background:#fff;box-sizing:border-box;font-family:inherit"></div>
       </div>
       <input id="rfPriceSlider" type="range" min="10" max="${PRICE_MAX_CAP}" step="10" value="${sliderVal}" oninput="document.getElementById('rfPriceLive').textContent = this.value >= ${PRICE_MAX_CAP} ? 'Any price' : 'Up to $' + this.value + '/day'" onchange="H._rental._draftSlider(this.value)" style="width:100%;accent-color:#1A3A8F">
       <div id="rfPriceLive" style="text-align:center;font-size:13px;font-weight:700;color:#1A3A8F;margin-top:6px">${f.pmax != null ? 'Up to $' + f.pmax + '/day' : 'Any price'}</div>`;
 
     // ── Vehicle type: selectable icon cards ──────────────────────────────────
-    const types = [['suv','SUV'],['sedan','Sedan'],['pickup','Pickup'],['minibus','Minibus'],['luxury','Luxury'],['bus','Bus'],['motorbike','Motorbike'],['other','Other']];
-    const typeHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">` + types.map(([v, l]) => {
+    const types = [['suv','SUV','🚙'],['sedan','Sedan','🚗'],['pickup','Pickup','🛻'],['minibus','Minibus','🚐'],['luxury','Luxury','✨'],['bus','Bus','🚌'],['motorbike','Motorbike','🏍️'],['other','Other','🚘']];
+    const typeHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">` + types.map(([v, l, e]) => {
       const active = f.cat === v;
-      return `<button onclick="H._rental._draftToggle('cat','${v}')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:14px;border:1.5px solid ${active ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${active ? '#EEF2FB' : 'var(--card,#fff)'};color:${active ? '#1A3A8F' : 'var(--text)'};cursor:pointer;font-family:inherit">
-        <span style="color:${active ? '#1A3A8F' : '#94A3B8'}">${I.car}</span>
+      return `<button onclick="H._rental._draftToggle('cat','${v}')" class="rvl-chip-tap" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:14px;border:1.5px solid ${active ? '#1A3A8F' : '#EEF0F4'};background:${active ? '#F3F6FF' : '#fff'};color:${active ? '#1A3A8F' : 'var(--text)'};cursor:pointer;font-family:inherit">
+        <span style="font-size:19px">${e}</span>
         <span style="font-size:11.5px;font-weight:${active ? '800' : '600'}">${l}</span>
       </button>`;
     }).join('') + `</div>`;
@@ -325,34 +359,44 @@
     const brandHtml = `<div style="display:flex;flex-wrap:wrap;gap:8px">${brands.map(([slug, label]) => chip(esc(label), f.brand === slug, `H._rental._draftToggle('brand','${esc(slug)}')`)).join('')}</div>`;
 
     // ── Segmented controls ──────────────────────────────────────────────────
-    const seg = (opts, key, cur) => `<div style="display:flex;border:1.5px solid var(--border,#E8ECF4);border-radius:12px;overflow:hidden">${opts.map((o, i) => {
+    const seg = (opts, key, cur) => `<div style="display:flex;background:#F5F7FC;border-radius:12px;padding:3px;gap:2px">${opts.map((o) => {
       const active = cur === o;
-      return `<button onclick="H._rental._draftToggle('${key}','${o}')" style="flex:1;min-height:42px;padding:10px 4px;border:none;${i > 0 ? 'border-left:1.5px solid var(--border,#E8ECF4);' : ''}background:${active ? '#1A3A8F' : 'var(--card,#fff)'};color:${active ? '#fff' : 'var(--text)'};font-size:13px;font-weight:${active ? '800' : '600'};cursor:pointer;font-family:inherit">${o}</button>`;
+      return `<button onclick="H._rental._draftToggle('${key}','${o}')" class="rvl-chip-tap" style="flex:1;min-height:40px;padding:9px 4px;border:none;border-radius:9px;background:${active ? '#fff' : 'transparent'};color:${active ? '#1A3A8F' : '#5C6480'};font-size:13px;font-weight:${active ? '800' : '600'};cursor:pointer;font-family:inherit;${active ? 'box-shadow:0 1px 3px rgba(16,24,40,.12)' : ''}">${o}</button>`;
     }).join('')}</div>`;
 
     const availHtml = chip('Available Today', !!f.avail, "H._rental._draftToggle('avail','')");
 
+    // Live summaries shown on collapsed group headers
+    const sumLoc   = f.city || '';
+    const sumPrice = f.pmax != null ? `Up to $${f.pmax}` : (f.pmin != null ? `From $${f.pmin}` : '');
+    const sumType  = f.cat ? catLabel(f.cat) : '';
+    const sumBrand = f.brand ? brandLabel(f.brand) : '';
+    const sumTrans = f.trans || '';
+    const sumFuel  = f.fuel || '';
+    const sumAvail = f.avail ? 'On' : '';
+
     const html = `<div id="rentalFilterSheet" style="position:fixed;inset:0;z-index:200;display:flex;flex-direction:column">
       <div onclick="H._rental.closeFilters()" style="flex:1;background:rgba(0,0,0,.45)"></div>
-      <div style="background:var(--bg,#F0F4FF);border-radius:20px 20px 0 0;max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--card,#fff);border-bottom:1px solid var(--border,#E8ECF4);border-radius:20px 20px 0 0;flex-shrink:0">
-          <button onclick="H._rental.closeFilters()" aria-label="Close filters" style="width:38px;height:38px;border-radius:50%;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center">${I.close}</button>
-          <span style="font-size:16px;font-weight:800;color:var(--text)">Filters</span>
+      <div class="rvl-sheet-in" style="background:#fff;border-radius:22px 22px 0 0;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 30px rgba(0,0,0,.15)">
+        <div style="width:36px;height:4px;background:#E4E7EE;border-radius:2px;margin:10px auto 2px;flex-shrink:0"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px 12px;flex-shrink:0">
           <span style="width:38px"></span>
+          <span style="font-size:17px;font-weight:800;color:var(--text)">Filters</span>
+          <button onclick="H._rental.closeFilters()" aria-label="Close filters" style="width:34px;height:34px;border-radius:50%;border:none;background:#F5F7FC;color:#5C6480;cursor:pointer;display:flex;align-items:center;justify-content:center">${I.close}</button>
         </div>
         <div id="rentalFilterBody" style="overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch">
-          ${section('Location', locationHtml)}
-          ${section('Daily Price', priceHtml)}
-          ${section('Vehicle Type', typeHtml)}
-          ${section('Brand', brandHtml)}
-          ${section('Transmission', seg(['Automatic','Manual','CVT'], 'trans', f.trans))}
-          ${section('Fuel Type', seg(['Petrol','Diesel','Hybrid','Electric'], 'fuel', f.fuel))}
-          ${section('Availability', `<div style="display:flex;gap:8px">${availHtml}</div>`)}
+          ${group('loc',   'Location',      sumLoc,   locationHtml)}
+          ${group('price', 'Daily Price',   sumPrice, priceHtml)}
+          ${group('type',  'Vehicle Type',  sumType,  typeHtml)}
+          ${group('brand', 'Brand',         sumBrand, brandHtml)}
+          ${group('trans', 'Transmission',  sumTrans, seg(['Automatic','Manual','CVT'], 'trans', f.trans))}
+          ${group('fuel',  'Fuel Type',     sumFuel,  seg(['Petrol','Diesel','Hybrid','Electric'], 'fuel', f.fuel))}
+          ${group('avail', 'Availability',  sumAvail, `<div style="display:flex;gap:8px">${availHtml}</div>`)}
           <div style="height:8px"></div>
         </div>
-        <div style="display:flex;gap:10px;align-items:center;padding:14px 16px;background:var(--card,#fff);border-top:1px solid var(--border,#E8ECF4);padding-bottom:calc(14px + var(--safe-bottom,0px));flex-shrink:0">
-          <button onclick="H._rental._resetDraft()" style="flex-shrink:0;padding:14px 18px;border-radius:14px;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Reset</button>
-          <button id="rfApplyBtn" onclick="H._rental.applyFilters()" style="flex:1;padding:14px;border-radius:14px;border:none;background:#1A3A8F;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Show Vehicles</button>
+        <div style="display:flex;gap:10px;align-items:center;padding:14px 18px;background:#fff;border-top:1px solid #F0F1F3;padding-bottom:calc(14px + var(--safe-bottom,0px));flex-shrink:0">
+          <button onclick="H._rental._resetDraft()" style="flex-shrink:0;padding:15px 20px;border-radius:14px;border:1.5px solid #E4E7EE;background:#fff;color:#3B4256;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Reset</button>
+          <button id="rfApplyBtn" onclick="H._rental.applyFilters()" style="flex:1;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,#1A3A8F,#25438f);color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(26,58,143,.3)">Show Vehicles</button>
         </div>
       </div>
     </div>`;
@@ -360,6 +404,12 @@
     const body = document.getElementById('rentalFilterBody');
     if (body && prevScroll) body.scrollTop = prevScroll;
   }
+
+  R._toggleGroup = function (key) {
+    if (!R._openGroups) R._openGroups = {};
+    R._openGroups[key] = !R._openGroups[key];
+    _renderFilterOverlay();
+  };
 
   R._citySearchInput = function (val) {
     R._citySearch = val;
@@ -462,20 +512,30 @@
     return r;
   }
 
+  const SORT_ICONS = {
+    featured:    '⭐',
+    price_asc:   '↑',
+    price_desc:  '↓',
+    most_viewed: '🔥',
+    newest:      '✨',
+  };
+
   R.openSort = function () {
     document.getElementById('rentalSortSheet')?.remove();
     const rows = SORT_OPTIONS.map(([v, l, sub]) => {
       const active = R.sortBy === v;
-      return `<button onclick="H._rental._setSort('${v}')" style="display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;padding:13px 0;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid var(--border,#E8ECF4);text-align:left">
-        <span><span style="display:block;font-size:14px;font-weight:${active ? '800' : '600'};color:${active ? '#1A3A8F' : 'var(--text)'}">${l}</span>${sub ? `<span style="display:block;font-size:11.5px;color:var(--sub);margin-top:1px">${sub}</span>` : ''}</span>
+      return `<button onclick="H._rental._setSort('${v}')" style="display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 10px;border:none;border-radius:14px;background:${active ? '#F3F6FF' : 'none'};cursor:pointer;font-family:inherit;text-align:left;margin-bottom:2px">
+        <div style="width:38px;height:38px;border-radius:11px;background:${active ? '#1A3A8F' : '#F5F7FC'};color:${active ? '#fff' : '#5C6480'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">${SORT_ICONS[v] || ''}</div>
+        <span style="flex:1"><span style="display:block;font-size:14px;font-weight:${active ? '800' : '600'};color:${active ? '#1A3A8F' : 'var(--text)'}">${l}</span>${sub ? `<span style="display:block;font-size:11.5px;color:#8992A9;margin-top:1px">${sub}</span>` : ''}</span>
         ${active ? `<span style="width:22px;height:22px;border-radius:50%;background:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0">${I.check.replace('stroke="currentColor"','stroke="#fff"')}</span>` : ''}
       </button>`;
     }).join('');
 
     const html = `<div id="rentalSortSheet" style="position:fixed;inset:0;z-index:200;display:flex;flex-direction:column">
       <div onclick="document.getElementById('rentalSortSheet')?.remove()" style="flex:1;background:rgba(0,0,0,.45)"></div>
-      <div style="background:var(--card,#fff);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + var(--safe-bottom,0px))">
-        <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">Sort By</div>
+      <div class="rvl-sheet-in" style="background:#fff;border-radius:22px 22px 0 0;padding:0 10px calc(16px + var(--safe-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.15)">
+        <div style="width:36px;height:4px;background:#E4E7EE;border-radius:2px;margin:10px auto 6px"></div>
+        <div style="font-size:17px;font-weight:800;color:var(--text);padding:6px 8px 10px">Sort By</div>
         ${rows}
       </div>
     </div>`;
@@ -495,20 +555,24 @@
 
 
   // ── Empty state for rentals (no listings yet) ─────────────────────────────
-  function _rentalEmptyState(hasFilters) {
-    if (hasFilters) {
-      return `<div style="padding:40px 24px;text-align:center">
-        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#CBD5E1" stroke-width="1.5" style="margin-bottom:16px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px">No vehicles match your filters</div>
-        <div style="font-size:14px;color:var(--sub);margin-bottom:20px">Try removing some filters to see more results.</div>
-        <button onclick="H._rental.clearFilters()" style="padding:12px 28px;border-radius:12px;border:none;background:#1A3A8F;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Clear Filters</button>
-      </div>`;
-    }
-    return `<div style="padding:32px 24px 0;text-align:center">
-      <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="#CBD5E1" stroke-width="1.3" style="margin-bottom:16px"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2M7 17h10"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="M5 9l2-4h10l2 4"/></svg>
-      <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">No rental listings yet</div>
-      <div style="font-size:14px;color:var(--sub);line-height:1.6">Be the first rental company on PaMarket Zimbabwe. Register your fleet and reach thousands of customers.</div>
+  // Shared "polished empty state" tile: rounded gradient icon tile, title,
+  // short explanation, optional CTA. Used everywhere in the rental module.
+  function _emptyTile(iconSvg, title, sub, ctaLabel, ctaOnclick) {
+    return `<div style="padding:52px 28px 40px;text-align:center">
+      <div style="width:84px;height:84px;border-radius:22px;background:linear-gradient(135deg,#EEF2FB,#E4E9FA);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:#1A3A8F">${iconSvg}</div>
+      <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">${title}</div>
+      <div style="font-size:13.5px;color:#8992A9;line-height:1.6;max-width:280px;margin:0 auto ${ctaLabel ? '22px' : '0'}">${sub}</div>
+      ${ctaLabel ? `<button onclick="${ctaOnclick}" style="padding:13px 26px;border-radius:13px;border:none;background:#1A3A8F;color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit">${ctaLabel}</button>` : ''}
     </div>`;
+  }
+
+  function _rentalEmptyState(hasFilters) {
+    const searchIcon = '<svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+    if (hasFilters) {
+      return _emptyTile(searchIcon, 'No vehicles match', 'Try adjusting your filters or search in a different city to see more results.', 'Clear Filters', 'H._rental.clearFilters()');
+    }
+    const carIcon = '<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2M7 17h10"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="M5 9l2-4h10l2 4"/></svg>';
+    return _emptyTile(carIcon, 'No rental listings yet', 'Be the first rental company on PaMarket Zimbabwe. Register your fleet and reach thousands of customers.', null, null);
   }
 
   // PAGE: RentalListings
@@ -589,18 +653,28 @@
     });
   }
 
+  // Bold the portion of a suggestion that matches what's currently typed,
+  // so search feels responsive/intelligent rather than a static list.
+  function _highlightMatch(label, query) {
+    if (!query) return esc(label);
+    const idx = label.toLowerCase().indexOf(query.toLowerCase());
+    if (idx === -1) return esc(label);
+    return esc(label.slice(0, idx)) + '<b style="color:#1A3A8F">' + esc(label.slice(idx, idx + query.length)) + '</b>' + esc(label.slice(idx + query.length));
+  }
+
   R._showSearchPanel = function () {
     const panel = document.getElementById('rentalSearchPanel');
     if (!panel) return;
+    const query   = (document.getElementById('rentalSearch') || {}).value || '';
     const recents = _lsGet(RECENT_SEARCH_KEY);
     const sugRow = (label, icon) =>
-      `<button onclick="H._rental._commitSearch('${esc(label)}')" style="display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:11px 16px;border:none;background:none;font-size:13.5px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left;border-bottom:1px solid var(--border,#E8ECF4)">${icon}${esc(label)}</button>`;
+      `<button onclick="H._rental._commitSearch('${esc(label)}')" style="display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:11px 16px;border:none;background:none;font-size:13.5px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left;border-bottom:1px solid #F0F1F3">${icon}${_highlightMatch(label, query)}</button>`;
     const clockIcon  = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
     const trendIcon  = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#94A3B8" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>';
-    const header = (t) => `<div style="font-size:10.5px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;padding:12px 16px 6px">${t}</div>`;
+    const header = (t) => `<div style="font-size:10.5px;font-weight:800;color:#8992A9;text-transform:uppercase;letter-spacing:.6px;padding:12px 16px 6px">${t}</div>`;
     let html = '';
     if (recents.length) html += header('Recent Searches') + recents.map(s => sugRow(s, clockIcon)).join('');
-    html += header('Popular') + POPULAR_SEARCHES.map(s => sugRow(s, trendIcon)).join('');
+    html += header('Trending Searches') + POPULAR_SEARCHES.map(s => sugRow(s, trendIcon)).join('');
     panel.innerHTML = html;
     panel.style.display = 'block';
   };
@@ -643,8 +717,8 @@
     const comp   = d.company || {};
 
     const photoHtml = photos.length
-      ? `<img src="${esc(photos[0].url)}" id="rvdPhotoImg" data-photos="${esc(JSON.stringify(photos.map(m => m.url)))}" onclick="H.openPhotoViewer(JSON.parse(this.dataset.photos),0)" style="cursor:zoom-in;position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`
-      : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#EEF2FB;color:#94A3B8">${I.car}</div>`;
+      ? `<img src="${esc(photos[0].url)}" id="rvdPhotoImg" data-photos="${esc(JSON.stringify(photos.map(m => m.url)))}" onclick="H.openPhotoViewer(JSON.parse(this.dataset.photos),0)" class="rvl-card-img-fade" onload="this.classList.add('on')" style="cursor:zoom-in;position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`
+      : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#EEF2FB,#DCE4F7);color:#A8B4D0">${I.car}</div>`;
 
     const specIcons = [
       d.year               ? `<span style="display:flex;align-items:center;gap:4px;font-size:12.5px;color:var(--sub)">${I.calendar}${esc(String(d.year))}</span>` : '',
@@ -652,23 +726,30 @@
       specs.doors          ? `<span style="display:flex;align-items:center;gap:4px;font-size:12.5px;color:var(--sub)">${I.door}${esc(String(specs.doors))} doors</span>` : '',
     ].filter(Boolean).join('<span style="color:#CBD5E1;font-size:12px">·</span>');
 
-    // Stacked pricing rows
-    function priceRow(label, rate, kmInfo, perKm) {
+    // Price + availability grouped into one card so the two facts a user
+    // needs first ("how much" and "can I get it") aren't visually separated.
+    function priceCell(label, rate) {
       if (!rate) return '';
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:12px;margin-bottom:8px">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">${label}</div>
-          <div style="font-size:22px;font-weight:800;color:#1A3A8F">$${fmt(rate)}</div>
-        </div>
-        ${kmInfo ? `<div style="text-align:right"><div style="font-size:12px;color:var(--sub)">${esc(kmInfo)}</div>${perKm ? `<div style="font-size:11px;color:var(--sub);margin-top:2px">${esc(perKm)}</div>` : ''}</div>` : ''}
+      return `<div style="flex:1;min-width:88px">
+        <div style="font-size:10px;font-weight:700;color:#8992A9;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">${label}</div>
+        <div style="font-size:19px;font-weight:800;color:#1A3A8F">$${fmt(rate)}</div>
       </div>`;
     }
 
+    const availRow = d.is_available !== undefined
+      ? (d.is_available
+          ? `<span style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:#16A34A;background:#ECFDF5;border-radius:8px;padding:5px 10px">${I.checkGr}Available Now</span>`
+          : `<span style="font-size:12.5px;font-weight:700;color:#DC2626;background:#FEF2F2;border-radius:8px;padding:5px 10px">Currently Unavailable</span>`)
+      : '';
+
     const pricingSection = (d.daily_rate || d.weekly_rate || d.monthly_rate)
-      ? `<div style="margin-bottom:16px">
-          ${priceRow('Daily Rent', d.daily_rate, '', '')}
-          ${priceRow('Weekly Rent', d.weekly_rate, '', '')}
-          ${priceRow('Monthly Rent', d.monthly_rate, '', '')}
+      ? `<div style="background:var(--card,#fff);border:1px solid #F0F1F3;border-radius:14px;padding:14px;margin-bottom:16px">
+          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:${availRow ? '12px' : '0'}">
+            ${priceCell('Daily', d.daily_rate)}
+            ${priceCell('Weekly', d.weekly_rate)}
+            ${priceCell('Monthly', d.monthly_rate)}
+          </div>
+          ${availRow ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:12px;border-top:1px solid #F0F1F3">${availRow}<span style="font-size:12px;color:#8992A9;display:flex;align-items:center;gap:3px">${I.loc}${esc(d.city || '')}${d.province ? ', ' + esc(d.province) : ''}</span></div>` : ''}
         </div>`
       : '';
 
@@ -723,38 +804,38 @@
     const starsHtml  = [1,2,3,4,5].map(n => `<svg viewBox="0 0 24 24" width="11" height="11" fill="${n<=starsFill?'#F5A623':'none'}" stroke="${n<=starsFill?'#F5A623':'#D4D4D8'}" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`).join('');
 
     const compCard = comp.id
-      ? `<div onclick="H.openInner('RentalCompanyProfile',{id:'${esc(comp.id || '')}'})" style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center;cursor:pointer">
+      ? `<div onclick="H.openInner('RentalCompanyProfile',{id:'${esc(comp.id || '')}'})" class="rvl-card" style="background:var(--card,#fff);border:1px solid #F0F1F3;border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center;cursor:pointer">
           <div style="width:52px;height:52px;border-radius:12px;background:#EEF2FB;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#1A3A8F">
             ${comp.logo_url ? `<img src="${esc(comp.logo_url)}" style="width:100%;height:100%;object-fit:cover">` : I.bldg}
           </div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;color:var(--sub);font-weight:500">Dealer</div>
-            <div style="font-size:14px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:5px;margin-top:1px">${esc(comp.name || '')}${comp.is_verified ? I.verified : ''}</div>
-            <div style="display:flex;align-items:center;gap:4px;margin-top:3px">${starsHtml}<span style="font-size:11px;color:var(--sub)">${avgRating || '—'} · ${comp.review_count || 0} reviews</span></div>
+            <div style="font-size:12.5px;color:#8992A9;font-weight:600">Dealer</div>
+            <div style="font-size:14.5px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:5px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(comp.name || '')}${comp.is_verified ? I.verified : ''}</div>
+            <div style="display:flex;align-items:center;gap:4px;margin-top:3px">${starsHtml}<span style="font-size:11px;color:#8992A9">${avgRating || '—'} · ${comp.review_count || 0} reviews</span></div>
           </div>
-          <div style="font-size:13px;font-weight:700;color:#1A3A8F;white-space:nowrap">View All ${I.chevR}</div>
+          <div style="font-size:13px;font-weight:800;color:#1A3A8F;white-space:nowrap;display:flex;align-items:center">View${I.chevR.replace('#94A3B8','#1A3A8F')}</div>
         </div>`
       : '';
 
     const ctaBar = u
-      ? `<div style="position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--card,#fff);border-top:1px solid var(--border,#E8ECF4);padding:12px 16px;padding-bottom:calc(12px + var(--safe-bottom,0px));display:flex;gap:8px">
-          ${comp.phone    ? `<button onclick="H._rental.callCompany('${esc(id)}')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px;border-radius:12px;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">${I.phone}Call</button>` : ''}
-          ${comp.whatsapp ? `<button onclick="H._rental.waCompany('${esc(id)}')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px;border-radius:12px;border:none;background:#25D366;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">${I.wa}WhatsApp</button>` : ''}
-          <button onclick="H._rental.chatCompany('${esc(id)}')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px;border-radius:12px;border:none;background:#1A3A8F;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">${I.chat}Chat</button>
+      ? `<div style="position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--card,#fff);border-top:1px solid #F0F1F3;padding:12px 16px;padding-bottom:calc(12px + var(--safe-bottom,0px));display:flex;gap:8px;box-shadow:0 -2px 12px rgba(16,24,40,.06)">
+          ${comp.phone    ? `<button onclick="H._rental.callCompany('${esc(id)}')" style="flex:1;min-height:46px;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px;border-radius:12px;border:1.5px solid #E4E7EE;background:var(--card,#fff);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">${I.phone}Call</button>` : ''}
+          ${comp.whatsapp ? `<button onclick="H._rental.waCompany('${esc(id)}')" style="flex:1;min-height:46px;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px;border-radius:12px;border:none;background:#25D366;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">${I.wa}WhatsApp</button>` : ''}
+          <button onclick="H._rental.chatCompany('${esc(id)}')" style="flex:1;min-height:46px;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#1A3A8F,#25438f);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">${I.chat}Chat</button>
         </div>`
-      : `<div style="position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--card,#fff);border-top:1px solid var(--border,#E8ECF4);padding:12px 16px;padding-bottom:calc(12px + var(--safe-bottom,0px))">
-          <button onclick="H.requireAuth('Sign in to contact this company')" style="width:100%;padding:13px;border-radius:12px;border:none;background:#1A3A8F;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Sign in to Contact</button>
+      : `<div style="position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--card,#fff);border-top:1px solid #F0F1F3;padding:12px 16px;padding-bottom:calc(12px + var(--safe-bottom,0px));box-shadow:0 -2px 12px rgba(16,24,40,.06)">
+          <button onclick="H.requireAuth('Sign in to contact this company')" style="width:100%;min-height:46px;padding:13px;border-radius:12px;border:none;background:#1A3A8F;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Sign in to Contact</button>
         </div>`;
 
     return `<div class="page active det-page" id="rvdPage" data-id="${esc(id)}">
       <div style="position:relative;width:100%;padding-top:62%;background:#EEF2FB;overflow:hidden">
         ${photoHtml}
         ${photos.length > 1 ? `<div class="photo-dots">${photos.map((_,i)=>`<div class="pdot ${i===0?'on':''}" onclick="H._rental._setPhoto(${i})"></div>`).join('')}</div><div class="photo-counter" id="rvdPhotoCount">${I.photo} 1 / ${photos.length}</div>` : ''}
-        <div style="position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:12px 12px;background:linear-gradient(to bottom,rgba(0,0,0,.45),transparent)">
-          <button onclick="H.goBack()" style="width:36px;height:36px;border-radius:50%;border:none;background:rgba(0,0,0,.35);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="20" height="20"><polyline points="15 18 9 12 15 6" stroke="#fff" stroke-width="2.5" fill="none"/></svg></button>
+        <div style="position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:12px;background:linear-gradient(to bottom,rgba(0,0,0,.5),transparent)">
+          <button onclick="H.goBack()" aria-label="Back" style="width:40px;height:40px;border-radius:50%;border:none;background:rgba(0,0,0,.4);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="20" height="20"><polyline points="15 18 9 12 15 6" stroke="#fff" stroke-width="2.5" fill="none"/></svg></button>
           <div style="display:flex;gap:8px">
-            <button onclick="H._rental.shareVehicle('${esc(id)}')" style="width:36px;height:36px;border-radius:50%;border:none;background:rgba(0,0,0,.35);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">${I.share}</button>
-            <button data-rvd-save="${esc(id)}" onclick="H._rental.toggleFav('${esc(id)}')" style="width:36px;height:36px;border-radius:50%;border:none;background:rgba(0,0,0,.35);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">${saved ? I.heartF : I.heart}</button>
+            <button onclick="H._rental.shareVehicle('${esc(id)}')" aria-label="Share" style="width:40px;height:40px;border-radius:50%;border:none;background:rgba(0,0,0,.4);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">${I.share}</button>
+            <button data-rvd-save="${esc(id)}" onclick="H._rental.toggleFav('${esc(id)}')" aria-label="${saved ? 'Remove from saved' : 'Save vehicle'}" style="width:40px;height:40px;border-radius:50%;border:none;background:rgba(0,0,0,.4);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">${saved ? I.heartF : I.heart}</button>
           </div>
         </div>
       </div>
@@ -768,16 +849,15 @@
 
       <div style="padding:16px">
         ${pricingSection}
-        ${d.is_available !== undefined ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">${d.is_available ? `<span style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#16A34A">${I.checkGr}Available Now</span>` : '<span style="font-size:13px;font-weight:600;color:#DC2626">Currently Unavailable</span>'}<span style="font-size:12px;color:var(--sub);display:flex;align-items:center;gap:3px">${I.loc}${esc(d.city || '')}, ${esc(d.province || '')}</span></div>` : ''}
 
-        ${specsHtml ? `<div class="det-section"><div class="det-sec-title">Car Overview</div><div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:2px 14px">${specsHtml}</div></div>` : ''}
+        ${specsHtml ? `<div class="det-section"><div class="det-sec-title">Car Overview</div><div style="background:var(--card,#fff);border:1px solid #F0F1F3;border-radius:14px;padding:2px 14px">${specsHtml}</div></div>` : ''}
         ${featuresHtml}
         ${descHtml}
         ${termsGrid}
 
         ${comp.id ? `<div class="det-section"><div class="det-sec-title">Listed by</div>${compCard}</div>` : ''}
 
-        <button onclick="H._rental.reportVehicle('${esc(id)}')" style="background:none;border:none;color:var(--sub);font-size:13px;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:6px;font-family:inherit">${I.flag}Report this listing</button>
+        <button onclick="H._rental.reportVehicle('${esc(id)}')" style="background:none;border:none;color:#8992A9;font-size:13px;cursor:pointer;padding:10px 4px;min-height:38px;display:flex;align-items:center;gap:6px;font-family:inherit">${I.flag}Report this listing</button>
       </div>
 
       <div style="height:90px"></div>
@@ -830,14 +910,14 @@
     const reviewsHtml = reviews.length
       ? reviews.map(rv => {
           const rStars = [1,2,3,4,5].map(n=>`<svg viewBox="0 0 24 24" width="12" height="12" fill="${n<=rv.rating?'#F5A623':'none'}" stroke="${n<=rv.rating?'#F5A623':'#D4D4D8'}" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`).join('');
-          return `<div style="border-bottom:1px solid var(--border,#E8ECF4);padding:12px 0">
+          return `<div style="border-bottom:1px solid #F0F1F3;padding:14px 0">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
               <div style="width:34px;height:34px;border-radius:50%;background:#EEF2FB;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#1A3A8F;flex-shrink:0">${esc((rv.reviewer_name || '?').charAt(0).toUpperCase())}</div>
               <div style="flex:1">
                 <div style="font-size:13px;font-weight:700;color:var(--text)">${esc(rv.reviewer_name || 'Anonymous')}</div>
                 <div style="display:flex;gap:2px;margin-top:2px">${rStars}</div>
               </div>
-              <div style="font-size:11px;color:var(--sub)">${rv.created_at ? H.timeAgo(new Date(rv.created_at).getTime()) : ''}</div>
+              <div style="font-size:11px;color:#8992A9">${rv.created_at ? H.timeAgo(new Date(rv.created_at).getTime()) : ''}</div>
             </div>
             ${rv.body ? `<div style="font-size:13px;color:var(--text);line-height:1.55;padding-left:42px">${esc(rv.body)}</div>` : ''}
           </div>`;
@@ -858,43 +938,43 @@
     return `<div class="page active" id="rcpPage" data-id="${esc(id)}">
       ${H.innerTopbar(esc(comp.name || 'Company Profile'))}
 
-      <div style="background:var(--card,#fff);border-bottom:1px solid var(--border,#E8ECF4)">
-        <div style="padding:16px;display:flex;gap:14px;align-items:flex-start">
-          <div style="width:68px;height:68px;border-radius:16px;background:#EEF2FB;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#1A3A8F">
+      <div style="background:var(--card,#fff);border-bottom:1px solid #F0F1F3">
+        <div style="padding:18px 16px 16px;display:flex;gap:14px;align-items:flex-start">
+          <div style="width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,#EEF2FB,#E4E9FA);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#1A3A8F;box-shadow:0 2px 8px rgba(26,58,143,.1)">
             ${comp.logo_url ? `<img src="${esc(comp.logo_url)}" style="width:100%;height:100%;object-fit:cover">` : I.bldg}
           </div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:17px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap">${esc(comp.name || '')}${comp.is_verified ? I.verified : ''}</div>
-            <div style="font-size:12px;color:var(--sub);font-weight:500;margin-top:2px">Rental Company</div>
-            <div style="display:flex;align-items:center;gap:4px;margin-top:5px">${bigStars}<span style="font-size:13px;font-weight:700;color:var(--text);margin-left:2px">${avgRating || '—'}</span><span style="font-size:12px;color:var(--sub)">(${comp.review_count || 0} reviews)</span></div>
+            <div style="font-size:18px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap;letter-spacing:-.2px">${esc(comp.name || '')}${comp.is_verified ? I.verified : ''}</div>
+            <div style="font-size:12.5px;color:#8992A9;font-weight:600;margin-top:2px">Rental Company</div>
+            <div style="display:flex;align-items:center;gap:4px;margin-top:6px">${bigStars}<span style="font-size:13px;font-weight:700;color:var(--text);margin-left:2px">${avgRating || '—'}</span><span style="font-size:12px;color:#8992A9">(${comp.review_count || 0} reviews)</span></div>
           </div>
         </div>
 
-        <div style="display:flex;border-top:1px solid var(--border,#E8ECF4)">
+        <div style="display:flex;border-top:1px solid #F0F1F3;padding:14px 0">
           ${stat(comp.fleet_count || 0, 'Vehicles')}
-          <div style="width:1px;background:var(--border,#E8ECF4)"></div>
+          <div style="width:1px;background:#F0F1F3"></div>
           ${stat(avgRating || '—', 'Rating')}
-          <div style="width:1px;background:var(--border,#E8ECF4)"></div>
+          <div style="width:1px;background:#F0F1F3"></div>
           ${stat(comp.review_count || 0, 'Reviews')}
         </div>
       </div>
 
       <div class="inner-content" style="padding-bottom:24px">
-        ${comp.bio ? `<div style="font-size:14px;color:var(--text);line-height:1.65;margin-bottom:16px;padding:14px;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px">${esc(comp.bio)}</div>` : ''}
+        ${comp.bio ? `<div style="font-size:14px;color:var(--text);line-height:1.65;margin-bottom:16px;padding:14px;background:var(--card,#fff);border:1px solid #F0F1F3;border-radius:14px">${esc(comp.bio)}</div>` : ''}
 
         ${comp.phone || comp.whatsapp
-          ? `<div style="display:flex;gap:10px;margin-bottom:20px">
-              ${comp.phone    ? `<button onclick="H._rental._callDirect('${esc(comp.phone)}')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px;border-radius:12px;border:1.5px solid var(--border,#E8ECF4);background:var(--card,#fff);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">${I.phone}Call</button>` : ''}
-              ${comp.whatsapp ? `<button onclick="H._rental._waDirect('${esc(comp.whatsapp)}','${esc(comp.name||'')}')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px;border-radius:12px;border:none;background:#25D366;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">${I.wa}WhatsApp</button>` : ''}
+          ? `<div style="display:flex;gap:10px;margin-bottom:22px">
+              ${comp.phone    ? `<button onclick="H._rental._callDirect('${esc(comp.phone)}')" style="flex:1;min-height:46px;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px;border-radius:12px;border:1.5px solid #E4E7EE;background:var(--card,#fff);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">${I.phone}Call</button>` : ''}
+              ${comp.whatsapp ? `<button onclick="H._rental._waDirect('${esc(comp.whatsapp)}','${esc(comp.name||'')}')" style="flex:1;min-height:46px;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px;border-radius:12px;border:none;background:#25D366;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">${I.wa}WhatsApp</button>` : ''}
             </div>`
           : ''}
 
-        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">Fleet (${comp.fleet_count || 0})</div>
+        <div style="font-size:14.5px;font-weight:800;color:var(--text);margin-bottom:12px">Fleet (${comp.fleet_count || 0})</div>
         ${fleetHtml}
 
-        <div style="font-size:14px;font-weight:800;color:var(--text);margin:20px 0 12px">Reviews</div>
+        <div style="font-size:14.5px;font-weight:800;color:var(--text);margin:22px 0 12px">Reviews</div>
         ${writeReviewBtn}
-        <div style="background:var(--card,#fff);border-radius:14px;border:1px solid var(--border,#E8ECF4);padding:2px 14px">${reviewsHtml}</div>
+        <div style="background:var(--card,#fff);border-radius:14px;border:1px solid #F0F1F3;padding:2px 14px">${reviewsHtml}</div>
       </div>
     </div>`;
   };

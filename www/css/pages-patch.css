@@ -198,6 +198,20 @@
 /* ── PAGE TRANSITION ─────────────────────────────── */
 #mainArea{transition:opacity 0.15s ease}
 
+/* ── RENTAL MICRO-INTERACTIONS ────────────────────── */
+.rvl-card{transition:transform .15s ease}
+.rvl-card:active{transform:scale(.985)}
+.rvl-card-img-fade{opacity:0;transition:opacity .35s ease}
+.rvl-card-img-fade.on{opacity:1}
+@keyframes rvlFavPop{0%{transform:scale(1)}35%{transform:scale(1.28)}60%{transform:scale(.94)}100%{transform:scale(1)}}
+.rvl-fav-pop{animation:rvlFavPop .35s ease}
+.rvl-fgroup-body{overflow:hidden;transition:max-height .25s ease,opacity .2s ease}
+.rvl-fgroup-chev{transition:transform .2s ease}
+.rvl-sheet-in{animation:rvlSheetIn .22s ease}
+@keyframes rvlSheetIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.rvl-chip-tap{transition:transform .1s ease,background .15s ease,border-color .15s ease,color .15s ease}
+.rvl-chip-tap:active{transform:scale(.94)}
+
 /* ── SKELETON SHIMMER ────────────────────────────── */
 @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
 .skel{background:linear-gradient(90deg,var(--border) 25%,var(--card) 50%,var(--border) 75%);background-size:800px 100%;animation:shimmer 1.4s infinite linear;border-radius:6px}
