@@ -14,12 +14,13 @@
 
   H._rentalBiz = H._rentalBiz || {};
   const RB = H._rentalBiz;
-  RB.company   = RB.company   || null;
-  RB.fleet     = RB.fleet     || [];
-  RB.leads     = RB.leads     || [];
-  RB._loading  = false;
-  RB._wizState = null;
-  RB._fleetTab = RB._fleetTab || 'all';
+  RB.company    = RB.company   || null;
+  RB.fleet      = RB.fleet     || [];
+  RB.leads      = RB.leads     || [];
+  RB._loading   = false;
+  RB._wizState  = null;
+  RB._fleetTab  = RB._fleetTab || 'all';
+  RB._access    = null;   // result of get_user_rental_access()
 
   const WIZARD_STEPS = ['Basic Info', 'Pricing', 'Description', 'Review'];
 
@@ -84,8 +85,89 @@
     return `<span style="display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;color:${c[0]};background:${c[1]}">${c[2]}</span>`;
   }
 
-  // ── Section divider ───────────────────────────────────────────────────────
   const _div = `<div style="height:8px;background:#F4F4F5;flex-shrink:0"></div>`;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ACCESS CONTROL
+  // Calls get_user_rental_access() RPC — the single source of truth.
+  // Result is cached in RB._access and refreshed on every dashboard load.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  RB.loadAccess = async function () {
+    const sb = window.supabase; if (!sb) return null;
+    try {
+      const { data, error } = await sb.rpc('get_user_rental_access');
+      if (error) throw error;
+      RB._access = data || null;
+    } catch (e) {
+      console.warn('rental access check:', e);
+      RB._access = null;
+    }
+    // Re-render whichever rental business page is currently open
+    const page = H.currentPageName;
+    const biz  = _requireBiz();
+    if (!biz) return RB._access;
+    if (page === 'RentalDashboard')          H.renderPage('RentalDashboard', {});
+    if (page === 'RentalManageFleet')         H.renderPage('RentalManageFleet', { bizId: biz.id });
+    if (page === 'RentalAddVehicle')          H.renderPage('RentalAddVehicle',  { bizId: biz.id });
+    if (page === 'RentalBusinessAnalytics')   H.renderPage('RentalBusinessAnalytics', { bizId: biz.id });
+    return RB._access;
+  };
+
+  // ── Access gate UI states ─────────────────────────────────────────────────
+  function _pendingBanner() {
+    return `<div style="margin:16px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:16px;padding:20px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="width:40px;height:40px;border-radius:50%;background:#FEF3C7;border:2px solid #F5A623;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="18" height="18" fill="none" stroke="#F5A623" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:800;color:#92400E;margin-bottom:4px">Pending Approval</div>
+          <div style="font-size:13px;color:#92400E;line-height:1.6">Your rental company application is under review. Our team will activate your account within 24 to 48 hours.</div>
+          <div style="font-size:12px;color:#B45309;margin-top:8px;font-weight:600">Fleet and vehicle management will be available after approval.</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function _rejectedScreen(onReapply) {
+    return `<div style="padding:24px 16px">
+      <div style="background:#FFF1F0;border:1px solid #FECACA;border-radius:16px;padding:24px;text-align:center">
+        <div style="width:52px;height:52px;border-radius:50%;background:#FFF1F0;border:2px solid #D92D20;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+          <svg width="22" height="22" fill="none" stroke="#D92D20" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        </div>
+        <div style="font-size:16px;font-weight:800;color:#D92D20;margin-bottom:8px">Application Not Approved</div>
+        <div style="font-size:13px;color:#991B1B;line-height:1.6;max-width:280px;margin:0 auto">Your rental company application was not approved. This may be due to incomplete documentation or verification requirements.</div>
+        <div onclick="${onReapply}" style="margin-top:20px;display:inline-block;padding:12px 28px;background:#D92D20;color:#fff;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Update Application</div>
+      </div>
+    </div>`;
+  }
+
+  function _blockedAction(title, reason) {
+    return `<div style="margin:0 16px 16px;background:#F9F9FB;border:1.5px solid #E4E4E7;border-radius:14px;padding:20px;text-align:center">
+      <svg width="22" height="22" fill="none" stroke="#A1A1AA" stroke-width="2" viewBox="0 0 24 24" style="display:block;margin:0 auto 10px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <div style="font-size:14px;font-weight:700;color:#52525B;margin-bottom:4px">${title}</div>
+      <div style="font-size:12px;color:#A1A1AA;line-height:1.5">${reason}</div>
+    </div>`;
+  }
+
+  // Loading skeleton (used while access RPC is in flight)
+  function _dashSkeleton() {
+    return `<div class="page active" id="rentalDashPage">
+      <div style="background:#1A3A8F;padding:16px;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.15)"></div>
+          <div style="flex:1">
+            <div style="height:14px;width:140px;background:rgba(255,255,255,.2);border-radius:6px;margin-bottom:8px"></div>
+            <div style="height:11px;width:100px;background:rgba(255,255,255,.12);border-radius:6px"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;padding:12px 16px;overflow-x:auto">
+        ${Array(4).fill('<div class="skel" style="flex-shrink:0;width:110px;height:80px;border-radius:14px"></div>').join('')}
+      </div>
+    </div>`;
+  }
 
   // ─────────────────────────────────────────────────────────────────────────
   // PAGE: RentalCompanySetup
@@ -111,31 +193,46 @@
 
   // ─────────────────────────────────────────────────────────────────────────
   // PAGE: RentalDashboard
+  // Access state machine:
+  //   null access  → skeleton (RPC still loading)
+  //   no_business  → redirect to BusinessOnboarding
+  //   no_company   → redirect to RentalCompanySetup
+  //   rejected     → blocked screen with re-apply CTA
+  //   pending      → read-only dashboard (header + stats + pending banner)
+  //   active       → full dashboard
   // ─────────────────────────────────────────────────────────────────────────
   H.pages.RentalDashboard = function (params) {
     const biz = _requireBiz();
     if (!biz) return `<div class="page active">${H.innerTopbar('Rentals')}${H.emptyState('Business account required', 'Register a business to manage rental vehicles.', 'Register Business', "H.openInner('BusinessOnboarding')")}</div>`;
 
-    if (!RB.company) {
-      return `<div class="page active" id="rentalDashPage">
-        <div style="background:#1A3A8F;padding:16px">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div class="skel" style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.2)"></div>
-            <div style="flex:1">
-              <div class="skel" style="height:14px;width:140px;margin-bottom:8px;background:rgba(255,255,255,.2);border-radius:6px"></div>
-              <div class="skel" style="height:11px;width:100px;background:rgba(255,255,255,.15);border-radius:6px"></div>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;padding:12px 16px;overflow-x:auto">
-          ${Array(4).fill('<div class="skel" style="flex-shrink:0;width:110px;height:80px;border-radius:14px"></div>').join('')}
+    // Still loading access from RPC
+    if (!RB._access) return _dashSkeleton();
+
+    const acc = RB._access;
+
+    // No rental company yet → send to setup
+    if (!acc.has_rental_company) {
+      H.openInner('RentalCompanySetup');
+      return `<div class="page active"></div>`;
+    }
+
+    // Rejected → full block
+    if (acc.company_status === 'rejected') {
+      return `<div class="page active">
+        ${H.innerTopbar('Rental Dashboard')}
+        <div class="inner-content" style="padding:0">
+          ${_rejectedScreen("H.openInner('RentalCompanySetup')")}
         </div>
       </div>`;
     }
 
-    const rc    = RB.company;
-    const fleet = RB.fleet;
-    const leads = RB.leads;
+    // Still loading company data after access confirmed
+    if (!RB.company) return _dashSkeleton();
+
+    const rc      = RB.company;
+    const fleet   = RB.fleet;
+    const leads   = RB.leads;
+    const isPending = acc.company_status === 'pending';
     const bizName = rc.company_name || biz.name;
     const initial = bizName.charAt(0).toUpperCase();
     const activeCount = fleet.filter(v => v.status === 'active').length;
@@ -148,12 +245,21 @@
         <div style="font-size:11px;color:#A1A1AA;font-weight:600;margin-top:2px">${label}</div>
       </div>`;
 
-    const menuCard = (title, sub, svgIcon, onclick) => `
-      <div onclick="${onclick}" style="background:#fff;border:1px solid #E4E4E7;border-radius:18px;padding:16px;cursor:pointer">
+    // Quick actions — grayed out and non-clickable when pending
+    const menuCard = (title, sub, svgIcon, onclick) => {
+      if (isPending) {
+        return `<div style="background:#F9F9FB;border:1px solid #E4E4E7;border-radius:18px;padding:16px;opacity:.5;cursor:not-allowed">
+          <div style="width:40px;height:40px;border-radius:10px;background:#F4F4F5;display:flex;align-items:center;justify-content:center;margin-bottom:10px">${svgIcon}</div>
+          <div style="font-size:14px;font-weight:700;color:#18181B">${title}</div>
+          <div style="font-size:12px;color:#A1A1AA;margin-top:2px">${sub}</div>
+        </div>`;
+      }
+      return `<div onclick="${onclick}" style="background:#fff;border:1px solid #E4E4E7;border-radius:18px;padding:16px;cursor:pointer">
         <div style="width:40px;height:40px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;margin-bottom:10px">${svgIcon}</div>
         <div style="font-size:14px;font-weight:700;color:#18181B">${title}</div>
         <div style="font-size:12px;color:#A1A1AA;margin-top:2px">${sub}</div>
       </div>`;
+    };
 
     const recentItems = leads.slice(0, 5).map(l => {
       const init  = (l.user_name || 'C').charAt(0).toUpperCase();
@@ -171,10 +277,6 @@
       </div>`;
     }).join('');
 
-    const pendingBadge = rc.status !== 'active'
-      ? `<div style="display:inline-block;background:rgba(255,255,255,.18);border-radius:20px;padding:2px 12px;font-size:12px;font-weight:700;color:#fff;margin-top:8px">Pending approval</div>`
-      : '';
-
     return `<div class="page active" id="rentalDashPage">
       <div style="background:#1A3A8F;padding:16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
@@ -188,7 +290,6 @@
             <svg width="22" height="22" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
           </div>
         </div>
-        ${pendingBadge}
       </div>
       <div style="display:flex;gap:8px;padding:12px 16px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;-ms-overflow-style:none">
         ${statCard(fleet.length, 'Total Vehicles')}
@@ -197,6 +298,7 @@
         ${statCard(newLeads, 'New Inquiries')}
       </div>
       <div style="flex:1;overflow-y:auto">
+        ${isPending ? _pendingBanner() : ''}
         ${_div}
         <div style="padding:14px 16px 12px;background:#fff">
           <div style="font-size:14px;font-weight:700;color:#18181B">Quick Actions</div>
@@ -211,15 +313,9 @@
           ${menuCard('Analytics', 'Views, leads, trends',
             '<svg width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
             `H.openInner('RentalBusinessAnalytics',{bizId:'${esc(biz.id)}'})`)}
-          ${menuCard('Verification', 'Documents and status',
-            '<svg width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
-            `H.toast('Document verification coming soon.')`)}
           ${menuCard('Company Profile', 'Update info and logo',
             '<svg width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
             `H.openInner('RentalCompanySetup')`)}
-          ${menuCard('Promotions', 'Boost listings',
-            '<svg width="20" height="20" fill="none" stroke="#F5A623" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-            `H.toast('Promotions coming soon.')`)}
         </div>
         ${leads.length ? `
           ${_div}
@@ -236,6 +332,9 @@
   H.pages.RentalDashboard_after = function (params) {
     const biz = _requireBiz();
     if (!biz) return;
+    // Always refresh access on dashboard entry — it's the primary gate
+    RB._access = null;
+    RB.loadAccess();
     if (!RB.company) RB.loadCompanyData(biz.id);
   };
 
@@ -245,6 +344,11 @@
   H.pages.RentalManageFleet = function (params) {
     const biz = _requireBiz();
     if (!biz) return `<div class="page active">${H.innerTopbar('Fleet')}${H.emptyState('Business required', '')}</div>`;
+
+    const acc = RB._access;
+
+    // Pending or rejected: show fleet read-only (owner can see their listings) but no write actions
+    const canWrite = acc && acc.can_create_fleet;
 
     const tab   = RB._fleetTab || 'all';
     const fleet = RB.fleet;
@@ -268,8 +372,8 @@
       const img = v.cover_url
         ? `<img src="${esc(v.cover_url)}" style="width:100%;height:100%;object-fit:cover">`
         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" fill="none" stroke="#94A3B8" stroke-width="1.5" viewBox="0 0 24 24"><rect x="1" y="3" width="22" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>`;
-      const loc = v.city_label || '';
-      const cat = v.category_label || '';
+      const loc  = v.city_label || '';
+      const cat  = v.category_label || '';
       const meta = [cat, loc].filter(Boolean).join(' · ');
       return `<div data-fleet-item data-name="${esc(((v.brand_label || '') + ' ' + (v.model || '')).toLowerCase())}" style="display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid #E4E4E7;align-items:center">
         <div style="width:72px;height:52px;border-radius:10px;background:#E8ECF4;overflow:hidden;flex-shrink:0">${img}</div>
@@ -281,14 +385,14 @@
             ${_statusPill(v.status)}
           </div>
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
+        ${canWrite ? `<div style="display:flex;gap:8px;flex-shrink:0">
           <div onclick="H.openInner('RentalEditVehicle',{id:'${esc(v.id)}',bizId:'${esc(biz.id)}'})" style="width:34px;height:34px;border-radius:10px;border:1.5px solid #E4E4E7;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer">
             <svg width="15" height="15" fill="none" stroke="#52525B" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </div>
           <div onclick="H._rentalBiz._fleetMore('${esc(v.id)}','${esc(biz.id)}','${v.status === 'active' ? 'paused' : 'active'}')" style="width:34px;height:34px;border-radius:10px;border:1.5px solid #E4E4E7;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer">
             <svg width="15" height="15" fill="none" stroke="#52525B" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
           </div>
-        </div>
+        </div>` : ''}
       </div>`;
     };
 
@@ -298,8 +402,9 @@
           <svg width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </div>
         <div style="flex:1;font-size:16px;font-weight:700;color:#18181B">Manage Fleet</div>
-        <div onclick="H.openInner('RentalAddVehicle',{bizId:'${esc(biz.id)}'})" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">+ Add</div>
+        ${canWrite ? `<div onclick="H.openInner('RentalAddVehicle',{bizId:'${esc(biz.id)}'})" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">+ Add</div>` : ''}
       </div>
+      ${!canWrite && acc ? _blockedAction('Vehicle management locked', 'Your company must be approved before you can add or edit vehicles.') : ''}
       <div style="display:flex;background:#fff;border-bottom:1px solid #E4E4E7;flex-shrink:0">
         ${tabItem('all',    `All (${allCount})`)}
         ${tabItem('active', `Active (${activeCount})`)}
@@ -315,7 +420,7 @@
       <div style="flex:1;overflow-y:auto" id="fleetListWrap">
         ${filtered.length
           ? filtered.map(fleetItem).join('')
-          : `<div style="padding:40px 16px;text-align:center"><div style="font-size:14px;font-weight:600;color:#A1A1AA">No vehicles in this category</div><div onclick="H.openInner('RentalAddVehicle',{bizId:'${esc(biz.id)}'})" style="margin-top:12px;display:inline-block;padding:10px 20px;background:#1A3A8F;color:#fff;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Add Vehicle</div></div>`}
+          : `<div style="padding:40px 16px;text-align:center"><div style="font-size:14px;font-weight:600;color:#A1A1AA">No vehicles in this category</div>${canWrite ? `<div onclick="H.openInner('RentalAddVehicle',{bizId:'${esc(biz.id)}'})" style="margin-top:12px;display:inline-block;padding:10px 20px;background:#1A3A8F;color:#fff;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Add Vehicle</div>` : ''}</div>`}
       </div>
     </div>`;
   };
@@ -323,6 +428,7 @@
   H.pages.RentalManageFleet_after = function (params) {
     const biz = _requireBiz();
     if (!biz) return;
+    if (!RB._access) RB.loadAccess();
     if (!RB.company || !RB.fleet.length) RB.loadCompanyData(biz.id);
   };
 
@@ -361,15 +467,37 @@
 
   // ─────────────────────────────────────────────────────────────────────────
   // PAGE: RentalAddVehicle (4-step wizard)
+  // Blocked unless rental_companies.status = 'active'
   // ─────────────────────────────────────────────────────────────────────────
   H.pages.RentalAddVehicle = function (params) {
     const biz = _requireBiz();
     if (!biz) return `<div class="page active">${H.innerTopbar('Add Vehicle')}${H.emptyState('Business required', '')}</div>`;
+
+    const acc = RB._access;
+    if (acc && !acc.can_create_vehicle) {
+      const reason = acc.company_status === 'pending'
+        ? 'Your company is pending approval. Vehicle creation will be unlocked once your account is activated.'
+        : 'Vehicle creation is not available in your current account state.';
+      return `<div class="page active">
+        ${H.innerTopbar('Add Vehicle')}
+        <div class="inner-content" style="padding:0">
+          <div style="height:32px"></div>
+          ${_blockedAction('Vehicle creation locked', reason)}
+          <div style="padding:0 16px">
+            <button onclick="H.goBack()" class="btn-sec" style="width:100%">Go Back</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
     if (!RB._wizState) { RB._wizState = { step: 0, data: {}, bizId: (params && params.bizId) || biz.id }; }
     return RB._renderWizStep(RB._wizState.step);
   };
 
-  H.pages.RentalAddVehicle_after = function () { window.RB = RB; };
+  H.pages.RentalAddVehicle_after = function () {
+    if (!RB._access) RB.loadAccess();
+    window.RB = RB;
+  };
 
   RB._renderWizStep = function (step) {
     const d    = (RB._wizState && RB._wizState.data) || {};
@@ -533,6 +661,14 @@
     const d  = RB._wizState.data;
     const biz= _requireBiz(); if (!biz) return;
 
+    // Re-verify access at submit time — backend RLS will also enforce this,
+    // but this gives a clean user-facing error instead of a 403.
+    const freshAccess = await RB.loadAccess();
+    if (!freshAccess || !freshAccess.can_create_vehicle) {
+      H.toast('Vehicle creation requires an active rental company account.', 5000, true);
+      return;
+    }
+
     const btn = document.querySelector('.btn-pri');
     if (btn) { btn.disabled = true; btn.textContent = 'Creating...'; }
 
@@ -595,7 +731,12 @@
       H.openInner('RentalManageFleet', { bizId: biz.id });
     } catch (e) {
       console.warn('vehicle create:', e);
-      H.toast('Could not create vehicle. Check your details and try again.', 5000, true);
+      // RLS block from backend — company not active
+      if (e.code === '42501') {
+        H.toast('Access denied. Your company must be active to add vehicles.', 5000, true);
+      } else {
+        H.toast('Could not create vehicle. Check your details and try again.', 5000, true);
+      }
       if (btn) { btn.disabled = false; btn.textContent = 'Create Vehicle'; }
     }
   };
@@ -608,6 +749,7 @@
     const v      = RB.fleet.find(x => x.id === id) || {};
     const blocks = (RB._availBlocks && RB._availBlocks[id]) || [];
     const vName  = ((v.brand_label || '') + ' ' + (v.model || '')).trim() || 'Vehicle';
+    const canWrite = RB._access && RB._access.can_create_vehicle;
 
     const blockRows = blocks.map(b => `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #E4E4E7">
@@ -615,7 +757,7 @@
           <div style="font-size:13px;font-weight:700;color:#18181B">${esc(b.starts_on)} to ${esc(b.ends_on)}</div>
           <div style="font-size:12px;color:#A1A1AA;margin-top:2px">${esc(b.reason || 'Blocked')}</div>
         </div>
-        <button onclick="H._rentalBiz.removeBlock('${esc(id)}','${esc(b.id)}')" style="background:none;border:none;font-size:12px;font-weight:700;color:#D92D20;cursor:pointer;font-family:inherit;padding:4px 0">Remove</button>
+        ${canWrite ? `<button onclick="H._rentalBiz.removeBlock('${esc(id)}','${esc(b.id)}')" style="background:none;border:none;font-size:12px;font-weight:700;color:#D92D20;cursor:pointer;font-family:inherit;padding:4px 0">Remove</button>` : ''}
       </div>`).join('');
 
     return `<div class="page active">
@@ -631,27 +773,29 @@
         <div style="margin-left:auto">${_statusPill(v.status)}</div>
       </div>
       <div class="inner-content" style="padding:0">
-        <div style="height:8px;background:#F4F4F5"></div>
-        <div style="padding:14px 16px 8px;background:#fff">
-          <div style="font-size:14px;font-weight:700;color:#18181B">Block Dates</div>
-        </div>
-        <div style="padding:0 16px 16px;background:#fff;display:flex;flex-direction:column;gap:12px">
-          <div style="display:flex;gap:10px">
-            <div style="flex:1">
-              <div style="font-size:12px;font-weight:700;color:#52525B;margin-bottom:6px">From</div>
-              <input id="avlStart" type="date" style="width:100%;height:46px;border:1.5px solid #E4E4E7;border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px;color:#18181B;background:#fff;box-sizing:border-box">
-            </div>
-            <div style="flex:1">
-              <div style="font-size:12px;font-weight:700;color:#52525B;margin-bottom:6px">To</div>
-              <input id="avlEnd" type="date" style="width:100%;height:46px;border:1.5px solid #E4E4E7;border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px;color:#18181B;background:#fff;box-sizing:border-box">
-            </div>
+        ${canWrite ? `
+          <div style="height:8px;background:#F4F4F5"></div>
+          <div style="padding:14px 16px 8px;background:#fff">
+            <div style="font-size:14px;font-weight:700;color:#18181B">Block Dates</div>
           </div>
-          <div>
-            <div style="font-size:12px;font-weight:700;color:#52525B;margin-bottom:6px">Reason (optional)</div>
-            <input id="avlReason" type="text" placeholder="Maintenance, personal use..." style="width:100%;height:46px;border:1.5px solid #E4E4E7;border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px;color:#18181B;background:#fff;box-sizing:border-box">
+          <div style="padding:0 16px 16px;background:#fff;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:10px">
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:700;color:#52525B;margin-bottom:6px">From</div>
+                <input id="avlStart" type="date" style="width:100%;height:46px;border:1.5px solid #E4E4E7;border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px;color:#18181B;background:#fff;box-sizing:border-box">
+              </div>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:700;color:#52525B;margin-bottom:6px">To</div>
+                <input id="avlEnd" type="date" style="width:100%;height:46px;border:1.5px solid #E4E4E7;border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px;color:#18181B;background:#fff;box-sizing:border-box">
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:#52525B;margin-bottom:6px">Reason (optional)</div>
+              <input id="avlReason" type="text" placeholder="Maintenance, personal use..." style="width:100%;height:46px;border:1.5px solid #E4E4E7;border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px;color:#18181B;background:#fff;box-sizing:border-box">
+            </div>
+            <button onclick="H._rentalBiz.addBlock('${esc(id)}')" style="height:48px;width:100%;background:#fff;color:#1A3A8F;border:2px solid #1A3A8F;border-radius:14px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">Block Selected Dates</button>
           </div>
-          <button onclick="H._rentalBiz.addBlock('${esc(id)}')" style="height:48px;width:100%;background:#fff;color:#1A3A8F;border:2px solid #1A3A8F;border-radius:14px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">Block Selected Dates</button>
-        </div>
+        ` : `<div style="height:8px;background:#F4F4F5"></div>${_blockedAction('Read-only mode', 'Availability management requires an active company account.')}`}
         ${blocks.length ? `
           <div style="height:8px;background:#F4F4F5"></div>
           <div style="padding:14px 16px 8px;background:#fff">
@@ -669,6 +813,7 @@
 
   H.pages.RentalAvailability_after = function (params) {
     const id = params && params.id;
+    if (!RB._access) RB.loadAccess();
     if (id) RB.loadAvailability(id);
   };
 
@@ -679,23 +824,26 @@
     const biz = _requireBiz();
     if (!biz) return `<div class="page active">${H.innerTopbar('Analytics')}${H.emptyState('Business required', '')}</div>`;
 
-    const rc  = RB.company || {};
-    const a   = RB._analytics;
+    const rc    = RB.company || {};
+    const a     = RB._analytics;
     const fleet = RB.fleet;
 
     const totalViews     = a ? a.views_30d     : fleet.reduce((n, v) => n + (v.view_count || 0), 0);
     const totalInquiries = a ? (a.chats_30d + a.whatsapp_30d + a.calls_30d) : fleet.reduce((n, v) => n + (v.inquiry_count || 0), 0);
-    const totalSaves     = a ? a.saves_30d     : fleet.reduce((n, v) => n + (v.save_count || 0), 0);
     const convRate       = totalViews ? Math.round((totalInquiries / totalViews) * 100) : 0;
 
-    const kpiCard = (num, label, delta) => `
+    const kpiCard = (num, label) => `
       <div style="background:#F9F9FB;border:1px solid #E4E4E7;border-radius:14px;padding:12px">
         <div style="font-size:20px;font-weight:800;color:#18181B">${num}</div>
         <div style="font-size:11px;color:#A1A1AA;font-weight:600;margin-top:2px">${label}</div>
-        ${delta ? `<div style="font-size:11px;font-weight:700;margin-top:4px;color:#12B76A">${delta}</div>` : ''}
       </div>`;
 
     const topByViews = fleet.slice().sort((x, y) => (y.view_count || 0) - (x.view_count || 0)).slice(0, 5);
+
+    const totalLeadCh = (a ? (a.chats_30d + a.whatsapp_30d + a.calls_30d) : 0) || 1;
+    const chatPct = a ? Math.round((a.chats_30d    / totalLeadCh) * 100) : 52;
+    const waPct   = a ? Math.round((a.whatsapp_30d / totalLeadCh) * 100) : 34;
+    const callPct = a ? Math.round((a.calls_30d    / totalLeadCh) * 100) : 14;
 
     const sourceBar = (label, pct, color) => `
       <div style="margin-bottom:10px">
@@ -708,19 +856,14 @@
         </div>
       </div>`;
 
-    const totalLeadCh = (a ? (a.chats_30d + a.whatsapp_30d + a.calls_30d) : 0) || 1;
-    const chatPct     = a ? Math.round((a.chats_30d    / totalLeadCh) * 100) : 52;
-    const waPct       = a ? Math.round((a.whatsapp_30d / totalLeadCh) * 100) : 34;
-    const callPct     = a ? Math.round((a.calls_30d    / totalLeadCh) * 100) : 14;
-
     return `<div class="page active">
       ${H.innerTopbar('Fleet Analytics')}
       <div class="inner-content" style="padding:0">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px;background:#fff;border-bottom:1px solid #E4E4E7">
-          ${kpiCard(fmt(totalViews),     'Total Views',     a ? null : null)}
-          ${kpiCard(fmt(totalInquiries), 'Inquiries',       null)}
-          ${kpiCard(convRate + '%',      'Inquiry Rate',    null)}
-          ${kpiCard(fleet.filter(v => v.status === 'active').length, 'Active Listings', null)}
+          ${kpiCard(fmt(totalViews),     'Total Views')}
+          ${kpiCard(fmt(totalInquiries), 'Inquiries')}
+          ${kpiCard(convRate + '%',      'Inquiry Rate')}
+          ${kpiCard(fleet.filter(v => v.status === 'active').length, 'Active Listings')}
         </div>
         ${topByViews.length ? `
           ${_div}
@@ -760,10 +903,9 @@
   };
 
   H.pages.RentalBusinessAnalytics_after = function (params) {
+    if (!RB._access) RB.loadAccess();
     const rc = RB.company;
-    if (rc && rc.id && rc.id !== RB._analyticsId) {
-      RB.loadAnalytics(rc.id);
-    }
+    if (rc && rc.id && rc.id !== RB._analyticsId) RB.loadAnalytics(rc.id);
   };
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -774,6 +916,19 @@
     const bizId = params && params.bizId;
     const v     = RB.fleet.find(x => x.id === id) || {};
     const vName = ((v.brand_label || '') + ' ' + (v.model || '') + (v.year ? ' ' + v.year : '')).trim();
+
+    // Block editing if company not active
+    const acc = RB._access;
+    if (acc && !acc.can_create_vehicle) {
+      return `<div class="page active">
+        ${H.innerTopbar('Edit Vehicle')}
+        <div class="inner-content" style="padding:0">
+          <div style="height:32px"></div>
+          ${_blockedAction('Editing locked', 'Your company must be active to edit vehicles.')}
+          <div style="padding:0 16px"><button onclick="H.goBack()" class="btn-sec" style="width:100%">Go Back</button></div>
+        </div>
+      </div>`;
+    }
 
     const TRANS = [['', 'Select'], ['Manual', 'Manual'], ['Automatic', 'Automatic'], ['CVT', 'CVT'], ['Semi-Automatic', 'Semi-Automatic']];
     const FUELS = [['', 'Select'], ['Petrol', 'Petrol'], ['Diesel', 'Diesel'], ['Hybrid', 'Hybrid'], ['Electric', 'Electric']];
@@ -903,9 +1058,9 @@
     }
     RB._loading = false;
     const curPage = H.currentPageName;
-    if (curPage === 'RentalDashboard')          H.renderPage('RentalDashboard', {});
-    if (curPage === 'RentalManageFleet')         H.renderPage('RentalManageFleet', { bizId });
-    if (curPage === 'RentalBusinessAnalytics')   H.renderPage('RentalBusinessAnalytics', { bizId });
+    if (curPage === 'RentalDashboard')        H.renderPage('RentalDashboard', {});
+    if (curPage === 'RentalManageFleet')       H.renderPage('RentalManageFleet', { bizId });
+    if (curPage === 'RentalBusinessAnalytics') H.renderPage('RentalBusinessAnalytics', { bizId });
   };
 
   RB.submitSetup = async function (bizId) {
@@ -936,6 +1091,7 @@
       if (error) throw error;
       H.toast('Rental company set up! Pending admin approval.');
       RB.company = null;
+      RB._access = null;   // force re-fetch on next dashboard entry
       H.openInner('RentalDashboard');
     } catch (e) {
       console.warn('rental setup:', e);
@@ -954,7 +1110,8 @@
       H.renderPage('RentalManageFleet', { bizId: RB.company && RB.company.business_id });
       H.toast(newStatus === 'active' ? 'Vehicle activated.' : 'Vehicle paused.');
     } catch (e) {
-      H.toast('Could not update status.', 4000, true);
+      if (e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
+      else H.toast('Could not update status.', 4000, true);
     }
   };
 
@@ -972,7 +1129,8 @@
           H.renderPage('RentalManageFleet', { bizId: RB.company && RB.company.business_id });
           H.toast('Vehicle removed.');
         } catch (e) {
-          H.toast('Could not remove vehicle.', 4000, true);
+          if (e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
+          else H.toast('Could not remove vehicle.', 4000, true);
         }
       },
     });
@@ -1016,7 +1174,8 @@
       H.goBack();
     } catch (e) {
       console.warn('rental edit:', e);
-      H.toast('Could not save changes.', 4000, true);
+      if (e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
+      else H.toast('Could not save changes.', 4000, true);
       if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
     }
   };
@@ -1045,6 +1204,7 @@
       RB.loadAvailability(vehicleId);
     } catch (e) {
       if (e.code === 'P0001') H.toast('Those dates overlap an existing blocked period.', 4000, true);
+      else if (e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
       else H.toast('Could not block dates.', 4000, true);
     }
   };
@@ -1089,6 +1249,7 @@
     } catch (e) {
       console.warn('rental upload:', e);
       if (e.statusCode === 409) H.toast('File already exists. Please try again.', 4000, true);
+      else if (e.code === '42501') H.toast('Access denied. Your company account is not active.', 4000, true);
       else H.toast('Upload failed: ' + (e.message || 'Unknown error'), 4000, true);
       return null;
     }
