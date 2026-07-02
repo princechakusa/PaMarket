@@ -25,7 +25,7 @@ from public.rental_vehicle_listings
 order by created_at desc;
 
 -- 3. Who is an admin (approvals in admin.html only work for these users)
-select 'admin_profiles' as what, id, username, role
+select 'admin_profiles' as what, id, name, email, role
 from public.profiles
 where role = 'admin';
 
