@@ -18,7 +18,7 @@
   R.favIds      = R.favIds      || new Set();
   R.detailCache = R.detailCache || {};
   R.compCache   = R.compCache   || {};
-  R.filters     = R.filters     || { cat: null, city: null, trans: null, fuel: null, avail: false, brand: null, pmin: null, pmax: null };
+  R.filters     = R.filters     || { cat: null, city: null, trans: null, fuel: null, avail: false, brand: null, pmin: null, pmax: null, dateFrom: null, dateTo: null };
   R.sortBy      = R.sortBy      || 'featured';
 
   // ── Recent searches / locations (device-local) ───────────────────────────
@@ -92,7 +92,43 @@
 
   function _activeFilterCount() {
     const f = R.filters;
-    return [f.cat, f.city, f.trans, f.fuel, f.avail, f.brand, (f.pmin != null || f.pmax != null)].filter(Boolean).length;
+    return [f.cat, f.city, f.trans, f.fuel, f.avail, f.brand, (f.pmin != null || f.pmax != null), (f.dateFrom || f.dateTo)].filter(Boolean).length;
+  }
+
+  // ── Date-range availability (client-side) ────────────────────────────────
+  // The search RPC has no date params, but rental_vehicle_availability stores
+  // owner-blocked ranges and is publicly readable for approved listings. When
+  // the user picks pickup/return dates we batch-check the loaded rows and hide
+  // any vehicle with an overlapping block. One query per page of results.
+  function _normDates(f) {
+    const from = f.dateFrom || f.dateTo;
+    const to   = f.dateTo   || f.dateFrom;
+    return from ? { from, to } : null;
+  }
+
+  R._excludeBlockedFor = async function (rows, filters) {
+    const d = _normDates(filters || R.filters);
+    if (!d || !rows.length) return rows;
+    const sb = window.supabase; if (!sb) return rows;
+    try {
+      const { data, error } = await sb.from('rental_vehicle_availability')
+        .select('listing_id')
+        .in('listing_id', rows.map(r => r.id))
+        .lte('starts_on', d.to)
+        .gte('ends_on', d.from);
+      if (error) throw error;
+      const blocked = new Set((data || []).map(b => b.listing_id));
+      return rows.filter(r => !blocked.has(r.id));
+    } catch (e) {
+      console.warn('rental date filter:', e);
+      return rows; // best-effort: never hide everything because a check failed
+    }
+  };
+  R._excludeBlocked = (rows) => R._excludeBlockedFor(rows, R.filters);
+
+  function _fmtDateShort(iso) {
+    try { return new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+    catch (e) { return iso; }
   }
 
   // Cities and brands for the filter sheet, loaded once from the DB so the
@@ -242,6 +278,8 @@
     if (f.trans) chips.push(chip(f.trans,               "H._rental.removeFilter('trans')"));
     if (f.fuel)  chips.push(chip(f.fuel,                "H._rental.removeFilter('fuel')"));
     if (f.avail) chips.push(chip('Available Today',     "H._rental.removeFilter('avail')"));
+    const dChip = _normDates(f);
+    if (dChip) chips.push(chip(`${_fmtDateShort(dChip.from)} – ${_fmtDateShort(dChip.to)}`, "H._rental.removeFilter('dates')"));
     if (f.pmin != null || f.pmax != null) {
       const label = (f.pmin != null && f.pmax != null) ? `$${f.pmin}-$${f.pmax}`
                   : (f.pmax != null) ? `Under $${f.pmax}` : `Over $${f.pmin}`;
@@ -258,6 +296,7 @@
     if (key === 'q') { R._searchQuery = ''; }
     else if (key === 'avail') R.filters.avail = false;
     else if (key === 'price') { R.filters.pmin = null; R.filters.pmax = null; }
+    else if (key === 'dates') { R.filters.dateFrom = null; R.filters.dateTo = null; }
     else R.filters[key] = null;
     R.loadBrowse(true);
   };
@@ -364,16 +403,29 @@
       return `<button onclick="H._rental._draftToggle('${key}','${o}')" class="rvl-chip-tap" style="flex:1;min-height:40px;padding:9px 4px;border:none;border-radius:9px;background:${active ? '#fff' : 'transparent'};color:${active ? '#1A3A8F' : '#5C6480'};font-size:13px;font-weight:${active ? '800' : '600'};cursor:pointer;font-family:inherit;${active ? 'box-shadow:0 1px 3px rgba(16,24,40,.12)' : ''}">${o}</button>`;
     }).join('')}</div>`;
 
-    const availHtml = chip('Available Today', !!f.avail, "H._rental._draftToggle('avail','')");
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const availHtml = `
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="flex:1"><div style="font-size:11px;font-weight:700;color:#8992A9;margin-bottom:5px">PICKUP DATE</div>
+          <input id="rfDateFrom" type="date" min="${todayIso}" value="${esc(f.dateFrom || '')}" onchange="H._rental._draftDates()" style="width:100%;border:1.5px solid #EEF0F4;border-radius:12px;padding:10px 12px;font-size:14px;color:var(--text);background:#fff;box-sizing:border-box;font-family:inherit;min-height:44px"></div>
+        <div style="flex:1"><div style="font-size:11px;font-weight:700;color:#8992A9;margin-bottom:5px">RETURN DATE</div>
+          <input id="rfDateTo" type="date" min="${esc(f.dateFrom || todayIso)}" value="${esc(f.dateTo || '')}" onchange="H._rental._draftDates()" style="width:100%;border:1.5px solid #EEF0F4;border-radius:12px;padding:10px 12px;font-size:14px;color:var(--text);background:#fff;box-sizing:border-box;font-family:inherit;min-height:44px"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        ${chip('Available Today', !!f.avail, "H._rental._draftToggle('avail','')")}
+        ${(f.dateFrom || f.dateTo) ? `<button onclick="H._rental._clearDraftDates()" style="background:none;border:none;color:#1A3A8F;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:underline;min-height:36px">Clear dates</button>` : ''}
+      </div>
+      ${(f.dateFrom || f.dateTo) ? `<div style="font-size:12px;color:#8992A9;margin-top:8px;line-height:1.5">Vehicles with bookings or blocked dates in your range will be hidden.</div>` : ''}`;
 
     // Live summaries shown on collapsed group headers
+    const dNorm    = _normDates(f);
     const sumLoc   = f.city || '';
     const sumPrice = f.pmax != null ? `Up to $${f.pmax}` : (f.pmin != null ? `From $${f.pmin}` : '');
     const sumType  = f.cat ? catLabel(f.cat) : '';
     const sumBrand = f.brand ? brandLabel(f.brand) : '';
     const sumTrans = f.trans || '';
     const sumFuel  = f.fuel || '';
-    const sumAvail = f.avail ? 'On' : '';
+    const sumAvail = dNorm ? `${_fmtDateShort(dNorm.from)} – ${_fmtDateShort(dNorm.to)}` : (f.avail ? 'Today' : '');
 
     const html = `<div id="rentalFilterSheet" style="position:fixed;inset:0;z-index:200;display:flex;flex-direction:column">
       <div onclick="H._rental.closeFilters()" style="flex:1;background:rgba(0,0,0,.45)"></div>
@@ -445,8 +497,28 @@
     R._updateDraftCount();
   };
 
+  R._draftDates = function () {
+    if (!R._draft) R._draft = Object.assign({}, R.filters);
+    R._draft.dateFrom = document.getElementById('rfDateFrom')?.value || null;
+    R._draft.dateTo   = document.getElementById('rfDateTo')?.value   || null;
+    // Keep the range sane: return can't be before pickup
+    if (R._draft.dateFrom && R._draft.dateTo && R._draft.dateTo < R._draft.dateFrom) {
+      R._draft.dateTo = R._draft.dateFrom;
+    }
+    _renderFilterOverlay();
+    R._updateDraftCount();
+  };
+
+  R._clearDraftDates = function () {
+    if (!R._draft) R._draft = Object.assign({}, R.filters);
+    R._draft.dateFrom = null;
+    R._draft.dateTo = null;
+    _renderFilterOverlay();
+    R._updateDraftCount();
+  };
+
   R._resetDraft = function () {
-    R._draft = { cat: null, city: null, trans: null, fuel: null, avail: false, brand: null, pmin: null, pmax: null };
+    R._draft = { cat: null, city: null, trans: null, fuel: null, avail: false, brand: null, pmin: null, pmax: null, dateFrom: null, dateTo: null };
     R._citySearch = '';
     _renderFilterOverlay();
     R._updateDraftCount();
@@ -471,7 +543,9 @@
           p_featured_first: false,
           p_limit: 100, p_offset: 0,
         });
-        const n = (data || []).length;
+        // Date range applies on top of the RPC result (client-side check)
+        const rows = await R._excludeBlockedFor(data || [], f);
+        const n = rows.length;
         const btn = document.getElementById('rfApplyBtn');
         if (btn) btn.textContent = n === 0 ? 'No Vehicles Match' : `Show ${n}${n === 100 ? '+' : ''} Vehicle${n === 1 ? '' : 's'}`;
       } catch (e) { /* count is best-effort */ }
@@ -1047,6 +1121,8 @@
       const { data, error } = await Promise.race([rpcPromise, timeoutPromise]);
       if (error) throw error;
       let rows = data || [];
+      // Hide vehicles blocked for the chosen pickup/return dates
+      rows = await R._excludeBlocked(rows);
       // Keep newly loaded pages consistent with the active client-side sort
       if (R.sortBy !== 'featured') rows = _applySort(rows, R.sortBy);
       const feat = (R.sortBy === 'featured') ? rows.filter(r => r.is_featured && R.page === 0) : [];
@@ -1264,7 +1340,7 @@
   };
 
   R.clearFilters = function () {
-    R.filters = { cat: null, city: null, trans: null, fuel: null, avail: false, brand: null, pmin: null, pmax: null };
+    R.filters = { cat: null, city: null, trans: null, fuel: null, avail: false, brand: null, pmin: null, pmax: null, dateFrom: null, dateTo: null };
     R._searchQuery = '';
     R.sortBy = 'featured';
     R.loadBrowse(true);
