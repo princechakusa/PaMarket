@@ -20,7 +20,8 @@
   RB._loading   = false;
   RB._wizState  = null;
   RB._fleetTab  = RB._fleetTab || 'all';
-  RB._access    = null;   // result of get_user_rental_access()
+  RB._access         = null;   // result of get_user_rental_access()
+  RB._lastAccessLoad = 0;      // timestamp of last loadAccess() completion (loop guard)
 
   const WIZARD_STEPS = ['Basic Info', 'Pricing', 'Description', 'Review'];
 
@@ -103,6 +104,8 @@
       console.warn('rental access check:', e);
       RB._access = null;
     }
+    // Mark load time BEFORE renderPage so _after loop guard fires correctly
+    RB._lastAccessLoad = Date.now();
     // Re-render whichever rental business page is currently open
     const page = H.currentPageName;
     const biz  = _requireBiz();
@@ -332,8 +335,14 @@
   H.pages.RentalDashboard_after = function (params) {
     const biz = _requireBiz();
     if (!biz) return;
-    // Always refresh access on dashboard entry — it's the primary gate
+    // Guard: if a loader just triggered this re-render (within 3s), don't loop back
+    if (Date.now() - RB._lastAccessLoad < 3000) {
+      if (!RB.company) RB.loadCompanyData(biz.id);
+      return;
+    }
+    // Fresh navigation: always re-fetch access so status changes are reflected
     RB._access = null;
+    RB._lastAccessLoad = Date.now();
     RB.loadAccess();
     if (!RB.company) RB.loadCompanyData(biz.id);
   };
@@ -1057,6 +1066,7 @@
       H.toast('Could not load rental data.', 4000, true);
     }
     RB._loading = false;
+    RB._lastAccessLoad = Date.now(); // prevent _after loop when this re-render fires
     const curPage = H.currentPageName;
     if (curPage === 'RentalDashboard')        H.renderPage('RentalDashboard', {});
     if (curPage === 'RentalManageFleet')       H.renderPage('RentalManageFleet', { bizId });
