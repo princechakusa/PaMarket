@@ -71,8 +71,11 @@
   function _requireBiz() {
     const u = H.currentUser();
     if (!u) { H.requireAuth('Sign in to manage your rental business'); return null; }
-    const biz = (H.state.businesses || []).find(b => b.ownerUserId === u.id);
-    return biz || null;
+    const owned = (H.state.businesses || []).filter(b => b.ownerUserId === u.id);
+    // A user can own several businesses; the rental company hangs off ONE of
+    // them. Prefer the one the access RPC / loaded company identified.
+    const rentalBizId = (RB._access && RB._access.business_id) || (RB.company && RB.company.business_id);
+    return owned.find(b => b.id === rentalBizId) || owned[0] || null;
   }
 
   // ── Status pill ───────────────────────────────────────────────────────────
@@ -1012,11 +1015,19 @@
     const sb = window.supabase; if (!sb) { RB._loadingCompany = false; return; }
     RB._loading = true;
     try {
-      const { data: rc, error } = await sb.from('rental_companies')
-        .select('id,status,avg_rating,review_count,fleet_count,business_id')
-        .eq('business_id', bizId).single();
+      // Search ALL businesses this user owns — the rental company may be
+      // attached to a different business than the one passed in.
+      const u = H.currentUser();
+      const ownedIds = (H.state.businesses || [])
+        .filter(b => u && b.ownerUserId === u.id).map(b => b.id);
+      if (bizId && !ownedIds.includes(bizId)) ownedIds.push(bizId);
 
-      if (error && error.code === 'PGRST116') {
+      const { data: rcRows, error } = await sb.from('rental_companies')
+        .select('id,status,avg_rating,review_count,fleet_count,business_id')
+        .in('business_id', ownedIds).limit(1);
+      const rc = (rcRows && rcRows[0]) || null;
+
+      if (!error && !rc) {
         RB.company = null; RB.fleet = []; RB.leads = [];
         RB._loading = false;
         const curPage = H.currentPageName;
@@ -1028,6 +1039,8 @@
       }
       if (error) throw error;
 
+      // Use the business the company is actually attached to from here on
+      bizId = rc.business_id;
       const bizRes = await sb.from('businesses').select('name').eq('id', bizId).single();
 
       RB.company = {
@@ -1080,8 +1093,8 @@
       const userIds = [...new Set((leadsRes.data || []).map(l => l.user_id).filter(Boolean))];
       let nameMap   = {};
       if (userIds.length) {
-        const nameRes = await sb.from('profiles').select('id,full_name,username').in('id', userIds);
-        (nameRes.data || []).forEach(p => { nameMap[p.id] = p.full_name || p.username || 'Customer'; });
+        const nameRes = await sb.from('profiles').select('id,name').in('id', userIds);
+        (nameRes.data || []).forEach(p => { nameMap[p.id] = p.name || 'Customer'; });
       }
       const vehicleNameMap = {};
       RB.fleet.forEach(v => { vehicleNameMap[v.id] = (v.brand_label || '') + ' ' + (v.model || ''); });
