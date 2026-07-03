@@ -173,16 +173,16 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 <nav class="cat-nav">
   <div class="cat-nav-w">
     <a href="browse.html" class="cnav">All Listings</a>
-    <a href="browse.html?cat=Property" class="cnav">Property</a>
-    <a href="browse.html?cat=Vehicles" class="cnav">Vehicles</a>
-    <a href="browse.html?cat=Electronics" class="cnav">Electronics</a>
+    <a href="browse.html?cat=property" class="cnav">Property</a>
+    <a href="browse.html?cat=vehicles" class="cnav">Vehicles</a>
+    <a href="browse.html?cat=electronics" class="cnav">Electronics</a>
     <a href="jobs.html" class="cnav">Jobs</a>
-    <a href="browse.html?cat=Furniture" class="cnav">Furniture</a>
-    <a href="browse.html?cat=Fashion" class="cnav">Fashion</a>
-    <a href="browse.html?cat=Services" class="cnav">Services</a>
-    <a href="browse.html?cat=Agriculture" class="cnav">Agriculture</a>
-    <a href="browse.html?cat=Rooms" class="cnav">Rooms to Rent</a>
-    <a href="browse.html?cat=Pets" class="cnav">Pets</a>
+    <a href="browse.html?cat=furniture" class="cnav">Furniture</a>
+    <a href="browse.html?cat=fashion" class="cnav">Fashion</a>
+    <a href="browse.html?cat=services" class="cnav">Services</a>
+    <a href="browse.html?cat=agriculture" class="cnav">Agriculture</a>
+    <a href="browse.html?cat=rooms" class="cnav">Rooms to Rent</a>
+    <a href="browse.html?cat=pets" class="cnav">Pets</a>
     <a href="browse.html?shops=1" class="cnav">Shops</a>
   </div>
 </nav>
@@ -209,12 +209,12 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     </div>
     <div class="foot-col">
       <h5>Categories</h5>
-      <a href="browse.html?cat=Property">Property</a>
-      <a href="browse.html?cat=Vehicles">Vehicles</a>
-      <a href="browse.html?cat=Electronics">Electronics</a>
-      <a href="browse.html?cat=Furniture">Furniture</a>
-      <a href="browse.html?cat=Fashion">Fashion</a>
-      <a href="browse.html?cat=Agriculture">Agriculture</a>
+      <a href="browse.html?cat=property">Property</a>
+      <a href="browse.html?cat=vehicles">Vehicles</a>
+      <a href="browse.html?cat=electronics">Electronics</a>
+      <a href="browse.html?cat=furniture">Furniture</a>
+      <a href="browse.html?cat=fashion">Fashion</a>
+      <a href="browse.html?cat=agriculture">Agriculture</a>
       <a href="jobs.html">Jobs</a>
       <a href="browse.html?shops=1">Shops</a>
       <a href="plans.html">Shop Plans</a>

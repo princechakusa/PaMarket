@@ -27,15 +27,17 @@ input,select,textarea{font-family:var(--font)}
 /* PAGE BACKGROUND */
 .auth-page{
   min-height:100vh;
-  background:linear-gradient(160deg,#0f2460 0%,#1A3A8F 45%,#1e40af 100%);
+  background:
+    radial-gradient(ellipse 900px 600px at 15% 10%,rgba(232,163,61,.10) 0%,transparent 60%),
+    radial-gradient(ellipse 700px 500px at 90% 90%,rgba(232,163,61,.08) 0%,transparent 60%),
+    linear-gradient(160deg,#0a1a4a 0%,#0f2460 30%,#1A3A8F 60%,#15306e 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:24px 16px 40px;
   position:relative;overflow:hidden;
 }
 .auth-page::before{
-  content:'';position:absolute;top:-120px;right:-120px;width:500px;height:500px;
-  border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,.12) 0%,transparent 70%);
-  pointer-events:none;
+  content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);
 }
 .auth-page::after{
   content:'';position:absolute;bottom:-80px;left:-80px;width:400px;height:400px;
@@ -51,18 +53,15 @@ input,select,textarea{font-family:var(--font)}
 .auth-back:hover{color:#fff}
 .auth-back svg{flex-shrink:0}
 
-/* BRAND */
-.auth-brand-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:28px;position:relative;z-index:1}
+/* BRAND (wordmark + tagline — shown on landing screen only) */
+.auth-brand-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:32px;position:relative;z-index:1}
 .auth-brand{
   font-size:36px;font-weight:900;letter-spacing:-1px;color:#fff;
   display:inline-flex;align-items:center;gap:0;line-height:1;
 }
 .auth-brand em{color:var(--gold);font-style:normal}
-.auth-tagline{font-size:14px;color:rgba(255,255,255,.6);margin-top:6px;font-weight:500;letter-spacing:.2px}
-
-/* ILLUSTRATION (shown on landing screen only) */
-.auth-illustration{display:flex;justify-content:center;margin-bottom:20px;position:relative;z-index:1}
-.auth-illustration svg{filter:drop-shadow(0 8px 24px rgba(0,0,0,.3))}
+.auth-tagline{font-size:14px;color:rgba(255,255,255,.6);font-weight:500;letter-spacing:.2px;margin:0}
+.auth-badge img{border-radius:16px;display:block}
 
 /* CARD */
 .auth-card-wrap{width:100%;max-width:400px;position:relative;z-index:1}
@@ -150,6 +149,8 @@ input,select,textarea{font-family:var(--font)}
 .auth-foot a{color:rgba(255,255,255,.55);font-weight:600;transition:color .2s}
 .auth-foot a:hover{color:#fff}
 .auth-foot .sep{margin:0 6px;opacity:.4}
+.auth-foot-flag-row{display:flex;align-items:center;justify-content:center;gap:6px}
+.zw-flag-sm{width:16px;height:11px;border-radius:2px;object-fit:cover;box-shadow:0 0 0 1px rgba(255,255,255,.25);display:inline-block}
 
 /* REGISTER LINK ROW */
 .auth-switch{text-align:center;margin-top:16px;font-size:14px;color:var(--sub)}
@@ -216,47 +217,9 @@ input,select,textarea{font-family:var(--font)}
   </a>
 
   <!-- Brand -->
-  <div class="auth-brand-wrap">
+  <div class="auth-brand-wrap" id="authIllustration">
     <a href="index.html" class="auth-brand">Pa<em>Market</em></a>
     <p class="auth-tagline">Zimbabwe's Free Marketplace</p>
-  </div>
-
-  <!-- Illustration (landing screen only) -->
-  <div class="auth-illustration" id="authIllustration">
-    <svg width="160" height="110" viewBox="0 0 160 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Stall / market structure -->
-      <rect x="10" y="38" width="140" height="60" rx="4" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
-      <!-- Roof -->
-      <path d="M4 40 L80 8 L156 40" stroke="rgba(245,166,35,.7)" stroke-width="3" stroke-linecap="round" fill="none"/>
-      <path d="M4 40 L80 8 L156 40" fill="rgba(245,166,35,.12)"/>
-      <!-- Shelves -->
-      <rect x="22" y="56" width="36" height="28" rx="3" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
-      <rect x="62" y="56" width="36" height="28" rx="3" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
-      <rect x="102" y="56" width="36" height="28" rx="3" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
-      <!-- Items on shelves -->
-      <circle cx="40" cy="66" r="5" fill="rgba(245,166,35,.6)"/>
-      <rect x="30" y="74" width="20" height="6" rx="2" fill="rgba(245,166,35,.4)"/>
-      <rect x="68" y="62" width="22" height="16" rx="2" fill="rgba(245,166,35,.5)"/>
-      <circle cx="120" cy="67" r="6" fill="rgba(245,166,35,.55)"/>
-      <rect x="110" y="76" width="22" height="5" rx="2" fill="rgba(245,166,35,.35)"/>
-      <!-- People / figures -->
-      <circle cx="55" cy="46" r="4" fill="rgba(255,255,255,.55)"/>
-      <path d="M55 50 L55 60" stroke="rgba(255,255,255,.55)" stroke-width="2.5" stroke-linecap="round"/>
-      <circle cx="105" cy="44" r="4" fill="rgba(255,255,255,.55)"/>
-      <path d="M105 48 L105 58" stroke="rgba(255,255,255,.55)" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Zimbabwe flag colours strip at bottom -->
-      <rect x="10" y="94" width="28" height="3" rx="1.5" fill="#009a44"/>
-      <rect x="40" y="94" width="28" height="3" rx="1.5" fill="#ffe000"/>
-      <rect x="70" y="94" width="28" height="3" rx="1.5" fill="#d40000"/>
-      <rect x="100" y="94" width="28" height="3" rx="1.5" fill="rgba(0,0,0,.4)"/>
-      <!-- Phone icon -->
-      <rect x="128" y="25" width="18" height="28" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
-      <circle cx="137" cy="49" r="1.5" fill="rgba(255,255,255,.4)"/>
-      <!-- Signal bars on phone -->
-      <rect x="132" y="34" width="2" height="6" rx="1" fill="var(--gold)" opacity=".7"/>
-      <rect x="135.5" y="32" width="2" height="8" rx="1" fill="var(--gold)" opacity=".7"/>
-      <rect x="139" y="30" width="2" height="10" rx="1" fill="var(--gold)" opacity=".7"/>
-    </svg>
   </div>
 
   <!-- Auth Card -->
@@ -268,7 +231,7 @@ input,select,textarea{font-family:var(--font)}
 
   <!-- Page footer -->
   <div class="auth-foot">
-    <div>&copy; 2026 PaMarket &nbsp;&middot;&nbsp; Made in Zimbabwe &#127487;&#127484;</div>
+    <div class="auth-foot-flag-row">&copy; 2026 PaMarket &nbsp;&middot;&nbsp; Made in Zimbabwe <img src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" class="zw-flag-sm"></div>
     <div><a href="terms.html">Terms of Service</a><span class="sep">|</span><a href="privacy.html">Privacy Policy</a></div>
   </div>
 

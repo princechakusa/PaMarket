@@ -3,68 +3,207 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Contact the PaMarket team. We're here to help with buying, selling, advertising, or anything else.">
-<title>Contact Us - PaMarket</title>
+<meta name="description" content="Contact the PaMarket team in Harare, Zimbabwe. We're here to help with buying, selling, advertising, or anything else — reply within 24 hours.">
+<title>Contact Us — PaMarket Zimbabwe</title>
+<link rel="canonical" href="https://pamarketzw.com/contact.html">
 <link rel="icon" href="img/icon-192.png" type="image/png">
+<meta property="og:title" content="Contact PaMarket">
+<meta property="og:description" content="We're here to help. Reach our team any time — we respond within 24 hours.">
+<meta property="og:image" content="https://pamarketzw.com/img/icon-512.png">
+<meta property="og:url" content="https://pamarketzw.com/contact.html">
+<meta name="robots" content="index, follow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  .contact-grid{display:grid;grid-template-columns:1fr 1.6fr;gap:48px;align-items:start}
-  .info-stack{display:flex;flex-direction:column;gap:14px}
-  .info-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;align-items:flex-start;gap:16px}
-  .info-ic{width:42px;height:42px;border-radius:11px;background:var(--navy-tint);color:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .info-lbl{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
-  .info-val{font-size:15px;font-weight:600;color:var(--ink)}
-  .info-val a{color:var(--ink);text-decoration:none}
-  .wa-pill{display:inline-flex;align-items:center;gap:7px;background:#25D366;color:#fff;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:700;margin-top:8px;text-decoration:none}
-  .form-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:40px}
-  .fg{margin-bottom:18px}
-  .fl{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:7px}
-  .fi{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:9px;font-size:15px;color:var(--ink);background:#fff;outline:none;transition:border-color .2s;font-family:inherit}
-  .fi:focus{border-color:var(--navy)}
-  textarea.fi{min-height:130px;resize:vertical}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:860px){.contact-grid{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#1A3A8F;--navy-deep:#0F2460;--navy-mid:#1E4BB8;
+  --gold:#E8A33D;--gold-dark:#C5871A;
+  --ink:#0F172A;--sub:#475569;--mute:#94A3B8;
+  --line:#E2E8F0;--paper:#F8FAFC;--white:#FFFFFF;
+  --green:#16A34A;--red:#DC2626;
+}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#fff;font-size:15px;line-height:1.6}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;display:block}
+button{font-family:inherit;cursor:pointer}
+.hidden{display:none!important}
+.w{max-width:1200px;margin:0 auto;padding:0 32px}
+
+/* ══ SHARED HEADER/FOOTER ══ */
+.top-bar{background:var(--navy-deep);padding:8px 0;font-size:12.5px;color:#94B4E8}
+.top-bar-w{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;align-items:center}
+.top-bar a{color:#94B4E8;transition:color .15s}.top-bar a:hover{color:#fff}
+.top-bar-links{display:flex;gap:24px}
+.zw-flag-row{display:inline-flex;align-items:center;gap:7px}
+.zw-flag{border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.2);flex-shrink:0;display:block}
+#hdr{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:300;box-shadow:0 1px 12px rgba(15,36,96,.07)}
+.hdr-w{max-width:1200px;margin:0 auto;padding:0 32px;height:66px;display:flex;align-items:center;gap:18px}
+.logo{font-size:23px;font-weight:900;color:var(--navy);flex-shrink:0;letter-spacing:-.02em;cursor:pointer;transition:opacity .15s}
+.logo:hover{opacity:.8}
+.logo em{color:var(--gold);font-style:normal}
+.search-bar{flex:1;min-width:280px;max-width:560px;display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper);transition:border-color .2s,box-shadow .2s}
+.search-bar:focus-within{border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,58,143,.1)}
+.search-cat{border:none;background:none;border-right:1px solid var(--line);padding:0 12px 0 14px;height:44px;font-size:13px;color:var(--sub);font-family:inherit;outline:none;cursor:pointer}
+.search-inp{flex:1;border:none;background:none;padding:0 14px;height:44px;font-size:14px;font-family:inherit;color:var(--ink);outline:none}
+.search-inp::placeholder{color:var(--mute)}
+.search-btn{background:var(--navy);color:#fff;border:none;height:44px;padding:0 22px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px;transition:background .15s;flex-shrink:0}
+.search-btn:hover{background:var(--navy-deep)}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
+.btn-sign{border:1.5px solid var(--line);border-radius:9px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--ink);background:#fff;transition:border-color .15s}
+.btn-sign:hover{border-color:var(--navy);color:var(--navy)}
+.btn-post{background:var(--gold);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:700;transition:background .15s}
+.btn-post:hover{background:var(--gold-dark)}
+.ham{display:none;background:none;border:none;color:var(--ink);padding:4px}
+.cat-nav{background:#fff;border-bottom:1px solid var(--line)}
+.cat-nav-w{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;overflow-x:auto;scrollbar-width:none;gap:2px}
+.cat-nav-w::-webkit-scrollbar{display:none}
+.cnav{flex-shrink:0;padding:10px 16px;font-size:13px;font-weight:500;color:var(--sub);border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .15s}
+.cnav:hover,.cnav.on{color:var(--navy);border-bottom-color:var(--navy);font-weight:600}
+.mob-nav{display:none;flex-direction:column;background:#fff;border-top:1px solid var(--line);padding:12px 28px 20px}
+.mob-nav a{padding:12px 0;color:var(--ink);font-weight:500;border-bottom:1px solid var(--line);font-size:14.5px}
+.mob-nav a:last-child{border-bottom:none;color:var(--gold);font-weight:700}
+.mob-nav.open{display:flex}
+footer{background:var(--navy-deep);color:#6A8AC8}
+.foot-main{max-width:1200px;margin:0 auto;padding:56px 32px 40px;display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px}
+.foot-logo{font-size:24px;font-weight:900;color:#fff;letter-spacing:-.02em}
+.foot-logo em{color:var(--gold);font-style:normal}
+.foot-tagline{font-size:13.5px;color:#6A8AC8;margin-top:12px;max-width:240px;line-height:1.7}
+.foot-contact{margin-top:20px;font-size:13px;display:flex;flex-direction:column;gap:8px}
+.foot-contact a{color:#6A8AC8;transition:color .15s}
+.foot-contact a:hover{color:#fff}
+.foot-store{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+.foot-col h5{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin-bottom:16px}
+.foot-col a{display:block;font-size:13.5px;color:#6A8AC8;margin-bottom:10px;transition:color .15s}
+.foot-col a:hover{color:#fff}
+.foot-bottom{border-top:1px solid rgba(255,255,255,.08);padding:18px 32px;max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:#4A6490}
+.foot-bottom-links{display:flex;gap:20px}
+.foot-bottom-links a{color:#4A6490;transition:color .15s}.foot-bottom-links a:hover{color:#fff}
+.wa{position:fixed;right:22px;bottom:22px;z-index:99}
+.wa-btn{width:54px;height:54px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(37,211,102,.5);transition:transform .2s}
+.wa-btn:hover{transform:scale(1.08)}
+@media(max-width:768px){
+  .top-bar{display:none}
+  .hdr-right .btn-sign{display:none}
+  .search-cat{display:none}
+  .ham{display:block}
+  .cat-nav{display:none}
+  .hdr-w{padding:0 20px;gap:12px}
+  .foot-main{grid-template-columns:1fr;padding:36px 24px}
+  .foot-bottom{flex-direction:column;gap:12px;text-align:center;padding:16px 24px}
+}
+
+/* ══ PAGE-SPECIFIC ══ */
+.ct-hero{background:linear-gradient(145deg,var(--navy-deep) 0%,var(--navy) 55%,#1E4BB8 100%);padding:64px 0}
+.ct-hero-w{max-width:800px;margin:0 auto;padding:0 32px;text-align:center}
+.p-tag{display:inline-block;background:rgba(255,255,255,.12);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 13px;border-radius:20px;color:#C7D8F5}
+.ct-hero h1{font-size:34px;font-weight:900;color:#fff;margin-top:14px;letter-spacing:-.02em}
+.ct-hero p{font-size:15.5px;color:#9BB4E0;margin-top:10px;max-width:520px;margin-left:auto;margin-right:auto}
+
+.band{padding:56px 0}
+.contact-grid{display:grid;grid-template-columns:1fr 1.6fr;gap:40px;align-items:start}
+.info-stack{display:flex;flex-direction:column;gap:14px}
+.info-card{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;align-items:flex-start;gap:16px;transition:all .2s}
+.info-card:hover{box-shadow:0 10px 24px rgba(26,58,143,.08);border-color:rgba(26,58,143,.2)}
+.info-ic{width:42px;height:42px;border-radius:11px;background:#EEF2FF;color:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.info-lbl{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.info-val{font-size:15px;font-weight:600;color:var(--ink)}
+.wa-pill{display:inline-flex;align-items:center;gap:7px;background:#25D366;color:#fff;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:700;margin-top:8px}
+.help-callout{background:#EEF2FF;border-radius:14px;padding:18px 20px;font-size:13.5px;color:var(--sub);text-align:center}
+.help-callout a{color:var(--navy);font-weight:700}
+
+.form-card{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:36px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-dark)}
+.sec-title{font-size:24px;font-weight:900;letter-spacing:-.02em;margin-top:6px}
+.rule{width:44px;height:3px;background:var(--navy);border-radius:2px;margin-top:12px}
+.fg{margin-bottom:18px;margin-top:22px}
+.fl{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:7px}
+.fi{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:9px;font-size:14.5px;color:var(--ink);background:#fff;outline:none;transition:border-color .2s;font-family:inherit}
+.fi:focus{border-color:var(--navy)}
+textarea.fi{min-height:130px;resize:vertical}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.submit-btn{width:100%;background:var(--gold);color:#fff;border:none;border-radius:10px;padding:14px;font-size:14.5px;font-weight:700;transition:background .15s}
+.submit-btn:hover{background:var(--gold-dark)}
+
+@media(max-width:860px){
+  .contact-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .form-card{padding:26px}
+}
 </style>
 </head>
-<body data-page="Contact Us">
+<body>
 
-<header id="site-header">
-  <div class="hdr">
-    <a href="index.html" class="logo">Pa<span>Market</span></a>
-    <nav class="hdr-nav">
-      <a href="browse.html" class="nav-a">Browse</a>
-      <a href="browse.html?shops=1" class="nav-a">Shops</a>
-      <a href="jobs.html" class="nav-a">Hire Talent</a>
-      <a href="advertise.html" class="nav-a">Advertise</a>
-      <a href="about.html" class="nav-a">About</a>
-    </nav>
-    <div class="hdr-actions">
-      <a href="post-ad.html" class="btn btn-accent btn-sm">Post Free Ad</a>
+<div class="top-bar">
+  <div class="top-bar-w">
+    <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
+    <div class="top-bar-links">
+      <a href="browse.html">Browse Ads</a>
+      <a href="advertise.html">Advertise</a>
+      <a href="about.html">About Us</a>
     </div>
-    <button class="hamburger" onclick="toggleMob()" aria-label="Toggle menu">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-    </button>
+  </div>
+</div>
+
+<header id="hdr">
+  <div class="hdr-w">
+    <a href="index.html" class="logo">Pa<em>Market</em></a>
+    <div class="search-bar">
+      <select class="search-cat" id="hCat" aria-label="Category">
+        <option value="">All Categories</option>
+        <option value="property">Property</option><option value="vehicles">Vehicles</option><option value="electronics">Electronics</option>
+        <option value="jobs">Jobs</option><option value="furniture">Furniture</option><option value="fashion">Fashion</option>
+        <option value="services">Services</option><option value="agriculture">Agriculture</option><option value="rooms">Rooms</option>
+        <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option>
+      </select>
+      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Search
+      </button>
+    </div>
+    <div class="hdr-right">
+      <a href="auth.html" class="btn-sign" id="signInBtn">Sign In</a>
+      <a href="post-ad.html" class="btn-post">+ Post Free Ad</a>
+      <button class="ham" onclick="toggleMob()" aria-label="Menu">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+      </button>
+    </div>
   </div>
   <nav id="mobNav" class="mob-nav">
-    <a href="index.html">Home</a><a href="browse.html">Browse All</a><a href="browse.html?shops=1">Shops</a>
-    <a href="jobs.html">Hire Talent</a><a href="advertise.html">Advertise</a><a href="about.html">About</a>
-    <div class="mob-nav-btns"><a href="post-ad.html" class="btn btn-accent">Post Free Ad</a></div>
+    <a href="index.html">Home</a>
+    <a href="browse.html">Browse All</a>
+    <a href="jobs.html">Jobs</a>
+    <a href="browse.html?shops=1">Shops</a>
+    <a href="advertise.html">Advertise</a>
+    <a href="about.html">About</a>
+    <a href="post-ad.html">+ Post Free Ad</a>
   </nav>
 </header>
 
-<section class="page-hero">
-  <div class="wrap" style="padding:64px 40px 56px">
-    <div class="pagetag">Get in Touch</div>
+<nav class="cat-nav">
+  <div class="cat-nav-w">
+    <a href="index.html" class="cnav">Home</a>
+    <a href="browse.html" class="cnav">All Listings</a>
+    <a href="browse.html?cat=property" class="cnav">Property</a>
+    <a href="browse.html?cat=vehicles" class="cnav">Vehicles</a>
+    <a href="jobs.html" class="cnav">Jobs</a>
+    <a href="browse.html?shops=1" class="cnav">Shops</a>
+  </div>
+</nav>
+
+<section class="ct-hero">
+  <div class="ct-hero-w">
+    <span class="p-tag">Get in Touch</span>
     <h1>Contact Us</h1>
     <p>We are here to help. Reach our team any time and we will respond within 24 hours.</p>
   </div>
 </section>
 
-<section class="band reveal">
-  <div class="wrap">
+<section class="band">
+  <div class="w">
     <div class="contact-grid">
       <div class="info-stack">
         <div class="info-card">
@@ -89,7 +228,7 @@
           <div class="info-ic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
           <div>
             <div class="info-lbl">Office Hours</div>
-            <div class="info-val">Mon - Fri: 8am to 5pm CAT</div>
+            <div class="info-val">Mon – Fri: 8am to 5pm CAT</div>
             <div style="font-size:13px;color:var(--sub);margin-top:2px">Saturday: 9am to 1pm</div>
           </div>
         </div>
@@ -100,67 +239,109 @@
             <div class="info-val">Harare, Zimbabwe</div>
           </div>
         </div>
-        <div style="background:var(--navy-tint);border-radius:14px;padding:18px 20px;font-size:14px;color:var(--sub);text-align:center">
-          Quick answers? <a href="help.html" style="color:var(--navy);font-weight:700">Visit our Help Center</a>
+        <div class="help-callout">
+          Quick answers? <a href="help.html">Visit our Help Center</a>
         </div>
       </div>
 
       <div class="form-card">
         <div class="eyebrow">Send a Message</div>
-        <h2 class="sec-title" style="margin-top:6px">We'll reply within 24 hours</h2>
+        <h2 class="sec-title">We'll reply within 24 hours</h2>
         <div class="rule"></div>
-        <div style="margin-top:24px">
-          <div class="form-row">
-            <div class="fg">
-              <label class="fl">Your Name</label>
-              <input type="text" class="fi" id="cName" placeholder="John Doe">
-            </div>
-            <div class="fg">
-              <label class="fl">Email Address</label>
-              <input type="email" class="fi" id="cEmail" placeholder="your@email.com">
-            </div>
+        <div class="form-row" style="margin-top:22px">
+          <div class="fg" style="margin-top:0">
+            <label class="fl">Your Name</label>
+            <input type="text" class="fi" id="cName" placeholder="John Doe">
           </div>
-          <div class="fg">
-            <label class="fl">Subject</label>
-            <select class="fi" id="cSubject">
-              <option value="">Select a subject...</option>
-              <option>General Inquiry</option>
-              <option>Report a Problem</option>
-              <option>Advertising</option>
-              <option>Partnership</option>
-              <option>Other</option>
-            </select>
+          <div class="fg" style="margin-top:0">
+            <label class="fl">Email Address</label>
+            <input type="email" class="fi" id="cEmail" placeholder="your@email.com">
           </div>
-          <div class="fg">
-            <label class="fl">Message</label>
-            <textarea class="fi" id="cMessage" placeholder="Tell us how we can help you..."></textarea>
-          </div>
-          <button onclick="submitContact()" class="btn btn-accent" style="width:100%;padding:15px;font-size:15px">Send Message</button>
         </div>
+        <div class="fg" style="margin-top:0">
+          <label class="fl">Subject</label>
+          <select class="fi" id="cSubject">
+            <option value="">Select a subject...</option>
+            <option>General Inquiry</option>
+            <option>Report a Problem</option>
+            <option>Advertising</option>
+            <option>Partnership</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-top:0">
+          <label class="fl">Message</label>
+          <textarea class="fi" id="cMessage" placeholder="Tell us how we can help you..."></textarea>
+        </div>
+        <button onclick="submitContact()" class="submit-btn">Send Message</button>
       </div>
     </div>
   </div>
 </section>
 
 <footer>
-  <div class="wrap">
-    <div class="foot-grid">
-      <div><a href="index.html" class="logo">Pa<span>Market</span></a><p>Zimbabwe's free marketplace. Buy, sell, hire and grow your business across all ten provinces.</p></div>
-      <div class="foot"><h4>Marketplace</h4><a href="browse.html">Browse</a><a href="post-ad.html">Post a Free Ad</a><a href="browse.html?shops=1">Shops</a><a href="plans.html">Plans</a><a href="jobs.html">Hire Talent</a></div>
-      <div class="foot"><h4>Company</h4><a href="about.html">About</a><a href="advertise.html">Advertise</a><a href="contact.html">Contact</a><a href="help.html">Help</a></div>
-      <div class="foot"><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="community-guidelines.html">Guidelines</a><a href="help.html">Safety</a></div>
+  <div class="foot-main">
+    <div>
+      <div class="foot-logo">Pa<em>Market</em></div>
+      <p class="foot-tagline">Zimbabwe's free marketplace. Buy, sell, find jobs and grow your business across all ten provinces. No fees, ever.</p>
+      <div class="foot-contact">
+        <a href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a>
+        <a href="mailto:support@pamarketzw.com">support@pamarketzw.com</a>
+      </div>
+      <div class="foot-store">
+        <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener">
+          <img src="img/google-play-badge.png" alt="Get it on Google Play" style="height:40px;display:block">
+        </a>
+      </div>
     </div>
-    <div class="footer-bottom">&copy; 2026 PaMarket. App version 1.5.0. Made in Zimbabwe. All rights reserved.</div>
+    <div class="foot-col">
+      <h5>Categories</h5>
+      <a href="browse.html?cat=property">Property</a>
+      <a href="browse.html?cat=vehicles">Vehicles</a>
+      <a href="browse.html?cat=electronics">Electronics</a>
+      <a href="jobs.html">Jobs</a>
+      <a href="browse.html?shops=1">Shops</a>
+      <a href="plans.html">Shop Plans</a>
+    </div>
+    <div class="foot-col">
+      <h5>Customer Service</h5>
+      <a href="help.html">Help &amp; FAQ</a>
+      <a href="contact.html">Contact Us</a>
+      <a href="advertise.html">Advertise</a>
+      <a href="community-guidelines.html">Community Guidelines</a>
+      <a href="about.html">About PaMarket</a>
+    </div>
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="delete-account.html">Delete Account</a>
+      <a href="auth.html">Sign In</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</span>
+    <div class="foot-bottom-links">
+      <a href="terms.html">Terms</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="community-guidelines.html">Guidelines</a>
+      <a href="contact.html">Contact</a>
+    </div>
   </div>
 </footer>
 
-<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:12px 22px;border-radius:999px;font-size:14px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999"></div>
+<a href="https://wa.me/971589772645" class="wa" target="_blank" rel="noopener" aria-label="WhatsApp">
+  <div class="wa-btn">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+  </div>
+</a>
 
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;padding:12px 22px;border-radius:999px;font-size:14px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999"></div>
+
+<script src="js/supabase-config.js"></script>
+<script src="js/session.js"></script>
+<script src="js/nav-dropdowns.js"></script>
 <script>
-function toggleMob(){document.getElementById('mobNav').classList.toggle('open')}
-document.addEventListener('click',e=>{const n=document.getElementById('mobNav');if(n.classList.contains('open')&&!document.getElementById('site-header').contains(e.target))n.classList.remove('open')});
-const revealObs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');revealObs.unobserve(e.target)}})},{threshold:0.08});
-document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3000)}
 function submitContact(){
   const name=document.getElementById('cName').value.trim();
@@ -171,7 +352,23 @@ function submitContact(){
   window.location.href='mailto:support@pamarketzw.com?subject='+encodeURIComponent('[PaMarket] '+sub)+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+'\n\n'+msg);
   toast("Opening your email app...");
 }
+function doSearch(){
+  const q=document.getElementById('hQ')?.value?.trim();
+  const cat=document.getElementById('hCat')?.value;
+  if(cat==='jobs'){window.location='jobs.html'+(q?'?q='+encodeURIComponent(q):'');return}
+  let u='browse.html?';
+  if(q)u+='q='+encodeURIComponent(q);
+  if(cat)u+=(q?'&':'')+'cat='+encodeURIComponent(cat);
+  window.location=u==='browse.html?'?'browse.html':u;
+}
+function toggleMob(){
+  document.getElementById('mobNav').classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  const h=document.getElementById('hdr');
+  const n=document.getElementById('mobNav');
+  if(n && n.classList.contains('open') && h && !h.contains(e.target))n.classList.remove('open');
+});
 </script>
-<script src="js/site.js"></script>
 </body>
 </html>
