@@ -860,7 +860,7 @@
       + '<p>You must be at least 18 years old and have full legal capacity to enter into binding contracts under the laws of Zimbabwe. By creating an account you represent and warrant that you meet these requirements. We reserve the right to terminate any account we have reason to believe belongs to a person under 18, without notice or liability.</p>'
 
       + '<h3>3. Account Registration and Security</h3>'
-      + '<p>You may register using a valid email address, phone number, or a supported third-party sign-in provider (e.g. Google). You are solely responsible for maintaining the confidentiality of your password and for all activity that occurs under your account. You must notify us immediately at chakusaprince@gmail.com if you become aware of any unauthorised access. We will not be liable for any loss caused by someone else using your account with or without your knowledge. You may hold only one account; duplicate accounts will be removed.</p>'
+      + '<p>You may register using a valid email address, phone number, or a supported third-party sign-in provider (e.g. Google). You are solely responsible for maintaining the confidentiality of your password and for all activity that occurs under your account. You must notify us immediately at info@pamarketzw.com if you become aware of any unauthorised access. We will not be liable for any loss caused by someone else using your account with or without your knowledge. You may hold only one account; duplicate accounts will be removed.</p>'
 
       + '<h3>4. Nature of the Platform - PaMarket Is a Marketplace Only</h3>'
       + '<p>PaMarket is an online classifieds and services marketplace. We provide technology that enables users to list goods, services, jobs, and business profiles, and to communicate with each other. <strong>PaMarket is not a buyer, seller, employer, employee, broker, agent, or auctioneer.</strong> We do not own, inspect, store, or ship any item listed on the platform. We do not employ, represent, endorse, or guarantee any user, business, or job poster. Any contract for the purchase or sale of any item or service is made directly between the buyer and the seller. PaMarket is not a party to any such contract.</p>'
@@ -930,7 +930,7 @@
       + '<p>The PaMarket name, logo, app design, user interface, proprietary software, written content, and all other intellectual property on the platform are owned by PaMarket or its licensors and are protected by copyright, trademark, and other intellectual property laws. You may not copy, reproduce, modify, distribute, create derivative works from, publicly display, or commercially exploit any part of our intellectual property without our prior written permission. Unauthorised use may result in civil and criminal liability.</p>'
 
       + '<h3>14. Copyright and IP Infringement - Takedown Requests</h3>'
-      + '<p>If you believe that content on PaMarket infringes your copyright or other intellectual property rights, please contact us in writing at chakusaprince@gmail.com with the following information: (a) a description of the copyrighted work or IP right you claim has been infringed; (b) the URL or location of the allegedly infringing content on PaMarket; (c) your name, address, phone number, and email; (d) a statement that you have a good-faith belief that the use is not authorised; (e) a statement that the information in your notice is accurate and that you are the rights owner or authorised to act on the owner\'s behalf. We will review all valid takedown requests and act in accordance with applicable law.</p>'
+      + '<p>If you believe that content on PaMarket infringes your copyright or other intellectual property rights, please contact us in writing at info@pamarketzw.com with the following information: (a) a description of the copyrighted work or IP right you claim has been infringed; (b) the URL or location of the allegedly infringing content on PaMarket; (c) your name, address, phone number, and email; (d) a statement that you have a good-faith belief that the use is not authorised; (e) a statement that the information in your notice is accurate and that you are the rights owner or authorised to act on the owner\'s behalf. We will review all valid takedown requests and act in accordance with applicable law.</p>'
 
       + '<h3>15. Disclaimers - No Warranties</h3>'
       + '<p>TO THE FULLEST EXTENT PERMITTED BY ZIMBABWEAN LAW, PAMARKET PROVIDES THE PLATFORM "AS IS" AND "AS AVAILABLE" WITHOUT ANY REPRESENTATION OR WARRANTY OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, OR NON-INFRINGEMENT. WE DO NOT WARRANT THAT: (a) THE PLATFORM WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, OR FREE OF VIRUSES; (b) ANY LISTING ON THE PLATFORM IS ACCURATE, COMPLETE, LEGAL, OR GENUINE; (c) THE IDENTITY OR CREDITWORTHINESS OF ANY USER HAS BEEN VERIFIED; (d) ANY ITEM OR SERVICE LISTED IS FIT FOR THE PURPOSE FOR WHICH IT IS SOLD. YOU USE THE PLATFORM ENTIRELY AT YOUR OWN RISK.</p>'
@@ -958,7 +958,7 @@
       + '<p><strong>Electronic Communications:</strong> By using PaMarket you consent to receive communications from us electronically, including via in-app notifications, push notifications, and email.</p>'
 
       + '<h3>22. Contact</h3>'
-      + '<p>PaMarket Zimbabwe<br>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>'
+      + '<p>PaMarket Zimbabwe<br>Email: info@pamarketzw.com<br>WhatsApp: +971 589 772 645</p>'
       + '</div>';
   };
 
@@ -969,7 +969,7 @@
       + '<p>PaMarket Zimbabwe ("PaMarket", "we", "us", "our") is committed to protecting your privacy and handling your personal information responsibly. This Privacy Policy explains what data we collect, why we collect it, how we use and protect it, who we share it with, how long we keep it, and what rights you have over it. By using PaMarket you agree to the practices described in this Policy.</p>'
 
       + '<h3>1. Who Is the Data Controller</h3>'
-      + '<p>PaMarket Zimbabwe is the data controller responsible for your personal information collected through the PaMarket mobile application and website. This Policy is governed by the Zimbabwe Cyber Security and Data Protection Act [Chapter 12:07] and applicable Zimbabwean data protection law. Contact us at chakusaprince@gmail.com for any privacy-related enquiry.</p>'
+      + '<p>PaMarket Zimbabwe is the data controller responsible for your personal information collected through the PaMarket mobile application and website. This Policy is governed by the Zimbabwe Cyber Security and Data Protection Act [Chapter 12:07] and applicable Zimbabwean data protection law. Contact us at info@pamarketzw.com for any privacy-related enquiry.</p>'
 
       + '<h3>2. Information We Collect</h3>'
       + '<p><strong>Account and identity data:</strong> your full name, email address, phone number, and profile photo when you register or update your profile.</p>'
@@ -1036,7 +1036,7 @@
       + '</ul>'
 
       + '<h3>11. Security</h3>'
-      + '<p>All data is transmitted using HTTPS/TLS encryption. Passwords are never stored in plain text; authentication is managed by Supabase Auth using industry-standard hashing. Our database tables are protected by row-level security (RLS) policies, which means each user can only access their own data unless they have been explicitly granted access (e.g. conversation participants). We conduct periodic security reviews and apply security patches promptly. Despite these measures, no system is completely secure. If you become aware of a security vulnerability, please report it immediately to chakusaprince@gmail.com.</p>'
+      + '<p>All data is transmitted using HTTPS/TLS encryption. Passwords are never stored in plain text; authentication is managed by Supabase Auth using industry-standard hashing. Our database tables are protected by row-level security (RLS) policies, which means each user can only access their own data unless they have been explicitly granted access (e.g. conversation participants). We conduct periodic security reviews and apply security patches promptly. Despite these measures, no system is completely secure. If you become aware of a security vulnerability, please report it immediately to info@pamarketzw.com.</p>'
 
       + '<h3>12. Your Rights and Choices</h3>'
       + '<ul>'
@@ -1047,13 +1047,13 @@
       + '<li><strong>Portability:</strong> request an export of your data in a machine-readable format by emailing us.</li>'
       + '<li><strong>Withdraw consent:</strong> where processing is based on your consent (e.g. verification documents, push notifications), you may withdraw consent at any time without affecting the lawfulness of prior processing.</li>'
       + '</ul>'
-      + '<p>To exercise any of these rights, contact us at chakusaprince@gmail.com. We will not discriminate against you for exercising your privacy rights.</p>'
+      + '<p>To exercise any of these rights, contact us at info@pamarketzw.com. We will not discriminate against you for exercising your privacy rights.</p>'
 
       + '<h3>13. International Data Transfers</h3>'
       + '<p>Your data is stored and processed by Supabase on Amazon Web Services infrastructure located in Ireland (EU). By using PaMarket you consent to this transfer. We ensure that all international transfers are subject to appropriate contractual safeguards, including Supabase\'s standard data processing agreement.</p>'
 
       + '<h3>14. Children\'s Privacy</h3>'
-      + '<p>PaMarket is intended for users aged 18 and over. We do not knowingly collect personal information from anyone under the age of 18. If we become aware that a user is under 18, we will delete their account and all associated data without notice. If you believe a child has registered on our platform, please contact us immediately at chakusaprince@gmail.com.</p>'
+      + '<p>PaMarket is intended for users aged 18 and over. We do not knowingly collect personal information from anyone under the age of 18. If we become aware that a user is under 18, we will delete their account and all associated data without notice. If you believe a child has registered on our platform, please contact us immediately at info@pamarketzw.com.</p>'
 
       + '<h3>15. Marketing Communications</h3>'
       + '<p>We may occasionally send you in-app notifications about new features, platform updates, or promotional offers from PaMarket. We do not send marketing emails or SMS without your explicit opt-in. You can opt out of in-app promotional notifications by adjusting your notification preferences in Settings.</p>'
@@ -1062,7 +1062,7 @@
       + '<p>We may update this Privacy Policy from time to time to reflect changes in our practices, technology, legal requirements, or business operations. We will notify you of significant changes via an in-app notification or a prominent notice in the app. The "Last updated" date at the top of this Policy will always reflect the date of the most recent revision. Your continued use of PaMarket after changes are posted constitutes your acceptance of the updated Policy.</p>'
 
       + '<h3>17. Contact</h3>'
-      + '<p>For any privacy-related enquiry, request, or complaint:<br>PaMarket Zimbabwe<br>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>'
+      + '<p>For any privacy-related enquiry, request, or complaint:<br>PaMarket Zimbabwe<br>Email: info@pamarketzw.com<br>WhatsApp: +971 589 772 645</p>'
       + '</div>';
   };
 
@@ -1180,7 +1180,7 @@
       + '<p>If you see content that violates these guidelines:</p>'
       + '<ul>'
       + '<li>Tap the "..." or Report icon on the listing, profile, or message and select a reason.</li>'
-      + '<li>For urgent safety or fraud concerns, email chakusaprince@gmail.com directly with as much detail as possible.</li>'
+      + '<li>For urgent safety or fraud concerns, email info@pamarketzw.com directly with as much detail as possible.</li>'
       + '<li>For criminal matters (stolen goods, fraud, weapons), contact the Zimbabwe Republic Police and share the listing URL with them.</li>'
       + '</ul>'
       + '<p>All reports are reviewed by our moderation team. We may not be able to share the outcome of every report with the reporter, but we act on all valid reports.</p>'
@@ -1195,10 +1195,10 @@
       + '</ul>'
 
       + '<h3>13. Appeals</h3>'
-      + '<p>If you believe your listing was removed or your account was actioned in error, you may appeal by emailing chakusaprince@gmail.com within 14 days of the action, stating your account details and the reason you believe the action was incorrect. We will review your appeal and respond within 14 business days. Appeals against permanent bans for serious violations (fraud, illegal content, criminal activity) will not be considered.</p>'
+      + '<p>If you believe your listing was removed or your account was actioned in error, you may appeal by emailing info@pamarketzw.com within 14 days of the action, stating your account details and the reason you believe the action was incorrect. We will review your appeal and respond within 14 business days. Appeals against permanent bans for serious violations (fraud, illegal content, criminal activity) will not be considered.</p>'
 
       + '<h3>14. Contact</h3>'
-      + '<p>PaMarket Zimbabwe<br>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p>'
+      + '<p>PaMarket Zimbabwe<br>Email: info@pamarketzw.com<br>WhatsApp: +971 589 772 645</p>'
       + '</div>';
   };
 

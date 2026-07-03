@@ -14,13 +14,96 @@
 <meta name="robots" content="index, follow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#1A3A8F;--navy-deep:#0F2460;--navy-mid:#1E4BB8;
+  --gold:#E8A33D;--gold-dark:#C5871A;
+  --ink:#0F172A;--sub:#475569;--mute:#94A3B8;
+  --line:#E2E8F0;--paper:#F8FAFC;--white:#FFFFFF;
+  --green:#16A34A;--red:#DC2626;
+}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#fff;font-size:15px;line-height:1.6}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;display:block}
+button{font-family:inherit;cursor:pointer}
+.w{max-width:1200px;margin:0 auto;padding:0 32px}
+
+/* ══ TOP BAR ══ */
+.top-bar{background:var(--navy-deep);padding:8px 0;font-size:12.5px;color:#94B4E8}
+.top-bar-w{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;align-items:center}
+.top-bar a{color:#94B4E8;transition:color .15s}.top-bar a:hover{color:#fff}
+.top-bar-links{display:flex;gap:24px}
+
+/* ══ HEADER ══ */
+#hdr{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:300;box-shadow:0 1px 12px rgba(15,36,96,.07)}
+.hdr-w{max-width:1200px;margin:0 auto;padding:0 32px;height:66px;display:flex;align-items:center;gap:18px}
+.logo{font-size:23px;font-weight:900;color:var(--navy);flex-shrink:0;letter-spacing:-.02em}
+.logo em{color:var(--gold);font-style:normal}
+.search-bar{flex:1;max-width:620px;display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper);transition:border-color .2s,box-shadow .2s}
+.search-bar:focus-within{border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,58,143,.1)}
+.search-cat{border:none;background:none;border-right:1px solid var(--line);padding:0 12px 0 14px;height:44px;font-size:13px;color:var(--sub);font-family:inherit;outline:none;cursor:pointer}
+.search-inp{flex:1;border:none;background:none;padding:0 14px;height:44px;font-size:14px;font-family:inherit;color:var(--ink);outline:none}
+.search-inp::placeholder{color:var(--mute)}
+.search-btn{background:var(--navy);color:#fff;border:none;height:44px;padding:0 22px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px;transition:background .15s;flex-shrink:0}
+.search-btn:hover{background:var(--navy-deep)}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
+.btn-sign{border:1.5px solid var(--line);border-radius:9px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--ink);background:#fff;transition:border-color .15s}
+.btn-sign:hover{border-color:var(--navy);color:var(--navy)}
+.btn-post{background:var(--gold);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:700;transition:background .15s}
+.btn-post:hover{background:var(--gold-dark)}
+.ham{display:none;background:none;border:none;color:var(--ink);padding:4px}
+
+/* ══ CAT NAV ══ */
+.cat-nav{background:#fff;border-bottom:1px solid var(--line)}
+.cat-nav-w{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;overflow-x:auto;scrollbar-width:none;gap:2px}
+.cat-nav-w::-webkit-scrollbar{display:none}
+.cnav{flex-shrink:0;padding:10px 16px;font-size:13px;font-weight:500;color:var(--sub);border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .15s}
+.cnav:hover,.cnav.on{color:var(--navy);border-bottom-color:var(--navy);font-weight:600}
+
+/* ══ MOB NAV ══ */
+.mob-nav{display:none;flex-direction:column;background:#fff;border-top:1px solid var(--line);padding:12px 28px 20px}
+.mob-nav a{padding:12px 0;color:var(--ink);font-weight:500;border-bottom:1px solid var(--line);font-size:14.5px}
+.mob-nav a:last-child{border-bottom:none;color:var(--gold);font-weight:700}
+.mob-nav.open{display:flex}
+
+/* ══ FOOTER ══ */
+footer{background:var(--navy-deep);color:#6A8AC8}
+.foot-main{max-width:1200px;margin:0 auto;padding:56px 32px 40px;display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px}
+.foot-logo{font-size:24px;font-weight:900;color:#fff;letter-spacing:-.02em}
+.foot-logo em{color:var(--gold);font-style:normal}
+.foot-tagline{font-size:13.5px;color:#6A8AC8;margin-top:12px;max-width:240px;line-height:1.7}
+.foot-contact{margin-top:20px;font-size:13px;display:flex;flex-direction:column;gap:8px}
+.foot-contact a{color:#6A8AC8;transition:color .15s}
+.foot-contact a:hover{color:#fff}
+.foot-store{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+.foot-store-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;transition:background .15s;text-decoration:none}
+.foot-store-btn:hover{background:rgba(255,255,255,.14)}
+.foot-col h5{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin-bottom:16px}
+.foot-col a{display:block;font-size:13.5px;color:#6A8AC8;margin-bottom:10px;transition:color .15s}
+.foot-col a:hover{color:#fff}
+.foot-bottom{border-top:1px solid rgba(255,255,255,.08);padding:18px 32px;max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:#4A6490}
+.foot-bottom-links{display:flex;gap:20px}
+.foot-bottom-links a{color:#4A6490;transition:color .15s}.foot-bottom-links a:hover{color:#fff}
+
+@media(max-width:768px){
+  .top-bar{display:none}
+  .hdr-right .btn-sign{display:none}
+  .search-cat{display:none}
+  .ham{display:block}
+  .cat-nav{display:none}
+  .hdr-w{padding:0 20px;gap:12px}
+  .foot-main{grid-template-columns:1fr;padding:36px 24px}
+  .foot-bottom{flex-direction:column;gap:12px;text-align:center;padding:16px 24px}
+}
+
+/* ── Page-specific ── */
 .da-wrap{max-width:560px;margin:0 auto;padding:56px 24px 80px}
 .da-wrap h1{font-size:28px;font-weight:800;color:var(--ink);margin-bottom:10px}
 .da-wrap>p{font-size:15px;color:var(--sub);line-height:1.7;margin-bottom:24px}
-.da-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px}
+.da-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px}
 .da-warn{background:#FFF4E5;border:1px solid #F3C77E;border-radius:12px;padding:16px 18px;margin-bottom:22px}
 .da-warn p{font-size:13.5px;color:#8A5A0A;line-height:1.7;margin:0}
 .da-field{margin-bottom:18px}
@@ -33,17 +116,42 @@
 .da-status{margin-top:16px;font-size:14px;text-align:center;display:none;padding:12px;border-radius:10px}
 .da-status.ok{display:block;background:#ECFDF5;color:#16A34A}
 .da-status.err{display:block;background:#FEF2F2;color:#DC2626}
-.da-list{font-size:13.5px;color:var(--sub);line-height:1.8;padding-left:20px;margin-top:8px}
 </style>
 </head>
 <body>
 
+<div class="top-bar">
+  <div class="top-bar-w">
+    <span>Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
+    <div class="top-bar-links">
+      <a href="browse.html">Browse Ads</a>
+      <a href="advertise.html">Advertise</a>
+      <a href="about.html">About Us</a>
+    </div>
+  </div>
+</div>
+
 <header id="hdr">
   <div class="hdr-w">
     <a href="index.html" class="logo">Pa<em>Market</em></a>
+    <div class="search-bar">
+      <select class="search-cat" id="hCat" aria-label="Category">
+        <option value="">All Categories</option>
+        <option>Property</option><option>Vehicles</option><option>Electronics</option>
+        <option>Jobs</option><option>Furniture</option><option>Fashion</option>
+        <option>Services</option><option>Agriculture</option><option>Rooms</option>
+        <option>Pets</option><option>Baby &amp; Kids</option>
+      </select>
+      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Search
+      </button>
+    </div>
     <div class="hdr-right">
-      <a href="index.html" class="btn-sign">Home</a>
-      <button class="ham" onclick="document.getElementById('mobNav').classList.toggle('open')">
+      <a href="auth.html" class="btn-sign">Sign In</a>
+      <a href="post-ad.html" class="btn-post">+ Post Free Ad</a>
+      <button class="ham" onclick="toggleMob()" aria-label="Menu">
         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
       </button>
     </div>
@@ -51,10 +159,30 @@
   <nav id="mobNav" class="mob-nav">
     <a href="index.html">Home</a>
     <a href="browse.html">Browse All</a>
-    <a href="privacy.html">Privacy</a>
-    <a href="terms.html">Terms</a>
+    <a href="jobs.html">Jobs</a>
+    <a href="browse.html?shops=1">Shops</a>
+    <a href="advertise.html">Advertise</a>
+    <a href="about.html">About</a>
+    <a href="post-ad.html">+ Post Free Ad</a>
   </nav>
 </header>
+
+<nav class="cat-nav">
+  <div class="cat-nav-w">
+    <a href="browse.html" class="cnav">All Listings</a>
+    <a href="browse.html?cat=Property" class="cnav">Property</a>
+    <a href="browse.html?cat=Vehicles" class="cnav">Vehicles</a>
+    <a href="browse.html?cat=Electronics" class="cnav">Electronics</a>
+    <a href="jobs.html" class="cnav">Jobs</a>
+    <a href="browse.html?cat=Furniture" class="cnav">Furniture</a>
+    <a href="browse.html?cat=Fashion" class="cnav">Fashion</a>
+    <a href="browse.html?cat=Services" class="cnav">Services</a>
+    <a href="browse.html?cat=Agriculture" class="cnav">Agriculture</a>
+    <a href="browse.html?cat=Rooms" class="cnav">Rooms to Rent</a>
+    <a href="browse.html?cat=Pets" class="cnav">Pets</a>
+    <a href="browse.html?shops=1" class="cnav">Shops</a>
+  </div>
+</nav>
 
 <div class="da-wrap">
   <h1>Delete My Account</h1>
@@ -86,19 +214,81 @@
 </div>
 
 <footer>
-  <div class="wrap">
-    <div class="foot-grid">
-      <div><a href="index.html" class="logo">Pa<span>Market</span></a><p>Zimbabwe's free marketplace. Buy, sell, hire and grow your business across all ten provinces.</p></div>
-      <div class="foot"><h4>Marketplace</h4><a href="browse.html">Browse</a><a href="post-ad.html">Post a Free Ad</a><a href="browse.html?shops=1">Shops</a><a href="plans.html">Plans</a><a href="jobs.html">Hire Talent</a></div>
-      <div class="foot"><h4>Company</h4><a href="about.html">About</a><a href="advertise.html">Advertise</a><a href="contact.html">Contact</a><a href="help.html">Help</a></div>
-      <div class="foot"><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="delete-account.html">Delete Account</a><a href="community-guidelines.html">Guidelines</a></div>
+  <div class="foot-main">
+    <div>
+      <div class="foot-logo">Pa<em>Market</em></div>
+      <p class="foot-tagline">Zimbabwe's free marketplace. Buy, sell, find jobs and grow your business across all ten provinces. No fees, ever.</p>
+      <div class="foot-contact">
+        <a href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a>
+        <a href="mailto:support@pamarketzw.com">support@pamarketzw.com</a>
+      </div>
+      <div class="foot-store">
+        <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" class="foot-store-btn" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76a1.75 1.75 0 0 1-.88-1.54V1.78A1.75 1.75 0 0 1 3.18.24l12.08 11.76zm13.56-6.62-3.08-3-9.42 5.28zM20.4 10.94a1.77 1.77 0 0 1 0 2.12l-2.56 1.46-3.4-3.32 3.4-3.32zm-2.14-4.24-9.42-5.28 9.5 9.24z"/></svg>
+          Google Play
+        </a>
+      </div>
     </div>
-    <div class="footer-bottom">&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</div>
+    <div class="foot-col">
+      <h5>Categories</h5>
+      <a href="browse.html?cat=Property">Property</a>
+      <a href="browse.html?cat=Vehicles">Vehicles</a>
+      <a href="browse.html?cat=Electronics">Electronics</a>
+      <a href="browse.html?cat=Furniture">Furniture</a>
+      <a href="browse.html?cat=Fashion">Fashion</a>
+      <a href="browse.html?cat=Agriculture">Agriculture</a>
+      <a href="jobs.html">Jobs</a>
+      <a href="browse.html?shops=1">Shops</a>
+      <a href="plans.html">Shop Plans</a>
+    </div>
+    <div class="foot-col">
+      <h5>Customer Service</h5>
+      <a href="help.html">Help &amp; FAQ</a>
+      <a href="contact.html">Contact Us</a>
+      <a href="advertise.html">Advertise</a>
+      <a href="community-guidelines.html">Community Guidelines</a>
+      <a href="about.html">About PaMarket</a>
+    </div>
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="delete-account.html">Delete Account</a>
+      <a href="auth.html">Sign In</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</span>
+    <div class="foot-bottom-links">
+      <a href="terms.html">Terms</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="community-guidelines.html">Guidelines</a>
+      <a href="contact.html">Contact</a>
+    </div>
   </div>
 </footer>
 
 <script src="js/supabase-config.js"></script>
 <script>
+function doSearch(){
+  const q=document.getElementById('hQ')?.value?.trim();
+  const cat=document.getElementById('hCat')?.value;
+  if(cat==='Jobs'){window.location='jobs.html'+(q?'?q='+encodeURIComponent(q):'');return}
+  let u='browse.html?';
+  if(q)u+='q='+encodeURIComponent(q);
+  if(cat)u+=(q?'&':'')+'cat='+encodeURIComponent(cat);
+  window.location=u==='browse.html?'?'browse.html':u;
+}
+function toggleMob(){
+  const n=document.getElementById('mobNav');
+  n.classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  const h=document.getElementById('hdr');
+  const n=document.getElementById('mobNav');
+  if(n && n.classList.contains('open') && h && !h.contains(e.target))n.classList.remove('open');
+});
+
 (function(){
   'use strict';
   var SB_URL = window.SUPABASE_URL || 'https://gxgytumhknmnwspxjzxw.supabase.co';
@@ -161,14 +351,14 @@
       } else {
         return res.json().catch(function () { return {}; }).then(function (body) {
           statusEl.className = 'da-status err';
-          statusEl.textContent = 'Could not submit your request (' + (body.message || res.status) + '). Please email chakusaprince@gmail.com instead.';
+          statusEl.textContent = 'Could not submit your request (' + (body.message || res.status) + '). Please email support@pamarketzw.com instead.';
         });
       }
     }).catch(function () {
       btn.disabled = false;
       btn.textContent = 'Submit Deletion Request';
       statusEl.className = 'da-status err';
-      statusEl.textContent = 'Network error. Please try again or email chakusaprince@gmail.com.';
+      statusEl.textContent = 'Network error. Please try again or email support@pamarketzw.com.';
     });
   });
 })();

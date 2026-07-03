@@ -2533,7 +2533,7 @@ window.H = {
         +'<button onclick="H.authShowDoc(\'guidelines\')" style="width:100%;padding:12px;background:var(--bg,#f5f7fb);border:1px solid var(--border,#e5e7eb);border-radius:10px;font-size:14px;font-weight:600;color:var(--text,#1a1a1a);cursor:pointer;text-align:left">Community Guidelines</button>'
         +'</div></div>'
         +'<div class="about-card"><div class="about-sec-title">Contact Us</div>'
-        +'<div class="about-contact-row" onclick="window.location.href=\'mailto:chakusaprince@gmail.com\'"><div class="about-contact-ic email-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><div><div class="about-contact-label">Support Email</div><div class="about-contact-val">chakusaprince@gmail.com</div></div></div>'
+        +'<div class="about-contact-row" onclick="window.location.href=\'mailto:support@pamarketzw.com\'"><div class="about-contact-ic email-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><div><div class="about-contact-label">Support Email</div><div class="about-contact-val">support@pamarketzw.com</div></div></div>'
         +'<div class="about-contact-row" onclick="window.open(\'https://wa.me/971589772645\')"><div class="about-contact-ic wa-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg></div><div><div class="about-contact-label">WhatsApp Support</div><div class="about-contact-val">+971 589 772 645</div></div></div>'
         +'</div>'
         +'<div class="about-ads-banner"><div class="about-ads-title">Advertise with PaMarket</div><div class="about-ads-sub">Reach active buyers across all provinces of Zimbabwe</div><button class="about-ads-btn" onclick="H.openInner(\'Ads\')">Get in Touch</button></div>'
@@ -2576,7 +2576,7 @@ window.H = {
       if(!msg){H.toast('Please add a message');return;}
       const subject=encodeURIComponent('PaMarket Advertising Enquiry – '+type);
       const body=encodeURIComponent('Business: '+biz+'\nContact Email: '+email+'\nAd Type: '+type+'\n\nMessage:\n'+msg);
-      window.location.href='mailto:chakusaprince@gmail.com?subject='+subject+'&body='+body;
+      window.location.href='mailto:support@pamarketzw.com?subject='+subject+'&body='+body;
     };
   },
 

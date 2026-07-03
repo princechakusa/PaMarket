@@ -14,9 +14,98 @@
 <meta name="robots" content="index, follow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#1A3A8F;--navy-deep:#0F2460;--navy-mid:#1E4BB8;
+  --gold:#E8A33D;--gold-dark:#C5871A;
+  --ink:#0F172A;--sub:#475569;--mute:#94A3B8;
+  --line:#E2E8F0;--paper:#F8FAFC;--white:#FFFFFF;
+  --green:#16A34A;--red:#DC2626;
+}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#fff;font-size:15px;line-height:1.6}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;display:block}
+button{font-family:inherit;cursor:pointer}
+.w{max-width:1200px;margin:0 auto;padding:0 32px}
+
+/* ══ TOP BAR ══ */
+.top-bar{background:var(--navy-deep);padding:8px 0;font-size:12.5px;color:#94B4E8}
+.top-bar-w{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;align-items:center}
+.top-bar a{color:#94B4E8;transition:color .15s}.top-bar a:hover{color:#fff}
+.top-bar-links{display:flex;gap:24px}
+
+/* ══ HEADER ══ */
+#hdr{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:300;box-shadow:0 1px 12px rgba(15,36,96,.07)}
+.hdr-w{max-width:1200px;margin:0 auto;padding:0 32px;height:66px;display:flex;align-items:center;gap:18px}
+.logo{font-size:23px;font-weight:900;color:var(--navy);flex-shrink:0;letter-spacing:-.02em}
+.logo em{color:var(--gold);font-style:normal}
+.search-bar{flex:1;max-width:620px;display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper);transition:border-color .2s,box-shadow .2s}
+.search-bar:focus-within{border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,58,143,.1)}
+.search-cat{border:none;background:none;border-right:1px solid var(--line);padding:0 12px 0 14px;height:44px;font-size:13px;color:var(--sub);font-family:inherit;outline:none;cursor:pointer}
+.search-inp{flex:1;border:none;background:none;padding:0 14px;height:44px;font-size:14px;font-family:inherit;color:var(--ink);outline:none}
+.search-inp::placeholder{color:var(--mute)}
+.search-btn{background:var(--navy);color:#fff;border:none;height:44px;padding:0 22px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px;transition:background .15s;flex-shrink:0}
+.search-btn:hover{background:var(--navy-deep)}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
+.btn-sign{border:1.5px solid var(--line);border-radius:9px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--ink);background:#fff;transition:border-color .15s}
+.btn-sign:hover{border-color:var(--navy);color:var(--navy)}
+.btn-post{background:var(--gold);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:700;transition:background .15s}
+.btn-post:hover{background:var(--gold-dark)}
+.ham{display:none;background:none;border:none;color:var(--ink);padding:4px}
+
+/* ══ CAT NAV ══ */
+.cat-nav{background:#fff;border-bottom:1px solid var(--line)}
+.cat-nav-w{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;overflow-x:auto;scrollbar-width:none;gap:2px}
+.cat-nav-w::-webkit-scrollbar{display:none}
+.cnav{flex-shrink:0;padding:10px 16px;font-size:13px;font-weight:500;color:var(--sub);border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .15s}
+.cnav:hover,.cnav.on{color:var(--navy);border-bottom-color:var(--navy);font-weight:600}
+
+/* ══ MOB NAV ══ */
+.mob-nav{display:none;flex-direction:column;background:#fff;border-top:1px solid var(--line);padding:12px 28px 20px}
+.mob-nav a{padding:12px 0;color:var(--ink);font-weight:500;border-bottom:1px solid var(--line);font-size:14.5px}
+.mob-nav a:last-child{border-bottom:none;color:var(--gold);font-weight:700}
+.mob-nav.open{display:flex}
+
+/* ══ FOOTER ══ */
+footer{background:var(--navy-deep);color:#6A8AC8}
+.foot-main{max-width:1200px;margin:0 auto;padding:56px 32px 40px;display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px}
+.foot-logo{font-size:24px;font-weight:900;color:#fff;letter-spacing:-.02em}
+.foot-logo em{color:var(--gold);font-style:normal}
+.foot-tagline{font-size:13.5px;color:#6A8AC8;margin-top:12px;max-width:240px;line-height:1.7}
+.foot-contact{margin-top:20px;font-size:13px;display:flex;flex-direction:column;gap:8px}
+.foot-contact a{color:#6A8AC8;transition:color .15s}
+.foot-contact a:hover{color:#fff}
+.foot-store{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+.foot-store-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;transition:background .15s;text-decoration:none}
+.foot-store-btn:hover{background:rgba(255,255,255,.14)}
+.foot-col h5{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin-bottom:16px}
+.foot-col a{display:block;font-size:13.5px;color:#6A8AC8;margin-bottom:10px;transition:color .15s}
+.foot-col a:hover{color:#fff}
+.foot-bottom{border-top:1px solid rgba(255,255,255,.08);padding:18px 32px;max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:#4A6490}
+.foot-bottom-links{display:flex;gap:20px}
+.foot-bottom-links a{color:#4A6490;transition:color .15s}.foot-bottom-links a:hover{color:#fff}
+
+/* ══ WA FLOAT ══ */
+.wa{position:fixed;right:22px;bottom:22px;z-index:99}
+.wa-btn{width:54px;height:54px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(37,211,102,.5);transition:transform .2s}
+.wa-btn:hover{transform:scale(1.08)}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:768px){
+  .top-bar{display:none}
+  .hdr-right .btn-sign{display:none}
+  .search-cat{display:none}
+  .ham{display:block}
+  .cat-nav{display:none}
+  .hdr-w{padding:0 20px;gap:12px}
+  .foot-main{grid-template-columns:1fr;padding:36px 24px}
+  .foot-bottom{flex-direction:column;gap:12px;text-align:center;padding:16px 24px}
+}
+
+
 .legal-wrap{max-width:760px;margin:0 auto;padding:56px 40px 80px}
 .legal-wrap .doc-content h2{font-size:28px;font-weight:800;color:var(--ink);margin-bottom:8px}
 .legal-wrap .doc-content>p:first-of-type{font-size:13px;color:var(--mute);margin-bottom:32px}
@@ -25,21 +114,47 @@
 .legal-wrap .doc-content ul{padding-left:22px;margin-bottom:14px}
 .legal-wrap .doc-content ul li{font-size:15px;color:var(--sub);line-height:1.8;margin-bottom:7px}
 .legal-wrap .doc-content a{color:var(--navy);text-decoration:underline}
-.legal-callout{background:var(--navy-tint);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:20px 0}
+.legal-callout{background:#EEF2FB;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:20px 0}
 .legal-callout p{margin-bottom:8px;font-size:14px;color:var(--ink)}
 .legal-callout p:last-child{margin-bottom:0}
 .legal-callout a{color:var(--navy);text-decoration:underline}
+
 </style>
 </head>
 <body>
 
+<div class="top-bar">
+  <div class="top-bar-w">
+    <span>Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
+    <div class="top-bar-links">
+      <a href="browse.html">Browse Ads</a>
+      <a href="advertise.html">Advertise</a>
+      <a href="about.html">About Us</a>
+    </div>
+  </div>
+</div>
+
 <header id="hdr">
   <div class="hdr-w">
     <a href="index.html" class="logo">Pa<em>Market</em></a>
+    <div class="search-bar">
+      <select class="search-cat" id="hCat" aria-label="Category">
+        <option value="">All Categories</option>
+        <option>Property</option><option>Vehicles</option><option>Electronics</option>
+        <option>Jobs</option><option>Furniture</option><option>Fashion</option>
+        <option>Services</option><option>Agriculture</option><option>Rooms</option>
+        <option>Pets</option><option>Baby &amp; Kids</option>
+      </select>
+      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Search
+      </button>
+    </div>
     <div class="hdr-right">
-      <a href="index.html" class="btn-sign">Home</a>
+      <a href="auth.html" class="btn-sign">Sign In</a>
       <a href="post-ad.html" class="btn-post">+ Post Free Ad</a>
-      <button class="ham" onclick="document.getElementById('mobNav').classList.toggle('open')">
+      <button class="ham" onclick="toggleMob()" aria-label="Menu">
         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
       </button>
     </div>
@@ -48,27 +163,108 @@
     <a href="index.html">Home</a>
     <a href="browse.html">Browse All</a>
     <a href="jobs.html">Jobs</a>
+    <a href="browse.html?shops=1">Shops</a>
     <a href="advertise.html">Advertise</a>
     <a href="about.html">About</a>
     <a href="post-ad.html">+ Post Free Ad</a>
   </nav>
 </header>
 
+<nav class="cat-nav">
+  <div class="cat-nav-w">
+    <a href="browse.html" class="cnav">All Listings</a>
+    <a href="browse.html?cat=Property" class="cnav">Property</a>
+    <a href="browse.html?cat=Vehicles" class="cnav">Vehicles</a>
+    <a href="browse.html?cat=Electronics" class="cnav">Electronics</a>
+    <a href="jobs.html" class="cnav">Jobs</a>
+    <a href="browse.html?cat=Furniture" class="cnav">Furniture</a>
+    <a href="browse.html?cat=Fashion" class="cnav">Fashion</a>
+    <a href="browse.html?cat=Services" class="cnav">Services</a>
+    <a href="browse.html?cat=Agriculture" class="cnav">Agriculture</a>
+    <a href="browse.html?cat=Rooms" class="cnav">Rooms to Rent</a>
+    <a href="browse.html?cat=Pets" class="cnav">Pets</a>
+    <a href="browse.html?shops=1" class="cnav">Shops</a>
+  </div>
+</nav>
+
 <div class="legal-wrap">
-<div class="doc-content"><h2>Terms of Service</h2><p><strong>Last updated: June 2026</strong></p><p>These Terms of Service ("Terms") form a legally binding agreement between you ("User", "you") and PaMarket Zimbabwe ("PaMarket", "we", "us", "our"). By accessing or using the PaMarket mobile application or website you confirm that you have read, understood, and agree to be bound by these Terms and our Privacy Policy. If you do not agree, you must stop using the platform immediately.</p><h3>1. Changes to These Terms</h3><p>We may update these Terms at any time. We will notify you of material changes by in-app notification or by posting the updated Terms with a new effective date. Your continued use of PaMarket after changes are posted constitutes your acceptance of the revised Terms. If you disagree with any change, your only remedy is to stop using the platform and delete your account.</p><h3>2. Eligibility</h3><p>You must be at least 18 years old and have full legal capacity to enter into binding contracts under the laws of Zimbabwe. By creating an account you represent and warrant that you meet these requirements. We reserve the right to terminate any account we have reason to believe belongs to a person under 18, without notice or liability.</p><h3>3. Account Registration and Security</h3><p>You may register using a valid email address, phone number, or a supported third-party sign-in provider (e.g. Google). You are solely responsible for maintaining the confidentiality of your password and for all activity that occurs under your account. You must notify us immediately at chakusaprince@gmail.com if you become aware of any unauthorised access. We will not be liable for any loss caused by someone else using your account with or without your knowledge. You may hold only one account; duplicate accounts will be removed.</p><h3>4. Nature of the Platform - PaMarket Is a Marketplace Only</h3><p>PaMarket is an online classifieds and services marketplace. We provide technology that enables users to list goods, services, jobs, and business profiles, and to communicate with each other. <strong>PaMarket is not a buyer, seller, employer, employee, broker, agent, or auctioneer.</strong> We do not own, inspect, store, or ship any item listed on the platform. We do not employ, represent, endorse, or guarantee any user, business, or job poster. Any contract for the purchase or sale of any item or service is made directly between the buyer and the seller. PaMarket is not a party to any such contract.</p><h3>5. Licence You Grant PaMarket</h3><p>By submitting content to PaMarket (including photos, text, videos, business names, and descriptions) you grant PaMarket a worldwide, non-exclusive, royalty-free, sublicensable, and transferable licence to use, reproduce, modify, adapt, publish, translate, distribute, and display that content across all media formats, including within the app, on our website, and for promotional purposes, for as long as the content remains on our platform. You represent and warrant that you own or have the necessary rights to grant this licence and that your content does not infringe the rights of any third party.</p><h3>6. Listing Rules</h3><p>All listings must meet the following requirements:</p><ul><li>You must own the item or have verifiable legal authority to sell it.</li><li>The title, description, photos, price, and location must accurately represent the item. No misleading statements, omissions of known defects, or inflated valuations.</li><li>All prices must be quoted in United States Dollars (USD). Listings in any other currency will be removed.</li><li>Photos must be real images of the actual item. Stock images, watermarked images, or images of a different item are not permitted.</li><li>Do not post duplicate listings for the same item across multiple categories or provinces.</li><li>Listings must be placed in the correct category. Miscategorised listings will be moved or removed.</li><li>Remove or mark your listing as sold as soon as the item is no longer available.</li></ul><p>PaMarket reserves the right to edit, reclassify, reject, or remove any listing at any time, with or without notice, for any reason including but not limited to violation of these Terms.</p><h3>7. Prohibited Items and Content</h3><p>The following items, services, and types of content are strictly prohibited on PaMarket:</p><ul><li>Stolen goods or goods obtained through fraud or deception.</li><li>Counterfeit, fake, or unauthorised copies of branded goods (replica watches, fake designer clothing, pirated software, etc.).</li><li>Goods requiring ZIMRA import permits, licences, or customs clearance that the seller does not hold.</li><li>Illegal drugs, narcotics, controlled substances, or drug paraphernalia.</li><li>Unlicensed firearms, weapons, ammunition, explosives, or related accessories.</li><li>Wildlife, live animals, animal parts, or products protected under CITES or the Zimbabwe Parks and Wildlife Act.</li><li>Tobacco products, alcohol, or spirits sold without the required ZIMRA/Government of Zimbabwe retail licence.</li><li>Pornographic, sexually explicit, or adult content of any kind.</li><li>Content that promotes or incites violence, hatred, discrimination, or terrorism on the basis of race, ethnicity, religion, gender, sexual orientation, or disability.</li><li>Pyramid schemes, multilevel marketing recruitment (MLM), advance fee fraud (419), Ponzi schemes, or any deceptive financial offer.</li><li>Impersonation of any individual, business, government body, or official institution.</li><li>Personal data or private information of third parties without their consent.</li><li>Human beings, human organs, or any service that constitutes human trafficking.</li><li>Prescription medicines or medical devices sold without a valid pharmacist or medical licence.</li><li>Hazardous chemicals, flammable materials, or radioactive substances.</li><li>Any item or service whose listing, sale, or purchase is prohibited under the laws of Zimbabwe.</li></ul><p>This list is non-exhaustive. PaMarket retains sole discretion to determine what constitutes prohibited content and to remove any content that we consider harmful, illegal, or contrary to the spirit of these Terms.</p><h3>8. Business Shops</h3><p>Business accounts may create a verified Shop profile with a product catalogue and a dedicated business inbox. You must be the legitimate owner or an authorised representative of the business entity named in the Shop. All business details including name, registration status, contact information, and product listings must be accurate and kept up to date. PaMarket may request proof of business registration at any time and reserves the right to downgrade or remove verification, suspend, or permanently close any Business Shop that provides false information or violates these Terms. PaMarket does not guarantee or warrant the legitimacy, quality, or delivery of any product or service offered by a Business Shop.</p><h3>9. Hire Talent</h3><p>Employers may post job openings subject to admin review, which is typically completed within 24 hours. All job postings must be for genuine, existing vacancies at a real organisation operating lawfully within Zimbabwe. <strong>Charging job seekers any registration, application, training, or placement fee is strictly prohibited and will result in immediate permanent account suspension and may be reported to the Zimbabwe Republic Police.</strong> PaMarket is not an employment agency and is not responsible for the accuracy of job descriptions, the conduct of employers, or any employment relationship that arises from a listing. Candidates use Hire Talent at their own risk and should independently verify the legitimacy of any potential employer before sharing personal information or attending an interview.</p><h3>10. Transactions - No Involvement by PaMarket</h3><p>PaMarket does not facilitate, guarantee, insure, or supervise any transaction between users. We do not process payments, hold escrow funds, or provide buyer or seller protection of any kind. All agreements, payments, and deliveries are arranged directly between the buyer and the seller. PaMarket expressly disclaims any liability for:</p><ul><li>Non-payment, partial payment, or delayed payment by a buyer.</li><li>Non-delivery, partial delivery, or late delivery of goods by a seller.</li><li>Goods that are defective, misdescribed, counterfeit, stolen, or do not match the listing.</li><li>Fraud, scams, or deceptive conduct by any user.</li><li>Loss, damage, or injury arising from a meeting between users.</li><li>Any dispute arising from a transaction conducted through or discovered on the platform.</li></ul><h3>11. Messaging and User Conduct</h3><p>PaMarket's in-app messaging is provided to facilitate legitimate transactions. You agree not to use messaging to send spam, unsolicited bulk messages, harassment, threats, sexually explicit content, or any content that violates these Terms. We do not read your private messages as a matter of course; however, we may review messages if they are reported to us for abuse. Do not share your bank account details, national ID numbers, passwords, or other sensitive personal information through the messaging system.</p><h3>12. Third-Party Links and Services</h3><p>The platform may contain links to third-party websites, services, or resources. PaMarket has no control over the content, privacy practices, or availability of such third-party sites. A link to a third-party site does not constitute an endorsement, sponsorship, or recommendation by PaMarket. You access any third-party links entirely at your own risk. PaMarket is not responsible for any loss or damage arising from your use of third-party websites or services.</p><h3>13. Our Intellectual Property</h3><p>The PaMarket name, logo, app design, user interface, proprietary software, written content, and all other intellectual property on the platform are owned by PaMarket or its licensors and are protected by copyright, trademark, and other intellectual property laws. You may not copy, reproduce, modify, distribute, create derivative works from, publicly display, or commercially exploit any part of our intellectual property without our prior written permission. Unauthorised use may result in civil and criminal liability.</p><h3>14. Copyright and IP Infringement - Takedown Requests</h3><p>If you believe that content on PaMarket infringes your copyright or other intellectual property rights, please contact us in writing at chakusaprince@gmail.com with the following information: (a) a description of the copyrighted work or IP right you claim has been infringed; (b) the URL or location of the allegedly infringing content on PaMarket; (c) your name, address, phone number, and email; (d) a statement that you have a good-faith belief that the use is not authorised; (e) a statement that the information in your notice is accurate and that you are the rights owner or authorised to act on the owner's behalf. We will review all valid takedown requests and act in accordance with applicable law.</p><h3>15. Disclaimers - No Warranties</h3><p>TO THE FULLEST EXTENT PERMITTED BY ZIMBABWEAN LAW, PAMARKET PROVIDES THE PLATFORM "AS IS" AND "AS AVAILABLE" WITHOUT ANY REPRESENTATION OR WARRANTY OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, OR NON-INFRINGEMENT. WE DO NOT WARRANT THAT: (a) THE PLATFORM WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, OR FREE OF VIRUSES; (b) ANY LISTING ON THE PLATFORM IS ACCURATE, COMPLETE, LEGAL, OR GENUINE; (c) THE IDENTITY OR CREDITWORTHINESS OF ANY USER HAS BEEN VERIFIED; (d) ANY ITEM OR SERVICE LISTED IS FIT FOR THE PURPOSE FOR WHICH IT IS SOLD. YOU USE THE PLATFORM ENTIRELY AT YOUR OWN RISK.</p><h3>16. Limitation of Liability</h3><p>TO THE FULLEST EXTENT PERMITTED BY ZIMBABWEAN LAW, PAMARKET AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, AND LICENSORS SHALL NOT BE LIABLE TO YOU FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES, INCLUDING LOSS OF PROFITS, LOSS OF DATA, LOSS OF GOODWILL, OR LOSS OF BUSINESS OPPORTUNITY, ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF OR INABILITY TO USE THE PLATFORM, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. OUR TOTAL AGGREGATE LIABILITY TO YOU FOR ANY CLAIM ARISING FROM OR RELATED TO THESE TERMS OR YOUR USE OF THE PLATFORM SHALL NOT EXCEED THE GREATER OF (a) THE AMOUNT YOU PAID TO PAMARKET IN THE 12 MONTHS PRECEDING THE CLAIM, OR (b) USD 10. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OR LIMITATION OF CERTAIN DAMAGES, SO THE ABOVE LIMITATIONS MAY NOT APPLY TO YOU IN FULL.</p><h3>17. Indemnification</h3><p>You agree to defend, indemnify, and hold harmless PaMarket and its officers, directors, employees, contractors, agents, licensors, and service providers from and against any and all claims, liabilities, damages, judgments, awards, losses, costs, expenses, and fees (including reasonable legal fees) arising out of or relating to: (a) your violation of these Terms; (b) any content you post, upload, or transmit on the platform; (c) your conduct towards other users; (d) your violation of any third-party right, including intellectual property or privacy rights; (e) any transaction you enter into through or facilitated by the platform; or (f) your violation of any applicable law or regulation.</p><h3>18. Termination</h3><p>PaMarket reserves the right to suspend, restrict, or permanently terminate your access to the platform at any time, with or without notice, for any reason, including but not limited to violation of these Terms, fraudulent activity, or conduct harmful to other users or to PaMarket. Upon termination, your licence to use the platform immediately ceases. You may delete your account at any time via Settings, and your data will be handled as described in our Privacy Policy. Termination does not relieve you of any obligations that arose before termination, including indemnification obligations.</p><h3>19. Force Majeure</h3><p>PaMarket shall not be liable for any failure or delay in performance of its obligations under these Terms caused by circumstances beyond our reasonable control, including but not limited to internet or telecommunications failures, power outages, natural disasters, civil unrest, government actions, cyberattacks, pandemics, or acts of God. In such circumstances our obligations will be suspended for the duration of the event.</p><h3>20. Governing Law and Dispute Resolution</h3><p>These Terms are governed by and construed in accordance with the laws of the Republic of Zimbabwe, without regard to its conflict of law provisions. Any dispute arising out of or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts of Zimbabwe. Before commencing formal proceedings, you agree to contact us in good faith to attempt to resolve the dispute informally. We will attempt to resolve any complaint within 30 days of receipt.</p><h3>21. Miscellaneous</h3><p><strong>Entire Agreement:</strong> These Terms, together with our Privacy Policy and Community Guidelines, constitute the entire agreement between you and PaMarket and supersede all prior agreements.</p><p><strong>Severability:</strong> If any provision of these Terms is found to be unenforceable, that provision will be limited or eliminated to the minimum extent necessary so that the remaining Terms remain in full force and effect.</p><p><strong>No Waiver:</strong> Our failure to enforce any right or provision of these Terms is not a waiver of that right or provision.</p><p><strong>Assignment:</strong> You may not assign or transfer your rights under these Terms without our prior written consent. We may assign our rights without restriction.</p><p><strong>Electronic Communications:</strong> By using PaMarket you consent to receive communications from us electronically, including via in-app notifications, push notifications, and email.</p><h3>22. Contact</h3><p>PaMarket Zimbabwe<br>Email: chakusaprince@gmail.com<br>WhatsApp: +971 589 772 645</p></div>
+<div class="doc-content"><h2>Terms of Service</h2><p><strong>Last updated: June 2026</strong></p><p>These Terms of Service ("Terms") form a legally binding agreement between you ("User", "you") and PaMarket Zimbabwe ("PaMarket", "we", "us", "our"). By accessing or using the PaMarket mobile application or website you confirm that you have read, understood, and agree to be bound by these Terms and our Privacy Policy. If you do not agree, you must stop using the platform immediately.</p><h3>1. Changes to These Terms</h3><p>We may update these Terms at any time. We will notify you of material changes by in-app notification or by posting the updated Terms with a new effective date. Your continued use of PaMarket after changes are posted constitutes your acceptance of the revised Terms. If you disagree with any change, your only remedy is to stop using the platform and delete your account.</p><h3>2. Eligibility</h3><p>You must be at least 18 years old and have full legal capacity to enter into binding contracts under the laws of Zimbabwe. By creating an account you represent and warrant that you meet these requirements. We reserve the right to terminate any account we have reason to believe belongs to a person under 18, without notice or liability.</p><h3>3. Account Registration and Security</h3><p>You may register using a valid email address, phone number, or a supported third-party sign-in provider (e.g. Google). You are solely responsible for maintaining the confidentiality of your password and for all activity that occurs under your account. You must notify us immediately at info@pamarketzw.com if you become aware of any unauthorised access. We will not be liable for any loss caused by someone else using your account with or without your knowledge. You may hold only one account; duplicate accounts will be removed.</p><h3>4. Nature of the Platform - PaMarket Is a Marketplace Only</h3><p>PaMarket is an online classifieds and services marketplace. We provide technology that enables users to list goods, services, jobs, and business profiles, and to communicate with each other. <strong>PaMarket is not a buyer, seller, employer, employee, broker, agent, or auctioneer.</strong> We do not own, inspect, store, or ship any item listed on the platform. We do not employ, represent, endorse, or guarantee any user, business, or job poster. Any contract for the purchase or sale of any item or service is made directly between the buyer and the seller. PaMarket is not a party to any such contract.</p><h3>5. Licence You Grant PaMarket</h3><p>By submitting content to PaMarket (including photos, text, videos, business names, and descriptions) you grant PaMarket a worldwide, non-exclusive, royalty-free, sublicensable, and transferable licence to use, reproduce, modify, adapt, publish, translate, distribute, and display that content across all media formats, including within the app, on our website, and for promotional purposes, for as long as the content remains on our platform. You represent and warrant that you own or have the necessary rights to grant this licence and that your content does not infringe the rights of any third party.</p><h3>6. Listing Rules</h3><p>All listings must meet the following requirements:</p><ul><li>You must own the item or have verifiable legal authority to sell it.</li><li>The title, description, photos, price, and location must accurately represent the item. No misleading statements, omissions of known defects, or inflated valuations.</li><li>All prices must be quoted in United States Dollars (USD). Listings in any other currency will be removed.</li><li>Photos must be real images of the actual item. Stock images, watermarked images, or images of a different item are not permitted.</li><li>Do not post duplicate listings for the same item across multiple categories or provinces.</li><li>Listings must be placed in the correct category. Miscategorised listings will be moved or removed.</li><li>Remove or mark your listing as sold as soon as the item is no longer available.</li></ul><p>PaMarket reserves the right to edit, reclassify, reject, or remove any listing at any time, with or without notice, for any reason including but not limited to violation of these Terms.</p><h3>7. Prohibited Items and Content</h3><p>The following items, services, and types of content are strictly prohibited on PaMarket:</p><ul><li>Stolen goods or goods obtained through fraud or deception.</li><li>Counterfeit, fake, or unauthorised copies of branded goods (replica watches, fake designer clothing, pirated software, etc.).</li><li>Goods requiring ZIMRA import permits, licences, or customs clearance that the seller does not hold.</li><li>Illegal drugs, narcotics, controlled substances, or drug paraphernalia.</li><li>Unlicensed firearms, weapons, ammunition, explosives, or related accessories.</li><li>Wildlife, live animals, animal parts, or products protected under CITES or the Zimbabwe Parks and Wildlife Act.</li><li>Tobacco products, alcohol, or spirits sold without the required ZIMRA/Government of Zimbabwe retail licence.</li><li>Pornographic, sexually explicit, or adult content of any kind.</li><li>Content that promotes or incites violence, hatred, discrimination, or terrorism on the basis of race, ethnicity, religion, gender, sexual orientation, or disability.</li><li>Pyramid schemes, multilevel marketing recruitment (MLM), advance fee fraud (419), Ponzi schemes, or any deceptive financial offer.</li><li>Impersonation of any individual, business, government body, or official institution.</li><li>Personal data or private information of third parties without their consent.</li><li>Human beings, human organs, or any service that constitutes human trafficking.</li><li>Prescription medicines or medical devices sold without a valid pharmacist or medical licence.</li><li>Hazardous chemicals, flammable materials, or radioactive substances.</li><li>Any item or service whose listing, sale, or purchase is prohibited under the laws of Zimbabwe.</li></ul><p>This list is non-exhaustive. PaMarket retains sole discretion to determine what constitutes prohibited content and to remove any content that we consider harmful, illegal, or contrary to the spirit of these Terms.</p><h3>8. Business Shops</h3><p>Business accounts may create a verified Shop profile with a product catalogue and a dedicated business inbox. You must be the legitimate owner or an authorised representative of the business entity named in the Shop. All business details including name, registration status, contact information, and product listings must be accurate and kept up to date. PaMarket may request proof of business registration at any time and reserves the right to downgrade or remove verification, suspend, or permanently close any Business Shop that provides false information or violates these Terms. PaMarket does not guarantee or warrant the legitimacy, quality, or delivery of any product or service offered by a Business Shop.</p><h3>9. Hire Talent</h3><p>Employers may post job openings subject to admin review, which is typically completed within 24 hours. All job postings must be for genuine, existing vacancies at a real organisation operating lawfully within Zimbabwe. <strong>Charging job seekers any registration, application, training, or placement fee is strictly prohibited and will result in immediate permanent account suspension and may be reported to the Zimbabwe Republic Police.</strong> PaMarket is not an employment agency and is not responsible for the accuracy of job descriptions, the conduct of employers, or any employment relationship that arises from a listing. Candidates use Hire Talent at their own risk and should independently verify the legitimacy of any potential employer before sharing personal information or attending an interview.</p><h3>10. Transactions - No Involvement by PaMarket</h3><p>PaMarket does not facilitate, guarantee, insure, or supervise any transaction between users. We do not process payments, hold escrow funds, or provide buyer or seller protection of any kind. All agreements, payments, and deliveries are arranged directly between the buyer and the seller. PaMarket expressly disclaims any liability for:</p><ul><li>Non-payment, partial payment, or delayed payment by a buyer.</li><li>Non-delivery, partial delivery, or late delivery of goods by a seller.</li><li>Goods that are defective, misdescribed, counterfeit, stolen, or do not match the listing.</li><li>Fraud, scams, or deceptive conduct by any user.</li><li>Loss, damage, or injury arising from a meeting between users.</li><li>Any dispute arising from a transaction conducted through or discovered on the platform.</li></ul><h3>11. Messaging and User Conduct</h3><p>PaMarket's in-app messaging is provided to facilitate legitimate transactions. You agree not to use messaging to send spam, unsolicited bulk messages, harassment, threats, sexually explicit content, or any content that violates these Terms. We do not read your private messages as a matter of course; however, we may review messages if they are reported to us for abuse. Do not share your bank account details, national ID numbers, passwords, or other sensitive personal information through the messaging system.</p><h3>12. Third-Party Links and Services</h3><p>The platform may contain links to third-party websites, services, or resources. PaMarket has no control over the content, privacy practices, or availability of such third-party sites. A link to a third-party site does not constitute an endorsement, sponsorship, or recommendation by PaMarket. You access any third-party links entirely at your own risk. PaMarket is not responsible for any loss or damage arising from your use of third-party websites or services.</p><h3>13. Our Intellectual Property</h3><p>The PaMarket name, logo, app design, user interface, proprietary software, written content, and all other intellectual property on the platform are owned by PaMarket or its licensors and are protected by copyright, trademark, and other intellectual property laws. You may not copy, reproduce, modify, distribute, create derivative works from, publicly display, or commercially exploit any part of our intellectual property without our prior written permission. Unauthorised use may result in civil and criminal liability.</p><h3>14. Copyright and IP Infringement - Takedown Requests</h3><p>If you believe that content on PaMarket infringes your copyright or other intellectual property rights, please contact us in writing at info@pamarketzw.com with the following information: (a) a description of the copyrighted work or IP right you claim has been infringed; (b) the URL or location of the allegedly infringing content on PaMarket; (c) your name, address, phone number, and email; (d) a statement that you have a good-faith belief that the use is not authorised; (e) a statement that the information in your notice is accurate and that you are the rights owner or authorised to act on the owner's behalf. We will review all valid takedown requests and act in accordance with applicable law.</p><h3>15. Disclaimers - No Warranties</h3><p>TO THE FULLEST EXTENT PERMITTED BY ZIMBABWEAN LAW, PAMARKET PROVIDES THE PLATFORM "AS IS" AND "AS AVAILABLE" WITHOUT ANY REPRESENTATION OR WARRANTY OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, OR NON-INFRINGEMENT. WE DO NOT WARRANT THAT: (a) THE PLATFORM WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, OR FREE OF VIRUSES; (b) ANY LISTING ON THE PLATFORM IS ACCURATE, COMPLETE, LEGAL, OR GENUINE; (c) THE IDENTITY OR CREDITWORTHINESS OF ANY USER HAS BEEN VERIFIED; (d) ANY ITEM OR SERVICE LISTED IS FIT FOR THE PURPOSE FOR WHICH IT IS SOLD. YOU USE THE PLATFORM ENTIRELY AT YOUR OWN RISK.</p><h3>16. Limitation of Liability</h3><p>TO THE FULLEST EXTENT PERMITTED BY ZIMBABWEAN LAW, PAMARKET AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, AND LICENSORS SHALL NOT BE LIABLE TO YOU FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES, INCLUDING LOSS OF PROFITS, LOSS OF DATA, LOSS OF GOODWILL, OR LOSS OF BUSINESS OPPORTUNITY, ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF OR INABILITY TO USE THE PLATFORM, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. OUR TOTAL AGGREGATE LIABILITY TO YOU FOR ANY CLAIM ARISING FROM OR RELATED TO THESE TERMS OR YOUR USE OF THE PLATFORM SHALL NOT EXCEED THE GREATER OF (a) THE AMOUNT YOU PAID TO PAMARKET IN THE 12 MONTHS PRECEDING THE CLAIM, OR (b) USD 10. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OR LIMITATION OF CERTAIN DAMAGES, SO THE ABOVE LIMITATIONS MAY NOT APPLY TO YOU IN FULL.</p><h3>17. Indemnification</h3><p>You agree to defend, indemnify, and hold harmless PaMarket and its officers, directors, employees, contractors, agents, licensors, and service providers from and against any and all claims, liabilities, damages, judgments, awards, losses, costs, expenses, and fees (including reasonable legal fees) arising out of or relating to: (a) your violation of these Terms; (b) any content you post, upload, or transmit on the platform; (c) your conduct towards other users; (d) your violation of any third-party right, including intellectual property or privacy rights; (e) any transaction you enter into through or facilitated by the platform; or (f) your violation of any applicable law or regulation.</p><h3>18. Termination</h3><p>PaMarket reserves the right to suspend, restrict, or permanently terminate your access to the platform at any time, with or without notice, for any reason, including but not limited to violation of these Terms, fraudulent activity, or conduct harmful to other users or to PaMarket. Upon termination, your licence to use the platform immediately ceases. You may delete your account at any time via Settings, and your data will be handled as described in our Privacy Policy. Termination does not relieve you of any obligations that arose before termination, including indemnification obligations.</p><h3>19. Force Majeure</h3><p>PaMarket shall not be liable for any failure or delay in performance of its obligations under these Terms caused by circumstances beyond our reasonable control, including but not limited to internet or telecommunications failures, power outages, natural disasters, civil unrest, government actions, cyberattacks, pandemics, or acts of God. In such circumstances our obligations will be suspended for the duration of the event.</p><h3>20. Governing Law and Dispute Resolution</h3><p>These Terms are governed by and construed in accordance with the laws of the Republic of Zimbabwe, without regard to its conflict of law provisions. Any dispute arising out of or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts of Zimbabwe. Before commencing formal proceedings, you agree to contact us in good faith to attempt to resolve the dispute informally. We will attempt to resolve any complaint within 30 days of receipt.</p><h3>21. Miscellaneous</h3><p><strong>Entire Agreement:</strong> These Terms, together with our Privacy Policy and Community Guidelines, constitute the entire agreement between you and PaMarket and supersede all prior agreements.</p><p><strong>Severability:</strong> If any provision of these Terms is found to be unenforceable, that provision will be limited or eliminated to the minimum extent necessary so that the remaining Terms remain in full force and effect.</p><p><strong>No Waiver:</strong> Our failure to enforce any right or provision of these Terms is not a waiver of that right or provision.</p><p><strong>Assignment:</strong> You may not assign or transfer your rights under these Terms without our prior written consent. We may assign our rights without restriction.</p><p><strong>Electronic Communications:</strong> By using PaMarket you consent to receive communications from us electronically, including via in-app notifications, push notifications, and email.</p><h3>22. Contact</h3><p>PaMarket Zimbabwe<br>Email: info@pamarketzw.com<br>WhatsApp: +971 589 772 645</p></div>
 </div>
 
 <footer>
-  <div class="wrap">
-    <div class="foot-grid">
-      <div><a href="index.html" class="logo">Pa<span>Market</span></a><p>Zimbabwe's free marketplace. Buy, sell, hire and grow your business across all ten provinces.</p></div>
-      <div class="foot"><h4>Marketplace</h4><a href="browse.html">Browse</a><a href="post-ad.html">Post a Free Ad</a><a href="browse.html?shops=1">Shops</a><a href="plans.html">Plans</a><a href="jobs.html">Hire Talent</a></div>
-      <div class="foot"><h4>Company</h4><a href="about.html">About</a><a href="advertise.html">Advertise</a><a href="contact.html">Contact</a><a href="help.html">Help</a></div>
-      <div class="foot"><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="delete-account.html">Delete Account</a><a href="community-guidelines.html">Guidelines</a></div>
+  <div class="foot-main">
+    <div>
+      <div class="foot-logo">Pa<em>Market</em></div>
+      <p class="foot-tagline">Zimbabwe's free marketplace. Buy, sell, find jobs and grow your business across all ten provinces. No fees, ever.</p>
+      <div class="foot-contact">
+        <a href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a>
+        <a href="mailto:info@pamarketzw.com">info@pamarketzw.com</a>
+      </div>
+      <div class="foot-store">
+        <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" class="foot-store-btn" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76a1.75 1.75 0 0 1-.88-1.54V1.78A1.75 1.75 0 0 1 3.18.24l12.08 11.76zm13.56-6.62-3.08-3-9.42 5.28zM20.4 10.94a1.77 1.77 0 0 1 0 2.12l-2.56 1.46-3.4-3.32 3.4-3.32zm-2.14-4.24-9.42-5.28 9.5 9.24z"/></svg>
+          Google Play
+        </a>
+      </div>
     </div>
-    <div class="footer-bottom">&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</div>
+    <div class="foot-col">
+      <h5>Categories</h5>
+      <a href="browse.html?cat=Property">Property</a>
+      <a href="browse.html?cat=Vehicles">Vehicles</a>
+      <a href="browse.html?cat=Electronics">Electronics</a>
+      <a href="browse.html?cat=Furniture">Furniture</a>
+      <a href="browse.html?cat=Fashion">Fashion</a>
+      <a href="browse.html?cat=Agriculture">Agriculture</a>
+      <a href="jobs.html">Jobs</a>
+      <a href="browse.html?shops=1">Shops</a>
+      <a href="plans.html">Shop Plans</a>
+    </div>
+    <div class="foot-col">
+      <h5>Customer Service</h5>
+      <a href="help.html">Help &amp; FAQ</a>
+      <a href="contact.html">Contact Us</a>
+      <a href="advertise.html">Advertise</a>
+      <a href="community-guidelines.html">Community Guidelines</a>
+      <a href="about.html">About PaMarket</a>
+    </div>
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="delete-account.html">Delete Account</a>
+      <a href="auth.html">Sign In</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</span>
+    <div class="foot-bottom-links">
+      <a href="terms.html">Terms</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="community-guidelines.html">Guidelines</a>
+      <a href="contact.html">Contact</a>
+    </div>
   </div>
 </footer>
 
+<script>
+function doSearch(){
+  const q=document.getElementById('hQ')?.value?.trim();
+  const cat=document.getElementById('hCat')?.value;
+  if(cat==='Jobs'){window.location='jobs.html'+(q?'?q='+encodeURIComponent(q):'');return}
+  let u='browse.html?';
+  if(q)u+='q='+encodeURIComponent(q);
+  if(cat)u+=(q?'&':'')+'cat='+encodeURIComponent(cat);
+  window.location=u==='browse.html?'?'browse.html':u;
+}
+function toggleMob(){
+  const n=document.getElementById('mobNav');
+  n.classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  const h=document.getElementById('hdr');
+  const n=document.getElementById('mobNav');
+  if(n && n.classList.contains('open') && h && !h.contains(e.target))n.classList.remove('open');
+});
+</script>
 </body>
 </html>

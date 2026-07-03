@@ -1241,7 +1241,7 @@
       '  2. Vehicle registration book(s)\n' +
       "  3. Owner's national ID\n"
     );
-    window.location.href = 'mailto:chakusaprince@gmail.com?subject=' + subject + '&body=' + body;
+    window.location.href = 'mailto:support@pamarketzw.com?subject=' + subject + '&body=' + body;
   };
 
   // Onboarding-only: creates the pending company + initial profile. Editing

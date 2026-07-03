@@ -71,7 +71,7 @@
           <div class="info-ic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
           <div>
             <div class="info-lbl">Email</div>
-            <div class="info-val"><a href="mailto:chakusaprince@gmail.com">chakusaprince@gmail.com</a></div>
+            <div class="info-val"><a href="mailto:support@pamarketzw.com">support@pamarketzw.com</a></div>
           </div>
         </div>
         <div class="info-card">
@@ -168,7 +168,7 @@ function submitContact(){
   const msg=document.getElementById('cMessage').value.trim();
   if(!name||!email||!msg){toast('Please fill in all required fields.');return}
   const sub=document.getElementById('cSubject').value||'General Inquiry';
-  window.location.href='mailto:chakusaprince@gmail.com?subject='+encodeURIComponent('[PaMarket] '+sub)+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+'\n\n'+msg);
+  window.location.href='mailto:support@pamarketzw.com?subject='+encodeURIComponent('[PaMarket] '+sub)+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+'\n\n'+msg);
   toast("Opening your email app...");
 }
 </script>
