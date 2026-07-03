@@ -590,6 +590,13 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   </div>
 </div>
 
+<!-- SPONSORED ADS (dynamic from paid_ads; hidden when none active) -->
+<div class="ads-band rv" id="adsBand" style="display:none">
+  <div class="w">
+    <div class="hscroll" id="adCards"></div>
+  </div>
+</div>
+
 <!-- TOP CATEGORIES -->
 <div class="cats-sec rv">
   <div class="w">
@@ -842,6 +849,23 @@ function renderCards(elId,listings){
 PM.fetchListings({category:'electronics',limit:8}).then(l=>renderCards('elCards',l)).catch(()=>renderCards('elCards',[]));
 PM.fetchListings({category:'vehicles',limit:8}).then(l=>renderCards('vCards',l)).catch(()=>renderCards('vCards',[]));
 PM.fetchListings({category:'property',limit:8}).then(l=>renderCards('pCards',l)).catch(()=>renderCards('pCards',[]));
+
+// Sponsored ads — same live paid_ads the app renders. Hidden entirely when none.
+function adEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function renderAds(ads){
+  var band=document.getElementById('adsBand'), wrap=document.getElementById('adCards');
+  if(!wrap||!ads||!ads.length){if(band)band.style.display='none';return;}
+  wrap.innerHTML=ads.map(function(a){
+    var img=a.image_url?'<img src="'+adEsc(a.image_url)+'" alt="'+adEsc(a.title||'Sponsored')+'" loading="lazy" style="width:100%;height:100%;object-fit:cover">':'<div style="padding:16px;font-weight:700;color:#1A3A8F">'+adEsc(a.title||'Sponsored')+'</div>';
+    return '<a class="ad-card" href="'+(a.link_url?adEsc(a.link_url):'#')+'" target="_blank" rel="noopener nofollow" data-ad-id="'+adEsc(a.id)+'" onclick="PM.trackAdEvent(this.getAttribute(\'data-ad-id\'),\'click\')" style="flex:0 0 auto;width:280px;height:140px;border-radius:14px;overflow:hidden;position:relative;display:block;background:#EEF2FB;border:1px solid var(--line)"><span style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:6px;text-transform:uppercase;z-index:2">Sponsored</span>'+img+'</a>';
+  }).join('');
+  if(band)band.style.display='';
+  // Count one impression per active ad shown.
+  ads.forEach(function(a){PM.trackAdEvent(a.id,'impression');});
+}
+PM.fetchActiveAds({placement:'home',limit:8})
+  .then(function(ads){ if(ads&&ads.length){renderAds(ads);} else { return PM.fetchActiveAds({limit:8}).then(renderAds); } })
+  .catch(function(){ var b=document.getElementById('adsBand'); if(b)b.style.display='none'; });
 
 const PIN2='<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
 const CLOCK='<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';

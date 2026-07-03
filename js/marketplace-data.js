@@ -18,6 +18,19 @@
     return encodeURIComponent(v);
   }
 
+  // POST to a PostgREST RPC (security-definer function). Best-effort; never throws.
+  function pgRpc(fn, body) {
+    return fetch(SB_URL + '/rest/v1/rpc/' + fn, {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY,
+        Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body || {}),
+    }).catch(function () {});
+  }
+
   // ── General listings (public.listings) ──────────────────────────
   // opts: { category, q, province, city, limit, offset, order }
   function fetchListings(opts) {
@@ -167,13 +180,14 @@
     });
   }
 
-  // Best-effort impression/click tracking. The anon website key cannot UPDATE
-  // paid_ads (admin-write RLS), so tracking from the public site is a no-op at
-  // the DB level today; kept as a single call site so a future PostgREST RPC
-  // (security definer increment, like the app's listing-view RPC) can wire in
-  // without touching every page. Returns a resolved promise so callers are safe.
-  function trackAdEvent(/* id, kind */) {
-    return Promise.resolve();
+  // Impression/click tracking via security-definer RPCs (add_ad_tracking_rpc.sql).
+  // The anon key cannot UPDATE paid_ads directly (admin-write RLS); these RPCs
+  // increment the counters safely. Best-effort — never blocks the UI.
+  // kind: 'impression' | 'click'
+  function trackAdEvent(id, kind) {
+    if (!id) return Promise.resolve();
+    var fn = kind === 'click' ? 'track_ad_click' : 'track_ad_impression';
+    return pgRpc(fn, { p_ad_id: id });
   }
 
   function money(n, currency) {
