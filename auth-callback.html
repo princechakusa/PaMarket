@@ -33,12 +33,12 @@ function showErr(msg){
   const e=document.getElementById('errMsg');
   e.textContent=msg;
   e.classList.remove('hidden');
-  setTimeout(()=>window.location.href='index.html',3000);
+  setTimeout(()=>window.location.href='/',3000);
 }
 
 function safeReturnUrl(url){
-  try{const u=new URL(url,location.href);if(u.origin!==location.origin)return'index.html';}catch{}
-  if(!url||url.includes('auth.html')||url.includes('auth-callback.html'))return'index.html';
+  try{const u=new URL(url,location.href);if(u.origin!==location.origin)return'/';}catch{}
+  if(!url||url.includes('auth')||url.includes('auth-callback'))return'/';
   return url;
 }
 
@@ -77,7 +77,7 @@ async function handleCallback(){
         };
         localStorage.setItem('pm_session',JSON.stringify(session));
         sessionStorage.removeItem('pm_pkce_verifier');
-        const returnUrl=safeReturnUrl(sessionStorage.getItem('pm_return_url')||'index.html');
+        const returnUrl=safeReturnUrl(sessionStorage.getItem('pm_return_url')||'/');
         sessionStorage.removeItem('pm_return_url');
         window.location.href=returnUrl;
         return;
@@ -92,7 +92,7 @@ async function handleCallback(){
     if(type==='recovery'){
       document.getElementById('msg').textContent='Loading password reset…';
       sessionStorage.setItem('pm_recovery_token',accessToken);
-      window.location.href='auth.html?mode=reset';
+      window.location.href='auth?mode=reset';
       return;
     }
 
@@ -115,7 +115,7 @@ async function handleCallback(){
     localStorage.setItem('pm_session',JSON.stringify(session));
 
     // Redirect back to where the user came from (same-origin only)
-    const returnUrl=safeReturnUrl(sessionStorage.getItem('pm_return_url')||'index.html');
+    const returnUrl=safeReturnUrl(sessionStorage.getItem('pm_return_url')||'/');
     sessionStorage.removeItem('pm_return_url');
     window.location.href=returnUrl;
   }catch(err){

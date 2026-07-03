@@ -19,32 +19,32 @@ function loadSupabaseConfig() {
 
 const STATIC_PAGES = [
   { loc: '/', changefreq: 'daily', priority: '1.0' },
-  { loc: '/browse.html', changefreq: 'daily', priority: '0.9' },
-  { loc: '/browse.html?cat=property', changefreq: 'daily', priority: '0.9' },
-  { loc: '/browse.html?cat=vehicles', changefreq: 'daily', priority: '0.9' },
-  { loc: '/browse.html?cat=electronics', changefreq: 'daily', priority: '0.8' },
-  { loc: '/browse.html?cat=furniture', changefreq: 'daily', priority: '0.8' },
-  { loc: '/browse.html?cat=fashion', changefreq: 'daily', priority: '0.8' },
-  { loc: '/browse.html?cat=services', changefreq: 'daily', priority: '0.8' },
-  { loc: '/browse.html?cat=agriculture', changefreq: 'daily', priority: '0.7' },
-  { loc: '/browse.html?cat=rooms', changefreq: 'daily', priority: '0.7' },
-  { loc: '/browse.html?cat=pets', changefreq: 'daily', priority: '0.7' },
-  { loc: '/browse.html?cat=kids', changefreq: 'daily', priority: '0.7' },
-  { loc: '/browse.html?cat=other', changefreq: 'daily', priority: '0.6' },
-  { loc: '/browse.html?shops=1', changefreq: 'daily', priority: '0.8' },
-  { loc: '/jobs.html', changefreq: 'daily', priority: '0.9' },
-  { loc: '/rentals.html', changefreq: 'daily', priority: '0.8' },
-  { loc: '/plans.html', changefreq: 'weekly', priority: '0.6' },
-  { loc: '/advertise.html', changefreq: 'monthly', priority: '0.5' },
-  { loc: '/post-ad.html', changefreq: 'monthly', priority: '0.6' },
-  { loc: '/about.html', changefreq: 'monthly', priority: '0.4' },
-  { loc: '/services.html', changefreq: 'monthly', priority: '0.5' },
-  { loc: '/help.html', changefreq: 'monthly', priority: '0.4' },
-  { loc: '/contact.html', changefreq: 'monthly', priority: '0.4' },
-  { loc: '/terms.html', changefreq: 'yearly', priority: '0.3' },
-  { loc: '/privacy.html', changefreq: 'yearly', priority: '0.3' },
-  { loc: '/community-guidelines.html', changefreq: 'yearly', priority: '0.3' },
-  { loc: '/delete-account.html', changefreq: 'yearly', priority: '0.3' },
+  { loc: '/browse', changefreq: 'daily', priority: '0.9' },
+  { loc: '/browse?cat=property', changefreq: 'daily', priority: '0.9' },
+  { loc: '/browse?cat=vehicles', changefreq: 'daily', priority: '0.9' },
+  { loc: '/browse?cat=electronics', changefreq: 'daily', priority: '0.8' },
+  { loc: '/browse?cat=furniture', changefreq: 'daily', priority: '0.8' },
+  { loc: '/browse?cat=fashion', changefreq: 'daily', priority: '0.8' },
+  { loc: '/browse?cat=services', changefreq: 'daily', priority: '0.8' },
+  { loc: '/browse?cat=agriculture', changefreq: 'daily', priority: '0.7' },
+  { loc: '/browse?cat=rooms', changefreq: 'daily', priority: '0.7' },
+  { loc: '/browse?cat=pets', changefreq: 'daily', priority: '0.7' },
+  { loc: '/browse?cat=kids', changefreq: 'daily', priority: '0.7' },
+  { loc: '/browse?cat=other', changefreq: 'daily', priority: '0.6' },
+  { loc: '/browse?shops=1', changefreq: 'daily', priority: '0.8' },
+  { loc: '/jobs', changefreq: 'daily', priority: '0.9' },
+  { loc: '/rentals', changefreq: 'daily', priority: '0.8' },
+  { loc: '/plans', changefreq: 'weekly', priority: '0.6' },
+  { loc: '/advertise', changefreq: 'monthly', priority: '0.5' },
+  { loc: '/post-ad', changefreq: 'monthly', priority: '0.6' },
+  { loc: '/about', changefreq: 'monthly', priority: '0.4' },
+  { loc: '/services', changefreq: 'monthly', priority: '0.5' },
+  { loc: '/help', changefreq: 'monthly', priority: '0.4' },
+  { loc: '/contact', changefreq: 'monthly', priority: '0.4' },
+  { loc: '/terms', changefreq: 'yearly', priority: '0.3' },
+  { loc: '/privacy', changefreq: 'yearly', priority: '0.3' },
+  { loc: '/community-guidelines', changefreq: 'yearly', priority: '0.3' },
+  { loc: '/delete-account', changefreq: 'yearly', priority: '0.3' },
 ];
 
 async function fetchActiveListingIds(cfg) {
@@ -101,7 +101,7 @@ async function main() {
 
   for (const l of listings) {
     const lastmod = l.created_at ? l.created_at.slice(0, 10) : today;
-    xml += urlEntry('/detail.html?id=' + l.id, lastmod, 'weekly', '0.6');
+    xml += urlEntry('/detail?id=' + l.id, lastmod, 'weekly', '0.6');
   }
 
   xml += '</urlset>\n';

@@ -43,7 +43,7 @@
   "url": "https://pamarketzw.com/",
   "potentialAction": {
     "@type": "SearchAction",
-    "target": "https://pamarketzw.com/browse.html?q={search_term_string}",
+    "target": "https://pamarketzw.com/browse?q={search_term_string}",
     "query-input": "required name=search_term_string"
   }
 }
@@ -372,9 +372,9 @@ footer{background:var(--navy-deep);color:#6A8AC8}
       Zimbabwe's #1 Free Marketplace — No fees, no commissions
     </span>
     <div class="top-bar-links">
-      <a href="browse.html">Browse Ads</a>
-      <a href="advertise.html">Advertise</a>
-      <a href="about.html">About Us</a>
+      <a href="browse">Browse Ads</a>
+      <a href="advertise">Advertise</a>
+      <a href="about">About Us</a>
     </div>
   </div>
 </div>
@@ -382,59 +382,59 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 <!-- HEADER -->
 <header id="hdr">
   <div class="hdr-w">
-    <a href="index.html" class="logo">Pa<em>Market</em></a>
+    <a href="/" class="logo">Pa<em>Market</em></a>
     <div class="hdr-util">
-      <a href="auth.html" class="util-btn" title="Notifications" aria-label="Notifications">
+      <a href="auth" class="util-btn" title="Notifications" aria-label="Notifications">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
         <span class="util-lbl">Notifications</span>
       </a>
-      <a href="auth.html" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
+      <a href="auth" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         <span class="util-lbl">My Searches</span>
       </a>
-      <a href="auth.html" class="util-btn" title="Favorites" aria-label="Favorites">
+      <a href="auth" class="util-btn" title="Favorites" aria-label="Favorites">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
         <span class="util-lbl">Favorites</span>
       </a>
-      <a href="auth.html" class="util-btn" title="Chats" aria-label="Chats">
+      <a href="auth" class="util-btn" title="Chats" aria-label="Chats">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <span class="util-lbl">Chats</span>
       </a>
-      <a href="auth.html" class="util-btn" title="My Ads" aria-label="My Ads">
+      <a href="auth" class="util-btn" title="My Ads" aria-label="My Ads">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
         <span class="util-lbl">My Ads</span>
       </a>
     </div>
     <div class="hdr-right">
-      <a href="auth.html" class="btn-sign" id="signInBtn">Sign In</a>
-      <a href="post-ad.html" class="btn-post">+ Post Free Ad</a>
+      <a href="auth" class="btn-sign" id="signInBtn">Sign In</a>
+      <a href="post-ad" class="btn-post">+ Post Free Ad</a>
       <button class="ham" onclick="toggleMob()">
         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
       </button>
     </div>
   </div>
   <nav id="mobNav" class="mob-nav">
-    <a href="index.html">Home</a>
-    <a href="browse.html">Browse All</a>
-    <a href="jobs.html">Jobs</a>
-    <a href="browse.html?shops=1">Shops</a>
-    <a href="advertise.html">Advertise</a>
-    <a href="about.html">About</a>
-    <a href="post-ad.html">+ Post Free Ad</a>
+    <a href="/">Home</a>
+    <a href="browse">Browse All</a>
+    <a href="jobs">Jobs</a>
+    <a href="browse?shops=1">Shops</a>
+    <a href="advertise">Advertise</a>
+    <a href="about">About</a>
+    <a href="post-ad">+ Post Free Ad</a>
   </nav>
 </header>
 
 <!-- CATEGORY NAV -->
 <nav class="cat-nav">
   <div class="cat-nav-w">
-    <a href="index.html" class="cnav on">Home</a>
-    <a href="browse.html?cat=property" class="cnav">Property</a>
-    <a href="browse.html?cat=vehicles" class="cnav">Vehicles</a>
-    <a href="jobs.html" class="cnav">Jobs</a>
-    <a href="browse.html?cat=electronics" class="cnav">Electronics</a>
-    <a href="browse.html?cat=furniture" class="cnav">Furniture</a>
-    <a href="browse.html?shops=1" class="cnav">Shops</a>
-    <a href="browse.html" class="cnav">All Listings</a>
+    <a href="/" class="cnav on">Home</a>
+    <a href="browse?cat=property" class="cnav">Property</a>
+    <a href="browse?cat=vehicles" class="cnav">Vehicles</a>
+    <a href="jobs" class="cnav">Jobs</a>
+    <a href="browse?cat=electronics" class="cnav">Electronics</a>
+    <a href="browse?cat=furniture" class="cnav">Furniture</a>
+    <a href="browse?shops=1" class="cnav">Shops</a>
+    <a href="browse" class="cnav">All Listings</a>
   </div>
 </nav>
 
@@ -474,12 +474,12 @@ footer{background:var(--navy-deep);color:#6A8AC8}
       </button>
     </div>
     <div class="hero-pills">
-      <a href="browse.html?cat=property" class="hero-pill">Property</a>
-      <a href="browse.html?cat=vehicles" class="hero-pill">Vehicles</a>
-      <a href="browse.html?cat=electronics" class="hero-pill">Electronics</a>
-      <a href="jobs.html" class="hero-pill">Jobs</a>
-      <a href="browse.html?shops=1" class="hero-pill">Shops</a>
-      <a href="browse.html?cat=agriculture" class="hero-pill">Agriculture</a>
+      <a href="browse?cat=property" class="hero-pill">Property</a>
+      <a href="browse?cat=vehicles" class="hero-pill">Vehicles</a>
+      <a href="browse?cat=electronics" class="hero-pill">Electronics</a>
+      <a href="jobs" class="hero-pill">Jobs</a>
+      <a href="browse?shops=1" class="hero-pill">Shops</a>
+      <a href="browse?cat=agriculture" class="hero-pill">Agriculture</a>
     </div>
     <div class="hero-stats">
       <div><div class="hero-stat-n">12+</div><div class="hero-stat-l">Categories</div></div>
@@ -524,7 +524,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   <div class="hs-inner">
     <div class="sec-row">
       <div class="sec-title">Best deals on <span>Electronics</span></div>
-      <a href="browse.html?cat=electronics" class="view-all">View All <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+      <a href="browse?cat=electronics" class="view-all">View All <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
     </div>
     <div class="hscroll" id="elCards"></div>
   </div>
@@ -535,7 +535,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   <div class="w">
     <div class="sec-row">
       <div class="sec-title">Shop From <span>Top Categories</span></div>
-      <a href="browse.html" class="view-all">View All <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+      <a href="browse" class="view-all">View All <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
     </div>
     <div class="cats-grid" id="catGrid"></div>
   </div>
@@ -546,7 +546,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   <div class="hs-inner">
     <div class="sec-row">
       <div class="sec-title">Latest <span>Vehicles</span></div>
-      <a href="browse.html?cat=vehicles" class="view-all">View All <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+      <a href="browse?cat=vehicles" class="view-all">View All <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
     </div>
     <div class="hscroll" id="vCards"></div>
   </div>
@@ -577,7 +577,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
           <div><div class="shops-ft">Leads &amp; Analytics</div><div class="shops-fs">Track every enquiry as a lead and see which products get the most interest.</div></div>
         </li>
       </ul>
-      <a href="browse.html?shops=1" class="shops-btn">
+      <a href="browse?shops=1" class="shops-btn">
         Browse Shops
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
       </a>
@@ -594,7 +594,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   <div class="hs-inner">
     <div class="sec-row">
       <div class="sec-title">Latest <span>Property</span></div>
-      <a href="browse.html?cat=property" class="view-all">View All <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+      <a href="browse?cat=property" class="view-all">View All <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
     </div>
     <div class="hscroll" id="pCards"></div>
   </div>
@@ -605,7 +605,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   <div class="jobs-sec-inner">
     <div class="sec-row">
       <div class="sec-title"><span>Jobs</span> Hiring Now</div>
-      <a href="jobs.html" class="view-all">View All <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+      <a href="jobs" class="view-all">View All <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
     </div>
     <div class="hscroll" id="jobCards"></div>
   </div>
@@ -677,40 +677,40 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     </div>
     <div class="foot-col">
       <h5>Categories</h5>
-      <a href="browse.html?cat=property">Property</a>
-      <a href="browse.html?cat=vehicles">Vehicles</a>
-      <a href="browse.html?cat=electronics">Electronics</a>
-      <a href="browse.html?cat=furniture">Furniture</a>
-      <a href="browse.html?cat=fashion">Fashion</a>
-      <a href="browse.html?cat=agriculture">Agriculture</a>
-      <a href="jobs.html">Jobs</a>
-      <a href="browse.html?shops=1">Shops</a>
-      <a href="plans.html">Shop Plans</a>
+      <a href="browse?cat=property">Property</a>
+      <a href="browse?cat=vehicles">Vehicles</a>
+      <a href="browse?cat=electronics">Electronics</a>
+      <a href="browse?cat=furniture">Furniture</a>
+      <a href="browse?cat=fashion">Fashion</a>
+      <a href="browse?cat=agriculture">Agriculture</a>
+      <a href="jobs">Jobs</a>
+      <a href="browse?shops=1">Shops</a>
+      <a href="plans">Shop Plans</a>
     </div>
     <div class="foot-col">
       <h5>Customer Service</h5>
-      <a href="help.html">Help &amp; FAQ</a>
-      <a href="contact.html">Contact Us</a>
-      <a href="advertise.html">Advertise</a>
-      <a href="community-guidelines.html">Community Guidelines</a>
-      <a href="about.html">About PaMarket</a>
+      <a href="help">Help &amp; FAQ</a>
+      <a href="contact">Contact Us</a>
+      <a href="advertise">Advertise</a>
+      <a href="community-guidelines">Community Guidelines</a>
+      <a href="about">About PaMarket</a>
     </div>
     <div class="foot-col">
       <h5>Legal</h5>
-      <a href="terms.html">Terms of Service</a>
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="post-ad.html">Post a Free Ad</a>
-      <a href="auth.html">Sign In</a>
-      <a href="auth.html?tab=register">Create Account</a>
+      <a href="terms">Terms of Service</a>
+      <a href="privacy">Privacy Policy</a>
+      <a href="post-ad">Post a Free Ad</a>
+      <a href="auth">Sign In</a>
+      <a href="auth?tab=register">Create Account</a>
     </div>
   </div>
   <div class="foot-bottom">
     <span>&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</span>
     <div class="foot-bottom-links">
-      <a href="terms.html">Terms</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="community-guidelines.html">Guidelines</a>
-      <a href="contact.html">Contact</a>
+      <a href="terms">Terms</a>
+      <a href="privacy">Privacy</a>
+      <a href="community-guidelines">Guidelines</a>
+      <a href="contact">Contact</a>
     </div>
   </div>
 </footer>
@@ -744,7 +744,7 @@ function lcard(listing,idx){
   const img=photo
     ?`<img class="lcard-img-inner" src="${photo}" alt="${listing.title.replace(/"/g,'&quot;')}" loading="lazy">`
     :`<div class="lcard-img-inner" style="color:${tc};font-weight:800;font-size:13px;text-align:center;padding:12px;line-height:1.4">${listing.title.split(' ').slice(0,3).join('<br>')}</div>`;
-  return`<a class="lcard" href="detail.html?id=${listing.id}">
+  return`<a class="lcard" href="detail?id=${listing.id}">
     <div class="lcard-img" style="background:${bg}">
       ${b}
       ${img}
@@ -777,7 +777,7 @@ function jobCard(job){
   const loc=[job.city,job.province].filter(Boolean).join(', ')||'Zimbabwe';
   const sal=job.price?PM.money(job.price,job.currency)+'/mo':'Negotiable';
   const type=(job.attributes&&job.attributes.job_type)||'Full Time';
-  return`<a class="job-card" href="detail.html?id=${job.id}">
+  return`<a class="job-card" href="detail?id=${job.id}">
     <div class="job-top">
       <div class="job-logo">${init||'PM'}</div>
       <div><div class="job-title">${job.title}</div><div class="job-co">${co}</div></div>
@@ -799,14 +799,14 @@ PM.fetchJobs({limit:8}).then(jobs=>{
 
 // Top Categories
 const CATS=[
-  {n:'Property',h:'browse.html?cat=property',bg:'#EEF2FF',c:'#1A3A8F',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},
-  {n:'Vehicles',h:'browse.html?cat=vehicles',bg:'#FEF3C7',c:'#B27D22',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 17H5v-5l2-6h10l2 6v5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>'},
-  {n:'Electronics',h:'browse.html?cat=electronics',bg:'#DCFCE7',c:'#16A34A',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>'},
-  {n:'Jobs',h:'jobs.html',bg:'#E0F2FE',c:'#0369A1',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>'},
-  {n:'Furniture',h:'browse.html?cat=furniture',bg:'#F3E8FF',c:'#7B2D8B',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="8" rx="2"/><rect x="5" y="7" width="3" height="3" rx="1"/><rect x="16" y="7" width="3" height="3" rx="1"/><path d="M5 18v2"/><path d="M19 18v2"/></svg>'},
-  {n:'Fashion',h:'browse.html?cat=fashion',bg:'#FCE7F3',c:'#9D174D',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>'},
-  {n:'Services',h:'browse.html?cat=services',bg:'#FEF9C3',c:'#92400E',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'},
-  {n:'Agriculture',h:'browse.html?cat=agriculture',bg:'#ECFDF5',c:'#065F46',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>'},
+  {n:'Property',h:'browse?cat=property',bg:'#EEF2FF',c:'#1A3A8F',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},
+  {n:'Vehicles',h:'browse?cat=vehicles',bg:'#FEF3C7',c:'#B27D22',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 17H5v-5l2-6h10l2 6v5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>'},
+  {n:'Electronics',h:'browse?cat=electronics',bg:'#DCFCE7',c:'#16A34A',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>'},
+  {n:'Jobs',h:'jobs',bg:'#E0F2FE',c:'#0369A1',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>'},
+  {n:'Furniture',h:'browse?cat=furniture',bg:'#F3E8FF',c:'#7B2D8B',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="8" rx="2"/><rect x="5" y="7" width="3" height="3" rx="1"/><rect x="16" y="7" width="3" height="3" rx="1"/><path d="M5 18v2"/><path d="M19 18v2"/></svg>'},
+  {n:'Fashion',h:'browse?cat=fashion',bg:'#FCE7F3',c:'#9D174D',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>'},
+  {n:'Services',h:'browse?cat=services',bg:'#FEF9C3',c:'#92400E',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'},
+  {n:'Agriculture',h:'browse?cat=agriculture',bg:'#ECFDF5',c:'#065F46',icon:'<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>'},
 ];
 document.getElementById('catGrid').innerHTML=CATS.map(c=>`
   <a class="cat-item" href="${c.h}">
@@ -818,23 +818,23 @@ document.getElementById('catGrid').innerHTML=CATS.map(c=>`
 function doSearch(){
   const q=document.getElementById('hQ')?.value?.trim();
   const cat=document.getElementById('hCat')?.value;
-  if(cat==='jobs'){window.location='jobs.html'+(q?'?q='+encodeURIComponent(q):'');return}
-  let u='browse.html?';
+  if(cat==='jobs'){window.location='jobs'+(q?'?q='+encodeURIComponent(q):'');return}
+  let u='browse?';
   if(q)u+='q='+encodeURIComponent(q);
   if(cat)u+=(q?'&':'')+'cat='+encodeURIComponent(cat);
-  window.location=u==='browse.html?'?'browse.html':u;
+  window.location=u==='browse?'?'browse':u;
 }
 function doHeroSearch(){
   const q=document.getElementById('heroQ')?.value?.trim();
   const cat=document.getElementById('heroCat')?.value;
   const loc=document.getElementById('heroLoc')?.value;
-  if(cat==='jobs'){window.location='jobs.html'+(q?'?q='+encodeURIComponent(q):'');return}
+  if(cat==='jobs'){window.location='jobs'+(q?'?q='+encodeURIComponent(q):'');return}
   const params=new URLSearchParams();
   if(q)params.set('q',q);
   if(cat)params.set('cat',cat);
   if(loc)params.set('prov',loc);
   const qs=params.toString();
-  window.location='browse.html'+(qs?'?'+qs:'');
+  window.location='browse'+(qs?'?'+qs:'');
 }
 
 // ── Mobile nav ──

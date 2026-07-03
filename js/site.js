@@ -19,20 +19,20 @@ document.addEventListener('click', function(e) {
   var header = document.getElementById('site-header');
   if (!header) return;
   // Don't add breadcrumb on homepage
-  if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) return;
+  if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/index') || window.location.pathname.endsWith('/')) return;
 
   var label = document.body.getAttribute('data-page') || document.title.replace(/\s*[-–|].*$/, '').trim();
   var bar = document.createElement('div');
   bar.className = 'breadcrumb-bar';
   bar.innerHTML =
     '<div class="bc-wrap">' +
-      '<button class="bc-back" onclick="history.length>1?history.back():window.location=\'index.html\'">' +
+      '<button class="bc-back" onclick="history.length>1?history.back():window.location=\'/\'">' +
         '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 5-7 7 7 7"/></svg>' +
         'Back' +
       '</button>' +
       '<div class="bc-div"></div>' +
       '<div class="bc-crumb">' +
-        '<a href="index.html">Home</a>' +
+        '<a href="/">Home</a>' +
         '<span class="bc-sep">›</span>' +
         '<span class="bc-cur">' + label + '</span>' +
       '</div>' +

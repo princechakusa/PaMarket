@@ -66,7 +66,7 @@
   ];
 
   function subcatUrl(catKey, subKey) {
-    return 'browse.html?cat=' + catKey + '&sub=' + subKey;
+    return 'browse?cat=' + catKey + '&sub=' + subKey;
   }
 
   // Splits a subcat list into left-rail "groups" of ~3 items each, mimicking
@@ -100,7 +100,7 @@
       })
       .join('');
     var featured = entry.cat === 'vehicles'
-      ? '<a href="rentals.html" class="mega-featured">' +
+      ? '<a href="rentals" class="mega-featured">' +
           '<span class="mega-featured-ic">🔑</span>' +
           '<span><span class="mega-featured-title">Vehicle Rental</span>' +
           '<span class="mega-featured-sub">Rent a car by the day, week or month</span></span>' +
@@ -112,7 +112,7 @@
         '<div class="mega-content">' +
           '<div class="mega-content-head">' +
             '<span class="mega-content-title" id="megaTitle-' + entry.cat + '">' + groups[0][0][1] + '</span>' +
-            '<a href="browse.html?cat=' + entry.cat + '" class="mega-viewall">View All ' + entry.label + ' →</a>' +
+            '<a href="browse?cat=' + entry.cat + '" class="mega-viewall">View All ' + entry.label + ' →</a>' +
           '</div>' +
           '<div class="mega-panels">' + panels + '</div>' +
           featured +
@@ -125,11 +125,11 @@
     if (entry.jobs) {
       return (
         '<div class="mega-simple">' +
-          '<a href="jobs.html" class="mega-simple-card">' +
+          '<a href="jobs" class="mega-simple-card">' +
             '<div class="mega-simple-ic">🔍</div>' +
             '<div><div class="mega-simple-title">Find a Job</div><div class="mega-simple-sub">Browse live vacancies across Zimbabwe</div></div>' +
           '</a>' +
-          '<a href="jobs.html#hire" class="mega-simple-card">' +
+          '<a href="jobs#hire" class="mega-simple-card">' +
             '<div class="mega-simple-ic">💼</div>' +
             '<div><div class="mega-simple-title">Hire Talent</div><div class="mega-simple-sub">Post a job and reach candidates for free</div></div>' +
           '</a>' +
@@ -138,11 +138,11 @@
     }
     return (
       '<div class="mega-simple">' +
-        '<a href="browse.html?shops=1" class="mega-simple-card">' +
+        '<a href="browse?shops=1" class="mega-simple-card">' +
           '<div class="mega-simple-ic">🏬</div>' +
           '<div><div class="mega-simple-title">Browse All Shops</div><div class="mega-simple-sub">Verified business storefronts near you</div></div>' +
         '</a>' +
-        '<a href="advertise.html" class="mega-simple-card">' +
+        '<a href="advertise" class="mega-simple-card">' +
           '<div class="mega-simple-ic">➕</div>' +
           '<div><div class="mega-simple-title">Open Your Shop</div><div class="mega-simple-sub">Free storefront, product catalog & inbox</div></div>' +
         '</a>' +

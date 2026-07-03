@@ -65,7 +65,7 @@
       .slice(0, 2)
       .join('')
       .toUpperCase();
-    var profileUrl = 'profile.html?id=' + encodeURIComponent(user.id);
+    var profileUrl = 'profile?id=' + encodeURIComponent(user.id);
 
     var wrap = document.createElement('div');
     wrap.className = 'acct-wrap';
@@ -81,7 +81,7 @@
         '<a href="' + APP_URL + '" target="_blank" rel="noopener">Favorites (open app)</a>' +
         '<a href="' + APP_URL + '" target="_blank" rel="noopener">Chats (open app)</a>' +
         '<div class="acct-sep"></div>' +
-        '<a href="rentals.html#fleet">My Rental Fleet</a>' +
+        '<a href="rentals#fleet">My Rental Fleet</a>' +
         '<a href="' + APP_URL + '" target="_blank" rel="noopener">Account Settings</a>' +
         '<a href="#" class="acct-signout" id="acctSignOutBtn">Sign Out</a>' +
       '</div>';

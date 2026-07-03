@@ -211,14 +211,14 @@ input,select,textarea{font-family:var(--font)}
 <div class="auth-page" id="authPage">
 
   <!-- Back to site -->
-  <a href="index.html" class="auth-back">
+  <a href="/" class="auth-back">
     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
     Back to site
   </a>
 
   <!-- Brand -->
   <div class="auth-brand-wrap" id="authIllustration">
-    <a href="index.html" class="auth-brand">Pa<em>Market</em></a>
+    <a href="/" class="auth-brand">Pa<em>Market</em></a>
     <p class="auth-tagline">Zimbabwe's Free Marketplace</p>
   </div>
 
@@ -232,7 +232,7 @@ input,select,textarea{font-family:var(--font)}
   <!-- Page footer -->
   <div class="auth-foot">
     <div class="auth-foot-flag-row">&copy; 2026 PaMarket &nbsp;&middot;&nbsp; Made in Zimbabwe <img src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" class="zw-flag-sm"></div>
-    <div><a href="terms.html">Terms of Service</a><span class="sep">|</span><a href="privacy.html">Privacy Policy</a></div>
+    <div><a href="terms">Terms of Service</a><span class="sep">|</span><a href="privacy">Privacy Policy</a></div>
   </div>
 
 </div>
@@ -299,10 +299,10 @@ function showIllustration(show){
 function getReturnUrl(){
   const q=new URLSearchParams(location.search);
   const pm=sessionStorage.getItem('pm_return_url');
-  let url=q.get('return')||pm||'index.html';
+  let url=q.get('return')||pm||'/';
   // Never redirect to auth pages or external origins
-  try{const u=new URL(url,location.href);if(u.origin!==location.origin)url='index.html';}catch{url='index.html'}
-  if(url.includes('auth.html')||url.includes('auth-callback.html'))url='index.html';
+  try{const u=new URL(url,location.href);if(u.origin!==location.origin)url='/';}catch{url='/'}
+  if(url.includes('auth')||url.includes('auth-callback'))url='/';
   return url;
 }
 
@@ -456,7 +456,7 @@ function showSignUp(anim){
     </div>
     <label class="consent-row">
       <input type="checkbox" id="ageConsent">
-      <span>I am 18 or older and agree to the <a class="auth-link" href="terms.html" target="_blank">Terms of Service</a> and <a class="auth-link" href="privacy.html" target="_blank">Privacy Policy</a></span>
+      <span>I am 18 or older and agree to the <a class="auth-link" href="terms" target="_blank">Terms of Service</a> and <a class="auth-link" href="privacy" target="_blank">Privacy Policy</a></span>
     </label>
     <button class="auth-btn" id="signUpBtn" onclick="doSignUp()">Create Account</button>
     <button class="auth-btn secondary" onclick="showLanding('back')">Back to Sign In</button>`;
@@ -565,10 +565,8 @@ function showError(elId,msg){const el=document.getElementById(elId);if(el)el.inn
 /* ---- ACTION: GOOGLE SIGN IN ---- */
 function doGoogle(){
   sessionStorage.setItem('pm_return_url',getReturnUrl());
-  const cb=location.href.replace(/\/[^/]*(\?.*)?$/,'/')+'/auth-callback.html';
-  // Fix: build correct callback URL
-  const base=location.href.replace(/auth\.html.*/,'');
-  const callbackUrl=base+'auth-callback.html';
+  const base=location.href.replace(/auth(\.html)?.*/,'');
+  const callbackUrl=base+'auth-callback';
   window.location.href=`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}&flow_type=implicit`;
 }
 
@@ -719,8 +717,8 @@ async function doForgot(){
   btn.innerHTML='<div class="spinner"></div> Sending…';
   try{
     // Use the auth-callback page as the redirect for password reset
-    const base=location.href.replace(/auth\.html.*/,'');
-    const redirectTo=base+'auth-callback.html?type=recovery';
+    const base=location.href.replace(/auth(\.html)?.*/,'');
+    const redirectTo=base+'auth-callback?type=recovery';
     const res=await sbPost('/auth/v1/recover',{email,redirect_to:redirectTo});
     // Supabase always returns 200 for security (even if email not found)
     showResetSent(email);
