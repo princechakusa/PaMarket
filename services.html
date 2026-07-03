@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Find trusted service providers across Zimbabwe on PaMarket. Plumbers, electricians, cleaners, drivers, builders and more.">
-<title>Services — PaMarket Zimbabwe</title>
-<link rel="canonical" href="https://pamarketzw.com/services">
+<meta id="metaDesc" name="description" content="Find trusted service providers across Zimbabwe on PaMarket. Plumbers, electricians, cleaners, drivers, builders and more.">
+<title id="pageTitle">Services — PaMarket Zimbabwe</title>
+<link id="canonicalLink" rel="canonical" href="https://pamarketzw.com/services">
 <link rel="icon" href="img/icon-192.png" type="image/png">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="img/icon-192.png">
 <link rel="manifest" href="/manifest.json">
-<meta property="og:title" content="Services — PaMarket">
-<meta property="og:description" content="Find trusted service providers across Zimbabwe. Compare, contact, and hire directly.">
+<meta id="ogTitle" property="og:title" content="Services — PaMarket">
+<meta id="ogDesc" property="og:description" content="Find trusted service providers across Zimbabwe. Compare, contact, and hire directly.">
 <meta property="og:image" content="https://pamarketzw.com/img/icon-512.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Services — PaMarket">
-<meta name="twitter:description" content="Find trusted service providers across Zimbabwe. Compare, contact, and hire directly.">
+<meta id="twTitle" name="twitter:title" content="Services — PaMarket">
+<meta id="twDesc" name="twitter:description" content="Find trusted service providers across Zimbabwe. Compare, contact, and hire directly.">
 <meta name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
-<meta property="og:url" content="https://pamarketzw.com/services">
+<meta id="ogUrl" property="og:url" content="https://pamarketzw.com/services">
 <meta name="robots" content="index, follow">
 <script type="application/ld+json">
 {
@@ -230,9 +230,9 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 
 <section class="sv-hero">
   <div class="sv-hero-w">
-    <span class="p-tag">Services</span>
-    <h1>Find trusted service providers across Zimbabwe.</h1>
-    <p>From plumbers to photographers, PaMarket connects you with skilled people in your area. Compare, contact, and hire directly.</p>
+    <span class="p-tag" id="heroTag">Services</span>
+    <h1 id="heroTitle">Find trusted service providers across Zimbabwe.</h1>
+    <p id="heroSub">From plumbers to photographers, PaMarket connects you with skilled people in your area. Compare, contact, and hire directly.</p>
   </div>
 </section>
 
@@ -299,7 +299,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
       <p>List your services under the Services category and reach customers across your province. No listing fees, no commissions.</p>
       <div style="display:flex;justify-content:center;gap:14px;flex-wrap:wrap">
         <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener" class="btn-gold">List My Services</a>
-        <a href="browse?cat=services" class="btn-outline-w">Browse Services</a>
+        <a href="browse?cat=services" class="btn-outline-w" id="browseServicesBtn">Browse Services</a>
       </div>
     </div>
   </div>
@@ -332,6 +332,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     </div>
     <div class="foot-col">
       <h5>Customer Service</h5>
+      <a href="blog">Blog</a>
       <a href="help">Help &amp; FAQ</a>
       <a href="contact">Contact Us</a>
       <a href="advertise">Advertise</a>
@@ -367,6 +368,24 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 <script src="js/session.js"></script>
 <script src="js/nav-dropdowns.js"></script>
 <script>
+(function(){
+  const cityQ=new URLSearchParams(location.search).get('city')||'';
+  if(!cityQ)return;
+  const pageTitle='Service Providers in '+cityQ+', Zimbabwe | PaMarket';
+  const pageDesc='Find trusted plumbers, electricians, cleaners and more service providers in '+cityQ+', Zimbabwe on PaMarket. Compare, contact, and hire directly, free of charge.';
+  document.title=pageTitle;
+  document.getElementById('pageTitle').textContent=pageTitle;
+  document.getElementById('metaDesc').setAttribute('content',pageDesc);
+  document.getElementById('ogTitle').setAttribute('content',pageTitle);
+  document.getElementById('ogDesc').setAttribute('content',pageDesc);
+  document.getElementById('twTitle').setAttribute('content',pageTitle);
+  document.getElementById('twDesc').setAttribute('content',pageDesc);
+  document.getElementById('heroTag').textContent=cityQ;
+  document.getElementById('heroTitle').textContent='Find trusted service providers in '+cityQ+'.';
+  document.getElementById('heroSub').textContent='From plumbers to photographers, PaMarket connects you with skilled people in '+cityQ+'. Compare, contact, and hire directly.';
+  const btn=document.getElementById('browseServicesBtn');
+  if(btn)btn.href='browse?cat=services&city='+encodeURIComponent(cityQ);
+})();
 function doSearch(){
   const q=document.getElementById('hQ')?.value?.trim();
   const cat=document.getElementById('hCat')?.value;

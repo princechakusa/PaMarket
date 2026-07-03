@@ -90,11 +90,14 @@
   function fetchRentalListings(opts) {
     opts = opts || {};
     var qp = ['status=eq.active', 'admin_status=eq.approved', 'deleted_at=is.null'];
+    var locationEmbed = opts.city ? 'rental_locations!inner(city,province)' : 'rental_locations(city,province)';
+    if (opts.city) qp.push('rental_locations.city=ilike.*' + esc(opts.city) + '*');
     qp.push(
       'select=id,model,year,daily_rate,weekly_rate,monthly_rate,pickup_suburb,company_id,is_available,' +
         'rental_brands(label),rental_categories(label),' +
         'rental_vehicle_media(url,is_cover,sort_order),' +
-        'rental_companies(trading_name)'
+        'rental_companies(trading_name),' +
+        locationEmbed
     );
     qp.push('order=' + (opts.order || 'created_at.desc'));
     qp.push('limit=' + (opts.limit || 12));
@@ -120,6 +123,8 @@
     opts = opts || {};
     var qp = ['status=eq.active', 'category=eq.jobs'];
     if (opts.q) qp.push('title=ilike.*' + esc(opts.q) + '*');
+    if (opts.city) qp.push('city=ilike.*' + esc(opts.city) + '*');
+    if (opts.province) qp.push('province=ilike.*' + esc(opts.province) + '*');
     qp.push('select=id,title,price,currency,city,province,attributes,created_at,seller_name');
     qp.push('order=' + (opts.order || 'created_at.desc'));
     qp.push('limit=' + (opts.limit || 12));

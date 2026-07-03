@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Post a free listing on PaMarket. Sell property, vehicles, electronics, furniture, services and more across Zimbabwe. No fees, no commission.">
-<title>Post a Free Ad — PaMarket Zimbabwe</title>
-<link rel="canonical" href="https://pamarketzw.com/post-ad">
+<meta id="metaDesc" name="description" content="Post a free listing on PaMarket. Sell property, vehicles, electronics, furniture, services and more across Zimbabwe. No fees, no commission.">
+<title id="pageTitle">Post a Free Ad — PaMarket Zimbabwe</title>
+<link id="canonicalLink" rel="canonical" href="https://pamarketzw.com/post-ad">
 <link rel="icon" href="img/icon-192.png" type="image/png">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="img/icon-192.png">
 <link rel="manifest" href="/manifest.json">
-<meta property="og:title" content="Post a Free Ad — PaMarket">
-<meta property="og:description" content="Sell anything. Reach all of Zimbabwe. No fees, no commissions.">
+<meta id="ogTitle" property="og:title" content="Post a Free Ad — PaMarket">
+<meta id="ogDesc" property="og:description" content="Sell anything. Reach all of Zimbabwe. No fees, no commissions.">
 <meta property="og:image" content="https://pamarketzw.com/img/icon-512.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Post a Free Ad — PaMarket">
-<meta name="twitter:description" content="Sell anything. Reach all of Zimbabwe. No fees, no commissions.">
+<meta id="twTitle" name="twitter:title" content="Post a Free Ad — PaMarket">
+<meta id="twDesc" name="twitter:description" content="Sell anything. Reach all of Zimbabwe. No fees, no commissions.">
 <meta name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
-<meta property="og:url" content="https://pamarketzw.com/post-ad">
+<meta id="ogUrl" property="og:url" content="https://pamarketzw.com/post-ad">
 <meta name="robots" content="index, follow">
 <script type="application/ld+json">
 {
@@ -356,6 +356,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     </div>
     <div class="foot-col">
       <h5>Customer Service</h5>
+      <a href="blog">Blog</a>
       <a href="help">Help &amp; FAQ</a>
       <a href="contact">Contact Us</a>
       <a href="advertise">Advertise</a>
@@ -391,19 +392,58 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 <script src="js/session.js"></script>
 <script src="js/nav-dropdowns.js"></script>
 <script>
-if(new URLSearchParams(location.search).get('type')==='job'){
-  document.title='Post a Job — PaMarket Zimbabwe';
-  document.getElementById('paTag').textContent='Post a Job';
-  document.getElementById('paTitle').textContent='Hire faster. Reach candidates across Zimbabwe.';
-  document.getElementById('paSub').textContent='Your job posting goes live after a quick review — usually within 24 hours. No fees, no commissions.';
-  document.getElementById('paCta').textContent='Post Your Job — Get the App';
-  document.getElementById('paStep1Title').textContent='Choose "Jobs" as your category';
-  document.getElementById('paStep1Desc').textContent='Select Jobs from the category list, then choose the industry, job type (full-time, part-time, contract) and province.';
-  document.getElementById('paStep2Title').textContent='Write the job listing';
-  document.getElementById('paStep2Desc').textContent='Add a clear job title, responsibilities, requirements and salary range in USD. Detailed listings attract better candidates.';
-  document.getElementById('paStep3Title').textContent='Submit for review';
-  document.getElementById('paStep3Desc').textContent='All job postings are reviewed by our team before going live — this keeps fake or scam listings off PaMarket. Charging job seekers any fee is strictly prohibited.';
-}
+(function(){
+  const type=new URLSearchParams(location.search).get('type');
+  const modes={
+    job:{
+      title:'Post a Job — PaMarket Zimbabwe',
+      desc:'Post a free job vacancy on PaMarket and reach job seekers across Zimbabwe. No fees for employers, no charge for candidates to apply.',
+      tag:'Post a Job',
+      h1:'Hire faster. Reach candidates across Zimbabwe.',
+      sub:'Your job posting goes live after a quick review — usually within 24 hours. No fees, no commissions.',
+      cta:'Post Your Job — Get the App',
+      step1Title:'Choose "Jobs" as your category',
+      step1Desc:'Select Jobs from the category list, then choose the industry, job type (full-time, part-time, contract) and province.',
+      step2Title:'Write the job listing',
+      step2Desc:'Add a clear job title, responsibilities, requirements and salary range in USD. Detailed listings attract better candidates.',
+      step3Title:'Submit for review',
+      step3Desc:'All job postings are reviewed by our team before going live — this keeps fake or scam listings off PaMarket. Charging job seekers any fee is strictly prohibited.'
+    },
+    vehicles:{
+      title:'Post a Vehicle for Sale — PaMarket Zimbabwe',
+      desc:'Sell your car, bakkie, SUV or motorbike for free on PaMarket. Reach buyers across Zimbabwe with no listing fees or commission.',
+      tag:'Post a Vehicle',
+      h1:'Sell your vehicle. Reach buyers across Zimbabwe.',
+      sub:'Your listing goes live in under 2 minutes. No fees, no commissions, no catch.',
+      cta:'Post Your Vehicle — Get the App',
+      step1Title:'Choose "Vehicles" as your category',
+      step1Desc:'Select Vehicles from the category list, then choose the make, model, year and condition.',
+      step2Title:'Write your listing',
+      step2Desc:'Add mileage, condition details, price in USD, and your province and suburb. Honest, detailed listings sell faster.',
+      step3Title:'Upload photos',
+      step3Desc:'Add up to 8 real photos from multiple angles, including the interior and any damage. Listings with clear photos get significantly more enquiries.'
+    }
+  };
+  const m=modes[type];
+  if(!m)return;
+  document.title=m.title;
+  document.getElementById('pageTitle')&&(document.getElementById('pageTitle').textContent=m.title);
+  document.getElementById('metaDesc')&&document.getElementById('metaDesc').setAttribute('content',m.desc);
+  document.getElementById('ogTitle')&&document.getElementById('ogTitle').setAttribute('content',m.title);
+  document.getElementById('ogDesc')&&document.getElementById('ogDesc').setAttribute('content',m.desc);
+  document.getElementById('twTitle')&&document.getElementById('twTitle').setAttribute('content',m.title);
+  document.getElementById('twDesc')&&document.getElementById('twDesc').setAttribute('content',m.desc);
+  document.getElementById('paTag').textContent=m.tag;
+  document.getElementById('paTitle').textContent=m.h1;
+  document.getElementById('paSub').textContent=m.sub;
+  document.getElementById('paCta').textContent=m.cta;
+  document.getElementById('paStep1Title').textContent=m.step1Title;
+  document.getElementById('paStep1Desc').textContent=m.step1Desc;
+  document.getElementById('paStep2Title').textContent=m.step2Title;
+  document.getElementById('paStep2Desc').textContent=m.step2Desc;
+  document.getElementById('paStep3Title').textContent=m.step3Title;
+  document.getElementById('paStep3Desc').textContent=m.step3Desc;
+})();
 function doSearch(){
   const q=document.getElementById('hQ')?.value?.trim();
   const cat=document.getElementById('hCat')?.value;

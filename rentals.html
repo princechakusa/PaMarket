@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Rent a vehicle in Zimbabwe. Browse verified rental companies, daily rates, and available cars, bakkies and SUVs on PaMarket.">
-<title>Vehicle Rental — PaMarket Zimbabwe</title>
-<link rel="canonical" href="https://pamarketzw.com/rentals">
+<meta id="metaDesc" name="description" content="Rent a vehicle in Zimbabwe. Browse verified rental companies, daily rates, and available cars, bakkies and SUVs on PaMarket.">
+<title id="pageTitle">Vehicle Rental — PaMarket Zimbabwe</title>
+<link id="canonicalLink" rel="canonical" href="https://pamarketzw.com/rentals">
 <link rel="icon" href="img/icon-192.png" type="image/png">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="img/icon-192.png">
 <link rel="manifest" href="/manifest.json">
-<meta property="og:title" content="Vehicle Rental — PaMarket Zimbabwe">
-<meta property="og:description" content="Rent a vehicle in Zimbabwe from verified rental companies. Daily, weekly and monthly rates.">
+<meta id="ogTitle" property="og:title" content="Vehicle Rental — PaMarket Zimbabwe">
+<meta id="ogDesc" property="og:description" content="Rent a vehicle in Zimbabwe from verified rental companies. Daily, weekly and monthly rates.">
 <meta property="og:image" content="https://pamarketzw.com/img/icon-512.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Vehicle Rental — PaMarket Zimbabwe">
-<meta name="twitter:description" content="Rent a vehicle in Zimbabwe from verified rental companies. Daily, weekly and monthly rates.">
+<meta id="twTitle" name="twitter:title" content="Vehicle Rental — PaMarket Zimbabwe">
+<meta id="twDesc" name="twitter:description" content="Rent a vehicle in Zimbabwe from verified rental companies. Daily, weekly and monthly rates.">
 <meta name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
-<meta property="og:url" content="https://pamarketzw.com/rentals">
+<meta id="ogUrl" property="og:url" content="https://pamarketzw.com/rentals">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="en_ZW">
 <meta name="robots" content="index, follow">
@@ -239,16 +239,17 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   </div>
 </nav>
 
-<div class="crumb"><a href="/">Home</a> / <span>Vehicle Rental</span></div>
+<div class="crumb" id="crumb"><a href="/">Home</a> / <span id="crumbCur">Vehicle Rental</span></div>
 <section class="rt-hero">
   <div class="rt-hero-w">
-    <span class="p-tag">Vehicle Rental</span>
-    <h1>Rent a car in Zimbabwe</h1>
-    <p>Browse verified rental companies with daily, weekly and monthly rates. Cars, bakkies, SUVs and more.</p>
+    <span class="p-tag" id="heroTag">Vehicle Rental</span>
+    <h1 id="heroTitle">Rent a car in Zimbabwe</h1>
+    <p id="heroSub">Browse verified rental companies with daily, weekly and monthly rates. Cars, bakkies, SUVs and more.</p>
   </div>
 </section>
 
 <div class="rt-wrap">
+  <p id="rentalsIntro" style="max-width:820px;color:var(--sub);font-size:14px;line-height:1.8;margin-bottom:24px">PaMarket Vehicle Rental connects you directly with verified rental companies across Zimbabwe, offering cars, bakkies, SUVs and more on daily, weekly or monthly terms. Each listing shows real-time availability, transparent pricing including any deposit required, and the rental company's actual location, so you know exactly what to expect before you book. Rental companies are verified before their listings go live, and all bookings and payments are arranged directly with the company — PaMarket does not charge renters any booking fee. Browse by category and location to find the right vehicle for your trip, whether that is a short-term rental in Harare or a longer booking in Bulawayo.</p>
   <div class="rt-head">
     <div class="rt-count" id="rtCount">Loading rental vehicles…</div>
   </div>
@@ -297,6 +298,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     </div>
     <div class="foot-col">
       <h5>Customer Service</h5>
+      <a href="blog">Blog</a>
       <a href="help">Help &amp; FAQ</a>
       <a href="contact">Contact Us</a>
       <a href="advertise">Advertise</a>
@@ -341,7 +343,7 @@ function rcard(v){
   const cover=media.find(m=>m.is_cover)||media[0];
   const catLabel=(v.rental_categories&&v.rental_categories.label)||'';
   const company=(v.rental_companies&&v.rental_companies.trading_name)||'';
-  const loc=v.pickup_suburb||'';
+  const loc=[v.pickup_suburb,v.rental_locations&&v.rental_locations.city].filter(Boolean).join(', ');
   const img=cover
     ?`<img src="${cover.url}" alt="${title.replace(/"/g,'&quot;')}" loading="lazy">`
     :`<div class="rcard-img-ph"><svg width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 17H5v-5l2-6h10l2 6v5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg></div>`;
@@ -361,12 +363,30 @@ function rcard(v){
   </a>`;
 }
 
+const rtCityQ=new URLSearchParams(location.search).get('city')||'';
+if(rtCityQ){
+  const pageTitle='Car Rental in '+rtCityQ+', Zimbabwe | PaMarket';
+  const pageDesc='Rent a vehicle in '+rtCityQ+', Zimbabwe from verified rental companies on PaMarket. Daily, weekly and monthly rates.';
+  document.title=pageTitle;
+  document.getElementById('pageTitle').textContent=pageTitle;
+  document.getElementById('metaDesc').setAttribute('content',pageDesc);
+  document.getElementById('ogTitle').setAttribute('content',pageTitle);
+  document.getElementById('ogDesc').setAttribute('content',pageDesc);
+  document.getElementById('twTitle').setAttribute('content',pageTitle);
+  document.getElementById('twDesc').setAttribute('content',pageDesc);
+  document.getElementById('heroTag').textContent=rtCityQ;
+  document.getElementById('heroTitle').textContent='Rent a car in '+rtCityQ;
+  document.getElementById('heroSub').textContent='Browse verified rental companies in '+rtCityQ+' with daily, weekly and monthly rates.';
+  document.getElementById('crumbCur').textContent='Vehicle Rental in '+rtCityQ;
+  document.getElementById('rentalsIntro').textContent='PaMarket Vehicle Rental connects you directly with verified rental companies in '+rtCityQ+', offering cars, bakkies, SUVs and more on daily, weekly or monthly terms. Each listing shows real-time availability and transparent pricing, including any deposit required, so you know exactly what to expect before you book. Rental companies are verified before their listings go live, and all bookings and payments are arranged directly with the company — PaMarket does not charge renters any booking fee. If you cannot find the right vehicle in '+rtCityQ+' right now, try browsing rentals across all of Zimbabwe instead.';
+}
+
 document.getElementById('rtGrid').innerHTML=skeletons(8);
-PM.fetchRentalListings({limit:24}).then(rows=>{
+PM.fetchRentalListings({limit:24,city:rtCityQ||undefined}).then(rows=>{
   const grid=document.getElementById('rtGrid');
   const count=document.getElementById('rtCount');
   if(!rows.length){
-    grid.innerHTML='<div class="empty-state">No rental vehicles listed yet. Check back soon, or <a href="browse?cat=vehicles">browse vehicles for sale</a> instead.</div>';
+    grid.innerHTML='<div class="empty-state">No rental vehicles listed'+(rtCityQ?' in '+rtCityQ:'')+' yet. Check back soon, or <a href="browse?cat=vehicles">browse vehicles for sale</a> instead.</div>';
     count.textContent='';
     return;
   }

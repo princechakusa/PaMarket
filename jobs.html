@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Hire skilled talent or find work across Zimbabwe. Post jobs and browse live vacancies on PaMarket Hire Talent — free for employers and job seekers.">
-<title>Hire Talent — PaMarket Zimbabwe</title>
-<link rel="canonical" href="https://pamarketzw.com/jobs">
+<meta id="metaDesc" name="description" content="Hire skilled talent or find work across Zimbabwe. Post jobs and browse live vacancies on PaMarket Hire Talent — free for employers and job seekers.">
+<title id="pageTitle">Hire Talent — PaMarket Zimbabwe</title>
+<link id="canonicalLink" rel="canonical" href="https://pamarketzw.com/jobs">
 <link rel="icon" href="img/icon-192.png" type="image/png">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="img/icon-192.png">
 <link rel="manifest" href="/manifest.json">
-<meta property="og:title" content="Hire Talent — PaMarket Zimbabwe">
-<meta property="og:description" content="Post jobs, browse live vacancies, and connect directly. Free for employers and job seekers.">
+<meta id="ogTitle" property="og:title" content="Hire Talent — PaMarket Zimbabwe">
+<meta id="ogDesc" property="og:description" content="Post jobs, browse live vacancies, and connect directly. Free for employers and job seekers.">
 <meta property="og:image" content="https://pamarketzw.com/img/icon-512.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Hire Talent — PaMarket Zimbabwe">
-<meta name="twitter:description" content="Post jobs, browse live vacancies, and connect directly. Free for employers and job seekers.">
+<meta id="twTitle" name="twitter:title" content="Hire Talent — PaMarket Zimbabwe">
+<meta id="twDesc" name="twitter:description" content="Post jobs, browse live vacancies, and connect directly. Free for employers and job seekers.">
 <meta name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
-<meta property="og:url" content="https://pamarketzw.com/jobs">
+<meta id="ogUrl" property="og:url" content="https://pamarketzw.com/jobs">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="en_ZW">
 <meta name="robots" content="index, follow">
@@ -264,16 +264,21 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   </div>
 </nav>
 
-<div class="crumb"><a href="/">Home</a> / <span>Jobs</span></div>
+<div class="crumb" id="crumb"><a href="/">Home</a> / <span id="crumbCur">Jobs</span></div>
 <section class="j-hero">
   <div class="j-hero-w">
-    <span class="p-tag">Hire Talent</span>
-    <h1>Find the right people across Zimbabwe.</h1>
-    <p>Post jobs, browse live vacancies, and connect directly. Free for employers and job seekers.</p>
+    <span class="p-tag" id="heroTag">Hire Talent</span>
+    <h1 id="heroTitle">Find the right people across Zimbabwe.</h1>
+    <p id="heroSub">Post jobs, browse live vacancies, and connect directly. Free for employers and job seekers.</p>
     <div class="j-hero-btns">
       <a href="post-ad?type=job" class="btn-gold">Post a Job Free</a>
       <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener" class="btn-outline-w">Get the App</a>
     </div>
+  </div>
+</section>
+<section class="band" style="padding:32px 0 0" id="jobsIntroSection">
+  <div class="w">
+    <p id="jobsIntro" style="max-width:760px;color:var(--sub);font-size:14.5px;line-height:1.8">PaMarket lists live job vacancies from real employers across Zimbabwe, covering all ten provinces from Harare and Bulawayo to smaller towns like Chinhoyi and Kwekwe. Every vacancy is reviewed by our team before it goes live, typically within 24 hours, to keep fake or scam listings off the platform. Employers can post a vacancy for free, with no charge to advertise a role or contact candidates who apply. Job seekers browse and apply at no cost too — charging a candidate any fee to apply, interview, or be placed is strictly against PaMarket's rules and will result in the listing being removed. Whether you are hiring for a single role or looking for your next job, PaMarket Hire Talent connects you directly, without a recruitment agency in between.</p>
   </div>
 </section>
 
@@ -374,6 +379,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     </div>
     <div class="foot-col">
       <h5>Customer Service</h5>
+      <a href="blog">Blog</a>
       <a href="help">Help &amp; FAQ</a>
       <a href="contact">Contact Us</a>
       <a href="advertise">Advertise</a>
@@ -437,13 +443,32 @@ function jobCard(job){
 
 const params=new URLSearchParams(location.search);
 const searchQ=params.get('q')||'';
+const cityQ=params.get('city')||'';
 if(searchQ)document.getElementById('hQ').value=searchQ;
 
+if(cityQ){
+  const pageTitle='Jobs in '+cityQ+', Zimbabwe | PaMarket';
+  const pageDesc='Browse live job vacancies in '+cityQ+', Zimbabwe on PaMarket. Free for employers and job seekers — no fees to post or apply.';
+  const canonicalUrl='https://pamarketzw.com/jobs';
+  document.title=pageTitle;
+  document.getElementById('pageTitle').textContent=pageTitle;
+  document.getElementById('metaDesc').setAttribute('content',pageDesc);
+  document.getElementById('ogTitle').setAttribute('content',pageTitle);
+  document.getElementById('ogDesc').setAttribute('content',pageDesc);
+  document.getElementById('twTitle').setAttribute('content',pageTitle);
+  document.getElementById('twDesc').setAttribute('content',pageDesc);
+  document.getElementById('heroTag').textContent=cityQ;
+  document.getElementById('heroTitle').textContent='Jobs in '+cityQ+', Zimbabwe';
+  document.getElementById('heroSub').textContent='Live vacancies from real employers in '+cityQ+'. Free for employers and job seekers.';
+  document.getElementById('jobsIntro').textContent='PaMarket lists live job vacancies in '+cityQ+' from real employers, updated as new roles are posted throughout the day. Every vacancy is reviewed by our team before it goes live, typically within 24 hours, to keep fake or scam listings off the platform. Employers in '+cityQ+' can post a vacancy for free, with no charge to advertise a role or contact candidates who apply. Job seekers browse and apply at no cost too — charging a candidate any fee to apply, interview, or be placed is strictly against PaMarket\'s rules. If you cannot find the right role in '+cityQ+' right now, try browsing jobs across all of Zimbabwe, or check back soon as new vacancies are added regularly.';
+  document.getElementById('crumbCur').textContent='Jobs in '+cityQ;
+}
+
 document.getElementById('jobCardsGrid').innerHTML=skeletons(6);
-PM.fetchJobs({limit:12,q:searchQ||undefined}).then(jobs=>{
+PM.fetchJobs({limit:12,q:searchQ||undefined,city:cityQ||undefined}).then(jobs=>{
   const grid=document.getElementById('jobCardsGrid');
   if(!jobs||!jobs.length){
-    grid.innerHTML='<div class="empty-jobs">No jobs posted yet'+(searchQ?' for "'+searchQ+'"':'')+'. Check back soon or <a href="jobs" style="color:var(--navy);font-weight:700">clear your search</a>.</div>';
+    grid.innerHTML='<div class="empty-jobs">No jobs posted yet'+(searchQ?' for "'+searchQ+'"':'')+(cityQ?' in '+cityQ:'')+'. Check back soon or <a href="jobs" style="color:var(--navy);font-weight:700">clear your search</a>.</div>';
     document.getElementById('jobCountNote').textContent='';
     return;
   }
