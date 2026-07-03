@@ -2732,6 +2732,15 @@ var _raListingsFilter = 'all';
 var _raReportsFilter  = 'open';
 var _raLookupsTab     = 'categories';
 var _raLoadingApprovals = false;
+// Module 1/4: search, advanced filters, bulk selection state
+var _raListingSearch = '';
+var _raListingCity   = '';
+var _raListingCompany= '';
+var _raListingHealth = '';        // '', 'no_images', 'low_engagement'
+var _raSelected      = {};        // { listingId: true } for bulk actions
+var _raGlobalSearch  = '';        // cross-entity search term (Module 1)
+var _raAuditSearch   = '';        // Module 9 audit trail search
+var _raAuditAction   = '';        // Module 9 action-type filter
 
 function raPill(s) {
   var map = {
@@ -2861,37 +2870,159 @@ function renderRentalCompanies() {
 }
 
 // ── Render: All Listings ──────────────────────────────────
+// Listing health flags (Module 4): returns array of {label,color}
+function raListingHealth(v) {
+  var flags = [];
+  if (!v._hasMedia) flags.push({label:'No images', color:'#DC2626', bg:'#FEE2E2', key:'no_images'});
+  if ((v.view_count||0) < 5 && v.admin_status==='approved') flags.push({label:'Low engagement', color:'#B45309', bg:'#FEF3C7', key:'low_engagement'});
+  if (v.is_available===false) flags.push({label:'Unavailable', color:'#6B7280', bg:'#F3F4F6', key:'unavailable'});
+  return flags;
+}
+
 function renderRentalListings() {
   if (!RA_DATA.allListings.length) { raLoadAllListings(); }
   var listings = RA_DATA.allListings;
   var filter   = _raListingsFilter;
-  var filtered = filter === 'all' ? listings : listings.filter(function(l){return l.admin_status===filter||l.status===filter;});
+
+  // Advanced filters (Module 4) + search (Module 1), all client-side over loaded rows.
+  var q = (_raListingSearch||'').trim().toLowerCase();
+  var filtered = listings.filter(function(l){
+    if (filter !== 'all' && !(l.admin_status===filter||l.status===filter)) return false;
+    if (_raListingCity    && (l.city||'') !== _raListingCity) return false;
+    if (_raListingCompany && (l.company_name||'') !== _raListingCompany) return false;
+    if (_raListingHealth) { if (!raListingHealth(l).some(function(f){return f.key===_raListingHealth;})) return false; }
+    if (q) {
+      var hay = ((l.brand_label||'')+' '+(l.model||'')+' '+(l.year||'')+' '+(l.company_name||'')+' '+(l.city||'')).toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
   var pending  = listings.filter(function(l){return l.admin_status==='pending_review';}).length;
   var rejected = listings.filter(function(l){return l.admin_status==='rejected';}).length;
 
   function fBtn(val, label, count) {
     return '<button onclick="_raListingsFilter=\''+val+'\';renderRentalListings()" class="filter-btn'+(_raListingsFilter===val?' on':'')+'">'+label+(count?' ('+count+')':'')+'</button>';
   }
+  // Distinct cities/companies from loaded rows for the dropdown filters.
+  var cities    = [...new Set(listings.map(function(l){return l.city;}).filter(Boolean))].sort();
+  var companies = [...new Set(listings.map(function(l){return l.company_name;}).filter(Boolean))].sort();
+  function opt(v,sel){return '<option value="'+esc(v)+'"'+(sel===v?' selected':'')+'>'+esc(v)+'</option>';}
+
+  var selCount = Object.keys(_raSelected).filter(function(k){return _raSelected[k];}).length;
+
   var html = '<div class="sec-head"><div class="sec-title">All Rental Listings</div><div class="sec-actions">'
     + fBtn('all','All',listings.length)+fBtn('pending_review','Pending',pending)+fBtn('approved','Approved',null)+fBtn('rejected','Rejected',rejected)+fBtn('paused','Paused',null)
-    + '<button class="btn-refresh" onclick="RA_DATA.allListings=[];raLoadAllListings()">Refresh</button></div></div>';
-  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Vehicle</th><th>Company</th><th>Rate</th><th>Status</th><th>Views</th><th>Actions</th></tr></thead><tbody>';
-  if (!filtered.length) html += '<tr><td colspan="6"><div class="empty-msg">No listings in this filter.</div></td></tr>';
+    + '<button class="btn-refresh" onclick="RA_DATA.allListings=[];_raSelected={};raLoadAllListings()">Refresh</button></div></div>';
+
+  // Search + advanced filter bar (Modules 1 & 4)
+  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center">'
+    + '<input id="raListingSearch" class="search-input" placeholder="Search vehicle, company, city…" value="'+esc(_raListingSearch)+'" oninput="_raListingSearch=this.value;renderRentalListings();var el=document.getElementById(\'raListingSearch\');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}" style="min-width:220px;flex:1">'
+    + '<select onchange="_raListingCity=this.value;renderRentalListings()"><option value="">All cities</option>'+cities.map(function(c){return opt(c,_raListingCity);}).join('')+'</select>'
+    + '<select onchange="_raListingCompany=this.value;renderRentalListings()"><option value="">All companies</option>'+companies.map(function(c){return opt(c,_raListingCompany);}).join('')+'</select>'
+    + '<select onchange="_raListingHealth=this.value;renderRentalListings()"><option value="">All health</option>'
+      + '<option value="no_images"'+(_raListingHealth==='no_images'?' selected':'')+'>Missing images</option>'
+      + '<option value="low_engagement"'+(_raListingHealth==='low_engagement'?' selected':'')+'>Low engagement</option>'
+      + '<option value="unavailable"'+(_raListingHealth==='unavailable'?' selected':'')+'>Unavailable</option></select>'
+    + '</div>';
+
+  // Bulk action bar (Module 4) — appears when rows are selected.
+  if (selCount) {
+    html += '<div style="display:flex;gap:8px;align-items:center;background:#EEF2FB;border:1px solid #C7D8F5;border-radius:10px;padding:10px 14px;margin-bottom:12px">'
+      + '<span style="font-weight:700;color:#1A3A8F">'+selCount+' selected</span>'
+      + '<button class="ab ab-approve" onclick="raBulkAction(\'approve\')">Approve</button>'
+      + '<button class="ab ab-reject" onclick="raBulkAction(\'reject\')">Reject</button>'
+      + '<button class="ab ab-view" onclick="raBulkAction(\'feature\')">Feature</button>'
+      + '<button class="ab ab-reject" onclick="raBulkAction(\'unavailable\')">Mark Unavailable</button>'
+      + '<button class="filter-btn" onclick="_raSelected={};renderRentalListings()">Clear</button>'
+      + '</div>';
+  }
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th style="width:28px"><input type="checkbox" onchange="raSelectAllVisible(this.checked)"></th><th>Vehicle</th><th>Company</th><th>Rate</th><th>Status</th><th>Health</th><th>Views</th><th>Inq.</th><th>Actions</th></tr></thead><tbody>';
+  if (!filtered.length) html += '<tr><td colspan="9"><div class="empty-msg">No listings match these filters.</div></td></tr>';
   filtered.forEach(function(v) {
+    var health = raListingHealth(v);
+    var healthHtml = health.length
+      ? health.map(function(f){return '<span style="font-size:10px;font-weight:700;color:'+f.color+';background:'+f.bg+';padding:2px 6px;border-radius:5px;white-space:nowrap">'+f.label+'</span>';}).join(' ')
+      : '<span style="font-size:11px;color:#16A34A">OK</span>';
     html += '<tr>'
+      + '<td><input type="checkbox" '+(_raSelected[v.id]?'checked':'')+' onchange="_raSelected[\''+esc(v.id)+'\']=this.checked;raRefreshBulkBar()"></td>'
       + '<td style="font-weight:600">'+esc((v.brand_label||'')+' '+v.model+' '+(v.year||''))+'</td>'
       + '<td style="color:var(--sub);font-size:12px">'+esc(v.company_name||'—')+'</td>'
       + '<td style="font-weight:700">$'+fmt(v.daily_rate)+'/day</td>'
       + '<td>'+raPill(v.admin_status||'pending_review')+'</td>'
+      + '<td>'+healthHtml+'</td>'
       + '<td style="color:var(--sub)">'+fmt(v.view_count||0)+'</td>'
+      + '<td style="color:var(--sub)">'+fmt(v.inquiry_count||0)+'</td>'
       + '<td><div style="display:flex;gap:4px">'
       + (v.admin_status!=='approved' ? '<button class="ab ab-approve" onclick="raApproveListing(\''+esc(v.id)+'\')">Approve</button>' : '')
       + (v.admin_status!=='rejected' ? '<button class="ab ab-reject" onclick="raModerateListing(\''+esc(v.id)+'\',\'rejected\')">Reject</button>' : '')
       + '</div></td></tr>';
   });
   html += '</tbody></table></div>';
+  html += '<div style="font-size:11.5px;color:var(--sub);padding:8px 2px">Showing '+filtered.length+' of '+listings.length+' loaded. <button class="filter-btn" onclick="raLoadAllListings()">Load more</button></div>';
   if (!RA_DATA.allListings.length) html += '<div class="loading-msg">Loading…</div>';
   document.getElementById('mainContent').innerHTML = html;
+}
+
+// Bulk selection helpers (Module 4)
+function raSelectAllVisible(checked) {
+  var listings = RA_DATA.allListings;
+  var q = (_raListingSearch||'').trim().toLowerCase();
+  listings.forEach(function(l){
+    if (_raListingsFilter !== 'all' && !(l.admin_status===_raListingsFilter||l.status===_raListingsFilter)) return;
+    if (_raListingCity && (l.city||'')!==_raListingCity) return;
+    if (_raListingCompany && (l.company_name||'')!==_raListingCompany) return;
+    if (_raListingHealth && !raListingHealth(l).some(function(f){return f.key===_raListingHealth;})) return;
+    if (q) { var hay=((l.brand_label||'')+' '+(l.model||'')+' '+(l.company_name||'')+' '+(l.city||'')).toLowerCase(); if (hay.indexOf(q)===-1) return; }
+    _raSelected[l.id] = checked;
+  });
+  renderRentalListings();
+}
+function raRefreshBulkBar() { renderRentalListings(); }
+
+// Bulk action over selected listings (Module 4). Each item goes through the SAME
+// RLS-guarded update the single-item actions use, so server authorization is
+// unchanged — a non-admin's updates match 0 rows and are counted as failures.
+async function raBulkAction(kind) {
+  var ids = Object.keys(_raSelected).filter(function(k){return _raSelected[k];});
+  if (!ids.length) { toast('Nothing selected','error'); return; }
+  var labels = {approve:'Approve', reject:'Reject', feature:'Feature', unavailable:'Mark Unavailable'};
+  var reason = '';
+  if (kind === 'reject') {
+    reason = await confirm2('Bulk Reject', 'Reject '+ids.length+' listing(s). Reason (optional):', 'Reject', 'red', true, 'e.g. Prohibited content');
+    if (reason === null) return;
+  } else {
+    var ok = await confirm2('Bulk '+labels[kind], labels[kind]+' '+ids.length+' listing(s)?', labels[kind], kind==='approve'?'green':'red');
+    if (!ok) return;
+  }
+  var done = 0, failed = 0;
+  for (var i=0;i<ids.length;i++) {
+    var id = ids[i];
+    try {
+      var r;
+      if (kind==='approve') {
+        r = await sb.from('rental_vehicle_listings').update({admin_status:'approved',status:'active'}).eq('id',id).select('id');
+      } else if (kind==='reject') {
+        r = await sb.from('rental_vehicle_listings').update({admin_status:'rejected',status:'paused'}).eq('id',id).select('id');
+      } else if (kind==='unavailable') {
+        r = await sb.from('rental_vehicle_listings').update({is_available:false}).eq('id',id).select('id');
+      } else if (kind==='feature') {
+        var lst = await sb.from('rental_vehicle_listings').select('company_id').eq('id',id).single();
+        if (lst.error || !lst.data) { failed++; continue; }
+        var now = new Date(); var end = new Date(now.getTime()+7*864e5);
+        r = await sb.from('rental_featured_listings').insert({listing_id:id,company_id:lst.data.company_id,starts_at:now.toISOString(),ends_at:end.toISOString(),priority:10,is_active:true}).select('id');
+      }
+      if (r && !r.error && r.data && r.data.length) {
+        done++;
+        try { await sb.from('rental_audit_logs').insert({action:'bulk_'+kind+'_listing',target_table:'rental_vehicle_listings',target_id:id}); } catch(e){}
+      } else { failed++; }
+    } catch(e) { failed++; }
+  }
+  _raSelected = {};
+  RA_DATA.allListings = []; RA_DATA.summary = null; RA_DATA.featured = [];
+  toast(done+' done'+(failed?', '+failed+' failed (RLS/permission?)':''), failed?'error':'info');
+  updateBadges();
+  raLoadAllListings();
 }
 
 // ── Render: Reports ───────────────────────────────────────
@@ -3008,10 +3139,27 @@ function renderRentalAnalytics() {
 function renderRentalAuditLogs() {
   if (!RA_DATA.auditLogs.length) { raLoadAuditLogs(); }
   var logs = RA_DATA.auditLogs;
+  // Module 9: searchable audit trail (action / table / target / actor).
+  var q = (_raAuditSearch||'').trim().toLowerCase();
+  var actionFilter = _raAuditAction || '';
+  var actions = [...new Set(logs.map(function(l){return l.action;}).filter(Boolean))].sort();
+  var filtered = logs.filter(function(l){
+    if (actionFilter && l.action !== actionFilter) return false;
+    if (q) {
+      var hay = ((l.action||'')+' '+(l.target_table||'')+' '+(l.target_id||'')+' '+(l.actor_id||'')).toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
   var html = '<div class="sec-head"><div class="sec-title">Rental Audit Logs</div><button class="btn-refresh" onclick="RA_DATA.auditLogs=[];raLoadAuditLogs()">Refresh</button></div>';
+  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">'
+    + '<input id="raAuditSearch" class="search-input" placeholder="Search action, target, actor…" value="'+esc(_raAuditSearch)+'" oninput="_raAuditSearch=this.value;renderRentalAuditLogs();var el=document.getElementById(\'raAuditSearch\');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}" style="min-width:220px;flex:1">'
+    + '<select onchange="_raAuditAction=this.value;renderRentalAuditLogs()"><option value="">All actions</option>'+actions.map(function(a){return '<option value="'+esc(a)+'"'+(actionFilter===a?' selected':'')+'>'+esc(a)+'</option>';}).join('')+'</select>'
+    + '</div>';
   html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Action</th><th>Table</th><th>Target</th><th>Actor</th><th>When</th></tr></thead><tbody>';
   if (!logs.length) html += '<tr><td colspan="5"><div class="loading-msg">Loading…</div></td></tr>';
-  logs.forEach(function(l) {
+  else if (!filtered.length) html += '<tr><td colspan="5"><div class="empty-msg">No log entries match.</div></td></tr>';
+  filtered.forEach(function(l) {
     html += '<tr>'
       + '<td style="font-weight:700">'+esc(l.action||'')+'</td>'
       + '<td style="color:var(--sub);font-size:12px">'+esc(l.target_table||'')+'</td>'
@@ -3138,10 +3286,17 @@ async function raLoadAllListings() {
   var offset = RA_DATA.allListings.length;
   try {
     var {data, error} = await sb.from('rental_vehicle_listings')
-      .select('id,model,year,daily_rate,admin_status,status,created_at,view_count,brand_id,company_id,location_id')
+      .select('id,model,year,daily_rate,admin_status,status,created_at,view_count,inquiry_count,save_count,is_available,brand_id,company_id,location_id')
       .is('deleted_at',null).order('created_at',{ascending:false}).range(offset, offset+29);
     if (error) throw error;
     var rows = data||[];
+    // Health indicator: does each listing have at least one media row? (Module 4)
+    var listingIds = rows.map(function(r){return r.id;}).filter(Boolean);
+    var mediaRes = listingIds.length
+      ? await sb.from('rental_vehicle_media').select('listing_id').in('listing_id', listingIds)
+      : {data:[]};
+    var withMedia = new Set((mediaRes.data||[]).map(function(m){return m.listing_id;}));
+    rows.forEach(function(r){ r._hasMedia = withMedia.has(r.id); });
     var brandIds = [...new Set(rows.map(function(r){return r.brand_id;}).filter(Boolean))];
     var coIds    = [...new Set(rows.map(function(r){return r.company_id;}).filter(Boolean))];
     var locIds   = [...new Set(rows.map(function(r){return r.location_id;}).filter(Boolean))];
