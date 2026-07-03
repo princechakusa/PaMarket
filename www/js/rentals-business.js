@@ -502,21 +502,38 @@
     });
   };
 
-  // Tapping a Recent Inquiry opens the rental conversation bound to that
-  // (customer, vehicle) pair. The lead itself doesn't store a conversation
-  // id — rental_conversation_context does — so look it up there. A lead can
-  // exist without a conversation yet (e.g. the customer tapped WhatsApp or
-  // Call but never opened chat), so fall back to marking it read instead of
-  // erroring.
+  // Tapping a Recent Inquiry opens the rental conversation for that customer.
+  // The lead itself doesn't store a conversation id — rental_conversation_
+  // context does — so look it up there. Because the underlying chat system
+  // gives one thread per (customer, owner) pair for its whole lifetime
+  // (never one per listing), rental_conversation_context.conversation_id is
+  // primary-keyed and always describes the MOST RECENT vehicle a returning
+  // customer discussed — an older lead for a different vehicle from the same
+  // customer therefore has no exact (user_id, listing_id) match once a newer
+  // one overwrote it. Fall back to "same customer, any listing with this
+  // company" so the conversation still opens instead of false-negatively
+  // reporting "no chat yet". A lead can also genuinely have no conversation
+  // (customer only tapped WhatsApp/Call), which still gets the clear fallback.
   RB.openInquiry = async function (leadId, userId, listingId) {
     const sb = window.supabase; if (!sb) return;
     try {
-      const { data, error } = await sb.from('rental_conversation_context')
+      let { data, error } = await sb.from('rental_conversation_context')
         .select('conversation_id')
         .eq('user_id', userId)
         .eq('listing_id', listingId)
         .maybeSingle();
       if (error) throw error;
+      if (!data && RB.company) {
+        const fallback = await sb.from('rental_conversation_context')
+          .select('conversation_id')
+          .eq('user_id', userId)
+          .eq('company_id', RB.company.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (fallback.error) throw fallback.error;
+        data = fallback.data;
+      }
       if (data && data.conversation_id) {
         sb.from('rental_vehicle_leads').update({ status: 'contacted' }).eq('id', leadId).then(function(){}, function(){});
         H.openInner('Chat', { id: data.conversation_id });
@@ -1227,6 +1244,10 @@
     window.location.href = 'mailto:chakusaprince@gmail.com?subject=' + subject + '&body=' + body;
   };
 
+  // Onboarding-only: creates the pending company + initial profile. Editing
+  // an already-active company's profile goes through RB.saveCompanyProfile
+  // instead (RentalCompanyProfileSelf), which never shows "pending approval"
+  // copy or bounces the user back to the dashboard.
   RB.submitSetup = async function (bizId) {
     const sb = window.supabase; if (!sb) return;
     const bio   = document.getElementById('rcSetupBio')?.value?.trim()   || null;
@@ -1513,7 +1534,7 @@
       const { data, error } = await sb.from('notifications')
         .select('id,title,body,type,read,created_at')
         .eq('user_id', u.id)
-        .ilike('type', 'rental\\_%')
+        .eq('category', 'rental')
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw error;
@@ -1538,12 +1559,15 @@
   // never the personal profile, and never the read-only customer-facing
   // RentalCompanyProfile (which requires a company id param and has no edit UI).
   // ─────────────────────────────────────────────────────────────────────────
+  const DAYS_OF_WEEK = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
   H.pages.RentalCompanyProfileSelf = function (params) {
     const biz = _requireBiz();
     if (!biz) return `<div class="page active">${H.innerTopbar('Company Profile')}${H.emptyState('Business required', 'Register a business first to use the rentals module.', 'Register Business', "H.openInner('BusinessOnboarding')")}</div>`;
     if (!RB.company) return `<div class="page active">${H.innerTopbar('Company Profile')}<div style="padding:40px 16px;text-align:center;color:#A1A1AA;font-size:13px">Loading…</div></div>`;
 
     const rc = RB.company;
+    const prof = RB._profile || {};
     const isActive = rc.status === 'active';
     const verifiedBadge = isActive
       ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#ECFDF5;color:#16A34A;font-size:11px;font-weight:800;border-radius:999px;padding:3px 10px;margin-left:6px"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>`
@@ -1551,12 +1575,36 @@
 
     const stat = (val, label) => `<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:#1A3A8F">${esc(String(val))}</div><div style="font-size:11px;color:#A1A1AA;margin-top:2px">${label}</div></div>`;
 
+    const coverHtml = `<div style="position:relative;width:100%;padding-top:32%;background:${prof.cover_url ? `url('${esc(prof.cover_url)}') center/cover` : 'linear-gradient(135deg,#1A3A8F,#2D5BE3)'}">
+      <label style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.45);color:#fff;font-size:11px;font-weight:700;padding:6px 12px;border-radius:20px;cursor:pointer;display:flex;align-items:center;gap:5px">
+        <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Change Cover
+        <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="H._rentalBiz.uploadProfileImage('cover',this)">
+      </label>
+    </div>`;
+
+    const daysChips = DAYS_OF_WEEK.map(d => {
+      const on = (RB._profileDays || []).includes(d);
+      return `<button type="button" onclick="H._rentalBiz.toggleProfileDay('${d}')" style="padding:7px 12px;border-radius:20px;border:1.5px solid ${on ? '#1A3A8F' : '#E4E4E7'};background:${on ? '#1A3A8F' : '#fff'};color:${on ? '#fff' : '#18181B'};font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">${d}</button>`;
+    }).join('');
+
+    const locChips = (RB._locationList || []).map(loc => {
+      const on = (RB._profileLocIds || []).includes(loc.id);
+      return `<button type="button" onclick="H._rentalBiz.toggleProfileLocation('${loc.id}')" style="padding:7px 12px;border-radius:20px;border:1.5px solid ${on ? '#1A3A8F' : '#E4E4E7'};background:${on ? '#EEF2FF' : '#fff'};color:${on ? '#1A3A8F' : '#18181B'};font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">${esc(loc.city)}</button>`;
+    }).join('');
+
     return `<div class="page active">
       ${H.innerTopbar('Company Profile')}
       <div class="inner-content" style="padding:0">
+        ${coverHtml}
         <div style="padding:20px 16px;background:#fff;border-bottom:1px solid #E4E4E7;display:flex;gap:14px;align-items:center">
-          <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#EEF2FB,#E4E9FA);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#1A3A8F;font-size:22px;font-weight:800">
-            ${rc.logo_url ? `<img src="${esc(rc.logo_url)}" style="width:100%;height:100%;object-fit:cover">` : esc((biz.name || 'C').charAt(0).toUpperCase())}
+          <div style="position:relative;flex-shrink:0">
+            <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#EEF2FB,#E4E9FA);overflow:hidden;display:flex;align-items:center;justify-content:center;color:#1A3A8F;font-size:22px;font-weight:800">
+              ${prof.logo_url ? `<img src="${esc(prof.logo_url)}" style="width:100%;height:100%;object-fit:cover">` : esc((biz.name || 'C').charAt(0).toUpperCase())}
+            </div>
+            <label style="position:absolute;bottom:-4px;right:-4px;width:24px;height:24px;border-radius:50%;background:#1A3A8F;border:2px solid #fff;display:flex;align-items:center;justify-content:center;cursor:pointer">
+              <svg width="11" height="11" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="H._rentalBiz.uploadProfileImage('logo',this)">
+            </label>
           </div>
           <div style="flex:1;min-width:0">
             <div style="font-size:17px;font-weight:800;color:#18181B;display:flex;align-items:center;flex-wrap:wrap">${esc(biz.name || '')}${verifiedBadge}</div>
@@ -1574,8 +1622,14 @@
           ${_field('rcSetupBio', 'Company Description', `<textarea id="rcSetupBio" rows="4" placeholder="Tell customers about your rental services, coverage areas, and fleet..." style="width:100%;min-height:80px;border:1.5px solid #E4E4E7;border-radius:14px;padding:12px 14px;font-family:inherit;font-size:14px;color:#18181B;background:#fff;resize:none;box-sizing:border-box">${esc(RB._profileAbout || '')}</textarea>`)}
           ${_textField('rcSetupPhone', 'Contact Phone', '+263 77 000 0000', 'tel', biz.phone || '')}
           ${_textField('rcSetupWA', 'WhatsApp Number', '+263 77 000 0000', 'tel', biz.phone || '')}
+          ${_field('', 'Operating Days', `<div style="display:flex;flex-wrap:wrap;gap:8px">${daysChips}</div>`)}
+          ${_rowWrap(
+            _textField('rcOpensAt', 'Opens At', '08:00', 'time', RB._profileOpensAt || ''),
+            _textField('rcClosesAt', 'Closes At', '17:00', 'time', RB._profileClosesAt || '')
+          )}
+          ${_field('', 'Service Locations', `<div style="display:flex;flex-wrap:wrap;gap:8px">${locChips || '<span style="font-size:12.5px;color:#A1A1AA">Loading cities…</span>'}</div>`)}
           <div style="height:8px"></div>
-          <button class="btn-pri" style="width:100%" onclick="H._rentalBiz.submitSetup('${esc(biz.id)}')">Save Changes</button>
+          <button class="btn-pri" style="width:100%" onclick="H._rentalBiz.saveCompanyProfile('${esc(biz.id)}')">Save Changes</button>
         </div>
       </div>
     </div>`;
@@ -1583,16 +1637,119 @@
 
   H.pages.RentalCompanyProfileSelf_after = function (params) {
     const biz = _requireBiz();
-    if (biz && !RB.company) RB.loadCompanyData(biz.id);
-    if (RB.company) {
-      const sb = window.supabase;
-      if (sb) {
-        sb.from('rental_company_profiles').select('about').eq('company_id', RB.company.id).maybeSingle()
-          .then(function (r) {
-            RB._profileAbout = (r && r.data && r.data.about) || '';
-            if (H.currentPageName === 'RentalCompanyProfileSelf') H.renderPage('RentalCompanyProfileSelf', {});
-          }, function () {});
-      }
+    if (biz && !RB.company) { RB.loadCompanyData(biz.id); return; }
+    if (!RB.company) return;
+    const sb = window.supabase; if (!sb) return;
+    if (!RB._locationList) {
+      sb.from('rental_locations').select('id,city').order('sort_order').then(function (r) {
+        RB._locationList = (r && r.data) || [];
+        if (H.currentPageName === 'RentalCompanyProfileSelf') H.renderPage('RentalCompanyProfileSelf', {});
+      }, function () {});
+    }
+    if (!RB._profileFetched) {
+      RB._profileFetched = true;
+      sb.from('rental_company_profiles').select('about,logo_url,cover_url,service_location_ids').eq('company_id', RB.company.id).maybeSingle()
+        .then(function (r) {
+          const p = (r && r.data) || {};
+          RB._profile = p;
+          RB._profileAbout = p.about || '';
+          RB._profileLocIds = p.service_location_ids || [];
+          if (H.currentPageName === 'RentalCompanyProfileSelf') H.renderPage('RentalCompanyProfileSelf', {});
+        }, function () {});
+      sb.from('rental_companies').select('days_open,opens_at,closes_at').eq('id', RB.company.id).maybeSingle()
+        .then(function (r) {
+          const c = (r && r.data) || {};
+          RB._profileDays = c.days_open || [];
+          RB._profileOpensAt = c.opens_at || '';
+          RB._profileClosesAt = c.closes_at || '';
+          if (H.currentPageName === 'RentalCompanyProfileSelf') H.renderPage('RentalCompanyProfileSelf', {});
+        }, function () {});
+    }
+  };
+
+  RB.toggleProfileDay = function (d) {
+    RB._profileDays = RB._profileDays || [];
+    const i = RB._profileDays.indexOf(d);
+    if (i === -1) RB._profileDays.push(d); else RB._profileDays.splice(i, 1);
+    H.renderPage('RentalCompanyProfileSelf', {});
+  };
+
+  RB.toggleProfileLocation = function (id) {
+    RB._profileLocIds = RB._profileLocIds || [];
+    const i = RB._profileLocIds.indexOf(id);
+    if (i === -1) RB._profileLocIds.push(id); else RB._profileLocIds.splice(i, 1);
+    H.renderPage('RentalCompanyProfileSelf', {});
+  };
+
+  // Logo/cover use the same R2 pipeline as vehicle photos (compress → R2 →
+  // store URL), keyed under rentals/{userId}/profile/ so it's covered by the
+  // same get-r2-upload-url path allowlist.
+  RB.uploadProfileImage = async function (kind, input) {
+    const file = input && input.files && input.files[0];
+    if (!file) return;
+    const u = H.currentUser();
+    if (!u || !RB.company || typeof H.uploadToR2 !== 'function') { H.toast('Uploads unavailable right now.', 4000, true); return; }
+    try {
+      const dataUrl = await H.compressImage(file, kind === 'cover' ? 1600 : 600, 0.82);
+      const b64  = dataUrl.split(',')[1];
+      const blob = new Blob([Uint8Array.from(atob(b64), c => c.charCodeAt(0))], { type: 'image/jpeg' });
+      const key  = 'rentals/' + u.id + '/profile/' + kind + '_' + H.uid() + '.jpg';
+      const url  = await H.uploadToR2(blob, key, 'image/jpeg');
+      if (!url) throw new Error('Upload did not return a URL');
+      const field = kind === 'cover' ? 'cover_url' : 'logo_url';
+      const { error } = await window.supabase.from('rental_company_profiles')
+        .upsert({ company_id: RB.company.id, [field]: url }, { onConflict: 'company_id' });
+      if (error) throw error;
+      RB._profile = Object.assign({}, RB._profile, { [field]: url });
+      H.toast(kind === 'cover' ? 'Cover image updated.' : 'Logo updated.');
+      H.renderPage('RentalCompanyProfileSelf', {});
+    } catch (e) {
+      console.warn('profile image upload:', e);
+      H.toast('Upload failed. Please try again.', 4000, true);
+    }
+    input.value = '';
+  };
+
+  RB.saveCompanyProfile = async function (bizId) {
+    const sb = window.supabase; if (!sb || !RB.company) return;
+    const btn = document.querySelector('.btn-pri');
+    const originalLabel = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+    try {
+      const bio   = document.getElementById('rcSetupBio')?.value?.trim()   || null;
+      const phone = document.getElementById('rcSetupPhone')?.value?.trim() || null;
+      const wa    = document.getElementById('rcSetupWA')?.value?.trim()    || null;
+      const opensAt  = document.getElementById('rcOpensAt')?.value  || null;
+      const closesAt = document.getElementById('rcClosesAt')?.value || null;
+
+      const [profRes, coRes, bizRes] = await Promise.all([
+        sb.from('rental_company_profiles').upsert({
+          company_id: RB.company.id,
+          about: bio,
+          service_location_ids: RB._profileLocIds || [],
+        }, { onConflict: 'company_id' }).select('id'),
+        sb.from('rental_companies').update({
+          days_open: RB._profileDays || [],
+          opens_at:  opensAt,
+          closes_at: closesAt,
+        }).eq('id', RB.company.id).select('id'),
+        (phone || wa) ? sb.from('businesses').update({
+          phone:    phone || undefined,
+          whatsapp: wa    || undefined,
+        }).eq('id', bizId).select('id') : Promise.resolve({ data: [{}], error: null }),
+      ]);
+      if (profRes.error) throw profRes.error;
+      if (coRes.error) throw coRes.error;
+      if (bizRes.error) throw bizRes.error;
+      if (!coRes.data || !coRes.data.length) throw new Error('Update matched 0 rows — your company must be active to save changes.');
+
+      H.toast('Company profile updated.');
+      RB.company = null; RB._profileFetched = false; // force full reload so every view reflects the save immediately
+      H.openInner('RentalCompanyProfileSelf');
+    } catch (e) {
+      console.warn('save company profile:', e);
+      H.toast((e && e.message) ? e.message : 'Could not save changes.', 5000, true);
+      if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
     }
   };
 

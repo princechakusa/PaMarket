@@ -1190,7 +1190,9 @@
         const bizRes  = await sb.from('businesses').select('name,phone,whatsapp,owner_user_id').eq('id', companyRes.data.business_id).single();
         // maybeSingle: a company may not have filled in its profile
         // (logo/cover/about) yet — that's a valid state, not an error.
-        const profRes = await sb.from('rental_company_profiles').select('logo_url,cover_url,about').eq('company_id', companyId).maybeSingle();
+        // Reads the PUBLIC view — the base table's verification document
+        // columns (business_reg_doc etc.) must never reach a customer.
+        const profRes = await sb.from('rental_company_profiles_public').select('logo_url,cover_url,about').eq('company_id', companyId).maybeSingle();
         compBiz = {
           id:            companyId,
           name:          bizRes.data && bizRes.data.name,
@@ -1235,7 +1237,8 @@
       const [bRes, pRes, rvRes, flRes] = await Promise.all([
         sb.from('businesses').select('name,phone,whatsapp,owner_user_id').eq('id', rc.business_id).single(),
         // maybeSingle: profile is optional — company may not have set a logo/about yet.
-        sb.from('rental_company_profiles').select('logo_url,cover_url,about').eq('company_id', id).maybeSingle(),
+        // Public view — never expose the base table's verification documents to customers.
+        sb.from('rental_company_profiles_public').select('logo_url,cover_url,about').eq('company_id', id).maybeSingle(),
         sb.from('rental_reviews').select('id,rating,body,created_at,reviewer_id').eq('company_id', id).eq('status','published').order('created_at', {ascending:false}).limit(10),
         sb.rpc('rental_search_listings', { p_available_only: false, p_limit: 8, p_offset: 0 }),
       ]);
@@ -1455,12 +1458,21 @@
     }
     R._logLead(det, 'chat');
     // Bind this conversation to the listing/company so the business portal's
-    // Recent Inquiries and a future "rental messages" view can find it, and
-    // so it never gets mixed into personal-only surfaces. startChatWith
-    // derives the conversation id deterministically from the two user ids
-    // (sorted, last-6-chars), so we can compute the same id here without
-    // waiting on it — one row per (user, listing) via the table's unique
-    // constraint, so re-opening chat on the same vehicle never duplicates.
+    // Recent Inquiries can find it, and so it never gets mixed into
+    // personal-only surfaces.
+    //
+    // IMPORTANT: startChatWith gives ONE thread per (customer, owner) pair,
+    // for the app's whole lifetime — never one per listing (its own comments
+    // explain this is deliberate, to avoid forking a seller's chat history
+    // across every listing/profile entry point). rental_conversation_context
+    // has conversation_id as its PRIMARY KEY, so it can only describe ONE
+    // listing per conversation at a time. If a customer contacts the same
+    // company about a second vehicle, we must UPDATE the existing context
+    // row to the new listing (upsert on conversation_id) rather than insert
+    // a second row for the same id — that would collide on the primary key.
+    // This means Recent Inquiries reflects "what this thread is currently
+    // about" (the latest vehicle discussed), which matches what a business
+    // owner actually needs to see when they open the conversation.
     if (sb) {
       const ids = [u.id, ownerId].sort();
       const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
@@ -1469,7 +1481,7 @@
         listing_id:      listingId,
         company_id:      det.company.id,
         user_id:         u.id,
-      }, { onConflict: 'user_id,listing_id' }).then(function () {}, function () {});
+      }, { onConflict: 'conversation_id' }).then(function () {}, function () {});
     }
     H.startChatWith(ownerId, listingId);
   };
@@ -1488,13 +1500,13 @@
       user_id:     u.id,
       lead_source: source,
       status:      'new',
-    }).then(function () {}, function () {});
+    }).then(function () {}, function (e) { console.warn('rental lead log failed:', e); });
   };
 
   R.waCompany = function (listingId) {
     const det = R.detailCache[listingId];
     if (!det || !det.company) return;
-    R._logLead(det, 'whatsapp');
+    R._logLead(det, 'whatsapp_click');
     R._waDirect(det.company.whatsapp, det.company.name, det);
   };
 
@@ -1509,7 +1521,7 @@
   R.callCompany = function (listingId) {
     const det = R.detailCache[listingId];
     if (!det || !det.company || !det.company.phone) { H.toast('No phone number available'); return; }
-    R._logLead(det, 'call');
+    R._logLead(det, 'call_click');
     R._callDirect(det.company.phone);
   };
 

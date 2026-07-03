@@ -83,19 +83,21 @@
     const c = sb(); if (!c) return;
     const u = H.currentUser(); if (!u) return;
     try {
-      // Rental notifications (type starting "rental_") are excluded here —
-      // they belong only in the Rental Business Platform's own notification
-      // list (RB.loadNotifications in rentals-business.js), never mixed
-      // into the personal feed.
+      // Rental notifications are excluded here — they belong only in the
+      // Rental Business Platform's own notification list (RB.loadNotifications
+      // in rentals-business.js), never mixed into the personal feed. Scoped
+      // on the explicit `category` column (not a type-string pattern match —
+      // fragile, unindexed, and one typo'd type would silently break
+      // isolation) per the production audit.
       let res = await c.from('notifications')
         .select('id, user_id, title, body, type, read, created_at, meta, image_url').eq('user_id', u.id)
-        .not('type', 'ilike', 'rental\\_%')
+        .or('category.is.null,category.neq.rental')
         .order('created_at', { ascending: false }).limit(20);
       // If the full select 400s (image_url column not yet in this DB), retry without it
       if (res.error && /image_url|column|PGRST/i.test((res.error.message || '') + (res.error.code || ''))) {
         res = await c.from('notifications')
           .select('id, user_id, title, body, type, read, created_at, meta').eq('user_id', u.id)
-          .not('type', 'ilike', 'rental\\_%')
+          .or('category.is.null,category.neq.rental')
           .order('created_at', { ascending: false }).limit(20);
       }
       if (res.error || !res.data) return;
@@ -149,8 +151,9 @@
       }, payload => {
         const r = payload.new; if (!r) return;
         // Rental notifications never enter the personal feed — see the
-        // matching exclusion in syncNotifications above.
-        if (r.type && /^rental_/i.test(r.type)) return;
+        // matching exclusion in syncNotifications above. Scoped on category,
+        // not a type-string pattern.
+        if (r.category === 'rental') return;
         H.state.notifs = H.state.notifs || {};
         const list = H.state.notifs[u.id] = H.state.notifs[u.id] || [];
         if (!list.some(n => n.id === r.id)) {
@@ -216,7 +219,11 @@
     toast('Marked all as read');
     const c = sb();
     if (c) {
+      // Scoped to non-rental — without this, marking personal notifications
+      // read also silently marked the same user's unread rental
+      // notifications as read, clearing their business badge count too.
       c.from('notifications').update({ read: true }).eq('user_id', u.id).eq('read', false)
+        .or('category.is.null,category.neq.rental')
         .then(r => { if (r && r.error) console.warn('mark-all update failed:', r.error.message); });
     }
   };
@@ -252,7 +259,10 @@
     toast('Cleared all notifications');
     const c = sb();
     if (c) {
-      c.from('notifications').delete().eq('user_id', u.id)
+      // Only delete the notifications this page actually shows (non-rental).
+      // Without the category filter, clearing personal notifications also
+      // silently deleted the same user's rental notification history.
+      c.from('notifications').delete().eq('user_id', u.id).or('category.is.null,category.neq.rental')
         .then(r => { if (r && r.error) console.warn('notif clear failed:', r.error.message); });
     }
   };
