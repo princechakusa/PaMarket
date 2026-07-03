@@ -1527,13 +1527,17 @@
     let c = H.state.conversations.find(function (x) { return x.id === convId; });
     if (!c) {
       c = { id: convId, members: [myId, ownerId], messages: [], businessId: bizId,
-            otherName: (company && company.name) || 'Rental Company', listingId: null, bizV: 2 };
+            otherName: (company && company.name) || 'Rental Company', listingId: null, bizV: 2,
+            convKind: 'rental' };
       H.state.conversations.unshift(c);
       H.saveState();
       if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c).catch(function () {});
     } else {
       let dirty = false;
       if (!c.businessId) { c.businessId = bizId; dirty = true; }
+      // Mark this as a rental thread so the Business tab shows it as "Rental"
+      // instead of blending it into the local-shops list.
+      if (c.convKind !== 'rental') { c.convKind = 'rental'; dirty = true; }
       if (!Array.isArray(c.members) || c.members.indexOf(ownerId) === -1) { c.members = [myId, ownerId]; dirty = true; }
       if (!c.otherName && company && company.name) { c.otherName = company.name; dirty = true; }
       if (dirty) H.saveState();

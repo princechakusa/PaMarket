@@ -305,6 +305,7 @@
     }
     if (typeof H.initPresence === 'function') H.initPresence();
     H._mergeDuplicateConversations();
+    H._backfillRentalConvKind();
 
     const tab = H._msgTab || 'personal';
     const myBizIds = new Set((H.state.businesses || []).filter(function (b) { return b.ownerUserId === u.id; }).map(function (b) { return b.id; }));
@@ -389,10 +390,41 @@
 
     // ── BUSINESS TAB ─────────────────────────────────────────
     function renderBizTab() {
-      // Owner-side: one grouped entry per shop I own
-      const ownerBizConvs = bizConvs.filter(function (c) { return myBizIds.has(c.businessId); });
+      // Owner-side: one grouped entry per shop I own. Rental inquiries live in the
+      // SAME Business tab but are shown as their own "Rental" entries (convKind
+      // === 'rental'), never blended into the local-shops list.
+      const ownerBizConvsAll = bizConvs.filter(function (c) { return myBizIds.has(c.businessId); });
+      const ownerBizConvs   = ownerBizConvsAll.filter(function (c) { return c.convKind !== 'rental'; });
+      const ownerRentalConvs = ownerBizConvsAll.filter(function (c) { return c.convKind === 'rental'; });
       const ownerGroups = {};
       ownerBizConvs.forEach(function (c) { (ownerGroups[c.businessId] = ownerGroups[c.businessId] || []).push(c); });
+
+      // Rental inquiries grouped per rental business I own, labelled "Rental".
+      const rentalGroups = {};
+      ownerRentalConvs.forEach(function (c) { (rentalGroups[c.businessId] = rentalGroups[c.businessId] || []).push(c); });
+      const rentalEntries = Object.keys(rentalGroups).map(function (bizId) {
+        const convs = rentalGroups[bizId];
+        const biz = (H.state.businesses || []).find(function (b) { return b.id === bizId; });
+        const bizName = (biz && biz.name) || (convs[0] && convs[0].otherName) || 'Rental Company';
+        const latestMsg = convs.reduce(function (latest, c) {
+          const msgs = c.messages || []; const last = msgs[msgs.length - 1];
+          return (!latest || (last && last.t > (latest.t || 0))) ? last : latest;
+        }, null);
+        const totalUnread = convs.reduce(function (s, c) { return s + (c.messages || []).filter(function (m) { return m.from !== u.id && !m.read; }).length; }, 0);
+        const color = H.avatarColorFor(bizId || bizName);
+        const unread = totalUnread > 0;
+        return `<div class="msg-item${unread ? ' unread' : ''}" onclick="H.openInner('RentalBusinessInbox',{id:'${escHtml(bizId)}'})">
+          <div class="p-av-wrap">${listAvatarHtml({ avatar: (biz && biz.logo) || null }, bizName, color, 'p-av')}</div>
+          <div class="msg-body">
+            <div class="msg-name-row">
+              <div class="msg-name">${escHtml(bizName)} <span style="font-size:10px;font-weight:700;color:#1A3A8F;background:#EEF2FB;padding:1px 6px;border-radius:5px;vertical-align:middle;margin-left:4px">RENTAL</span></div>
+              <div class="msg-time${unread ? ' u' : ''}">${latestMsg ? timeAgo(latestMsg.t) : ''}</div>
+            </div>
+            <div class="msg-preview${unread ? ' unread' : ''}">Rental inquiries · ${convs.length}${totalUnread > 0 ? ' · ' + totalUnread + ' unread' : ''}</div>
+          </div>
+          ${unread ? `<div class="msg-badge">${totalUnread > 99 ? '99+' : totalUnread}</div>` : ''}
+        </div>`;
+      }).join('');
 
       const ownerEntries = Object.keys(ownerGroups).map(function (bizId) {
         const convs = ownerGroups[bizId];
@@ -437,11 +469,14 @@
           ? MIC.offer + (_lastOffer.k === 'accept' ? 'Offer accepted' : _lastOffer.k === 'decline' ? 'Offer declined' : (_lastOffer.k === 'counter' ? 'Counter: $' : 'Offer: $') + Number(_lastOffer.price || 0).toLocaleString())
           : (last.image ? MIC.photo + 'Photo' : escHtml(msgPreview(last)));
         const preview = (mine ? previewTick(!!last.read) + ' ' : '') + previewBody;
+        const rentalTag = c.convKind === 'rental'
+          ? ' <span style="font-size:10px;font-weight:700;color:#1A3A8F;background:#EEF2FB;padding:1px 6px;border-radius:5px;vertical-align:middle">RENTAL</span>'
+          : '';
         return `<div class="msg-item${unread ? ' unread' : ''}" onclick="H.openChat('${escHtml(c.id)}')">
           <div class="p-av-wrap">${listAvatarHtml(listOther, listName, color, 'p-av')}</div>
           <div class="msg-body">
             <div class="msg-name-row">
-              <div class="msg-name">${escHtml(listName)}</div>
+              <div class="msg-name">${escHtml(listName)}${rentalTag}</div>
               <div class="msg-time${unread ? ' u' : ''}">${timeAgo(last.t)}</div>
             </div>
             <div class="msg-preview${unread ? ' unread' : ''}">${preview}</div>
@@ -450,9 +485,9 @@
         </div>`;
       }).join('');
 
-      const hasContent = ownerEntries || buyerEntries;
+      const hasContent = ownerEntries || rentalEntries || buyerEntries;
       return hasContent
-        ? (ownerEntries + buyerEntries)
+        ? (ownerEntries + rentalEntries + buyerEntries)
         : H.emptyState('No business messages', 'Tap Message on any shop to start chatting.', null, null);
     }
 
@@ -1261,6 +1296,35 @@
 
   H._switchMsgTab = function (t) { H._msgTab = t; H.renderPage('Messages'); };
 
+  // One-time-ish backfill: rental conversations created before convKind existed
+  // are untagged and would render as local shops. Any conversation whose id is in
+  // rental_conversation_context is a rental — tag it. Best-effort; runs at most
+  // once per session (guarded) and re-renders if it changed anything.
+  H._backfillRentalConvKind = function () {
+    if (H._rentalKindBackfilled) return;
+    const sb = window.supabase; const u = currentUser();
+    if (!sb || !u) return;
+    // Only bother if there are untagged biz_ convs that could be rentals.
+    const candidates = (H.state.conversations || []).filter(function (c) {
+      return c && typeof c.id === 'string' && c.id.indexOf('biz_') === 0 && c.convKind !== 'rental';
+    });
+    if (!candidates.length) { H._rentalKindBackfilled = true; return; }
+    H._rentalKindBackfilled = true;
+    const ids = candidates.map(function (c) { return c.id; });
+    sb.from('rental_conversation_context')
+      .select('conversation_id')
+      .in('conversation_id', ids)
+      .then(function (res) {
+        if (!res || res.error || !Array.isArray(res.data) || !res.data.length) return;
+        const rentalIds = new Set(res.data.map(function (r) { return r.conversation_id; }));
+        let changed = false;
+        (H.state.conversations || []).forEach(function (c) {
+          if (rentalIds.has(c.id) && c.convKind !== 'rental') { c.convKind = 'rental'; changed = true; }
+        });
+        if (changed) { H.saveState(); if (H.currentPageName === 'Messages') H.renderPage('Messages'); }
+      }, function () {});
+  };
+
   // ── SHOP INBOX (owner view) ──────────────────────────────
   pages.BusinessShopInbox = function (params) {
     try {
@@ -1274,6 +1338,7 @@
     const bizConvs = conversations()
       .filter(function (c) {
         return c.businessId === bizId
+          && c.convKind !== 'rental'   // rental inquiries have their own inbox
           && Array.isArray(c.messages) && c.messages.some(function (m) { return m.from !== u.id; });
       })
       .sort(function (a, b) {
@@ -1331,6 +1396,66 @@
     } catch (e) {
       console.error('BusinessShopInbox render error:', e);
       return '<div class="page active">' + H.innerTopbar('Shop Inbox') + '<div style="padding:32px 20px;text-align:center"><div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px">Could not load inbox</div><div style="font-size:13px;color:var(--sub);margin-bottom:20px">Please go back and try again.</div><button onclick="H.goBack()" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:11px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Go Back</button></div></div>';
+    }
+  };
+
+  // ── RENTAL INBOX (owner view) ────────────────────────────
+  // Same shape as BusinessShopInbox but scoped to rental inquiry threads
+  // (convKind === 'rental'). Keeps rentals inside the Business area while
+  // presenting them as their OWN inbox, never mixed with local-shop chats.
+  pages.RentalBusinessInbox = function (params) {
+    try {
+    const bizId = params && params.id;
+    const b = (H.state.businesses || []).find(function (b) { return b.id === bizId; });
+    const u = currentUser();
+    if (!b || !u || String(b.ownerUserId) !== String(u.id)) {
+      return '<div class="page active">' + H.innerTopbar('Rental Inbox') + H.emptyState('Not found', '', null, null) + '</div>';
+    }
+    const convs = conversations()
+      .filter(function (c) {
+        return c.businessId === bizId && c.convKind === 'rental'
+          && Array.isArray(c.messages) && c.messages.some(function (m) { return m.from !== u.id; });
+      })
+      .sort(function (a, b) {
+        const am = (a.messages || [])[(a.messages || []).length - 1] || {};
+        const bm = (b.messages || [])[(b.messages || []).length - 1] || {};
+        return (bm.t || 0) - (am.t || 0);
+      });
+
+    const rows = convs.map(function (c) {
+      const otherId = (c.members || []).find(function (m) { return m !== u.id; });
+      const other = otherId ? (H.state.users || []).find(function (x) { return x.id === otherId; }) : null;
+      if (!other && otherId) H._resolveOtherName(otherId, c);
+      const buyerName = (other && other.name) || c.otherName || 'Customer';
+      const msgs = c.messages || [];
+      const last = msgs[msgs.length - 1];
+      const unreadCount = msgs.filter(function (m) { return m.from !== u.id && !m.read; }).length;
+      const unread = unreadCount > 0;
+      const color = H.avatarColorFor(otherId || buyerName);
+      const preview = last ? ((last.from === u.id ? 'You: ' : '') + escHtml(String(msgPreview(last)).slice(0, 60))) : 'No messages';
+      return `<div class="msg-item${unread ? ' unread' : ''}" onclick="H.openChat('${escHtml(c.id)}')">
+        <div class="p-av-wrap">${listAvatarHtml(other, buyerName, color, 'p-av')}</div>
+        <div class="msg-body">
+          <div class="msg-name-row">
+            <div class="msg-name">${escHtml(buyerName)}</div>
+            <div class="msg-time${unread ? ' u' : ''}">${last ? timeAgo(last.t) : ''}</div>
+          </div>
+          <div class="msg-preview${unread ? ' unread' : ''}">${preview}</div>
+        </div>
+        ${unread ? `<div class="msg-badge">${unreadCount > 99 ? '99+' : unreadCount}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    return `<div class="page active">
+      ${H.innerTopbar(H.escHtml(b.name) + ' · Rental Inbox')}
+      <div id="rentalInboxList">
+        ${rows || H.emptyState('No rental inquiries yet', 'When a customer messages you about a rental vehicle, it appears here.', null, null)}
+      </div>
+      <div style="text-align:center;font-size:11.5px;color:var(--sub);padding:16px 20px;line-height:1.55;border-top:1px solid var(--border,#E8ECF4);margin-top:8px">Rental inquiries are shown here, separate from local-shop chats and personal DMs.</div>
+    </div>`;
+    } catch (e) {
+      console.error('RentalBusinessInbox render error:', e);
+      return '<div class="page active">' + H.innerTopbar('Rental Inbox') + H.emptyState('Could not load inbox', 'Please go back and try again.', null, null) + '</div>';
     }
   };
 
