@@ -3,6 +3,7 @@
 // Requires SUPABASE_URL / SUPABASE_ANON_KEY env vars (or js/supabase-config.js locally).
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 
 const SITE = 'https://pamarketzw.com';
 
@@ -54,7 +55,16 @@ const STATIC_PAGES = [
   { loc: '/privacy', changefreq: 'yearly', priority: '0.3' },
   { loc: '/community-guidelines', changefreq: 'yearly', priority: '0.3' },
   { loc: '/delete-account', changefreq: 'yearly', priority: '0.3' },
+  { loc: '/blog', changefreq: 'weekly', priority: '0.7' },
 ];
+
+function loadBlogPosts() {
+  const blogDataPath = path.join(__dirname, '..', 'js', 'blog-data.js');
+  const sandbox = { window: {} };
+  vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync(blogDataPath, 'utf8'), sandbox);
+  return sandbox.window.PMBlog.getAllPosts();
+}
 
 async function fetchAllRows(cfg, table, select, filter) {
   const headers = { apikey: cfg.key, Authorization: 'Bearer ' + cfg.key };
@@ -141,6 +151,12 @@ async function main() {
     xml += urlEntry('/profile?id=' + p.id, lastmod, 'monthly', '0.4');
   }
 
+  const blogPosts = loadBlogPosts();
+  for (const post of blogPosts) {
+    const lastmod = post.dateModified || post.datePublished || today;
+    xml += urlEntry('/blog-post?slug=' + post.slug, lastmod, 'monthly', '0.6');
+  }
+
   xml += '</urlset>\n';
 
   const outPath = path.join(__dirname, '..', 'sitemap.xml');
@@ -148,7 +164,7 @@ async function main() {
   console.log(
     'sitemap.xml written with ' + STATIC_PAGES.length + ' static pages, ' +
     listings.length + ' listing pages, ' + rentals.length + ' rental pages, ' +
-    profiles.length + ' profile pages.'
+    profiles.length + ' profile pages, ' + blogPosts.length + ' blog posts.'
   );
 }
 
