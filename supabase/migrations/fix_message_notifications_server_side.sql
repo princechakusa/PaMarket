@@ -40,9 +40,12 @@ declare
 begin
   -- Resolve conversation members; if the conversation row is missing we cannot
   -- know the recipients, so do nothing (message still stored).
+  -- Cast both sides to text so this works whether conversations.id is text
+  -- (post fix_conversations_id_text.sql) or still uuid — avoids a uuid = text
+  -- operator error when the two migrations are applied in either order.
   select members into v_members
   from public.conversations
-  where id = NEW.conversation_id;
+  where id::text = NEW.conversation_id::text;
 
   if v_members is null then
     return NEW;
