@@ -83,13 +83,19 @@
     const c = sb(); if (!c) return;
     const u = H.currentUser(); if (!u) return;
     try {
+      // Rental notifications (type starting "rental_") are excluded here —
+      // they belong only in the Rental Business Platform's own notification
+      // list (RB.loadNotifications in rentals-business.js), never mixed
+      // into the personal feed.
       let res = await c.from('notifications')
         .select('id, user_id, title, body, type, read, created_at, meta, image_url').eq('user_id', u.id)
+        .not('type', 'ilike', 'rental\\_%')
         .order('created_at', { ascending: false }).limit(20);
       // If the full select 400s (image_url column not yet in this DB), retry without it
       if (res.error && /image_url|column|PGRST/i.test((res.error.message || '') + (res.error.code || ''))) {
         res = await c.from('notifications')
           .select('id, user_id, title, body, type, read, created_at, meta').eq('user_id', u.id)
+          .not('type', 'ilike', 'rental\\_%')
           .order('created_at', { ascending: false }).limit(20);
       }
       if (res.error || !res.data) return;
@@ -142,6 +148,9 @@
         filter: 'user_id=eq.' + u.id
       }, payload => {
         const r = payload.new; if (!r) return;
+        // Rental notifications never enter the personal feed — see the
+        // matching exclusion in syncNotifications above.
+        if (r.type && /^rental_/i.test(r.type)) return;
         H.state.notifs = H.state.notifs || {};
         const list = H.state.notifs[u.id] = H.state.notifs[u.id] || [];
         if (!list.some(n => n.id === r.id)) {

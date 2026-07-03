@@ -310,7 +310,7 @@
     const recentItems = leads.slice(0, 5).map(l => {
       const init  = (l.user_name || 'C').charAt(0).toUpperCase();
       const isNew = l.status === 'new';
-      return `<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #E4E4E7;${isNew ? 'border-left:3px solid #1A3A8F;' : ''}cursor:pointer">
+      return `<div onclick="H._rentalBiz.openInquiry('${esc(l.id)}','${esc(l.user_id)}','${esc(l.listing_id)}')" style="display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #E4E4E7;${isNew ? 'border-left:3px solid #1A3A8F;' : ''}cursor:pointer">
         <div style="width:44px;height:44px;border-radius:50%;background:#DBEAFE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#1A3A8F;flex-shrink:0">${init}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:700;color:#18181B">${esc(l.user_name || 'Customer')}</div>
@@ -335,10 +335,10 @@
             <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:1px">Rentals Dashboard</div>
           </div>
           <div style="display:flex;gap:12px;flex-shrink:0">
-            <div onclick="H.openInner('Notifications')" role="button" aria-label="Notifications" style="cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:28px">
+            <div onclick="H.openInner('RentalNotifications')" role="button" aria-label="Rental notifications" style="cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:28px">
               <svg width="22" height="22" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             </div>
-            <div onclick="H.openInner('Profile')" role="button" aria-label="Profile" style="cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:28px">
+            <div onclick="H.openInner('RentalCompanyProfileSelf')" role="button" aria-label="Company profile" style="cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:28px">
               <svg width="22" height="22" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
             </div>
           </div>
@@ -500,6 +500,34 @@
       const name = el.dataset.name || '';
       el.style.display = !q || name.includes(q) ? '' : 'none';
     });
+  };
+
+  // Tapping a Recent Inquiry opens the rental conversation bound to that
+  // (customer, vehicle) pair. The lead itself doesn't store a conversation
+  // id — rental_conversation_context does — so look it up there. A lead can
+  // exist without a conversation yet (e.g. the customer tapped WhatsApp or
+  // Call but never opened chat), so fall back to marking it read instead of
+  // erroring.
+  RB.openInquiry = async function (leadId, userId, listingId) {
+    const sb = window.supabase; if (!sb) return;
+    try {
+      const { data, error } = await sb.from('rental_conversation_context')
+        .select('conversation_id')
+        .eq('user_id', userId)
+        .eq('listing_id', listingId)
+        .maybeSingle();
+      if (error) throw error;
+      if (data && data.conversation_id) {
+        sb.from('rental_vehicle_leads').update({ status: 'contacted' }).eq('id', leadId).then(function(){}, function(){});
+        H.openInner('Chat', { id: data.conversation_id });
+      } else {
+        H.toast('This customer has not opened chat yet — they contacted you via ' +
+          (RB.leads.find(l => l.id === leadId) || {}).lead_source + '.');
+      }
+    } catch (e) {
+      console.warn('open inquiry:', e);
+      H.toast('Could not open this inquiry.', 4000, true);
+    }
   };
 
   RB._fleetMore = function (vehicleId, bizId, toggleStatus) {
@@ -1436,6 +1464,135 @@
     }
     if (H.currentPageName === 'RentalBusinessAnalytics') {
       H.renderPage('RentalBusinessAnalytics', { bizId: RB.company && RB.company.business_id });
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PAGE: RentalNotifications — rental-only notification feed (Issue 2 fix).
+  // Reads the same shared `notifications` table personal notifications use,
+  // but scoped to type LIKE 'rental_%' and this owner's user_id, so it never
+  // shows personal alerts and personal Notifications never shows these.
+  // ─────────────────────────────────────────────────────────────────────────
+  RB._notifs = [];
+  RB._notifsLoading = false;
+
+  H.pages.RentalNotifications = function () {
+    const rows = RB._notifs || [];
+    const row = (n) => `<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #E4E4E7;${!n.read ? 'border-left:3px solid #1A3A8F;background:#F8FAFF' : ''}">
+      <div style="width:38px;height:38px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:#18181B">${esc(n.title || '')}</div>
+        <div style="font-size:13px;color:#71717A;margin-top:2px;line-height:1.4">${esc(n.body || '')}</div>
+        <div style="font-size:11px;color:#A1A1AA;margin-top:4px">${n.created_at && typeof H.timeAgo === 'function' ? H.timeAgo(new Date(n.created_at).getTime()) : ''}</div>
+      </div>
+    </div>`;
+
+    const content = rows.length
+      ? rows.map(row).join('')
+      : (RB._notifsLoading
+          ? '<div style="padding:40px 16px;text-align:center;color:#A1A1AA;font-size:13px">Loading…</div>'
+          : H.emptyState('No notifications yet', 'Updates about your listings, reviews, and approvals will appear here.', '', ''));
+
+    return `<div class="page active">
+      ${H.innerTopbar('Rental Notifications')}
+      <div class="inner-content" style="padding:0">${content}</div>
+    </div>`;
+  };
+
+  H.pages.RentalNotifications_after = function () {
+    RB.loadNotifications();
+  };
+
+  RB.loadNotifications = async function () {
+    const sb = window.supabase; if (!sb) return;
+    const u = H.currentUser(); if (!u) return;
+    RB._notifsLoading = true;
+    try {
+      const { data, error } = await sb.from('notifications')
+        .select('id,title,body,type,read,created_at')
+        .eq('user_id', u.id)
+        .ilike('type', 'rental\\_%')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      RB._notifs = data || [];
+      // Mark as read once viewed, matching the personal Notifications page behaviour.
+      const unreadIds = RB._notifs.filter(n => !n.read).map(n => n.id);
+      if (unreadIds.length) {
+        sb.from('notifications').update({ read: true }).in('id', unreadIds).then(function(){}, function(){});
+      }
+    } catch (e) {
+      console.warn('rental notifications load:', e);
+    }
+    RB._notifsLoading = false;
+    if (H.currentPageName === 'RentalNotifications') H.renderPage('RentalNotifications', {});
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PAGE: RentalCompanyProfileSelf — Issue 1 fix. The dashboard's profile
+  // icon previously opened the user's PERSONAL profile (H.openInner('Profile')).
+  // This is the owner's view of their OWN company: logo, verification status,
+  // fleet/review stats, and the same editable fields as RentalCompanySetup —
+  // never the personal profile, and never the read-only customer-facing
+  // RentalCompanyProfile (which requires a company id param and has no edit UI).
+  // ─────────────────────────────────────────────────────────────────────────
+  H.pages.RentalCompanyProfileSelf = function (params) {
+    const biz = _requireBiz();
+    if (!biz) return `<div class="page active">${H.innerTopbar('Company Profile')}${H.emptyState('Business required', 'Register a business first to use the rentals module.', 'Register Business', "H.openInner('BusinessOnboarding')")}</div>`;
+    if (!RB.company) return `<div class="page active">${H.innerTopbar('Company Profile')}<div style="padding:40px 16px;text-align:center;color:#A1A1AA;font-size:13px">Loading…</div></div>`;
+
+    const rc = RB.company;
+    const isActive = rc.status === 'active';
+    const verifiedBadge = isActive
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#ECFDF5;color:#16A34A;font-size:11px;font-weight:800;border-radius:999px;padding:3px 10px;margin-left:6px"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>`
+      : `<span style="display:inline-flex;align-items:center;background:#FEF3C7;color:#92400E;font-size:11px;font-weight:800;border-radius:999px;padding:3px 10px;margin-left:6px">Pending</span>`;
+
+    const stat = (val, label) => `<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:#1A3A8F">${esc(String(val))}</div><div style="font-size:11px;color:#A1A1AA;margin-top:2px">${label}</div></div>`;
+
+    return `<div class="page active">
+      ${H.innerTopbar('Company Profile')}
+      <div class="inner-content" style="padding:0">
+        <div style="padding:20px 16px;background:#fff;border-bottom:1px solid #E4E4E7;display:flex;gap:14px;align-items:center">
+          <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#EEF2FB,#E4E9FA);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#1A3A8F;font-size:22px;font-weight:800">
+            ${rc.logo_url ? `<img src="${esc(rc.logo_url)}" style="width:100%;height:100%;object-fit:cover">` : esc((biz.name || 'C').charAt(0).toUpperCase())}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:17px;font-weight:800;color:#18181B;display:flex;align-items:center;flex-wrap:wrap">${esc(biz.name || '')}${verifiedBadge}</div>
+            <div style="font-size:12px;color:#A1A1AA;margin-top:2px">Rental Company</div>
+          </div>
+        </div>
+        <div style="display:flex;padding:14px 0;background:#fff;border-bottom:1px solid #E4E4E7">
+          ${stat(rc.fleet_count || 0, 'Vehicles')}
+          <div style="width:1px;background:#E4E4E7"></div>
+          ${stat(rc.avg_rating ? Number(rc.avg_rating).toFixed(1) : '—', 'Rating')}
+          <div style="width:1px;background:#E4E4E7"></div>
+          ${stat(rc.review_count || 0, 'Reviews')}
+        </div>
+        <div style="padding:16px">
+          ${_field('rcSetupBio', 'Company Description', `<textarea id="rcSetupBio" rows="4" placeholder="Tell customers about your rental services, coverage areas, and fleet..." style="width:100%;min-height:80px;border:1.5px solid #E4E4E7;border-radius:14px;padding:12px 14px;font-family:inherit;font-size:14px;color:#18181B;background:#fff;resize:none;box-sizing:border-box">${esc(RB._profileAbout || '')}</textarea>`)}
+          ${_textField('rcSetupPhone', 'Contact Phone', '+263 77 000 0000', 'tel', biz.phone || '')}
+          ${_textField('rcSetupWA', 'WhatsApp Number', '+263 77 000 0000', 'tel', biz.phone || '')}
+          <div style="height:8px"></div>
+          <button class="btn-pri" style="width:100%" onclick="H._rentalBiz.submitSetup('${esc(biz.id)}')">Save Changes</button>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  H.pages.RentalCompanyProfileSelf_after = function (params) {
+    const biz = _requireBiz();
+    if (biz && !RB.company) RB.loadCompanyData(biz.id);
+    if (RB.company) {
+      const sb = window.supabase;
+      if (sb) {
+        sb.from('rental_company_profiles').select('about').eq('company_id', RB.company.id).maybeSingle()
+          .then(function (r) {
+            RB._profileAbout = (r && r.data && r.data.about) || '';
+            if (H.currentPageName === 'RentalCompanyProfileSelf') H.renderPage('RentalCompanyProfileSelf', {});
+          }, function () {});
+      }
     }
   };
 

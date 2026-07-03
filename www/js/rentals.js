@@ -711,6 +711,7 @@
   H.pages.RentalListings_after = function () {
     if (!R.browse.length && !R._loading && !R._loadFailed && !R._attempted) H._rental.loadBrowse(true);
     R._loadFilterLookups();
+    R._ensureFavIds();
     window._rentalSearchTimer = null;
     // Close the suggestion panel when tapping anywhere outside the search area
     if (!R._panelDismissBound) {
@@ -953,6 +954,7 @@
     if (!id) return;
     H._rental.loadDetail(id);
     H._rental._incrementView(id);
+    H._rental._ensureFavIds();
   };
 
   R._toggleDesc = function () {
@@ -1267,6 +1269,34 @@
     if (H.currentPageName === 'RentalCompanyProfile') H.renderPage('RentalCompanyProfile', { id });
   };
 
+  // Lightweight favorite-id preload — was only ever populated by visiting
+  // the Saved Vehicles page, so hearts on Browse/Detail always rendered
+  // unfilled even for already-saved vehicles, and re-tapping one hit the
+  // unique(user_id,listing_id) constraint and silently reverted (Issue 5).
+  // Fetches ids only (not full listing rows) so it's cheap to call from
+  // every rental page's _after hook.
+  R._favIdsLoaded = false;
+  R._ensureFavIds = async function () {
+    const u = H.currentUser(); if (!u) return;
+    if (R._favIdsLoaded || R._favIdsLoading) return;
+    const sb = window.supabase; if (!sb) return;
+    R._favIdsLoading = true;
+    try {
+      const { data, error } = await sb.from('rental_favorites').select('listing_id').eq('user_id', u.id).limit(500);
+      if (error) throw error;
+      (data || []).forEach(r => R.favIds.add(r.listing_id));
+      R._favIdsLoaded = true;
+    } catch (e) {
+      console.warn('rental fav ids preload:', e);
+    }
+    R._favIdsLoading = false;
+    if (document.getElementById('rentalListingsPage')) H.renderPage('RentalListings', {});
+    else if (document.getElementById('rvdPage')) {
+      const saveBtns = document.querySelectorAll('[data-rvd-save]');
+      saveBtns.forEach(btn => { const id = btn.dataset.rvdSave; btn.innerHTML = R.favIds.has(id) ? I.heartF : I.heart; });
+    }
+  };
+
   R.loadFavorites = async function () {
     const u = H.currentUser(); if (!u) return;
     const sb = window.supabase; if (!sb) return;
@@ -1424,6 +1454,23 @@
       } catch (e) {}
     }
     R._logLead(det, 'chat');
+    // Bind this conversation to the listing/company so the business portal's
+    // Recent Inquiries and a future "rental messages" view can find it, and
+    // so it never gets mixed into personal-only surfaces. startChatWith
+    // derives the conversation id deterministically from the two user ids
+    // (sorted, last-6-chars), so we can compute the same id here without
+    // waiting on it — one row per (user, listing) via the table's unique
+    // constraint, so re-opening chat on the same vehicle never duplicates.
+    if (sb) {
+      const ids = [u.id, ownerId].sort();
+      const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+      sb.from('rental_conversation_context').upsert({
+        conversation_id: convId,
+        listing_id:      listingId,
+        company_id:      det.company.id,
+        user_id:         u.id,
+      }, { onConflict: 'user_id,listing_id' }).then(function () {}, function () {});
+    }
     H.startChatWith(ownerId, listingId);
   };
 
