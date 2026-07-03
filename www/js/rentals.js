@@ -1461,18 +1461,17 @@
     // Recent Inquiries can find it, and so it never gets mixed into
     // personal-only surfaces.
     //
-    // IMPORTANT: startChatWith gives ONE thread per (customer, owner) pair,
-    // for the app's whole lifetime — never one per listing (its own comments
-    // explain this is deliberate, to avoid forking a seller's chat history
-    // across every listing/profile entry point). rental_conversation_context
-    // has conversation_id as its PRIMARY KEY, so it can only describe ONE
-    // listing per conversation at a time. If a customer contacts the same
-    // company about a second vehicle, we must UPDATE the existing context
-    // row to the new listing (upsert on conversation_id) rather than insert
-    // a second row for the same id — that would collide on the primary key.
-    // This means Recent Inquiries reflects "what this thread is currently
-    // about" (the latest vehicle discussed), which matches what a business
-    // owner actually needs to see when they open the conversation.
+    // startChatWith gives ONE thread per (customer, owner) pair for the
+    // app's whole lifetime — never one per listing (deliberate, so a
+    // seller's chat history doesn't fork across every listing/profile entry
+    // point). rental_conversation_context's primary key is now the
+    // composite (conversation_id, listing_id) — see
+    // fix_rental_conversation_context_composite_key.sql — so a customer
+    // asking about a second vehicle from the same company gets its OWN
+    // context row instead of overwriting/colliding with the first. Upsert
+    // targets (user_id, listing_id), which stays unique per vehicle per
+    // customer: re-opening chat about the same vehicle updates that row
+    // rather than duplicating it.
     if (sb) {
       const ids = [u.id, ownerId].sort();
       const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
@@ -1481,7 +1480,7 @@
         listing_id:      listingId,
         company_id:      det.company.id,
         user_id:         u.id,
-      }, { onConflict: 'conversation_id' }).then(function () {}, function () {});
+      }, { onConflict: 'user_id,listing_id' }).then(function () {}, function () {});
     }
     H.startChatWith(ownerId, listingId);
   };
