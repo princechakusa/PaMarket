@@ -2741,6 +2741,8 @@ var _raSelected      = {};        // { listingId: true } for bulk actions
 var _raGlobalSearch  = '';        // cross-entity search term (Module 1)
 var _raAuditSearch   = '';        // Module 9 audit trail search
 var _raAuditAction   = '';        // Module 9 action-type filter
+var _raReportSeverity= '';        // Module 5 report severity filter
+var _raReviewTab     = 'flagged'; // Module 6 review moderation queue tab
 
 function raPill(s) {
   var map = {
@@ -2834,9 +2836,35 @@ function renderRentalApprovals() {
       + '<div class="verif-actions">'
       + '<button class="btn-verif-approve" onclick="raApproveListing(\''+esc(v.id)+'\')">Approve</button>'
       + '<button class="btn-verif-reject" onclick="raModerateListing(\''+esc(v.id)+'\',\'rejected\')">Reject</button>'
+      + '<button class="ab ab-view" onclick="raShowListingHistory(\''+esc(v.id)+'\')">History</button>'
       + '</div></div>';
   });
   document.getElementById('mainContent').innerHTML = html;
+}
+
+// Module 2: per-listing approval history timeline (from rental_audit_logs).
+async function raShowListingHistory(id) {
+  openModal('<div class="confirm-title">Approval History</div><div class="loading-msg">Loading…</div>');
+  try {
+    var { data, error } = await sb.from('rental_audit_logs')
+      .select('action,actor_id,actor_role,after_state,created_at')
+      .eq('target_table','rental_vehicle_listings').eq('target_id',id)
+      .order('created_at',{ascending:false}).limit(50);
+    if (error) throw error;
+    var rows = data||[];
+    var body = rows.length ? rows.map(function(l){
+      var reason = l.after_state && l.after_state.reason ? l.after_state.reason : '';
+      var actor  = l.actor_id ? String(l.actor_id).slice(0,8)+'…' : (l.actor_role||'system');
+      return '<div style="border-left:2px solid var(--border);padding:8px 0 8px 12px;margin-left:4px">'
+        + '<div style="font-weight:700;font-size:13px">'+esc(l.action||'')+'</div>'
+        + (reason?'<div style="font-size:12px;color:var(--sub);margin-top:2px">Reason: '+esc(reason)+'</div>':'')
+        + '<div style="font-size:11px;color:var(--sub);margin-top:2px">'+esc(actor)+' · '+fmtDateTime(l.created_at)+'</div>'
+        + '</div>';
+    }).join('') : '<div class="empty-msg">No recorded actions for this listing yet.</div>';
+    openModal('<div class="confirm-title">Approval History</div><div style="max-height:60vh;overflow:auto;margin:8px 0">'+body+'</div><div class="confirm-btns"><button class="confirm-cancel" onclick="closeModal()">Close</button></div>');
+  } catch(e) {
+    openModal('<div class="confirm-title">Approval History</div><div class="empty-msg">Could not load history: '+esc(e.message)+'</div><div class="confirm-btns"><button class="confirm-cancel" onclick="closeModal()">Close</button></div>');
+  }
 }
 
 // ── Render: Companies ─────────────────────────────────────
@@ -2956,6 +2984,7 @@ function renderRentalListings() {
       + '<td><div style="display:flex;gap:4px">'
       + (v.admin_status!=='approved' ? '<button class="ab ab-approve" onclick="raApproveListing(\''+esc(v.id)+'\')">Approve</button>' : '')
       + (v.admin_status!=='rejected' ? '<button class="ab ab-reject" onclick="raModerateListing(\''+esc(v.id)+'\',\'rejected\')">Reject</button>' : '')
+      + '<button class="ab ab-view" onclick="raShowListingHistory(\''+esc(v.id)+'\')">History</button>'
       + '</div></td></tr>';
   });
   html += '</tbody></table></div>';
@@ -3026,11 +3055,28 @@ async function raBulkAction(kind) {
 }
 
 // ── Render: Reports ───────────────────────────────────────
+// Module 5: severity badge helper.
+function raSevBadge(sev) {
+  var map = { high:{c:'#DC2626',bg:'#FEE2E2'}, medium:{c:'#B45309',bg:'#FEF3C7'}, low:{c:'#6B7280',bg:'#F3F4F6'} };
+  var m = map[sev||'medium'] || map.medium;
+  return '<span style="font-size:10px;font-weight:700;color:'+m.c+';background:'+m.bg+';padding:2px 7px;border-radius:5px;text-transform:uppercase">'+esc(sev||'medium')+'</span>';
+}
+
 function renderRentalReports() {
   if (!RA_DATA.reports.length) { raLoadReports(); }
   var reports  = RA_DATA.reports;
   var filter   = _raReportsFilter;
-  var filtered = filter === 'all' ? reports : reports.filter(function(r){return r.status===filter;});
+  var sevFilter = _raReportSeverity || '';
+  var filtered = reports.filter(function(r){
+    if (filter !== 'all' && r.status !== filter) return false;
+    if (sevFilter && (r.severity||'medium') !== sevFilter) return false;
+    return true;
+  });
+  // Escalation-first: high severity + open at the top.
+  var sevRank = { high:0, medium:1, low:2 };
+  filtered = filtered.slice().sort(function(a,b){
+    return (sevRank[a.severity||'medium']-sevRank[b.severity||'medium']);
+  });
 
   function fBtn(val, label) {
     return '<button onclick="_raReportsFilter=\''+val+'\';renderRentalReports()" class="filter-btn'+(_raReportsFilter===val?' on':'')+'">'+label+'</button>';
@@ -3038,12 +3084,25 @@ function renderRentalReports() {
   var html = '<div class="sec-head"><div class="sec-title">Rental Reports</div><div class="sec-actions">'
     + fBtn('open','Open')+fBtn('reviewing','Reviewing')+fBtn('resolved','Resolved')+fBtn('dismissed','Dismissed')+fBtn('all','All')
     + '<button class="btn-refresh" onclick="raLoadReports()">Refresh</button></div></div>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">'
+    + '<span style="font-size:12px;color:var(--sub);font-weight:600">Severity:</span>'
+    + '<select onchange="_raReportSeverity=this.value;renderRentalReports()"><option value="">All</option>'
+      + '<option value="high"'+(sevFilter==='high'?' selected':'')+'>High</option>'
+      + '<option value="medium"'+(sevFilter==='medium'?' selected':'')+'>Medium</option>'
+      + '<option value="low"'+(sevFilter==='low'?' selected':'')+'>Low</option></select>'
+    + '</div>';
   if (!filtered.length) { html += '<div class="empty-msg">No reports in this category.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
-  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Reason</th><th>Listing</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Severity</th><th>Reason</th><th>Listing</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
   filtered.forEach(function(r) {
+    var listingLink = r.listing_id
+      ? '<a href="#" onclick="raShowListingHistory(\''+esc(r.listing_id)+'\');return false;" style="color:#1A3A8F">'+esc(r.listing_title||r.listing_id)+'</a>'
+      : esc(r.listing_title||'');
     html += '<tr>'
-      + '<td style="font-weight:600;max-width:160px">'+esc(r.reason||'No reason')+'</td>'
-      + '<td style="color:var(--sub);font-size:12px">'+esc(r.listing_title||r.listing_id||'')+'</td>'
+      + '<td><select onchange="raSetReportSeverity(\''+esc(r.id)+'\',this.value)" style="font-size:11px">'
+        + ['high','medium','low'].map(function(s){return '<option value="'+s+'"'+((r.severity||'medium')===s?' selected':'')+'>'+s+'</option>';}).join('')
+        + '</select></td>'
+      + '<td style="font-weight:600;max-width:150px">'+esc(r.reason||'No reason')+(r.detail?'<div style="font-size:11px;color:var(--sub);font-weight:400">'+esc(String(r.detail).slice(0,80))+'</div>':'')+'</td>'
+      + '<td style="color:var(--sub);font-size:12px">'+listingLink+'</td>'
       + '<td>'+raPill(r.status)+'</td>'
       + '<td style="color:var(--sub);font-size:12px">'+fmtDate(r.created_at)+'</td>'
       + '<td><div style="display:flex;gap:4px">'
@@ -3056,23 +3115,73 @@ function renderRentalReports() {
   document.getElementById('mainContent').innerHTML = html;
 }
 
+// Module 5: set report severity (admin-only via existing rental_reports RLS).
+async function raSetReportSeverity(id, sev) {
+  try {
+    var r = await sb.from('rental_reports').update({severity:sev}).eq('id',id).select('id');
+    if (r.error) throw r.error;
+    if (!r.data || !r.data.length) throw new Error('Update matched 0 rows — RLS blocked it (admin role?)');
+    var rp = RA_DATA.reports.find(function(x){return x.id===id;}); if (rp) rp.severity=sev;
+    toast('Severity: '+sev);
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
 // ── Render: Reviews ───────────────────────────────────────
+// Module 6: auto-flag heuristics (client-side; no schema change). Returns array
+// of flag labels. Duplicate detection uses the full loaded set (passed in).
+function raReviewFlags(r, allReviews) {
+  var flags = [];
+  var body = (r.body||'').trim();
+  var low  = body.toLowerCase();
+  // Spam: contains a URL, or long runs of repeated chars.
+  if (/https?:\/\/|www\.|\b\w+\.(com|net|co|xyz)\b/i.test(body) || /(.)\1{5,}/.test(body)) flags.push('spam');
+  // Abuse: crude profanity match (kept minimal + non-explicit here).
+  if (/\b(scam|fraud|idiot|stupid|thief|thieves)\b/i.test(low)) flags.push('abuse');
+  // Duplicate: same reviewer posted an identical body more than once.
+  if (body && allReviews.filter(function(x){return x.reviewer_id===r.reviewer_id && (x.body||'').trim()===body;}).length > 1) flags.push('duplicate');
+  return flags;
+}
+
 function renderRentalReviews() {
   if (!RA_DATA.reviews.length) { raLoadReviews(); }
   var reviews = RA_DATA.reviews;
-  var html = '<div class="sec-head"><div class="sec-title">Review Moderation</div><button class="btn-refresh" onclick="raLoadReviews()">Refresh</button></div>';
+  var tab = _raReviewTab || 'flagged';
+  // Precompute flags for each review.
+  reviews.forEach(function(r){ r._flags = raReviewFlags(r, reviews); });
+
+  var counts = {
+    flagged:   reviews.filter(function(r){return r._flags.length;}).length,
+    published: reviews.filter(function(r){return r.status==='published';}).length,
+    hidden:    reviews.filter(function(r){return r.status==='hidden';}).length,
+    removed:   reviews.filter(function(r){return r.status==='removed';}).length,
+    all:       reviews.length
+  };
+  var filtered = tab==='flagged' ? reviews.filter(function(r){return r._flags.length;})
+    : tab==='all' ? reviews
+    : reviews.filter(function(r){return r.status===tab;});
+
+  function qBtn(val,label){ return '<button onclick="_raReviewTab=\''+val+'\';renderRentalReviews()" class="filter-btn'+(tab===val?' on':'')+'">'+label+' ('+counts[val]+')</button>'; }
+
+  var html = '<div class="sec-head"><div class="sec-title">Review Moderation</div><div class="sec-actions">'
+    + qBtn('flagged','Flagged')+qBtn('published','Published')+qBtn('hidden','Hidden')+qBtn('removed','Removed')+qBtn('all','All')
+    + '<button class="btn-refresh" onclick="RA_DATA.reviews=[];raLoadReviews()">Refresh</button></div></div>';
   if (!reviews.length) { html += '<div class="loading-msg">Loading…</div>'; document.getElementById('mainContent').innerHTML=html; return; }
-  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Company</th><th>Rating</th><th>Body</th><th>Reviewer</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-  reviews.forEach(function(r) {
+  if (!filtered.length) { html += '<div class="empty-msg">No reviews in this queue.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Company</th><th>Rating</th><th>Body</th><th>Flags</th><th>Reviewer</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  filtered.forEach(function(r) {
     var stars = [1,2,3,4,5].map(function(n){return '<svg viewBox="0 0 24 24" width="10" height="10" fill="'+(n<=r.rating?'var(--amber)':'none')+'" stroke="var(--amber)" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';}).join('');
+    var flagHtml = (r._flags&&r._flags.length)
+      ? r._flags.map(function(f){return '<span style="font-size:10px;font-weight:700;color:#DC2626;background:#FEE2E2;padding:2px 6px;border-radius:5px;text-transform:uppercase">'+esc(f)+'</span>';}).join(' ')
+      : '<span style="font-size:11px;color:#16A34A">clean</span>';
     html += '<tr>'
       + '<td style="font-weight:600">'+esc(r.company_name||'—')+'</td>'
       + '<td style="white-space:nowrap">'+stars+' '+r.rating+'/5</td>'
       + '<td style="color:var(--sub);font-size:12px;max-width:180px">'+esc((r.body||'').slice(0,80))+'</td>'
+      + '<td>'+flagHtml+'</td>'
       + '<td style="color:var(--sub);font-size:12px">'+esc(r.reviewer_name||'—')+'</td>'
       + '<td>'+raPill(r.status)+'</td>'
       + '<td><div style="display:flex;gap:4px">'
-      + (r.status!=='published' ? '<button class="ab ab-approve" onclick="raSetReviewStatus(\''+esc(r.id)+'\',\'published\')">Publish</button>' : '')
+      + (r.status!=='published' ? '<button class="ab ab-approve" onclick="raSetReviewStatus(\''+esc(r.id)+'\',\'published\')">'+(r.status==='removed'?'Restore':'Publish')+'</button>' : '')
       + (r.status!=='hidden'    ? '<button class="ab ab-view" onclick="raSetReviewStatus(\''+esc(r.id)+'\',\'hidden\')">Hide</button>' : '')
       + (r.status!=='removed'   ? '<button class="ab ab-reject" onclick="raSetReviewStatus(\''+esc(r.id)+'\',\'removed\')">Remove</button>' : '')
       + '</div></td></tr>';
@@ -3320,16 +3429,24 @@ async function raLoadAllListings() {
 async function raLoadReports() {
   if (!sb) return;
   try {
-    var {data, error} = await sb.from('rental_reports')
-      .select('id,listing_id,reason,detail,status,created_at').order('created_at',{ascending:false}).limit(50);
-    if (error) throw error;
+    // severity may not exist until add_rental_report_severity.sql is applied; if
+    // the select errors on the unknown column, retry without it so the module
+    // still works pre-migration.
+    var res = await sb.from('rental_reports')
+      .select('id,listing_id,reason,detail,status,severity,admin_note,reporter_id,created_at').order('created_at',{ascending:false}).limit(50);
+    if (res.error) {
+      res = await sb.from('rental_reports')
+        .select('id,listing_id,reason,detail,status,admin_note,reporter_id,created_at').order('created_at',{ascending:false}).limit(50);
+    }
+    var data = res.data; if (res.error) throw res.error;
     var lids = [...new Set((data||[]).map(function(r){return r.listing_id;}))];
-    var lstRes = lids.length ? await sb.from('rental_vehicle_listings').select('id,model,year,brand_id').in('id',lids) : {data:[]};
+    var lstRes = lids.length ? await sb.from('rental_vehicle_listings').select('id,model,year,brand_id,company_id').in('id',lids) : {data:[]};
     var brandIds = [...new Set((lstRes.data||[]).map(function(l){return l.brand_id;}).filter(Boolean))];
     var bRes = brandIds.length ? await sb.from('rental_brands').select('id,label').in('id',brandIds) : {data:[]};
     var bMap = Object.fromEntries((bRes.data||[]).map(function(b){return [b.id,b.label];}));
-    var lstMap = Object.fromEntries((lstRes.data||[]).map(function(l){return [l.id,(bMap[l.brand_id]||'')+' '+(l.model||'')];}));
-    RA_DATA.reports = (data||[]).map(function(r){return Object.assign({},r,{listing_title:lstMap[r.listing_id]});});
+    var lstMap  = Object.fromEntries((lstRes.data||[]).map(function(l){return [l.id,(bMap[l.brand_id]||'')+' '+(l.model||'')];}));
+    var coMap   = Object.fromEntries((lstRes.data||[]).map(function(l){return [l.id,l.company_id];}));
+    RA_DATA.reports = (data||[]).map(function(r){return Object.assign({},r,{listing_title:lstMap[r.listing_id],company_id:coMap[r.listing_id]});});
   } catch(e) { console.warn('ra reports:', e); }
   if (currentTab === 'rentalReports') renderRentalReports();
 }
@@ -3438,7 +3555,7 @@ async function raApproveListing(id) {
     var r = await sb.from('rental_vehicle_listings').update({admin_status:'approved',status:'active'}).eq('id',id).select('id');
     if (r.error) throw r.error;
     if (!r.data || !r.data.length) throw new Error('Update matched 0 rows — RLS blocked it (check your profile role is admin and the "rvl: admin all" policy exists)');
-    try { await sb.from('rental_audit_logs').insert({action:'approve_listing',target_table:'rental_vehicle_listings',target_id:id}); } catch(e){}
+    try { await sb.from('rental_audit_logs').insert({action:'approve_listing',target_table:'rental_vehicle_listings',target_id:id,after_state:{admin_status:'approved'}}); } catch(e){}
     RA_DATA.pendingListings = RA_DATA.pendingListings.filter(function(l){return l.id!==id;});
     RA_DATA.summary = null; RA_DATA.allListings = [];
     toast('Listing approved and published');
@@ -3449,16 +3566,20 @@ async function raApproveListing(id) {
 }
 
 async function raModerateListing(id, newStatus) {
-  var reason = await confirm2(newStatus==='rejected'?'Reject Listing':'Remove Listing','Reason (optional):',newStatus==='rejected'?'Reject':'Remove','red',true,'e.g. Prohibited content');
+  var reason = await confirm2(newStatus==='rejected'?'Reject Listing':'Remove Listing','Reason (required for the record):',newStatus==='rejected'?'Reject':'Remove','red',true,'e.g. Prohibited content, misleading photos');
   if (reason===null) return;
+  // Module 2: rejection reason is now REQUIRED and logged (was captured then dropped).
+  if (newStatus==='rejected' && !String(reason).trim()) { toast('A rejection reason is required','error'); return; }
   try {
     var update = newStatus==='rejected'
-      ? {admin_status:'rejected',status:'paused'}
-      : {admin_status:'rejected',status:'archived',deleted_at:new Date().toISOString()};
+      ? {admin_status:'rejected',status:'paused',admin_note:String(reason).trim()}
+      : {admin_status:'rejected',status:'archived',deleted_at:new Date().toISOString(),admin_note:String(reason).trim()};
     var r = await sb.from('rental_vehicle_listings').update(update).eq('id',id).select('id');
     if (r.error) throw r.error;
     if (!r.data || !r.data.length) throw new Error('Update matched 0 rows — RLS blocked it (check your profile role is admin and the "rvl: admin all" policy exists)');
-    try { await sb.from('rental_audit_logs').insert({action:newStatus+'_listing',target_table:'rental_vehicle_listings',target_id:id}); } catch(e){}
+    // Store the reason in the audit trail (after_state jsonb) so the per-listing
+    // approval timeline can show WHY it was rejected — no new columns needed.
+    try { await sb.from('rental_audit_logs').insert({action:newStatus+'_listing',target_table:'rental_vehicle_listings',target_id:id,after_state:{admin_status:newStatus,reason:String(reason).trim()}}); } catch(e){}
     RA_DATA.pendingListings = RA_DATA.pendingListings.filter(function(l){return l.id!==id;});
     RA_DATA.summary = null; RA_DATA.allListings = [];
     toast('Listing '+newStatus,'info');
@@ -3484,7 +3605,14 @@ async function raSetCompanyStatus(id, newStatus) {
 
 async function raSetReportStatus(id, newStatus) {
   try {
-    var r = await sb.from('rental_reports').update({status:newStatus}).eq('id',id).select('id');
+    // Module 5: stamp resolver + time when closing a report so the resolution
+    // workflow is auditable. resolved_by/resolved_at already exist on the table.
+    var update = { status:newStatus };
+    if (newStatus==='resolved' || newStatus==='dismissed') {
+      update.resolved_at = new Date().toISOString();
+      try { var u = (await sb.auth.getUser()).data.user; if (u) update.resolved_by = u.id; } catch(e){}
+    }
+    var r = await sb.from('rental_reports').update(update).eq('id',id).select('id');
     if (r.error) throw r.error;
     if (!r.data || !r.data.length) throw new Error('Update matched 0 rows — RLS blocked it (check your admin role)');
     var rp = RA_DATA.reports.find(function(r){return r.id===id;}); if (rp) rp.status=newStatus;
