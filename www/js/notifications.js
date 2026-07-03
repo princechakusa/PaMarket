@@ -30,11 +30,17 @@
     saveState();
     H._updateNotifBadge();
 
-    // Persist to Supabase so the user gets it on other devices.
-    // conversationId is included in meta so the FCM server can use Android
-    // notification tag grouping (one notification per conversation).
+    // Cloud persistence of CROSS-USER notifications is now handled exclusively by
+    // server-side security-definer triggers (messages, reviews, business_leads,
+    // rental_* events). The notifications INSERT policy is self-only
+    // (auth.uid() = user_id), so a client insert for another user is rejected by
+    // RLS anyway. We therefore only persist when the target is the CURRENT user
+    // (e.g. a self/system notice), which RLS permits. This keeps a single source
+    // of truth for cross-user delivery and avoids doomed inserts.
+    const cu = H.currentUser && H.currentUser();
+    const isSelf = cu && String(cu.id) === String(uid_);
     const c = sb();
-    if (c) {
+    if (c && isSelf) {
       c.from('notifications').insert({
         id: n.id, user_id: uid_, title: n.title, body: n.body,
         type: n.type, read: false, created_at: n.t,
