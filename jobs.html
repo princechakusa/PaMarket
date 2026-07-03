@@ -7,13 +7,43 @@
 <title>Hire Talent — PaMarket Zimbabwe</title>
 <link rel="canonical" href="https://pamarketzw.com/jobs">
 <link rel="icon" href="img/icon-192.png" type="image/png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="/manifest.json">
 <meta property="og:title" content="Hire Talent — PaMarket Zimbabwe">
 <meta property="og:description" content="Post jobs, browse live vacancies, and connect directly. Free for employers and job seekers.">
 <meta property="og:image" content="https://pamarketzw.com/img/icon-512.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hire Talent — PaMarket Zimbabwe">
+<meta name="twitter:description" content="Post jobs, browse live vacancies, and connect directly. Free for employers and job seekers.">
+<meta name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
 <meta property="og:url" content="https://pamarketzw.com/jobs">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_ZW">
 <meta name="robots" content="index, follow">
 <meta name="geo.region" content="ZW">
 <meta name="geo.placename" content="Zimbabwe">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Jobs in Zimbabwe — Hire Talent on PaMarket",
+  "description": "Post jobs, browse live vacancies, and connect directly. Free for employers and job seekers across Zimbabwe.",
+  "url": "https://pamarketzw.com/jobs",
+  "isPartOf": {"@type": "WebSite", "name": "PaMarket", "url": "https://pamarketzw.com/"},
+  "about": {"@type": "Thing", "name": "Jobs in Zimbabwe"}
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://pamarketzw.com/"},
+    {"@type": "ListItem", "position": 2, "name": "Jobs", "item": "https://pamarketzw.com/jobs"}
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -68,6 +98,9 @@ button{font-family:inherit;cursor:pointer}
 .mob-nav.open{display:flex}
 
 /* ══ HERO ══ */
+.crumb{max-width:1200px;margin:0 auto;padding:14px 32px;font-size:13px;color:var(--mute)}
+.crumb a{color:var(--sub);font-weight:500}
+.crumb a:hover{color:var(--navy)}
 .j-hero{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:64px 0 56px;position:relative;overflow:hidden}
 .j-hero::before{content:'';position:absolute;top:-120px;right:-100px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(232,163,61,.12),transparent 70%)}
 .j-hero-w{max-width:1200px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
@@ -231,6 +264,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   </div>
 </nav>
 
+<div class="crumb"><a href="/">Home</a> / <span>Jobs</span></div>
 <section class="j-hero">
   <div class="j-hero-w">
     <span class="p-tag">Hire Talent</span>

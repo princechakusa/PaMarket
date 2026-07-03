@@ -3,14 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Browse thousands of live listings across Zimbabwe. Property, vehicles, electronics, jobs, furniture and more on PaMarket — Zimbabwe's free marketplace.">
-<title>Browse Listings — PaMarket Zimbabwe</title>
-<link rel="canonical" href="https://pamarketzw.com/browse">
+<meta id="metaDesc" name="description" content="Browse thousands of live listings across Zimbabwe. Property, vehicles, electronics, jobs, furniture and more on PaMarket — Zimbabwe's free marketplace.">
+<title id="pageTitle">Browse Listings — PaMarket Zimbabwe</title>
+<link id="canonicalLink" rel="canonical" href="https://pamarketzw.com/browse">
 <link rel="icon" href="img/icon-192.png" type="image/png">
-<meta property="og:title" content="Browse Listings — PaMarket Zimbabwe">
-<meta property="og:description" content="Thousands of live listings across Zimbabwe. Updated daily.">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta id="ogTitle" property="og:title" content="Browse Listings — PaMarket Zimbabwe">
+<meta id="ogDesc" property="og:description" content="Thousands of live listings across Zimbabwe. Updated daily.">
 <meta property="og:image" content="https://pamarketzw.com/img/icon-512.png">
-<meta property="og:url" content="https://pamarketzw.com/browse">
+<meta name="twitter:card" content="summary_large_image">
+<meta id="twTitle" name="twitter:title" content="Browse Listings — PaMarket Zimbabwe">
+<meta id="twDesc" name="twitter:description" content="Thousands of live listings across Zimbabwe. Updated daily.">
+<meta name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
+<meta id="ogUrl" property="og:url" content="https://pamarketzw.com/browse">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="en_ZW">
 <meta name="robots" content="index, follow">
@@ -86,6 +93,9 @@ button{font-family:inherit;cursor:pointer}
 .mob-nav.open{display:flex}
 
 /* ══ PAGE HERO ══ */
+.crumb{max-width:1200px;margin:0 auto;padding:14px 32px;font-size:13px;color:var(--mute)}
+.crumb a{color:var(--sub);font-weight:500}
+.crumb a:hover{color:var(--navy)}
 .p-hero{background:linear-gradient(135deg,var(--navy-deep),var(--navy));color:#fff;padding:40px 0}
 .p-hero-w{max-width:1200px;margin:0 auto;padding:0 32px}
 .p-tag{display:inline-block;background:rgba(255,255,255,.12);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 13px;border-radius:20px;color:#C7D8F5}
@@ -278,6 +288,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   </div>
 </nav>
 
+<div class="crumb" id="crumb"><a href="/">Home</a> / <span id="crumbCur">Browse</span></div>
 <section class="p-hero">
   <div class="p-hero-w">
     <span class="p-tag" id="heroTag">Browse</span>
@@ -306,6 +317,15 @@ footer{background:var(--navy-deep);color:#6A8AC8}
         <option>Harare</option><option>Bulawayo</option><option>Manicaland</option>
         <option>Mashonaland Central</option><option>Mashonaland East</option><option>Mashonaland West</option>
         <option>Masvingo</option><option>Matabeleland North</option><option>Matabeleland South</option><option>Midlands</option>
+      </select>
+    </div>
+    <div class="f-group">
+      <label class="f-label">City / Town</label>
+      <select class="f-select" id="fCity">
+        <option value="">All Cities</option>
+        <option>Harare</option><option>Bulawayo</option><option>Mutare</option><option>Gweru</option>
+        <option>Masvingo</option><option>Chinhoyi</option><option>Kadoma</option><option>Kwekwe</option>
+        <option>Victoria Falls</option>
       </select>
     </div>
     <div class="f-group">
@@ -371,6 +391,15 @@ footer{background:var(--navy-deep);color:#6A8AC8}
       <option>Harare</option><option>Bulawayo</option><option>Manicaland</option>
       <option>Mashonaland Central</option><option>Mashonaland East</option><option>Mashonaland West</option>
       <option>Masvingo</option><option>Matabeleland North</option><option>Matabeleland South</option><option>Midlands</option>
+    </select>
+  </div>
+  <div class="f-group">
+    <label class="f-label">City / Town</label>
+    <select class="f-select" id="fCityM">
+      <option value="">All Cities</option>
+      <option>Harare</option><option>Bulawayo</option><option>Mutare</option><option>Gweru</option>
+      <option>Masvingo</option><option>Chinhoyi</option><option>Kadoma</option><option>Kwekwe</option>
+      <option>Victoria Falls</option>
     </select>
   </div>
   <div class="f-group">
@@ -450,7 +479,8 @@ const TCOLORS=['#1A3A8F','#B27D22','#16A34A','#9D174D','#0369A1','#92400E','#7B2
 const CAT_LABELS={property:'Property',vehicles:'Vehicles',electronics:'Electronics',furniture:'Furniture',fashion:'Fashion',services:'Services',agriculture:'Agriculture',rooms:'Rooms to Rent',pets:'Pets',kids:'Baby & Kids',jobs:'Jobs'};
 
 const PAGE_SIZE=20;
-let state={cat:'',q:'',prov:'',sort:'created_at.desc',offset:0,shops:false};
+let state={cat:'',q:'',prov:'',city:'',sort:'created_at.desc',offset:0,shops:false};
+const ZW_CITIES=['Harare','Bulawayo','Mutare','Gweru','Masvingo','Chinhoyi','Kadoma','Kwekwe','Victoria Falls'];
 
 function bcard(biz,idx){
   const bg=COLORS[idx%COLORS.length],tc=TCOLORS[idx%TCOLORS.length];
@@ -514,27 +544,75 @@ function updateItemListSchema(rows){
 
 function updateHero(){
   const tag=document.getElementById('heroTag'),title=document.getElementById('heroTitle'),sub=document.getElementById('heroSub');
+  const place=state.city||state.prov||'';
+  const catLabel=CAT_LABELS[state.cat]||state.cat;
+  let pageTitle,pageDesc,crumbLabel,ogType='website';
+
   if(state.shops){
     tag.textContent='Shops';
     title.textContent='Verified Business Shops';
     sub.textContent='Browse verified businesses selling on PaMarket across Zimbabwe.';
+    pageTitle='Verified Business Shops — PaMarket Zimbabwe';
+    pageDesc='Browse verified business shops selling on PaMarket across Zimbabwe.';
+    crumbLabel='Shops';
   }else if(state.business){
     tag.textContent='Shop';
     title.textContent='Listings from this shop';
     sub.textContent='All active listings from this verified business.';
+    pageTitle='Shop Listings — PaMarket Zimbabwe';
+    pageDesc='All active listings from this verified PaMarket business.';
+    crumbLabel='Shop';
+  }else if(state.cat && place){
+    tag.textContent=catLabel;
+    title.textContent=catLabel+' in '+place+', Zimbabwe';
+    sub.textContent='Browse '+catLabel.toLowerCase()+' listings in '+place+'. Updated continuously, always free.';
+    pageTitle=catLabel+' for Sale in '+place+' | PaMarket Zimbabwe';
+    pageDesc='Find '+catLabel.toLowerCase()+' listings in '+place+', Zimbabwe on PaMarket. Live listings from real sellers, updated daily. No fees, no commissions.';
+    crumbLabel=catLabel+' in '+place;
+    ogType='product.group';
   }else if(state.cat){
-    tag.textContent=CAT_LABELS[state.cat]||state.cat;
-    title.textContent=(CAT_LABELS[state.cat]||state.cat)+' listings in Zimbabwe';
-    sub.textContent=state.prov?('Showing listings in '+state.prov+'.'):'Live listings from real sellers. Updated continuously.';
+    tag.textContent=catLabel;
+    title.textContent=catLabel+' listings in Zimbabwe';
+    sub.textContent='Live listings from real sellers. Updated continuously.';
+    pageTitle=catLabel+' for Sale in Zimbabwe | PaMarket';
+    pageDesc='Browse '+catLabel.toLowerCase()+' listings across Zimbabwe on PaMarket — Harare, Bulawayo and all 10 provinces. Free to browse and post.';
+    crumbLabel=catLabel;
+    ogType='product.group';
+  }else if(place){
+    tag.textContent=place;
+    title.textContent='Listings in '+place+', Zimbabwe';
+    sub.textContent='Browse everything for sale in '+place+' on PaMarket. Updated continuously.';
+    pageTitle='Classifieds in '+place+', Zimbabwe | PaMarket';
+    pageDesc='Browse property, vehicles, electronics, jobs and more for sale in '+place+', Zimbabwe on PaMarket.';
+    crumbLabel=place;
   }else if(state.q){
     tag.textContent='Search';
     title.textContent='Results for "'+state.q+'"';
-    sub.textContent=state.prov?('Showing listings in '+state.prov+'.'):'Live listings from real sellers. Updated continuously.';
+    sub.textContent='Live listings from real sellers. Updated continuously.';
+    pageTitle='Search: '+state.q+' | PaMarket Zimbabwe';
+    pageDesc='Search results for "'+state.q+'" on PaMarket, Zimbabwe\'s free marketplace.';
+    crumbLabel='Search';
   }else{
     tag.textContent='Browse';
     title.textContent='All listings across Zimbabwe';
-    sub.textContent=state.prov?('Showing listings in '+state.prov+'.'):'Live listings from real sellers. Updated continuously.';
+    sub.textContent='Live listings from real sellers. Updated continuously.';
+    pageTitle='Browse Listings — PaMarket Zimbabwe';
+    pageDesc='Thousands of live listings across Zimbabwe. Updated daily.';
+    crumbLabel='Browse';
   }
+
+  document.title=pageTitle;
+  document.getElementById('pageTitle').textContent=pageTitle;
+  document.getElementById('metaDesc').setAttribute('content',pageDesc);
+  document.getElementById('ogTitle').setAttribute('content',pageTitle);
+  document.getElementById('ogDesc').setAttribute('content',pageDesc);
+  document.getElementById('twTitle').setAttribute('content',pageTitle);
+  document.getElementById('twDesc').setAttribute('content',pageDesc);
+  document.getElementById('crumbCur').textContent=crumbLabel;
+  const canonicalUrl='https://pamarketzw.com/browse'+(state.shops?'?shops=1':(state.cat?'?cat='+state.cat:''));
+  document.getElementById('canonicalLink').setAttribute('href',canonicalUrl);
+  document.getElementById('ogUrl').setAttribute('content',canonicalUrl);
+
   document.getElementById('rentalBanner').classList.toggle('hidden',state.cat!=='vehicles');
 }
 
@@ -559,7 +637,7 @@ async function runQuery(append){
       rows=await PM.fetchBusinesses({q:state.q||undefined,limit:PAGE_SIZE,offset:state.offset});
       cardFn=bcard;
     }else{
-      rows=await PM.fetchListings({category:state.cat||undefined,subcat:state.sub||undefined,q:state.q||undefined,province:state.prov||undefined,businessId:state.business||undefined,order:state.sort,limit:PAGE_SIZE,offset:state.offset});
+      rows=await PM.fetchListings({category:state.cat||undefined,subcat:state.sub||undefined,q:state.q||undefined,province:state.prov||undefined,city:state.city||undefined,businessId:state.business||undefined,order:state.sort,limit:PAGE_SIZE,offset:state.offset});
       cardFn=gcard;
     }
     if(!append)grid.innerHTML='';
@@ -589,12 +667,14 @@ function syncFromUrl(){
   state.cat=p.get('cat')||'';
   state.q=p.get('q')||'';
   state.prov=p.get('prov')||'';
+  state.city=p.get('city')||'';
   state.shops=p.get('shops')==='1';
   state.business=p.get('business')||'';
   state.sub=p.get('sub')||'';
   document.getElementById('fCat').value=state.cat;
   document.getElementById('fQ').value=state.q;
   document.getElementById('fProv').value=state.prov;
+  document.getElementById('fCity').value=state.city;
   if(state.shops){
     document.getElementById('filtersPanel').classList.add('hidden');
     document.getElementById('browseLayout').classList.add('no-filters');
@@ -605,12 +685,14 @@ function applyFilters(){
   state.cat=document.getElementById('fCat').value;
   state.q=document.getElementById('fQ').value.trim();
   state.prov=document.getElementById('fProv').value;
+  state.city=document.getElementById('fCity').value;
   state.sort=document.getElementById('sortSelect').value;
   state.offset=0;
   const u=new URLSearchParams();
   if(state.cat)u.set('cat',state.cat);
   if(state.q)u.set('q',state.q);
   if(state.prov)u.set('prov',state.prov);
+  if(state.city)u.set('city',state.city);
   history.replaceState(null,'','browse'+(u.toString()?'?'+u.toString():''));
   updateHero();highlightCatNav();runQuery(false);
 }
@@ -619,6 +701,7 @@ function applyFiltersMobile(){
   document.getElementById('fCat').value=document.getElementById('fCatM').value;
   document.getElementById('fQ').value=document.getElementById('fQM').value;
   document.getElementById('fProv').value=document.getElementById('fProvM').value;
+  document.getElementById('fCity').value=document.getElementById('fCityM').value;
   closeDrawer();
   applyFilters();
 }
@@ -626,6 +709,7 @@ function applyFiltersMobile(){
 function openDrawer(){
   document.getElementById('fCatM').value=state.cat;
   document.getElementById('fProvM').value=state.prov;
+  document.getElementById('fCityM').value=state.city;
   document.getElementById('fQM').value=state.q;
   document.getElementById('drawerBg').classList.add('show');
   document.getElementById('filterDrawer').classList.add('open');

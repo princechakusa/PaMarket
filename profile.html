@@ -3,9 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="View a seller profile on PaMarket — Zimbabwe's free marketplace.">
+<meta id="metaDesc" name="description" content="View a seller profile on PaMarket — Zimbabwe's free marketplace.">
 <title id="pageTitle">Seller Profile — PaMarket Zimbabwe</title>
+<link id="canonicalLink" rel="canonical" href="https://pamarketzw.com/profile">
 <link rel="icon" href="img/icon-192.png" type="image/png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta id="ogTitle" property="og:title" content="Seller Profile — PaMarket Zimbabwe">
+<meta id="ogDesc" property="og:description" content="View a seller profile on PaMarket — Zimbabwe's free marketplace.">
+<meta id="ogImage" property="og:image" content="https://pamarketzw.com/img/icon-512.png">
+<meta id="ogUrl" property="og:url" content="https://pamarketzw.com/profile">
+<meta property="og:type" content="profile">
+<meta property="og:locale" content="en_ZW">
+<meta name="twitter:card" content="summary">
+<meta id="twTitle" name="twitter:title" content="Seller Profile — PaMarket Zimbabwe">
+<meta id="twDesc" name="twitter:description" content="View a seller profile on PaMarket — Zimbabwe's free marketplace.">
+<meta id="twImage" name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
 <meta name="robots" content="index, follow">
 <meta name="geo.region" content="ZW">
 <meta name="geo.placename" content="Zimbabwe">
@@ -223,7 +237,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   <div class="pf-wrap">
     <div class="pf-card">
       <div class="pf-avatar" id="pfAvatar"></div>
-      <div class="pf-name" id="pfName"></div>
+      <h1 class="pf-name" id="pfName"></h1>
       <div class="pf-role" id="pfRole"></div>
       <div class="pf-meta" id="pfMeta"></div>
       <div class="pf-bio hidden" id="pfBio"></div>
@@ -338,13 +352,25 @@ function showNotFound(){
 
 function render(p){
   const name=p.name||'PaMarket User';
-  document.title=name+' — PaMarket Zimbabwe';
-  document.getElementById('pageTitle').textContent=name+' — PaMarket Zimbabwe';
+  const canonicalUrl='https://pamarketzw.com/profile?id='+p.id;
+  const pageTitle=name+' — Seller Profile | PaMarket Zimbabwe';
+  const pageDesc=name+' on PaMarket'+(p.city?', '+p.city:'')+'.'+(p.job_title?' '+p.job_title+'.':'')+' View active listings and contact directly.';
+  document.title=pageTitle;
+  document.getElementById('pageTitle').textContent=pageTitle;
+  document.getElementById('metaDesc').setAttribute('content',pageDesc);
+  document.getElementById('canonicalLink').setAttribute('href',canonicalUrl);
+  document.getElementById('ogTitle').setAttribute('content',pageTitle);
+  document.getElementById('ogDesc').setAttribute('content',pageDesc);
+  document.getElementById('ogUrl').setAttribute('content',canonicalUrl);
+  document.getElementById('twTitle').setAttribute('content',pageTitle);
+  document.getElementById('twDesc').setAttribute('content',pageDesc);
   document.getElementById('crumbName').textContent=name;
 
   const avatarEl=document.getElementById('pfAvatar');
   if(p.avatar){
     avatarEl.innerHTML=`<img src="${p.avatar}" alt="${name.replace(/"/g,'&quot;')}">`;
+    document.getElementById('ogImage').setAttribute('content',p.avatar);
+    document.getElementById('twImage').setAttribute('content',p.avatar);
   }else{
     avatarEl.textContent=name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   }
@@ -374,6 +400,23 @@ function render(p){
   }else{
     waBtn.classList.add('hidden');
   }
+
+  const schema=document.createElement('script');
+  schema.type='application/ld+json';
+  schema.textContent=JSON.stringify({
+    '@context':'https://schema.org',
+    '@type':'ProfilePage',
+    dateCreated:p.created_at||undefined,
+    mainEntity:{
+      '@type':'Person',
+      name,
+      image:p.avatar||undefined,
+      jobTitle:p.job_title||undefined,
+      address:p.city?{'@type':'PostalAddress',addressLocality:p.city,addressCountry:'ZW'}:undefined,
+      url:canonicalUrl
+    }
+  });
+  document.head.appendChild(schema);
 }
 
 function doSearch(){

@@ -2339,7 +2339,9 @@
     if (window.supabase && typeof window.supabase.from === 'function') {
       window.supabase.from('reports').insert({ id: rep.id, reporter_id: u.id,
         target_type: 'message', target_id: msgId, reason: rep.reason,
-        created_at: new Date(rep.t).toISOString(), status: 'open' }).catch(function(){});
+        created_at: new Date(rep.t).toISOString(), status: 'open' })
+        .then(function(r){ if (r && r.error) console.warn('message report save failed:', r.error.message); })
+        .catch(function(e){ console.warn('message report save failed:', e && e.message); });
     }
   };
 
@@ -2513,7 +2515,9 @@
       if (window.supabase && typeof window.supabase.from === 'function') {
         window.supabase.from('reports').insert({ id: rep.id, reporter_id: u.id,
           target_type: 'business', target_id: bizId, reason: rep.reason,
-          created_at: new Date(rep.t).toISOString(), status: 'open' }).catch(() => {});
+          created_at: new Date(rep.t).toISOString(), status: 'open' })
+          .then(function(r){ if (r && r.error) console.warn('business report save failed:', r.error.message); })
+          .catch(function(e){ console.warn('business report save failed:', e && e.message); });
       }
     },
   });

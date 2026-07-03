@@ -3,9 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="View rental vehicle details on PaMarket — Zimbabwe's free marketplace.">
+<meta id="metaDesc" name="description" content="View rental vehicle details on PaMarket — Zimbabwe's free marketplace.">
 <title id="pageTitle">Rental Vehicle — PaMarket Zimbabwe</title>
+<link id="canonicalLink" rel="canonical" href="https://pamarketzw.com/rental-detail">
 <link rel="icon" href="img/icon-192.png" type="image/png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta id="ogTitle" property="og:title" content="Rental Vehicle — PaMarket Zimbabwe">
+<meta id="ogDesc" property="og:description" content="View rental vehicle details on PaMarket — Zimbabwe's free marketplace.">
+<meta id="ogImage" property="og:image" content="https://pamarketzw.com/img/icon-512.png">
+<meta id="ogUrl" property="og:url" content="https://pamarketzw.com/rental-detail">
+<meta property="og:type" content="product">
+<meta property="og:locale" content="en_ZW">
+<meta name="twitter:card" content="summary_large_image">
+<meta id="twTitle" name="twitter:title" content="Rental Vehicle — PaMarket Zimbabwe">
+<meta id="twDesc" name="twitter:description" content="View rental vehicle details on PaMarket — Zimbabwe's free marketplace.">
+<meta id="twImage" name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
 <meta name="robots" content="index, follow">
 <meta name="geo.region" content="ZW">
 <meta name="geo.placename" content="Zimbabwe">
@@ -324,8 +338,18 @@ function showNotFound(){
 function render(v){
   const brand=(v.rental_brands&&v.rental_brands.label)||'';
   const title=(brand+' '+(v.model||'')).trim()+(v.year?' '+v.year:'');
-  document.title=title+' — PaMarket Zimbabwe';
-  document.getElementById('pageTitle').textContent=title+' — PaMarket Zimbabwe';
+  const canonicalUrl='https://pamarketzw.com/rental-detail?id='+v.id;
+  const pageTitle=(title||'Rental Vehicle')+' Rental — PaMarket Zimbabwe';
+  const pageDesc='Rent a '+(title||'vehicle')+' in Zimbabwe'+(v.daily_rate?' from $'+Number(v.daily_rate).toLocaleString()+'/day':'')+'. Book directly with a verified rental company on PaMarket.';
+  document.title=pageTitle;
+  document.getElementById('pageTitle').textContent=pageTitle;
+  document.getElementById('metaDesc').setAttribute('content',pageDesc);
+  document.getElementById('canonicalLink').setAttribute('href',canonicalUrl);
+  document.getElementById('ogTitle').setAttribute('content',pageTitle);
+  document.getElementById('ogDesc').setAttribute('content',pageDesc);
+  document.getElementById('ogUrl').setAttribute('content',canonicalUrl);
+  document.getElementById('twTitle').setAttribute('content',pageTitle);
+  document.getElementById('twDesc').setAttribute('content',pageDesc);
   document.getElementById('crumbTitle').textContent=title;
 
   const media=(v.rental_vehicle_media||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
@@ -340,6 +364,8 @@ function render(v){
   if(media.length){
     thumbsEl.innerHTML=media.map((m,i)=>`<div class="gallery-thumb${i===0?' on':''}" onclick="window.__showPhoto(${i})"><img src="${m.url}" alt=""></div>`).join('');
     window.__showPhoto=showPhoto;
+    document.getElementById('ogImage').setAttribute('content',media[0].url);
+    document.getElementById('twImage').setAttribute('content',media[0].url);
   }
   showPhoto(0);
 
@@ -379,6 +405,44 @@ function render(v){
   }else{
     waBtn.classList.add('hidden');
   }
+
+  const schema=document.createElement('script');
+  schema.type='application/ld+json';
+  schema.textContent=JSON.stringify({
+    '@context':'https://schema.org',
+    '@type':'Vehicle',
+    name:title||'Rental Vehicle',
+    description:v.description||pageDesc,
+    image:media.length?media.map(m=>m.url):undefined,
+    url:canonicalUrl,
+    brand:brand||undefined,
+    model:v.model||undefined,
+    vehicleModelDate:v.year?String(v.year):undefined,
+    offers:{
+      '@type':'Offer',
+      price:v.daily_rate||undefined,
+      priceCurrency:'USD',
+      availability:v.is_available?'https://schema.org/InStock':'https://schema.org/OutOfStock',
+      businessFunction:'http://purl.org/goodrelations/v1#LeaseOut',
+      areaServed:{'@type':'Country',name:'Zimbabwe'},
+      url:canonicalUrl
+    },
+    provider:{'@type':'Organization',name:company.trading_name||'PaMarket Rental Partner'}
+  });
+  document.head.appendChild(schema);
+
+  const breadcrumb=document.createElement('script');
+  breadcrumb.type='application/ld+json';
+  breadcrumb.textContent=JSON.stringify({
+    '@context':'https://schema.org',
+    '@type':'BreadcrumbList',
+    itemListElement:[
+      {'@type':'ListItem',position:1,name:'Home',item:'https://pamarketzw.com/'},
+      {'@type':'ListItem',position:2,name:'Vehicle Rental',item:'https://pamarketzw.com/rentals'},
+      {'@type':'ListItem',position:3,name:title||'Rental Vehicle',item:canonicalUrl}
+    ]
+  });
+  document.head.appendChild(breadcrumb);
 }
 
 function doSearch(){

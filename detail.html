@@ -3,9 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="View listing details on PaMarket — Zimbabwe's free marketplace.">
+<meta id="metaDesc" name="description" content="View listing details on PaMarket — Zimbabwe's free marketplace.">
 <title id="pageTitle">Listing — PaMarket Zimbabwe</title>
+<link id="canonicalLink" rel="canonical" href="https://pamarketzw.com/detail">
 <link rel="icon" href="img/icon-192.png" type="image/png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta id="ogTitle" property="og:title" content="Listing — PaMarket Zimbabwe">
+<meta id="ogDesc" property="og:description" content="View listing details on PaMarket — Zimbabwe's free marketplace.">
+<meta id="ogImage" property="og:image" content="https://pamarketzw.com/img/icon-512.png">
+<meta id="ogUrl" property="og:url" content="https://pamarketzw.com/detail">
+<meta property="og:type" content="product">
+<meta property="og:locale" content="en_ZW">
+<meta name="twitter:card" content="summary_large_image">
+<meta id="twTitle" name="twitter:title" content="Listing — PaMarket Zimbabwe">
+<meta id="twDesc" name="twitter:description" content="View listing details on PaMarket — Zimbabwe's free marketplace.">
+<meta id="twImage" name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
 <meta name="robots" content="index, follow">
 <meta name="geo.region" content="ZW">
 <meta name="geo.placename" content="Zimbabwe">
@@ -396,8 +410,22 @@ function showNotFound(){
 function renderListing(l){
   const loc=[l.suburb,l.city,l.province].filter(Boolean).join(', ')||'Zimbabwe';
   const catLabel=CAT_LABELS[l.category]||l.category;
-  document.title=l.title+' — PaMarket Zimbabwe';
-  document.getElementById('pageTitle').textContent=l.title+' — PaMarket Zimbabwe';
+  const pageTitle=l.title+' — '+PM.money(l.price,l.currency)+' | PaMarket Zimbabwe';
+  const pageDesc=(l.description?l.description.slice(0,155):l.title+' — '+catLabel+' for sale in '+loc+' on PaMarket, Zimbabwe\'s free marketplace.');
+  const canonicalUrl='https://pamarketzw.com/detail?id='+l.id;
+  document.title=pageTitle;
+  document.getElementById('pageTitle').textContent=pageTitle;
+  document.getElementById('metaDesc').setAttribute('content',pageDesc);
+  document.getElementById('canonicalLink').setAttribute('href',canonicalUrl);
+  document.getElementById('ogTitle').setAttribute('content',pageTitle);
+  document.getElementById('ogDesc').setAttribute('content',pageDesc);
+  document.getElementById('ogUrl').setAttribute('content',canonicalUrl);
+  document.getElementById('twTitle').setAttribute('content',pageTitle);
+  document.getElementById('twDesc').setAttribute('content',pageDesc);
+  if(l.photos&&l.photos.length){
+    document.getElementById('ogImage').setAttribute('content',l.photos[0]);
+    document.getElementById('twImage').setAttribute('content',l.photos[0]);
+  }
   document.getElementById('crumbCat').textContent=catLabel;
 
   const photos=(l.photos&&l.photos.length)?l.photos:[];
@@ -449,23 +477,93 @@ function renderListing(l){
 
   const schema=document.createElement('script');
   schema.type='application/ld+json';
-  schema.textContent=JSON.stringify({
+  schema.textContent=JSON.stringify(buildListingSchema(l,catLabel,loc,photos,canonicalUrl));
+  document.head.appendChild(schema);
+
+  const breadcrumb=document.createElement('script');
+  breadcrumb.type='application/ld+json';
+  breadcrumb.textContent=JSON.stringify({
     '@context':'https://schema.org',
-    '@type':'Product',
+    '@type':'BreadcrumbList',
+    itemListElement:[
+      {'@type':'ListItem',position:1,name:'Home',item:'https://pamarketzw.com/'},
+      {'@type':'ListItem',position:2,name:'Browse',item:'https://pamarketzw.com/browse'},
+      {'@type':'ListItem',position:3,name:catLabel,item:'https://pamarketzw.com/browse?cat='+l.category},
+      {'@type':'ListItem',position:4,name:l.title,item:canonicalUrl}
+    ]
+  });
+  document.head.appendChild(breadcrumb);
+}
+
+function buildListingSchema(l,catLabel,loc,photos,canonicalUrl){
+  const base={
+    '@context':'https://schema.org',
     name:l.title,
     description:l.description||l.title,
     image:photos.length?photos:undefined,
+    url:canonicalUrl,
+    datePosted:l.created_at
+  };
+  const address={'@type':'PostalAddress',addressLocality:l.city||l.suburb||undefined,addressRegion:l.province||undefined,addressCountry:'ZW'};
+
+  if(l.category==='property'){
+    const rentalType=(l.attributes&&l.attributes.rentalType)||'';
+    return Object.assign(base,{
+      '@type':'RealEstateListing',
+      category:catLabel,
+      address,
+      offers:{
+        '@type':'Offer',
+        price:l.price,
+        priceCurrency:l.currency||'USD',
+        availability:'https://schema.org/InStock',
+        businessFunction:/rent/i.test(rentalType)?'http://purl.org/goodrelations/v1#LeaseOut':'http://purl.org/goodrelations/v1#Sell',
+        url:canonicalUrl
+      }
+    });
+  }
+  if(l.category==='vehicles'){
+    return Object.assign(base,{
+      '@type':'Vehicle',
+      category:catLabel,
+      vehicleCondition:l.condition||undefined,
+      areaServed:{'@type':'Country',name:'Zimbabwe'},
+      offers:{
+        '@type':'Offer',
+        price:l.price,
+        priceCurrency:l.currency||'USD',
+        availability:'https://schema.org/InStock',
+        areaServed:{'@type':'Country',name:'Zimbabwe'},
+        url:canonicalUrl
+      }
+    });
+  }
+  if(l.category==='jobs'){
+    return {
+      '@context':'https://schema.org',
+      '@type':'JobPosting',
+      title:l.title,
+      description:l.description||l.title,
+      datePosted:l.created_at,
+      validThrough:l.expires_at||undefined,
+      employmentType:(l.attributes&&l.attributes.employmentType)||undefined,
+      hiringOrganization:{'@type':'Organization',name:l.seller_name||'PaMarket Employer',sameAs:'https://pamarketzw.com/'},
+      jobLocation:{'@type':'Place',address},
+      baseSalary:l.price?{'@type':'MonetaryAmount',currency:l.currency||'USD',value:{'@type':'QuantitativeValue',value:l.price,unitText:'MONTH'}}:undefined
+    };
+  }
+  return Object.assign(base,{
+    '@type':'Product',
     category:catLabel,
     offers:{
       '@type':'Offer',
       price:l.price,
       priceCurrency:l.currency||'USD',
       availability:'https://schema.org/InStock',
-      areaServed:{'@type':'Country', name:'Zimbabwe'},
-      url:location.href
+      areaServed:{'@type':'Country',name:'Zimbabwe'},
+      url:canonicalUrl
     }
   });
-  document.head.appendChild(schema);
 }
 
 function doSearch(){
