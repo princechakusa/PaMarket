@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
         `cv/${user.id}/`,
         `verification/${user.id}/`,
         `profiles/${user.id}/`,
+        `rentals/${user.id}/`,
       ]
       if (!allowed.some(p => key.startsWith(p))) throw new Error('Forbidden path')
       if (!contentType) throw new Error('contentType required for upload')
