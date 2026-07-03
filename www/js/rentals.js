@@ -75,6 +75,12 @@
     photo:    '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
     chevD:    '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>',
     chevR:    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94A3B8" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>',
+    tag:      '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2.41 12.4A2 2 0 0 1 1.83 11V4a2 2 0 0 1 2-2h7a2 2 0 0 1 1.41.59l8.35 8.35a2 2 0 0 1 0 2.47z"/><circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" stroke="none"/></svg>',
+    trending: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    arrowUp:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>',
+    arrowDn:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>',
+    trophy:   '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2"><path d="M8 21h8M12 17v4M17 4H7v6a5 5 0 0 0 10 0V4z"/><path d="M17 5h3a2 2 0 0 1-2 4M7 5H4a2 2 0 0 0 2 4"/></svg>',
+    sparkle:  '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><path d="M12 2l1.8 5.6L19.4 9.4 13.8 11.2 12 17l-1.8-5.8L4.6 9.4l5.6-1.8z"/></svg>',
   };
 
   const BRAND_LABELS = {
@@ -166,14 +172,14 @@
       ? `<div style="position:absolute;bottom:10px;left:10px;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.96);border-radius:999px;padding:5px 10px 5px 8px;font-size:11px;font-weight:700;color:#16A34A;box-shadow:0 2px 6px rgba(16,24,40,.12)"><span style="width:7px;height:7px;border-radius:50%;background:#16A34A"></span>Available</div>`
       : `<div style="position:absolute;bottom:10px;left:10px;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.96);border-radius:999px;padding:5px 10px 5px 8px;font-size:11px;font-weight:700;color:#DC2626;box-shadow:0 2px 6px rgba(16,24,40,.12)"><span style="width:7px;height:7px;border-radius:50%;background:#DC2626"></span>Booked</div>`;
 
-    const metaChip = (emoji, label) => label
-      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:#5C6480;background:#F5F7FC;border-radius:7px;padding:4px 8px;font-weight:600">${emoji}${esc(String(label))}</span>`
+    const metaChip = (icon, label) => label
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:#5C6480;background:#F5F7FC;border-radius:7px;padding:4px 8px;font-weight:600">${icon}${esc(String(label))}</span>`
       : '';
 
     return `<div class="rvl-card" style="background:var(--card,#fff);border:1px solid #F0F1F3;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.04),0 4px 14px rgba(16,24,40,.06)" onclick="H._rental.openDetail('${lid}')">
       <div style="position:relative;width:100%;padding-top:62%;background:#EEF2FB;overflow:hidden">
         ${img}
-        ${v.is_featured ? '<div style="position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#F5A623,#F09819);color:#fff;font-size:10px;font-weight:800;border-radius:8px;padding:5px 9px;letter-spacing:.4px;box-shadow:0 2px 6px rgba(245,166,35,.4);display:flex;align-items:center;gap:4px">⭐ FEATURED</div>' : ''}
+        ${v.is_featured ? `<div style="position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#F5A623,#F09819);color:#fff;font-size:10px;font-weight:800;border-radius:8px;padding:5px 9px 5px 7px;letter-spacing:.4px;box-shadow:0 2px 6px rgba(245,166,35,.4);display:flex;align-items:center;gap:4px">${I.trophy}FEATURED</div>` : ''}
         <button onclick="event.stopPropagation();H._rental.toggleFav('${lid}')" aria-label="${saved ? 'Remove from saved' : 'Save vehicle'}" class="rvl-fav-btn${saved ? ' rvl-fav-pop' : ''}" style="position:absolute;top:10px;right:10px;width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.96);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 8px rgba(16,24,40,.14)">${saved ? I.heartF : I.heart}</button>
         ${availPill}
       </div>
@@ -183,14 +189,14 @@
           ${v.daily_rate ? `<div style="text-align:right;flex-shrink:0;white-space:nowrap"><span style="font-size:18px;font-weight:800;color:#1A3A8F">$${fmt(v.daily_rate)}</span><span style="font-size:11px;color:#8992A9;font-weight:600">/day</span></div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:9px">
-          ${metaChip('📅 ', v.year)}
-          ${metaChip('🚙 ', catLabel(v.category_slug))}
-          ${metaChip('📍 ', v.city)}
+          ${metaChip(I.calendar, v.year)}
+          ${metaChip(I.carSm, catLabel(v.category_slug))}
+          ${metaChip(I.loc, v.city)}
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:11px;padding-top:11px;border-top:1px solid #F0F1F3">
           <div style="width:22px;height:22px;border-radius:6px;background:#EEF2FB;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#1A3A8F">${I.bldg}</div>
           <span style="flex:1;font-size:12px;color:#8992A9;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.company_name || '')}</span>
-          ${v.view_count ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#B4BACB">👁 ${fmt(v.view_count)}</span>` : ''}
+          ${v.view_count ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#B4BACB">${I.eye}${fmt(v.view_count)}</span>` : ''}
           <span style="font-size:12px;font-weight:800;color:#1A3A8F;display:inline-flex;align-items:center">View${I.chevR.replace('#94A3B8','#1A3A8F')}</span>
         </div>
       </div>
@@ -319,13 +325,13 @@
 
   const PRICE_MAX_CAP = 500;
   const GROUP_ICONS = {
-    loc:   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
-    price: '$',
-    type:  '🚙',
-    brand: '🏷️',
-    trans: '⚙️',
-    fuel:  '⛽',
-    avail: '📅',
+    loc:   I.loc,
+    price: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    type:  I.carSm,
+    brand: I.tag,
+    trans: I.gear,
+    fuel:  I.fuel,
+    avail: I.calendar,
   };
 
   function _renderFilterOverlay() {
@@ -384,11 +390,11 @@
       <div id="rfPriceLive" style="text-align:center;font-size:13px;font-weight:700;color:#1A3A8F;margin-top:6px">${f.pmax != null ? 'Up to $' + f.pmax + '/day' : 'Any price'}</div>`;
 
     // ── Vehicle type: selectable icon cards ──────────────────────────────────
-    const types = [['suv','SUV','🚙'],['sedan','Sedan','🚗'],['pickup','Pickup','🛻'],['minibus','Minibus','🚐'],['luxury','Luxury','✨'],['bus','Bus','🚌'],['motorbike','Motorbike','🏍️'],['other','Other','🚘']];
-    const typeHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">` + types.map(([v, l, e]) => {
+    const types = [['suv','SUV'],['sedan','Sedan'],['pickup','Pickup'],['minibus','Minibus'],['luxury','Luxury'],['bus','Bus'],['motorbike','Motorbike'],['other','Other']];
+    const typeHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">` + types.map(([v, l]) => {
       const active = f.cat === v;
       return `<button onclick="H._rental._draftToggle('cat','${v}')" class="rvl-chip-tap" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:14px;border:1.5px solid ${active ? '#1A3A8F' : '#EEF0F4'};background:${active ? '#F3F6FF' : '#fff'};color:${active ? '#1A3A8F' : 'var(--text)'};cursor:pointer;font-family:inherit">
-        <span style="font-size:19px">${e}</span>
+        <span style="display:flex">${active ? I.car.replace(/width="\d+" height="\d+"/, 'width="20" height="20"') : I.car.replace(/width="\d+" height="\d+"/, 'width="20" height="20"').replace('currentColor','#94A3B8')}</span>
         <span style="font-size:11.5px;font-weight:${active ? '800' : '600'}">${l}</span>
       </button>`;
     }).join('') + `</div>`;
@@ -586,12 +592,15 @@
     return r;
   }
 
+  // Use currentColor variants so the icon tints white when its tile is the
+  // active (filled blue) state, matching the arrow/trending/sparkle icons.
+  const SORT_ICON_FEATURED = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
   const SORT_ICONS = {
-    featured:    '⭐',
-    price_asc:   '↑',
-    price_desc:  '↓',
-    most_viewed: '🔥',
-    newest:      '✨',
+    featured:    SORT_ICON_FEATURED,
+    price_asc:   I.arrowUp,
+    price_desc:  I.arrowDn,
+    most_viewed: I.trending,
+    newest:      I.sparkle,
   };
 
   R.openSort = function () {
