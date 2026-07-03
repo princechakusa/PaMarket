@@ -6,7 +6,7 @@
 with checks as (
 
   -- 1. reports: business/message target types accepted (fix_reports_target_types)
-  select 'reports target_type includes business+message' as check,
+  select 'reports target_type includes business+message' as check_name,
     case when pg_get_constraintdef(c.oid) like '%business%'
           and pg_get_constraintdef(c.oid) like '%message%'
          then 'OK' else 'MISSING' end as status
@@ -109,4 +109,4 @@ with checks as (
                  and grantee='anon' and privilege_type='EXECUTE') = 2
     then 'OK' else 'MISSING' end
 )
-select check, status from checks order by status desc, check;
+select check_name, status from checks order by status desc, check_name;
