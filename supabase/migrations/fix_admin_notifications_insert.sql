@@ -23,7 +23,10 @@ alter table public.notifications enable row level security;
 
 drop policy if exists "own notifications: insert" on public.notifications;
 drop policy if exists "notifications: self or admin insert" on public.notifications;
+-- Cast both sides to text so this works whether notifications.user_id is uuid
+-- (schema/notifications.sql) or text (as some live deployments have it) — avoids
+-- a uuid = text operator error.
 create policy "notifications: self or admin insert"
   on public.notifications for insert
   to authenticated
-  with check (auth.uid() = user_id or public.is_admin());
+  with check (auth.uid()::text = user_id::text or public.is_admin());

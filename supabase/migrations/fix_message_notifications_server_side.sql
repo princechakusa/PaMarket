@@ -59,11 +59,13 @@ begin
 
   -- One notification per OTHER member (1:1 chats have exactly one).
   foreach v_recipient in array v_members loop
-    if v_recipient is distinct from NEW.sender_id then
+    if v_recipient::text is distinct from NEW.sender_id::text then
+      -- user_id is cast to text so this works whether the live notifications
+      -- table has user_id as uuid (schema) or text (some deployments).
       insert into public.notifications (id, user_id, title, body, type, read, created_at, meta)
       values (
         gen_random_uuid()::text,
-        v_recipient,
+        v_recipient::text,
         'New Message',
         v_sender_name || ': ' || v_preview,
         'message',
