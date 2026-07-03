@@ -142,6 +142,40 @@
     });
   }
 
+  // ── Advertisements (public.paid_ads) ──────────────────────────────
+  // Same live table the app renders, so an ad an admin activates (e.g. on
+  // behalf of a rental company) appears on the website too — no separate ad
+  // store, no hardcoded banners. Filters to currently-active ads: active=true
+  // AND (starts_at is null OR starts_at <= now) AND (ends_at is null OR
+  // ends_at >= now). PostgREST cannot express the null-or-compare in one param,
+  // so the date-window filtering is finished client-side after the active fetch.
+  // opts: { placement, limit }
+  function fetchActiveAds(opts) {
+    opts = opts || {};
+    var qp = ['active=eq.true'];
+    if (opts.placement) qp.push('placement=eq.' + esc(opts.placement));
+    qp.push('select=id,title,image_url,link_url,placement,starts_at,ends_at');
+    qp.push('order=created_at.desc');
+    qp.push('limit=' + (opts.limit || 10));
+    return pgFetch('paid_ads?' + qp.join('&')).then(function (rows) {
+      var now = Date.now();
+      return (rows || []).filter(function (a) {
+        var startsOk = !a.starts_at || new Date(a.starts_at).getTime() <= now;
+        var endsOk = !a.ends_at || new Date(a.ends_at).getTime() >= now;
+        return startsOk && endsOk;
+      });
+    });
+  }
+
+  // Best-effort impression/click tracking. The anon website key cannot UPDATE
+  // paid_ads (admin-write RLS), so tracking from the public site is a no-op at
+  // the DB level today; kept as a single call site so a future PostgREST RPC
+  // (security definer increment, like the app's listing-view RPC) can wire in
+  // without touching every page. Returns a resolved promise so callers are safe.
+  function trackAdEvent(/* id, kind */) {
+    return Promise.resolve();
+  }
+
   function money(n, currency) {
     var num = Number(n) || 0;
     return (currency === 'ZWG' ? 'ZWG ' : '$') + num.toLocaleString();
@@ -167,6 +201,8 @@
   global.PM.fetchBusinesses = fetchBusinesses;
   global.PM.fetchBusinessById = fetchBusinessById;
   global.PM.fetchJobs = fetchJobs;
+  global.PM.fetchActiveAds = fetchActiveAds;
+  global.PM.trackAdEvent = trackAdEvent;
   global.PM.money = money;
   global.PM.timeAgo = timeAgo;
 })(window);
