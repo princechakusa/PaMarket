@@ -282,6 +282,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
       <a href="browse?cat=vehicles">Vehicles</a>
       <a href="rentals">Vehicle Rental</a>
       <a href="jobs">Jobs</a>
+      <a href="services">Services</a>
       <a href="browse?shops=1">Shops</a>
     </div>
     <div class="foot-col">
@@ -362,7 +363,7 @@ function render(v){
     thumbsEl.querySelectorAll('.gallery-thumb').forEach((t,ti)=>t.classList.toggle('on',ti===i));
   }
   if(media.length){
-    thumbsEl.innerHTML=media.map((m,i)=>`<div class="gallery-thumb${i===0?' on':''}" onclick="window.__showPhoto(${i})"><img src="${m.url}" alt=""></div>`).join('');
+    thumbsEl.innerHTML=media.map((m,i)=>`<div class="gallery-thumb${i===0?' on':''}" onclick="window.__showPhoto(${i})"><img src="${m.url}" alt="" loading="lazy"></div>`).join('');
     window.__showPhoto=showPhoto;
     document.getElementById('ogImage').setAttribute('content',media[0].url);
     document.getElementById('twImage').setAttribute('content',media[0].url);

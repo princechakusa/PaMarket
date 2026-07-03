@@ -324,6 +324,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
       <a href="browse?cat=vehicles">Vehicles</a>
       <a href="browse?cat=electronics">Electronics</a>
       <a href="jobs">Jobs</a>
+      <a href="services">Services</a>
       <a href="browse?shops=1">Shops</a>
     </div>
     <div class="foot-col">
@@ -438,7 +439,7 @@ function renderListing(l){
     thumbsEl.querySelectorAll('.gallery-thumb').forEach((t,ti)=>t.classList.toggle('on',ti===i));
   }
   if(photos.length){
-    thumbsEl.innerHTML=photos.map((p,i)=>`<div class="gallery-thumb${i===0?' on':''}" onclick="window.__showPhoto(${i})"><img src="${p}" alt=""></div>`).join('');
+    thumbsEl.innerHTML=photos.map((p,i)=>`<div class="gallery-thumb${i===0?' on':''}" onclick="window.__showPhoto(${i})"><img src="${p}" alt="" loading="lazy"></div>`).join('');
     window.__showPhoto=showPhoto;
   }
   showPhoto(0);

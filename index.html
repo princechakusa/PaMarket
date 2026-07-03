@@ -55,6 +55,46 @@
   }
 }
 </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is PaMarket?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "PaMarket is Zimbabwe's free online marketplace and classifieds app. It lets anyone in Zimbabwe buy, sell, rent property or vehicles, find jobs, and hire talent — all in one place, with no listing fees or commissions on sales."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is PaMarket free to use?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Posting and browsing on PaMarket is always 100% free. There are no hidden fees, listing costs, or commissions on sales anywhere on the platform."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What areas does PaMarket cover?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "PaMarket covers all ten provinces of Zimbabwe, including Harare, Bulawayo, Mutare, Gweru, Masvingo, Chinhoyi, Kadoma, Kwekwe and Victoria Falls, with hundreds of suburbs and towns."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I contact a seller?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Open any listing and tap the WhatsApp or Chat button to message the seller directly. Contact details are never shared publicly until you choose to reach out."
+      }
+    }
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -221,6 +261,19 @@ button{font-family:inherit;cursor:pointer}
   -webkit-mask-image:radial-gradient(ellipse 62% 58% at 50% 46%,#000 68%,transparent 100%);
   mask-image:radial-gradient(ellipse 62% 58% at 50% 46%,#000 68%,transparent 100%);
 }
+
+/* ══ HOMEPAGE FAQ ══ */
+.home-faq{padding:72px 0;background:var(--paper)}
+.home-faq-w{max-width:800px;margin:0 auto;padding:0 32px}
+.faq-item{border:1.5px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;background:#fff}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;gap:12px}
+.faq-q:hover{background:var(--paper)}
+.faq-tog{font-size:22px;font-weight:300;color:var(--sub);flex-shrink:0;transition:transform .2s}
+.faq-a{display:none;padding:0 20px 18px;font-size:14px;color:var(--sub);line-height:1.7}
+.faq-item.open .faq-a{display:block}
+.faq-item.open .faq-tog{transform:rotate(45deg)}
+.home-faq-more{text-align:center;margin-top:22px}
+.home-faq-more a{color:var(--navy);font-weight:700;font-size:14px}
 
 /* ══ HOW IT WORKS ══ */
 .how{padding:72px 0;background:#fff}
@@ -646,6 +699,21 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   </div>
 </section>
 
+<!-- FAQ -->
+<section class="home-faq rv">
+  <div class="home-faq-w">
+    <div style="text-align:center;margin-bottom:36px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">FAQ</div>
+      <div class="sec-title" style="font-size:28px;text-align:center">Frequently asked questions</div>
+    </div>
+    <div class="faq-item"><div class="faq-q" onclick="tog(this)">What is PaMarket?<span class="faq-tog">+</span></div><div class="faq-a">PaMarket is Zimbabwe's free online marketplace and classifieds app. It lets anyone in Zimbabwe buy, sell, rent property or vehicles, find jobs, and hire talent — all in one place, with no listing fees or commissions on sales.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="tog(this)">Is PaMarket free to use?<span class="faq-tog">+</span></div><div class="faq-a">Yes. Posting and browsing on PaMarket is always 100% free. There are no hidden fees, listing costs, or commissions on sales anywhere on the platform.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="tog(this)">What areas does PaMarket cover?<span class="faq-tog">+</span></div><div class="faq-a">PaMarket covers all ten provinces of Zimbabwe, including Harare, Bulawayo, Mutare, Gweru, Masvingo, Chinhoyi, Kadoma, Kwekwe and Victoria Falls, with hundreds of suburbs and towns.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="tog(this)">How do I contact a seller?<span class="faq-tog">+</span></div><div class="faq-a">Open any listing and tap the WhatsApp or Chat button to message the seller directly. Contact details are never shared publicly until you choose to reach out.</div></div>
+    <div class="home-faq-more"><a href="help">See all FAQs →</a></div>
+  </div>
+</section>
+
 <!-- APP CTA -->
 <section class="app-cta rv">
   <div class="app-cta-w">
@@ -691,6 +759,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
       <a href="browse?cat=fashion">Fashion</a>
       <a href="browse?cat=agriculture">Agriculture</a>
       <a href="jobs">Jobs</a>
+      <a href="services">Services</a>
       <a href="browse?shops=1">Shops</a>
       <a href="plans">Shop Plans</a>
     </div>
@@ -843,6 +912,9 @@ function doHeroSearch(){
   const qs=params.toString();
   window.location='browse'+(qs?'?'+qs:'');
 }
+
+// ── FAQ accordion ──
+function tog(q){const item=q.closest('.faq-item');item.classList.toggle('open')}
 
 // ── Mobile nav ──
 function toggleMob(){

@@ -41,32 +41,55 @@ const STATIC_PAGES = [
   { loc: '/services', changefreq: 'monthly', priority: '0.5' },
   { loc: '/help', changefreq: 'monthly', priority: '0.4' },
   { loc: '/contact', changefreq: 'monthly', priority: '0.4' },
+  { loc: '/browse?city=Harare', changefreq: 'daily', priority: '0.6' },
+  { loc: '/browse?city=Bulawayo', changefreq: 'daily', priority: '0.6' },
+  { loc: '/browse?city=Mutare', changefreq: 'daily', priority: '0.5' },
+  { loc: '/browse?city=Gweru', changefreq: 'daily', priority: '0.5' },
+  { loc: '/browse?city=Masvingo', changefreq: 'daily', priority: '0.5' },
+  { loc: '/browse?city=Chinhoyi', changefreq: 'daily', priority: '0.5' },
+  { loc: '/browse?city=Kadoma', changefreq: 'daily', priority: '0.5' },
+  { loc: '/browse?city=Kwekwe', changefreq: 'daily', priority: '0.5' },
+  { loc: '/browse?city=Victoria%20Falls', changefreq: 'daily', priority: '0.5' },
   { loc: '/terms', changefreq: 'yearly', priority: '0.3' },
   { loc: '/privacy', changefreq: 'yearly', priority: '0.3' },
   { loc: '/community-guidelines', changefreq: 'yearly', priority: '0.3' },
   { loc: '/delete-account', changefreq: 'yearly', priority: '0.3' },
 ];
 
-async function fetchActiveListingIds(cfg) {
+async function fetchAllRows(cfg, table, select, filter) {
   const headers = { apikey: cfg.key, Authorization: 'Bearer ' + cfg.key };
   const pageSize = 1000;
   let offset = 0;
-  const ids = [];
+  const rows = [];
   for (;;) {
     const url =
       cfg.url +
-      '/rest/v1/listings?status=eq.active&select=id,created_at&order=created_at.desc&limit=' +
-      pageSize +
-      '&offset=' +
-      offset;
+      '/rest/v1/' + table + '?' + (filter ? filter + '&' : '') +
+      'select=' + select + '&limit=' + pageSize + '&offset=' + offset;
     const res = await fetch(url, { headers });
-    if (!res.ok) throw new Error('Supabase listings fetch failed: ' + res.status + ' ' + (await res.text()));
-    const rows = await res.json();
-    ids.push(...rows);
-    if (rows.length < pageSize) break;
+    if (!res.ok) {
+      // Table may not exist or be publicly readable in every environment — skip gracefully.
+      console.warn('Skipping ' + table + ': ' + res.status + ' ' + (await res.text()).slice(0, 200));
+      return [];
+    }
+    const page = await res.json();
+    rows.push(...page);
+    if (page.length < pageSize) break;
     offset += pageSize;
   }
-  return ids;
+  return rows;
+}
+
+async function fetchActiveListingIds(cfg) {
+  return fetchAllRows(cfg, 'listings', 'id,created_at', 'status=eq.active&order=created_at.desc');
+}
+
+async function fetchActiveRentalIds(cfg) {
+  return fetchAllRows(cfg, 'rental_vehicle_listings', 'id,updated_at', 'is_available=eq.true');
+}
+
+async function fetchPublicProfileIds(cfg) {
+  return fetchAllRows(cfg, 'profiles_public', 'id,created_at', '');
 }
 
 function xmlEscape(s) {
@@ -89,7 +112,11 @@ function urlEntry(loc, lastmod, changefreq, priority) {
 
 async function main() {
   const cfg = loadSupabaseConfig();
-  const listings = await fetchActiveListingIds(cfg);
+  const [listings, rentals, profiles] = await Promise.all([
+    fetchActiveListingIds(cfg),
+    fetchActiveRentalIds(cfg),
+    fetchPublicProfileIds(cfg),
+  ]);
 
   const today = new Date().toISOString().slice(0, 10);
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
@@ -104,11 +131,25 @@ async function main() {
     xml += urlEntry('/detail?id=' + l.id, lastmod, 'weekly', '0.6');
   }
 
+  for (const r of rentals) {
+    const lastmod = r.updated_at ? r.updated_at.slice(0, 10) : today;
+    xml += urlEntry('/rental-detail?id=' + r.id, lastmod, 'weekly', '0.6');
+  }
+
+  for (const p of profiles) {
+    const lastmod = p.created_at ? p.created_at.slice(0, 10) : today;
+    xml += urlEntry('/profile?id=' + p.id, lastmod, 'monthly', '0.4');
+  }
+
   xml += '</urlset>\n';
 
   const outPath = path.join(__dirname, '..', 'sitemap.xml');
   fs.writeFileSync(outPath, xml, 'utf8');
-  console.log('sitemap.xml written with ' + STATIC_PAGES.length + ' static pages and ' + listings.length + ' listing pages.');
+  console.log(
+    'sitemap.xml written with ' + STATIC_PAGES.length + ' static pages, ' +
+    listings.length + ' listing pages, ' + rentals.length + ' rental pages, ' +
+    profiles.length + ' profile pages.'
+  );
 }
 
 main().catch((e) => {
