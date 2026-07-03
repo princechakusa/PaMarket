@@ -1195,6 +1195,7 @@
         const profRes = await sb.from('rental_company_profiles_public').select('logo_url,cover_url,about').eq('company_id', companyId).maybeSingle();
         compBiz = {
           id:            companyId,
+          business_id:   companyRes.data.business_id,
           name:          bizRes.data && bizRes.data.name,
           phone:         bizRes.data && bizRes.data.phone,
           whatsapp:      bizRes.data && bizRes.data.whatsapp,
@@ -1252,6 +1253,7 @@
 
       R.compCache[id] = {
         id,
+        business_id:   rc.business_id,
         name:          bRes.data && bRes.data.name,
         phone:         bRes.data && bRes.data.phone,
         whatsapp:      bRes.data && bRes.data.whatsapp,
@@ -1444,6 +1446,10 @@
     }
     const ownerId = det.company.owner_user_id;
     if (ownerId === u.id) { H.toast('This is your own listing.'); return; }
+    // A rental company IS a business (rental_companies.business_id → businesses.id).
+    // Without a business id we cannot open a *business* conversation, so bail to the
+    // legacy personal path only as a last resort (older cached details).
+    const bizId = det.company.business_id || null;
 
     const sb = window.supabase;
     if (sb) {
@@ -1457,24 +1463,28 @@
       } catch (e) {}
     }
     R._logLead(det, 'chat');
-    // Bind this conversation to the listing/company so the business portal's
-    // Recent Inquiries can find it, and so it never gets mixed into
-    // personal-only surfaces.
+    // A rental company is a BUSINESS, so its inquiries must open a business-
+    // tagged conversation (biz_ prefix + businessId) — NOT a personal DM. This
+    // is what makes the thread appear under the owner's "Business" inbox tab and
+    // show the company's name/logo in the chat header instead of the owner's
+    // personal profile (see messages.js inbox segregation + business-messaging.js
+    // startBizChat). Routing through H.startChatWith (the personal path) was the
+    // root cause of rental inquiries landing in the owner's personal inbox.
     //
-    // startChatWith gives ONE thread per (customer, owner) pair for the
-    // app's whole lifetime — never one per listing (deliberate, so a
-    // seller's chat history doesn't fork across every listing/profile entry
-    // point). rental_conversation_context's primary key is now the
-    // composite (conversation_id, listing_id) — see
-    // fix_rental_conversation_context_composite_key.sql — so a customer
-    // asking about a second vehicle from the same company gets its OWN
-    // context row instead of overwriting/colliding with the first. Upsert
-    // targets (user_id, listing_id), which stays unique per vehicle per
-    // customer: re-opening chat about the same vehicle updates that row
-    // rather than duplicating it.
-    if (sb) {
-      const ids = [u.id, ownerId].sort();
-      const convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    // The conversation is ONE thread per (customer, business) pair for the app's
+    // whole lifetime — never one per listing (deliberate: a company's chat history
+    // must not fork across every vehicle). rental_conversation_context is keyed on
+    // (conversation_id, listing_id) so a customer asking about a second vehicle
+    // from the same company still records its own context row (which vehicle they
+    // asked about) without forking the chat. The business portal's openInquiry
+    // reads conversation_id straight from this table, so writing the biz_ id here
+    // keeps the owner's "Recent Inquiries" tap opening the SAME thread the customer
+    // sees. Upsert targets (user_id, listing_id): re-asking about the same vehicle
+    // updates that row rather than duplicating it.
+    const convId = bizId
+      ? H.startRentalBizChat(bizId, ownerId, det.company)
+      : null;
+    if (sb && convId) {
       sb.from('rental_conversation_context').upsert({
         conversation_id: convId,
         listing_id:      listingId,
@@ -1482,7 +1492,53 @@
         user_id:         u.id,
       }, { onConflict: 'user_id,listing_id' }).then(function () {}, function () {});
     }
-    H.startChatWith(ownerId, listingId);
+    if (!convId) {
+      // Legacy fallback: an older cached detail without business_id. Still reach
+      // the right person, just via the personal path (pre-fix behaviour).
+      const ids = [u.id, ownerId].sort();
+      const legacyId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+      if (sb) {
+        sb.from('rental_conversation_context').upsert({
+          conversation_id: legacyId,
+          listing_id:      listingId,
+          company_id:      det.company.id,
+          user_id:         u.id,
+        }, { onConflict: 'user_id,listing_id' }).then(function () {}, function () {});
+      }
+      H.startChatWith(ownerId, listingId);
+    }
+  };
+
+  // Open a business-branded rental conversation. Mirrors H.startBizChat but sources
+  // company identity from the rental detail cache, because a browsing CUSTOMER's
+  // H.state.businesses does not necessarily contain the rental company's business
+  // record (it is populated lazily for owned/viewed businesses). Returns the
+  // conversation id so the caller can bind rental_conversation_context to it.
+  H.startRentalBizChat = function (bizId, ownerId, company) {
+    const u = H.currentUser();
+    if (!u || !bizId || !ownerId) return null;
+    const myId = String(u.id);
+    ownerId = String(ownerId);
+    if (myId === ownerId) return null;
+    // Same deterministic scheme as startBizChat so both entry points agree.
+    const convId = 'biz_' + String(bizId).slice(-8) + '_' + myId.slice(-6);
+    H.state.conversations = H.state.conversations || [];
+    let c = H.state.conversations.find(function (x) { return x.id === convId; });
+    if (!c) {
+      c = { id: convId, members: [myId, ownerId], messages: [], businessId: bizId,
+            otherName: (company && company.name) || 'Rental Company', listingId: null, bizV: 2 };
+      H.state.conversations.unshift(c);
+      H.saveState();
+      if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c).catch(function () {});
+    } else {
+      let dirty = false;
+      if (!c.businessId) { c.businessId = bizId; dirty = true; }
+      if (!Array.isArray(c.members) || c.members.indexOf(ownerId) === -1) { c.members = [myId, ownerId]; dirty = true; }
+      if (!c.otherName && company && company.name) { c.otherName = company.name; dirty = true; }
+      if (dirty) H.saveState();
+    }
+    if (typeof H.openInner === 'function') H.openInner('Chat', { id: convId });
+    return convId;
   };
 
   // Record a customer inquiry so it surfaces in the company's dashboard.
