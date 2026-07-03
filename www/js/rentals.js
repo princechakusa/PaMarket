@@ -1166,7 +1166,10 @@
       const [lstRes, mediaRes, specsRes, featRes] = await Promise.all([
         sb.from('rental_vehicle_listings').select('id,model,year,daily_rate,weekly_rate,monthly_rate,deposit,min_rental_days,driver_rate,description,is_available,company_id,brand_id,location_id').eq('id', id).single(),
         sb.from('rental_vehicle_media').select('url,sort_order,is_cover').eq('listing_id', id).order('sort_order'),
-        sb.from('rental_vehicle_specs').select('transmission,fuel_type,drive_type,seats,doors,mileage_km').eq('listing_id', id).single(),
+        // maybeSingle: specs are optional — an owner may not have set them
+        // yet, and requiring exactly one row (.single()) throws a 406 for a
+        // perfectly valid "no specs on file" vehicle.
+        sb.from('rental_vehicle_specs').select('transmission,fuel_type,drive_type,seats,doors,mileage_km').eq('listing_id', id).maybeSingle(),
         sb.from('rental_vehicle_features').select('feature').eq('listing_id', id).limit(30),
       ]);
       if (lstRes.error) throw lstRes.error;
@@ -1183,7 +1186,9 @@
       let compBiz = {};
       if (companyRes.data && !companyRes.error) {
         const bizRes  = await sb.from('businesses').select('name,phone,whatsapp,owner_user_id').eq('id', companyRes.data.business_id).single();
-        const profRes = await sb.from('rental_company_profiles').select('logo_url,cover_url,about').eq('company_id', companyId).single();
+        // maybeSingle: a company may not have filled in its profile
+        // (logo/cover/about) yet — that's a valid state, not an error.
+        const profRes = await sb.from('rental_company_profiles').select('logo_url,cover_url,about').eq('company_id', companyId).maybeSingle();
         compBiz = {
           id:            companyId,
           name:          bizRes.data && bizRes.data.name,
@@ -1227,7 +1232,8 @@
 
       const [bRes, pRes, rvRes, flRes] = await Promise.all([
         sb.from('businesses').select('name,phone,whatsapp,owner_user_id').eq('id', rc.business_id).single(),
-        sb.from('rental_company_profiles').select('logo_url,cover_url,about').eq('company_id', id).single(),
+        // maybeSingle: profile is optional — company may not have set a logo/about yet.
+        sb.from('rental_company_profiles').select('logo_url,cover_url,about').eq('company_id', id).maybeSingle(),
         sb.from('rental_reviews').select('id,rating,body,created_at,reviewer_id').eq('company_id', id).eq('status','published').order('created_at', {ascending:false}).limit(10),
         sb.rpc('rental_search_listings', { p_available_only: false, p_limit: 8, p_offset: 0 }),
       ]);
