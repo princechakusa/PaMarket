@@ -1481,9 +1481,25 @@
     // keeps the owner's "Recent Inquiries" tap opening the SAME thread the customer
     // sees. Upsert targets (user_id, listing_id): re-asking about the same vehicle
     // updates that row rather than duplicating it.
-    const convId = bizId
-      ? H.startRentalBizChat(bizId, ownerId, det.company)
-      : null;
+    // A rental company is ALWAYS a business, so a rental inquiry must ALWAYS be a
+    // biz_ thread — never the personal chat path. If a legacy cached detail lacks
+    // business_id, re-fetch it rather than degrading to a personal conversation.
+    let resolvedBizId = bizId;
+    if (!resolvedBizId && sb) {
+      try {
+        const { data } = await sb.from('rental_companies')
+          .select('business_id').eq('id', det.company.id).single();
+        if (data && data.business_id) {
+          resolvedBizId = data.business_id;
+          det.company.business_id = resolvedBizId; // heal the cache
+        }
+      } catch (e) { /* fall through to guard below */ }
+    }
+    if (!resolvedBizId) {
+      H.toast('Could not open the company chat. Please try again in a moment.', 4000, true);
+      return;
+    }
+    const convId = H.startRentalBizChat(resolvedBizId, ownerId, det.company);
     if (sb && convId) {
       sb.from('rental_conversation_context').upsert({
         conversation_id: convId,
@@ -1491,21 +1507,6 @@
         company_id:      det.company.id,
         user_id:         u.id,
       }, { onConflict: 'user_id,listing_id' }).then(function () {}, function () {});
-    }
-    if (!convId) {
-      // Legacy fallback: an older cached detail without business_id. Still reach
-      // the right person, just via the personal path (pre-fix behaviour).
-      const ids = [u.id, ownerId].sort();
-      const legacyId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
-      if (sb) {
-        sb.from('rental_conversation_context').upsert({
-          conversation_id: legacyId,
-          listing_id:      listingId,
-          company_id:      det.company.id,
-          user_id:         u.id,
-        }, { onConflict: 'user_id,listing_id' }).then(function () {}, function () {});
-      }
-      H.startChatWith(ownerId, listingId);
     }
   };
 
