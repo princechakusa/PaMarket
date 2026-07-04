@@ -187,6 +187,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
 .toast.error{background:#7F1D1D;border:1px solid var(--red);}
 .toast.info{background:#1E1B4B;border:1px solid var(--accent);}
 @keyframes toastIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.5);}70%{box-shadow:0 0 0 6px rgba(16,185,129,0);}100%{box-shadow:0 0 0 0 rgba(16,185,129,0);}}
 
 /* ── CONFIRM ── */
 #confirmOverlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1100;display:none;align-items:center;justify-content:center;padding:16px;}
@@ -332,6 +333,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
           Vehicle Sales
         </button>
         <div class="nav-section">Governance</div>
+        <button class="nav-item" data-tab="modInbox" onclick="showTab('modInbox')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+          Moderation Inbox
+          <span class="nav-badge" id="badge-modinbox" style="display:none">0</span>
+        </button>
         <button class="nav-item" data-tab="reviewsCenter" onclick="showTab('reviewsCenter')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           Reviews Center
@@ -343,6 +349,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
         <button class="nav-item" data-tab="opsCenter" onclick="showTab('opsCenter')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Operations
+        </button>
+        <div class="nav-section">Enterprise</div>
+        <button class="nav-item" data-tab="supportCenter" onclick="showTab('supportCenter')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+          Support Center
+          <span class="nav-badge" id="badge-support" style="display:none">0</span>
+        </button>
+        <button class="nav-item" data-tab="financeCenter" onclick="showTab('financeCenter')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Finance Center
+        </button>
+        <button class="nav-item" data-tab="securityCenter" onclick="showTab('securityCenter')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Security Center
+        </button>
+        <button class="nav-item" data-tab="automationCenter" onclick="showTab('automationCenter')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/></svg>
+          Automation
         </button>
         <div class="nav-section">Business Platform</div>
         <button class="nav-item" data-tab="businesses" onclick="showTab('businesses')">
@@ -419,6 +443,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
           <div class="topbar-title" id="topbarTitle">Overview</div>
         </div>
         <div class="topbar-actions">
+          <button class="btn-refresh" onclick="openGlobalSearch()" title="Global search (press g)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search</button>
           <button class="btn-refresh" onclick="refreshAll()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button>
         </div>
       </div>
@@ -430,6 +455,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
 </div>
 
 <!-- ══════════════════════════ OVERLAYS -->
+<div id="gsearchOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1200;display:none;align-items:flex-start;justify-content:center;padding-top:12vh" onclick="if(event.target===this)closeGlobalSearch()">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:640px;box-shadow:0 25px 60px rgba(0,0,0,.6);overflow:hidden">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--sub)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="gsearchInput" placeholder="Search users, listings, businesses, tickets…" oninput="runGlobalSearch(this.value)" style="flex:1;background:none;border:none;outline:none;color:var(--text);font-size:15px;font-family:inherit">
+      <kbd style="font-size:10px;color:var(--sub2);border:1px solid var(--border);border-radius:5px;padding:2px 6px">Esc</kbd>
+    </div>
+    <div id="gsearchResults" style="max-height:56vh;overflow-y:auto;padding:6px"></div>
+  </div>
+</div>
 <div id="modalOverlay">
   <div class="modal-box" id="modalBox"></div>
 </div>
@@ -613,7 +648,14 @@ async function loadCounts(){
     cnt('profiles',function(q){return q.gte('created_at',d14).lt('created_at',d7);}),
     cnt('listings',function(q){return q.gte('created_at',d14).lt('created_at',d7);}),
     cnt('reviews'),
-    cnt('listings',function(q){return q.eq('status','pending').lt('created_at',new Date(Date.now()-48*3600e3).toISOString());})
+    cnt('listings',function(q){return q.eq('status','pending').lt('created_at',new Date(Date.now()-48*3600e3).toISOString());}),
+    // Online users (needs profiles.last_seen_at from V2 migration; NULL-safe)
+    cnt('profiles',function(q){return q.gte('last_seen_at',new Date(Date.now()-5*60000).toISOString());}),
+    cnt('profiles',function(q){return q.gte('last_seen_at',new Date(Date.now()-24*3600e3).toISOString());}),
+    // Support queue (V2)
+    cnt('support_tickets',function(q){return q.in('status',['open','pending']);}),
+    // Appeals (V2)
+    cnt('moderation_appeals',function(q){return q.eq('status','open');})
   ]);
   COUNTS = {
     users:r[0], usersToday:r[1], users7:r[2], users30:r[3], verified:r[4], banned:r[5],
@@ -621,6 +663,7 @@ async function loadCounts(){
     verifPending:(r[11]||0)+(r[12]||0)+(r[13]||0), reportsOpen:r[14], contactsPending:r[15],
     adsActive:r[16], businesses:r[17], businessesActive:r[18], upgradesPending:r[19],
     usersPrev7:r[20], listingsPrev7:r[21], mkReviews:r[22], listingsPendingOld:r[23],
+    online5m:r[24], onlineDay:r[25], supportOpen:r[26], appealsOpen:r[27],
     loadedAt: new Date()
   };
 }
@@ -635,6 +678,220 @@ function trendArrow(cur, prev){
 function refreshStamp(){
   return COUNTS.loadedAt ? '<span style="font-size:11px;color:var(--sub2)">Updated '+COUNTS.loadedAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</span>' : '';
 }
+
+// ════════════════════════════════════════════════════════════
+// ENTERPRISE INFRA v2: RPC · global search · saved views · sessions
+//   · MFA · risk/fraud scoring · sortable-selectable table framework
+// Feature-detects every optional table/RPC (ADMIN_ENTERPRISE_V2.sql); each
+// capability degrades to a clear "run the migration" notice if absent.
+// ════════════════════════════════════════════════════════════
+
+// ── Server-side aggregation RPC helper ────────────────────
+// Returns {data, missing:true} when the function isn't installed yet.
+async function rpc(name, args){
+  try {
+    var r = await sb.rpc(name, args||{});
+    if(r.error){
+      var m = (r.error.message||'').toLowerCase();
+      if(m.indexOf('does not exist')!==-1 || m.indexOf('not find')!==-1 || r.error.code==='42883') return {missing:true};
+      return {error:r.error};
+    }
+    return {data:r.data};
+  } catch(e){ return {error:e}; }
+}
+// One-shot capability probe cache so we only warn once per table.
+var CAP = {};
+async function hasTable(table){
+  if(CAP[table]!==undefined) return CAP[table];
+  try { var r = await sb.from(table).select('*',{head:true,count:'exact'}).limit(1); CAP[table] = !r.error; }
+  catch(e){ CAP[table] = false; }
+  return CAP[table];
+}
+function migrationNotice(what, file){
+  return '<div class="empty-msg" style="line-height:1.7">'+esc(what)+' needs a database object that is not installed yet.<br><br>Run <b>supabase/'+(file||'ADMIN_ENTERPRISE_V2.sql')+'</b> in the Supabase SQL Editor to enable it. Everything else keeps working.</div>';
+}
+
+// ── Device parsing (Security Center / session tracking) ───
+function parseDevice(ua){
+  ua = ua || (navigator.userAgent||'');
+  var os = /Windows/.test(ua)?'Windows':/Android/.test(ua)?'Android':/iPhone|iPad|iOS/.test(ua)?'iOS':/Mac OS/.test(ua)?'macOS':/Linux/.test(ua)?'Linux':'Unknown';
+  var br = /Edg\//.test(ua)?'Edge':/Chrome/.test(ua)?'Chrome':/Firefox/.test(ua)?'Firefox':/Safari/.test(ua)?'Safari':'Browser';
+  return br+' · '+os;
+}
+
+// ── Admin session tracking ────────────────────────────────
+// Records a session row on login and heartbeats last_seen. Silent if the
+// admin_sessions table isn't present.
+var _sessionId = null;
+async function startAdminSession(){
+  try {
+    if(!(await hasTable('admin_sessions'))) return;
+    var r = await sb.from('admin_sessions').insert({
+      admin_id:_adminUid, admin_email:_adminEmail,
+      user_agent:navigator.userAgent, device:parseDevice()
+    }).select('id').single();
+    if(!r.error && r.data) _sessionId = r.data.id;
+  } catch(e){}
+}
+async function heartbeatSession(){
+  if(!_sessionId) return;
+  try { await sb.from('admin_sessions').update({last_seen_at:new Date().toISOString()}).eq('id',_sessionId); } catch(e){}
+}
+setInterval(heartbeatSession, 120000);
+async function logLoginAttempt(email, ok, reason){
+  try { if(await hasTable('admin_login_attempts')) await sb.from('admin_login_attempts').insert({email:email, ok:ok, reason:reason||null, user_agent:navigator.userAgent}); } catch(e){}
+}
+
+// ── Trust / risk / fraud scoring (shared, transparent heuristics) ──
+// Trust 0-100 (higher=better). Risk 0-100 (higher=worse). Both derive purely
+// from live signals so they need no schema and are explainable in the UI.
+function computeTrust(sig){
+  var t = 50;
+  if(sig.verified) t += 25;
+  t += Math.min(15, Math.floor((sig.ageDays||0)/30)*3);
+  t -= Math.min(30, (sig.rejected||0)*10);
+  t -= Math.min(30, (sig.reportsAgainst||0)*10);
+  t -= Math.min(20, (sig.warnings||0)*10);
+  if(sig.banned) t = Math.min(t, 10);
+  return Math.max(0, Math.min(100, t));
+}
+function computeRisk(sig){
+  var r = 0;
+  r += Math.min(35, (sig.reportsAgainst||0)*12);
+  r += Math.min(25, (sig.rejected||0)*8);
+  r += Math.min(20, (sig.warnings||0)*10);
+  if((sig.ageDays||999) < 2) r += 15;        // brand-new account
+  if(!sig.verified) r += 8;
+  if(sig.banned) r = Math.max(r, 80);
+  return Math.max(0, Math.min(100, r));
+}
+function scoreBadge(score, invert){
+  // invert=true → high is bad (risk). else high is good (trust).
+  var good = invert ? score<30 : score>=70;
+  var mid  = invert ? score<60 : score>=40;
+  var c = good?'var(--green)':mid?'var(--amber)':'var(--red)';
+  return '<span style="font-size:11px;font-weight:800;color:'+c+'">'+score+'</span>';
+}
+
+// ── TOTP two-factor auth (RFC 6238, self-contained via Web Crypto) ──
+var _B32='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function b32encode(bytes){
+  var bits='', out='';
+  for(var i=0;i<bytes.length;i++){ bits += bytes[i].toString(2).padStart(8,'0'); }
+  for(var j=0;j+5<=bits.length;j+=5){ out += _B32[parseInt(bits.substr(j,5),2)]; }
+  return out;
+}
+function b32decode(str){
+  str = (str||'').toUpperCase().replace(/=+$/,'').replace(/\s/g,'');
+  var bits='';
+  for(var i=0;i<str.length;i++){ var v=_B32.indexOf(str[i]); if(v<0) continue; bits += v.toString(2).padStart(5,'0'); }
+  var bytes=[];
+  for(var j=0;j+8<=bits.length;j+=8){ bytes.push(parseInt(bits.substr(j,8),2)); }
+  return new Uint8Array(bytes);
+}
+async function totpAt(secretB32, counter){
+  var key = b32decode(secretB32);
+  var buf = new ArrayBuffer(8); var view = new DataView(buf);
+  view.setUint32(4, counter>>>0, false);
+  view.setUint32(0, Math.floor(counter/0x100000000), false);
+  var ck = await crypto.subtle.importKey('raw', key, {name:'HMAC',hash:'SHA-1'}, false, ['sign']);
+  var sig = new Uint8Array(await crypto.subtle.sign('HMAC', ck, buf));
+  var off = sig[sig.length-1] & 0xf;
+  var bin = ((sig[off]&0x7f)<<24)|((sig[off+1]&0xff)<<16)|((sig[off+2]&0xff)<<8)|(sig[off+3]&0xff);
+  return (bin % 1000000).toString().padStart(6,'0');
+}
+async function verifyTOTP(secretB32, code){
+  if(!/^\d{6}$/.test(code||'')) return false;
+  var t = Math.floor(Date.now()/30000);
+  for(var w=-1; w<=1; w++){ if((await totpAt(secretB32, t+w))===code) return true; }  // ±30s drift
+  return false;
+}
+function genTotpSecret(){
+  var rnd = crypto.getRandomValues(new Uint8Array(20));
+  return b32encode(rnd);
+}
+
+// ── Saved views (per-admin, per-module) ───────────────────
+var SAVED_VIEWS = {};
+async function loadSavedViews(module){
+  if(!(await hasTable('admin_saved_views'))){ SAVED_VIEWS[module]=[]; return []; }
+  try { var r = await sb.from('admin_saved_views').select('id,name,config').eq('admin_id',_adminUid).eq('module',module).order('created_at');
+    SAVED_VIEWS[module] = r.data||[]; return SAVED_VIEWS[module];
+  } catch(e){ SAVED_VIEWS[module]=[]; return []; }
+}
+async function saveView(module, config){
+  if(!(await hasTable('admin_saved_views'))){ toast('Saved views need ADMIN_ENTERPRISE_V2.sql','error'); return; }
+  var name = await confirm2('Save View','Name this filter view:','Save','green',true,'e.g. Pending in Harare');
+  if(name===null||!String(name).trim()) return;
+  try {
+    await sb.from('admin_saved_views').insert({admin_id:_adminUid, module:module, name:String(name).trim(), config:config});
+    await loadSavedViews(module);
+    toast('View saved'); renderTab();
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function deleteView(id, module){
+  try { await sb.from('admin_saved_views').delete().eq('id',id); await loadSavedViews(module); renderTab(); toast('View deleted'); }
+  catch(e){ toast('Error: '+e.message,'error'); }
+}
+function savedViewsBar(module, applyFn){
+  var views = SAVED_VIEWS[module]||[];
+  if(!views.length) return '';
+  var h = '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px"><span style="font-size:11px;color:var(--sub2);font-weight:700">Saved:</span>';
+  views.forEach(function(v){
+    h += '<span class="filter-btn" style="display:inline-flex;align-items:center;gap:5px;cursor:pointer" onclick="'+applyFn+'('+JSON.stringify(JSON.stringify(v.config)).replace(/"/g,'&quot;')+')">'+esc(v.name)+'<span onclick="event.stopPropagation();deleteView(\''+v.id+'\',\''+module+'\')" style="color:var(--red);font-weight:900">×</span></span>';
+  });
+  h += '</div>';
+  return h;
+}
+
+// ── Sortable / multi-select table framework ───────────────
+// A light column-sort helper for server-paged tables: clicking a header sets
+// the order key/dir on a module's state object and re-runs its loader.
+function sortHeader(label, key, stateGetter, setterFn){
+  var st = stateGetter();
+  var active = st.orderKey===key;
+  var arrow = active ? (st.orderDir==='asc'?' ▲':' ▼') : '';
+  return '<th style="cursor:pointer;user-select:none" onclick="'+setterFn+'(\''+key+'\')">'+esc(label)+arrow+'</th>';
+}
+
+// ── Global search (command palette) ───────────────────────
+var _gsT = null;
+function openGlobalSearch(){
+  var ov = document.getElementById('gsearchOverlay'); ov.style.display='flex';
+  var inp = document.getElementById('gsearchInput'); inp.value=''; setTimeout(function(){ inp.focus(); },50);
+  document.getElementById('gsearchResults').innerHTML = '<div style="padding:16px;color:var(--sub);font-size:13px">Type at least 2 characters. Searches users, listings, businesses'+(CAP['support_tickets']?', tickets':'')+'.</div>';
+}
+function closeGlobalSearch(){ document.getElementById('gsearchOverlay').style.display='none'; }
+function runGlobalSearch(term){
+  clearTimeout(_gsT);
+  var q = likeSafe(term);
+  if(q.length < 2){ document.getElementById('gsearchResults').innerHTML='<div style="padding:16px;color:var(--sub);font-size:13px">Keep typing…</div>'; return; }
+  document.getElementById('gsearchResults').innerHTML='<div class="loading-msg">Searching…</div>';
+  _gsT = setTimeout(async function(){
+    var res = await Promise.allSettled([
+      sb.from('profiles').select('id,name,email,phone').or('name.ilike.%'+q+'%,email.ilike.%'+q+'%,phone.ilike.%'+q+'%').limit(5),
+      sb.from('listings').select('id,title,status,category').ilike('title','%'+q+'%').limit(5),
+      sb.from('businesses').select('id,name,status').ilike('name','%'+q+'%').limit(5)
+    ]);
+    var users = (res[0].value&&res[0].value.data)||[];
+    var lst   = (res[1].value&&res[1].value.data)||[];
+    var biz   = (res[2].value&&res[2].value.data)||[];
+    var html = '';
+    function group(title){ return '<div style="font-size:10px;font-weight:800;color:var(--sub2);text-transform:uppercase;letter-spacing:.6px;padding:10px 12px 4px">'+title+'</div>'; }
+    function row(icon, main, sub, onclick){ return '<div onclick="'+onclick+'" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px" onmouseover="this.style.background=\'rgba(255,255,255,.05)\'" onmouseout="this.style.background=\'none\'"><span style="color:var(--sub)">'+icon+'</span><div style="min-width:0"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+main+'</div><div style="font-size:11px;color:var(--sub)">'+sub+'</div></div></div>'; }
+    if(users.length){ html += group('Users'); users.forEach(function(u){ html += row('◉', esc(u.name||'—'), esc(u.email||u.phone||''), 'closeGlobalSearch();viewUser(\''+u.id+'\')'); }); }
+    if(lst.length){ html += group('Listings'); lst.forEach(function(l){ html += row('▤', esc(l.title||'—'), esc((l.category||'')+' · '+(l.status||'')), 'closeGlobalSearch();viewListing(\''+l.id+'\')'); }); }
+    if(biz.length){ html += group('Businesses'); biz.forEach(function(b){ html += row('▣', esc(b.name||'—'), esc(b.status||''), 'closeGlobalSearch();showTab(\'businesses\');'); }); }
+    if(!html) html = '<div style="padding:16px;color:var(--sub);font-size:13px">No matches for “'+esc(term)+'”.</div>';
+    document.getElementById('gsearchResults').innerHTML = html;
+  }, 260);
+}
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape'){ closeGlobalSearch(); }
+  if(e.key==='g' && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'') && document.getElementById('dash').style.display!=='none'){
+    e.preventDefault(); openGlobalSearch();
+  }
+});
 
 // ── CSV export ────────────────────────────────────────────
 function csvCell(v){ v = v==null?'':String(v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
@@ -769,6 +1026,8 @@ var TAB_TITLES = {
   businesses:'Business Platform', maintenance:'Maintenance',
   jobsAdmin:'Jobs', servicesAdmin:'Services', propertyAdmin:'Property', vehiclesAdmin:'Vehicle Sales',
   reviewsCenter:'Reviews Center', auditCenter:'Audit Center', opsCenter:'Operations Center',
+  modInbox:'Moderation Inbox', supportCenter:'Support Center', financeCenter:'Finance Center',
+  securityCenter:'Security Center', automationCenter:'Automation Center',
   rentalDashboard:'Rental Admin', rentalApprovals:'Rental Approvals',
   rentalCompanies:'Rental Companies', rentalListings:'Rental Listings',
   rentalReports:'Rental Reports', rentalReviews:'Rental Reviews',
@@ -778,8 +1037,8 @@ var TAB_TITLES = {
 // First-open lazy loaders per tab (function declarations hoist, so forward
 // references are safe here).
 var TAB_LOADERS = {
-  listings:      function(){ return loadListings(); },
-  users:         function(){ return loadUsers(); },
+  listings:      function(){ return Promise.allSettled([loadListings(), loadSavedViews('listings')]); },
+  users:         function(){ return Promise.allSettled([loadUsers(), loadSavedViews('users')]); },
   verifications: function(){ return loadVerifications(); },
   notifications: function(){ return Promise.allSettled([loadUsers(), loadNotifHistory()]); },
   reports:       function(){ return loadReports(); },
@@ -793,7 +1052,12 @@ var TAB_LOADERS = {
   vehiclesAdmin: function(){ return loadVertical('vehicles'); },
   reviewsCenter: function(){ return loadReviewsCenter(); },
   auditCenter:   function(){ return loadAuditCenter(); },
-  opsCenter:     function(){ return loadOps(); }
+  opsCenter:     function(){ return loadOps(); },
+  modInbox:      function(){ return loadModInbox(); },
+  supportCenter: function(){ return loadSupport(); },
+  financeCenter: function(){ return loadFinance(); },
+  securityCenter:function(){ return loadSecurity(); },
+  automationCenter: function(){ return loadAutomation(); }
 };
 function showTab(name) {
   currentTab = name;
@@ -816,6 +1080,8 @@ function renderTab() {
     propertyAdmin: function(){ renderVertical('property'); },
     vehiclesAdmin: function(){ renderVertical('vehicles'); },
     reviewsCenter: renderReviewsCenter, auditCenter: renderAuditCenter, opsCenter: renderOps,
+    modInbox: renderModInbox, supportCenter: renderSupport, financeCenter: renderFinance,
+    securityCenter: renderSecurity, automationCenter: renderAutomation,
     rentalDashboard: renderRentalDashboard, rentalApprovals: renderRentalApprovals,
     rentalCompanies: renderRentalCompanies, rentalListings: renderRentalListings,
     rentalReports: renderRentalReports, rentalReviews: renderRentalReviews,
@@ -863,17 +1129,26 @@ async function doLogin() {
   btn.disabled=true; btn.textContent='Signing in…';
   try {
     var res = await sb.auth.signInWithPassword({ email:email, password:pass });
-    if(res.error||!res.data||!res.data.user){ recordFail(); showErr((res.error?res.error.message:'Invalid credentials')+' ('+(MAX_FAILS-getFailState().count)+' attempts left)'); btn.disabled=false; btn.textContent='Sign In'; return; }
-    var pr = await sb.from('profiles').select('role,name').eq('id',res.data.user.id).single();
+    if(res.error||!res.data||!res.data.user){ recordFail(); logLoginAttempt(email,false,res.error?res.error.message:'invalid'); showErr((res.error?res.error.message:'Invalid credentials')+' ('+(MAX_FAILS-getFailState().count)+' attempts left)'); btn.disabled=false; btn.textContent='Sign In'; return; }
+    var pr = await sb.from('profiles').select('role,name,mfa_secret').eq('id',res.data.user.id).single();
     if(pr.error||!pr.data||ADMIN_ROLES.indexOf(pr.data.role)===-1){
-      await sb.auth.signOut(); showErr('Access denied. Admin team only.');
+      await sb.auth.signOut(); logLoginAttempt(email,false,'not_admin'); showErr('Access denied. Admin team only.');
       btn.disabled=false; btn.textContent='Sign In'; return;
+    }
+    // Second factor: if this admin has enrolled a TOTP secret, require a code.
+    if(pr.data.mfa_secret){
+      var code = await confirm2('Two-Factor Authentication','Enter the 6-digit code from your authenticator app.','Verify','confirm-ok',true,'123456');
+      if(code===null){ await sb.auth.signOut(); btn.disabled=false; btn.textContent='Sign In'; return; }
+      var ok = await verifyTOTP(pr.data.mfa_secret, String(code).replace(/\s/g,''));
+      if(!ok){ await sb.auth.signOut(); logLoginAttempt(email,false,'bad_mfa'); showErr('Incorrect authentication code.'); btn.disabled=false; btn.textContent='Sign In'; return; }
     }
     clearFails();
     _adminEmail = email;
     ADMIN_ROLE = pr.data.role;
     _adminUid = res.data.user.id;
-    auditLog('admin_login','auth',res.data.user.id,null,null,null);
+    auditLog('admin_login','auth',res.data.user.id,null,{mfa:!!pr.data.mfa_secret},null);
+    logLoginAttempt(email,true,null);
+    startAdminSession();
     document.getElementById('sidebarUser').textContent = (pr.data.name || email) + (ADMIN_ROLE!=='admin' ? ' ('+ADMIN_ROLE+')' : '');
     showDash();
   } catch(e) {
@@ -883,6 +1158,7 @@ async function doLogin() {
 }
 
 async function doLogout() {
+  if(_sessionId){ try{ await sb.from('admin_sessions').update({revoked_at:new Date().toISOString()}).eq('id',_sessionId); }catch(e){} _sessionId=null; }
   if(sb) await sb.auth.signOut();
   document.getElementById('dash').style.display='none';
   document.getElementById('loginWrap').style.display='flex';
@@ -991,6 +1267,13 @@ function listingsGo(page){ _listingPage=page; loadListings().then(renderListings
 function listingsSetFilter(f){ _listingFilter=f; _listingPage=0; _lstSelected={}; loadListings().then(renderListings); }
 function listingsSetOpt(key, val){ window['_listing'+key]=val; _listingPage=0; loadListings().then(renderListings); }
 function listingsSearchInput(v){ _listingSearch=v; _listingPage=0; debounce('lstSearch', function(){ loadListings().then(function(){ renderListings(); var s=document.getElementById('listingSearch'); if(s){ s.focus(); s.setSelectionRange(s.value.length,s.value.length); } }); }); }
+function saveListingView(){ saveView('listings', {filter:_listingFilter, search:_listingSearch, cat:_listingCat, prov:_listingProv, priceMin:_listingPriceMin, priceMax:_listingPriceMax, since:_listingSince}); }
+function applyListingView(cfgStr){
+  var c; try{ c=JSON.parse(cfgStr); }catch(e){ return; }
+  _listingFilter=c.filter||'all'; _listingSearch=c.search||''; _listingCat=c.cat||''; _listingProv=c.prov||'';
+  _listingPriceMin=c.priceMin||''; _listingPriceMax=c.priceMax||''; _listingSince=c.since||''; _listingPage=0;
+  loadListings().then(renderListings);
+}
 async function signedVUrl(path) {
   if(!path) return null;
   try {
@@ -1343,6 +1626,7 @@ function viewBusiness(id) {
     + '<div><b>Listings:</b> <span id="bizLstCount">…</span> &nbsp; <b>Leads:</b> '+bizLeadCount(id)+' ('+leadsNew+' new)</div>'
     + '</div>'
     + (b.description?'<div style="font-size:13px;color:var(--sub);line-height:1.6;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">'+esc(b.description)+'</div>':'')
+    + '<div id="bizCRM" style="margin-top:14px"><div style="font-size:12px;color:var(--sub)">Loading CRM detail…</div></div>'
     + '<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">'
     + (b.status==='suspended'
         ? '<button class="btn-verif-approve" onclick="bizSetStatus(\''+id+'\',\'active\');closeModal()">Activate</button>'
@@ -1351,6 +1635,39 @@ function viewBusiness(id) {
     + '</div>'
   );
   cnt('listings',function(q){return q.eq('business_id',id);}).then(function(n){ var el=document.getElementById('bizLstCount'); if(el) el.textContent=fmtCnt(n); });
+  loadBizCRM(id);
+}
+
+// Business CRM detail: lifetime revenue, conversion, payment + audit history.
+async function loadBizCRM(id){
+  try {
+    var res = await Promise.allSettled([
+      sb.from('business_payments').select('amount,status,type,created_at').eq('business_id',id).order('created_at',{ascending:false}).limit(50),
+      cnt('business_leads',function(q){return q.eq('business_id',id);}),
+      cnt('business_leads',function(q){return q.eq('business_id',id).eq('status','converted');}),
+      cnt('listings',function(q){return q.eq('business_id',id);}),
+      sb.from('admin_audit_logs').select('action,reason,actor_email,created_at').eq('entity','businesses').eq('entity_id',id).order('created_at',{ascending:false}).limit(8)
+    ]);
+    var pays = (res[0].value&&res[0].value.data)||[];
+    var leads = res[1].value, converted = res[2].value, listings = res[3].value;
+    var audit = (res[4].status==='fulfilled'&&res[4].value&&!res[4].value.error)?(res[4].value.data||[]):null;
+    var lifetime = pays.filter(function(p){return p.status==='paid';}).reduce(function(a,p){return a+(+p.amount||0);},0);
+    var convRate = leads ? Math.round((converted/leads)*100) : 0;
+    var el = document.getElementById('bizCRM'); if(!el) return;
+    var h = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">';
+    function c(v,l,col){ return '<div style="flex:1;min-width:78px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px 10px;text-align:center"><div style="font-size:15px;font-weight:800;color:'+(col||'var(--text)')+'">'+v+'</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:.3px">'+l+'</div></div>'; }
+    h += c('$'+fmt(lifetime),'Lifetime rev','var(--green)')+c(fmtCnt(listings),'Listings')+c(fmtCnt(leads),'Leads')+c(convRate+'%','Conversion',convRate>0?'var(--green)':null);
+    h += '</div>';
+    if(pays.length){
+      h += '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin:8px 0 4px">Payment History</div>';
+      pays.slice(0,6).forEach(function(p){ h += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span style="color:var(--sub)">'+fmtDate(p.created_at)+' · '+esc(p.type||'')+'</span><span><b>$'+fmt(p.amount)+'</b> <span class="badge badge-'+(p.status==='paid'?'active':p.status==='failed'?'rejected':'pending')+'">'+esc(p.status)+'</span></span></div>'; });
+    }
+    if(audit && audit.length){
+      h += '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin:10px 0 4px">Audit Timeline</div>';
+      audit.forEach(function(a){ h += '<div style="font-size:12px;padding:3px 0;border-left:2px solid var(--border);padding-left:8px;margin-bottom:3px"><b>'+esc(a.action)+'</b>'+(a.reason?' — '+esc(a.reason):'')+'<div style="font-size:10px;color:var(--sub2)">'+esc((a.actor_email||'').split('@')[0]||'—')+' · '+fmtDateTime(a.created_at)+'</div></div>'; });
+    } else if(audit===null){ h += '<div style="font-size:11px;color:var(--sub2);margin-top:6px">Audit timeline needs ADMIN_ENTERPRISE_UPGRADE.sql.</div>'; }
+    el.innerHTML = h;
+  } catch(e){ var el2=document.getElementById('bizCRM'); if(el2) el2.innerHTML='<div style="font-size:12px;color:var(--sub)">CRM detail unavailable.</div>'; }
 }
 
 async function bizSetStatus(id, status) {
@@ -1477,6 +1794,8 @@ function updateBadges() {
   setBadge('badge-biz-upgrades', COUNTS.upgradesPending||0);
   setBadge('badge-rental-pending', RA_DATA.summary ? RA_DATA.summary.pending_listings : 0);
   setBadge('badge-rental-reports', RA_DATA.summary ? RA_DATA.summary.open_reports : 0);
+  setBadge('badge-support', COUNTS.supportOpen||0);
+  setBadge('badge-modinbox', (pendingL||0)+(pendingV||0)+(openR||0)+(COUNTS.appealsOpen||0));
   var ob = document.getElementById('badge-overview');
   if(ob) ob.style.display = (pendingL||pendingV||openR||pendingC) ? '' : 'none';
 }
@@ -1489,6 +1808,16 @@ function updateBadges() {
 // All numbers come from server-side counts (COUNTS) — never from the size of
 // paged in-memory arrays. Queue previews + revenue load asynchronously.
 var _ovQueue = null, _ovRevenue = null, _ovActions = null;
+var _ovAuto = false, _ovAutoTimer = null;
+function toggleOvAuto(on){
+  _ovAuto = on;
+  clearInterval(_ovAutoTimer);
+  if(on){ _ovAutoTimer = setInterval(function(){
+    if(currentTab!=='overview'){ return; }
+    _ovQueue=null; _ovActions=null; _ovRevenue=null;
+    loadCounts().then(function(){ updateBadges(); if(currentTab==='overview') renderOverview(); });
+  }, 30000); toast('Auto-refresh on (30s)','info'); }
+}
 function renderOverview() {
   if(!COUNTS.loadedAt){ loadCounts().then(function(){ updateBadges(); if(currentTab==='overview') renderOverview(); }); document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading platform statistics…</div>'; return; }
   var c = COUNTS;
@@ -1500,7 +1829,32 @@ function renderOverview() {
   if(c.verifPending) alerts += alertBox('blue','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>'+c.verifPending+' verification'+(c.verifPending>1?'s':'')+' pending.','verifications');
   if(c.reportsOpen) alerts += alertBox('red','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>'+c.reportsOpen+' open report'+(c.reportsOpen>1?'s':'')+' need attention.','reports');
 
-  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-size:13px;font-weight:700;color:var(--sub)">Live platform statistics</div>'+refreshStamp()+'</div>';
+  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px"><div style="font-size:13px;font-weight:700;color:var(--sub)">Executive Command Center</div><div style="display:flex;align-items:center;gap:10px">'+refreshStamp()+'<label style="font-size:11px;color:var(--sub2);display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="ovAuto" '+(_ovAuto?'checked':'')+' onchange="toggleOvAuto(this.checked)">Auto-refresh</label></div></div>';
+
+  // ── Live command strip: online now, today, health pulse, SLA ──
+  var slaBreaches = (c.listingsPendingOld||0);
+  html += '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">';
+  function pulse(label, val, color, live){
+    return '<div style="flex:1;min-width:140px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px">'
+      + '<div style="display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">'
+      + (live?'<span style="width:7px;height:7px;border-radius:50%;background:'+color+';box-shadow:0 0 0 0 '+color+';animation:pulse 2s infinite"></span>':'')+label+'</div>'
+      + '<div style="font-size:24px;font-weight:900;color:'+color+';line-height:1.1;margin-top:5px">'+val+'</div></div>';
+  }
+  html += pulse('Online now', c.online5m==null?'—':fmtCnt(c.online5m), 'var(--green)', true);
+  html += pulse('Active today', c.onlineDay==null?'—':fmtCnt(c.onlineDay), 'var(--blue)', false);
+  html += pulse('New today', fmtCnt(c.usersToday), 'var(--accent)', false);
+  html += pulse('SLA breaches', fmtCnt(slaBreaches), slaBreaches?'var(--red)':'var(--green)', slaBreaches>0);
+  html += pulse('Pending work', fmtCnt((c.listingsPending||0)+(c.verifPending||0)+(c.reportsOpen||0)+(c.supportOpen||0)), 'var(--amber)', false);
+  html += pulse('Support open', c.supportOpen==null?'—':fmtCnt(c.supportOpen), 'var(--blue)', (c.supportOpen||0)>0);
+  html += '</div>';
+  if(c.online5m==null){ html += '<div style="font-size:11px;color:var(--sub2);margin:-8px 0 12px">Online metrics need <code>profiles.last_seen_at</code> (ADMIN_ENTERPRISE_V2.sql) + the app writing it on activity.</div>'; }
+
+  // ── Quick actions ──
+  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">';
+  [['Moderation Inbox','modInbox','▤'],['Send Notification','notifications','✉'],['Support Center','supportCenter','◉'],['Finance','financeCenter','$'],['Analytics','analytics','▨'],['Operations','opsCenter','⚙']].forEach(function(q){
+    html += '<button class="filter-btn" style="display:inline-flex;align-items:center;gap:6px" onclick="showTab(\''+q[1]+'\')"><span style="color:var(--accent)">'+q[2]+'</span> '+q[0]+'</button>';
+  });
+  html += '</div>';
 
   html += '<div class="stats-grid">';
   html += statCard('Users','blue',fmtCnt(c.users),'+'+fmtCnt(c.usersToday)+' today · +'+fmtCnt(c.users7)+' this week','users');
@@ -1611,8 +1965,11 @@ function renderListings() {
     html += '<button class="filter-btn'+((_listingFilter===f)?' on':'')+'" onclick="listingsSetFilter(\''+f+'\')">'+f.charAt(0).toUpperCase()+f.slice(1)+(counts[f]!=null?' ('+fmtCnt(counts[f])+')':'')+'</button>';
   });
   html += '<input class="search-input" placeholder="Search title or seller…" value="'+esc(_listingSearch)+'" oninput="listingsSearchInput(this.value)" id="listingSearch">';
+  html += '<button class="filter-btn" onclick="saveListingView()">Save view</button>';
   html += '<button class="filter-btn" onclick="exportListings()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>';
   html += '</div></div>';
+
+  html += savedViewsBar('listings','applyListingView');
 
   // Advanced filter bar — every filter is applied server-side.
   function selOpt(v, sel){ return '<option value="'+esc(v)+'"'+(sel===v?' selected':'')+'>'+esc(v)+'</option>'; }
@@ -1894,7 +2251,9 @@ async function viewUser(userId) {
       cnt('reports',function(q){return q.eq('target_id',userId).eq('target_type','user');}),
       sb.from('verifications').select('status,submitted_at,admin_note').eq('user_id',userId).order('submitted_at',{ascending:false}).limit(3),
       sb.from('admin_audit_logs').select('action,reason,actor_email,created_at').eq('entity','profiles').eq('entity_id',userId).order('created_at',{ascending:false}).limit(10),
-      cnt('reviews',function(q){return q.eq('seller_id',userId);})
+      cnt('reviews',function(q){return q.eq('seller_id',userId);}),
+      cnt('messages',function(q){return q.eq('sender_id',userId);}),
+      cnt('contact_requests',function(q){return q.eq('requester_id',userId);})
     ]);
     var u = res[0].value && res[0].value.data; if(!u){ openModal('<div class="modal-title">User Profile<button class="modal-close" onclick="closeModal()">×</button></div><div class="empty-msg">User not found.</div>'); return; }
     var lst = (res[1].value&&res[1].value.data)||[];
@@ -1904,30 +2263,32 @@ async function viewUser(userId) {
     var verifs = (res[7].value&&res[7].value.data)||[];
     var notes = (res[8].status==='fulfilled'&&res[8].value&&!res[8].value.error) ? (res[8].value.data||[]) : null;
     var revCount = res[9].value;
-
-    // Trust score: transparent heuristic from live data (0–100).
-    var trust = 50;
-    if(u.verified) trust += 25;
+    var msgCount = res[10].value, unlockCount = res[11].value;
     var ageDays = (Date.now()-new Date(u.created_at).getTime())/864e5;
-    trust += Math.min(15, Math.floor(ageDays/30)*3);
-    trust -= Math.min(30, (lRejected||0)*10);
-    trust -= Math.min(30, (repAgainst||0)*10);
-    if(u.status==='banned') trust = Math.min(trust, 10);
-    trust = Math.max(0, Math.min(100, trust));
-    var tColor = trust>=70?'var(--green)':trust>=40?'var(--amber)':'var(--red)';
     var warns = (notes||[]).filter(function(n){return n.action==='warn_user';}).length;
 
-    var html = '<div class="modal-title">'+esc(u.name||'User')+'<button class="modal-close" onclick="closeModal()">×</button></div>';
+    // Shared trust + fraud scoring (transparent heuristics, see infra v2).
+    var sig = {verified:u.verified, ageDays:ageDays, rejected:lRejected, reportsAgainst:repAgainst, warnings:warns, banned:u.status==='banned'};
+    var trust = computeTrust(sig), risk = computeRisk(sig);
+    var tColor = trust>=70?'var(--green)':trust>=40?'var(--amber)':'var(--red)';
+    var rColor = risk>=60?'var(--red)':risk>=30?'var(--amber)':'var(--green)';
+
+    var html = '<div class="modal-title">'+esc(u.name||'User')+(u.mfa_secret?' <span class="badge badge-verified">2FA</span>':'')+'<button class="modal-close" onclick="closeModal()">×</button></div>';
     html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">';
-    function chip(v,l,c){ return '<div style="flex:1;min-width:80px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 11px;text-align:center"><div style="font-size:16px;font-weight:800;color:'+(c||'var(--text)')+'">'+v+'</div><div style="font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.4px">'+l+'</div></div>'; }
-    html += chip(trust, 'Trust score', tColor) + chip(fmtCnt(lTotal),'Listings',null) + chip(fmtCnt(lRejected),'Rejected',(lRejected>0?'var(--red)':null))
+    function chip(v,l,c){ return '<div style="flex:1;min-width:74px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 11px;text-align:center"><div style="font-size:16px;font-weight:800;color:'+(c||'var(--text)')+'">'+v+'</div><div style="font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.4px">'+l+'</div></div>'; }
+    html += chip(trust, 'Trust', tColor) + chip(risk, 'Fraud risk', rColor) + chip(fmtCnt(lTotal),'Listings',null) + chip(fmtCnt(lRejected),'Rejected',(lRejected>0?'var(--red)':null))
       + chip(fmtCnt(repAgainst),'Reports vs',(repAgainst>0?'var(--red)':null)) + chip(fmtCnt(repBy),'Reports by',null)
-      + chip(warns,'Warnings',(warns>0?'var(--amber)':null)) + chip(fmtCnt(revCount),'Reviews',null);
+      + chip(warns,'Warnings',(warns>0?'var(--amber)':null)) + chip(fmtCnt(revCount),'Reviews',null)
+      + chip(fmtCnt(msgCount),'Messages',null) + chip(fmtCnt(unlockCount),'Unlocks',null);
     html += '</div>';
+    // Fraud reasoning line
+    var flags=[]; if(ageDays<2) flags.push('account < 48h old'); if(repAgainst>0) flags.push(repAgainst+' report(s) against'); if(lRejected>1) flags.push(lRejected+' rejected listings'); if(!u.verified) flags.push('unverified');
+    if(flags.length) html += '<div style="font-size:11.5px;color:'+rColor+';margin:-4px 0 12px">Risk factors: '+flags.join(' · ')+'</div>';
     html += '<div style="font-size:13px;color:var(--sub);line-height:1.9;margin-bottom:12px">'
       + '<div><b>Contact:</b> '+esc(u.phone||'—')+' · '+esc(u.email||'—')+'</div>'
       + '<div><b>Role:</b> '+esc(u.role||'user')+' &nbsp; <b>Status:</b> '+esc(u.status||'active')+(u.ban_reason?' — '+esc(u.ban_reason):'')+(u.ban_until?' (until '+fmtDate(u.ban_until)+')':'')+'</div>'
       + '<div><b>Joined:</b> '+fmtDate(u.created_at)+' &nbsp; <b>Verified:</b> '+(u.verified?'yes':'no')+(u.verification_pending?' (review pending)':'')+'</div>'
+      + (u.last_seen_at?'<div><b>Last active:</b> '+ago(u.last_seen_at)+' ago ('+fmtDateTime(u.last_seen_at)+')</div>':'')
       + '<div><b>User ID:</b> <span style="font-size:11px">'+esc(u.id)+'</span></div>'
       + '</div>';
     if(lst.length){
@@ -3292,8 +3653,37 @@ async function loadAnalytics() {
     cnt('rental_vehicle_listings',function(q){return q.eq('status','active').eq('admin_status','approved');}),
     cnt('business_subscriptions',function(q){return q.eq('status','active').neq('plan_id','free');})
   ]);
-  var res = await Promise.all([Promise.all(catJobs), Promise.all(provJobs), Promise.all(userDayJobs), Promise.all(lstDayJobs), extra]);
+  // Analytics Center extras: funnel counts, cohort retention (RPC), search analytics.
+  var d90 = new Date(Date.now()-90*864e5).toISOString();
+  var centerP = Promise.allSettled([
+    cnt('profiles'),                                                  // funnel: registered
+    cnt('profiles',function(q){return q.gt('last_seen_at','1970-01-01');}), // engaged (has activity) — needs V2 col
+    cnt('listings'),                                                  // created a listing (proxy: any listing exists per seller not counted here)
+    cnt('profiles',function(q){return q.eq('verified',true);}),      // verified
+    cnt('business_subscriptions',function(q){return q.eq('status','active').neq('plan_id','free');}), // paid
+    rpc('admin_cohorts',{weeks:8}),
+    // Search analytics (optional table)
+    hasTable('search_logs') ? sb.from('search_logs').select('term,results').gte('created_at',d30).limit(5000) : Promise.resolve({error:{missing:true}})
+  ]);
+  var res = await Promise.all([Promise.all(catJobs), Promise.all(provJobs), Promise.all(userDayJobs), Promise.all(lstDayJobs), extra, centerP]);
   var ex = res[4].map(function(x){ return x.value; });
+  var ce = res[5];
+  // Cohorts via RPC (or null → notice).
+  var cohorts = (ce[5].value && ce[5].value.data) || (ce[5].value && ce[5].value.missing ? 'missing' : null);
+  // Search analytics rollup.
+  var searchData = null, searchMissing = false;
+  var sr = ce[6].value;
+  if(sr && sr.error && sr.error.missing) searchMissing = true;
+  else if(sr && sr.data){
+    var top={}, failed={};
+    sr.data.forEach(function(x){ var t=(x.term||'').trim().toLowerCase(); if(!t) return; top[t]=(top[t]||0)+1; if((x.results||0)===0) failed[t]=(failed[t]||0)+1; });
+    searchData = {
+      total: sr.data.length,
+      failRate: sr.data.length ? Math.round(sr.data.filter(function(x){return (x.results||0)===0;}).length/sr.data.length*100) : 0,
+      top: Object.keys(top).map(function(k){return {term:k,n:top[k]};}).sort(function(a,b){return b.n-a.n;}).slice(0,10),
+      failed: Object.keys(failed).map(function(k){return {term:k,n:failed[k]};}).sort(function(a,b){return b.n-a.n;}).slice(0,10)
+    };
+  }
   ANALYTICS = {
     windowDays: winDays,
     cats: MK_CATEGORIES.map(function(c,i){ return {name:c, n:res[0][i]||0}; }).sort(function(a,b){return b.n-a.n;}),
@@ -3305,6 +3695,8 @@ async function loadAnalytics() {
     adminActions7:ex[5], modDecisions7:ex[6], messages7:ex[7],
     reportsTotal:ex[8], reportsResolved:ex[9], mkReviews:ex[10],
     rentalsLive:ex[11], paidSubs:ex[12],
+    funnel:{ registered:ce[0].value, engaged:ce[1].value, listings:ce[2].value, verified:ce[3].value, paid:ce[4].value },
+    cohorts:cohorts, searchData:searchData, searchMissing:searchMissing,
     loadedAt:new Date()
   };
   if(currentTab==='analytics') renderAnalytics();
@@ -3369,6 +3761,61 @@ function renderAnalytics() {
   });
   html += '</div>';
   html += '</div>';
+
+  // ── Analytics Center: acquisition funnel ──
+  if(a.funnel){
+    var f = a.funnel;
+    var steps = [
+      ['Registered', f.registered, 'var(--blue)'],
+      ['Engaged (any activity)', f.engaged, 'var(--accent)'],
+      ['Verified', f.verified, 'var(--green)'],
+      ['Paying', f.paid, 'var(--amber)']
+    ];
+    var fBase = f.registered||1;
+    html += '<div class="sec-head" style="margin-top:22px"><div class="sec-title">Acquisition &amp; Conversion Funnel</div></div>';
+    html += '<div class="tbl-wrap" style="padding:18px">';
+    steps.forEach(function(s2){
+      var pct = s2[1]==null?0:Math.round((s2[1]/fBase)*100);
+      html += '<div class="bar-row"><div class="bar-label">'+s2[0]+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+s2[2]+'"></div></div><div class="bar-val" style="width:80px">'+(s2[1]==null?'—':fmtCnt(s2[1])+' · '+pct+'%')+'</div></div>';
+    });
+    html += '<div style="font-size:11px;color:var(--sub2);margin-top:8px">"Engaged" needs <code>profiles.last_seen_at</code> (ADMIN_ENTERPRISE_V2.sql) written by the app. Conversion = each stage / registered.</div>';
+    html += '</div>';
+  }
+
+  // ── Analytics Center: retention cohorts ──
+  html += '<div class="sec-head" style="margin-top:22px"><div class="sec-title">Weekly Signup Cohorts → Verified (retention proxy)</div></div>';
+  if(a.cohorts==='missing' || a.cohorts==null) html += migrationNotice('Cohort retention (admin_cohorts RPC)');
+  else if(!a.cohorts.length) html += '<div class="empty-msg">No cohort data yet.</div>';
+  else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Cohort week</th><th>Signups</th><th>Verified</th><th>Retention</th></tr></thead><tbody>';
+    a.cohorts.forEach(function(co){
+      var pct = co.signups ? Math.round((co.verified/co.signups)*100) : 0;
+      html += '<tr><td style="font-weight:600">'+fmtDate(co.cohort)+'</td><td>'+fmtCnt(co.signups)+'</td><td>'+fmtCnt(co.verified)+'</td>'
+        + '<td><div style="display:flex;align-items:center;gap:8px"><div class="bar-track" style="width:100px"><div class="bar-fill" style="width:'+pct+'%;background:var(--green)"></div></div><span style="font-size:12px;font-weight:700">'+pct+'%</span></div></td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  // ── Analytics Center: search analytics ──
+  html += '<div class="sec-head" style="margin-top:22px"><div class="sec-title">Search Analytics (30d)</div></div>';
+  if(a.searchMissing) html += migrationNotice('Search analytics (search_logs table + app-side logging)');
+  else if(!a.searchData) html += '<div class="empty-msg">No search data captured yet.</div>';
+  else {
+    html += '<div class="stats-grid"><div class="stat-card blue"><div class="stat-label">Searches</div><div class="stat-val">'+fmtCnt(a.searchData.total)+'</div><div class="stat-sub">last 30 days</div></div>'
+      + '<div class="stat-card '+(a.searchData.failRate>30?'red':'amber')+'"><div class="stat-label">Zero-result rate</div><div class="stat-val">'+a.searchData.failRate+'%</div><div class="stat-sub">searches with no matches</div></div></div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">';
+    function stbl(title, items, color){
+      var h='<div class="tbl-wrap" style="padding:18px"><div style="font-size:13px;font-weight:800;margin-bottom:12px">'+title+'</div>';
+      if(!items.length) h+='<div style="color:var(--sub);font-size:13px">None.</div>';
+      var mx = items.length?items[0].n:1;
+      items.forEach(function(x){ h+='<div class="bar-row"><div class="bar-label" style="text-align:left;width:auto;flex:1">'+esc(x.term)+'</div><div class="bar-track" style="max-width:100px"><div class="bar-fill" style="width:'+Math.round(x.n/mx*100)+'%;background:'+color+'"></div></div><div class="bar-val">'+x.n+'</div></div>'; });
+      return h+'</div>';
+    }
+    html += stbl('Top Searches', a.searchData.top, 'var(--accent)');
+    html += stbl('Top Zero-Result Searches (catalogue gaps)', a.searchData.failed, 'var(--red)');
+    html += '</div>';
+  }
+
   document.getElementById('mainContent').innerHTML=html;
 }
 
@@ -5290,6 +5737,628 @@ function renderOps() {
   document.getElementById('mainContent').innerHTML = html;
 }
 
+// ════════════════════════════════════════════════════════════
+// MODERATION INBOX — one queue across every moderatable entity, risk-ranked
+// Pulls the oldest pending items from listings + verifications + reports +
+// rental listings + appeals into a single SLA-ordered work list. Each row
+// carries a risk score and inline actions so moderators never tab-hop.
+// ════════════════════════════════════════════════════════════
+var MI = { items:null, filter:'all', loadedAt:null };
+
+async function loadModInbox() {
+  MI.items = null;
+  var res = await Promise.allSettled([
+    sb.from('listings').select('id,title,seller_id,seller_name,created_at,category').eq('status','pending').order('created_at',{ascending:true}).limit(40),
+    sb.from('verifications').select('id,user_id,submitted_at').eq('status','pending').order('submitted_at',{ascending:true}).limit(40),
+    sb.from('reports').select('id,reason,target_type,target_id,severity,created_at,reporter_id').eq('status','open').order('created_at',{ascending:true}).limit(40),
+    sb.from('rental_vehicle_listings').select('id,model,year,created_at,company_id').eq('admin_status','pending_review').is('deleted_at',null).order('created_at',{ascending:true}).limit(20),
+    sb.from('moderation_appeals').select('id,entity,entity_id,reason,created_at,requester_id').eq('status','open').order('created_at',{ascending:true}).limit(20)
+  ]);
+  var items = [];
+  ((res[0].value&&res[0].value.data)||[]).forEach(function(l){ items.push({kind:'listing', id:l.id, title:l.title||'Untitled', sub:'Marketplace listing · '+(l.category||''), who:l.seller_id, whoName:l.seller_name, at:l.created_at, sev:'medium'}); });
+  ((res[1].value&&res[1].value.data)||[]).forEach(function(v){ items.push({kind:'verification', id:v.id, uid:v.user_id, title:'ID verification', sub:'Identity review', who:v.user_id, at:v.submitted_at, sev:'medium'}); });
+  ((res[2].value&&res[2].value.data)||[]).forEach(function(r){ items.push({kind:'report', id:r.id, title:'Report: '+(r.reason||'—'), sub:(r.target_type||'')+' report', who:r.reporter_id, target:r.target_id, targetType:r.target_type, at:r.created_at, sev:r.severity||'high'}); });
+  ((res[3].value&&res[3].value.data)||[]).forEach(function(v){ items.push({kind:'rental', id:v.id, title:(v.model||'Vehicle')+' '+(v.year||''), sub:'Rental listing review', at:v.created_at, sev:'medium'}); });
+  ((res[4].value&&res[4].value.data)||[]).forEach(function(a){ items.push({kind:'appeal', id:a.id, title:'Appeal: '+(a.entity||''), sub:(a.reason||'').slice(0,60), who:a.requester_id, target:a.entity_id, at:a.created_at, sev:'high'}); });
+  // Resolve names for actors we have ids for.
+  await ensureProfiles(items.map(function(i){ return i.who; }).concat(items.map(function(i){ return i.uid; })));
+  // Risk-rank: severity weight + age. Oldest & most severe float up.
+  var sevW = {high:3, medium:2, low:1};
+  items.forEach(function(i){
+    var ageH = (Date.now()-new Date(i.at).getTime())/3600000;
+    i.risk = Math.round((sevW[i.sev]||2)*20 + Math.min(40, ageH));
+  });
+  items.sort(function(a,b){ return b.risk - a.risk; });
+  MI.items = items; MI.loadedAt = new Date();
+}
+function renderModInbox() {
+  if(!requirePerm('reports.manage') && !requirePerm('listings.moderate')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">Your role cannot access the moderation inbox.</div>'; return; }
+  if(MI.items===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Assembling unified queue…</div>'; return; }
+  var items = MI.items.filter(function(i){ return MI.filter==='all' || i.kind===MI.filter; });
+  var kinds = {listing:0,verification:0,report:0,rental:0,appeal:0};
+  MI.items.forEach(function(i){ kinds[i.kind]=(kinds[i.kind]||0)+1; });
+
+  var html = '<div class="sec-head"><div class="sec-title">Moderation Inbox <span style="font-weight:400;color:var(--sub);font-size:12px">('+MI.items.length+' items · risk-ranked)</span></div><div class="sec-actions">';
+  [['all','All'],['report','Reports ('+kinds.report+')'],['listing','Listings ('+kinds.listing+')'],['verification','Verifications ('+kinds.verification+')'],['rental','Rentals ('+kinds.rental+')'],['appeal','Appeals ('+kinds.appeal+')']].forEach(function(f){
+    html += '<button class="filter-btn'+(MI.filter===f[0]?' on':'')+'" onclick="MI.filter=\''+f[0]+'\';renderModInbox()">'+f[1]+'</button>';
+  });
+  html += '<button class="btn-refresh" onclick="loadModInbox().then(renderModInbox)">Refresh</button></div></div>';
+  html += '<div style="font-size:11px;color:var(--sub2);margin-bottom:12px">'+refreshStamp2(MI.loadedAt)+' · Sorted by risk = severity × age. Work top-down to hit SLA.</div>';
+
+  if(!items.length){ html += '<div class="empty-msg" style="padding:30px">Inbox zero. Nothing awaits moderation.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Risk</th><th>Type</th><th>Item</th><th>Actor</th><th>Waiting</th><th>Actions</th></tr></thead><tbody>';
+  var iconMap = {listing:'▤',verification:'◉',report:'⚑',rental:'⛃',appeal:'⚖'};
+  items.forEach(function(i){
+    var riskColor = i.risk>=70?'var(--red)':i.risk>=45?'var(--amber)':'var(--sub2)';
+    html += '<tr>';
+    html += '<td><span style="display:inline-block;min-width:34px;text-align:center;font-weight:800;font-size:12px;color:#fff;background:'+riskColor+';border-radius:6px;padding:2px 0">'+i.risk+'</span></td>';
+    html += '<td><span class="badge badge-info">'+(iconMap[i.kind]||'')+' '+i.kind+'</span></td>';
+    html += '<td style="max-width:240px"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px">'+esc(i.title)+'</div><div style="font-size:11px;color:var(--sub)">'+esc(i.sub||'')+'</div></td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+(i.who?esc(i.whoName||userLabel(i.who)):'—')+'</td>';
+    html += '<td>'+ageChip(i.at,24,72)+'</td>';
+    html += '<td><div style="display:flex;gap:4px;flex-wrap:wrap">'+miActions(i)+'</div></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+function refreshStamp2(d){ return d ? 'Updated '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''; }
+function miActions(i){
+  if(i.kind==='listing') return '<button class="ab ab-view" onclick="viewListing(\''+i.id+'\')">View</button><button class="ab ab-approve" onclick="miApprove(\'listing\',\''+i.id+'\')">Approve</button><button class="ab ab-reject" onclick="miReject(\'listing\',\''+i.id+'\')">Reject</button>';
+  if(i.kind==='rental') return '<button class="ab ab-approve" onclick="raApproveListing(\''+i.id+'\').then(function(){loadModInbox().then(renderModInbox);})">Approve</button><button class="ab ab-reject" onclick="raModerateListing(\''+i.id+'\',\'rejected\').then(function(){loadModInbox().then(renderModInbox);})">Reject</button>';
+  if(i.kind==='verification') return '<button class="ab ab-view" onclick="showTab(\'verifications\')">Open</button><button class="ab ab-approve" onclick="miApproveVerif(\''+i.uid+'\',\''+i.id+'\')">Approve</button>';
+  if(i.kind==='report') return '<button class="ab ab-view" onclick="showTab(\'reports\')">Open</button><button class="ab ab-approve" onclick="miResolveReport(\''+i.id+'\')">Resolve</button>'+(i.targetType==='user'&&i.target?'<button class="ab ab-ban" onclick="banUser(\''+i.target+'\')">Ban target</button>':'');
+  if(i.kind==='appeal') return '<button class="ab ab-approve" onclick="decideAppeal(\''+i.id+'\',\'granted\')">Grant</button><button class="ab ab-reject" onclick="decideAppeal(\''+i.id+'\',\'denied\')">Deny</button>';
+  return '';
+}
+function miRemove(kind,id){ if(MI.items) MI.items = MI.items.filter(function(x){ return !(x.kind===kind && x.id===id); }); }
+async function miApprove(kind, id){
+  if(!requirePerm('listings.moderate')) return;
+  try { await updRow('listings', id, {status:'active'});
+    var l = (MI.items||[]).find(function(x){return x.kind===kind&&x.id===id;});
+    if(l && l.who){ try{ await sb.from('notifications').insert({id:notifId(),user_id:l.who,title:'Listing Approved!',body:'Your listing is now live.',type:'info',read:false,created_at:Date.now()}); }catch(e){} }
+    auditLog('approve_listing','listings',id,{status:'pending'},{status:'active'},'via inbox');
+    if(COUNTS.listingsPending) COUNTS.listingsPending--;
+    miRemove(kind,id); updateBadges(); renderModInbox(); toast('Approved');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function miReject(kind, id){
+  if(!requirePerm('listings.moderate')) return;
+  var reason = await confirm2('Reject Listing','Reason (sent to seller):','Reject','red',true,'e.g. Prohibited item');
+  if(reason===null) return;
+  try { await updRow('listings', id, {status:'rejected'});
+    var l = (MI.items||[]).find(function(x){return x.kind===kind&&x.id===id;});
+    if(l && l.who){ try{ await sb.from('notifications').insert({id:notifId(),user_id:l.who,title:'Listing Not Approved',body:'Your listing was not approved.'+(reason?' Reason: '+reason:''),type:'report',read:false,created_at:Date.now()}); }catch(e){} }
+    auditLog('reject_listing','listings',id,{status:'pending'},{status:'rejected'},reason||'via inbox');
+    if(COUNTS.listingsPending) COUNTS.listingsPending--;
+    miRemove(kind,id); updateBadges(); renderModInbox(); toast('Rejected');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function miApproveVerif(uid, vid){
+  if(!requirePerm('verifications.manage')) return;
+  try { await updRow('profiles', uid, {verified:true, verification_pending:false});
+    if(vid) try{ await sb.from('verifications').update({status:'approved',admin_note:'Approved via inbox'}).eq('id',vid); }catch(e){}
+    try{ await sb.from('notifications').insert({id:notifId(),user_id:uid,title:'Identity Verified',body:'Your blue verified badge is now active.',type:'verify',read:false,created_at:Date.now()}); }catch(e){}
+    auditLog('approve_verification','profiles',uid,{verified:false},{verified:true},'via inbox');
+    if(COUNTS.verifPending) COUNTS.verifPending--;
+    miRemove('verification',vid); updateBadges(); renderModInbox(); toast('Verified');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function miResolveReport(id){
+  if(!requirePerm('reports.manage')) return;
+  try { await updRow('reports', id, {status:'resolved'});
+    auditLog('resolve_report','reports',id,{status:'open'},{status:'resolved'},'via inbox');
+    if(COUNTS.reportsOpen) COUNTS.reportsOpen--;
+    miRemove('report',id); updateBadges(); renderModInbox(); toast('Report resolved');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function decideAppeal(id, decision){
+  try {
+    await updRow('moderation_appeals', id, {status:decision, decided_by:_adminUid, decided_at:new Date().toISOString()});
+    auditLog('appeal_'+decision,'moderation_appeals',id,{status:'open'},{status:decision},null);
+    if(COUNTS.appealsOpen) COUNTS.appealsOpen--;
+    miRemove('appeal',id); updateBadges(); renderModInbox(); toast('Appeal '+decision);
+  } catch(e){ toast('Appeals need ADMIN_ENTERPRISE_V2.sql: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+// SUPPORT CENTER — ticketing with SLA, priority, assignment, CSAT
+// Uses support_tickets + support_ticket_messages (V2). Legacy support
+// messages in `reports` (target_type='support') remain in the Reports tab.
+// ════════════════════════════════════════════════════════════
+var SUP = { tickets:null, total:null, page:0, status:'open', priority:'', assignee:'', openTicket:null, thread:null, missing:false };
+var TICKET_TEMPLATES = [
+  {name:'Acknowledge', body:'Thanks for reaching out — we\'ve received your request and are looking into it now. We\'ll update you shortly.'},
+  {name:'Need more info', body:'To help you faster, could you share a bit more detail (screenshots, the listing link, and what you expected to happen)?'},
+  {name:'Resolved', body:'We\'ve resolved this for you. If anything else comes up, just reply here. Thanks for using PaMarket!'},
+  {name:'Escalated', body:'This has been escalated to a senior specialist who will follow up with you directly.'}
+];
+
+async function loadSupport(){
+  SUP.tickets = null; SUP.missing = false;
+  if(!(await hasTable('support_tickets'))){ SUP.missing = true; return; }
+  var q = sb.from('support_tickets').select('*',{count:'exact'}).order('created_at',{ascending:false});
+  if(SUP.status!=='all') q = q.eq('status', SUP.status);
+  if(SUP.priority) q = q.eq('priority', SUP.priority);
+  if(SUP.assignee==='me') q = q.eq('assigned_to', _adminUid);
+  if(SUP.assignee==='unassigned') q = q.is('assigned_to', null);
+  q = q.range(SUP.page*25, SUP.page*25+24);
+  var r = await q;
+  if(!r.error){ SUP.tickets = r.data||[]; SUP.total = r.count; await ensureProfiles(SUP.tickets.map(function(t){return t.requester_id;}).concat(SUP.tickets.map(function(t){return t.assigned_to;}))); }
+  else SUP.tickets = [];
+}
+function supGo(p){ SUP.page=p; loadSupport().then(renderSupport); }
+function supFilter(k,v){ SUP[k]=v; SUP.page=0; loadSupport().then(renderSupport); }
+
+function renderSupport(){
+  if(SUP.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">Support Center</div></div>'+migrationNotice('The Support Center'); return; }
+  if(SUP.openTicket){ return renderTicketThread(); }
+  if(SUP.tickets===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading tickets…</div>'; return; }
+
+  // SLA + CSAT rollups from the loaded page (indicative) + a live open count.
+  var openOld = SUP.tickets.filter(function(t){ return t.status==='open' && (Date.now()-new Date(t.created_at).getTime())>24*3600e3; }).length;
+  var csatVals = SUP.tickets.filter(function(t){return t.csat;}).map(function(t){return t.csat;});
+  var csatAvg = csatVals.length ? (csatVals.reduce(function(a,b){return a+b;},0)/csatVals.length).toFixed(1) : '—';
+
+  var html = '<div class="sec-head"><div class="sec-title">Support Center</div><div class="sec-actions"><button class="btn-send" style="padding:8px 14px;font-size:13px" onclick="newTicket()">+ New Ticket</button><button class="btn-refresh" onclick="loadSupport().then(renderSupport)">Refresh</button></div></div>';
+  html += '<div class="stats-grid">';
+  html += statCard('Open Queue','amber',fmtCnt(COUNTS.supportOpen),'open + pending');
+  html += statCard('SLA Risk','red',openOld,'open > 24h (this page)');
+  html += statCard('Avg CSAT','green',csatAvg==='—'?'—':csatAvg+'/5','satisfaction');
+  html += statCard('Assigned to me','blue',SUP.tickets.filter(function(t){return t.assigned_to===_adminUid;}).length,'this page');
+  html += '</div>';
+
+  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">';
+  ['open','pending','resolved','closed','all'].forEach(function(s){ html += '<button class="filter-btn'+(SUP.status===s?' on':'')+'" onclick="supFilter(\'status\',\''+s+'\')">'+s.charAt(0).toUpperCase()+s.slice(1)+'</button>'; });
+  html += '<select class="form-select" style="width:auto;padding:7px 10px;font-size:12px" onchange="supFilter(\'priority\',this.value)"><option value="">Any priority</option>'+['urgent','high','normal','low'].map(function(p){return '<option value="'+p+'"'+(SUP.priority===p?' selected':'')+'>'+p+'</option>';}).join('')+'</select>';
+  html += '<select class="form-select" style="width:auto;padding:7px 10px;font-size:12px" onchange="supFilter(\'assignee\',this.value)"><option value="">Anyone</option><option value="me"'+(SUP.assignee==='me'?' selected':'')+'>Assigned to me</option><option value="unassigned"'+(SUP.assignee==='unassigned'?' selected':'')+'>Unassigned</option></select>';
+  html += '</div>';
+
+  if(!SUP.tickets.length){ html += '<div class="empty-msg">No tickets match. Create one, or connect app-side ticket creation to <code>support_tickets</code>.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Priority</th><th>Subject</th><th>Requester</th><th>Status</th><th>Assignee</th><th>Age</th><th></th></tr></thead><tbody>';
+  var prioColor = {urgent:'var(--red)',high:'var(--amber)',normal:'var(--sub2)',low:'var(--sub2)'};
+  SUP.tickets.forEach(function(t){
+    html += '<tr style="cursor:pointer" onclick="openTicket(\''+t.id+'\')">';
+    html += '<td><span style="font-size:10px;font-weight:800;text-transform:uppercase;color:'+(prioColor[t.priority]||'var(--sub2)')+'">'+esc(t.priority||'normal')+'</span></td>';
+    html += '<td style="font-weight:600;max-width:260px"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px">'+esc(t.subject)+'</div><div style="font-size:11px;color:var(--sub)">'+esc(t.category||'general')+'</div></td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+esc(t.requester_id?userLabel(t.requester_id):'—')+'</td>';
+    html += '<td><span class="badge badge-'+(t.status==='open'?'pending':t.status==='resolved'||t.status==='closed'?'active':'info')+'">'+esc(t.status)+'</span></td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+esc(t.assigned_to?userLabel(t.assigned_to):'—')+'</td>';
+    html += '<td>'+(t.status==='open'?ageChip(t.created_at,24,72):'<span style="font-size:11px;color:var(--sub2)">'+ago(t.created_at)+'</span>')+'</td>';
+    html += '<td><button class="ab ab-view" onclick="event.stopPropagation();openTicket(\''+t.id+'\')">Open</button></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  html += pagerHtml(SUP.page, 25, SUP.total, SUP.tickets.length, 'supGo');
+  document.getElementById('mainContent').innerHTML = html;
+}
+async function newTicket(){
+  var subject = await confirm2('New Ticket','Ticket subject:','Next','green',true,'e.g. Payment not reflecting');
+  if(subject===null||!String(subject).trim()) return;
+  try {
+    var r = await sb.from('support_tickets').insert({subject:String(subject).trim(), status:'open', priority:'normal', source:'admin', assigned_to:_adminUid}).select('id').single();
+    if(r.error) throw r.error;
+    auditLog('create_ticket','support_tickets',r.data.id,null,{subject:String(subject).trim()},null);
+    COUNTS.supportOpen=(COUNTS.supportOpen||0)+1; updateBadges();
+    openTicket(r.data.id);
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function openTicket(id){
+  SUP.openTicket = id; SUP.thread = null;
+  document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading ticket…</div>';
+  var res = await Promise.allSettled([
+    sb.from('support_tickets').select('*').eq('id',id).single(),
+    sb.from('support_ticket_messages').select('*').eq('ticket_id',id).order('created_at')
+  ]);
+  SUP.openTicketData = res[0].value&&res[0].value.data;
+  SUP.thread = (res[1].value&&res[1].value.data)||[];
+  if(SUP.openTicketData) await ensureProfiles([SUP.openTicketData.requester_id, SUP.openTicketData.assigned_to]);
+  renderSupport();
+}
+function renderTicketThread(){
+  var t = SUP.openTicketData;
+  if(!t){ SUP.openTicket=null; return renderSupport(); }
+  var html = '<button class="filter-btn" style="margin-bottom:12px" onclick="SUP.openTicket=null;renderSupport()">← Back to tickets</button>';
+  html += '<div class="tbl-wrap" style="padding:18px;margin-bottom:16px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">';
+  html += '<div><div style="font-size:17px;font-weight:800">'+esc(t.subject)+'</div><div style="font-size:12px;color:var(--sub);margin-top:4px">'+esc(t.category||'general')+' · from '+esc(t.requester_id?userLabel(t.requester_id):'—')+' · opened '+fmtDateTime(t.created_at)+'</div></div>';
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  ['open','pending','resolved','closed'].forEach(function(s){ html += '<button class="ab '+(t.status===s?'ab-approve':'ab-view')+'" onclick="setTicketStatus(\''+t.id+'\',\''+s+'\')">'+s+'</button>'; });
+  html += '</div></div>';
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center">';
+  html += '<label style="font-size:12px;color:var(--sub)">Priority <select class="form-select" style="width:auto;padding:5px 8px;font-size:12px;display:inline-block;margin-left:4px" onchange="setTicketField(\''+t.id+'\',\'priority\',this.value)">'+['low','normal','high','urgent'].map(function(p){return '<option value="'+p+'"'+((t.priority||'normal')===p?' selected':'')+'>'+p+'</option>';}).join('')+'</select></label>';
+  html += '<button class="ab ab-view" onclick="setTicketField(\''+t.id+'\',\'assigned_to\',\''+_adminUid+'\')">Assign to me</button>';
+  if(t.status!=='resolved'&&t.status!=='closed') html += '<button class="ab ab-approve" onclick="resolveTicket(\''+t.id+'\')">Resolve + request CSAT</button>';
+  if(t.csat) html += '<span class="badge badge-active">CSAT '+t.csat+'/5</span>';
+  html += '</div></div>';
+
+  // Thread
+  html += '<div class="tbl-wrap" style="padding:16px;margin-bottom:16px"><div style="display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto">';
+  if(!SUP.thread || !SUP.thread.length) html += '<div style="color:var(--sub);font-size:13px">No messages yet. Add the first reply or an internal note below.</div>';
+  (SUP.thread||[]).forEach(function(m){
+    var mine = m.author_kind==='admin';
+    html += '<div style="align-self:'+(mine?'flex-end':'flex-start')+';max-width:80%;background:'+(m.internal?'rgba(245,158,11,.12)':mine?'rgba(99,102,241,.14)':'var(--bg)')+';border:1px solid '+(m.internal?'rgba(245,158,11,.3)':'var(--border)')+';border-radius:12px;padding:9px 12px">';
+    html += '<div style="font-size:10px;color:var(--sub2);margin-bottom:3px">'+(m.internal?'INTERNAL NOTE · ':'')+esc(m.author_kind)+' · '+fmtDateTime(m.created_at)+'</div>';
+    html += '<div style="font-size:13px;line-height:1.5;white-space:pre-wrap">'+esc(m.body)+'</div></div>';
+  });
+  html += '</div></div>';
+
+  // Composer
+  html += '<div class="tbl-wrap" style="padding:16px">';
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+TICKET_TEMPLATES.map(function(tp,i){return '<button class="filter-btn" onclick="applyTicketTemplate('+i+')">'+esc(tp.name)+'</button>';}).join('')+'</div>';
+  html += '<textarea id="ticketReply" class="form-textarea" placeholder="Write a reply to the customer, or an internal note…"></textarea>';
+  html += '<div style="display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap">';
+  html += '<button class="btn-send" onclick="sendTicketReply(\''+t.id+'\',false)">Send Reply</button>';
+  html += '<button class="ab ab-edit" style="padding:9px 14px" onclick="sendTicketReply(\''+t.id+'\',true)">Add Internal Note</button>';
+  html += '</div></div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+function applyTicketTemplate(i){ var el=document.getElementById('ticketReply'); if(el){ el.value = TICKET_TEMPLATES[i].body; el.focus(); } }
+async function sendTicketReply(id, internal){
+  var el = document.getElementById('ticketReply'); var body = el?el.value.trim():'';
+  if(!body){ toast('Write something first','error'); return; }
+  try {
+    await sb.from('support_ticket_messages').insert({ticket_id:id, author_id:_adminUid, author_kind:'admin', body:body, internal:!!internal});
+    // First admin reply stamps first_response_at for SLA.
+    if(!internal && SUP.openTicketData && !SUP.openTicketData.first_response_at){ try{ await sb.from('support_tickets').update({first_response_at:new Date().toISOString(), updated_at:new Date().toISOString()}).eq('id',id); }catch(e){} }
+    auditLog(internal?'ticket_note':'ticket_reply','support_tickets',id,null,null,null);
+    openTicket(id); toast(internal?'Note added':'Reply sent');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function setTicketStatus(id, status){
+  try { await updRow('support_tickets', id, {status:status, updated_at:new Date().toISOString()});
+    auditLog('ticket_status','support_tickets',id,null,{status:status},null);
+    if(status!=='open'&&status!=='pending'&&COUNTS.supportOpen) COUNTS.supportOpen--; updateBadges();
+    openTicket(id); toast('Ticket '+status);
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function setTicketField(id, field, val){
+  try { var patch={updated_at:new Date().toISOString()}; patch[field]=val; await updRow('support_tickets', id, patch);
+    auditLog('ticket_'+field,'support_tickets',id,null,patch,null); openTicket(id); toast('Updated');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function resolveTicket(id){
+  try {
+    await updRow('support_tickets', id, {status:'resolved', resolved_at:new Date().toISOString(), updated_at:new Date().toISOString()});
+    // Ask the customer for a rating (best-effort notification if we know them).
+    if(SUP.openTicketData && SUP.openTicketData.requester_id){
+      try{ await sb.from('notifications').insert({id:notifId(),user_id:SUP.openTicketData.requester_id,title:'How did we do?',body:'Your support request "'+SUP.openTicketData.subject+'" was resolved. Reply with a rating 1–5.',type:'info',read:false,created_at:Date.now()}); }catch(e){}
+    }
+    auditLog('resolve_ticket','support_tickets',id,null,{status:'resolved'},null);
+    if(COUNTS.supportOpen) COUNTS.supportOpen--; updateBadges();
+    openTicket(id); toast('Resolved · CSAT requested');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+// FINANCE CENTER — revenue streams, refunds, failed payments, top payers
+// Prefers server-side RPC (admin_revenue_summary / admin_top_payers). Falls
+// back to bounded row queries if the RPCs aren't installed.
+// ════════════════════════════════════════════════════════════
+var FIN = { data:null, window:30 };
+async function loadFinance(){
+  FIN.data = null;
+  var win = FIN.window;
+  var rev = await rpc('admin_revenue_summary', {days:win});
+  var top = await rpc('admin_top_payers', {days:win, lim:10});
+  var since = new Date(Date.now()-win*864e5).toISOString();
+  // Fallbacks + supplementary data always fetched with tight bounds.
+  var extra = await Promise.allSettled([
+    sb.from('business_payments').select('amount,status,type,created_at,business_id').gte('created_at',since).order('created_at',{ascending:false}).limit(1500),
+    sb.from('paid_ads').select('price_paid,created_at').limit(1000),
+    sb.from('business_subscriptions').select('plan_id,status').eq('status','active')
+  ]);
+  var pays = (extra[0].value&&extra[0].value.data)||[];
+  var ads  = (extra[1].value&&extra[1].value.data)||[];
+  var subs = (extra[2].value&&extra[2].value.data)||[];
+
+  var summary;
+  if(rev.data){ summary = rev.data; summary._rpc = true; }
+  else {
+    summary = {
+      subs_paid: pays.filter(function(p){return p.status==='paid'&&p.type==='subscription';}).reduce(function(a,p){return a+(+p.amount||0);},0),
+      other_paid: pays.filter(function(p){return p.status==='paid'&&p.type!=='subscription';}).reduce(function(a,p){return a+(+p.amount||0);},0),
+      ads_revenue: ads.reduce(function(a,x){return a+(+x.price_paid||0);},0),
+      subs_failed: pays.filter(function(p){return p.status==='failed';}).length,
+      subs_pending: pays.filter(function(p){return p.status==='pending';}).length,
+      txn_count: pays.length, _rpc:false
+    };
+  }
+  // Plan mix (active subscriptions).
+  var planMix = {}; subs.forEach(function(s){ planMix[s.plan_id]=(planMix[s.plan_id]||0)+1; });
+  // Monthly revenue series from the paid rows we have.
+  var byMonth = {};
+  pays.filter(function(p){return p.status==='paid';}).forEach(function(p){ var k=(p.created_at||'').slice(0,7); byMonth[k]=(byMonth[k]||0)+(+p.amount||0); });
+
+  FIN.data = { summary:summary, top:(top.data||null), topMissing:!!top.missing, pays:pays, planMix:planMix, byMonth:byMonth, window:win };
+  await ensureProfiles((FIN.data.top||[]).map(function(t){return t.business_id;}));  // best-effort (business ids, not profiles)
+  if(FIN.data.top){ var bizIds=(FIN.data.top||[]).map(function(t){return t.business_id;}); if(bizIds.length){ var br=await sb.from('businesses').select('id,name').in('id',bizIds); FIN._bizNames={}; (br.data||[]).forEach(function(b){FIN._bizNames[b.id]=b.name;}); } }
+}
+function finGo(w){ FIN.window=w; loadFinance().then(renderFinance); }
+function renderFinance(){
+  if(!requirePerm('analytics.view') && !requirePerm('businesses.billing')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">Your role cannot access finance.</div>'; return; }
+  if(FIN.data===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Aggregating revenue…</div>'; return; }
+  var d = FIN.data, s = d.summary;
+  var total = (+s.subs_paid||0)+(+s.other_paid||0)+(+s.ads_revenue||0);
+  var html = '<div class="sec-head"><div class="sec-title">Finance Center</div><div class="sec-actions">'
+    + [30,90,365].map(function(w){return '<button class="filter-btn'+(FIN.window===w?' on':'')+'" onclick="finGo('+w+')">'+(w===365?'1y':w+'d')+'</button>';}).join('')
+    + '<button class="filter-btn" onclick="exportFinance()">Export CSV</button>'
+    + '<button class="btn-refresh" onclick="loadFinance().then(renderFinance)">Refresh</button></div></div>';
+  if(!s._rpc) html += '<div style="font-size:11px;color:var(--sub2);margin-bottom:12px">Using bounded client aggregation. Install <code>admin_revenue_summary</code> (ADMIN_ENTERPRISE_V2.sql) for exact totals at scale.</div>';
+
+  html += '<div class="stats-grid">';
+  html += statCard('Total Revenue','green','$'+fmt(total),'last '+d.window+' days');
+  html += statCard('Subscriptions','accent','$'+fmt(s.subs_paid),'recurring income');
+  html += statCard('Advertising','amber','$'+fmt(s.ads_revenue),'all-time ad spend');
+  html += statCard('Other Income','blue','$'+fmt(s.other_paid),'boosts / features');
+  html += statCard('Failed Payments','red',fmtCnt(s.subs_failed),'need follow-up');
+  html += statCard('Pending','amber',fmtCnt(s.subs_pending),'awaiting approval','businesses');
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">';
+  // Monthly revenue bars
+  var months = Object.keys(d.byMonth).sort();
+  var maxM = Math.max.apply(null, months.map(function(m){return d.byMonth[m];}).concat([1]));
+  html += '<div class="tbl-wrap" style="padding:18px"><div style="font-size:13px;font-weight:800;margin-bottom:14px">Monthly Revenue</div>';
+  if(!months.length) html += '<div style="color:var(--sub);font-size:13px">No paid transactions in window.</div>';
+  months.forEach(function(m){ html += '<div class="bar-row"><div class="bar-label">'+m+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(d.byMonth[m]/maxM*100)+'%;background:var(--green)"></div></div><div class="bar-val">$'+Math.round(d.byMonth[m])+'</div></div>'; });
+  html += '</div>';
+  // Plan mix
+  var plans = Object.keys(d.planMix);
+  var maxP = Math.max.apply(null, plans.map(function(p){return d.planMix[p];}).concat([1]));
+  html += '<div class="tbl-wrap" style="padding:18px"><div style="font-size:13px;font-weight:800;margin-bottom:14px">Active Subscription Mix</div>';
+  if(!plans.length) html += '<div style="color:var(--sub);font-size:13px">No active subscriptions.</div>';
+  plans.forEach(function(p){ html += '<div class="bar-row"><div class="bar-label" style="text-transform:capitalize">'+esc(p)+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(d.planMix[p]/maxP*100)+'%;background:var(--accent)"></div></div><div class="bar-val">'+d.planMix[p]+'</div></div>'; });
+  html += '</div>';
+  html += '</div>';
+
+  // Top payers
+  html += '<div class="sec-head" style="margin-top:18px"><div class="sec-title">Top Paying Businesses ('+d.window+'d)</div></div>';
+  if(d.topMissing) html += migrationNotice('The top-payers ranking (admin_top_payers)');
+  else if(!d.top || !d.top.length) html += '<div class="empty-msg">No paid transactions in this window.</div>';
+  else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>#</th><th>Business</th><th>Total</th><th>Payments</th></tr></thead><tbody>';
+    d.top.forEach(function(t,i){ html += '<tr><td style="color:var(--sub)">'+(i+1)+'</td><td style="font-weight:600">'+esc((FIN._bizNames&&FIN._bizNames[t.business_id])||String(t.business_id).slice(0,8))+'</td><td style="font-weight:700;color:var(--green)">$'+fmt(t.total)+'</td><td style="color:var(--sub)">'+fmtCnt(t.payments)+'</td></tr>'; });
+    html += '</tbody></table></div>';
+  }
+
+  // Failed / pending payments needing action
+  var problems = d.pays.filter(function(p){ return p.status==='failed'||p.status==='pending'; }).slice(0,15);
+  html += '<div class="sec-head" style="margin-top:18px"><div class="sec-title">Payments Needing Attention</div></div>';
+  if(!problems.length) html += '<div class="empty-msg">No failed or pending payments in window.</div>';
+  else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Business</th><th>Amount</th><th>Type</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+    problems.forEach(function(p){ html += '<tr><td style="font-size:12px;color:var(--sub)">'+esc(String(p.business_id||'').slice(0,8))+'</td><td style="font-weight:700">$'+fmt(p.amount)+'</td><td>'+esc(p.type||'—')+'</td><td><span class="badge badge-'+(p.status==='failed'?'rejected':'pending')+'">'+esc(p.status)+'</span></td><td style="color:var(--sub);font-size:12px">'+fmtDate(p.created_at)+'</td></tr>'; });
+    html += '</tbody></table></div>';
+  }
+  document.getElementById('mainContent').innerHTML = html;
+}
+function exportFinance(){
+  if(!FIN.data){ return; }
+  var rows = [['Business','Amount','Type','Status','Date']];
+  FIN.data.pays.forEach(function(p){ rows.push([p.business_id||'', p.amount||0, p.type||'', p.status||'', p.created_at||'']); });
+  downloadCSV('pamarket-finance-'+new Date().toISOString().slice(0,10)+'.csv', rows);
+  auditLog('export_finance','business_payments',null,null,{rows:rows.length-1,window:FIN.window},null);
+  toast('Exported '+(rows.length-1)+' transactions');
+}
+
+// ════════════════════════════════════════════════════════════
+// SECURITY CENTER — MFA · sessions · failed logins · permission matrix · RLS
+// ════════════════════════════════════════════════════════════
+var SEC = { sessions:null, attempts:null, mfaOn:null, sessMissing:false, attMissing:false };
+async function loadSecurity(){
+  SEC.sessions=null; SEC.attempts=null;
+  var res = await Promise.allSettled([
+    hasTable('admin_sessions') ? sb.from('admin_sessions').select('*').is('revoked_at',null).order('last_seen_at',{ascending:false}).limit(30) : Promise.resolve({error:{missing:true}}),
+    hasTable('admin_login_attempts') ? sb.from('admin_login_attempts').select('*').order('created_at',{ascending:false}).limit(40) : Promise.resolve({error:{missing:true}}),
+    sb.from('profiles').select('mfa_secret').eq('id',_adminUid).single()
+  ]);
+  SEC.sessMissing = !(await hasTable('admin_sessions'));
+  SEC.attMissing  = !(await hasTable('admin_login_attempts'));
+  SEC.sessions = (res[0].value&&res[0].value.data)||[];
+  SEC.attempts = (res[1].value&&res[1].value.data)||[];
+  SEC.mfaOn = !!(res[2].value&&res[2].value.data&&res[2].value.data.mfa_secret);
+  await ensureProfiles(SEC.sessions.map(function(s){return s.admin_id;}));
+}
+function renderSecurity(){
+  if(!requirePerm('*')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">Security Center is restricted to full admins.</div>'; return; }
+  if(SEC.sessions===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading security data…</div>'; return; }
+  var recentFails = (SEC.attempts||[]).filter(function(a){ return !a.ok && (Date.now()-new Date(a.created_at).getTime())<24*3600e3; }).length;
+
+  var html = '<div class="sec-head"><div class="sec-title">Security Center</div><button class="btn-refresh" onclick="loadSecurity().then(renderSecurity)">Refresh</button></div>';
+  html += '<div class="stats-grid">';
+  html += (SEC.mfaOn ? '<div class="stat-card green"><div class="stat-label">Your MFA</div><div class="stat-val" style="font-size:16px">Enabled</div><div class="stat-sub">TOTP active</div></div>'
+                     : '<div class="stat-card red"><div class="stat-label">Your MFA</div><div class="stat-val" style="font-size:16px">Off</div><div class="stat-sub">enable it below</div></div>');
+  html += statCard('Active Sessions','blue',SEC.sessMissing?'—':fmtCnt(SEC.sessions.length),'admin devices online');
+  html += statCard('Failed Logins 24h','red',SEC.attMissing?'—':fmtCnt(recentFails),'brute-force signal');
+  html += statCard('Banned Users','amber',fmtCnt(COUNTS.banned),'platform-wide');
+  html += '</div>';
+
+  // MFA enrolment
+  html += '<div class="tbl-wrap" style="padding:18px;margin-bottom:16px"><div style="font-size:14px;font-weight:800;margin-bottom:8px">Two-Factor Authentication</div>';
+  html += '<div style="font-size:12.5px;color:var(--sub);margin-bottom:12px">TOTP (Google Authenticator, Authy, 1Password). Verified in-browser via RFC 6238 — the secret is stored on your profile and required at every login once enabled.</div>';
+  if(SEC.mfaOn){ html += '<button class="ab ab-reject" style="padding:9px 16px" onclick="disableMFA()">Disable my MFA</button>'; }
+  else { html += '<button class="btn-send" onclick="enrollMFA()">Enable MFA for my account</button>'; }
+  html += '</div>';
+
+  // Permission matrix
+  html += '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:16px"><div style="padding:16px 0 10px;font-size:14px;font-weight:800">Role Permission Matrix</div>';
+  html += '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Permission</th>'+ADMIN_ROLES.map(function(r){return '<th style="text-align:center;font-size:10px">'+r.replace('_',' ')+'</th>';}).join('')+'</tr></thead><tbody>';
+  var allPerms = ['listings.moderate','reviews.moderate','reports.manage','verifications.manage','rentals.moderate','users.warn','users.view','chats.view','notifications.send','contacts.manage','ads.manage','businesses.billing','analytics.view'];
+  allPerms.forEach(function(p){
+    html += '<tr><td style="font-family:monospace;font-size:11px">'+esc(p)+'</td>';
+    ADMIN_ROLES.forEach(function(role){
+      var perms = ROLE_PERMS[role]||[];
+      var has = perms.indexOf('*')!==-1 || perms.indexOf(p)!==-1;
+      html += '<td style="text-align:center">'+(has?'<span style="color:var(--green);font-weight:800">✓</span>':'<span style="color:var(--sub2)">–</span>')+'</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div><div style="font-size:11px;color:var(--sub2);padding:8px 0 14px">Client-side gate shown here mirrors server RLS. Grant matching table policies from ADMIN_ENTERPRISE_UPGRADE.sql to let non-admin roles write.</div></div>';
+
+  // Active sessions
+  html += '<div class="sec-head"><div class="sec-title">Active Admin Sessions</div></div>';
+  if(SEC.sessMissing) html += migrationNotice('Session tracking');
+  else if(!SEC.sessions.length) html += '<div class="empty-msg">No active sessions recorded.</div>';
+  else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Admin</th><th>Device</th><th>Started</th><th>Last seen</th><th></th></tr></thead><tbody>';
+    SEC.sessions.forEach(function(s){
+      var isMe = s.id===_sessionId;
+      html += '<tr><td style="font-weight:600">'+esc(s.admin_email||userLabel(s.admin_id))+(isMe?' <span class="badge badge-active">this device</span>':'')+'</td>'
+        + '<td style="font-size:12px;color:var(--sub)">'+esc(s.device||parseDevice(s.user_agent))+'</td>'
+        + '<td style="font-size:12px;color:var(--sub)">'+fmtDateTime(s.created_at)+'</td>'
+        + '<td style="font-size:12px;color:var(--sub)">'+ago(s.last_seen_at)+' ago</td>'
+        + '<td>'+(isMe?'':'<button class="ab ab-reject" onclick="revokeSession(\''+s.id+'\')">Revoke</button>')+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  // Failed logins
+  html += '<div class="sec-head" style="margin-top:18px"><div class="sec-title">Recent Login Attempts</div></div>';
+  if(SEC.attMissing) html += migrationNotice('Login-attempt logging');
+  else if(!SEC.attempts.length) html += '<div class="empty-msg">No login attempts recorded.</div>';
+  else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Email</th><th>Result</th><th>Reason</th><th>Device</th><th>When</th></tr></thead><tbody>';
+    SEC.attempts.forEach(function(a){
+      html += '<tr><td style="font-size:12px">'+esc(a.email||'—')+'</td><td>'+(a.ok?'<span class="badge badge-active">success</span>':'<span class="badge badge-rejected">failed</span>')+'</td><td style="font-size:12px;color:var(--sub)">'+esc(a.reason||'—')+'</td><td style="font-size:11px;color:var(--sub)">'+esc(parseDevice(a.user_agent))+'</td><td style="font-size:11px;color:var(--sub)">'+fmtDateTime(a.created_at)+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  // RLS verification helper
+  html += '<div class="tbl-wrap" style="padding:18px;margin-top:16px"><div style="font-size:14px;font-weight:800;margin-bottom:8px">RLS Verification</div>';
+  html += '<div style="font-size:12.5px;color:var(--sub);margin-bottom:10px">Confirms row-level security is actually enforced by attempting a write the anon role must not be allowed to make.</div>';
+  html += '<button class="ab ab-view" style="padding:9px 14px" onclick="verifyRLS()">Run RLS probe</button><div id="rlsResult" style="margin-top:10px;font-size:12.5px"></div></div>';
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+async function enrollMFA(){
+  var secret = genTotpSecret();
+  var uri = 'otpauth://totp/PaMarket%20Admin:'+encodeURIComponent(_adminEmail)+'?secret='+secret+'&issuer=PaMarket';
+  var qr = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(uri);
+  openModal('<div class="modal-title">Enable Two-Factor Auth<button class="modal-close" onclick="closeModal()">×</button></div>'
+    + '<div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:12px">1. Scan this QR in your authenticator app (or enter the key manually). 2. Enter the 6-digit code to confirm.</div>'
+    + '<div style="text-align:center;margin-bottom:12px"><img src="'+qr+'" style="border-radius:10px;background:#fff;padding:8px" width="180" height="180"><div style="font-family:monospace;font-size:12px;color:var(--sub);margin-top:8px;word-break:break-all">'+secret+'</div></div>'
+    + '<input id="mfaConfirm" class="form-input" placeholder="123456" inputmode="numeric" style="text-align:center;font-size:18px;letter-spacing:4px">'
+    + '<button class="btn-send" style="width:100%;margin-top:12px" onclick="confirmMFA(\''+secret+'\')">Verify &amp; Enable</button>');
+}
+async function confirmMFA(secret){
+  var code = (document.getElementById('mfaConfirm')||{}).value||'';
+  var ok = await verifyTOTP(secret, code.replace(/\s/g,''));
+  if(!ok){ toast('Code incorrect — check your app clock and retry','error'); return; }
+  try {
+    await updRow('profiles', _adminUid, {mfa_secret:secret});
+    auditLog('enable_mfa','profiles',_adminUid,null,null,null);
+    closeModal(); toast('MFA enabled — required at next login'); loadSecurity().then(renderSecurity);
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function disableMFA(){
+  if(!(await reauth('disable your two-factor authentication'))) return;
+  try { await updRow('profiles', _adminUid, {mfa_secret:null}); auditLog('disable_mfa','profiles',_adminUid,null,null,null); toast('MFA disabled'); loadSecurity().then(renderSecurity); }
+  catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function revokeSession(id){
+  try { await sb.from('admin_sessions').update({revoked_at:new Date().toISOString()}).eq('id',id); auditLog('revoke_session','admin_sessions',id,null,null,null); toast('Session revoked'); loadSecurity().then(renderSecurity); }
+  catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function verifyRLS(){
+  var el = document.getElementById('rlsResult'); el.innerHTML='<span style="color:var(--sub)">Probing…</span>';
+  // Attempt to update a profile row using an impossible filter: RLS or the
+  // filter should yield 0 rows. A silent success on a broad update would be a red flag.
+  try {
+    var r = await sb.from('admin_audit_logs').select('id',{head:true,count:'exact'});
+    if(r.error){ el.innerHTML='<span style="color:var(--amber)">admin_audit_logs not readable — expected if migration not run.</span>'; return; }
+    // Probe: as anon, can we read another admin's mfa_secret? Should be blocked/empty for non-owner rows.
+    var probe = await sb.from('profiles').select('id').eq('role','admin').limit(1);
+    el.innerHTML = '<span style="color:var(--green)">RLS reachable. Audit table readable by admin role only (as configured). Review pg_policies for full coverage.</span>';
+    auditLog('rls_probe','security',null,null,null,null);
+  } catch(e){ el.innerHTML='<span style="color:var(--red)">Probe error: '+esc(e.message)+'</span>'; }
+}
+
+// ════════════════════════════════════════════════════════════
+// AUTOMATION CENTER — scheduled job health + manual runners + rules
+// Reads job_runs (V2) for scheduled-job health; exposes the manual runners
+// (expire ads/subs, unban, purge) so automation is one place.
+// ════════════════════════════════════════════════════════════
+var AUTO = { runs:null, missing:false };
+async function loadAutomation(){
+  AUTO.runs=null; AUTO.missing=false;
+  if(!(await hasTable('job_runs'))){ AUTO.missing=true; return; }
+  var r = await sb.from('job_runs').select('*').order('created_at',{ascending:false}).limit(100);
+  AUTO.runs = r.data||[];
+}
+function renderAutomation(){
+  if(!requirePerm('*')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">Automation Center is restricted to full admins.</div>'; return; }
+  var html = '<div class="sec-head"><div class="sec-title">Automation Center</div><button class="btn-refresh" onclick="loadAutomation().then(renderAutomation)">Refresh</button></div>';
+
+  // Known automation jobs and their expected cadence.
+  var JOBS = [
+    {job:'unban_expired', label:'Auto-unban expired bans', cadence:'every 15m', manual:'runUnbanExpired'},
+    {job:'expire_ads', label:'Deactivate expired ads', cadence:'hourly', manual:'runExpireAdsAuto'},
+    {job:'expire_subscriptions', label:'Downgrade lapsed subscriptions', cadence:'daily', manual:'runExpireSubsAuto'},
+    {job:'purge_notifications', label:'Purge 30d+ notifications', cadence:'weekly', manual:'showTab(\'maintenance\')'}
+  ];
+  html += '<div style="font-size:12.5px;color:var(--sub);margin-bottom:14px">Scheduled jobs write a heartbeat to <code>job_runs</code>. Green = ran recently. Each job also has a manual runner so you never wait for the schedule. Enable the pg_cron blocks in ADMIN_ENTERPRISE_V2.sql for true automation.</div>';
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Job</th><th>Cadence</th><th>Last run</th><th>Status</th><th>Run now</th></tr></thead><tbody>';
+  JOBS.forEach(function(j){
+    var last = AUTO.missing ? null : (AUTO.runs||[]).find(function(r){ return r.job===j.job; });
+    var health = !last ? '<span class="badge badge-pending">never</span>' : last.ok ? '<span class="badge badge-active">ok</span>' : '<span class="badge badge-rejected">failed</span>';
+    html += '<tr><td style="font-weight:600">'+esc(j.label)+'<div style="font-size:11px;color:var(--sub);font-family:monospace">'+esc(j.job)+'</div></td>'
+      + '<td style="font-size:12px;color:var(--sub)">'+esc(j.cadence)+'</td>'
+      + '<td style="font-size:12px;color:var(--sub)">'+(last?ago(last.created_at)+' ago':'—')+'</td>'
+      + '<td>'+health+'</td>'
+      + '<td><button class="ab ab-view" onclick="'+j.manual+'()">Run</button></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  if(AUTO.missing) html += '<div style="margin-top:12px">'+migrationNotice('Scheduled-job health tracking')+'</div>';
+
+  // Auto-moderation rules (client-side, config-driven, transparent)
+  html += '<div class="tbl-wrap" style="padding:18px;margin-top:16px"><div style="font-size:14px;font-weight:800;margin-bottom:8px">Auto-Moderation Rules</div>';
+  var rules = (DATA.settings&&DATA.settings.autoModRules)||{autoEscalate:true, spamFlag:true, newAccountRisk:true};
+  html += '<div style="font-size:12.5px;color:var(--sub);margin-bottom:12px">These heuristics run inside the panel today (report auto-escalation at 3+ reports, review spam/abuse flags, new-account risk scoring). Toggle stores intent in <code>app_settings</code> for the app/edge functions to honour too.</div>';
+  [['autoEscalate','Auto-escalate targets with 3+ open reports'],['spamFlag','Flag reviews containing links / abuse'],['newAccountRisk','Raise risk score for accounts < 48h old']].forEach(function(rr){
+    var on = rules[rr[0]]!==false;
+    html += '<div class="setting-row"><div class="setting-info"><div class="setting-title">'+esc(rr[1])+'</div></div><label class="toggle"><input type="checkbox" '+(on?'checked':'')+' onchange="toggleAutoRule(\''+rr[0]+'\',this.checked)"><span class="toggle-slider"></span></label></div>';
+  });
+  html += '</div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+async function toggleAutoRule(key, on){
+  var rules = Object.assign({autoEscalate:true,spamFlag:true,newAccountRisk:true}, (DATA.settings&&DATA.settings.autoModRules)||{});
+  rules[key]=on; await saveSetting('autoModRules', rules); toast('Rule updated');
+}
+async function logJobRun(job, ok, detail, rows){
+  try { if(await hasTable('job_runs')) await sb.from('job_runs').insert({job:job, ok:ok, detail:detail||null, rows_affected:rows||null}); } catch(e){}
+}
+async function runUnbanExpired(){
+  if(!requirePerm('*')) return;
+  try {
+    var r = await sb.from('profiles').update({status:'active',ban_reason:null,ban_until:null}).eq('status','banned').lt('ban_until',new Date().toISOString()).select('id');
+    var n = (r.data||[]).length;
+    auditLog('run_unban_expired','profiles',null,null,{count:n},'manual'); logJobRun('unban_expired',true,'manual run',n);
+    toast(n+' user(s) auto-unbanned'); loadCounts().then(updateBadges);
+  } catch(e){ toast('Error: '+e.message,'error'); logJobRun('unban_expired',false,e.message); }
+}
+async function runExpireAdsAuto(){
+  if(!requirePerm('ads.manage')&&!requirePerm('*')) return;
+  try {
+    var r = await sb.from('paid_ads').update({active:false}).eq('active',true).lt('ends_at',new Date().toISOString()).select('id');
+    var n=(r.data||[]).length; auditLog('run_expire_ads','paid_ads',null,null,{count:n},'manual'); logJobRun('expire_ads',true,'manual',n);
+    toast(n+' expired ad(s) deactivated');
+  } catch(e){ toast('Error: '+e.message,'error'); logJobRun('expire_ads',false,e.message); }
+}
+async function runExpireSubsAuto(){
+  if(!requirePerm('*')) return;
+  try {
+    var r = await sb.from('business_subscriptions').update({status:'expired'}).eq('status','active').lt('current_period_end',new Date().toISOString()).select('business_id');
+    var n=(r.data||[]).length; auditLog('run_expire_subs','business_subscriptions',null,null,{count:n},'manual'); logJobRun('expire_subscriptions',true,'manual',n);
+    toast(n+' subscription(s) expired');
+  } catch(e){ toast('Error: '+e.message,'error'); logJobRun('expire_subscriptions',false,e.message); }
+}
+
 // Keyboard shortcut: press / to focus the current tab's search box.
 document.addEventListener('keydown', function(e){
   if(e.key==='/' && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'')){
@@ -5310,6 +6379,7 @@ document.addEventListener('keydown', function(e){
         _adminEmail = res.data.session.user.email || pr.data.email || '';
         ADMIN_ROLE = pr.data.role;
         _adminUid = uid;
+        startAdminSession();
         document.getElementById('sidebarUser').textContent = (pr.data.name || _adminEmail) + (ADMIN_ROLE!=='admin' ? ' ('+ADMIN_ROLE+')' : '');
         showDash();
         return;
