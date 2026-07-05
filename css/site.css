@@ -160,9 +160,73 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 .toast.show{opacity:1;transform:none}
 .toast.success{background:var(--green)}
 
-/* Buttons (generic) */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;border-radius:10px;padding:11px 18px;border:0;cursor:pointer;font-family:inherit;transition:transform .12s,box-shadow .15s,background .15s}
+/* ── Button system ────────────────────────────────────────────
+   Variants: primary navy (.btn-navy) · primary gold (.btn-accent)
+   · secondary (.btn-secondary) · outline (.btn-ghost).
+   Sizes: .btn-sm / (default) / .btn-lg. States: :disabled, .is-loading.
+   Consistent height + hover; 44px min touch target on mobile. */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;line-height:1;border-radius:10px;padding:0 18px;min-height:42px;border:1.5px solid transparent;cursor:pointer;font-family:inherit;white-space:nowrap;transition:transform .12s,box-shadow .15s,background .15s,border-color .15s;text-decoration:none}
 .btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+.btn-sm{min-height:36px;padding:0 14px;font-size:13px;border-radius:9px}
+.btn-lg{min-height:50px;padding:0 26px;font-size:15px}
 .btn-accent{background:var(--gold);color:#fff}.btn-accent:hover{background:var(--gold-dark)}
-.btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:var(--navy-deep)}
-.btn-ghost{color:var(--navy);border:1.5px solid var(--line);background:#fff}
+.btn-navy,.btn-primary{background:var(--navy);color:#fff}.btn-navy:hover,.btn-primary:hover{background:var(--navy-deep)}
+.btn-secondary{background:var(--navy-tint);color:var(--navy)}.btn-secondary:hover{background:#E2E9FB}
+.btn-ghost{color:var(--navy);border-color:var(--line);background:#fff}.btn-ghost:hover{border-color:var(--navy)}
+.btn:disabled,.btn[disabled],.btn.is-disabled{opacity:.55;cursor:not-allowed;pointer-events:none}
+.btn.is-loading{color:transparent!important;pointer-events:none;position:relative}
+.btn.is-loading::after{content:"";position:absolute;width:16px;height:16px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;color:#fff;animation:btnspin .6s linear infinite}
+.btn-ghost.is-loading::after,.btn-secondary.is-loading::after{color:var(--navy)}
+@keyframes btnspin{to{transform:rotate(360deg)}}
+@media(max-width:768px){.btn{min-height:44px}}
+@media(prefers-reduced-motion:reduce){.btn.is-loading::after{animation:none}}
+
+/* ============================================================
+   PHASE 3 — Shared Component Library
+   One definition per component; the historical per-page class
+   names (.lcard on the homepage scroller, .gcard on the browse
+   grid, .shopcard for businesses) are aliased to the same rules
+   so every page renders an identical component. New markup should
+   use the .pm-* names.
+   ============================================================ */
+
+/* ── Listing card ─────────────────────────────────────────── */
+.pm-card,.lcard,.gcard{background:#fff;border-radius:14px;border:1px solid var(--line);overflow:hidden;transition:box-shadow .2s,transform .2s,border-color .2s;cursor:pointer;display:block;box-shadow:0 1px 3px rgba(15,36,96,.04)}
+.pm-card:hover,.lcard:hover,.gcard:hover{box-shadow:0 14px 34px rgba(26,58,143,.15);transform:translateY(-3px);border-color:rgba(26,58,143,.2)}
+.pm-card-img,.lcard-img,.gcard-img{width:100%;aspect-ratio:4/3;position:relative;overflow:hidden;background:var(--paper)}
+.pm-card-img img,.lcard-img-inner,.gcard-img img{width:100%;height:100%;object-fit:cover;display:flex;align-items:center;justify-content:center;text-align:center;transition:transform .35s}
+.pm-card:hover .pm-card-img img,.lcard:hover .lcard-img-inner,.gcard:hover .gcard-img img{transform:scale(1.05)}
+.pm-card-ph,.gcard-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;text-align:center;padding:12px;line-height:1.4}
+.pm-card-badge,.lcard-badge,.gcard-badge{position:absolute;top:8px;left:8px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;z-index:1;background:var(--navy);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.badge-new{background:var(--navy);color:#fff}
+.badge-hot{background:var(--red);color:#fff}
+.badge-feat{background:var(--gold);color:#fff}
+.pm-card-body,.lcard-body,.gcard-body{padding:12px 14px 14px}
+.pm-card-price,.lcard-price,.gcard-price{font-size:17px;font-weight:800;color:var(--navy);letter-spacing:-.02em}
+.pm-card-title,.lcard-title,.gcard-title{font-size:13px;color:var(--ink);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.pm-card-loc,.lcard-loc,.gcard-loc{font-size:11.5px;color:var(--mute);margin-top:7px;display:flex;align-items:center;gap:4px}
+/* Homepage horizontal scroller uses fixed-width cards */
+.hscroll>.pm-card,.hscroll>.lcard{flex:0 0 168px}
+@media(max-width:700px){.hscroll>.pm-card,.hscroll>.lcard{flex-basis:150px}}
+
+/* ── Business / shop card ─────────────────────────────────── */
+.pm-biz,.shopcard{background:#fff;border-radius:14px;border:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:16px;transition:box-shadow .2s,transform .2s,border-color .2s;cursor:pointer}
+.pm-biz:hover,.shopcard:hover{box-shadow:0 10px 26px rgba(26,58,143,.12);transform:translateY(-2px);border-color:rgba(26,58,143,.2)}
+.pm-biz-logo,.shopcard-logo{width:56px;height:56px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--paper)}
+.pm-biz-logo img,.shopcard-logo img{width:100%;height:100%;object-fit:cover}
+.pm-biz-body,.shopcard-body{min-width:0}
+.pm-biz-name,.shopcard-name{font-size:14.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;line-height:1.35}
+.pm-biz-verified,.shopcard-verified{width:16px;height:16px;border-radius:50%;background:var(--green);color:#fff;font-size:10px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.pm-biz-loc,.shopcard-loc{font-size:12px;color:var(--mute);margin-top:5px;display:flex;align-items:center;gap:4px}
+
+/* ── States: skeleton / empty ─────────────────────────────── */
+.skeleton{background:linear-gradient(90deg,#EEF1F6 25%,#F6F8FB 50%,#EEF1F6 75%);background-size:200% 100%;animation:sk 1.3s infinite}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.empty-state{background:#fff;border:1px solid var(--line);border-radius:14px;padding:60px 30px;text-align:center;color:var(--sub)}
+.empty-state a{color:var(--navy);font-weight:700}
+
+/* ── Load-more / pagination ───────────────────────────────── */
+.load-more{display:block;margin:26px auto 0;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:12px 30px;font-weight:700;font-size:13.5px;color:var(--navy);transition:border-color .15s,background .15s}
+.load-more:hover{border-color:var(--navy);background:var(--paper)}
+@media(prefers-reduced-motion:reduce){.skeleton{animation:none}.pm-card,.lcard,.gcard,.pm-biz,.shopcard{transition:none}}
