@@ -482,7 +482,9 @@ async function init(){
   try{
     const listing=await PM.fetchListingById(id);
     if(!listing){showNotFound();return}
-    renderListing(listing);
+    // Seller reviews drive Product aggregateRating/review (real data only).
+    const reviews=await PM.fetchSellerReviews(listing.seller_id,20).catch(()=>[]);
+    renderListing(listing,reviews);
     document.getElementById('loadingState').classList.add('hidden');
     document.getElementById('detailContent').classList.remove('hidden');
     PM.fetchSimilarListings(listing.category,listing.id,4).then(rows=>{
@@ -500,7 +502,7 @@ function showNotFound(){
   document.getElementById('notFoundState').classList.remove('hidden');
 }
 
-function renderListing(l){
+function renderListing(l,reviews){
   const loc=[l.suburb,l.city,l.province].filter(Boolean).join(', ')||'Zimbabwe';
   const catLabel=CAT_LABELS[l.category]||l.category;
   const pageTitle=l.title+' — '+PM.money(l.price,l.currency)+' | PaMarket Zimbabwe';
@@ -581,7 +583,7 @@ function renderListing(l){
 
   const schema=document.createElement('script');
   schema.type='application/ld+json';
-  schema.textContent=JSON.stringify(buildListingSchema(l,catLabel,loc,photos,canonicalUrl));
+  schema.textContent=JSON.stringify(buildListingSchema(l,catLabel,loc,photos,canonicalUrl,reviews));
   document.head.appendChild(schema);
 
   const breadcrumb=document.createElement('script');
@@ -599,22 +601,54 @@ function renderListing(l){
   document.head.appendChild(breadcrumb);
 }
 
-function buildListingSchema(l,catLabel,loc,photos,canonicalUrl){
+// Map a free-text condition to a schema.org enum (omitted when unknown —
+// never guessed).
+function schemaCondition(l){
+  var c=((l.condition!=null?l.condition:(l.attributes&&l.attributes.condition))||'').toString().toLowerCase();
+  if(!c) return undefined;
+  if(/new|sealed|brand/.test(c)) return 'https://schema.org/NewCondition';
+  if(/refurb/.test(c)) return 'https://schema.org/RefurbishedCondition';
+  if(/used|second|pre|fair|good|excellent/.test(c)) return 'https://schema.org/UsedCondition';
+  return undefined;
+}
+// aggregateRating + review from real seller reviews; null when none exist.
+function ratingBlock(reviews){
+  if(!reviews||!reviews.length) return null;
+  var sum=reviews.reduce(function(a,r){return a+(Number(r.rating)||0);},0);
+  return {
+    aggregateRating:{'@type':'AggregateRating',ratingValue:(sum/reviews.length).toFixed(1),reviewCount:reviews.length,bestRating:5,worstRating:1},
+    review:reviews.slice(0,10).map(function(r){
+      return {'@type':'Review',author:{'@type':'Person',name:r.reviewer_name||'PaMarket user'},datePublished:(r.created_at||'').slice(0,10),reviewRating:{'@type':'Rating',ratingValue:Number(r.rating)||0,bestRating:5,worstRating:1},reviewBody:r.body||''};
+    })
+  };
+}
+function sellerNode(l){
+  var n={'@type':l.business_id?'Organization':'Person',name:l.seller_name||'PaMarket seller'};
+  if(l.business_id) n.url='https://pamarketzw.com/business?id='+l.business_id;
+  return n;
+}
+
+function buildListingSchema(l,catLabel,loc,photos,canonicalUrl,reviews){
+  // Product requires an image; fall back to the brand mark only when the
+  // listing genuinely has no photos, to keep it eligible rather than erroring.
+  var image=photos.length?photos:['https://pamarketzw.com/img/icon-512.png'];
   const base={
     '@context':'https://schema.org',
     name:l.title,
     description:l.description||l.title,
-    image:photos.length?photos:undefined,
-    url:canonicalUrl,
-    datePosted:l.created_at
+    image:image,
+    url:canonicalUrl
   };
   const address={'@type':'PostalAddress',addressLocality:l.city||l.suburb||undefined,addressRegion:l.province||undefined,addressCountry:'ZW'};
+  const cond=schemaCondition(l);
+  const priceValidUntil=l.expires_at?String(l.expires_at).slice(0,10):undefined;
 
   if(l.category==='property'){
     const rentalType=(l.attributes&&l.attributes.rentalType)||'';
     return Object.assign(base,{
       '@type':'RealEstateListing',
       category:catLabel,
+      datePosted:l.created_at,
       address,
       offers:{
         '@type':'Offer',
@@ -622,25 +656,33 @@ function buildListingSchema(l,catLabel,loc,photos,canonicalUrl){
         priceCurrency:l.currency||'USD',
         availability:'https://schema.org/InStock',
         businessFunction:/rent/i.test(rentalType)?'http://purl.org/goodrelations/v1#LeaseOut':'http://purl.org/goodrelations/v1#Sell',
+        priceValidUntil:priceValidUntil,
+        seller:sellerNode(l),
         url:canonicalUrl
       }
     });
   }
   if(l.category==='vehicles'){
-    return Object.assign(base,{
+    const veh=Object.assign(base,{
       '@type':'Vehicle',
       category:catLabel,
-      vehicleCondition:l.condition||undefined,
+      itemCondition:cond,
       areaServed:{'@type':'Country',name:'Zimbabwe'},
       offers:{
         '@type':'Offer',
         price:l.price,
         priceCurrency:l.currency||'USD',
         availability:'https://schema.org/InStock',
+        itemCondition:cond,
+        priceValidUntil:priceValidUntil,
+        seller:sellerNode(l),
         areaServed:{'@type':'Country',name:'Zimbabwe'},
         url:canonicalUrl
       }
     });
+    const rb=ratingBlock(reviews);
+    if(rb){veh.aggregateRating=rb.aggregateRating;veh.review=rb.review;}
+    return veh;
   }
   if(l.category==='jobs'){
     return {
@@ -656,18 +698,28 @@ function buildListingSchema(l,catLabel,loc,photos,canonicalUrl){
       baseSalary:l.price?{'@type':'MonetaryAmount',currency:l.currency||'USD',value:{'@type':'QuantitativeValue',value:l.price,unitText:'MONTH'}}:undefined
     };
   }
-  return Object.assign(base,{
+  // Default: Product (electronics, furniture, fashion, etc.)
+  const product=Object.assign(base,{
     '@type':'Product',
     category:catLabel,
+    sku:l.id,
+    itemCondition:cond,
     offers:{
       '@type':'Offer',
       price:l.price,
       priceCurrency:l.currency||'USD',
       availability:'https://schema.org/InStock',
+      itemCondition:cond,
+      priceValidUntil:priceValidUntil,
+      seller:sellerNode(l),
       areaServed:{'@type':'Country',name:'Zimbabwe'},
       url:canonicalUrl
     }
   });
+  if(l.attributes&&l.attributes.brand) product.brand={'@type':'Brand',name:l.attributes.brand};
+  const rb=ratingBlock(reviews);
+  if(rb){product.aggregateRating=rb.aggregateRating;product.review=rb.review;}
+  return product;
 }
 
 function doSearch(){
