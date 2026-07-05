@@ -232,7 +232,7 @@
           <div class="seller-card" onclick="H.openUserProfile('${seller.id}')">
             <div style="position:relative;flex-shrink:0">
               <div class="seller-av">
-                ${seller.avatar ? `<img src="${seller.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(sellerName)}
+                ${seller.avatar ? `<img src="${H.escHtml(seller.avatar)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(sellerName)}
               </div>
               ${(seller.privacySettings && seller.privacySettings.showActivity) ? '<div class="seller-online-dot"></div>' : ''}
             </div>
@@ -353,7 +353,7 @@
       .slice(0, 4);
     function simCardHtml(s) {
       const thumb = s.photos && s.photos[0]
-        ? `<img src="${s.photos[0]}" style="width:100%;height:100%;object-fit:cover">`
+        ? `<img src="${H.escHtml(s.photos[0])}" style="width:100%;height:100%;object-fit:cover">`
         : `<div style="display:flex;align-items:center;justify-content:center;height:100%;opacity:.35">${H.categoryIcon(s.cat)}</div>`;
       return `<div class="sim-card" onclick="H.openListing('${s.id}')">
         <div class="sim-img">${thumb}</div>
@@ -829,7 +829,7 @@
         </div>
         <div class="prof-top" style="text-align:center;padding:32px 20px">
           <div class="prof-av" style="background:#1A3A8F;color:#fff;font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
-            ${u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(u.name)}
+            ${u.avatar ? `<img src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(u.name)}
           </div>
           <div class="prof-name">${H.escHtml(u.name)}</div>
           <div style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:7px 16px;background:rgba(255,255,255,0.12);border-radius:20px;border:1px solid rgba(255,255,255,0.25)">
@@ -856,7 +856,7 @@
       <div class="prof-top">
         <div style="position:relative;display:inline-block;margin-bottom:0">
           <div class="prof-av" style="background:#1A3A8F;color:#fff;font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center">
-            ${u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(u.name)}
+            ${u.avatar ? `<img src="${H.escHtml(u.avatar)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(u.name)}
           </div>
           ${showDot ? `<div style="position:absolute;bottom:3px;right:3px;width:13px;height:13px;border-radius:50%;background:#22c55e;border:2.5px solid #1A3A8F"></div>` : ''}
         </div>

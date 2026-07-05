@@ -222,7 +222,7 @@
   function renderPhotoGrid() {
     return postState.photos.map((p, i) =>
       `<div class="photo-thumb" style="position:relative">
-        <img src="${p}">
+        <img src="${H.escHtml(p)}">
         <button class="rm" onclick="H._post.removePhoto(${i})" aria-label="Remove">x</button>
         ${i === 0
           ? '<span style="position:absolute;bottom:4px;left:4px;font-size:9px;font-weight:800;background:#1A3A8F;color:#fff;border-radius:6px;padding:2px 6px;pointer-events:none">Cover</span>'

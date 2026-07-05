@@ -75,7 +75,7 @@
       <div class="profile-hero">
         <div class="profile-pic" style="position:relative;margin-bottom:14px">
           ${u.avatar
-            ? `<img src="${u.avatar}" alt="${H.escHtml(u.name || '')}" onclick="H.viewImage('${(u.avatar || '').replace(/'/g, "\\'")}')" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name || '').replace(/'/g, "\\'")}'))">`
+            ? `<img src="${escHtml(u.avatar)}" alt="${H.escHtml(u.name || '')}" onclick="H.viewImage('${(u.avatar || '').replace(/'/g, "\\'")}')" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in" onerror="this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML=H.initials(H.escHtml('${(u.name || '').replace(/'/g, "\\'")}'))">`
             : `<div class="profile-initials">${H.initials(u.name)}</div>`}
           ${showActivityDot ? `<div style="position:absolute;bottom:3px;right:3px;width:14px;height:14px;border-radius:50%;background:#22C55E;border:2.5px solid var(--card)"></div>` : ''}
         </div>
@@ -440,7 +440,29 @@
     H._myListings = {
       edit: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); H.openInner(l&&l.cat==='jobs'?'EditJob':'EditListing',{listingId:id}); },
       markSold: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='sold'; l.soldAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'sold'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job marked as filled' : 'Listing marked as sold'); H.renderPage('MyListings'); },
-      del: (id) => { if(!window.confirm('Delete this listing permanently?'))return; if(typeof H.markPendingDelete==='function')H.markPendingDelete(id); H.state.listings=(H.state.listings||[]).filter(x=>x.id!==id); H.saveState(); H.toast('Listing deleted'); H.renderPage('MyListings'); if(window.supabase&&typeof window.supabase.from==='function')window.supabase.from('listings').delete().eq('id',id).then(null,function(){}); },
+      del: (id) => {
+        // Branded confirm + cloud-first delete (mirrors H.deleteListing on the
+        // detail page). The old path used window.confirm and removed the row
+        // locally before the DB call, so a permission/network failure left the
+        // listing gone from the UI but still live in the cloud.
+        H.modal({
+          title: 'Delete this listing?', body: 'This cannot be undone.', confirmText: 'Delete', danger: true,
+          onConfirm: async () => {
+            const sc = window.supabase;
+            if (sc && sc.auth && typeof sc.from === 'function') {
+              try {
+                const res = await sc.from('listings').delete().eq('id', id).select();
+                if (res && res.error) { H.toast('Could not delete: ' + (res.error.message || 'permission denied')); return; }
+              } catch (e) { H.toast('Network error — try again'); return; }
+            }
+            if (typeof H.markPendingDelete === 'function') H.markPendingDelete(id);
+            H.state.listings = (H.state.listings || []).filter(x => x.id !== id);
+            H.saveState();
+            H.toast('Listing deleted');
+            H.renderPage('MyListings');
+          }
+        });
+      },
       reactivate: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='active'; delete l.soldAt; l.renewedAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'active'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job reopened!' : 'Listing reactivated!'); H.renderPage('MyListings'); },
     };
   };
@@ -661,7 +683,7 @@
         ${card('2. Selfie Photo', hasSelfie,
           `<div style="display:flex;flex-direction:column;align-items:center">
              ${hasSelfie
-              ? `<img src="${_pvSelfie}" style="width:130px;height:130px;border-radius:50%;object-fit:cover;border:3px solid #16a34a;margin-bottom:12px">`
+              ? `<img src="${escHtml(_pvSelfie)}" style="width:130px;height:130px;border-radius:50%;object-fit:cover;border:3px solid #16a34a;margin-bottom:12px">`
               : `<div style="width:130px;height:160px;border-radius:50% / 46%;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;margin-bottom:12px;color:var(--sub)"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div style="font-size:11px;text-align:center;padding:0 12px">Center your face</div></div>`}
              <div style="display:flex;gap:8px;width:100%;max-width:260px">
                ${btn(hasSelfie ? 'Re-take' : 'Take Selfie', 'H._profileVerify.takeSelfie()', true)}
@@ -672,7 +694,7 @@
 
         ${card('3. ID Document (front)', hasId,
           `${hasId
-            ? `<div style="border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-bottom:12px"><img src="${_pvIdFront}" style="width:100%;display:block"></div>`
+            ? `<div style="border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-bottom:12px"><img src="${escHtml(_pvIdFront)}" style="width:100%;display:block"></div>`
             : `<div style="border:2px dashed var(--border);border-radius:14px;padding:26px 12px;text-align:center;color:var(--sub);margin-bottom:12px"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M6 14h6"/></svg><div style="font-size:12px;margin-top:6px">National ID, Passport or Driver's License</div></div>`}
            <div style="display:flex;gap:8px">
              ${btn(hasId ? 'Re-take' : 'Take Photo', 'H._profileVerify.takeId()', true)}

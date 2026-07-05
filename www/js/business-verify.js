@@ -77,10 +77,10 @@
           lvl < 1 && phoneOk ? `<button class="btn-pri" style="padding:9px 16px;margin-top:10px;width:auto" onclick="H._bizVerify.confirmPhone('${b.id}')">Confirm phone</button>` : '')}
 
         ${step(2, lvl >= 2, lvl === 1, 'Owner ID Verified', "National ID or passport of the owner.",
-          lvl < 2 ? `${upBtn(pend.id ? 'Replace ID' : 'Upload ID', `H._bizVerify.capture('${b.id}','id')`)}${pend.id ? `<img src="${pend.id}" style="width:100%;max-width:220px;border-radius:12px;margin-top:10px">` : ''}` : '')}
+          lvl < 2 ? `${upBtn(pend.id ? 'Replace ID' : 'Upload ID', `H._bizVerify.capture('${b.id}','id')`)}${pend.id ? `<img src="${H.escHtml(pend.id)}" style="width:100%;max-width:220px;border-radius:12px;margin-top:10px">` : ''}` : '')}
 
         ${step(3, lvl >= 3, lvl === 2, 'Business Document', 'Certificate of incorporation / registration.',
-          lvl < 3 ? `${upBtn(pend.reg ? 'Replace Document' : 'Upload Document', `H._bizVerify.capture('${b.id}','reg')`)}${pend.reg ? `<img src="${pend.reg}" style="width:100%;max-width:220px;border-radius:12px;margin-top:10px">` : ''}` : '')}
+          lvl < 3 ? `${upBtn(pend.reg ? 'Replace Document' : 'Upload Document', `H._bizVerify.capture('${b.id}','reg')`)}${pend.reg ? `<img src="${H.escHtml(pend.reg)}" style="width:100%;max-width:220px;border-radius:12px;margin-top:10px">` : ''}` : '')}
 
         <input type="file" id="bvFile" accept="image/*" capture="environment" style="display:none" onchange="H._bizVerify.onFile(event)">
         ${(pend.id || pend.reg) && !pendingReview ? `<button class="btn-pri" id="bvSubmit" style="width:100%;margin-top:6px" onclick="H._bizVerify.submit('${b.id}')">Submit for Review</button>` : ''}

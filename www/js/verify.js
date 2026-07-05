@@ -168,11 +168,11 @@
         ${card(hasId ? 'done' : 'active', 2, 'Upload ID Document', "National ID, passport or driver's licence. Capture both sides if applicable.",
           `<input type="file" id="idFile" accept="image/*" capture="environment" style="display:none" onchange="H._verify.onIdUpload(event)">
            ${actBtn(hasId ? 'Replace ID' : 'Upload ID', "document.getElementById('idFile').click()", hasId)}
-           ${hasId ? `<div style="margin-top:12px;border-radius:14px;overflow:hidden;border:1px solid var(--border,#E8ECF4);max-width:240px"><img src="${idImg}" style="width:100%;display:block"></div>` : ''}`)}
+           ${hasId ? `<div style="margin-top:12px;border-radius:14px;overflow:hidden;border:1px solid var(--border,#E8ECF4);max-width:240px"><img src="${H.escHtml(idImg)}" style="width:100%;display:block"></div>` : ''}`)}
 
         ${card(hasSelfie ? 'done' : (hasId ? 'active' : 'todo'), 3, 'Face Selfie', 'Take a clear photo of your face. Reviewed alongside your ID.',
           `${actBtn(hasSelfie ? 'Re-take Selfie' : 'Take Selfie', 'H._verify.takeSelfie()', hasSelfie)}
-           ${hasSelfie ? `<div style="margin-top:12px"><img src="${selfieImg}" style="width:104px;height:104px;border-radius:50%;object-fit:cover;border:3px solid #16a34a"></div>` : ''}`)}
+           ${hasSelfie ? `<div style="margin-top:12px"><img src="${H.escHtml(selfieImg)}" style="width:104px;height:104px;border-radius:50%;object-fit:cover;border:3px solid #16a34a"></div>` : ''}`)}
 
         <button class="btn-pri" id="submitVerifyBtn" ${ready ? '' : 'disabled'} onclick="H._verify.submitForReview()" style="width:100%;margin-top:6px;${ready ? '' : 'opacity:.5;cursor:not-allowed'}">${ready ? 'Submit for Review' : 'Add ID & selfie to continue'}</button>
         <div style="font-size:12px;color:var(--sub);text-align:center;margin-top:8px">Reviewed by our team within 24 hours.</div>
@@ -482,7 +482,7 @@
               <div class="verify-step-title">${d[1]}</div>
               <div class="verify-step-sub">${d[2]}</div>
               <button class="verify-step-btn" onclick="H._companyVerify.capture('${d[0]}')">${I.camera} ${done ? 'Replace Photo' : 'Add Photo'}</button>
-              ${done ? `<img src="${_pendingCompany[d[0]]}" style="width:100%;max-width:240px;border-radius:12px;margin-top:10px">` : ''}
+              ${done ? `<img src="${H.escHtml(_pendingCompany[d[0]])}" style="width:100%;max-width:240px;border-radius:12px;margin-top:10px">` : ''}
             </div>
           </div>`;
         }).join('')}
