@@ -587,7 +587,7 @@ function bcard(biz,idx){
     ?`<img src="${biz.logo||biz.cover}" alt="${(biz.name||'').replace(/"/g,'&quot;')}" loading="lazy">`
     :`<span style="color:${tc};font-weight:800;font-size:18px">${initials}</span>`;
   const verified=biz.verification_level>0?'<span class="shopcard-verified" title="Verified">✓</span>':'';
-  return`<a class="shopcard" href="browse?business=${biz.id}">
+  return`<a class="shopcard" href="business?id=${biz.id}">
     <div class="shopcard-logo" style="background:${bg}">${img}</div>
     <div class="shopcard-body">
       <div class="shopcard-name">${biz.name||'Shop'}${verified}</div>

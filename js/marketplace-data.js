@@ -178,6 +178,18 @@
     });
   }
 
+  // Reviews for a seller (a business's owner_user_id). Real user-generated
+  // reviews only — used for the business profile rating + review list and its
+  // AggregateRating/Review JSON-LD. Returns [] when the seller has none.
+  function fetchSellerReviews(sellerId, limit) {
+    if (!sellerId) return Promise.resolve([]);
+    return pgFetch(
+      'reviews?seller_id=eq.' + esc(sellerId) +
+        '&select=reviewer_name,rating,body,created_at&order=created_at.desc&limit=' +
+        (limit || 20)
+    ).catch(function () { return []; });
+  }
+
   // ── Advertisements (public.paid_ads) ──────────────────────────────
   // Same live table the app renders, so an ad an admin activates (e.g. on
   // behalf of a rental company) appears on the website too — no separate ad
@@ -238,6 +250,7 @@
   global.PM.fetchProfileById = fetchProfileById;
   global.PM.fetchBusinesses = fetchBusinesses;
   global.PM.fetchBusinessById = fetchBusinessById;
+  global.PM.fetchSellerReviews = fetchSellerReviews;
   global.PM.fetchJobs = fetchJobs;
   global.PM.fetchActiveAds = fetchActiveAds;
   global.PM.trackAdEvent = trackAdEvent;

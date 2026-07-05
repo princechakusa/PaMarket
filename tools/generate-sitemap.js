@@ -102,6 +102,10 @@ async function fetchPublicProfileIds(cfg) {
   return fetchAllRows(cfg, 'profiles_public', 'id,created_at', '');
 }
 
+async function fetchActiveBusinessIds(cfg) {
+  return fetchAllRows(cfg, 'businesses', 'id,updated_at', 'status=eq.active');
+}
+
 function xmlEscape(s) {
   return String(s)
     .replace(/&/g, '&amp;')
@@ -122,10 +126,11 @@ function urlEntry(loc, lastmod, changefreq, priority) {
 
 async function main() {
   const cfg = loadSupabaseConfig();
-  const [listings, rentals, profiles] = await Promise.all([
+  const [listings, rentals, profiles, businesses] = await Promise.all([
     fetchActiveListingIds(cfg),
     fetchActiveRentalIds(cfg),
     fetchPublicProfileIds(cfg),
+    fetchActiveBusinessIds(cfg),
   ]);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -151,6 +156,11 @@ async function main() {
     xml += urlEntry('/profile?id=' + p.id, lastmod, 'monthly', '0.4');
   }
 
+  for (const b of businesses) {
+    const lastmod = b.updated_at ? b.updated_at.slice(0, 10) : today;
+    xml += urlEntry('/business?id=' + b.id, lastmod, 'weekly', '0.7');
+  }
+
   const blogPosts = loadBlogPosts();
   for (const post of blogPosts) {
     const lastmod = post.dateModified || post.datePublished || today;
@@ -164,7 +174,8 @@ async function main() {
   console.log(
     'sitemap.xml written with ' + STATIC_PAGES.length + ' static pages, ' +
     listings.length + ' listing pages, ' + rentals.length + ' rental pages, ' +
-    profiles.length + ' profile pages, ' + blogPosts.length + ' blog posts.'
+    profiles.length + ' profile pages, ' + businesses.length + ' business pages, ' +
+    blogPosts.length + ' blog posts.'
   );
 }
 
