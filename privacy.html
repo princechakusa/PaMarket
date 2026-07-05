@@ -63,6 +63,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -80,78 +81,69 @@ button{font-family:inherit;cursor:pointer}
 .w{max-width:1200px;margin:0 auto;padding:0 32px}
 
 /* ══ TOP BAR ══ */
-.top-bar{background:var(--navy-deep);padding:8px 0;font-size:12.5px;color:#94B4E8}
-.top-bar-w{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;align-items:center}
-.top-bar a{color:#94B4E8;transition:color .15s}.top-bar a:hover{color:#fff}
-.top-bar-links{display:flex;gap:24px}
+
+
+
+
 
 /* ══ HEADER ══ */
-#hdr{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:300;box-shadow:0 1px 12px rgba(15,36,96,.07)}
-.hdr-w{max-width:1200px;margin:0 auto;padding:0 32px;height:66px;display:flex;align-items:center;gap:18px}
-.logo{font-size:23px;font-weight:900;color:var(--navy);flex-shrink:0;letter-spacing:-.02em}
-.logo em{color:var(--gold);font-style:normal}
-.search-bar{flex:1;max-width:620px;display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper);transition:border-color .2s,box-shadow .2s}
-.search-bar:focus-within{border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,58,143,.1)}
-.search-cat{border:none;background:none;border-right:1px solid var(--line);padding:0 12px 0 14px;height:44px;font-size:13px;color:var(--sub);font-family:inherit;outline:none;cursor:pointer}
-.search-inp{flex:1;border:none;background:none;padding:0 14px;height:44px;font-size:14px;font-family:inherit;color:var(--ink);outline:none}
-.search-inp::placeholder{color:var(--mute)}
-.search-btn{background:var(--navy);color:#fff;border:none;height:44px;padding:0 22px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px;transition:background .15s;flex-shrink:0}
-.search-btn:hover{background:var(--navy-deep)}
-.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
-.btn-sign{border:1.5px solid var(--line);border-radius:9px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--ink);background:#fff;transition:border-color .15s}
-.btn-sign:hover{border-color:var(--navy);color:var(--navy)}
-.btn-post{background:var(--gold);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:700;transition:background .15s}
-.btn-post:hover{background:var(--gold-dark)}
-.ham{display:none;background:none;border:none;color:var(--ink);padding:4px}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ══ CAT NAV ══ */
-.cat-nav{background:#fff;border-bottom:1px solid var(--line)}
-.cat-nav-w{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;overflow-x:auto;scrollbar-width:none;gap:2px}
-.cat-nav-w::-webkit-scrollbar{display:none}
-.cnav{flex-shrink:0;padding:10px 16px;font-size:13px;font-weight:500;color:var(--sub);border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .15s}
-.cnav:hover,.cnav.on{color:var(--navy);border-bottom-color:var(--navy);font-weight:600}
+
+
+
+
+
 
 /* ══ MOB NAV ══ */
-.mob-nav{display:none;flex-direction:column;background:#fff;border-top:1px solid var(--line);padding:12px 28px 20px}
-.mob-nav a{padding:12px 0;color:var(--ink);font-weight:500;border-bottom:1px solid var(--line);font-size:14.5px}
-.mob-nav a:last-child{border-bottom:none;color:var(--gold);font-weight:700}
-.mob-nav.open{display:flex}
+
+
+
+
 
 /* ══ FOOTER ══ */
-footer{background:var(--navy-deep);color:#6A8AC8}
-.foot-main{max-width:1200px;margin:0 auto;padding:56px 32px 40px;display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px}
-.foot-logo{font-size:24px;font-weight:900;color:#fff;letter-spacing:-.02em}
-.foot-logo em{color:var(--gold);font-style:normal}
-.foot-tagline{font-size:13.5px;color:#6A8AC8;margin-top:12px;max-width:240px;line-height:1.7}
-.foot-contact{margin-top:20px;font-size:13px;display:flex;flex-direction:column;gap:8px}
-.foot-contact a{color:#6A8AC8;transition:color .15s}
-.foot-contact a:hover{color:#fff}
-.foot-store{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
-.foot-store-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;transition:background .15s;text-decoration:none}
-.foot-store-btn:hover{background:rgba(255,255,255,.14)}
-.foot-col h5{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin-bottom:16px}
-.foot-col a{display:block;font-size:13.5px;color:#6A8AC8;margin-bottom:10px;transition:color .15s}
-.foot-col a:hover{color:#fff}
-.foot-bottom{border-top:1px solid rgba(255,255,255,.08);padding:18px 32px;max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:#4A6490}
-.foot-bottom-links{display:flex;gap:20px}
-.foot-bottom-links a{color:#4A6490;transition:color .15s}.foot-bottom-links a:hover{color:#fff}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ══ WA FLOAT ══ */
-.wa{position:fixed;right:22px;bottom:22px;z-index:99}
-.wa-btn{width:54px;height:54px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(37,211,102,.5);transition:transform .2s}
-.wa-btn:hover{transform:scale(1.08)}
+
+
+
 
 /* ══ RESPONSIVE ══ */
-@media(max-width:768px){
-  .top-bar{display:none}
-  .hdr-right .btn-sign{display:none}
-  .search-cat{display:none}
-  .ham{display:block}
-  .cat-nav{display:none}
-  .hdr-w{padding:0 20px;gap:12px}
-  .foot-main{grid-template-columns:1fr;padding:36px 24px}
-  .foot-bottom{flex-direction:column;gap:12px;text-align:center;padding:16px 24px}
-}
+
 
 
 .legal-wrap{max-width:760px;margin:0 auto;padding:56px 40px 80px}
@@ -171,9 +163,17 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 </head>
 <body>
 
+<!-- HEADER:START -->
+<!-- ============================================================
+     PaMarket shared header — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the HEADER:START/END markers.
+     Styling lives in css/site.css. Do not edit the copies that
+     appear inside individual page files.
+     ============================================================ -->
 <div class="top-bar">
   <div class="top-bar-w">
-    <span>Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
+    <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
     <div class="top-bar-links">
       <a href="browse">Browse Ads</a>
       <a href="advertise">Advertise</a>
@@ -188,21 +188,43 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     <div class="search-bar">
       <select class="search-cat" id="hCat" aria-label="Category">
         <option value="">All Categories</option>
-        <option>Property</option><option>Vehicles</option><option>Electronics</option>
-        <option>Jobs</option><option>Furniture</option><option>Fashion</option>
-        <option>Services</option><option>Agriculture</option><option>Rooms</option>
-        <option>Pets</option><option>Baby &amp; Kids</option>
+        <option value="property">Property</option><option value="vehicles">Vehicles</option><option value="electronics">Electronics</option>
+        <option value="jobs">Jobs</option><option value="furniture">Furniture</option><option value="fashion">Fashion</option>
+        <option value="services">Services</option><option value="agriculture">Agriculture</option><option value="rooms">Rooms</option>
+        <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option>
       </select>
-      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." onkeydown="if(event.key==='Enter')doSearch()">
-      <button class="search-btn" onclick="doSearch()">
+      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." aria-label="Search" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()" aria-label="Search">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        Search
+        <span class="sbtn-lbl">Search</span>
       </button>
     </div>
+    <div class="hdr-util">
+      <a href="auth" class="util-btn" title="Notifications" aria-label="Notifications">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="util-lbl">Notifications</span>
+      </a>
+      <a href="auth" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        <span class="util-lbl">My Searches</span>
+      </a>
+      <a href="auth" class="util-btn" title="Favorites" aria-label="Favorites">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        <span class="util-lbl">Favorites</span>
+      </a>
+      <a href="auth" class="util-btn" title="Chats" aria-label="Chats">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="util-lbl">Chats</span>
+      </a>
+      <a href="auth" class="util-btn" title="My Ads" aria-label="My Ads">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+        <span class="util-lbl">My Ads</span>
+      </a>
+    </div>
     <div class="hdr-right">
-      <a href="auth" class="btn-sign">Sign In</a>
+      <a href="auth" class="btn-sign" id="signInBtn">Sign In</a>
       <a href="post-ad" class="btn-post">+ Post Free Ad</a>
-      <button class="ham" onclick="toggleMob()" aria-label="Menu">
+      <button class="ham" onclick="toggleMob()" aria-label="Menu" aria-expanded="false">
         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
       </button>
     </div>
@@ -217,6 +239,28 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     <a href="post-ad">+ Post Free Ad</a>
   </nav>
 </header>
+<script>
+/* Self-contained header behaviour so the partial works on any page
+   regardless of what else the page loads. Guarded so pages that
+   already define these keep their own implementation. */
+window.toggleMob = window.toggleMob || function(){
+  var n = document.getElementById('mobNav');
+  var h = document.querySelector('#hdr .ham');
+  if (!n) return;
+  var open = n.classList.toggle('open');
+  if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+window.doSearch = window.doSearch || function(){
+  var cat = document.getElementById('hCat');
+  var q = document.getElementById('hQ');
+  var p = new URLSearchParams();
+  if (cat && cat.value) p.set('cat', cat.value);
+  if (q && q.value.trim()) p.set('q', q.value.trim());
+  var qs = p.toString();
+  window.location.href = (cat && cat.value === 'jobs' ? 'jobs' : 'browse') + (qs ? '?' + qs : '');
+};
+</script>
+<!-- HEADER:END -->
 
 <nav class="cat-nav">
   <div class="cat-nav-w">
@@ -239,6 +283,13 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 <div class="doc-content"><h1>Privacy Policy</h1><p><strong>Last updated: June 2026</strong></p><p>PaMarket Zimbabwe ("PaMarket", "we", "us", "our") is committed to protecting your privacy and handling your personal information responsibly. This Privacy Policy explains what data we collect, why we collect it, how we use and protect it, who we share it with, how long we keep it, and what rights you have over it. By using PaMarket you agree to the practices described in this Policy.</p><h3>1. Who Is the Data Controller</h3><p>PaMarket Zimbabwe is the data controller responsible for your personal information collected through the PaMarket mobile application and website. This Policy is governed by the Zimbabwe Cyber Security and Data Protection Act [Chapter 12:07] and applicable Zimbabwean data protection law. Contact us at info@pamarketzw.com for any privacy-related enquiry.</p><h3>2. Information We Collect</h3><p><strong>Account and identity data:</strong> your full name, email address, phone number, and profile photo when you register or update your profile.</p><p><strong>Verification data:</strong> a copy of your national ID or passport when you voluntarily request a verified badge. This document is reviewed by our admin team and permanently deleted within 30 days of the review outcome, regardless of approval or rejection.</p><p><strong>Listing data:</strong> photos, titles, descriptions, prices, categories, provinces, and suburbs you provide when posting a listing or creating a Business Shop.</p><p><strong>Business data:</strong> business name, type, description, logo, cover image, contact details, province, suburb, and product catalogue if you create a Business Shop.</p><p><strong>Job and CV data:</strong> employment history, skills, education, province, and any other information you include in a Hire Talent candidate profile or job posting.</p><p><strong>Message and communication data:</strong> the content of messages, images, offer cards, and location pins you send and receive through the in-app messaging system.</p><p><strong>Push notification token:</strong> a device token generated by Google Firebase Cloud Messaging (Android) or Apple Push Notification Service (iOS) to enable delivery of notifications about messages, listing activity, and account events. You can withdraw this permission at any time in your device Settings.</p><p><strong>Usage and behavioural data:</strong> pages viewed, search queries, listings saved or reported, categories browsed, and other in-app actions, collected to understand how users engage with the platform and to improve the service.</p><p><strong>Device and technical data:</strong> device model, operating system version, app version, IP address, and crash/error logs, used for technical troubleshooting and security monitoring.</p><h3>3. Legal Basis for Processing</h3><p>We process your personal data on the following grounds:</p><ul><li><strong>Contract performance:</strong> to register your account, display your listings, deliver messages, and operate the core features of the platform that you have signed up for.</li><li><strong>Legitimate interests:</strong> to detect and prevent fraud, abuse, spam, and illegal content; to improve the platform; to monitor the security of our systems; and to respond to reports of violations.</li><li><strong>Consent:</strong> to send push notifications (you can withdraw consent at any time via device settings); to collect verification documents (voluntary and withdrawable).</li><li><strong>Legal obligation:</strong> to comply with lawful requests from Zimbabwean authorities, including the Zimbabwe Republic Police and POTRAZ, when legally required.</li></ul><h3>4. How We Use Your Information</h3><ul><li>To create and manage your account and verify your identity.</li><li>To display your listings, Business Shop, candidate profile, or job postings to other users.</li><li>To deliver in-app and push notifications about messages, offers, listing status, and account events.</li><li>To moderate listings and enforce our Terms of Service and Community Guidelines.</li><li>To investigate reports of abuse, fraud, or illegal content and take enforcement action.</li><li>To improve the app's features, design, and performance based on aggregated usage analytics.</li><li>To detect and prevent security threats, unauthorised access, and fraudulent behaviour.</li><li>To comply with legal obligations and respond to lawful requests from authorities.</li></ul><h3>5. Sharing and Service Providers</h3><p>We do not sell, rent, or trade your personal information to any third party. We share your data only with the following trusted service providers ("sub-processors") strictly for the purposes described:</p><ul><li><strong>Supabase Inc.:</strong> database hosting, user authentication, file storage, and real-time subscriptions. Data is hosted on Amazon Web Services (AWS) in the eu-west-1 (Ireland) region.</li><li><strong>Google LLC (Firebase):</strong> Android push notification delivery via Firebase Cloud Messaging (FCM). Google receives only an anonymous device token and the notification payload; it does not receive your full profile.</li><li><strong>Apple Inc. (APNS):</strong> iOS push notification delivery via Apple Push Notification Service. Apple receives only a device token and notification payload.</li><li><strong>Google LLC (Sign in with Google):</strong> if you choose to register or log in using your Google account, Google shares your name and email address with us to create your PaMarket account.</li></ul><p>All sub-processors are bound by data processing agreements that prohibit them from using your data for their own purposes or sharing it with anyone else. We may also disclose your data if required to do so by a court order, warrant, or lawful request from a competent Zimbabwean authority.</p><h3>6. Push Notifications</h3><p>We send push notifications to alert you to new messages, listing approvals, business enquiries, and other account activity. You can disable push notifications at any time in your device's notification settings. Disabling notifications does not affect your ability to use the app, but you may miss time-sensitive messages from other users.</p><h3>7. Camera, Photos, and Media</h3><p>The app requests permission to access your device camera and photo library only when you choose to upload photos for a listing, your profile picture, or your Business Shop logo and cover image. We do not scan your photo library or access any images beyond those you explicitly select and upload. Uploaded photos are stored in our Supabase file storage and are publicly accessible via the listing or profile where they appear.</p><h3>8. Location Data</h3><p>PaMarket does not request or collect your precise GPS location automatically. Province and suburb information is entered manually by you when creating a listing or account. You may optionally share a location pin within the in-app messaging system; this pin is shared only with the specific recipient of that message.</p><h3>9. Cookies and Analytics</h3><p>The PaMarket web version may use strictly necessary cookies to maintain your session. We do not use advertising cookies or cross-site tracking. Aggregated, anonymised usage analytics are collected within the app to understand feature usage and improve the user experience. No analytics data is linked to your name or contact details.</p><h3>10. Data Retention</h3><ul><li><strong>Account data:</strong> retained while your account is active. Deleted within 30 days of you requesting account deletion via Settings.</li><li><strong>Listings:</strong> retained until you delete them or your account is closed. Deleted listings are removed from public view immediately but may remain in server logs for up to 90 days.</li><li><strong>Messages:</strong> retained for 24 months from the date of last activity in the conversation, then automatically purged.</li><li><strong>Verification documents:</strong> permanently deleted within 30 days of the verification review outcome.</li><li><strong>Push notification tokens:</strong> deleted when you log out or uninstall the app.</li><li><strong>Server and security logs:</strong> retained for 90 days for security monitoring and fraud detection, then deleted.</li></ul><h3>11. Security</h3><p>All data is transmitted using HTTPS/TLS encryption. Passwords are never stored in plain text; authentication is managed by Supabase Auth using industry-standard hashing. Our database tables are protected by row-level security (RLS) policies, which means each user can only access their own data unless they have been explicitly granted access (e.g. conversation participants). We conduct periodic security reviews and apply security patches promptly. Despite these measures, no system is completely secure. If you become aware of a security vulnerability, please report it immediately to info@pamarketzw.com.</p><div class="legal-callout"><p><strong>Want to delete your account?</strong> Submit a request from our <a href="delete-account">Data Deletion Request page</a>. We will process it and permanently remove your profile, listings, messages, and related data.</p></div><h3>12. Your Rights and Choices</h3><ul><li><strong>Access:</strong> you can request a copy of the personal data we hold about you by emailing us. We will respond within 30 days.</li><li><strong>Correction:</strong> update your name, phone number, profile photo, and other details via Settings - Edit Profile at any time.</li><li><strong>Deletion:</strong> delete your account and all associated data via Settings - Security - Delete Account. Account deletion is irreversible.</li><li><strong>Notification opt-out:</strong> disable push notifications in your device Settings at any time.</li><li><strong>Portability:</strong> request an export of your data in a machine-readable format by emailing us.</li><li><strong>Withdraw consent:</strong> where processing is based on your consent (e.g. verification documents, push notifications), you may withdraw consent at any time without affecting the lawfulness of prior processing.</li></ul><p>To exercise any of these rights, contact us at info@pamarketzw.com. We will not discriminate against you for exercising your privacy rights.</p><h3>13. International Data Transfers</h3><p>Your data is stored and processed by Supabase on Amazon Web Services infrastructure located in Ireland (EU). By using PaMarket you consent to this transfer. We ensure that all international transfers are subject to appropriate contractual safeguards, including Supabase's standard data processing agreement.</p><h3>14. Children's Privacy</h3><p>PaMarket is intended for users aged 18 and over. We do not knowingly collect personal information from anyone under the age of 18. If we become aware that a user is under 18, we will delete their account and all associated data without notice. If you believe a child has registered on our platform, please contact us immediately at info@pamarketzw.com.</p><h3>15. Marketing Communications</h3><p>We may occasionally send you in-app notifications about new features, platform updates, or promotional offers from PaMarket. We do not send marketing emails or SMS without your explicit opt-in. You can opt out of in-app promotional notifications by adjusting your notification preferences in Settings.</p><h3>16. Changes to This Policy</h3><p>We may update this Privacy Policy from time to time to reflect changes in our practices, technology, legal requirements, or business operations. We will notify you of significant changes via an in-app notification or a prominent notice in the app. The "Last updated" date at the top of this Policy will always reflect the date of the most recent revision. Your continued use of PaMarket after changes are posted constitutes your acceptance of the updated Policy.</p><h3>17. Contact</h3><p>For any privacy-related enquiry, request, or complaint:<br>PaMarket Zimbabwe<br>Email: info@pamarketzw.com<br>WhatsApp: +971 589 772 645</p></div>
 </div>
 
+<!-- FOOTER:START -->
+<!-- ============================================================
+     PaMarket shared footer — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the FOOTER:START/END markers.
+     Styling lives in css/site.css.
+     ============================================================ -->
 <footer>
   <div class="foot-main">
     <div>
@@ -246,11 +297,11 @@ footer{background:var(--navy-deep);color:#6A8AC8}
       <p class="foot-tagline">Zimbabwe's free marketplace. Buy, sell, find jobs and grow your business across all ten provinces. No fees, ever.</p>
       <div class="foot-contact">
         <a href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a>
-        <a href="mailto:info@pamarketzw.com">info@pamarketzw.com</a>
+        <a href="mailto:support@pamarketzw.com">support@pamarketzw.com</a>
       </div>
       <div class="foot-store">
-        <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" class="foot-store-btn" target="_blank" rel="noopener">
-          <img src="img/google-play-badge.png" alt="Get it on Google Play" style="height:40px;display:block">
+        <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener">
+          <img src="img/google-play-badge.png" alt="Get it on Google Play" class="play-badge-sm">
         </a>
       </div>
     </div>
@@ -280,8 +331,9 @@ footer{background:var(--navy-deep);color:#6A8AC8}
       <h5>Legal</h5>
       <a href="terms">Terms of Service</a>
       <a href="privacy">Privacy Policy</a>
-      <a href="delete-account">Delete Account</a>
+      <a href="post-ad">Post a Free Ad</a>
       <a href="auth">Sign In</a>
+      <a href="auth?mode=signup">Create Account</a>
     </div>
   </div>
   <div class="foot-bottom">
@@ -294,6 +346,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     </div>
   </div>
 </footer>
+<!-- FOOTER:END -->
 
 <script>
 function doSearch(){

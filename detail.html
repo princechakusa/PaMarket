@@ -33,6 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -50,37 +51,37 @@ button{font-family:inherit;cursor:pointer}
 .hidden{display:none!important}
 
 /* ══ TOP BAR / HEADER / CAT NAV / MOB NAV (shared) ══ */
-.top-bar{background:var(--navy-deep);padding:8px 0;font-size:12.5px;color:#94B4E8}
-.top-bar-w{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;align-items:center}
-.top-bar a{color:#94B4E8;transition:color .15s}.top-bar a:hover{color:#fff}
-.top-bar-links{display:flex;gap:24px}
-#hdr{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:300;box-shadow:0 1px 12px rgba(15,36,96,.07)}
-.hdr-w{max-width:1200px;margin:0 auto;padding:0 32px;height:66px;display:flex;align-items:center;gap:18px}
-.logo{font-size:23px;font-weight:900;color:var(--navy);flex-shrink:0;letter-spacing:-.02em;cursor:pointer;transition:opacity .15s}
-.logo:hover{opacity:.8}
-.logo em{color:var(--gold);font-style:normal}
-.search-bar{flex:1;max-width:620px;display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper);transition:border-color .2s,box-shadow .2s}
-.search-bar:focus-within{border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,58,143,.1)}
-.search-cat{border:none;background:none;border-right:1px solid var(--line);padding:0 12px 0 14px;height:44px;font-size:13px;color:var(--sub);font-family:inherit;outline:none;cursor:pointer}
-.search-inp{flex:1;border:none;background:none;padding:0 14px;height:44px;font-size:14px;font-family:inherit;color:var(--ink);outline:none}
-.search-inp::placeholder{color:var(--mute)}
-.search-btn{background:var(--navy);color:#fff;border:none;height:44px;padding:0 22px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px;transition:background .15s;flex-shrink:0}
-.search-btn:hover{background:var(--navy-deep)}
-.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
-.btn-sign{border:1.5px solid var(--line);border-radius:9px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--ink);background:#fff;transition:border-color .15s}
-.btn-sign:hover{border-color:var(--navy);color:var(--navy)}
-.btn-post{background:var(--gold);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:700;transition:background .15s}
-.btn-post:hover{background:var(--gold-dark)}
-.ham{display:none;background:none;border:none;color:var(--ink);padding:4px}
-.cat-nav{background:#fff;border-bottom:1px solid var(--line)}
-.cat-nav-w{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;overflow-x:auto;scrollbar-width:none;gap:2px}
-.cat-nav-w::-webkit-scrollbar{display:none}
-.cnav{flex-shrink:0;padding:10px 16px;font-size:13px;font-weight:500;color:var(--sub);border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .15s}
-.cnav:hover,.cnav.on{color:var(--navy);border-bottom-color:var(--navy);font-weight:600}
-.mob-nav{display:none;flex-direction:column;background:#fff;border-top:1px solid var(--line);padding:12px 28px 20px}
-.mob-nav a{padding:12px 0;color:var(--ink);font-weight:500;border-bottom:1px solid var(--line);font-size:14.5px}
-.mob-nav a:last-child{border-bottom:none;color:var(--gold);font-weight:700}
-.mob-nav.open{display:flex}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ══ BREADCRUMB ══ */
 .crumb{max-width:1200px;margin:0 auto;padding:16px 32px 0;font-size:13px;color:var(--mute)}
@@ -148,41 +149,41 @@ button{font-family:inherit;cursor:pointer}
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
 /* ══ FOOTER ══ */
-footer{background:var(--navy-deep);color:#6A8AC8}
-.foot-main{max-width:1200px;margin:0 auto;padding:56px 32px 40px;display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px}
-.foot-logo{font-size:24px;font-weight:900;color:#fff;letter-spacing:-.02em}
-.foot-logo em{color:var(--gold);font-style:normal}
-.foot-tagline{font-size:13.5px;color:#6A8AC8;margin-top:12px;max-width:240px;line-height:1.7}
-.foot-contact{margin-top:20px;font-size:13px;display:flex;flex-direction:column;gap:8px}
-.foot-contact a{color:#6A8AC8;transition:color .15s}
-.foot-contact a:hover{color:#fff}
-.foot-col h5{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin-bottom:16px}
-.foot-col a{display:block;font-size:13.5px;color:#6A8AC8;margin-bottom:10px;transition:color .15s}
-.foot-col a:hover{color:#fff}
-.foot-bottom{border-top:1px solid rgba(255,255,255,.08);padding:18px 32px;max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:#4A6490}
-.foot-bottom-links{display:flex;gap:20px}
-.foot-bottom-links a{color:#4A6490;transition:color .15s}.foot-bottom-links a:hover{color:#fff}
 
-.wa{position:fixed;right:22px;bottom:22px;z-index:99}
-.wa-btn{width:54px;height:54px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(37,211,102,.5);transition:transform .2s}
-.wa-btn:hover{transform:scale(1.08)}
 
-@media(max-width:960px){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@media(max-width:960px) {
   .detail-wrap{grid-template-columns:1fr;padding:16px 20px 50px}
   .sidebar{position:static}
   .similar-grid{grid-template-columns:repeat(2,1fr)}
   .similar-sec{padding:0 20px 50px}
   .crumb{padding:14px 20px 0}
 }
-@media(max-width:768px){
-  .top-bar{display:none}
-  .hdr-right .btn-sign{display:none}
-  .search-cat{display:none}
-  .ham{display:block}
-  .cat-nav{display:none}
-  .hdr-w{padding:0 20px;gap:12px}
-  .foot-main{grid-template-columns:1fr;padding:36px 24px}
-  .foot-bottom{flex-direction:column;gap:12px;text-align:center;padding:16px 24px}
+@media(max-width:768px) {
+  
+  
+  
+  
+  
+  
+  
+  
   .d-title{font-size:20px}
   .d-price{font-size:24px}
 }
@@ -190,9 +191,17 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 </head>
 <body>
 
+<!-- HEADER:START -->
+<!-- ============================================================
+     PaMarket shared header — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the HEADER:START/END markers.
+     Styling lives in css/site.css. Do not edit the copies that
+     appear inside individual page files.
+     ============================================================ -->
 <div class="top-bar">
   <div class="top-bar-w">
-    <span>Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
+    <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
     <div class="top-bar-links">
       <a href="browse">Browse Ads</a>
       <a href="advertise">Advertise</a>
@@ -212,16 +221,38 @@ footer{background:var(--navy-deep);color:#6A8AC8}
         <option value="services">Services</option><option value="agriculture">Agriculture</option><option value="rooms">Rooms</option>
         <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option>
       </select>
-      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." onkeydown="if(event.key==='Enter')doSearch()">
-      <button class="search-btn" onclick="doSearch()">
+      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." aria-label="Search" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()" aria-label="Search">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        Search
+        <span class="sbtn-lbl">Search</span>
       </button>
     </div>
+    <div class="hdr-util">
+      <a href="auth" class="util-btn" title="Notifications" aria-label="Notifications">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="util-lbl">Notifications</span>
+      </a>
+      <a href="auth" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        <span class="util-lbl">My Searches</span>
+      </a>
+      <a href="auth" class="util-btn" title="Favorites" aria-label="Favorites">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        <span class="util-lbl">Favorites</span>
+      </a>
+      <a href="auth" class="util-btn" title="Chats" aria-label="Chats">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="util-lbl">Chats</span>
+      </a>
+      <a href="auth" class="util-btn" title="My Ads" aria-label="My Ads">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+        <span class="util-lbl">My Ads</span>
+      </a>
+    </div>
     <div class="hdr-right">
-      <a href="auth" class="btn-sign">Sign In</a>
+      <a href="auth" class="btn-sign" id="signInBtn">Sign In</a>
       <a href="post-ad" class="btn-post">+ Post Free Ad</a>
-      <button class="ham" onclick="toggleMob()" aria-label="Menu">
+      <button class="ham" onclick="toggleMob()" aria-label="Menu" aria-expanded="false">
         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
       </button>
     </div>
@@ -236,6 +267,28 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     <a href="post-ad">+ Post Free Ad</a>
   </nav>
 </header>
+<script>
+/* Self-contained header behaviour so the partial works on any page
+   regardless of what else the page loads. Guarded so pages that
+   already define these keep their own implementation. */
+window.toggleMob = window.toggleMob || function(){
+  var n = document.getElementById('mobNav');
+  var h = document.querySelector('#hdr .ham');
+  if (!n) return;
+  var open = n.classList.toggle('open');
+  if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+window.doSearch = window.doSearch || function(){
+  var cat = document.getElementById('hCat');
+  var q = document.getElementById('hQ');
+  var p = new URLSearchParams();
+  if (cat && cat.value) p.set('cat', cat.value);
+  if (q && q.value.trim()) p.set('q', q.value.trim());
+  var qs = p.toString();
+  window.location.href = (cat && cat.value === 'jobs' ? 'jobs' : 'browse') + (qs ? '?' + qs : '');
+};
+</script>
+<!-- HEADER:END -->
 
 <nav class="cat-nav">
   <div class="cat-nav-w">
@@ -325,6 +378,13 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   </div>
 </div>
 
+<!-- FOOTER:START -->
+<!-- ============================================================
+     PaMarket shared footer — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the FOOTER:START/END markers.
+     Styling lives in css/site.css.
+     ============================================================ -->
 <footer>
   <div class="foot-main">
     <div>
@@ -334,28 +394,41 @@ footer{background:var(--navy-deep);color:#6A8AC8}
         <a href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a>
         <a href="mailto:support@pamarketzw.com">support@pamarketzw.com</a>
       </div>
+      <div class="foot-store">
+        <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener">
+          <img src="img/google-play-badge.png" alt="Get it on Google Play" class="play-badge-sm">
+        </a>
+      </div>
     </div>
     <div class="foot-col">
       <h5>Categories</h5>
       <a href="browse?cat=property">Property</a>
       <a href="browse?cat=vehicles">Vehicles</a>
       <a href="browse?cat=electronics">Electronics</a>
+      <a href="browse?cat=furniture">Furniture</a>
+      <a href="browse?cat=fashion">Fashion</a>
+      <a href="browse?cat=agriculture">Agriculture</a>
       <a href="jobs">Jobs</a>
       <a href="services">Services</a>
       <a href="browse?shops=1">Shops</a>
+      <a href="plans">Shop Plans</a>
     </div>
     <div class="foot-col">
       <h5>Customer Service</h5>
       <a href="blog">Blog</a>
       <a href="help">Help &amp; FAQ</a>
       <a href="contact">Contact Us</a>
+      <a href="advertise">Advertise</a>
+      <a href="community-guidelines">Community Guidelines</a>
       <a href="about">About PaMarket</a>
     </div>
     <div class="foot-col">
       <h5>Legal</h5>
       <a href="terms">Terms of Service</a>
       <a href="privacy">Privacy Policy</a>
-      <a href="delete-account">Delete Account</a>
+      <a href="post-ad">Post a Free Ad</a>
+      <a href="auth">Sign In</a>
+      <a href="auth?mode=signup">Create Account</a>
     </div>
   </div>
   <div class="foot-bottom">
@@ -368,6 +441,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     </div>
   </div>
 </footer>
+<!-- FOOTER:END -->
 
 <a href="https://wa.me/971589772645" class="wa" target="_blank" rel="noopener" aria-label="WhatsApp">
   <div class="wa-btn">
