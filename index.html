@@ -373,6 +373,18 @@ button{font-family:inherit;cursor:pointer}
   
   .hero-search{max-width:100%}
 }
+/* ── Small-screen containment (≤520 / ≤400) ── */
+@media(max-width:520px){
+  .trust-w{grid-template-columns:1fr}
+  .trust-cell{border-right:none;border-top:1px solid var(--line)}
+  .trust-cell:first-child{border-top:none}
+}
+@media(max-width:400px){
+  .cats-grid{gap:8px}
+  .cat-item{min-width:0}
+  .cat-circle{width:56px;height:56px}
+  .cat-name{font-size:11px;overflow-wrap:break-word}
+}
 </style>
 </head>
 <body>

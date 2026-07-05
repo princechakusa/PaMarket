@@ -28,11 +28,18 @@
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 body{font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);background:#fff;font-size:15px;line-height:1.6}
 a{text-decoration:none;color:inherit}
-img{max-width:100%;display:block}
+img{max-width:100%;height:auto;display:block}
 button{font-family:inherit;cursor:pointer}
 .hidden{display:none!important}
 /* Shared page container */
 .w{max-width:1200px;margin:0 auto;padding:0 32px}
+
+/* Small-screen containment: nothing forces horizontal scroll at the edges.
+   Long unbreakable strings (emails, URLs) wrap instead of widening layout. */
+@media(max-width:400px){
+  h1,h2,h3{overflow-wrap:break-word}
+  a[href^="mailto:"],a[href^="tel:"]{overflow-wrap:anywhere}
+}
 
 /* ── Top bar ──────────────────────────────────────────────── */
 .top-bar{background:var(--navy-deep);padding:8px 0;font-size:12.5px;color:#94B4E8}
