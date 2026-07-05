@@ -200,6 +200,17 @@ button{font-family:inherit;cursor:pointer}
   .hero-go{padding:14px;justify-content:center}
 }
 
+/* ══ LIVE STATS BAR ══ */
+.live-stats{background:var(--navy-deep)}
+.live-stats-w{max-width:1200px;margin:0 auto;padding:22px 32px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.live-stat{text-align:center}
+.live-stat span{display:block;font-size:26px;font-weight:900;color:#fff;letter-spacing:-.02em}
+.live-stat label{display:block;font-size:11.5px;color:#9BB4E0;margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+@media(max-width:768px){
+  .live-stats-w{grid-template-columns:repeat(2,1fr);padding:18px 20px;gap:16px}
+  .live-stat span{font-size:21px}
+}
+
 /* ══ TRUST STRIP ══ */
 .trust{background:#fff;border-bottom:1px solid var(--line)}
 .trust-w{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
@@ -298,6 +309,13 @@ button{font-family:inherit;cursor:pointer}
 /* ══ JOBS BAND ══ */
 .jobs-sec{padding:36px 0;background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .jobs-sec-inner{max-width:1200px;margin:0 auto;padding:0 32px}
+.jobs-cta-row{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
+.jobs-cta-btn{flex:1;min-width:220px;text-align:center;padding:14px 20px;border-radius:11px;font-size:14px;font-weight:700;transition:all .15s}
+.jobs-cta-seeker{background:#fff;border:1.5px solid var(--navy);color:var(--navy)}
+.jobs-cta-seeker:hover{background:var(--navy);color:#fff}
+.jobs-cta-employer{background:var(--gold);color:#fff}
+.jobs-cta-employer:hover{background:var(--gold-dark)}
+@media(max-width:560px){.jobs-cta-row{flex-direction:column}.jobs-cta-btn{min-width:0}}
 .job-card{flex:0 0 270px;background:#fff;border-radius:14px;border:1px solid var(--line);padding:18px;transition:all .2s;cursor:pointer;scroll-snap-align:start}
 .job-card:hover{box-shadow:0 10px 28px rgba(26,58,143,.13);transform:translateY(-2px);border-color:rgba(26,58,143,.18)}
 .job-logo{width:46px;height:46px;border-radius:11px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:var(--navy);flex-shrink:0}
@@ -524,11 +542,9 @@ footer{background:var(--navy-deep);color:#6A8AC8}
         <label for="heroLoc">Location</label>
         <select id="heroLoc" aria-label="City">
           <option value="">All Zimbabwe</option>
-          <option>Harare</option><option>Bulawayo</option><option>Chitungwiza</option>
-          <option>Mutare</option><option>Gweru</option><option>Kwekwe</option>
-          <option>Kadoma</option><option>Masvingo</option><option>Hwange</option>
-          <option>Chinhoyi</option><option>Norton</option><option>Marondera</option>
-          <option>Victoria Falls</option>
+          <option>Harare</option><option>Bulawayo</option><option>Mutare</option>
+          <option>Gweru</option><option>Masvingo</option><option>Chinhoyi</option>
+          <option>Kadoma</option><option>Kwekwe</option><option>Victoria Falls</option>
         </select>
       </div>
       <div class="hs-field">
@@ -555,6 +571,16 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     </div>
   </div>
 </section>
+
+<!-- LIVE STATS BAR -->
+<div class="live-stats" id="liveStats" style="display:none">
+  <div class="live-stats-w">
+    <div class="live-stat"><span id="statListings">—</span><label>Active Listings</label></div>
+    <div class="live-stat"><span id="statBusinesses">—</span><label>Local Businesses</label></div>
+    <div class="live-stat"><span id="statJobs">—</span><label>Jobs Hiring Now</label></div>
+    <div class="live-stat"><span>10</span><label>Provinces Covered</label></div>
+  </div>
+</div>
 
 <!-- TRUST STRIP -->
 <div class="trust">
@@ -674,6 +700,17 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   </div>
 </div>
 
+<!-- RENTAL HIGHLIGHTS (hidden entirely if no live rentals) -->
+<div class="hs rv hidden" id="rentalSec" style="border-top:1px solid var(--line)">
+  <div class="hs-inner">
+    <div class="sec-row">
+      <div class="sec-title">Vehicle <span>Rental</span></div>
+      <a href="rentals" class="view-all">View All <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+    </div>
+    <div class="hscroll" id="rentalCards"></div>
+  </div>
+</div>
+
 <!-- JOBS SECTION -->
 <div class="jobs-sec rv">
   <div class="jobs-sec-inner">
@@ -682,6 +719,10 @@ footer{background:var(--navy-deep);color:#6A8AC8}
       <a href="jobs" class="view-all">View All <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
     </div>
     <div class="hscroll" id="jobCards"></div>
+    <div class="jobs-cta-row">
+      <a href="jobs" class="jobs-cta-btn jobs-cta-seeker">Looking for Work? Browse Jobs</a>
+      <a href="jobs#hire" class="jobs-cta-btn jobs-cta-employer">Hiring? Post a Job Free</a>
+    </div>
   </div>
 </div>
 
@@ -792,7 +833,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
       <a href="privacy">Privacy Policy</a>
       <a href="post-ad">Post a Free Ad</a>
       <a href="auth">Sign In</a>
-      <a href="auth?tab=register">Create Account</a>
+      <a href="auth?mode=signup">Create Account</a>
     </div>
   </div>
   <div class="foot-bottom">
@@ -857,6 +898,47 @@ function renderCards(elId,listings){
 PM.fetchListings({category:'electronics',limit:8}).then(l=>renderCards('elCards',l)).catch(()=>renderCards('elCards',[]));
 PM.fetchListings({category:'vehicles',limit:8}).then(l=>renderCards('vCards',l)).catch(()=>renderCards('vCards',[]));
 PM.fetchListings({category:'property',limit:8}).then(l=>renderCards('pCards',l)).catch(()=>renderCards('pCards',[]));
+
+// Rental Highlights — only shown when there's at least one live rental to feature.
+function rentalCard(v,idx){
+  const bg=COLORS[idx%COLORS.length],tc=TCOLORS[idx%TCOLORS.length];
+  const brand=(v.rental_brands&&v.rental_brands.label)||'';
+  const title=(brand+' '+(v.model||'')).trim()+(v.year?' '+v.year:'');
+  const media=(v.rental_vehicle_media||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const cover=media.find(m=>m.is_cover)||media[0];
+  const loc=[v.pickup_suburb,v.rental_locations&&v.rental_locations.city].filter(Boolean).join(', ')||'Zimbabwe';
+  const img=cover
+    ?`<img class="lcard-img-inner" src="${cover.url}" alt="${title.replace(/"/g,'&quot;')}" loading="lazy">`
+    :`<div class="lcard-img-inner" style="color:${tc};font-weight:800;font-size:13px;text-align:center;padding:12px">${title||'Rental Vehicle'}</div>`;
+  return `<a class="lcard" href="rental-detail?id=${v.id}">
+    <div class="lcard-img" style="background:${bg}">
+      ${v.is_available?'<div class="lcard-badge badge-new">AVAILABLE</div>':''}
+      ${img}
+    </div>
+    <div class="lcard-body">
+      <div class="lcard-price">${v.daily_rate?'$'+Number(v.daily_rate).toLocaleString()+'/day':'POA'}</div>
+      <div class="lcard-title">${title||'Rental Vehicle'}</div>
+      <div class="lcard-loc">${PIN} ${loc}</div>
+    </div>
+  </a>`;
+}
+PM.fetchRentalListings({limit:8}).then(rows=>{
+  if(!rows||!rows.length)return;
+  document.getElementById('rentalCards').innerHTML=rows.map((v,i)=>rentalCard(v,i)).join('');
+  document.getElementById('rentalSec').classList.remove('hidden');
+}).catch(()=>{});
+
+// Live stats bar — real counts, shown only once loaded so we never flash a fake number.
+Promise.all([
+  PM.fetchExactCount('listings','status=eq.active'),
+  PM.fetchExactCount('businesses','status=eq.active'),
+  PM.fetchExactCount('listings','status=eq.active&category=eq.jobs')
+]).then(([listings,businesses,jobs])=>{
+  document.getElementById('statListings').textContent=listings.toLocaleString()+'+';
+  document.getElementById('statBusinesses').textContent=businesses.toLocaleString()+'+';
+  document.getElementById('statJobs').textContent=jobs.toLocaleString()+'+';
+  document.getElementById('liveStats').style.display='';
+}).catch(()=>{});
 
 // Sponsored ads — same live paid_ads the app renders. Hidden entirely when none.
 function adEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -940,7 +1022,7 @@ function doHeroSearch(){
   const params=new URLSearchParams();
   if(q)params.set('q',q);
   if(cat)params.set('cat',cat);
-  if(loc)params.set('prov',loc);
+  if(loc)params.set('city',loc);
   const qs=params.toString();
   window.location='browse'+(qs?'?'+qs:'');
 }

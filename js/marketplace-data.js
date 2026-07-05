@@ -86,6 +86,24 @@
     });
   }
 
+  // Generic exact-count helper for real homepage/trust stats — table plus a
+  // raw PostgREST filter string, e.g. fetchExactCount('businesses','status=eq.active').
+  function fetchExactCount(table, filter) {
+    var qp = [filter, 'select=id'].filter(Boolean);
+    return fetch(SB_URL + '/rest/v1/' + table + '?' + qp.join('&'), {
+      headers: {
+        apikey: SB_KEY,
+        Authorization: 'Bearer ' + SB_KEY,
+        Prefer: 'count=exact',
+        Range: '0-0',
+      },
+    }).then(function (res) {
+      var range = res.headers.get('content-range');
+      var total = range && range.indexOf('/') > -1 ? parseInt(range.split('/')[1], 10) : 0;
+      return total || 0;
+    });
+  }
+
   // ── Rental vehicle listings ───────────────────────────────────────
   function fetchRentalListings(opts) {
     opts = opts || {};
@@ -214,6 +232,7 @@
   global.PM.fetchListingById = fetchListingById;
   global.PM.fetchSimilarListings = fetchSimilarListings;
   global.PM.fetchListingCount = fetchListingCount;
+  global.PM.fetchExactCount = fetchExactCount;
   global.PM.fetchRentalListings = fetchRentalListings;
   global.PM.fetchRentalListingById = fetchRentalListingById;
   global.PM.fetchProfileById = fetchProfileById;
