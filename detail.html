@@ -627,6 +627,31 @@ function sellerNode(l){
   if(l.business_id) n.url='https://pamarketzw.com/business?id='+l.business_id;
   return n;
 }
+// Normalise a free-text job type to Google's employmentType enum. Falls back
+// to OTHER (a truthful "unspecified") rather than guessing a specific type.
+function jobEmploymentType(attrs){
+  var t=((attrs&&(attrs.employmentType||attrs.jobType||attrs.type))||'').toString().toUpperCase().replace(/[\s-]+/g,'_');
+  var valid=['FULL_TIME','PART_TIME','CONTRACTOR','TEMPORARY','INTERN','VOLUNTEER','PER_DIEM','OTHER'];
+  if(valid.indexOf(t)>=0) return t;
+  if(/FULL/.test(t)) return 'FULL_TIME';
+  if(/PART/.test(t)) return 'PART_TIME';
+  if(/CONTRACT|FREELAN/.test(t)) return 'CONTRACTOR';
+  if(/TEMP|CASUAL|SEASON/.test(t)) return 'TEMPORARY';
+  if(/INTERN|ATTACH/.test(t)) return 'INTERN';
+  if(/VOLUNT/.test(t)) return 'VOLUNTEER';
+  return 'OTHER';
+}
+// Job address with the most granular data available. Zimbabwe listings rarely
+// carry a postal code, so it is included only when present (never invented).
+function jobAddress(l){
+  var a={'@type':'PostalAddress',addressCountry:'ZW'};
+  if(l.suburb) a.streetAddress=l.suburb;
+  if(l.city) a.addressLocality=l.city;
+  if(l.province) a.addressRegion=l.province;
+  var pc=l.attributes&&(l.attributes.postalCode||l.attributes.postal_code||l.attributes.postcode);
+  if(pc) a.postalCode=pc;
+  return a;
+}
 
 function buildListingSchema(l,catLabel,loc,photos,canonicalUrl,reviews){
   // Product requires an image; fall back to the brand mark only when the
@@ -685,16 +710,20 @@ function buildListingSchema(l,catLabel,loc,photos,canonicalUrl,reviews){
     return veh;
   }
   if(l.category==='jobs'){
+    const org={'@type':'Organization',name:l.seller_name||'PaMarket Employer',sameAs:'https://pamarketzw.com/'};
+    if(l.business_id) org.url='https://pamarketzw.com/business?id='+l.business_id;
     return {
       '@context':'https://schema.org',
       '@type':'JobPosting',
       title:l.title,
       description:l.description||l.title,
+      identifier:{'@type':'PropertyValue',name:'PaMarket',value:l.id},
       datePosted:l.created_at,
       validThrough:l.expires_at||undefined,
-      employmentType:(l.attributes&&l.attributes.employmentType)||undefined,
-      hiringOrganization:{'@type':'Organization',name:l.seller_name||'PaMarket Employer',sameAs:'https://pamarketzw.com/'},
-      jobLocation:{'@type':'Place',address},
+      employmentType:jobEmploymentType(l.attributes),
+      hiringOrganization:org,
+      jobLocation:{'@type':'Place',address:jobAddress(l)},
+      directApply:false,
       baseSalary:l.price?{'@type':'MonetaryAmount',currency:l.currency||'USD',value:{'@type':'QuantitativeValue',value:l.price,unitText:'MONTH'}}:undefined
     };
   }
