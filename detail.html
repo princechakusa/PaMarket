@@ -627,6 +627,35 @@ function sellerNode(l){
   if(l.business_id) n.url='https://pamarketzw.com/business?id='+l.business_id;
   return n;
 }
+// Merchant-listing return policy. PaMarket is a peer-to-peer classifieds
+// platform that does not facilitate returns, so the honest platform-level
+// policy is "returns not permitted" — a valid, complete category that needs
+// no return window/fees. (Never claims a return window that does not exist.)
+function merchantReturnPolicy(){
+  return {
+    '@type':'MerchantReturnPolicy',
+    applicableCountry:'ZW',
+    returnPolicyCategory:'https://schema.org/MerchantReturnNotPermitted'
+  };
+}
+// OfferShippingDetails — emitted ONLY when a seller has entered real delivery
+// data (rate). Buyers otherwise arrange collection/delivery directly, so no
+// shipping rate is invented.
+function offerShippingDetails(l){
+  var a=l.attributes||{};
+  var rate=a.shippingRate!=null?a.shippingRate:(a.deliveryFee!=null?a.deliveryFee:a.shipping_fee);
+  if(rate==null) return undefined;
+  return {
+    '@type':'OfferShippingDetails',
+    shippingRate:{'@type':'MonetaryAmount',value:Number(rate)||0,currency:l.currency||'USD'},
+    shippingDestination:{'@type':'DefinedRegion',addressCountry:'ZW'},
+    deliveryTime:{
+      '@type':'ShippingDeliveryTime',
+      handlingTime:{'@type':'QuantitativeValue',minValue:0,maxValue:1,unitCode:'DAY'},
+      transitTime:{'@type':'QuantitativeValue',minValue:1,maxValue:3,unitCode:'DAY'}
+    }
+  };
+}
 // Normalise a free-text job type to Google's employmentType enum. Falls back
 // to OTHER (a truthful "unspecified") rather than guessing a specific type.
 function jobEmploymentType(attrs){
@@ -728,24 +757,33 @@ function buildListingSchema(l,catLabel,loc,photos,canonicalUrl,reviews){
     };
   }
   // Default: Product (electronics, furniture, fashion, etc.)
+  const offer={
+    '@type':'Offer',
+    price:l.price,
+    priceCurrency:l.currency||'USD',
+    availability:'https://schema.org/InStock',
+    itemCondition:cond,
+    priceValidUntil:priceValidUntil,
+    seller:sellerNode(l),
+    hasMerchantReturnPolicy:merchantReturnPolicy(),
+    shippingDetails:offerShippingDetails(l),
+    areaServed:{'@type':'Country',name:'Zimbabwe'},
+    url:canonicalUrl
+  };
   const product=Object.assign(base,{
     '@type':'Product',
     category:catLabel,
     sku:l.id,
+    productID:l.id,
     itemCondition:cond,
-    offers:{
-      '@type':'Offer',
-      price:l.price,
-      priceCurrency:l.currency||'USD',
-      availability:'https://schema.org/InStock',
-      itemCondition:cond,
-      priceValidUntil:priceValidUntil,
-      seller:sellerNode(l),
-      areaServed:{'@type':'Country',name:'Zimbabwe'},
-      url:canonicalUrl
-    }
+    offers:offer
   });
-  if(l.attributes&&l.attributes.brand) product.brand={'@type':'Brand',name:l.attributes.brand};
+  if(l.attributes){
+    if(l.attributes.brand) product.brand={'@type':'Brand',name:l.attributes.brand};
+    if(l.attributes.mpn) product.mpn=String(l.attributes.mpn);
+    var gtin=l.attributes.gtin||l.attributes.gtin13||l.attributes.barcode;
+    if(gtin) product.gtin13=String(gtin);
+  }
   const rb=ratingBlock(reviews);
   if(rb){product.aggregateRating=rb.aggregateRating;product.review=rb.review;}
   return product;
