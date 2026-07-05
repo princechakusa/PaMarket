@@ -338,15 +338,13 @@ canvas.mini{position:absolute;inset:0;width:100%;height:100%}
   </div>
 </div>
 
-<!-- LEGEND -->
-<div id="legend">
-  <div class="leg-row"><div class="leg-dot" style="background:var(--green)"></div>Healthy</div>
-  <div class="leg-row"><div class="leg-dot" style="background:var(--yellow)"></div>Warning</div>
+<!-- LEGEND (compact — bottom right, above zoom controls) -->
+<div id="legend" style="bottom:212px;right:56px;left:auto;flex-direction:row;gap:12px;padding:6px 12px">
+  <div class="leg-row"><div class="leg-dot" style="background:var(--green)"></div>OK</div>
+  <div class="leg-row"><div class="leg-dot" style="background:var(--yellow)"></div>Warn</div>
   <div class="leg-row"><div class="leg-dot" style="background:var(--red)"></div>Error</div>
-  <div class="leg-row"><div class="leg-dot" style="background:#444"></div>Offline</div>
-  <div style="height:6px"></div>
-  <div class="leg-row"><div style="width:20px;height:2px;background:linear-gradient(90deg,var(--blue),transparent)"></div>Data flow</div>
-  <div class="leg-row"><div style="width:20px;height:2px;background:linear-gradient(90deg,var(--red),transparent)"></div>Error flow</div>
+  <div class="leg-row"><div style="width:16px;height:2px;background:linear-gradient(90deg,var(--blue),transparent)"></div>Real</div>
+  <div class="leg-row"><div style="width:16px;height:2px;background:linear-gradient(90deg,rgba(68,138,255,.3),transparent)"></div>Heartbeat</div>
 </div>
 
 <!-- ZOOM CONTROLS -->
@@ -625,22 +623,57 @@ function resize() {
 
 function drawBackground() {
   bgCtx.clearRect(0, 0, W, H);
-  // Radial gradient background
-  const g = bgCtx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*.7);
-  g.addColorStop(0,  '#04091a');
-  g.addColorStop(.5, '#030712');
+
+  // Deep space gradient
+  const g = bgCtx.createRadialGradient(W/2, H*.3, 0, W/2, H/2, Math.max(W,H)*.8);
+  g.addColorStop(0,  '#04091e');
+  g.addColorStop(.4, '#030712');
   g.addColorStop(1,  '#020408');
   bgCtx.fillStyle = g;
   bgCtx.fillRect(0, 0, W, H);
+
   // Subtle grid
-  bgCtx.strokeStyle = 'rgba(14,31,58,0.35)';
+  bgCtx.strokeStyle = 'rgba(14,31,58,0.28)';
   bgCtx.lineWidth = 1;
   const gs = 60;
   for (let x = 0; x < W; x += gs) { bgCtx.beginPath(); bgCtx.moveTo(x,0); bgCtx.lineTo(x,H); bgCtx.stroke(); }
   for (let y = 0; y < H; y += gs) { bgCtx.beginPath(); bgCtx.moveTo(0,y); bgCtx.lineTo(W,y); bgCtx.stroke(); }
-  // Glow center
-  const cg = bgCtx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*.4);
-  cg.addColorStop(0, 'rgba(68,138,255,0.04)');
+
+  // Tier lane horizontal bands
+  const TIER_BANDS = [
+    { y:.06, h:.14, label:'CLIENT',   color:'rgba(0,229,255,',   lc:'#00e5ff' },
+    { y:.20, h:.10, label:'INFRA',    color:'rgba(255,171,0,',   lc:'#ffab00' },
+    { y:.30, h:.20, label:'SERVICES', color:'rgba(68,138,255,',  lc:'#448aff' },
+    { y:.50, h:.15, label:'DATABASE', color:'rgba(124,77,255,',  lc:'#7c4dff' },
+    { y:.65, h:.20, label:'TABLES',   color:'rgba(164,122,255,', lc:'#a47aff' },
+    { y:.85, h:.12, label:'EXTERNAL', color:'rgba(255,109,0,',   lc:'#ff6d00' },
+  ];
+  TIER_BANDS.forEach(b => {
+    const by = b.y * H, bh = b.h * H;
+    bgCtx.fillStyle = `${b.color}0.03)`;
+    bgCtx.fillRect(0, by, W, bh);
+    // Left edge accent line
+    bgCtx.fillStyle = `${b.color}0.18)`;
+    bgCtx.fillRect(0, by, 3, bh);
+    // Label
+    bgCtx.font = 'bold 9px monospace';
+    bgCtx.fillStyle = b.lc + '55';
+    bgCtx.letterSpacing = '2px';
+    bgCtx.textAlign = 'left';
+    bgCtx.textBaseline = 'middle';
+    bgCtx.fillText(b.label, 10, by + bh / 2);
+    bgCtx.letterSpacing = '0px';
+    // Top border of band
+    bgCtx.beginPath();
+    bgCtx.moveTo(0, by); bgCtx.lineTo(W, by);
+    bgCtx.strokeStyle = `${b.color}0.08)`;
+    bgCtx.lineWidth = 1;
+    bgCtx.stroke();
+  });
+
+  // Center glow
+  const cg = bgCtx.createRadialGradient(W/2, H*.5, 0, W/2, H*.5, W*.45);
+  cg.addColorStop(0, 'rgba(68,138,255,0.05)');
   cg.addColorStop(1, 'transparent');
   bgCtx.fillStyle = cg;
   bgCtx.fillRect(0, 0, W, H);
@@ -1080,20 +1113,125 @@ function centerView() {
 }
 
 /* ── MAIN RENDER LOOP ────────────────────────────────────── */
-let lastRaf = 0;
-function render(ts = 0) {
+let _frameCount = 0;
+function render() {
   requestAnimationFrame(render);
   ctx.clearRect(0, 0, W, H);
 
   // Edges first (behind nodes)
   for (const e of state.edges) drawEdge(e);
 
-  // Particles
-  if (!state.frozen) updateParticles();
+  // Particles (skip update when paused, still draw existing ones)
+  if (!state.frozen && !state.paused) updateParticles();
   drawParticles();
 
   // Nodes
   for (const n of state.nodes) drawNode(n);
+
+  // Minimap every 6th frame to save CPU
+  _frameCount++;
+  if (_frameCount % 6 === 0) drawMinimap();
+}
+
+/* ── FAILURE PROPAGATION ─────────────────────────────────── */
+// Which services break when a node fails
+const DEPENDENCY_MAP = {
+  db:       ['api','realtime','storage','functions'],
+  api:      ['browser','android','ios','admin'],
+  auth:     ['browser','android','ios','admin'],
+  realtime: ['browser','android','ios'],
+  storage:  ['r2','bkt_listings_photos','bkt_chat_images','bkt_cv_files','bkt_verification_docs'],
+  functions:['fcm','smtp'],
+  fcm:      ['device'],
+};
+
+function propagateFailure(nodeId) {
+  const deps = DEPENDENCY_MAP[nodeId] || [];
+  if (!deps.length) return;
+  deps.forEach((depId, i) => {
+    setTimeout(() => {
+      const n = findNode(depId);
+      if (!n) return;
+      const current = state.healthChecks[depId];
+      if (current === 'healthy' || current === undefined) {
+        state.healthChecks[depId] = 'warning';
+        // Spawn a red error particle along the edge
+        spawnErrorParticle(nodeId, depId);
+      }
+    }, i * 180);
+  });
+}
+
+function spawnErrorParticle(srcId, tgtId) {
+  const sn = findNode(srcId), tn = findNode(tgtId);
+  if (!sn || !tn) return;
+  state.particles.push({
+    id: ++state.particleId,
+    s: srcId, t: tgtId,
+    type: 'error',
+    payload: 'failure cascade',
+    progress: 0,
+    speed: .006,
+    color: '#ff1744',
+    size: 6,
+    trail: [],
+    born: performance.now(),
+    isError: true,
+  });
+}
+
+function recoverNode(nodeId) {
+  state.healthChecks[nodeId] = 'healthy';
+  const deps = DEPENDENCY_MAP[nodeId] || [];
+  deps.forEach(depId => {
+    if (state.healthChecks[depId] === 'warning') {
+      state.healthChecks[depId] = 'healthy';
+    }
+  });
+  updateHealthScore();
+}
+
+/* ── LATENCY HISTORY ─────────────────────────────────────── */
+// Rolling 20-sample latency history per service for sparklines
+const LATENCY_HISTORY = {};
+function recordLatency(serviceId, ms) {
+  if (!LATENCY_HISTORY[serviceId]) LATENCY_HISTORY[serviceId] = [];
+  LATENCY_HISTORY[serviceId].push({ t: Date.now(), ms });
+  if (LATENCY_HISTORY[serviceId].length > 30) LATENCY_HISTORY[serviceId].shift();
+}
+
+function drawSparkline(canvasEl, serviceId, color = '#448aff') {
+  if (!canvasEl) return;
+  const history = LATENCY_HISTORY[serviceId] || [];
+  if (history.length < 2) return;
+  const ctx2 = canvasEl.getContext('2d');
+  const w = canvasEl.offsetWidth, h = canvasEl.offsetHeight;
+  canvasEl.width = w; canvasEl.height = h;
+  ctx2.clearRect(0, 0, w, h);
+  const vals = history.map(p => p.ms);
+  const maxV = Math.max(...vals, 100);
+  const minV = Math.min(...vals, 0);
+  const range = maxV - minV || 1;
+  ctx2.beginPath();
+  vals.forEach((v, i) => {
+    const x = (i / (vals.length - 1)) * w;
+    const y = h - ((v - minV) / range) * h * .85 - h * .05;
+    i === 0 ? ctx2.moveTo(x, y) : ctx2.lineTo(x, y);
+  });
+  ctx2.strokeStyle = color;
+  ctx2.lineWidth = 1.5;
+  ctx2.stroke();
+  // Fill area under
+  ctx2.lineTo(w, h); ctx2.lineTo(0, h); ctx2.closePath();
+  ctx2.fillStyle = color + '22';
+  ctx2.fill();
+  // Latest value label
+  const latest = vals[vals.length - 1];
+  ctx2.font = 'bold 9px monospace';
+  ctx2.fillStyle = color;
+  ctx2.textAlign = 'right';
+  ctx2.textBaseline = 'top';
+  ctx2.fillText(latest + 'ms', w - 2, 2);
 }
 
 /* ── NODE LOOKUP ─────────────────────────────────────────── */
@@ -1367,6 +1505,17 @@ function renderServicePanel(node) {
         <span class="panel-val ${b.public?'green':'yellow'}" style="font-size:10px">${b.public?'public':'private'}</span>
       </div>`).join('')}
     </div>` : ''}
+    <div class="panel-section">
+      <div class="panel-section-title">Latency (last 30 probes)</div>
+      <div class="mini-chart" style="height:44px"><canvas class="mini" id="sparkline-${node.id}"></canvas></div>
+    </div>
+    ${node.id === 'db' && securityIssues.length ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Security Findings (${securityIssues.length})</div>
+      ${securityIssues.slice(0,4).map(s => `<div class="panel-row">
+        <span style="font-size:9px;color:${s.severity==='high'?'var(--red)':s.severity==='medium'?'var(--yellow)':'var(--text2)'}">[${s.severity}] ${s.issue}</span>
+      </div>`).join('')}
+    </div>` : ''}
     ${hist.length > 0 ? `
     <div class="panel-section">
       <div class="panel-section-title">Recent Events</div>
@@ -1379,19 +1528,98 @@ function renderServicePanel(node) {
 }
 
 async function loadNodeDetails(node) {
-  if (node.tier === 'table') {
-    const tableName = node.id.replace('tb_','');
+  if (node.tier === 'table' && !node.id.startsWith('bkt_')) {
+    const tableName = node.id.replace(/^tb_/, '');
     const t0 = performance.now();
     try {
       const { count } = await sb.from(tableName).select('*', { count: 'exact', head: true });
       const lat = Math.round(performance.now() - t0);
-      state.tableStats[node.id] = { count: count || 0, latency: lat };
+      state.tableStats[node.id] = { ...(state.tableStats[node.id]||{}), count: count || 0, latency: lat };
       const el = document.getElementById('ps-trows');
       if (el) el.textContent = (count||0).toLocaleString();
       const rEl = document.getElementById('ps-rows');
       if (rEl) rEl.textContent = (count||0).toLocaleString();
     } catch(e) {}
   }
+
+  // Draw sparkline after short delay (panel DOM needs to exist)
+  setTimeout(() => {
+    const cvs2 = document.getElementById(`sparkline-${node.id}`);
+    if (cvs2) {
+      const latColor = LATENCY_HISTORY[node.id]?.length
+        ? (LATENCY_HISTORY[node.id].slice(-1)[0].ms < 400 ? '#00e676' : '#ffab00')
+        : '#448aff';
+      drawSparkline(cvs2, node.id, latColor);
+    }
+  }, 80);
+}
+
+/* ── MINIMAP ─────────────────────────────────────────────── */
+let mmCanvas, mmCtx;
+function initMinimap() {
+  mmCanvas = document.createElement('canvas');
+  mmCanvas.style.cssText = `
+    position:fixed;bottom:212px;left:16px;width:160px;height:90px;
+    background:rgba(3,6,15,.85);border:1px solid #0e1f3a;border-radius:8px;
+    z-index:100;cursor:pointer;
+  `;
+  mmCanvas.title = 'Click to fit view';
+  mmCanvas.addEventListener('click', centerView);
+  document.body.appendChild(mmCanvas);
+  mmCtx = mmCanvas.getContext('2d');
+}
+
+function drawMinimap() {
+  if (!mmCtx || !state.nodes.length) return;
+  const mw = 160, mh = 90;
+  mmCanvas.width = mw; mmCanvas.height = mh;
+  mmCtx.clearRect(0, 0, mw, mh);
+
+  // Find bounding box of all nodes
+  const xs = state.nodes.map(n => n.x), ys = state.nodes.map(n => n.y);
+  const minX = Math.min(...xs) - 60, maxX = Math.max(...xs) + 60;
+  const minY = Math.min(...ys) - 60, maxY = Math.max(...ys) + 60;
+  const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1;
+  const scaleM = Math.min((mw - 8) / rangeX, (mh - 8) / rangeY);
+  const offX = 4 - minX * scaleM, offY = 4 - minY * scaleM;
+
+  const mx = n => n.x * scaleM + offX;
+  const my = n => n.y * scaleM + offY;
+
+  // Draw edges
+  mmCtx.lineWidth = 0.5;
+  state.edges.forEach(e => {
+    const sn = findNode(e.s), tn = findNode(e.t);
+    if (!sn || !tn || !isNodeVisible(sn) || !isNodeVisible(tn)) return;
+    mmCtx.beginPath();
+    mmCtx.moveTo(mx(sn), my(sn));
+    mmCtx.lineTo(mx(tn), my(tn));
+    mmCtx.strokeStyle = (EDGE_COLOR[e.type]||'#448aff') + '40';
+    mmCtx.stroke();
+  });
+
+  // Draw nodes
+  state.nodes.forEach(n => {
+    if (!isNodeVisible(n)) return;
+    const r = n.tier === 'table' ? 2 : 3.5;
+    mmCtx.beginPath();
+    mmCtx.arc(mx(n), my(n), r, 0, Math.PI * 2);
+    const hc = healthColor(getNodeHealth(n));
+    mmCtx.fillStyle = hc;
+    mmCtx.fill();
+  });
+
+  // Viewport rectangle
+  const vl = -state.transform.x / state.transform.scale;
+  const vt = -state.transform.y / state.transform.scale;
+  const vr = vl + W / state.transform.scale;
+  const vb = vt + H / state.transform.scale;
+  mmCtx.strokeStyle = 'rgba(68,138,255,.6)';
+  mmCtx.lineWidth = 1;
+  mmCtx.strokeRect(
+    vl * scaleM + offX, vt * scaleM + offY,
+    (vr - vl) * scaleM, (vb - vt) * scaleM
+  );
 }
 
 /* ── EVENT FEED ──────────────────────────────────────────── */
@@ -1694,64 +1922,161 @@ function updateTableStat(id, delta) {
 
 /* ── HEALTH CHECKS ───────────────────────────────────────── */
 async function runHealthChecks() {
-  // DB health
+  // DB health — measure round-trip latency
   const t0 = performance.now();
   try {
-    const { data } = await sb.from('profiles').select('id', { count: 'exact', head: true });
+    await sb.from('profiles').select('id', { count: 'exact', head: true });
     const lat = Math.round(performance.now() - t0);
-    state.healthChecks['db'] = lat < 500 ? 'healthy' : lat < 2000 ? 'warning' : 'error';
+    const prev = state.healthChecks['db'];
+    state.healthChecks['db'] = lat < 600 ? 'healthy' : lat < 2500 ? 'warning' : 'error';
     state.healthChecks['api'] = 'healthy';
-    state.stats['db'] = { latency: lat };
+    state.stats['db']  = { latency: lat };
     state.stats['api'] = { latency: lat };
+    recordLatency('db', lat);
+    recordLatency('api', lat);
     document.getElementById('sv-latency').textContent = lat + 'ms';
+    if (prev === 'error' && state.healthChecks['db'] === 'healthy') {
+      recoverNode('db');
+      showAlert('success', 'Database recovered', `Latency: ${lat}ms`);
+    }
   } catch(e) {
+    const prev = state.healthChecks['db'];
     state.healthChecks['db'] = 'error';
     state.healthChecks['api'] = 'error';
-    showAlert('error', 'Database', 'Connection failed: ' + e.message);
+    if (prev !== 'error') {
+      propagateFailure('db');
+      showAlert('error', 'Database unreachable', e.message);
+    }
   }
 
-  // Auth health
+  // Auth health — measure GoTrue response
+  const ta = performance.now();
   try {
-    const { data } = await sb.auth.getSession();
-    state.healthChecks['auth'] = 'healthy';
-    if (data?.session) {
-      state.healthChecks['auth'] = 'healthy';
-      addEvent('auth_login', `Session active: ${data.session.user?.email || 'user'}`, {});
-      spawnParticle('mobile', 'auth', 'auth');
-    }
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/health`, {
+      headers: { 'apikey': SUPABASE_KEY }, signal: AbortSignal.timeout(4000)
+    });
+    const lat = Math.round(performance.now() - ta);
+    const prev = state.healthChecks['auth'];
+    state.healthChecks['auth'] = r.ok ? 'healthy' : 'warning';
+    state.stats['auth'] = { latency: lat };
+    recordLatency('auth', lat);
+    if (prev === 'error' && state.healthChecks['auth'] === 'healthy') recoverNode('auth');
   } catch(e) {
-    state.healthChecks['auth'] = 'warning';
+    const prev = state.healthChecks['auth'];
+    state.healthChecks['auth'] = 'error';
+    if (prev !== 'error') { propagateFailure('auth'); showAlert('error', 'Auth unreachable', e.message); }
   }
+
+  // Realtime health — check WebSocket endpoint
+  const tr = performance.now();
+  try {
+    const r = await fetch(`${SUPABASE_URL}/realtime/v1/`, {
+      method:'HEAD', headers: { 'apikey': SUPABASE_KEY }, signal: AbortSignal.timeout(3000)
+    });
+    const lat = Math.round(performance.now() - tr);
+    state.healthChecks['realtime'] = r.status < 500 ? 'healthy' : 'warning';
+    state.stats['realtime'] = { latency: lat };
+    recordLatency('realtime', lat);
+  } catch { state.healthChecks['realtime'] = 'warning'; }
 
   // Storage health
+  const ts = performance.now();
   try {
     const { data, error } = await sb.storage.listBuckets();
+    const lat = Math.round(performance.now() - ts);
     if (!error) {
+      const prev = state.healthChecks['storage'];
       state.healthChecks['storage'] = 'healthy';
       state.healthChecks['r2'] = 'healthy';
-      state.stats['storage'] = { buckets: data?.length || 0 };
+      state.stats['storage'] = { buckets: data?.length || 0, latency: lat };
+      recordLatency('storage', lat);
+      if (prev === 'error') recoverNode('storage');
     }
-  } catch(e) { state.healthChecks['storage'] = 'warning'; }
+  } catch(e) {
+    state.healthChecks['storage'] = 'error';
+    propagateFailure('storage');
+  }
 
-  // Check Supabase functions endpoint
+  // Edge Functions endpoint
+  const tf = performance.now();
   try {
-    const r = await fetch(`${SUPABASE_URL}/functions/v1/`, { method:'HEAD', signal: AbortSignal.timeout(3000) });
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/`, {
+      method:'HEAD', headers:{ 'apikey': SUPABASE_KEY }, signal: AbortSignal.timeout(3000)
+    });
+    const lat = Math.round(performance.now() - tf);
     state.healthChecks['functions'] = r.status < 500 ? 'healthy' : 'warning';
+    state.stats['functions'] = { latency: lat };
+    recordLatency('functions', lat);
   } catch { state.healthChecks['functions'] = 'warning'; }
 
-  // Client nodes
-  state.healthChecks['mobile'] = 'healthy';
-  state.healthChecks['web'] = 'healthy';
-  state.healthChecks['admin'] = 'healthy';
-  state.healthChecks['cdn'] = 'healthy';
-  state.healthChecks['fcm'] = 'healthy';
-  state.healthChecks['smtp'] = 'healthy';
-  state.healthChecks['google'] = 'healthy';
-  state.healthChecks['facebook'] = 'healthy';
-  state.healthChecks['device'] = 'healthy';
+  // Client / external nodes — assume healthy unless realtime subscriptions fail
+  ['browser','android','ios','admin','dns','cdn','fcm','smtp','google','facebook','device'].forEach(id => {
+    if (!state.healthChecks[id]) state.healthChecks[id] = 'healthy';
+  });
 
   updateHealthScore();
   updateTopStats();
+}
+
+/* ── SECURITY SCANNER ────────────────────────────────────── */
+const securityIssues = [];
+
+async function runSecurityScan() {
+  securityIssues.length = 0;
+
+  // 1. Check if any table is accessible without auth (using anonymous key with no session)
+  const publicTables = ['listings','profiles']; // expected to be public-readable
+  const unexpectedPublic = [];
+  const sensitiveTables = ['reports','verifications','transactions','error_logs','push_tokens','topup_requests'];
+  for (const tbl of sensitiveTables) {
+    try {
+      const { data, error } = await sb.from(tbl).select('id').limit(1);
+      // If we get data back without auth session, it's a potential exposure
+      const { data: session } = await sb.auth.getSession();
+      if (data && data.length > 0 && !session?.session) {
+        unexpectedPublic.push(tbl);
+        securityIssues.push({ severity:'high', table: tbl, issue:'Accessible without authentication', fix:`Add RLS policy: USING (auth.uid() IS NOT NULL)` });
+      }
+    } catch(e) {}
+  }
+
+  // 2. Check for recent error_log spikes (sign of attack / bugs)
+  try {
+    const since = new Date(Date.now() - 3600000).toISOString(); // last 1 hour
+    const { count } = await sb.from('error_logs').select('*', { count:'exact', head:true }).gte('created_at', since);
+    if (count > 50) {
+      securityIssues.push({ severity:'medium', table:'error_logs', issue:`${count} errors in last hour`, fix:'Check application logs for crash patterns' });
+      showAlert('warn', 'High Error Rate', `${count} errors logged in the last hour`);
+    }
+  } catch(e) {}
+
+  // 3. Check for reports spike
+  try {
+    const since = new Date(Date.now() - 3600000).toISOString();
+    const { count } = await sb.from('reports').select('*', { count:'exact', head:true }).gte('created_at', since);
+    if (count > 10) {
+      securityIssues.push({ severity:'medium', table:'reports', issue:`${count} content reports in last hour`, fix:'Review flagged content in admin panel' });
+    }
+  } catch(e) {}
+
+  // 4. Measure auth endpoint latency — high latency can indicate brute force protection kicking in
+  const ta = performance.now();
+  try {
+    await fetch(`${SUPABASE_URL}/auth/v1/health`, { headers:{'apikey':SUPABASE_KEY}, signal:AbortSignal.timeout(5000) });
+    const lat = Math.round(performance.now() - ta);
+    if (lat > 2000) {
+      securityIssues.push({ severity:'low', table:'auth', issue:`Auth endpoint slow (${lat}ms)`, fix:'May indicate rate-limiting active or high login volume' });
+    }
+  } catch(e) {}
+
+  // Update security badge on health globe if issues found
+  const high = securityIssues.filter(i => i.severity === 'high').length;
+  if (high > 0) {
+    showAlert('error', 'Security', `${high} high-severity issue${high>1?'s':''} detected`);
+    state.healthChecks['auth'] = state.healthChecks['auth'] === 'healthy' ? 'warning' : state.healthChecks['auth'];
+  }
+
+  return securityIssues;
 }
 
 function updateHealthScore() {
@@ -1946,6 +2271,7 @@ async function init() {
   resize();
   window.addEventListener('resize', () => { resize(); if (simulation) simulation.restart(); });
 
+  initMinimap();
   initSimulation();
   render();
   setupRealtime();
@@ -1957,6 +2283,29 @@ async function init() {
   // Periodic refresh
   setInterval(runHealthChecks, 15000);
   setInterval(pollStats, 8000);
+  setInterval(discoverBuckets, 60000);
+
+  // Security scan runs once at startup and then every 5 minutes
+  setTimeout(() => runSecurityScan(), 5000);
+  setInterval(runSecurityScan, 300000);
+
+  // Refresh sparklines in open panel every 15 seconds
+  setInterval(() => {
+    if (state.selectedNode) {
+      const n = findNode(state.selectedNode);
+      if (n) {
+        const cvs2 = document.getElementById(`sparkline-${n.id}`);
+        if (cvs2) drawSparkline(cvs2, n.id);
+        // Also update rate cells live
+        const insEl = document.getElementById('ps-ins');
+        if (insEl) insEl.textContent = getTableRate(n.id, 'insert');
+        const updEl = document.getElementById('ps-upd');
+        if (updEl) updEl.textContent = getTableRate(n.id, 'update');
+        const delEl = document.getElementById('ps-del');
+        if (delEl) delEl.textContent = getTableRate(n.id, 'delete');
+      }
+    }
+  }, 15000);
 
   startHeartbeats();
 
