@@ -105,6 +105,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -121,44 +122,7 @@ img{max-width:100%;display:block}
 button{font-family:inherit;cursor:pointer}
 .w{max-width:1200px;margin:0 auto;padding:0 32px}
 
-/* ══ TOP BAR ══ */
-.top-bar{background:var(--navy-deep);padding:8px 0;font-size:12.5px;color:#94B4E8}
-.top-bar-w{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;align-items:center}
-.top-bar a{color:#94B4E8;transition:color .15s}.top-bar a:hover{color:#fff}
-.top-bar-links{display:flex;gap:24px}
-.zw-flag-row{display:inline-flex;align-items:center;gap:7px}
-.zw-flag{border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.2);flex-shrink:0;display:block;object-fit:cover}
-
-/* ══ HEADER ══ */
-#hdr{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:300;box-shadow:0 1px 12px rgba(15,36,96,.07)}
-.hdr-w{max-width:1200px;margin:0 auto;padding:0 32px;height:66px;display:flex;align-items:center;gap:18px}
-.logo{font-size:23px;font-weight:900;color:var(--navy);flex-shrink:0;letter-spacing:-.02em;cursor:pointer;transition:opacity .15s}
-.logo:hover{opacity:.8}
-.logo em{color:var(--gold);font-style:normal}
-.search-bar{flex:1;min-width:280px;max-width:560px;display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper);transition:border-color .2s,box-shadow .2s}
-.search-bar:focus-within{border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,58,143,.1)}
-.search-cat{border:none;background:none;border-right:1px solid var(--line);padding:0 12px 0 14px;height:44px;font-size:13px;color:var(--sub);font-family:inherit;outline:none;cursor:pointer}
-.search-inp{flex:1;border:none;background:none;padding:0 14px;height:44px;font-size:14px;font-family:inherit;color:var(--ink);outline:none}
-.search-inp::placeholder{color:var(--mute)}
-.search-btn{background:var(--navy);color:#fff;border:none;height:44px;padding:0 22px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px;transition:background .15s;flex-shrink:0}
-.search-btn:hover{background:var(--navy-deep)}
-.hdr-util{display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:28px}
-.util-btn{display:flex;align-items:center;gap:6px;padding:9px 11px;border-radius:9px;color:var(--sub);transition:all .15s;font-size:13px;font-weight:600}
-.util-btn:hover{background:var(--paper);color:var(--navy)}
-.util-lbl{white-space:nowrap}
-.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
-.btn-sign{border:1.5px solid var(--line);border-radius:9px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--ink);background:#fff;transition:border-color .15s}
-.btn-sign:hover{border-color:var(--navy);color:var(--navy)}
-.btn-post{background:var(--gold);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:700;transition:background .15s}
-.btn-post:hover{background:var(--gold-dark)}
-.ham{display:none;background:none;border:none;color:var(--ink);padding:4px}
-
-/* ══ CAT NAV ══ */
-.cat-nav{background:#fff;border-bottom:1px solid var(--line)}
-.cat-nav-w{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;overflow-x:auto;scrollbar-width:none;gap:2px}
-.cat-nav-w::-webkit-scrollbar{display:none}
-.cnav{flex-shrink:0;padding:10px 16px;font-size:13px;font-weight:500;color:var(--sub);border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .15s}
-.cnav:hover,.cnav.on{color:var(--navy);border-bottom-color:var(--navy);font-weight:600}
+/* Shared header/footer/nav styles now live in css/site.css (single source) */
 
 /* ══ HERO ══ */
 .hero{
@@ -347,36 +311,6 @@ button{font-family:inherit;cursor:pointer}
   mask-image:radial-gradient(ellipse 62% 58% at 50% 46%,#000 68%,transparent 100%);
 }
 
-/* ══ FOOTER ══ */
-footer{background:var(--navy-deep);color:#6A8AC8}
-.foot-main{max-width:1200px;margin:0 auto;padding:56px 32px 40px;display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px}
-.foot-logo{font-size:24px;font-weight:900;color:#fff;letter-spacing:-.02em}
-.foot-logo em{color:var(--gold);font-style:normal}
-.foot-tagline{font-size:13.5px;color:#6A8AC8;margin-top:12px;max-width:240px;line-height:1.7}
-.foot-contact{margin-top:20px;font-size:13px;display:flex;flex-direction:column;gap:8px}
-.foot-contact a{color:#6A8AC8;transition:color .15s}
-.foot-contact a:hover{color:#fff}
-.foot-store{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
-.foot-store-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;transition:background .15s;text-decoration:none}
-.foot-store-btn:hover{background:rgba(255,255,255,.14)}
-.foot-col h5{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin-bottom:16px}
-.foot-col a{display:block;font-size:13.5px;color:#6A8AC8;margin-bottom:10px;transition:color .15s}
-.foot-col a:hover{color:#fff}
-.foot-bottom{border-top:1px solid rgba(255,255,255,.08);padding:18px 32px;max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:#4A6490}
-.foot-bottom-links{display:flex;gap:20px}
-.foot-bottom-links a{color:#4A6490;transition:color .15s}.foot-bottom-links a:hover{color:#fff}
-
-/* ══ WA FLOAT ══ */
-.wa{position:fixed;right:22px;bottom:22px;z-index:99}
-.wa-btn{width:54px;height:54px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(37,211,102,.5);transition:transform .2s}
-.wa-btn:hover{transform:scale(1.08)}
-
-/* ══ MOB NAV ══ */
-.mob-nav{display:none;flex-direction:column;background:#fff;border-top:1px solid var(--line);padding:12px 28px 20px}
-.mob-nav a{padding:12px 0;color:var(--ink);font-weight:500;border-bottom:1px solid var(--line);font-size:14.5px}
-.mob-nav a:last-child{border-bottom:none;color:var(--gold);font-weight:700}
-.mob-nav.open{display:flex}
-
 /* ══ MODAL ══ */
 .modal-bg{position:fixed;inset:0;background:rgba(10,22,40,.55);backdrop-filter:blur(4px);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px}
 .modal{background:#fff;border-radius:20px;padding:32px;width:100%;max-width:400px;position:relative}
@@ -449,13 +383,17 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 </head>
 <body>
 
-<!-- TOP BAR -->
+<!-- HEADER:START -->
+<!-- ============================================================
+     PaMarket shared header — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the HEADER:START/END markers.
+     Styling lives in css/site.css. Do not edit the copies that
+     appear inside individual page files.
+     ============================================================ -->
 <div class="top-bar">
   <div class="top-bar-w">
-    <span class="zw-flag-row">
-      <img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14">
-      Zimbabwe's #1 Free Marketplace — No fees, no commissions
-    </span>
+    <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
     <div class="top-bar-links">
       <a href="browse">Browse Ads</a>
       <a href="advertise">Advertise</a>
@@ -464,10 +402,23 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   </div>
 </div>
 
-<!-- HEADER -->
 <header id="hdr">
   <div class="hdr-w">
     <a href="/" class="logo">Pa<em>Market</em></a>
+    <div class="search-bar">
+      <select class="search-cat" id="hCat" aria-label="Category">
+        <option value="">All Categories</option>
+        <option value="property">Property</option><option value="vehicles">Vehicles</option><option value="electronics">Electronics</option>
+        <option value="jobs">Jobs</option><option value="furniture">Furniture</option><option value="fashion">Fashion</option>
+        <option value="services">Services</option><option value="agriculture">Agriculture</option><option value="rooms">Rooms</option>
+        <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option>
+      </select>
+      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." aria-label="Search" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()" aria-label="Search">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span class="sbtn-lbl">Search</span>
+      </button>
+    </div>
     <div class="hdr-util">
       <a href="auth" class="util-btn" title="Notifications" aria-label="Notifications">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
@@ -493,7 +444,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     <div class="hdr-right">
       <a href="auth" class="btn-sign" id="signInBtn">Sign In</a>
       <a href="post-ad" class="btn-post">+ Post Free Ad</a>
-      <button class="ham" onclick="toggleMob()">
+      <button class="ham" onclick="toggleMob()" aria-label="Menu" aria-expanded="false">
         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
       </button>
     </div>
@@ -508,6 +459,28 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     <a href="post-ad">+ Post Free Ad</a>
   </nav>
 </header>
+<script>
+/* Self-contained header behaviour so the partial works on any page
+   regardless of what else the page loads. Guarded so pages that
+   already define these keep their own implementation. */
+window.toggleMob = window.toggleMob || function(){
+  var n = document.getElementById('mobNav');
+  var h = document.querySelector('#hdr .ham');
+  if (!n) return;
+  var open = n.classList.toggle('open');
+  if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+window.doSearch = window.doSearch || function(){
+  var cat = document.getElementById('hCat');
+  var q = document.getElementById('hQ');
+  var p = new URLSearchParams();
+  if (cat && cat.value) p.set('cat', cat.value);
+  if (q && q.value.trim()) p.set('q', q.value.trim());
+  var qs = p.toString();
+  window.location.href = (cat && cat.value === 'jobs' ? 'jobs' : 'browse') + (qs ? '?' + qs : '');
+};
+</script>
+<!-- HEADER:END -->
 
 <!-- CATEGORY NAV -->
 <nav class="cat-nav">
@@ -789,7 +762,13 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   </div>
 </section>
 
-<!-- FOOTER -->
+<!-- FOOTER:START -->
+<!-- ============================================================
+     PaMarket shared footer — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the FOOTER:START/END markers.
+     Styling lives in css/site.css.
+     ============================================================ -->
 <footer>
   <div class="foot-main">
     <div>
@@ -846,6 +825,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
     </div>
   </div>
 </footer>
+<!-- FOOTER:END -->
 
 <!-- WA FLOAT -->
 <a href="https://wa.me/971589772645" class="wa" target="_blank" rel="noopener" aria-label="WhatsApp">
