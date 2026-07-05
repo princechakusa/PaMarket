@@ -236,8 +236,8 @@ button{font-family:inherit;cursor:pointer}
 .shops-ic{width:40px;height:40px;border-radius:10px;background:rgba(232,163,61,.15);display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0}
 .shops-ft{font-size:15px;font-weight:700;color:#fff}
 .shops-fs{font-size:13px;color:#7A9ED4;margin-top:2px}
-.shops-btn{display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:#fff;border:none;border-radius:10px;padding:13px 26px;font-weight:700;font-size:14px;margin-top:28px;transition:background .15s;cursor:pointer;text-decoration:none}
-.shops-btn:hover{background:var(--gold-dark)}
+.shops-btn{margin-top:28px}
+
 .shops-phones{display:flex;gap:12px;justify-content:center;align-items:flex-end}
 .sphone img{display:block;filter:drop-shadow(0 20px 46px rgba(0,0,0,.4));
   -webkit-mask-image:radial-gradient(ellipse 62% 58% at 50% 46%,#000 68%,transparent 100%);
@@ -274,11 +274,11 @@ button{font-family:inherit;cursor:pointer}
 .jobs-sec{padding:36px 0;background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .jobs-sec-inner{max-width:1200px;margin:0 auto;padding:0 32px}
 .jobs-cta-row{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
-.jobs-cta-btn{flex:1;min-width:220px;text-align:center;padding:14px 20px;border-radius:11px;font-size:14px;font-weight:700;transition:all .15s}
-.jobs-cta-seeker{background:#fff;border:1.5px solid var(--navy);color:var(--navy)}
-.jobs-cta-seeker:hover{background:var(--navy);color:#fff}
-.jobs-cta-employer{background:var(--gold);color:#fff}
-.jobs-cta-employer:hover{background:var(--gold-dark)}
+.jobs-cta-btn{flex:1;min-width:220px;text-align:center}
+
+
+
+
 @media(max-width:560px) {.jobs-cta-row{flex-direction:column}.jobs-cta-btn{min-width:0}}
 .job-card{flex:0 0 270px;background:#fff;border-radius:14px;border:1px solid var(--line);padding:18px;transition:all .2s;cursor:pointer;scroll-snap-align:start}
 .job-card:hover{box-shadow:0 10px 28px rgba(26,58,143,.13);transform:translateY(-2px);border-color:rgba(26,58,143,.18)}
@@ -644,7 +644,7 @@ window.doSearch = window.doSearch || function(){
           <div><div class="shops-ft">Leads &amp; Analytics</div><div class="shops-fs">Track every enquiry as a lead and see which products get the most interest.</div></div>
         </li>
       </ul>
-      <a href="browse?shops=1" class="shops-btn">
+      <a href="browse?shops=1" class="btn btn-primary shops-btn">
         Browse Shops
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
       </a>
@@ -687,8 +687,8 @@ window.doSearch = window.doSearch || function(){
     </div>
     <div class="hscroll" id="jobCards"></div>
     <div class="jobs-cta-row">
-      <a href="jobs" class="jobs-cta-btn jobs-cta-seeker">Looking for Work? Browse Jobs</a>
-      <a href="jobs#hire" class="jobs-cta-btn jobs-cta-employer">Hiring? Post a Job Free</a>
+      <a href="jobs" class="btn btn-outline jobs-cta-btn">Looking for Work? Browse Jobs</a>
+      <a href="jobs#hire" class="btn btn-primary jobs-cta-btn">Hiring? Post a Job Free</a>
     </div>
   </div>
 </div>

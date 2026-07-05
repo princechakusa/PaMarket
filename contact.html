@@ -164,8 +164,8 @@ button{font-family:inherit;cursor:pointer}
 .fi:focus{border-color:var(--navy)}
 textarea.fi{min-height:130px;resize:vertical}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.submit-btn{width:100%;background:var(--gold);color:#fff;border:none;border-radius:10px;padding:14px;font-size:14.5px;font-weight:700;transition:background .15s}
-.submit-btn:hover{background:var(--gold-dark)}
+.submit-btn{width:100%}
+
 
 @media(max-width:860px) {
   .contact-grid{grid-template-columns:1fr}
@@ -365,7 +365,7 @@ window.doSearch = window.doSearch || function(){
           <label class="fl">Message</label>
           <textarea class="fi" id="cMessage" placeholder="Tell us how we can help you..."></textarea>
         </div>
-        <button onclick="submitContact()" class="submit-btn">Send Message</button>
+        <button onclick="submitContact()" class="btn btn-primary submit-btn">Send Message</button>
       </div>
     </div>
   </div>

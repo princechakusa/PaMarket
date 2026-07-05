@@ -161,26 +161,37 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 .toast.success{background:var(--green)}
 
 /* ── Button system ────────────────────────────────────────────
-   Variants: primary navy (.btn-navy) · primary gold (.btn-accent)
-   · secondary (.btn-secondary) · outline (.btn-ghost).
-   Sizes: .btn-sm / (default) / .btn-lg. States: :disabled, .is-loading.
-   Consistent height + hover; 44px min touch target on mobile. */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;line-height:1;border-radius:10px;padding:0 18px;min-height:42px;border:1.5px solid transparent;cursor:pointer;font-family:inherit;white-space:nowrap;transition:transform .12s,box-shadow .15s,background .15s,border-color .15s;text-decoration:none}
+   One CTA system. Variants (colours preserve the brand):
+     .btn-primary  gold  (PaMarket's main CTA)   · alias .btn-accent
+     .btn-navy     navy
+     .btn-secondary  soft navy
+     .btn-outline  navy outline (light bg)        · alias .btn-ghost
+     .btn-outline-white  white outline (dark bg)
+     .btn-whatsapp green (contact)
+     .btn-danger   red (destructive)
+   Sizes .btn-sm / (default) / .btn-lg · .btn-block full width.
+   States :disabled/.btn-disabled · .btn-loading (spinner).
+   Consistent height, hover, focus ring; 44px mobile touch target. */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;line-height:1;border-radius:10px;padding:0 18px;min-height:42px;border:1.5px solid transparent;cursor:pointer;font-family:inherit;white-space:nowrap;transition:transform .12s,box-shadow .15s,background .15s,border-color .15s,color .15s;text-decoration:none}
 .btn:active{transform:translateY(1px)}
 .btn:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
 .btn-sm{min-height:36px;padding:0 14px;font-size:13px;border-radius:9px}
 .btn-lg{min-height:50px;padding:0 26px;font-size:15px}
-.btn-accent{background:var(--gold);color:#fff}.btn-accent:hover{background:var(--gold-dark)}
-.btn-navy,.btn-primary{background:var(--navy);color:#fff}.btn-navy:hover,.btn-primary:hover{background:var(--navy-deep)}
+.btn-block{width:100%}
+.btn-primary,.btn-accent{background:var(--gold);color:#fff}.btn-primary:hover,.btn-accent:hover{background:var(--gold-dark)}
+.btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:var(--navy-deep)}
 .btn-secondary{background:var(--navy-tint);color:var(--navy)}.btn-secondary:hover{background:#E2E9FB}
-.btn-ghost{color:var(--navy);border-color:var(--line);background:#fff}.btn-ghost:hover{border-color:var(--navy)}
-.btn:disabled,.btn[disabled],.btn.is-disabled{opacity:.55;cursor:not-allowed;pointer-events:none}
-.btn.is-loading{color:transparent!important;pointer-events:none;position:relative}
-.btn.is-loading::after{content:"";position:absolute;width:16px;height:16px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;color:#fff;animation:btnspin .6s linear infinite}
-.btn-ghost.is-loading::after,.btn-secondary.is-loading::after{color:var(--navy)}
+.btn-outline,.btn-ghost{background:#fff;color:var(--navy);border-color:var(--line)}.btn-outline:hover,.btn-ghost:hover{border-color:var(--navy)}
+.btn-outline-white{background:transparent;color:#fff;border-color:rgba(255,255,255,.35)}.btn-outline-white:hover{border-color:#fff;background:rgba(255,255,255,.1)}
+.btn-whatsapp{background:#25D366;color:#fff}.btn-whatsapp:hover{background:#1fb857}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#b91c1c}
+.btn:disabled,.btn[disabled],.btn.is-disabled,.btn.btn-disabled{opacity:.55;cursor:not-allowed;pointer-events:none}
+.btn.is-loading,.btn.btn-loading{color:transparent!important;pointer-events:none;position:relative}
+.btn.is-loading::after,.btn.btn-loading::after{content:"";position:absolute;width:16px;height:16px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;color:#fff;animation:btnspin .6s linear infinite}
+.btn-outline.is-loading::after,.btn-outline-white.is-loading::after,.btn-secondary.is-loading::after,.btn-outline.btn-loading::after{color:var(--navy)}
 @keyframes btnspin{to{transform:rotate(360deg)}}
 @media(max-width:768px){.btn{min-height:44px}}
-@media(prefers-reduced-motion:reduce){.btn.is-loading::after{animation:none}}
+@media(prefers-reduced-motion:reduce){.btn.is-loading::after,.btn.btn-loading::after{animation:none}}
 
 /* ============================================================
    PHASE 3 — Shared Component Library
@@ -227,13 +238,13 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 .empty-state a{color:var(--navy);font-weight:700}
 
 /* ── Filter chips ─────────────────────────────────────────── */
-.pm-chip,.ind-chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:var(--ink);text-align:center;cursor:pointer;transition:border-color .15s,background .15s,color .15s;white-space:nowrap}
+.pm-chip,.ind-chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:var(--ink);text-align:center;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
 .pm-chip:hover,.ind-chip:hover{border-color:var(--navy);color:var(--navy)}
 .pm-chip.is-active{background:var(--navy);border-color:var(--navy);color:#fff}
-/* Horizontal, edge-to-edge scroll on mobile */
+/* Horizontal, edge-to-edge scroll on mobile (nowrap only here) */
 .pm-chip-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .pm-chip-row::-webkit-scrollbar{display:none}
-.pm-chip-row>.pm-chip{flex:0 0 auto}
+.pm-chip-row>.pm-chip{flex:0 0 auto;white-space:nowrap}
 
 /* ── Load-more / pagination ───────────────────────────────── */
 .load-more{display:block;margin:26px auto 0;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:12px 30px;font-weight:700;font-size:13.5px;color:var(--navy);transition:border-color .15s,background .15s}

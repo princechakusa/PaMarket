@@ -143,10 +143,10 @@ button{font-family:inherit;cursor:pointer}
 .ad-hero h1{font-size:38px;font-weight:900;color:#fff;margin-top:16px;letter-spacing:-.025em;line-height:1.2}
 .ad-hero p{font-size:16px;color:#9BB4E0;margin-top:14px;max-width:560px;margin-left:auto;margin-right:auto;line-height:1.7}
 .ad-hero-btns{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:30px}
-.btn-gold{background:var(--gold);color:#fff;border:none;border-radius:10px;padding:14px 30px;font-size:15px;font-weight:700;transition:background .15s;display:inline-block}
-.btn-gold:hover{background:var(--gold-dark)}
-.btn-outline-w{color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:10px;padding:13px 28px;font-size:15px;font-weight:600;background:transparent;display:inline-block}
-.btn-outline-w:hover{border-color:rgba(255,255,255,.6)}
+
+
+
+
 
 .stat-bar{background:var(--navy-deep);padding:26px 0;border-top:1px solid rgba(255,255,255,.08)}
 .stat-bar-inner{max-width:1200px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center}
@@ -179,10 +179,10 @@ button{font-family:inherit;cursor:pointer}
 .price-feats{list-style:none;text-align:left;margin-bottom:26px;display:flex;flex-direction:column;gap:10px}
 .price-feats li{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:var(--ink)}
 .chk{color:var(--navy);flex-shrink:0;margin-top:1px}
-.price-btn{width:100%;text-align:center;padding:12px;border-radius:9px;font-weight:700;font-size:13.5px;display:block}
-.price-btn.outline{border:2px solid var(--navy);color:var(--navy)}
-.price-btn.solid{background:var(--gold);color:#fff}
-.price-btn.solid:hover{background:var(--gold-dark)}
+.price-btn{width:100%;text-align:center}
+
+
+
 .price-note{font-size:12.5px;color:var(--sub);margin-top:24px}
 
 .who-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:40px}
@@ -328,8 +328,8 @@ window.doSearch = window.doSearch || function(){
     <h1>Reach active buyers across all of Zimbabwe.</h1>
     <p>PaMarket connects your business with thousands of people actively searching to buy, hire, or engage. Zero commission. Direct contact.</p>
     <div class="ad-hero-btns">
-      <a href="post-ad" class="btn-gold">Start for Free</a>
-      <a href="#pricing" class="btn-outline-w">View Pricing</a>
+      <a href="post-ad" class="btn btn-primary btn-gold">Start for Free</a>
+      <a href="#pricing" class="btn btn-outline-white">View Pricing</a>
     </div>
   </div>
   <div class="stat-bar">
@@ -374,7 +374,7 @@ window.doSearch = window.doSearch || function(){
           <li><svg class="chk" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Direct buyer contact</li>
           <li><svg class="chk" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>90-day listing duration</li>
         </ul>
-        <a href="post-ad" class="price-btn outline">Get Started Free</a>
+        <a href="post-ad" class="btn btn-outline price-btn">Get Started Free</a>
       </div>
       <div class="price-card pop">
         <div class="pop-badge">Most Popular</div>
@@ -388,7 +388,7 @@ window.doSearch = window.doSearch || function(){
           <li><svg class="chk" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Homepage visibility</li>
           <li><svg class="chk" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Up to 10x more views</li>
         </ul>
-        <a href="contact" class="price-btn solid">Get Featured</a>
+        <a href="contact" class="btn btn-primary price-btn">Get Featured</a>
       </div>
       <div class="price-card">
         <h3>Sponsored</h3>
@@ -401,7 +401,7 @@ window.doSearch = window.doSearch || function(){
           <li><svg class="chk" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Highlighted listing border</li>
           <li><svg class="chk" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Maximum brand exposure</li>
         </ul>
-        <a href="contact" class="price-btn solid">Get Sponsored</a>
+        <a href="contact" class="btn btn-primary price-btn">Get Sponsored</a>
       </div>
     </div>
     <p class="price-note">All promotions are invoiced and confirmed by our team. Contact us to get started.</p>
@@ -444,8 +444,8 @@ window.doSearch = window.doSearch || function(){
       <h2>Ready to grow your business?</h2>
       <p>Join thousands of Zimbabwean businesses already reaching buyers on PaMarket. Start free today.</p>
       <div class="cta-btns">
-        <a href="post-ad" class="btn-gold">Post a Free Ad</a>
-        <a href="contact" class="btn-outline-w">Talk to Us</a>
+        <a href="post-ad" class="btn btn-primary btn-gold">Post a Free Ad</a>
+        <a href="contact" class="btn btn-outline-white">Talk to Us</a>
       </div>
     </div>
   </div>
