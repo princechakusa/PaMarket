@@ -8,6 +8,10 @@
 <link rel="icon" type="image/png" href="img/icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>if(typeof supabase==='undefined'){document.write('<scr'+'ipt src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/scr'+'ipt>');}</script>
+<!-- Single source of truth for Play Billing product IDs — same file the
+     customer app loads (js/billing-products.js). Admin never defines its
+     own product/price data; everything below reads from window.H.*_PRODUCTS. -->
+<script src="js/billing-products.js?v=2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -234,7 +238,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
   .verif-docs{grid-template-columns:1fr;}
   .search-input{width:140px;}
   .tbl-wrap{overflow-x:auto;}
+  .chat-shell{flex-direction:column;height:auto;}
+  .chat-list-pane{width:100%;border-right:none;border-bottom:1px solid var(--border);}
+  .chat-thread-pane{min-height:420px;}
 }
+
+/* ── CHATS (redesigned inbox: list + thread) ── */
+.chat-shell{display:flex;gap:0;height:calc(100vh - 160px);min-height:480px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.chat-list-pane{width:320px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;min-width:0;}
+.chat-search-wrap{padding:12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.chat-list-scroll{flex:1;overflow-y:auto;}
+.chat-list-row{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;}
+.chat-list-row:hover{background:rgba(255,255,255,.04);}
+.chat-list-row.active{background:rgba(99,102,241,.14);}
+.chat-list-name{font-size:13.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-list-time{font-size:10.5px;color:var(--sub2);flex-shrink:0;white-space:nowrap;}
+.chat-list-preview{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.chat-thread-pane{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg);}
+.chat-thread-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--sub);font-size:13px;}
+.chat-thread-hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--card);flex-shrink:0;}
+.chat-thread-scroll{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.chat-bubble-row{display:flex;}
+.chat-bubble-row.mine{justify-content:flex-end;}
+.chat-bubble{max-width:70%;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:8px 12px;}
+.chat-bubble-row.mine .chat-bubble{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.35);}
+.chat-bubble-name{font-size:10.5px;font-weight:700;color:var(--accent);margin-bottom:2px;}
+.chat-bubble-text{font-size:13.5px;color:var(--text);line-height:1.45;white-space:pre-wrap;word-break:break-word;}
+.chat-bubble-time{font-size:10px;color:var(--sub2);margin-top:4px;}
 </style>
 </head>
 <body>
@@ -359,6 +389,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
         <button class="nav-item" data-tab="financeCenter" onclick="showTab('financeCenter')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           Finance Center
+        </button>
+        <button class="nav-item" data-tab="playBilling" onclick="showTab('playBilling')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></svg>
+          Play Billing
+          <span class="nav-badge" id="badge-playFailed" style="display:none">0</span>
         </button>
         <button class="nav-item" data-tab="securityCenter" onclick="showTab('securityCenter')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -1027,6 +1062,7 @@ var TAB_TITLES = {
   jobsAdmin:'Jobs', servicesAdmin:'Services', propertyAdmin:'Property', vehiclesAdmin:'Vehicle Sales',
   reviewsCenter:'Reviews Center', auditCenter:'Audit Center', opsCenter:'Operations Center',
   modInbox:'Moderation Inbox', supportCenter:'Support Center', financeCenter:'Finance Center',
+  playBilling:'Play Billing',
   securityCenter:'Security Center', automationCenter:'Automation Center',
   rentalDashboard:'Rental Admin', rentalApprovals:'Rental Approvals',
   rentalCompanies:'Rental Companies', rentalListings:'Rental Listings',
@@ -1056,6 +1092,7 @@ var TAB_LOADERS = {
   modInbox:      function(){ return loadModInbox(); },
   supportCenter: function(){ return loadSupport(); },
   financeCenter: function(){ return loadFinance(); },
+  playBilling:   function(){ return loadPlayBilling(); },
   securityCenter:function(){ return loadSecurity(); },
   automationCenter: function(){ return loadAutomation(); }
 };
@@ -1081,6 +1118,7 @@ function renderTab() {
     vehiclesAdmin: function(){ renderVertical('vehicles'); },
     reviewsCenter: renderReviewsCenter, auditCenter: renderAuditCenter, opsCenter: renderOps,
     modInbox: renderModInbox, supportCenter: renderSupport, financeCenter: renderFinance,
+    playBilling: renderPlayBilling,
     securityCenter: renderSecurity, automationCenter: renderAutomation,
     rentalDashboard: renderRentalDashboard, rentalApprovals: renderRentalApprovals,
     rentalCompanies: renderRentalCompanies, rentalListings: renderRentalListings,
@@ -1401,9 +1439,10 @@ function renderBizUpgradeSection() {
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">';
   html += '<div style="display:flex;align-items:center;gap:8px">';
   html += '<div style="background:'+(pending.length?'#F59E0B':'#334155')+';border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>';
-  html += '<span style="font-size:14px;font-weight:800;color:var(--text)">Subscription Upgrade Requests</span>';
+  html += '<span style="font-size:14px;font-weight:800;color:var(--text)">Subscription Upgrade Requests (Legacy)</span>';
   if(pending.length) html += '<span style="background:#F59E0B;color:#000;border-radius:20px;padding:2px 9px;font-size:11px;font-weight:800">'+pending.length+' pending</span>';
-  html += '</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:var(--sub2);margin-bottom:12px">Upgrades now happen instantly via Google Play Billing — this panel only shows requests from before that migration.</div>';
 
   if (!pending.length) {
     html += '<div style="font-size:13px;color:var(--sub);margin-bottom:10px">No pending requests.</div>';
@@ -3547,74 +3586,190 @@ async function saveNewAd() {
 }
 
 // ── CHATS ─────────────────────────────────────────────────
+// Redesigned as a proper messenger UI (list + thread, like a SaaS inbox)
+// backed by real pagination instead of a flat "last 600 messages app-wide"
+// query — that old approach silently dropped older conversations and
+// truncated long threads whenever they fell outside the global cap.
+var CHAT_PAGE = 20;
+var _chatPage = 0, _chatsTotal = null, _chatSearch = '';
+var _openChatId = null;
+var _chatMsgs = [];          // messages currently loaded for the open thread, oldest first
+var _chatMsgsHasMore = false;
+var _chatMsgsOldestAt = null; // cursor for "load older"
+
 async function loadChats() {
   try {
-    var r = await sb.from('messages')
-      .select('id,conversation_id,sender_id,sender_name,text,created_at,read')
-      .order('created_at',{ascending:false})
-      .limit(600);
-    if(r.error||!r.data){ DATA.chats=[]; return; }
-    var convMap={};
-    r.data.forEach(function(m){
-      if(!convMap[m.conversation_id]) convMap[m.conversation_id]={id:m.conversation_id,messages:[],participants:{}};
-      convMap[m.conversation_id].messages.push(m);
-      if(m.sender_name) convMap[m.conversation_id].participants[m.sender_id]=m.sender_name;
-    });
-    DATA.chats = Object.values(convMap).map(function(c){
-      c.messages.sort(function(a,b){ return new Date(b.created_at)-new Date(a.created_at); });
-      c.lastMsg = c.messages[0];
-      c.participantNames = Object.values(c.participants);
-      c.unread = c.messages.filter(function(m){ return !m.read; }).length;
-      return c;
-    }).sort(function(a,b){ return new Date(b.lastMsg.created_at)-new Date(a.lastMsg.created_at); });
-  } catch(e){ DATA.chats=[]; }
+    var from = _chatPage * CHAT_PAGE, to = from + CHAT_PAGE - 1;
+    var r = await sb.from('conversations')
+      .select('id,members,listing_id,updated_at,created_at', {count:'exact'})
+      .order('updated_at', {ascending:false})
+      .range(from, to);
+    if(r.error||!r.data){ DATA.chats=[]; _chatsTotal=null; return; }
+    DATA.chats = r.data;
+    _chatsTotal = r.count!=null ? r.count : null;
+
+    var uids = [];
+    DATA.chats.forEach(function(c){ (c.members||[]).forEach(function(m){ uids.push(m); }); });
+    await ensureProfiles(uids);
+
+    var convIds = DATA.chats.map(function(c){ return c.id; });
+    if(convIds.length){
+      var lastRes = await sb.from('messages').select('conversation_id,text,image,created_at,read,sender_id')
+        .in('conversation_id', convIds).order('created_at',{ascending:false}).limit(convIds.length*4);
+      var lastByConv = {}, unreadByConv = {};
+      (lastRes.data||[]).forEach(function(m){
+        if(!lastByConv[m.conversation_id]) lastByConv[m.conversation_id]=m;
+        if(!m.read) unreadByConv[m.conversation_id]=(unreadByConv[m.conversation_id]||0)+1;
+      });
+      DATA.chats.forEach(function(c){ c.lastMsg=lastByConv[c.id]||null; c.unread=unreadByConv[c.id]||0; });
+    }
+  } catch(e){ DATA.chats=[]; _chatsTotal=null; }
 }
 
-var _openChatId = null;
+function chatsGo(page){ _chatPage=page; loadChats().then(renderChats); }
+function chatsSearchInput(v){ _chatSearch=v; debounce('chatSearch', function(){ renderChats(); var s=document.getElementById('chatSearchIn'); if(s){ s.focus(); s.setSelectionRange(s.value.length,s.value.length); } }); }
+
+function _chatParticipants(c){
+  return (c.members||[]).map(function(id){ return getUser(id); }).filter(Boolean);
+}
+function _chatTitle(c){
+  var names = _chatParticipants(c).map(function(u){ return u.name||u.email||u.phone; }).filter(Boolean);
+  return names.length ? names.join(' ↔ ') : c.id;
+}
+function _avatarChip(name, size){
+  size = size||36;
+  var initial = (name||'?').trim().charAt(0).toUpperCase()||'?';
+  return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:'+Math.round(size*0.4)+'px;font-weight:800;color:#fff;flex-shrink:0">'+esc(initial)+'</div>';
+}
+
+// Loads one page of a single conversation's message history, oldest-first
+// within the page. Called on open, and again by "Load older" — so a long
+// thread's full history is reachable instead of being cut off by a global cap.
+async function _loadChatMessages(convId, before){
+  var q = sb.from('messages').select('id,sender_id,sender_name,text,image,created_at,read')
+    .eq('conversation_id', convId).order('created_at',{ascending:false}).limit(50);
+  if(before) q = q.lt('created_at', before);
+  var r = await q;
+  if(r.error||!r.data) return {rows:[], hasMore:false};
+  var rows = r.data.slice().reverse(); // oldest-first for rendering
+  return {rows: rows, hasMore: r.data.length===50};
+}
+
+async function openChat(id){
+  _openChatId = id;
+  _chatMsgs = []; _chatMsgsHasMore = false; _chatMsgsOldestAt = null;
+  renderChats(); // show loading shell immediately
+  var page = await _loadChatMessages(id, null);
+  _chatMsgs = page.rows;
+  _chatMsgsHasMore = page.hasMore;
+  _chatMsgsOldestAt = _chatMsgs.length ? _chatMsgs[0].created_at : null;
+  var cv = DATA.chats.find(function(c){ return c.id===id; });
+  if(cv && window._lastAuditedChat !== id){
+    window._lastAuditedChat = id;
+    auditLog('view_chat','messages',id,null,{participants:_chatParticipants(cv).map(function(u){return u.name;})},null);
+  }
+  renderChats();
+}
+
+async function loadOlderChatMessages(){
+  if(!_openChatId || !_chatMsgsHasMore) return;
+  var page = await _loadChatMessages(_openChatId, _chatMsgsOldestAt);
+  _chatMsgs = page.rows.concat(_chatMsgs);
+  _chatMsgsHasMore = page.hasMore;
+  _chatMsgsOldestAt = page.rows.length ? page.rows[0].created_at : _chatMsgsOldestAt;
+  renderChats();
+}
+
+function closeChat(){ _openChatId=null; _chatMsgs=[]; renderChats(); }
+
 function renderChats() {
-  var html='<div class="sec-head"><div class="sec-title">User Chats</div><div class="sec-actions"><button class="filter-btn on" onclick="loadChats().then(renderChats)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button></div></div>';
-  if(!DATA.chats.length){
-    html+='<div class="empty-msg">No conversations found. Messages table may not exist yet or no chats have been sent.</div>';
+  var html='<div class="sec-head"><div class="sec-title">User Chats</div>'
+    +'<div class="sec-actions"><button class="filter-btn on" onclick="loadChats().then(renderChats)">'
+    +'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button></div></div>';
+
+  if(!DATA.chats.length && !_chatSearch){
+    html+='<div class="empty-msg">No conversations found yet.</div>';
     document.getElementById('mainContent').innerHTML=html; return;
   }
-  if(_openChatId){
-    var cv=DATA.chats.find(function(c){ return c.id===_openChatId; });
-    if(cv){
-      // Privacy control: reading user conversations is itself an audited action.
-      if(window._lastAuditedChat !== _openChatId){ window._lastAuditedChat = _openChatId; auditLog('view_chat','messages',_openChatId,null,{participants:cv.participantNames},null); }
-      html+='<button onclick="_openChatId=null;renderChats()" style="margin-bottom:12px;padding:8px 16px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">← Back to all chats</button>';
-      html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px">';
-      html+='<div style="font-size:13px;font-weight:700;color:var(--sub);margin-bottom:8px">'+esc(cv.participantNames.join(' ↔ ') || cv.id)+'</div>';
-      html+='<div style="display:flex;flex-direction:column;gap:8px;max-height:500px;overflow-y:auto">';
-      var msgs=[].concat(cv.messages).reverse();
-      msgs.forEach(function(m){
-        var isRight=false;
-        var name=esc(m.sender_name||m.sender_id.slice(-6));
-        var time=fmtDateTime(m.created_at);
-        html+='<div style="display:flex;flex-direction:column;gap:2px">';
-        html+='<div style="font-size:11px;color:var(--sub)">'+name+' · '+time+'</div>';
-        html+='<div style="background:var(--bg);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--text);max-width:85%">'+esc(m.text)+'</div>';
-        html+='</div>';
-      });
-      html+='</div></div>';
-      document.getElementById('mainContent').innerHTML=html; return;
-    }
+
+  var q = _chatSearch.trim().toLowerCase();
+  var filtered = q ? DATA.chats.filter(function(c){ return _chatTitle(c).toLowerCase().indexOf(q)!==-1; }) : DATA.chats;
+
+  html += '<div class="chat-shell">';
+
+  // ── Left pane: conversation list ──
+  html += '<div class="chat-list-pane">';
+  html += '<div class="chat-search-wrap"><input id="chatSearchIn" class="fi" placeholder="Search by participant name…" value="'+esc(_chatSearch)+'" oninput="chatsSearchInput(this.value)"></div>';
+  html += '<div class="chat-list-scroll">';
+  if(!filtered.length){
+    html += '<div class="empty-msg" style="padding:24px 16px">No conversations match "'+esc(_chatSearch)+'".</div>';
   }
-  html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Participants</th><th>Last Message</th><th>Messages</th><th>Unread</th><th>Last Active</th><th></th></tr></thead><tbody>';
-  DATA.chats.forEach(function(c){
-    var parts=esc(c.participantNames.join(' ↔ ')||c.id.slice(0,20));
-    var preview=esc((c.lastMsg.text||'').slice(0,60)+(c.lastMsg.text&&c.lastMsg.text.length>60?'…':''));
-    html+='<tr>';
-    html+='<td style="font-weight:600;font-size:13px">'+parts+'</td>';
-    html+='<td style="color:var(--sub);font-size:12px;max-width:200px">'+preview+'</td>';
-    html+='<td style="text-align:center">'+c.messages.length+'</td>';
-    html+='<td style="text-align:center">'+(c.unread?'<span class="badge badge-pending">'+c.unread+'</span>':'—')+'</td>';
-    html+='<td style="color:var(--sub);font-size:12px">'+fmtDateTime(c.lastMsg.created_at)+'</td>';
-    html+='<td><button class="ab ab-view" onclick="_openChatId=\''+esc(c.id)+'\';renderChats()">View</button></td>';
-    html+='</tr>';
+  filtered.forEach(function(c){
+    var title = _chatTitle(c);
+    var lm = c.lastMsg;
+    var preview = lm ? (lm.image ? 'Photo' : (lm.text||'').slice(0,54)+((lm.text||'').length>54?'…':'')) : 'No messages yet';
+    var isActive = c.id===_openChatId;
+    html += '<div class="chat-list-row'+(isActive?' active':'')+'" onclick="openChat(\''+esc(c.id)+'\')">';
+    html += _avatarChip(title, 40);
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="display:flex;justify-content:space-between;gap:8px"><div class="chat-list-name">'+esc(title)+'</div>';
+    html += '<div class="chat-list-time">'+(lm?fmtDateTime(lm.created_at):'')+'</div></div>';
+    html += '<div style="display:flex;justify-content:space-between;gap:8px"><div class="chat-list-preview">'+esc(preview)+'</div>';
+    html += (c.unread?'<span class="badge badge-pending">'+c.unread+'</span>':'')+'</div>';
+    html += '</div></div>';
   });
-  html+='</tbody></table></div>';
+  html += '</div>';
+  html += pagerHtml(_chatPage, CHAT_PAGE, _chatsTotal, DATA.chats.length, 'chatsGo');
+  html += '</div>';
+
+  // ── Right pane: thread view ──
+  html += '<div class="chat-thread-pane">';
+  if(!_openChatId){
+    html += '<div class="chat-thread-empty">'
+      + '<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.35;margin-bottom:10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+      + '<div>Select a conversation to view messages</div></div>';
+  } else {
+    var cv = DATA.chats.find(function(c){ return c.id===_openChatId; });
+    var title = cv ? _chatTitle(cv) : _openChatId;
+    var participants = cv ? _chatParticipants(cv) : [];
+    html += '<div class="chat-thread-hdr">';
+    html += _avatarChip(title, 38);
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:14px;font-weight:700;color:var(--text)">'+esc(title)+'</div>';
+    html += '<div style="font-size:11.5px;color:var(--sub)">'+participants.length+' participant'+(participants.length===1?'':'s')+' · conversation '+esc(String(_openChatId).slice(0,12))+'</div>';
+    html += '</div>';
+    html += '<button class="filter-btn" onclick="closeChat()">Close</button>';
+    html += '</div>';
+
+    html += '<div class="chat-thread-scroll" id="chatThreadScroll">';
+    if(_chatMsgsHasMore){
+      html += '<div style="text-align:center;padding:6px 0 14px"><button class="filter-btn" onclick="loadOlderChatMessages()">Load older messages</button></div>';
+    }
+    if(!_chatMsgs.length){
+      html += '<div class="empty-msg">No messages yet.</div>';
+    }
+    _chatMsgs.forEach(function(m){
+      var sender = getUser(m.sender_id);
+      var name = esc(sender ? (sender.name||sender.email||sender.phone) : (m.sender_name||String(m.sender_id).slice(-6)));
+      var mine = participants.length && m.sender_id === participants[0].id; // left/right split by first participant, purely visual
+      html += '<div class="chat-bubble-row'+(mine?' mine':'')+'">';
+      html += '<div class="chat-bubble">';
+      html += '<div class="chat-bubble-name">'+name+'</div>';
+      if(m.image) html += '<img src="'+esc(m.image)+'" style="max-width:220px;border-radius:8px;display:block;margin-bottom:4px">';
+      if(m.text) html += '<div class="chat-bubble-text">'+esc(m.text)+'</div>';
+      html += '<div class="chat-bubble-time">'+fmtDateTime(m.created_at)+(m.read?' · Read':'')+'</div>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>'; // .chat-thread-pane
+  html += '</div>'; // .chat-shell
+
   document.getElementById('mainContent').innerHTML=html;
+  if(_openChatId){
+    var scroller = document.getElementById('chatThreadScroll');
+    if(scroller) scroller.scrollTop = scroller.scrollHeight;
+  }
 }
 
 // ── ANALYTICS ─────────────────────────────────────────────
@@ -6045,14 +6200,22 @@ async function loadFinance(){
   var top = await rpc('admin_top_payers', {days:win, lim:10});
   var since = new Date(Date.now()-win*864e5).toISOString();
   // Fallbacks + supplementary data always fetched with tight bounds.
+  var playTable = await hasTable('play_purchases');
+  var packTable = await hasTable('featured_slot_packs');
   var extra = await Promise.allSettled([
     sb.from('business_payments').select('amount,status,type,created_at,business_id').gte('created_at',since).order('created_at',{ascending:false}).limit(1500),
     sb.from('paid_ads').select('price_paid,created_at').limit(1000),
-    sb.from('business_subscriptions').select('plan_id,status').eq('status','active')
+    sb.from('business_subscriptions').select('plan_id,status').eq('status','active'),
+    playTable ? sb.from('play_purchases').select('product_id,status').eq('status','consumed').gte('created_at',since) : Promise.resolve({data:[]}),
+    packTable ? sb.from('featured_slot_packs').select('extra_slots,status').eq('status','consumed').gte('created_at',since) : Promise.resolve({data:[]})
   ]);
   var pays = (extra[0].value&&extra[0].value.data)||[];
   var ads  = (extra[1].value&&extra[1].value.data)||[];
   var subs = (extra[2].value&&extra[2].value.data)||[];
+  var playPurchases = (extra[3].value&&extra[3].value.data)||[];
+  var slotPacks = (extra[4].value&&extra[4].value.data)||[];
+  var playRevenue = playPurchases.reduce(function(a,p){ return a+billingProductPrice(p.product_id); }, 0)
+    + slotPacks.reduce(function(a,p){ return a+billingSlotPackPriceByExtraSlots(p.extra_slots); }, 0);
 
   var summary;
   if(rev.data){ summary = rev.data; summary._rpc = true; }
@@ -6072,7 +6235,7 @@ async function loadFinance(){
   var byMonth = {};
   pays.filter(function(p){return p.status==='paid';}).forEach(function(p){ var k=(p.created_at||'').slice(0,7); byMonth[k]=(byMonth[k]||0)+(+p.amount||0); });
 
-  FIN.data = { summary:summary, top:(top.data||null), topMissing:!!top.missing, pays:pays, planMix:planMix, byMonth:byMonth, window:win };
+  FIN.data = { summary:summary, top:(top.data||null), topMissing:!!top.missing, pays:pays, planMix:planMix, byMonth:byMonth, window:win, playRevenue:playRevenue };
   await ensureProfiles((FIN.data.top||[]).map(function(t){return t.business_id;}));  // best-effort (business ids, not profiles)
   if(FIN.data.top){ var bizIds=(FIN.data.top||[]).map(function(t){return t.business_id;}); if(bizIds.length){ var br=await sb.from('businesses').select('id,name').in('id',bizIds); FIN._bizNames={}; (br.data||[]).forEach(function(b){FIN._bizNames[b.id]=b.name;}); } }
 }
@@ -6081,7 +6244,8 @@ function renderFinance(){
   if(!requirePerm('analytics.view') && !requirePerm('businesses.billing')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">Your role cannot access finance.</div>'; return; }
   if(FIN.data===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Aggregating revenue…</div>'; return; }
   var d = FIN.data, s = d.summary;
-  var total = (+s.subs_paid||0)+(+s.other_paid||0)+(+s.ads_revenue||0);
+  var playRev = d.playRevenue||0;
+  var total = (+s.subs_paid||0)+(+s.other_paid||0)+(+s.ads_revenue||0)+playRev;
   var html = '<div class="sec-head"><div class="sec-title">Finance Center</div><div class="sec-actions">'
     + [30,90,365].map(function(w){return '<button class="filter-btn'+(FIN.window===w?' on':'')+'" onclick="finGo('+w+')">'+(w===365?'1y':w+'d')+'</button>';}).join('')
     + '<button class="filter-btn" onclick="exportFinance()">Export CSV</button>'
@@ -6092,9 +6256,10 @@ function renderFinance(){
   html += statCard('Total Revenue','green','$'+fmt(total),'last '+d.window+' days');
   html += statCard('Subscriptions','accent','$'+fmt(s.subs_paid),'recurring income');
   html += statCard('Advertising','amber','$'+fmt(s.ads_revenue),'all-time ad spend');
-  html += statCard('Other Income','blue','$'+fmt(s.other_paid),'boosts / features');
-  html += statCard('Failed Payments','red',fmtCnt(s.subs_failed),'need follow-up');
-  html += statCard('Pending','amber',fmtCnt(s.subs_pending),'awaiting approval','businesses');
+  html += statCard('Legacy Off-App','blue','$'+fmt(s.other_paid),'pre-Play Billing invoices (historical)');
+  html += statCard('Play Billing','green','$'+fmt(playRev),'boosts, subs & slot packs','playBilling');
+  html += statCard('Legacy Failed','red',fmtCnt(s.subs_failed),'pre-Play Billing invoices (historical)');
+  html += statCard('Legacy Pending','amber',fmtCnt(s.subs_pending),'pre-Play Billing invoices (historical)','businesses');
   html += '</div>';
 
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">';
@@ -6142,6 +6307,231 @@ function exportFinance(){
   downloadCSV('pamarket-finance-'+new Date().toISOString().slice(0,10)+'.csv', rows);
   auditLog('export_finance','business_payments',null,null,{rows:rows.length-1,window:FIN.window},null);
   toast('Exported '+(rows.length-1)+' transactions');
+}
+
+// ── Billing catalogue lookups ──────────────────────────────
+// Reads product data (days/extraSlots/estimatedPriceUsd) from the shared
+// catalogue (js/billing-products.js — same file the customer app loads),
+// never from a duplicated map here. window.H is that catalogue's namespace.
+function billingProductDays(productId){
+  var all = (window.H && typeof window.H.getActiveProducts==='function') ? window.H.getActiveProducts('boosts') : [];
+  var p = all.find(function(x){ return x.productId===productId; });
+  return p ? p.days : null;
+}
+function billingProductPrice(productId){
+  var all = (window.H && typeof window.H.getActiveProducts==='function') ? window.H.getActiveProducts('boosts') : [];
+  var p = all.find(function(x){ return x.productId===productId; });
+  return p ? (p.estimatedPriceUsd||0) : 0;
+}
+function billingSlotPackPriceByExtraSlots(extraSlots){
+  var all = (window.H && typeof window.H.getActiveProducts==='function') ? window.H.getActiveProducts('slotPacks') : [];
+  var p = all.find(function(x){ return x.extraSlots===extraSlots; });
+  return p ? (p.estimatedPriceUsd||0) : 0;
+}
+
+// ════════════════════════════════════════════════════════════
+// PLAY BILLING — Google Play consumable purchase history for listing
+// boosts. play_purchases is the server-side ledger written ONLY by the
+// verify-play-purchase Edge Function (service-role key) — nothing here
+// can ever be edited by an admin action, this view is read-only by design
+// so it stays a trustworthy audit trail of what Google actually verified.
+// ════════════════════════════════════════════════════════════
+var PB = { rows:null, missing:false, window:30, statusFilter:'', view:'boosts' };
+var PB_SUB = { rows:null, missing:false };
+var PB_PACK = { rows:null, missing:false };
+
+async function loadPlayBilling(){
+  PB.rows = null;
+  PB.missing = !(await hasTable('play_purchases'));
+  if(!PB.missing){
+    var since = new Date(Date.now()-PB.window*864e5).toISOString();
+    var q = sb.from('play_purchases').select('id,user_id,listing_id,product_id,purchase_token,order_id,status,verification_error,purchase_time,expiry_time,created_at,verified_at')
+      .gte('created_at', since).order('created_at',{ascending:false}).limit(500);
+    if(PB.statusFilter) q = q.eq('status', PB.statusFilter);
+    var r = await q;
+    PB.rows = r.error ? [] : (r.data||[]);
+    var uids = [...new Set(PB.rows.map(function(p){return p.user_id;}).filter(Boolean))];
+    await ensureProfiles(uids);
+    var lids = [...new Set(PB.rows.map(function(p){return p.listing_id;}).filter(Boolean))];
+    PB._listings = {};
+    if(lids.length){ var lr = await sb.from('listings').select('id,title').in('id',lids); (lr.data||[]).forEach(function(l){PB._listings[l.id]=l;}); }
+  }
+
+  PB_SUB.missing = !(await hasTable('play_subscriptions'));
+  if(!PB_SUB.missing){
+    var sr = await sb.from('play_subscriptions').select('id,user_id,business_id,product_id,plan_id,billing_cycle,status,subscription_state,verification_error,expiry_time,created_at')
+      .order('created_at',{ascending:false}).limit(300);
+    PB_SUB.rows = sr.error ? [] : (sr.data||[]);
+    var bizIds = [...new Set(PB_SUB.rows.map(function(s){return s.business_id;}).filter(Boolean))];
+    PB_SUB._bizNames = {};
+    if(bizIds.length){ var br = await sb.from('businesses').select('id,name').in('id',bizIds); (br.data||[]).forEach(function(b){PB_SUB._bizNames[b.id]=b.name;}); }
+  }
+
+  PB_PACK.missing = !(await hasTable('featured_slot_packs'));
+  if(!PB_PACK.missing){
+    var pr = await sb.from('featured_slot_packs').select('id,user_id,business_id,product_id,extra_slots,status,verification_error,created_at')
+      .order('created_at',{ascending:false}).limit(300);
+    PB_PACK.rows = pr.error ? [] : (pr.data||[]);
+    var bizIds2 = [...new Set(PB_PACK.rows.map(function(p){return p.business_id;}).filter(Boolean))];
+    PB_PACK._bizNames = {};
+    if(bizIds2.length){ var br2 = await sb.from('businesses').select('id,name').in('id',bizIds2); (br2.data||[]).forEach(function(b){PB_PACK._bizNames[b.id]=b.name;}); }
+  }
+
+  var since2 = new Date(Date.now()-30*864e5).toISOString();
+  var failedCount = (PB.missing?0:await cnt('play_purchases', function(q){ return q.eq('status','failed').gte('created_at',since2); }))
+    + (PB_SUB.missing?0:await cnt('play_subscriptions', function(q){ return q.eq('status','failed').gte('created_at',since2); }))
+    + (PB_PACK.missing?0:await cnt('featured_slot_packs', function(q){ return q.eq('status','failed').gte('created_at',since2); }));
+  var badgeEl = document.getElementById('badge-playFailed');
+  if(badgeEl){ badgeEl.textContent = failedCount||0; badgeEl.style.display = (failedCount>0) ? '' : 'none'; }
+}
+function pbGo(w){ PB.window=w; loadPlayBilling().then(renderPlayBilling); }
+function pbSetFilter(s){ PB.statusFilter=s; loadPlayBilling().then(renderPlayBilling); }
+function pbSetView(v){ PB.view=v; renderPlayBilling(); }
+var PB_SUB_STATE_BADGE = { active:'active', in_grace_period:'pending', on_hold:'pending', canceled:'rejected', expired:'rejected', paused:'pending', pending:'pending' };
+
+function renderPlayBilling(){
+  if(!requirePerm('analytics.view') && !requirePerm('businesses.billing')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">Your role cannot access Play Billing.</div>'; return; }
+  var html = '<div class="sec-head"><div class="sec-title">Play Billing</div><div class="sec-actions">'
+    + '<button class="btn-refresh" onclick="loadPlayBilling().then(renderPlayBilling)">Refresh</button></div></div>';
+
+  html += '<div style="display:flex;gap:8px;margin-bottom:14px">'
+    + [['boosts','Listing Boosts'],['subs','Subscriptions'],['packs','Slot Packs']].map(function(v){
+        return '<button class="filter-btn'+(PB.view===v[0]?' on':'')+'" onclick="pbSetView(\''+v[0]+'\')">'+v[1]+'</button>';
+      }).join('')
+    + '</div>';
+
+  if(PB.view==='subs'){ html += renderPlaySubs(); document.getElementById('mainContent').innerHTML = html; return; }
+  if(PB.view==='packs'){ html += renderPlayPacks(); document.getElementById('mainContent').innerHTML = html; return; }
+
+  // ── Listing boosts (default view) ──
+  html += '<div class="sec-actions" style="margin-bottom:10px">'
+    + [30,90,365].map(function(w){return '<button class="filter-btn'+(PB.window===w?' on':'')+'" onclick="pbGo('+w+')">'+(w===365?'1y':w+'d')+'</button>';}).join('')
+    + '</div>';
+
+  if(PB.missing){ html += migrationNotice('Play Billing history', 'migrations/add_play_purchases.sql'); document.getElementById('mainContent').innerHTML = html; return; }
+  if(PB.rows===null){ document.getElementById('mainContent').innerHTML = html + '<div class="loading-msg">Loading purchase history…</div>'; return; }
+
+  var rows = PB.rows;
+  var verified = rows.filter(function(p){return p.status==='verified'||p.status==='consumed';});
+  var consumed = rows.filter(function(p){return p.status==='consumed';});
+  var failed   = rows.filter(function(p){return p.status==='failed';});
+  var pending  = rows.filter(function(p){return p.status==='pending';});
+  var revenue  = consumed.reduce(function(a,p){return a+billingProductPrice(p.product_id);},0);
+  var now = Date.now();
+  var activeBoosts = consumed.filter(function(p){ return p.expiry_time && new Date(p.expiry_time).getTime() > now; });
+
+  html += '<div class="stats-grid">';
+  html += statCard('Boost Revenue','green','$'+fmt(revenue),'last '+PB.window+' days (est.)');
+  html += statCard('Verified Purchases','accent',fmtCnt(verified.length),'passed Google verification');
+  html += statCard('Active Boosts','blue',fmtCnt(activeBoosts.length),'currently featured');
+  html += statCard('Failed Verification','red',fmtCnt(failed.length),'rejected by Google / fraud check');
+  html += statCard('Pending','amber',fmtCnt(pending.length),'awaiting verification');
+  html += '</div>';
+
+  html += '<div style="display:flex;gap:8px;margin:14px 0">'
+    + ['','pending','verified','consumed','failed'].map(function(s){
+        return '<button class="filter-btn'+(PB.statusFilter===s?' on':'')+'" onclick="pbSetFilter(\''+s+'\')">'+(s?s.charAt(0).toUpperCase()+s.slice(1):'All')+'</button>';
+      }).join('')
+    + '</div>';
+
+  if(!rows.length){ html += '<div class="empty-msg">No Play Billing purchases in this window.</div>'; document.getElementById('mainContent').innerHTML = html; return; }
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Buyer</th><th>Listing</th><th>Product</th><th>Status</th><th>Expiry</th><th>Purchased</th><th>Order ID</th></tr></thead><tbody>';
+  rows.forEach(function(p){
+    var buyer = userLabel(p.user_id);
+    var listing = PB._listings[p.listing_id];
+    var listingLabel = listing ? esc(listing.title) : esc(String(p.listing_id||'').slice(0,8));
+    var days = billingProductDays(p.product_id) || '?';
+    var statusColor = { pending:'pending', verified:'active', consumed:'active', failed:'rejected' }[p.status] || 'pending';
+    var expiry = p.expiry_time ? fmtDateTime(p.expiry_time) : '—';
+    var expired = p.expiry_time && new Date(p.expiry_time).getTime() <= now;
+    html += '<tr>';
+    html += '<td style="font-size:12.5px;font-weight:600">'+esc(buyer)+'</td>';
+    html += '<td style="font-size:12.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+listingLabel+'">'+listingLabel+'</td>';
+    html += '<td style="font-size:12.5px">'+days+'-day boost</td>';
+    html += '<td><span class="badge badge-'+statusColor+'">'+esc(p.status)+(p.status==='failed'&&p.verification_error?' ⓘ':'')+'</span></td>';
+    html += '<td style="font-size:12px;color:'+(expired?'var(--sub2)':'var(--text)')+'">'+expiry+(expired&&p.status==='consumed'?' (expired)':'')+'</td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+fmtDateTime(p.created_at)+'</td>';
+    html += '<td style="font-size:11px;color:var(--sub2)">'+esc(p.order_id||'—')+'</td>';
+    html += '</tr>';
+    if(p.status==='failed' && p.verification_error){
+      html += '<tr><td colspan="7" style="font-size:11.5px;color:var(--red);padding:2px 8px 10px 8px">Reason: '+esc(p.verification_error)+'</td></tr>';
+    }
+  });
+  html += '</tbody></table></div>';
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function renderPlaySubs(){
+  if(PB_SUB.missing) return migrationNotice('Play subscription history', 'migrations/add_play_subscriptions.sql');
+  if(PB_SUB.rows===null) return '<div class="loading-msg">Loading subscriptions…</div>';
+  var rows = PB_SUB.rows;
+  var active = rows.filter(function(s){return s.subscription_state==='active'||s.subscription_state==='in_grace_period';});
+  var failed = rows.filter(function(s){return s.status==='failed';});
+  var canceled = rows.filter(function(s){return s.subscription_state==='canceled'||s.subscription_state==='expired';});
+
+  var html = '<div class="stats-grid">';
+  html += statCard('Active Subscriptions','green',fmtCnt(active.length),'active or in grace period');
+  html += statCard('Canceled / Expired','amber',fmtCnt(canceled.length),'no longer entitling access');
+  html += statCard('Failed Verification','red',fmtCnt(failed.length),'rejected by Google');
+  html += statCard('Total Purchases','accent',fmtCnt(rows.length),'all-time');
+  html += '</div>';
+
+  if(!rows.length){ return html + '<div class="empty-msg">No subscription purchases yet.</div>'; }
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Business</th><th>Plan</th><th>Cycle</th><th>State</th><th>Expiry</th><th>Purchased</th></tr></thead><tbody>';
+  rows.forEach(function(s){
+    var bizName = PB_SUB._bizNames[s.business_id] || String(s.business_id||'').slice(0,8);
+    var badgeClass = PB_SUB_STATE_BADGE[s.subscription_state] || 'pending';
+    html += '<tr>';
+    html += '<td style="font-size:12.5px;font-weight:600">'+esc(bizName)+'</td>';
+    html += '<td style="font-size:12.5px;text-transform:capitalize">'+esc(s.plan_id)+'</td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+esc(s.billing_cycle)+'</td>';
+    html += '<td><span class="badge badge-'+badgeClass+'">'+esc(s.subscription_state)+(s.status==='failed'&&s.verification_error?' ⓘ':'')+'</span></td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+(s.expiry_time?fmtDateTime(s.expiry_time):'—')+'</td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+fmtDateTime(s.created_at)+'</td>';
+    html += '</tr>';
+    if(s.status==='failed' && s.verification_error){
+      html += '<tr><td colspan="6" style="font-size:11.5px;color:var(--red);padding:2px 8px 10px 8px">Reason: '+esc(s.verification_error)+'</td></tr>';
+    }
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderPlayPacks(){
+  if(PB_PACK.missing) return migrationNotice('Featured slot pack history', 'migrations/add_featured_slot_packs.sql');
+  if(PB_PACK.rows===null) return '<div class="loading-msg">Loading slot packs…</div>';
+  var rows = PB_PACK.rows;
+  var consumed = rows.filter(function(p){return p.status==='consumed';});
+  var failed = rows.filter(function(p){return p.status==='failed';});
+  var totalSlots = consumed.reduce(function(n,p){return n+(p.extra_slots||0);},0);
+
+  var html = '<div class="stats-grid">';
+  html += statCard('Extra Slots Sold','green',fmtCnt(totalSlots),'total across all businesses');
+  html += statCard('Purchases','accent',fmtCnt(consumed.length),'successfully activated');
+  html += statCard('Failed Verification','red',fmtCnt(failed.length),'rejected by Google');
+  html += '</div>';
+
+  if(!rows.length){ return html + '<div class="empty-msg">No slot pack purchases yet.</div>'; }
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Business</th><th>Slots</th><th>Status</th><th>Purchased</th></tr></thead><tbody>';
+  rows.forEach(function(p){
+    var bizName = PB_PACK._bizNames[p.business_id] || String(p.business_id||'').slice(0,8);
+    var statusColor = { pending:'pending', verified:'active', consumed:'active', failed:'rejected' }[p.status] || 'pending';
+    html += '<tr>';
+    html += '<td style="font-size:12.5px;font-weight:600">'+esc(bizName)+'</td>';
+    html += '<td style="font-size:12.5px">+'+p.extra_slots+'</td>';
+    html += '<td><span class="badge badge-'+statusColor+'">'+esc(p.status)+(p.status==='failed'&&p.verification_error?' ⓘ':'')+'</span></td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+fmtDateTime(p.created_at)+'</td>';
+    html += '</tr>';
+    if(p.status==='failed' && p.verification_error){
+      html += '<tr><td colspan="4" style="font-size:11.5px;color:var(--red);padding:2px 8px 10px 8px">Reason: '+esc(p.verification_error)+'</td></tr>';
+    }
+  });
+  html += '</tbody></table></div>';
+  return html;
 }
 
 // ════════════════════════════════════════════════════════════

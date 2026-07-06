@@ -1,4 +1,4 @@
-const CACHE = 'pamarket-v245';
+const CACHE = 'pamarket-v257';
 
 // Never cache these — auth tokens, API data, realtime
 const NO_CACHE = [
@@ -20,7 +20,7 @@ function shouldCache(url) {
 const PRECACHE = [
   './', './index.html', './manifest.json', './css/styles.css', './css/pages-patch.css', './offline.html',
   './js/app.js',  './js/auth.js', './js/home.js', './js/post.js',
-  './js/messages.js', './js/detail.js', './js/browse.js',
+  './js/messages.js', './js/detail.js', './js/browse.js', './js/billing-products.js', './js/billing.js',
   './js/account.js', './js/profile.js', './js/verify.js', './js/business-onboarding.js', './js/business-profile.js',
   './js/rentals.js', './js/rentals-business.js', './js/vehicles.js',
   './js/lib/supabase.umd.js', './js/supabase.js', './js/categories.js', './js/attributes.js', './js/ads-carousel.js', './js/refresh-manager.js',

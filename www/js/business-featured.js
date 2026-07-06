@@ -3,9 +3,11 @@
  * © 2026 PaMarket. All rights reserved.
  *
  * MODULE 9 — FEATURED LISTINGS SYSTEM
- * Time-based boosts for a business's listings. Featured slots are gated by the
- * subscription plan (H.planEntitlements.featuredSlots). A boost sets boost=true +
- * featuredUntil; existing feed/home ranking already surfaces boosted listings.
+ * Time-based boosts for a business's listings. The free slot count comes
+ * from the subscription plan (H.planEntitlements.featuredSlots); additional
+ * slots beyond that baseline are purchased as Google Play Billing consumables
+ * (H.buySlotPack, billing.js) — there is no manual/WhatsApp/admin-invoice
+ * path for extra slots. A boost sets boost=true + featuredUntil.
  * Expiry is reconciled on boot (H.processFeaturedExpiry).
  */
 'use strict';
@@ -24,7 +26,16 @@
   function getBiz(id) { return (H.state.businesses || []).find(b => b.id === id) || null; }
   function isOwner(b) { const u = currentUser(); return !!(u && b && b.ownerUserId === u.id); }
   function listingsOf(id) { return (H.state.listings || []).filter(l => l.businessId === id); }
-  function featuredSlots(b) { return (typeof H.planEntitlements === 'function') ? H.planEntitlements(b.planId).featuredSlots : 0; }
+  // Total slots = plan baseline + any purchased slot packs. extraSlots is
+  // fetched async (fetchExtraFeaturedSlots) and cached per business id since
+  // pages.BusinessFeatured renders synchronously; see BusinessFeatured_after.
+  const _extraSlotsCache = {};
+  function planSlots(b) { return (typeof H.planEntitlements === 'function') ? H.planEntitlements(b.planId).featuredSlots : 0; }
+  function featuredSlots(b) {
+    const base = planSlots(b);
+    if (base === Infinity) return Infinity;
+    return base + (_extraSlotsCache[b.id] || 0);
+  }
 
   H.isFeatured = function (l) { return !!(l && l.featuredUntil && l.featuredUntil > Date.now()); };
 
@@ -71,6 +82,11 @@
       </div>`;
     };
 
+    const atCapacity = slots !== Infinity && used >= slots;
+    const slotPackHtml = (typeof H.getActiveProducts === 'function' ? H.getActiveProducts('slotPacks') : []).map(p =>
+      `<button onclick="H.buySlotPack('${b.id}','${p.productId}')" style="flex:1;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">${escHtml(p.label)}</button>`
+    ).join('');
+
     return `<div class="page active">
       ${innerTopbar('Featured Listings')}
       <div class="inner-content" style="padding-bottom:40px">
@@ -78,32 +94,43 @@
           <div style="font-size:13px;color:var(--sub)">Featured slots</div>
           <div style="font-size:14px;font-weight:800;color:#b45309">${used} / ${slotLabel}</div>
         </div>
-        ${noSlots ? `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:16px;font-size:13px;color:var(--sub);line-height:1.55;margin-bottom:14px">Your plan has no featured slots. Upgrade to Pro or Premium to boost listings to the top of the feed and category pages.</div>` : ''}
+        ${noSlots ? `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:16px;font-size:13px;color:var(--sub);line-height:1.55;margin-bottom:14px">Your plan has no featured slots. Upgrade to Pro or Premium, or buy slots below, to boost listings to the top of the feed and category pages.</div>` : ''}
+        ${atCapacity ? `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:14px;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px">Need more slots?</div>
+          <div style="font-size:12px;color:var(--sub);margin-bottom:10px">Buy extra featured slots securely via Google Play — added instantly.</div>
+          <div style="display:flex;gap:8px">${slotPackHtml}</div>
+        </div>` : ''}
         ${mine.length ? mine.map(card).join('') : `<div style="text-align:center;color:var(--sub);font-size:13px;padding:24px 0">Add listings to this business first.</div>`}
       </div>
     </div>`;
   };
 
+  pages.BusinessFeatured_after = function (params) {
+    const b = getBiz(params && params.id);
+    if (!b || typeof H.fetchExtraFeaturedSlots !== 'function') return;
+    H.fetchExtraFeaturedSlots(b.id).then(extra => {
+      if (_extraSlotsCache[b.id] !== extra) {
+        _extraSlotsCache[b.id] = extra;
+        if (H.currentPageName === 'BusinessFeatured') renderPage('BusinessFeatured', { id: b.id });
+      }
+    });
+  };
+
   H._bizFeat = {
     open(id) { H.openInner('BusinessFeatured', { id }); },
+    // Using a featured slot is a pure plan/pack entitlement — no separate
+    // per-boost charge. The old $0.50/day pending-invoice fee is removed;
+    // the only paid action in this system is buying MORE slot capacity
+    // (H.buySlotPack, via Google Play Billing).
     async boost(businessId, listingId, days) {
       const b = getBiz(businessId); if (!b) return;
       const slots = featuredSlots(b);
       const used = listingsOf(businessId).filter(H.isFeatured).length;
-      if (slots !== Infinity && used >= slots) { toast('No featured slots left — upgrade your plan'); return; }
+      if (slots !== Infinity && used >= slots) { toast('No featured slots left — buy more slots or upgrade your plan'); return; }
       const l = (H.state.listings || []).find(x => x.id === listingId); if (!l) return;
-      // Module 11 — charge the featured fee against the wallet (no-op if monetization not loaded).
-      let _invoiced = false;
-      if (typeof H.chargeBusiness === 'function') {
-        const price = typeof H.featuredPrice === 'function' ? H.featuredPrice(days) : 0;
-        const res = await H.chargeBusiness(businessId, 'featured', price, days + '-day boost: ' + (l.title || 'listing'));
-        if (!res || !res.ok) { toast((res && res.msg) || 'Could not boost — please try again'); return; }
-        _invoiced = !!res.pending;
-      }
       l.featuredUntil = Date.now() + days * DAY; l.boost = true; saveState();
       await cloudFeature(listingId, l.featuredUntil);
-      if (_invoiced) toast('Boosted for ' + days + ' days — invoice created. Open Billing to pay.', 4500);
-      else toast('Boosted for ' + days + ' days');
+      toast('Boosted for ' + days + ' days');
       renderPage('BusinessFeatured', { id: businessId });
     },
     async unboost(businessId, listingId) {

@@ -14,7 +14,8 @@
     "@capacitor/local-notifications": "^8.0.0",
     "@capacitor/push-notifications": "^8.0.0",
     "@capgo/capacitor-social-login": "^8.0.0",
-    "@supabase/supabase-js": "^2.105.3"
+    "@supabase/supabase-js": "^2.105.3",
+    "capacitor-plugin-cdv-purchase": "^13.17.2"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",

@@ -6,7 +6,8 @@
  * Single source of truth for plan entitlements + the subscription lifecycle
  * (active / scheduled / downgraded / expired) on top of the business_subscriptions
  * table from Module 1. Other modules read H.planEntitlements() — no scattered
- * limit literals. No payment here: H.onSubscriptionCharge is the Module 11 seam.
+ * limit literals. Paid upgrades happen via H.upgradeBusinessPlan (billing.js),
+ * a real Google Play Billing subscription purchase — no payment logic here.
  */
 'use strict';
 (function (H) {
@@ -49,7 +50,13 @@
     return H.planEntitlements(expired ? 'free' : planId);
   };
 
-  // Apply due scheduled downgrades / expiries. Called on boot.
+  // Apply due scheduled (free-tier) downgrades / expiries. Called on boot.
+  // Paid-plan renewal/expiry is no longer computed client-side — Google Play
+  // Billing is the source of truth for that (see play-rtdn-webhook, which
+  // updates business_subscriptions directly as renewal/cancellation events
+  // arrive on Google's own schedule). This sweep only handles the local
+  // display state for a scheduled downgrade or a lapsed non-renewing period,
+  // neither of which involves a payment.
   H.processSubscriptionExpiry = function () {
     const now = Date.now();
     let changed = false;
@@ -67,17 +74,9 @@
           act.status = 'expired';
           const b = getBiz(bid); if (b) { b.planId = 'free'; }
           changed = true;
-        } else { // auto-renew: roll the period forward + raise a renewal invoice
-          act.currentPeriodEnd = periodEnd(act.billingCycle);
-          changed = true;
-          // Google-safe: a paid renewal raises a PENDING invoice (admin marks paid).
-          const b = getBiz(bid);
-          const plan = (H.BIZ_PLANS || []).find(p => p.id === (act.planId || (b && b.planId)));
-          const amount = plan ? (act.billingCycle === 'yearly' ? plan.price * 10 : plan.price) : 0;
-          if (amount > 0 && typeof H.chargeBusiness === 'function') {
-            H.chargeBusiness(bid, 'subscription', amount, (plan ? plan.name : 'Plan') + ' renewal (' + (act.billingCycle || 'monthly') + ')');
-          }
         }
+        // auto-renew paid plans: no client-side action — RTDN/reconciliation
+        // poll keep business_subscriptions accurate server-side.
       }
     });
     if (changed) saveState();
@@ -89,8 +88,6 @@
     return d.getTime();
   }
 
-  // Payment seam — Module 11 (Monetization) overrides this. Default: grant free.
-  H.onSubscriptionCharge = H.onSubscriptionCharge || async function (planId, cycle, amount) { return { ok: true }; };
 
   // ── Cloud ────────────────────────────────────────────────────
   H.fetchBusinessSubscriptions = async function (businessId) {
@@ -145,7 +142,6 @@
       </div>`;
     };
 
-    const supportWa = H.state.supportWhatsapp || '263776543210';
     const planCard = (p) => {
       const cur = p.id === curPlanId;
       const ents = H.planEntitlements(p.id);
@@ -154,12 +150,12 @@
       let actionBtn = '';
       if (isOwner && !cur) {
         if (higher && p.price > 0) {
-          // Paid upgrade: open WhatsApp contact only — no in-app state change (Google Play compliant)
-          const waMsg = encodeURIComponent('Hi PaMarket, I would like to upgrade ' + (b.name || 'my business') + ' to the ' + p.name + ' plan (' + (b.billingCycle || 'monthly') + ' billing). Please contact me to arrange payment.');
-          actionBtn = `<a href="https://wa.me/${supportWa}?text=${waMsg}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:10px;padding:9px;border-radius:10px;background:#16a34a;color:#fff;font-size:13px;font-weight:700;text-decoration:none;font-family:inherit;box-sizing:border-box;-webkit-tap-highlight-color:transparent">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M5.337 3.004A11.924 11.924 0 0 0 0 12.001c0 2.096.543 4.063 1.49 5.789L0 24l6.39-1.677A11.937 11.937 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0a11.924 11.924 0 0 0-6.663 2.004z"/></svg>
-            Contact to Upgrade
-          </a>`;
+          // Paid upgrade: Google Play Billing subscription purchase only —
+          // no WhatsApp/manual-payment path. See H.upgradeBusinessPlan (billing.js).
+          actionBtn = `<button class="btn-pri" style="display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:10px;padding:9px;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit" onclick="H.upgradeBusinessPlan('${b.id}','${p.id}','${b.billingCycle || 'monthly'}')">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M3 20.5v-17c0-.59.34-1.11.84-1.35L13.69 12l-9.85 9.85c-.5-.24-.84-.76-.84-1.35z"/><path d="M16.81 15.12L6.05 21.34l8.49-8.49 2.27 2.27z" opacity=".6"/><path d="M20.16 10.81c.5.32.84.86.84 1.19s-.34.87-.84 1.19l-2.75 1.59-2.5-2.5V9.72l2.5-2.5 2.75 1.59z" opacity=".8"/><path d="M6.05 2.66l10.76 6.22-2.27 2.27L6.05 2.66z"/></svg>
+            Buy via Google Play
+          </button>`;
         } else {
           actionBtn = `<button class="btn-pri" style="width:100%;margin-top:10px;padding:9px" onclick="H._bizSub.downgrade('${b.id}','${p.id}')">Downgrade</button>`;
         }
@@ -198,20 +194,13 @@
         <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px">Plans</div>
         ${H.BIZ_PLANS.map(planCard).join('')}
 
-        <!-- No in-app payments notice -->
+        <!-- Play Billing notice -->
         <div style="background:#EEF2FB;border:1px solid #c7d7f8;border-radius:14px;padding:16px;margin-top:8px">
           <div style="display:flex;align-items:flex-start;gap:10px">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <div>
-              <div style="font-size:13px;font-weight:800;color:#1A3A8F;margin-bottom:4px">No payments in the app</div>
-              <div style="font-size:12.5px;color:#475569;line-height:1.55">PaMarket does not process payments inside the app. Tapping "Contact to Upgrade" opens WhatsApp so you can speak directly with the PaMarket team. We will activate your plan once payment is confirmed.</div>
-              <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-                <a href="https://wa.me/263776543210" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#16a34a;color:#fff;border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:700;text-decoration:none;-webkit-tap-highlight-color:transparent">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M5.337 3.004A11.924 11.924 0 0 0 0 12.001c0 2.096.543 4.063 1.49 5.789L0 24l6.39-1.677A11.937 11.937 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0a11.924 11.924 0 0 0-6.663 2.004z"/></svg>
-                  WhatsApp Us
-                </a>
-                <a href="mailto:support@pamarket.co.zw" style="display:inline-flex;align-items:center;gap:6px;background:var(--card);color:#1A3A8F;border:1.5px solid #1A3A8F;border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:700;text-decoration:none;-webkit-tap-highlight-color:transparent">Email Us</a>
-              </div>
+              <div style="font-size:13px;font-weight:800;color:#1A3A8F;margin-bottom:4px">Upgrades activate instantly</div>
+              <div style="font-size:12.5px;color:#475569;line-height:1.55">All plan upgrades are purchased securely through Google Play. Your plan activates automatically as soon as your purchase is confirmed — no waiting, no manual approval.</div>
             </div>
           </div>
         </div>
@@ -234,30 +223,17 @@
   }
 
   H._bizSub = {
-    open(id) { H.fetchBusinessSubscriptions(id).then(() => renderPage('BusinessSubscription', { id })); H.openInner('BusinessSubscription', { id }); },
-
-    async upgrade(id, planId) {
-      const b = getBiz(id); if (!b) return;
-      const p = H.BIZ_PLANS.find(x => x.id === planId);
-      const cycle = b.billingCycle || 'monthly';
-      const amount = p ? (cycle === 'yearly' ? p.price * 10 : p.price) : 0;
-      const name = H.planEntitlements(planId).name;
-      // Free (or no charge) applies immediately.
-      if (planId === 'free' || amount <= 0) {
-        setActivePlan(b, planId, cycle);
-        toast('Plan changed to ' + name);
-        renderPage('BusinessSubscription', { id });
-        return;
-      }
-      // Paid plans are NOT activated on tap. We raise a pending invoice and the
-      // plan activates only when an admin confirms the off-app payment. The
-      // [planId] tag lets the admin's "Mark paid" action activate the right plan.
-      const res = await H.chargeBusiness(id, 'subscription', amount, name + ' plan (' + cycle + ') [' + planId + ']');
-      if (!res || !res.ok) { toast('Could not request the upgrade. Please try again.'); return; }
-      toast('Upgrade requested. Your ' + name + ' plan activates once we confirm your payment.', 5000);
-      renderPage('BusinessSubscription', { id });
+    open(id) {
+      H.fetchBusinessSubscriptions(id).then(() => renderPage('BusinessSubscription', { id }));
+      if (typeof H.reconcilePlaySubscription === 'function') H.reconcilePlaySubscription(id).then(() => renderPage('BusinessSubscription', { id }));
+      H.openInner('BusinessSubscription', { id });
     },
 
+    // Paid upgrades go through H.upgradeBusinessPlan (billing.js), which
+    // triggers a real Google Play Billing purchase — there is no free/manual
+    // upgrade path for paid plans. Only downgrading TO free or between plans
+    // with no charge involved is handled here (setActivePlan), since those
+    // are pure entitlement changes with no payment at all.
     downgrade(id, planId) {
       const b = getBiz(id); if (!b) return;
       const act = H.activeSubscription(id);

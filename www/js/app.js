@@ -885,6 +885,7 @@ window.H = {
     if(typeof H._setupRealtimeNotifs==='function') H._setupRealtimeNotifs();
     if(typeof H.startRealtime==='function') H.startRealtime();
     if(typeof H.setupPush==='function') H.setupPush();
+    if(typeof H.setupBilling==='function') H.setupBilling();
     this._initPullToRefresh();
     if(typeof window._hideSplash==='function') window._hideSplash();
     // Poll paid_ads every 3 min as realtime fallback — announcements appear within
