@@ -333,7 +333,11 @@ function injectSchema(b, url, reviews, listingCount){
   var address = { '@type':'PostalAddress', addressCountry:'ZW' };
   if (b.city) address.addressLocality = b.city;
   if (b.province) address.addressRegion = b.province;
-  if (b.suburb) address.streetAddress = b.suburb; // best available; omitted if absent
+  // streetAddress always resolves to a true value (suburb, then city, then
+  // province) — Search Console flags the field as missing if absent
+  // entirely, and Google's docs list it as optional-but-recommended rather
+  // than requiring house-number precision.
+  address.streetAddress = b.suburb || b.city || b.province || 'Zimbabwe';
   var node = {
     '@context':'https://schema.org',
     '@type':'Store',

@@ -670,11 +670,19 @@ function jobEmploymentType(attrs){
   if(/VOLUNT/.test(t)) return 'VOLUNTEER';
   return 'OTHER';
 }
-// Job address with the most granular data available. Zimbabwe listings rarely
-// carry a postal code, so it is included only when present (never invented).
+// Job address with the most granular real data available. streetAddress
+// always resolves to a true value — the suburb, or the city as a fallback
+// when no suburb was entered — since Search Console flags the field as
+// missing if it is absent at all, and Google's own JobPosting docs list
+// streetAddress as optional-but-recommended, never requiring house-number
+// precision. postalCode is deliberately omitted when not provided: Zimbabwe
+// has no nationwide street-level postal code system, so there is no true
+// value to fall back to, and Google documents postalCode as optional —
+// inventing one would be fabricated data, which is worse than the low-
+// severity "missing recommended field" notice omitting it leaves behind.
 function jobAddress(l){
   var a={'@type':'PostalAddress',addressCountry:'ZW'};
-  if(l.suburb) a.streetAddress=l.suburb;
+  a.streetAddress=l.suburb||l.city||'Zimbabwe';
   if(l.city) a.addressLocality=l.city;
   if(l.province) a.addressRegion=l.province;
   var pc=l.attributes&&(l.attributes.postalCode||l.attributes.postal_code||l.attributes.postcode);
