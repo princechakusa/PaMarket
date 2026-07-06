@@ -534,9 +534,61 @@
         if (fallback.error) throw fallback.error;
         data = fallback.data;
       }
-      if (data && data.conversation_id) {
+      // Last-resort fallback: rental_conversation_context can end up missing
+      // a row (e.g. the customer-side write silently failed) even though the
+      // actual chat thread exists. Rather than guess the deterministic
+      // biz_<bizId>_<userId> id (the id scheme has changed across app
+      // versions, so a fixed slice pattern can't be trusted to match older
+      // threads), just look up any conversation both the owner and this
+      // customer are members of — RLS already scopes conversations reads to
+      // rows the caller (the owner) is a member of, so this is always safe.
+      let convId = data && data.conversation_id;
+      if (!convId) {
+        const u = H.currentUser();
+        if (u) {
+          // Must be a "biz_" thread specifically, and EXACTLY the two of us —
+          // the same customer/owner pair can also share an unrelated personal
+          // DM or a multi-person group thread that still "contains" both IDs,
+          // so filter/verify in JS rather than trust a server-side LIKE +
+          // array-contains combination to exclude those.
+          const convRes = await sb.from('conversations')
+            .select('id,members,created_at')
+            .contains('members', [u.id, userId])
+            .order('created_at', { ascending: false })
+            .limit(20);
+          if (convRes.error) throw convRes.error;
+          const rows = convRes.data || [];
+          const match = rows.find(function (r) {
+            return typeof r.id === 'string' && r.id.indexOf('biz_') === 0 &&
+              Array.isArray(r.members) && r.members.length === 2;
+          });
+          if (match) convId = match.id;
+        }
+      }
+      if (convId) {
         sb.from('rental_vehicle_leads').update({ status: 'contacted' }).eq('id', leadId).then(function(){}, function(){});
-        H.openInner('Chat', { id: data.conversation_id });
+        // The Chat page reads businessId/convKind off the LOCAL cached
+        // conversation object (H.state.conversations) to decide whether to
+        // show rental-business branding — it does not re-derive this from
+        // the id every render. The generic background sync tries to backfill
+        // businessId by matching the biz_<slice> id against H.state.businesses,
+        // but that list is only lazily populated and may not contain this
+        // company yet when opening straight from the dashboard, so the thread
+        // renders as a plain personal chat. Stamp it directly here since
+        // RB.company.business_id is already known and authoritative.
+        if (RB.company && RB.company.business_id) {
+          H.state.conversations = H.state.conversations || [];
+          let localConv = H.state.conversations.find(function (x) { return x.id === convId; });
+          if (!localConv) {
+            localConv = { id: convId, members: [H.currentUser().id, userId], messages: [] };
+            H.state.conversations.push(localConv);
+          }
+          let dirty = false;
+          if (localConv.businessId !== RB.company.business_id) { localConv.businessId = RB.company.business_id; dirty = true; }
+          if (localConv.convKind !== 'rental') { localConv.convKind = 'rental'; dirty = true; }
+          if (dirty) H.saveState();
+        }
+        H.openInner('Chat', { id: convId });
       } else {
         H.toast('This customer has not opened chat yet — they contacted you via ' +
           (RB.leads.find(l => l.id === leadId) || {}).lead_source + '.');

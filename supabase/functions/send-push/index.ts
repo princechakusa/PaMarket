@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
       return json({ scheduled: true, scheduled_for: scheduledFor });
     }
 
-    let q = db.from('profiles').select('id, push_token, push_subscription, province');
+    let q = db.from('profiles').select('id, push_subscription, province');
     if (target === 'verified')        q = q.eq('verified', true);
     else if (target === 'unverified') q = q.eq('verified', false);
     else if (target !== 'all' && target !== 'sellers' && target !== 'buyers') q = q.eq('id', target);
@@ -214,6 +214,17 @@ Deno.serve(async (req) => {
     if (profilesResult.error) throw profilesResult.error;
 
     let profiles = profilesResult.data || [];
+
+    // FCM tokens live in the isolated push_tokens table (security_hardening_2026_06.sql
+    // dropped profiles.push_token so it's no longer publicly readable) — join them in
+    // by user id, same as notify-message does, instead of querying the dropped column.
+    const tokenMap: Record<string, string> = {};
+    if (profiles.length > 0) {
+      const tokenRows = await db.from('push_tokens').select('user_id, token').in('user_id', profiles.map((p) => p['id']));
+      if (tokenRows.error) console.warn('push_tokens lookup:', tokenRows.error.message);
+      for (const t of (tokenRows.data || [])) tokenMap[t['user_id']] = t['token'];
+    }
+    profiles = profiles.map((p) => ({ ...p, push_token: tokenMap[p['id']] || null }));
 
     if (target === 'sellers' || target === 'buyers') {
       const listingsResult = await db.from('listings').select('seller_id').neq('status', 'banned').limit(10000);

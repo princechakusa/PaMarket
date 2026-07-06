@@ -1501,12 +1501,21 @@
     }
     const convId = H.startRentalBizChat(resolvedBizId, ownerId, det.company);
     if (sb && convId) {
+      // This binding is what lets the business dashboard's "Recent Inquiries"
+      // find and open the right thread (see RB.openInquiry in
+      // rentals-business.js). A silently swallowed failure here previously
+      // caused a real chat to show as "customer hasn't opened chat yet" on
+      // the business side — log failures so they're at least visible.
       sb.from('rental_conversation_context').upsert({
         conversation_id: convId,
         listing_id:      listingId,
         company_id:      det.company.id,
         user_id:         u.id,
-      }, { onConflict: 'user_id,listing_id' }).then(function () {}, function () {});
+      }, { onConflict: 'user_id,listing_id' }).then(function (r) {
+        if (r && r.error) console.warn('rental_conversation_context upsert failed:', r.error.message);
+      }, function (e) {
+        console.warn('rental_conversation_context upsert failed:', e && e.message);
+      });
     }
   };
 
@@ -1554,13 +1563,19 @@
     const sb = window.supabase;
     if (!u || !sb || !det || !det.company || !det.company.id) return;
     if (det.company.owner_user_id === u.id) return;
-    sb.from('rental_vehicle_leads').insert({
+    // One lead per (listing, user): re-contacting the same vehicle (re-opening
+    // chat, re-clicking WhatsApp/call) must refresh the existing lead rather
+    // than fork a new "new" row — that duplication is what made the same
+    // buyer show up repeatedly in the business dashboard's Recent Inquiries.
+    // `status` is deliberately omitted from the upsert payload so a repeat
+    // contact never reverts a lead the business already progressed past 'new'.
+    sb.from('rental_vehicle_leads').upsert({
       listing_id:  det.id,
       company_id:  det.company.id,
       user_id:     u.id,
       lead_source: source,
-      status:      'new',
-    }).then(function () {}, function (e) { console.warn('rental lead log failed:', e); });
+      updated_at:  new Date().toISOString(),
+    }, { onConflict: 'listing_id,user_id' }).then(function () {}, function (e) { console.warn('rental lead log failed:', e); });
   };
 
   R.waCompany = function (listingId) {
@@ -1611,20 +1626,34 @@
 
   R.reportVehicle = function (id) {
     if (!H.currentUser()) { H.requireAuth('Sign in to report'); return; }
-    const reasons = ['Misleading description','Wrong category','Prohibited vehicle','Fake or fraudulent listing','Offensive content','Duplicate listing','Other'];
+    // Display label -> value stored in rental_reports.reason. Values must
+    // match the table's CHECK constraint exactly (rental_marketplace_schema.sql)
+    // — sending the display label itself (e.g. "Misleading description")
+    // violated that constraint on every submission, so no report ever
+    // reached the table and admin's Rental Reports queue stayed empty.
+    const reasons = [
+      { value: 'fraudulent',    label: 'Fake or fraudulent listing' },
+      { value: 'wrong_category', label: 'Wrong category' },
+      { value: 'offensive',     label: 'Offensive content' },
+      { value: 'unavailable',   label: 'Vehicle not actually available' },
+      { value: 'duplicate',     label: 'Duplicate listing' },
+      { value: 'other',         label: 'Other' },
+    ];
     H.modal({
       title: 'Report this listing',
-      body: `<select class="fi" id="rlReportReason" style="width:100%;margin-bottom:8px">${reasons.map(r => `<option>${r}</option>`).join('')}</select><textarea class="fi" id="rlReportNote" rows="3" placeholder="Additional details (optional)" style="width:100%;margin-top:4px"></textarea>`,
+      body: `<select class="fi" id="rlReportReason" style="width:100%;margin-bottom:8px">${reasons.map(r => `<option value="${r.value}">${r.label}</option>`).join('')}</select><textarea class="fi" id="rlReportNote" rows="3" placeholder="Additional details (optional)" style="width:100%;margin-top:4px"></textarea>`,
       confirmText: 'Submit Report',
       onConfirm: async () => {
         const sb = window.supabase; if (!sb) return;
         const u = H.currentUser(); if (!u) return;
-        const reason = document.getElementById('rlReportReason')?.value || reasons[0];
+        const reason = document.getElementById('rlReportReason')?.value || reasons[0].value;
         try {
-          await sb.from('rental_reports').insert({ listing_id: id, reporter_id: u.id, reason, detail: document.getElementById('rlReportNote')?.value || '' });
+          const res = await sb.from('rental_reports').insert({ listing_id: id, reporter_id: u.id, reason, detail: document.getElementById('rlReportNote')?.value || '' });
+          if (res.error) throw res.error;
           H.toast('Report submitted. We will review it shortly.');
         } catch (e) {
-          if (e.code === '23505') { H.toast('You have already reported this listing.'); }
+          console.warn('rental report submit failed:', e && e.message);
+          if (e && e.code === '23505') { H.toast('You have already reported this listing for that reason.'); }
           else { H.toast('Could not submit report. Try again.', 4000, true); }
         }
       }

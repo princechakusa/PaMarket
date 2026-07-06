@@ -414,16 +414,13 @@
   pages.LanguageSettings_after = function () {};
 
   // --- Blocked Users ----------------------------------------
+  // Blocks are enforced server-side (blocked_users table + RLS + a
+  // check_message_block trigger — see add_blocked_users.sql); H._blockedIds
+  // is only a client cache of that table, refreshed by BlockedUsers_after.
   pages.BlockedUsers = function () {
     const u = H.currentUser();
-    // Migrate legacy blocks stored at H.state.blockedUsers (top-level) into the user object
-    if (Array.isArray(H.state.blockedUsers) && H.state.blockedUsers.length) {
-      if (!Array.isArray(u.blockedUsers)) u.blockedUsers = [];
-      H.state.blockedUsers.forEach(id => { if (!u.blockedUsers.includes(id)) u.blockedUsers.push(id); });
-      delete H.state.blockedUsers;
-      H.saveState();
-    }
-    const blocked = u.blockedUsers || [];
+    if (!u) return H.requireAuth('Sign in to view blocked users');
+    const blocked = H._blockedIds ? [...H._blockedIds] : [];
 
     return `<div class="page active">
       ${H.innerTopbar('Blocked Users')}
@@ -447,14 +444,24 @@
   };
 
   pages.BlockedUsers_after = function () {
+    if (typeof H.ensureBlockedIds === 'function') {
+      H.ensureBlockedIds(true).then(function(){ if (H.currentPageName === 'BlockedUsers') H.renderPage('BlockedUsers'); }).catch(function(){});
+    }
     H._blockedUsers = {
-      unblock: (userId) => {
+      unblock: async (userId) => {
         const u = H.currentUser();
-        if (!u.blockedUsers) u.blockedUsers = [];
-        u.blockedUsers = u.blockedUsers.filter(id => id !== userId);
-        H.saveState();
-        H.toast('User unblocked');
-        H.openInner('BlockedUsers');
+        const sb = window.supabase;
+        if (!u || !sb) return;
+        try {
+          const r = await sb.from('blocked_users').delete().eq('blocker_id', u.id).eq('blocked_id', userId);
+          if (r.error) throw new Error(r.error.message);
+          if (H._blockedIds) H._blockedIds.delete(userId);
+          H.toast('User unblocked');
+          H.openInner('BlockedUsers');
+        } catch (e) {
+          console.warn('unblock:', e.message);
+          H.toast('Could not unblock. Try again.', 3000, true);
+        }
       }
     };
   };

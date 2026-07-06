@@ -12,6 +12,38 @@
           innerTopbar, emptyState, openInner, goBack, renderPage,
           initials, pushNotif, fmtPrice, ICONS } = H;
 
+  // Loads block info between the current user and others from the blocked_users
+  // table. H._blockedIds = users I've blocked (shown as "blocked" in Settings,
+  // unblockable from there). H._blockedByIds = users who've blocked me (used
+  // only to gate the UI; either direction also gets rejected server-side by
+  // the check_message_block trigger — see add_blocked_users.sql).
+  H.ensureBlockedIds = async function (force) {
+    const u = currentUser();
+    if (!u) return new Set();
+    if (H._blockedIds && !force) return H._blockedIds;
+    const sb = window.supabase;
+    if (!sb || typeof sb.from !== 'function') return H._blockedIds || new Set();
+    try {
+      const r = await sb.from('blocked_users').select('blocker_id,blocked_id')
+        .or('blocker_id.eq.' + u.id + ',blocked_id.eq.' + u.id);
+      const mine = new Set(), byOthers = new Set();
+      if (!r.error && r.data) {
+        r.data.forEach(function (row) {
+          if (row.blocker_id === u.id) mine.add(row.blocked_id);
+          else byOthers.add(row.blocker_id);
+        });
+      }
+      H._blockedIds = mine;
+      H._blockedByIds = byOthers;
+    } catch (e) { console.warn('ensureBlockedIds:', e.message); }
+    return H._blockedIds || new Set();
+  };
+
+  // True if either party has blocked the other (send should be disallowed).
+  H.isBlockedEitherWay = function (otherId) {
+    return !!((H._blockedIds && H._blockedIds.has(otherId)) || (H._blockedByIds && H._blockedByIds.has(otherId)));
+  };
+
   function conversations() {
     if (!Array.isArray(H.state.conversations)) {
       H.state.conversations = [];
@@ -1141,6 +1173,7 @@
   H._forceChatScrollBottom = forceChatScrollBottom;
 
   pages.Chat_after = function () {
+    if (typeof H.ensureBlockedIds === 'function') H.ensureBlockedIds().catch(function(){});
     if (window._messagesPoll) { clearInterval(window._messagesPoll); window._messagesPoll = null; }
     // Tear down keyboard/viewport listeners from a PREVIOUS Chat mount before we
     // wire new ones. Without this they accumulate on every chat open, so over a
@@ -2061,6 +2094,14 @@
       H.toast('You’re sending messages too fast. Please slow down.', 3000, true);
       return;
     }
+    const otherIdForBlock = (c.members || []).find(function(m){ return m !== u.id; });
+    if (otherIdForBlock && typeof H.ensureBlockedIds === 'function') {
+      await H.ensureBlockedIds();
+      if (H.isBlockedEitherWay(otherIdForBlock)) {
+        H.toast('You can’t message this user.', 3000, true);
+        return;
+      }
+    }
     var msgId = H.uid();
     var msgT = Date.now();
     // If replying, wrap the typed text in a reply envelope so the quote rides
@@ -2120,7 +2161,9 @@
       if (otherId && typeof H.pushNotif === 'function') H.pushNotif(otherId, 'New Message', (u.name || 'Someone') + ': ' + text.slice(0, 80), 'message', null, 'Chat?id=' + c.id, c.id);
     } catch(e) {
       console.warn('Msg cloud error:', e.message);
-      H.toast('Message could not be sent. Check your connection and try again.', 5000, true);
+      var isBlockErr = /block exists between these users/i.test(e.message || '');
+      H.toast(isBlockErr ? 'You can’t message this user.' : 'Message could not be sent. Check your connection and try again.', isBlockErr ? 3000 : 5000, true);
+      if (isBlockErr && typeof H.ensureBlockedIds === 'function') H.ensureBlockedIds(true);
     }
   };
 
@@ -2463,10 +2506,8 @@
     H.toast('Message reported — our team will review within 24 hours');
     if (window.supabase && typeof window.supabase.from === 'function') {
       window.supabase.from('reports').insert({ id: rep.id, reporter_id: u.id,
-        target_type: 'message', target_id: msgId, reason: rep.reason,
-        created_at: new Date(rep.t).toISOString(), status: 'open' })
-        .then(function(r){ if (r && r.error) console.warn('message report save failed:', r.error.message); })
-        .catch(function(e){ console.warn('message report save failed:', e && e.message); });
+        target_type: 'message', target_id: msgId, reason: rep.reason, status: 'open' })
+        .then(function(r){ if (r && r.error) console.warn('message report save failed:', r.error.message); }, function(e){ console.warn('message report save failed:', e && e.message); });
     }
   };
 
@@ -2525,7 +2566,7 @@
       const u = H.currentUser();
       const other = (H.state.users || []).find(x => x.id === userId);
       const name = other ? escHtml(other.name || 'User') : 'User';
-      const isBlocked = ((H.currentUser() || {}).blockedUsers || []).includes(userId);
+      const isBlocked = H._blockedIds ? H._blockedIds.has(userId) : ((H.currentUser() || {}).blockedUsers || []).includes(userId);
       H.modal({
         title: name,
         body: `<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
@@ -2596,20 +2637,29 @@
       });
     },
 
-    blockUser(userId) {
+    async blockUser(userId) {
       const u = H.currentUser();
       if (!u) return;
-      if (!Array.isArray(u.blockedUsers)) u.blockedUsers = [];
-      const already = u.blockedUsers.includes(userId);
-      if (already) {
-        u.blockedUsers = u.blockedUsers.filter(id => id !== userId);
-        H.saveState();
-        H.toast('User unblocked');
-      } else {
-        u.blockedUsers.push(userId);
-        H.saveState();
-        H.toast('User blocked — you will no longer receive messages from them');
-        H.goBack();
+      const sb = window.supabase;
+      if (!sb || typeof sb.from !== 'function') { H.toast('Connection unavailable', 3000, true); return; }
+      if (!H._blockedIds) H._blockedIds = new Set();
+      const already = H._blockedIds.has(userId);
+      try {
+        if (already) {
+          const r = await sb.from('blocked_users').delete().eq('blocker_id', u.id).eq('blocked_id', userId);
+          if (r.error) throw new Error(r.error.message);
+          H._blockedIds.delete(userId);
+          H.toast('User unblocked');
+        } else {
+          const r = await sb.from('blocked_users').insert({ blocker_id: u.id, blocked_id: userId });
+          if (r.error) throw new Error(r.error.message);
+          H._blockedIds.add(userId);
+          H.toast('User blocked — you will no longer receive messages from them');
+          H.goBack();
+        }
+      } catch (e) {
+        console.warn('blockUser:', e.message);
+        H.toast('Could not update block. Try again.', 3000, true);
       }
     },
 
@@ -2623,9 +2673,19 @@
       H.saveState();
       H.toast('Report submitted — our team will review within 24 hours');
       if (window.supabase && typeof window.supabase.from === 'function') {
+        // A bare .catch() on a PostgREST query builder throws "...catch is not
+        // a function" (it's a thenable, not a real Promise, until awaited or
+        // .then()'d) — that crash happened BEFORE the request was sent, so no
+        // report ever reached the server. .then(onSuccess, onError) is the
+        // safe two-arg form; see reportShop/reportMsg below for the same fix.
+        // created_at is deliberately omitted — the reports table's default
+        // handles it, and its actual column type (bigint epoch-ms on some
+        // environments, timestamptz per the base schema file elsewhere) isn't
+        // safe to guess a client-side format for; see the fix for this exact
+        // "invalid input syntax for type bigint" 400 error.
         window.supabase.from('reports').insert({ id: rep.id, reporter_id: rep.reporterId,
-          target_type: 'user', target_id: userId, reason: rep.reason,
-          created_at: new Date(rep.t).toISOString(), status: 'open' }).catch(() => {});
+          target_type: 'user', target_id: userId, reason: rep.reason, status: 'open' })
+          .then(function(r){ if (r && r.error) console.warn('report save failed:', r.error.message); }, function(e){ console.warn('report save failed:', e && e.message); });
       }
     },
 
@@ -2639,10 +2699,8 @@
       H.toast('Report submitted — our team will review within 24 hours');
       if (window.supabase && typeof window.supabase.from === 'function') {
         window.supabase.from('reports').insert({ id: rep.id, reporter_id: u.id,
-          target_type: 'business', target_id: bizId, reason: rep.reason,
-          created_at: new Date(rep.t).toISOString(), status: 'open' })
-          .then(function(r){ if (r && r.error) console.warn('business report save failed:', r.error.message); })
-          .catch(function(e){ console.warn('business report save failed:', e && e.message); });
+          target_type: 'business', target_id: bizId, reason: rep.reason, status: 'open' })
+          .then(function(r){ if (r && r.error) console.warn('business report save failed:', r.error.message); }, function(e){ console.warn('business report save failed:', e && e.message); });
       }
     },
   });
