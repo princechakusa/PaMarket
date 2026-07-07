@@ -505,7 +505,7 @@ function render(v){
     description:v.description||pageDesc,
     image:media.length?media.map(m=>m.url):undefined,
     url:canonicalUrl,
-    brand:brand||undefined,
+    brand:brand?{'@type':'Brand',name:brand}:undefined,
     model:v.model||undefined,
     vehicleModelDate:v.year?String(v.year):undefined,
     offers:{
