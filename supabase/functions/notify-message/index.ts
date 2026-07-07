@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
 
     if (!recipients.length) {
       const others = await db.from('messages').select('sender_id').eq('conversation_id', convId).neq('sender_id', senderId).limit(10);
-      recipients = [...new Set((others.data || []).map((r: any) => String(r.sender_id)))];
+      recipients = Array.from(new Set((others.data || []).map((r: any) => String(r.sender_id)))) as string[];
     }
     if (!recipients.length) { console.log('skipped: no recipient for', convId); return json({ skipped: 'no recipient' }); }
 
@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
     const tokRes = await db.from('push_tokens').select('user_id, token').in('user_id', recipients);
     if (tokRes.error) console.warn('push_tokens lookup error:', tokRes.error.message);
     const tokens = (tokRes.data || []).filter((p: any) => p.token);
-    if (!tokens.length) return json({ skipped: 'no push tokens' });
+    if (!tokens.length) { console.log('skipped: no push tokens for', recipients); return json({ skipped: 'no push tokens' }); }
 
     const saEnv = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
     if (!saEnv) return json({ error: 'FIREBASE_SERVICE_ACCOUNT not set' }, 500);
