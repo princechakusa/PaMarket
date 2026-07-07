@@ -627,15 +627,20 @@ function sellerNode(l){
   if(l.business_id) n.url='https://pamarketzw.com/business?id='+l.business_id;
   return n;
 }
-// Merchant-listing return policy. PaMarket is a peer-to-peer classifieds
-// platform that does not facilitate returns, so the honest platform-level
-// policy is "returns not permitted" — a valid, complete category that needs
-// no return window/fees. (Never claims a return window that does not exist.)
-function merchantReturnPolicy(){
+// Merchant-listing return policy — emitted ONLY when a seller has actually
+// entered return terms. PaMarket has no platform-wide return system, so this
+// is omitted for listings without real return data (never assumed/invented).
+function merchantReturnPolicy(l){
+  var a=(l&&l.attributes)||{};
+  var days=a.returnDays!=null?a.returnDays:(a.return_days!=null?a.return_days:null);
+  if(days==null) return undefined;
   return {
     '@type':'MerchantReturnPolicy',
     applicableCountry:'ZW',
-    returnPolicyCategory:'https://schema.org/MerchantReturnNotPermitted'
+    returnPolicyCategory:'https://schema.org/MerchantReturnFiniteReturnWindow',
+    merchantReturnDays:Number(days),
+    returnMethod:'https://schema.org/ReturnInStore',
+    returnFees:'https://schema.org/FreeReturn'
   };
 }
 // OfferShippingDetails — emitted ONLY when a seller has entered real delivery
@@ -773,7 +778,7 @@ function buildListingSchema(l,catLabel,loc,photos,canonicalUrl,reviews){
     itemCondition:cond,
     priceValidUntil:priceValidUntil,
     seller:sellerNode(l),
-    hasMerchantReturnPolicy:merchantReturnPolicy(),
+    hasMerchantReturnPolicy:merchantReturnPolicy(l),
     shippingDetails:offerShippingDetails(l),
     areaServed:{'@type':'Country',name:'Zimbabwe'},
     url:canonicalUrl
