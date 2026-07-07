@@ -1247,8 +1247,11 @@
       const reviewerIds = (rvRes.data || []).map(r => r.reviewer_id).filter(Boolean);
       let reviewerNames = {};
       if (reviewerIds.length) {
-        const namesRes = await sb.from('profiles').select('id,full_name,username').in('id', reviewerIds);
-        (namesRes.data || []).forEach(p => { reviewerNames[p.id] = p.full_name || p.username || 'User'; });
+        // profiles_public exposes only safe columns; `name` is the display name
+        // (the base table has no full_name/username columns — this also fixes a
+        // latent query error).
+        const namesRes = await sb.from('profiles_public').select('id,name').in('id', reviewerIds);
+        (namesRes.data || []).forEach(p => { reviewerNames[p.id] = p.name || 'User'; });
       }
 
       R.compCache[id] = {

@@ -1254,7 +1254,7 @@
       const userIds = [...new Set((leadsRes.data || []).map(l => l.user_id).filter(Boolean))];
       let nameMap   = {};
       if (userIds.length) {
-        const nameRes = await sb.from('profiles').select('id,name').in('id', userIds);
+        const nameRes = await sb.from('profiles_public').select('id,name').in('id', userIds);
         (nameRes.data || []).forEach(p => { nameMap[p.id] = p.name || 'Customer'; });
       }
       const vehicleNameMap = {};

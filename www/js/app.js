@@ -1800,7 +1800,7 @@ window.H = {
       // something actually changed (prevents an infinite re-render loop).
       const sellerIds = [...new Set(cloud.map(l => l.sellerId).filter(Boolean))];
       if (sellerIds.length) {
-        window.supabase.from('profiles').select('id,name,avatar,verified').in('id', sellerIds)
+        window.supabase.from('profiles_public').select('id,name,avatar,verified').in('id', sellerIds)
           .then(function(res) {
             if (!Array.isArray(res.data) || !res.data.length) return;
             H.state.users = H.state.users || [];

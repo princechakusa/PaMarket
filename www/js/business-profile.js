@@ -55,7 +55,7 @@
     const sb = window.supabase;
     if (!sb) return null;
     try {
-      const { data } = await sb.from('profiles').select('id,name,phone,email')
+      const { data } = await sb.from('profiles_public').select('id,name,phone,email')
         .or(`phone.eq.${q},email.eq.${q}`).limit(1);
       return (data && data[0]) || null;
     } catch (e) { return null; }

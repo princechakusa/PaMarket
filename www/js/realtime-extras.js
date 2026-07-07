@@ -201,7 +201,7 @@
       });
       return latest;
     }
-    return s.from('profiles').select('last_seen, privacy').eq('id', String(otherId)).maybeSingle()
+    return s.from('profiles_public').select('last_seen, privacy').eq('id', String(otherId)).maybeSingle()
       .then(function (res) {
         var d = res && res.data;
         if (d) {

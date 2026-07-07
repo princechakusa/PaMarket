@@ -41,6 +41,10 @@
     account_suspended: {
       message: 'Your account is temporarily suspended, so you can’t post right now. Please try again after the suspension ends.',
       blocked: true
+    },
+    rate_limited: {
+      message: 'You’ve reached today’s posting limit. Please try again later — this keeps PaMarket free of spam.',
+      blocked: true
     }
   };
 

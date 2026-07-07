@@ -573,7 +573,7 @@
       H._chatAvatarTried[otherId] = true;
       var _sbAv = window.supabase;
       if (_sbAv && typeof _sbAv.from === 'function') {
-        _sbAv.from('profiles').select('avatar').eq('id', otherId).maybeSingle().then(function (res) {
+        _sbAv.from('profiles_public').select('avatar').eq('id', otherId).maybeSingle().then(function (res) {
           var p = res && res.data;
           if (!p || !p.avatar) return;
           var ex = (H.state.users || []).find(function (x) { return x.id === otherId; });
