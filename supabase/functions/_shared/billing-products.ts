@@ -78,23 +78,16 @@ const SLOT_PACKS: ProductFamily<{ extraSlots: number; estimatedPriceUsd: number 
   },
 };
 
-// ═══════════════════════════════════════════════════════════
-// PLANNED — code/RPC/Edge Function backend fully built for these, but NONE
-// of these product ids exist in Google Play Console yet (only
-// shop_starter/shop_pro/shop_premium are real, live products right now).
-// Flip back to 'active' only after creating the real Play Console product(s)
-// AND confirming the exact resulting Product ID string(s) match below.
-// ═══════════════════════════════════════════════════════════
-
-// Recruiter subscriptions.
+// Recruiter subscriptions — single tier only. recruiter_yearly,
+// recruiter_pro_monthly, and recruiter_pro_yearly are documented but do NOT
+// exist as real Play Console products; only recruiter_monthly is final per
+// the monetization-phase task. Do not add a second tier here until a real
+// recruiter_pro product actually exists in Play Console.
 // supabase/migrations/add_recruiter_subscriptions.sql — product_id CHECK constraint.
 const RECRUITER_SUBSCRIPTIONS: ProductFamily<{ planId: string; cycle: string }> = {
-  status: 'planned',
+  status: 'active',
   products: {
-    recruiter_monthly:     { planId: 'recruiter',     cycle: 'monthly' },
-    recruiter_yearly:      { planId: 'recruiter',     cycle: 'yearly' },
-    recruiter_pro_monthly: { planId: 'recruiter_pro', cycle: 'monthly' },
-    recruiter_pro_yearly:  { planId: 'recruiter_pro', cycle: 'yearly' },
+    recruiter_monthly: { planId: 'recruiter', cycle: 'monthly' },
   },
 };
 
@@ -102,7 +95,7 @@ const RECRUITER_SUBSCRIPTIONS: ProductFamily<{ planId: string; cycle: string }> 
 // beyond the recruiter plan's free post limit.
 // supabase/migrations/add_job_credits.sql — product_id CHECK constraint.
 const JOB_CREDITS: ProductFamily<{ credits: number }> = {
-  status: 'planned',
+  status: 'active',
   products: {
     job_credit_pack_1: { credits: 1 },
     job_credit_pack_5: { credits: 5 },
@@ -114,7 +107,7 @@ const JOB_CREDITS: ProductFamily<{ credits: number }> = {
 // verify-play-purchase 501-guard and client UI can distinguish it.
 // supabase/migrations/add_job_boosts.sql — product_id CHECK constraint.
 const JOB_BOOSTS: ProductFamily<{ days: number }> = {
-  status: 'planned',
+  status: 'active',
   products: {
     job_boost_7day:  { days: 7 },
     job_boost_30day: { days: 30 },
@@ -124,7 +117,7 @@ const JOB_BOOSTS: ProductFamily<{ days: number }> = {
 // Duration-based rental listing featured placement.
 // supabase/migrations/add_rental_featured_slot_packs.sql — product_id CHECK constraint.
 const RENTAL_FEATURED_SLOTS: ProductFamily<{ days: number }> = {
-  status: 'planned',
+  status: 'active',
   products: {
     rental_featured_slot_7day:  { days: 7 },
     rental_featured_slot_30day: { days: 30 },

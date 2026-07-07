@@ -3185,19 +3185,20 @@
 
   // ── Recruiter subscription entitlements (single source of truth) ──
   // Mirrors H.PLAN_ENTITLEMENTS' shape in business-subscription.js.
-  // activeJobPosts limit is enforced client-side in H._submitJob below;
-  // -1 = unlimited.
+  // Single paid tier only — recruiter_pro does not exist as a real Play
+  // Console product; do not reintroduce a second tier here without first
+  // creating a real recruiter_pro subscription product and adding it to
+  // billing-products.js/.ts. activeJobPosts limit is enforced client-side
+  // in H._submitJob below; -1 = unlimited.
   H.RECRUITER_PLAN_ENTITLEMENTS = {
-    free:           { name: 'Free',            activeJobPosts: 2,  candidateAccess: 'limited', profileVisibility: 'standard', rank: 0 },
-    recruiter:      { name: 'Recruiter',       activeJobPosts: 10, candidateAccess: 'full',     profileVisibility: 'featured', rank: 1 },
-    recruiter_pro:  { name: 'Recruiter Pro',   activeJobPosts: -1, candidateAccess: 'full',     profileVisibility: 'featured', rank: 2 },
+    free:      { name: 'Free',      activeJobPosts: 2,  candidateAccess: 'limited', profileVisibility: 'standard', rank: 0 },
+    recruiter: { name: 'Recruiter', activeJobPosts: -1, candidateAccess: 'full',     profileVisibility: 'featured', rank: 1 },
   };
   H.recruiterPlanEntitlements = function (planId) { return H.RECRUITER_PLAN_ENTITLEMENTS[planId] || H.RECRUITER_PLAN_ENTITLEMENTS.free; };
 
   H.RECRUITER_PLANS = [
-    { id: 'free',          price: 0 },
-    { id: 'recruiter',     price: 12 },
-    { id: 'recruiter_pro', price: 30 },
+    { id: 'free',      price: 0 },
+    { id: 'recruiter', price: 12 },
   ];
 
   H.pages.RecruiterSubscription = function () {
@@ -3215,7 +3216,6 @@
       var pent = H.recruiterPlanEntitlements(p.id);
       var cur = p.id === curPlanId;
       var higher = pent.rank > curRank;
-      var isPopular = p.id === 'recruiter_pro' && !cur;
       var priceParts = p.price === 0 ? '<div class="pcard-amt">Free</div>' : '<div class="pcard-amt">$' + p.price + '</div><div class="pcard-per">/mo</div>';
       var btn = '';
       if (cur) {
@@ -3230,8 +3230,7 @@
       ].map(function (f) {
         return '<div class="pcard-feature"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' + f + '</div>';
       }).join('');
-      return '<div class="pcard' + (cur ? ' pcard-current' : '') + (isPopular ? ' pcard-popular' : '') + '">'
-        + (isPopular ? '<div class="pcard-ribbon">MOST POPULAR</div>' : '')
+      return '<div class="pcard' + (cur ? ' pcard-current' : '') + '">'
         + '<div class="pcard-head">'
         + '<div class="pcard-name-row"><span class="pcard-name">' + H.escHtml(pent.name) + '</span>' + (cur ? '<span class="pcard-current-tag">CURRENT</span>' : '') + '</div>'
         + '<div class="pcard-price">' + priceParts + '</div></div>'

@@ -92,60 +92,48 @@
       ],
     },
 
-    // ═══════════════════════════════════════════════════════════
-    // PLANNED — code/RPC/Edge Function backend is fully built for these, but
-    // NONE of these product ids exist in Google Play Console yet (only
-    // shop_starter/shop_pro/shop_premium are real, live products right now).
-    // Flipped back from 'active' after the shop-plan product-id mismatch
-    // incident, to avoid the exact same class of bug: _ensureProductsLoaded()
-    // batches every 'active' family into one getAvailableProducts() call, so
-    // requesting ids Google doesn't have risks breaking shop plan loading
-    // too, not just failing quietly on their own. Flip back to 'active' only
-    // after creating the real Play Console product(s) AND confirming the
-    // exact resulting Product ID string(s) match what's listed below.
-    // ═══════════════════════════════════════════════════════════
-
+    // Recruiter subscriptions — single tier only. recruiter_yearly,
+    // recruiter_pro_monthly, and recruiter_pro_yearly are documented but do
+    // NOT exist as real Play Console products; only recruiter_monthly is
+    // final per the monetization-phase task. Do not add a second tier here
+    // until a real recruiter_pro product actually exists in Play Console.
+    // supabase/migrations/add_recruiter_subscriptions.sql — product_id CHECK constraint.
     recruiterSubscriptions: {
-      status: 'planned',
-      // planId mirrors H.JOB_PLAN_ENTITLEMENTS ('recruiter' | 'recruiter_pro').
-      // supabase/migrations/add_recruiter_subscriptions.sql — product_id CHECK constraint.
+      status: 'active',
       products: [
-        { productId: 'recruiter_monthly',      planId: 'recruiter',      cycle: 'monthly' },
-        { productId: 'recruiter_yearly',       planId: 'recruiter',      cycle: 'yearly' },
-        { productId: 'recruiter_pro_monthly',  planId: 'recruiter_pro',  cycle: 'monthly' },
-        { productId: 'recruiter_pro_yearly',   planId: 'recruiter_pro',  cycle: 'yearly' },
+        { productId: 'recruiter_monthly', planId: 'recruiter', cycle: 'monthly' },
       ],
     },
 
+    // Pay-per-post alternative to a recruiter subscription; one credit spent
+    // per job posted beyond the recruiter plan's free post limit.
+    // supabase/migrations/add_job_credits.sql — product_id CHECK constraint.
     jobCredits: {
-      status: 'planned',
-      // Pay-per-post alternative to a recruiter subscription; one credit
-      // spent per job posted beyond the recruiter plan's free post limit.
-      // supabase/migrations/add_job_credits.sql — product_id CHECK constraint.
+      status: 'active',
       products: [
         { productId: 'job_credit_pack_1', credits: 1, label: '1 job post',  estimatedPriceUsd: 3 },
         { productId: 'job_credit_pack_5', credits: 5, label: '5 job posts', tag: 'Best value', estimatedPriceUsd: 12 },
       ],
     },
 
+    // Same mechanics/backend as `boosts` (reuses play_purchases +
+    // activate_play_boost — a job post is a listings row like any other),
+    // kept as its own family so the UI can offer a distinct "boost this
+    // job" picker. supabase/migrations/add_job_boosts.sql — product_id CHECK constraint.
     jobBoosts: {
-      status: 'planned',
-      // Same mechanics/backend as `boosts` (reuses play_purchases +
-      // activate_play_boost — a job post is a listings row like any other),
-      // kept as its own family so the UI can offer a distinct "boost this
-      // job" picker. supabase/migrations/add_job_boosts.sql — product_id CHECK constraint.
+      status: 'active',
       products: [
         { productId: 'job_boost_7day',  days: 7,  label: '7 days',  tag: '',           estimatedPriceUsd: 8 },
         { productId: 'job_boost_30day', days: 30, label: '30 days', tag: 'Best value', estimatedPriceUsd: 20 },
       ],
     },
 
+    // Duration-based featured placement for a rental listing — targets
+    // rental_featured_listings (previously admin-only/unpaid; this adds a
+    // purchased path that inserts a system row alongside it, same table).
+    // supabase/migrations/add_rental_featured_slot_packs.sql — product_id CHECK constraint.
     rentalFeaturedSlots: {
-      status: 'planned',
-      // Duration-based featured placement for a rental listing — targets
-      // rental_featured_listings (previously admin-only/unpaid; this adds a
-      // purchased path that inserts a system row alongside it, same table).
-      // supabase/migrations/add_rental_featured_slot_packs.sql — product_id CHECK constraint.
+      status: 'active',
       products: [
         { productId: 'rental_featured_slot_7day',  days: 7,  label: '7 days',  tag: '',           estimatedPriceUsd: 6 },
         { productId: 'rental_featured_slot_30day', days: 30, label: '30 days', tag: 'Best value', estimatedPriceUsd: 18 },
