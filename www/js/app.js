@@ -615,6 +615,41 @@ window.H = {
     return false;
   },
 
+  // Make the backend the source of truth for account standing. Reads the
+  // active row from user_sanctions (via safety.js — read-only) and maps it onto
+  // the existing local ban system so the ban screen / posting-messaging gates
+  // all reflect the moderator's decision, then refreshes the ban screen.
+  async syncSanction() {
+    try {
+      const u = this.currentUser();
+      if (!u || u.role === 'admin' || !window.Safety || !Safety.checkSanction) return false;
+      const s = await Safety.checkSanction(u.id);
+      let changed = false;
+      if (s.type === 'ban') {
+        if (u.status !== 'banned_perm') { u.status = 'banned_perm'; changed = true; }
+        u.banReason = s.message; u.banUntil = null;
+      } else if (s.type === 'suspension') {
+        const until = s.until ? new Date(s.until).getTime() : null;
+        if (u.status !== 'banned_temp') { u.status = 'banned_temp'; changed = true; }
+        u.banReason = s.message; u.banUntil = until;
+      } else {
+        // No active backend sanction. Only lift a local ban when the backend
+        // read definitively succeeded (s.ok) — an offline/missing-table read
+        // must never silently un-ban someone.
+        if (s.ok && (u.status === 'banned_perm' || u.status === 'banned_temp')) {
+          u.status = 'active'; u.banReason = null; u.banUntil = null; changed = true;
+        }
+        if (s.type === 'warning' && !this._warningShown) {
+          this._warningShown = true;
+          if (typeof this.toast === 'function') this.toast(s.message, 7000, true);
+        }
+      }
+      if (changed) this.saveState();
+      this.checkBan();
+      return u.status === 'banned_perm' || u.status === 'banned_temp';
+    } catch (e) { return false; }
+  },
+
   _showBanScreen(u) {
     const isTemp = u.status==='banned_temp';
     let countdown='';
@@ -780,6 +815,9 @@ window.H = {
           } catch (e) {}
           if (typeof H.loadProfile === 'function') {
             H.loadProfile(_sid).then(() => {
+              // Sync account standing from the backend (user_sanctions) before
+              // deciding whether to show the ban screen.
+              if (typeof H.syncSanction === 'function') H.syncSanction();
               if (this.state.currentUserId && this.checkBan()) return;
               // Re-render only the Account page (which actually shows profile
               // name/avatar). Home is listings-driven, so re-rendering it here
@@ -1385,16 +1423,31 @@ window.H = {
         created_at:listing.createdAt?new Date(listing.createdAt).toISOString():new Date().toISOString()
       };
       const attrs = (typeof H.collectAttrs==='function') ? H.collectAttrs(listing) : (listing.attrs||{});
-      const {error}=await window.supabase.from('listings').upsert(Object.assign({attributes:attrs}, base));
+      let {error}=await window.supabase.from('listings').upsert(Object.assign({attributes:attrs}, base));
       // If the attributes column hasn't been added yet, retry without it so
       // posting never breaks before the migration is run.
-      if(error){
-        if(/attributes|column|schema cache|PGRST204/i.test(error.message||'')){
-          const {error:e2}=await window.supabase.from('listings').upsert(base);
-          if(e2) console.warn('Cloud save failed:',e2.message);
-        } else console.warn('Cloud save failed:',error.message);
+      if(error && /attributes|column|schema cache|PGRST204/i.test(error.message||'')){
+        const {error:e2}=await window.supabase.from('listings').upsert(base);
+        error=e2||null;
       }
-    } catch(e){ console.warn('saveListingToCloud:',e.message); }
+      if(error){
+        // The Phase A moderation trigger blocks prohibited content and posts by
+        // banned/suspended accounts by raising an exception. Surface those as a
+        // user-facing decision so the caller can undo the optimistic local add.
+        if(window.Safety && Safety.isModerationBlock(error)){
+          return { ok:false, blocked:true, error:error, friendly:Safety.friendlyError(error) };
+        }
+        console.warn('Cloud save failed:',error.message);
+        return { ok:false, blocked:false, error:error };
+      }
+      return { ok:true };
+    } catch(e){
+      if(window.Safety && Safety.isModerationBlock(e)){
+        return { ok:false, blocked:true, error:e, friendly:Safety.friendlyError(e) };
+      }
+      console.warn('saveListingToCloud:',e.message);
+      return { ok:false, blocked:false, error:e };
+    }
   },
 
   async deleteListingFromCloud(id) {

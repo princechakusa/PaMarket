@@ -486,7 +486,20 @@
       H.saveState();
       if (typeof H.saveListingToCloud === "function") {
         try {
-          await (H.withTimeout ? H.withTimeout(H.saveListingToCloud(l), 20000, 'save listing') : H.saveListingToCloud(l));
+          const saveRes = await (H.withTimeout ? H.withTimeout(H.saveListingToCloud(l), 20000, 'save listing') : H.saveListingToCloud(l));
+          // Backend moderation blocked the post (prohibited content or an account
+          // sanction). Undo the optimistic local add so it never appears "live",
+          // then show the friendly reason from the backend decision.
+          if (saveRes && saveRes.blocked) {
+            H.state.listings = (H.state.listings || []).filter(x => x.id !== listingId);
+            H.saveState();
+            H._post._posting = false;
+            if (btn) { btn.disabled = false; btn.textContent = 'Post Ad →'; }
+            const msg = (saveRes.friendly && saveRes.friendly.message) ||
+              (window.Safety ? Safety.friendlyError(saveRes.error).message : 'This ad could not be posted.');
+            H.toast(msg, 6000, true);
+            return;
+          }
         } catch (e) {
           if (e && e._timeout && H.showError) H.showError('Saved on your device but the cloud didn’t respond — it will sync later.', e, 'post.cloud.timeout');
         }

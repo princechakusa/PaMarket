@@ -392,11 +392,15 @@
   pages.MyListings = function () {
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
-    const all      = (H.state.listings || []).filter(l => l.sellerId === u.id && !l.businessId);
+    // Hide deleted rows entirely. The remaining backend states are grouped into
+    // the four seller-facing tabs; the exact state is always shown as a badge.
+    const all      = (H.state.listings || []).filter(l => l.sellerId === u.id && !l.businessId && l.status !== 'deleted');
     const active   = all.filter(l => l.status === 'active');
-    const pending  = all.filter(l => l.status === 'pending');
+    // "In review" = anything the seller is waiting on the backend for.
+    const pending  = all.filter(l => ['pending', 'under_review', 'flagged'].includes(l.status));
     const sold     = all.filter(l => l.status === 'sold');
-    const rejected = all.filter(l => l.status === 'rejected');
+    // "Rejected" = anything the backend took down (legacy 'rejected' + 'removed').
+    const rejected = all.filter(l => ['rejected', 'removed'].includes(l.status));
     const btn = (label, fn, c, bg, bo) =>
       `<button onclick="${fn}" style="flex:1;padding:8px 2px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:${bg};color:${c};border:1.5px solid ${bo};font-family:inherit;white-space:nowrap">${label}</button>`;
     const actionBars = {
@@ -405,7 +409,17 @@
       sold:     (id) => btn('Post Again',`H._myListings.reactivate('${id}')`,'#1A3A8F','#EFF6FF','#BFDBFE')+btn('Remove',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'),
       rejected: (id) => btn('Edit & Resubmit',`H._myListings.edit('${id}')`,'#D97706','#FFFBEB','#FDE68A')+btn('Remove',`H._myListings.del('${id}')`,'#ef4444','#fef2f2','#fecaca'),
     };
-    const myCard = (l, status) => `<div style="margin-bottom:14px">${H.renderListCard(l)}<div style="display:flex;gap:6px;margin-top:6px">${(actionBars[status]||actionBars.active)(l.id)}</div></div>`;
+    // Per-listing moderation-state badge + explanation (from safety.js, which
+    // reflects the backend decision — the app does not decide state itself).
+    const stateInfo = (l) => (window.Safety ? Safety.listingStatus(l.status) : null);
+    const badge = (l) => (window.Safety ? Safety.statusBadge(l.status) : '');
+    const stateNote = (l) => {
+      const s = stateInfo(l);
+      // Only surface the note for states the seller needs to act on / understand.
+      if (!s || ['active', 'sold', 'pending'].includes((l.status || '').toLowerCase())) return '';
+      return `<div style="margin-top:6px;padding:8px 10px;border-radius:8px;font-size:11.5px;line-height:1.4;color:${s.color};background:${s.bg};border:1px solid ${s.border}">${H.escHtml ? H.escHtml(s.message) : s.message}</div>`;
+    };
+    const myCard = (l, status) => `<div style="margin-bottom:14px"><div style="display:flex;justify-content:flex-end;margin-bottom:4px">${badge(l)}</div>${H.renderListCard(l)}${stateNote(l)}<div style="display:flex;gap:6px;margin-top:6px">${(actionBars[status]||actionBars.active)(l.id)}</div></div>`;
     const section = (list, label, status) => list.length
       ? `<div style="padding:12px">${list.map(l => myCard(l, status)).join('')}</div>`
       : `<div style="color:var(--sub);padding:32px 20px;text-align:center;font-size:13px">No ${label.toLowerCase()} listings</div>`;
@@ -413,15 +427,15 @@
       ${H.innerTopbar('My Listings')}
       <div class="listing-tabs">
         <button class="tab active" data-tab="active">Active (${active.length})</button>
-        <button class="tab" data-tab="pending">Pending (${pending.length})</button>
+        <button class="tab" data-tab="pending">In Review (${pending.length})</button>
         <button class="tab" data-tab="sold">Sold / Filled (${sold.length})</button>
-        <button class="tab" data-tab="rejected">Rejected (${rejected.length})</button>
+        <button class="tab" data-tab="rejected">Removed (${rejected.length})</button>
       </div>
       <div class="tabs-content">
         <div class="tab-content active" data-tab="active">${section(active,'Active','active')}</div>
-        <div class="tab-content" data-tab="pending">${section(pending,'Pending','pending')}</div>
+        <div class="tab-content" data-tab="pending">${section(pending,'In Review','pending')}</div>
         <div class="tab-content" data-tab="sold">${section(sold,'Sold / Filled','sold')}</div>
-        <div class="tab-content" data-tab="rejected">${section(rejected,'Rejected','rejected')}</div>
+        <div class="tab-content" data-tab="rejected">${section(rejected,'Removed','rejected')}</div>
       </div>
       <div style="height:24px"></div>
     </div>`;
