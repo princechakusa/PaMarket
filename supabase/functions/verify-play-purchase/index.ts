@@ -341,7 +341,7 @@ Deno.serve(async (req) => {
     if (activateRes.error || !activateRes.data?.ok) {
       // Verified but not yet consumed — the client can retry and the branch
       // above will pick this back up without re-billing or re-verifying.
-      console.error('verify-play-purchase: activation failed:', activateRes.error?.message || activateRes.data?.msg);
+      console.error('[BILLING_ALERT] verify-play-purchase: verified-but-activation-failed:', activateRes.error?.message || activateRes.data?.msg);
       return json({ error: 'Purchase verified but activation failed: ' + (activateRes.error?.message || activateRes.data?.msg) }, 500);
     }
 

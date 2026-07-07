@@ -311,7 +311,7 @@ Deno.serve(async (req) => {
 
     const activateRes = await db.rpc(activateFn, { [activateParam]: rowId });
     if (activateRes.error || activateRes.data?.ok !== true) {
-      console.error('verify-play-subscription: activation failed:', activateRes.error?.message || activateRes.data?.msg);
+      console.error('[BILLING_ALERT] verify-play-subscription: verified-but-activation-failed:', activateRes.error?.message || activateRes.data?.msg);
       return json({ error: 'Subscription verified but activation failed: ' + (activateRes.error?.message || activateRes.data?.msg || 'unknown error') }, 500);
     }
 

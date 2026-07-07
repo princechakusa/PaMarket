@@ -227,7 +227,7 @@ Deno.serve(async (req) => {
     if (voided?.purchaseToken) {
       const revokeRes = await db.rpc('revoke_play_purchase', { p_purchase_token: voided.purchaseToken });
       if (revokeRes.error) {
-        console.error('play-rtdn-webhook: revoke_play_purchase failed:', revokeRes.error.message);
+        console.error('[BILLING_ALERT] play-rtdn-webhook: revoke_play_purchase failed:', revokeRes.error.message);
         return json({ error: revokeRes.error.message }, 500); // retry
       }
       console.log('play-rtdn-webhook: voided purchase processed:', JSON.stringify(revokeRes.data));
@@ -311,7 +311,7 @@ Deno.serve(async (req) => {
     // rule. A silent business-logic failure here must not be acked as 200,
     // or Pub/Sub will never redeliver an event that needs reprocessing.
     if (activateRes.error || activateRes.data?.ok !== true) {
-      console.error('play-rtdn-webhook: activation failed for', rowId, ':', activateRes.error?.message || activateRes.data?.msg);
+      console.error('[BILLING_ALERT] play-rtdn-webhook: activation failed for', rowId, ':', activateRes.error?.message || activateRes.data?.msg);
       return json({ error: activateRes.error?.message || activateRes.data?.msg || 'activation returned ok:false' }, 500);
     }
 
@@ -340,7 +340,7 @@ Deno.serve(async (req) => {
         // a silent 200.
         const downgradeRes = await db.from(downgradeTable).update({ plan_id: 'free' }).eq('id', targetId);
         if (downgradeRes.error) {
-          console.error('play-rtdn-webhook: FAILED to downgrade', downgradeTable, targetId, 'to free plan:', downgradeRes.error.message);
+          console.error('[BILLING_ALERT] play-rtdn-webhook: FAILED to downgrade', downgradeTable, targetId, 'to free plan:', downgradeRes.error.message);
           return json({ error: 'Could not downgrade to free plan: ' + downgradeRes.error.message }, 500); // retry
         }
       }
