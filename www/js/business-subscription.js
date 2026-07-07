@@ -138,7 +138,7 @@
       const pct = (limit < 0 || limit === Infinity) ? 8 : Math.min(100, limit ? Math.round(used / limit * 100) : 0);
       return `<div style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="color:var(--sub)">${label}</span><span style="font-weight:700;color:var(--text)">${used} / ${lim}</span></div>
-        <div style="height:7px;background:#E8ECF4;border-radius:5px;overflow:hidden"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#1A3A8F,#2952cc)"></div></div>
+        <div style="height:6px;background:var(--border,#EDEDF0);border-radius:4px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#1A3A8F;border-radius:4px"></div></div>
       </div>`;
     };
 
@@ -146,26 +146,34 @@
       const cur = p.id === curPlanId;
       const ents = H.planEntitlements(p.id);
       const higher = ents.rank > H.planEntitlements(curPlanId).rank;
+      const isPopular = p.id === 'pro' && !cur;
       const price = (cyc => p.price === 0 ? 'Free' : (cyc === 'yearly' ? `$${p.price * 10}/yr` : `$${p.price}/mo`))(b.billingCycle);
+      const priceParts = p.price === 0 ? '<div class="pcard-amt">Free</div>' : `<div class="pcard-amt">${price.split('/')[0]}</div><div class="pcard-per">/${price.split('/')[1]}</div>`;
       let actionBtn = '';
-      if (isOwner && !cur) {
+      if (cur) {
+        actionBtn = `<button class="pcard-btn pcard-btn-current">Your current plan</button>`;
+      } else if (isOwner) {
         if (higher && p.price > 0) {
           // Paid upgrade: Google Play Billing subscription purchase only —
           // no WhatsApp/manual-payment path. See H.upgradeBusinessPlan (billing.js).
-          actionBtn = `<button class="btn-pri" style="display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:10px;padding:9px;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit" onclick="H.upgradeBusinessPlan('${b.id}','${p.id}','${b.billingCycle || 'monthly'}')">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M3 20.5v-17c0-.59.34-1.11.84-1.35L13.69 12l-9.85 9.85c-.5-.24-.84-.76-.84-1.35z"/><path d="M16.81 15.12L6.05 21.34l8.49-8.49 2.27 2.27z" opacity=".6"/><path d="M20.16 10.81c.5.32.84.86.84 1.19s-.34.87-.84 1.19l-2.75 1.59-2.5-2.5V9.72l2.5-2.5 2.75 1.59z" opacity=".8"/><path d="M6.05 2.66l10.76 6.22-2.27 2.27L6.05 2.66z"/></svg>
-            Buy via Google Play
-          </button>`;
+          actionBtn = `<button class="pcard-btn pcard-btn-buy" onclick="H.upgradeBusinessPlan('${b.id}','${p.id}','${b.billingCycle || 'monthly'}')">Upgrade to ${escHtml(p.name)}</button>`;
         } else {
-          actionBtn = `<button class="btn-pri" style="width:100%;margin-top:10px;padding:9px" onclick="H._bizSub.downgrade('${b.id}','${p.id}')">Downgrade</button>`;
+          actionBtn = `<button class="pcard-btn pcard-btn-downgrade" onclick="H._bizSub.downgrade('${b.id}','${p.id}')">Downgrade</button>`;
         }
       }
-      return `<div style="border:2px solid ${cur ? '#1A3A8F' : 'var(--border,#E8ECF4)'};border-radius:16px;padding:15px;margin-bottom:10px;background:${cur ? '#EEF2FB' : 'var(--card,#fff)'}">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:15px;font-weight:800;color:${cur ? '#1A3A8F' : 'var(--text)'}">${p.name}${cur ? ' · Current' : ''}</div>
-          <div style="font-size:14px;font-weight:800;color:#1A3A8F">${price}</div>
+      const featureRows = [
+        `${ents.listingLimit < 0 ? 'Unlimited' : ents.listingLimit} listings`,
+        `${ents.staffLimit === Infinity ? 'Unlimited' : ents.staffLimit} staff seats`,
+        `${ents.featuredSlots} featured slot${ents.featuredSlots === 1 ? '' : 's'}`
+      ].map(f => `<div class="pcard-feature"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>${f}</div>`).join('');
+      return `<div class="pcard${cur ? ' pcard-current' : ''}${isPopular ? ' pcard-popular' : ''}">
+        ${isPopular ? '<div class="pcard-ribbon">MOST POPULAR</div>' : ''}
+        <div class="pcard-head">
+          <div class="pcard-name-row"><span class="pcard-name">${escHtml(p.name)}</span>${cur ? '<span class="pcard-current-tag">CURRENT</span>' : ''}</div>
+          <div class="pcard-price">${priceParts}</div>
         </div>
-        <div style="font-size:11.5px;color:var(--sub);margin-top:4px">${ents.listingLimit < 0 ? 'Unlimited' : ents.listingLimit} listings · ${ents.staffLimit === Infinity ? '∞' : ents.staffLimit} staff · ${ents.featuredSlots} featured</div>
+        <div class="pcard-divider"></div>
+        <div class="pcard-features">${featureRows}</div>
         ${actionBtn}
       </div>`;
     };
@@ -173,38 +181,29 @@
     return `<div class="page active">
       ${innerTopbar('Subscription')}
       <div class="inner-content" style="padding-bottom:40px">
-        <div style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:18px;padding:20px;color:#fff;margin-bottom:18px">
-          <div style="font-size:12px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:.4px">CURRENT PLAN</div>
-          <div style="font-size:24px;font-weight:800;margin-top:2px">${escHtml(ent.name)}</div>
-          <div style="font-size:12.5px;color:rgba(255,255,255,.8);margin-top:4px">${b.billingCycle === 'yearly' ? 'Yearly' : 'Monthly'} · ${act ? 'Renews ' + renewal : 'No active billing period'}</div>
-          ${sched ? `<div style="font-size:12px;color:#F5A623;margin-top:6px;font-weight:700">Scheduled: ${escHtml(H.planEntitlements(sched.planId).name)} from ${new Date(act.currentPeriodEnd).toLocaleDateString()}</div>` : ''}
+        <div class="sub-hero">
+          <div class="sub-hero-label">CURRENT PLAN</div>
+          <div class="sub-hero-row">
+            <div class="sub-hero-plan">${escHtml(ent.name)}</div>
+            ${act ? '<div class="sub-status-dot">Active</div>' : ''}
+          </div>
+          <div class="sub-hero-meta">${b.billingCycle === 'yearly' ? 'Yearly' : 'Monthly'} billing${act ? ' · renews ' + renewal : ' · no active billing period'}</div>
+          ${sched ? `<div class="sub-hero-scheduled">Scheduled: ${escHtml(H.planEntitlements(sched.planId).name)} from ${new Date(act.currentPeriodEnd).toLocaleDateString()}</div>` : ''}
         </div>
 
-        <div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:16px;padding:16px;margin-bottom:18px">
-          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px">Usage</div>
+        <div class="sub-usage-card">
+          <div class="sub-usage-title">Your usage</div>
           ${bar('Listings', listUsed, ent.listingLimit)}
           ${bar('Staff seats', staffUsed, ent.staffLimit)}
         </div>
 
-        <!-- Monthly/Yearly toggle removed until a real yearly base plan
-             exists in Play Console — shop_starter/shop_pro/shop_premium
-             currently have only a monthly base plan, so offering "Yearly"
-             here would lead to "not available for purchase" at buy time. -->
-
-
-        <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px">Plans</div>
-        ${H.BIZ_PLANS.map(planCard).join('')}
-
-        <!-- Play Billing notice -->
-        <div style="background:#EEF2FB;border:1px solid #c7d7f8;border-radius:14px;padding:16px;margin-top:8px">
-          <div style="display:flex;align-items:flex-start;gap:10px">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <div>
-              <div style="font-size:13px;font-weight:800;color:#1A3A8F;margin-bottom:4px">Upgrades activate instantly</div>
-              <div style="font-size:12.5px;color:#475569;line-height:1.55">All plan upgrades are purchased securely through Google Play. Your plan activates automatically as soon as your purchase is confirmed — no waiting, no manual approval.</div>
-            </div>
-          </div>
+        <div class="sub-gplay-badge">
+          ${H.ICONS.googlePlay}
+          <div class="sub-gplay-txt"><b>Play Protect Certified</b>Payments handled entirely by Google Play</div>
         </div>
+
+        <div class="sub-section-title">Available plans</div>
+        ${H.BIZ_PLANS.map(planCard).join('')}
       </div>
     </div>`;
   };

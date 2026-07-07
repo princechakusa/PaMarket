@@ -68,39 +68,48 @@
     const card = (l) => {
       const feat = H.isFeatured(l);
       const left = feat ? Math.max(1, Math.ceil((l.featuredUntil - Date.now()) / DAY)) : 0;
-      return `<div style="background:var(--card,#fff);border:1.5px solid ${feat ? '#F5A623' : 'var(--border,#E8ECF4)'};border-radius:14px;padding:12px;margin-bottom:10px">
+      return `<div style="background:var(--card);border:1px solid ${feat ? 'var(--blue)' : 'var(--border-mid)'};border-radius:14px;padding:12px;margin-bottom:10px">
         <div style="display:flex;gap:12px;align-items:center">
-          <div style="width:50px;height:50px;border-radius:10px;overflow:hidden;background:#EEF2FB;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#1A3A8F">${l.photos && l.photos[0] ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover">` : (typeof H.categoryIcon === 'function' ? H.categoryIcon(l.cat) : '')}</div>
+          <div style="width:50px;height:50px;border-radius:10px;overflow:hidden;background:var(--blue-light,#EEF2FF);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--blue)">${l.photos && l.photos[0] ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover">` : (typeof H.categoryIcon === 'function' ? H.categoryIcon(l.cat) : '')}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title || 'Untitled')}</div>
-            ${feat ? `<div style="font-size:11.5px;color:#b45309;font-weight:700;margin-top:3px">Featured · ${left}d left</div>` : `<div style="font-size:11.5px;color:var(--sub);margin-top:3px">Not featured</div>`}
+            ${feat ? `<div style="font-size:11.5px;color:var(--blue);font-weight:700;margin-top:3px">Featured · ${left}d left</div>` : `<div style="font-size:11.5px;color:var(--sub);margin-top:3px">Not featured</div>`}
           </div>
         </div>
         ${feat
-          ? `<button onclick="H._bizFeat.unboost('${b.id}','${l.id}')" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);font-size:12.5px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit">Remove boost</button>`
-          : `<div style="display:flex;gap:8px;margin-top:10px">${DURATIONS.map(d => `<button onclick="H._bizFeat.boost('${b.id}','${l.id}',${d[0]})" ${noSlots || used >= slots ? 'disabled style="opacity:.5"' : ''} style="flex:1;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">${d[1]}</button>`).join('')}</div>`}
+          ? `<button onclick="H._bizFeat.unboost('${b.id}','${l.id}')" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1px solid var(--border-mid);background:var(--card);font-size:12.5px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit">Remove boost</button>`
+          : `<div style="display:flex;gap:8px;margin-top:10px">${DURATIONS.map(d => `<button onclick="H._bizFeat.boost('${b.id}','${l.id}',${d[0]})" ${noSlots || used >= slots ? 'disabled style="opacity:.5"' : ''} style="flex:1;padding:9px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">${d[1]}</button>`).join('')}</div>`}
       </div>`;
     };
 
     const atCapacity = slots !== Infinity && used >= slots;
-    const slotPackHtml = (typeof H.getActiveProducts === 'function' ? H.getActiveProducts('slotPacks') : []).map(p =>
-      `<button onclick="H.buySlotPack('${b.id}','${p.productId}')" style="flex:1;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">${escHtml(p.label)}</button>`
+    const slotPackHtml = (typeof H.getActiveProducts === 'function' ? H.getActiveProducts('slotPacks') : []).map((p, i) =>
+      `<button class="slot-opt${i === 1 ? ' best' : ''}" onclick="H.buySlotPack('${b.id}','${p.productId}')">
+        ${p.tag ? `<div class="slot-opt-badge">${escHtml(p.tag.toUpperCase())}</div>` : ''}
+        <div class="slot-opt-n">${escHtml(p.label.replace(/[^+\d]/g, ''))}</div>
+        <div class="slot-opt-label">${escHtml(p.label.replace(/^\+\d+\s*/, ''))}</div>
+        <div class="slot-opt-price">$${p.estimatedPriceUsd || ''}</div>
+      </button>`
     ).join('');
 
     return `<div class="page active">
       ${innerTopbar('Featured Listings')}
       <div class="inner-content" style="padding-bottom:40px">
-        <div style="display:flex;justify-content:space-between;align-items:center;background:#FFF8EC;border-radius:12px;padding:12px 14px;margin-bottom:14px">
-          <div style="font-size:13px;color:var(--sub)">Featured slots</div>
-          <div style="font-size:14px;font-weight:800;color:#b45309">${used} / ${slotLabel}</div>
+        <div class="slots-hero">
+          <div class="sub-hero-label">FEATURED SLOTS</div>
+          <div class="slots-count">${used} <span style="font-size:14px;font-weight:500;color:var(--text-hint)">/ ${slotLabel} used</span></div>
+          ${noSlots ? `<div class="slots-sub">Your plan has no featured slots. Upgrade to Pro or Premium, or buy a pack below.</div>` : ''}
         </div>
-        ${noSlots ? `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:16px;font-size:13px;color:var(--sub);line-height:1.55;margin-bottom:14px">Your plan has no featured slots. Upgrade to Pro or Premium, or buy slots below, to boost listings to the top of the feed and category pages.</div>` : ''}
-        ${atCapacity ? `<div style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:14px;margin-bottom:14px">
-          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px">Need more slots?</div>
-          <div style="font-size:12px;color:var(--sub);margin-bottom:10px">Buy extra featured slots securely via Google Play — added instantly.</div>
-          <div style="display:flex;gap:8px">${slotPackHtml}</div>
+        ${atCapacity ? `<div class="sub-section-title">Buy extra slots</div>
+        <div class="slot-buy-card">
+          <div style="font-size:12.5px;color:var(--sub);line-height:1.5">Featured listings appear at the top of the feed and category pages.</div>
+          <div class="slot-options">${slotPackHtml}</div>
+        </div>
+        <div class="sub-gplay-badge">
+          ${H.ICONS.googlePlay}
+          <div class="sub-gplay-txt"><b>Added instantly</b>No waiting, no manual approval needed</div>
         </div>` : ''}
-        ${mine.length ? mine.map(card).join('') : `<div style="text-align:center;color:var(--sub);font-size:13px;padding:24px 0">Add listings to this business first.</div>`}
+        ${mine.length ? '<div class="sub-section-title">Your listings</div>' + mine.map(card).join('') : `<div style="text-align:center;color:var(--sub);font-size:12.5px;font-weight:500;padding:22px 12px;background:var(--card);border:1px dashed var(--border-mid);border-radius:16px;margin-top:14px">Add a listing to this business to start featuring it</div>`}
       </div>
     </div>`;
   };

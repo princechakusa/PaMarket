@@ -1501,18 +1501,20 @@
     sheet.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
     sheet.addEventListener('click', function (ev) { if (ev.target === sheet) sheet.remove(); });
     var planHtml = products.map(function (p) {
-      return '<button onclick="document.getElementById(\'_jobCreditSheet\').remove();H.buyJobCredits(\'' + p.productId + '\')" '
-        + 'style="background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;padding:14px 16px;'
-        + 'display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;width:100%">'
-        + '<div><div style="font-size:15px;font-weight:800">' + p.label + '</div>'
-        + (p.tag ? '<div style="font-size:11px;font-weight:700;opacity:.75;margin-top:2px">' + p.tag + '</div>' : '')
-        + '</div><div style="font-size:13px;font-weight:700;opacity:.9">Buy</div></button>';
+      return '<button class="buy-sheet-opt' + (p.tag ? ' recommended' : '') + '" onclick="document.getElementById(\'_jobCreditSheet\').remove();H.buyJobCredits(\'' + p.productId + '\')">'
+        + '<div><div class="buy-sheet-opt-name-row"><span class="buy-sheet-opt-name">' + p.label + '</span>'
+        + (p.tag ? '<span class="buy-sheet-opt-tag">' + p.tag.toUpperCase() + '</span>' : '') + '</div></div>'
+        + '<div class="buy-sheet-opt-price">' + (p.estimatedPriceUsd ? '$' + p.estimatedPriceUsd : 'Buy') + '</div>'
+        + '</button>';
     }).join('');
-    sheet.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px calc(env(safe-area-inset-bottom,0px)+20px);box-sizing:border-box">'
-      + '<div style="width:36px;height:4px;background:#E8ECF4;border-radius:4px;margin:0 auto 18px"></div>'
-      + '<div style="font-size:17px;font-weight:800;color:#111;margin-bottom:4px">Buy job posting credits</div>'
-      + '<div style="font-size:13px;color:#666;margin-bottom:16px">Each credit publishes one extra job listing. Paid securely via Google Play.</div>'
-      + '<div style="display:flex;flex-direction:column;gap:10px">' + planHtml + '</div></div>';
+    sheet.innerHTML = '<div style="background:var(--card,#fff);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 18px calc(env(safe-area-inset-bottom,0px)+20px);box-sizing:border-box">'
+      + '<div style="width:36px;height:4px;background:var(--border-mid,#E2E2E7);border-radius:4px;margin:0 auto 16px"></div>'
+      + '<div class="buy-sheet-title">Buy job posting credits</div>'
+      + '<div class="buy-sheet-sub">Each credit publishes one extra job listing.</div>'
+      + planHtml
+      + '<button class="buy-sheet-cancel" onclick="document.getElementById(\'_jobCreditSheet\')&&document.getElementById(\'_jobCreditSheet\').remove()">Cancel</button>'
+      + '<div class="buy-sheet-gplay-note">' + H.ICONS.googlePlay + '<span>Paid securely through Google Play — PaMarket never sees your card details.</span></div>'
+      + '</div>';
     document.body.appendChild(sheet);
   };
 
@@ -3213,33 +3215,43 @@
       var pent = H.recruiterPlanEntitlements(p.id);
       var cur = p.id === curPlanId;
       var higher = pent.rank > curRank;
-      var priceLabel = p.price === 0 ? 'Free' : ('$' + p.price + '/mo');
+      var isPopular = p.id === 'recruiter_pro' && !cur;
+      var priceParts = p.price === 0 ? '<div class="pcard-amt">Free</div>' : '<div class="pcard-amt">$' + p.price + '</div><div class="pcard-per">/mo</div>';
       var btn = '';
-      if (!cur && higher && p.price > 0) {
-        btn = '<button class="btn-pri" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit" onclick="H.upgradeRecruiterPlan(\'' + p.id + '\',\'monthly\')">Buy via Google Play</button>';
+      if (cur) {
+        btn = '<button class="pcard-btn pcard-btn-current">Your current plan</button>';
+      } else if (higher && p.price > 0) {
+        btn = '<button class="pcard-btn pcard-btn-buy" onclick="H.upgradeRecruiterPlan(\'' + p.id + '\',\'monthly\')">Upgrade to ' + H.escHtml(pent.name) + '</button>';
       }
-      return '<div style="border:2px solid ' + (cur ? '#1A3A8F' : 'var(--border,#E8ECF4)') + ';border-radius:16px;padding:15px;margin-bottom:10px;background:' + (cur ? '#EEF2FB' : 'var(--card,#fff)') + '">'
-        + '<div style="display:flex;justify-content:space-between;align-items:center">'
-        + '<div style="font-size:15px;font-weight:800;color:' + (cur ? '#1A3A8F' : 'var(--text)') + '">' + H.escHtml(pent.name) + (cur ? ' · Current' : '') + '</div>'
-        + '<div style="font-size:14px;font-weight:800;color:#1A3A8F">' + priceLabel + '</div></div>'
-        + '<div style="font-size:11.5px;color:var(--sub);margin-top:4px">' + (pent.activeJobPosts < 0 ? 'Unlimited' : pent.activeJobPosts) + ' active job posts · ' + pent.candidateAccess + ' candidate access · ' + pent.profileVisibility + ' visibility</div>'
+      var features = [
+        (pent.activeJobPosts < 0 ? 'Unlimited' : pent.activeJobPosts) + ' active job posts',
+        H.escHtml(pent.candidateAccess) + ' candidate access',
+        H.escHtml(pent.profileVisibility) + ' profile visibility'
+      ].map(function (f) {
+        return '<div class="pcard-feature"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' + f + '</div>';
+      }).join('');
+      return '<div class="pcard' + (cur ? ' pcard-current' : '') + (isPopular ? ' pcard-popular' : '') + '">'
+        + (isPopular ? '<div class="pcard-ribbon">MOST POPULAR</div>' : '')
+        + '<div class="pcard-head">'
+        + '<div class="pcard-name-row"><span class="pcard-name">' + H.escHtml(pent.name) + '</span>' + (cur ? '<span class="pcard-current-tag">CURRENT</span>' : '') + '</div>'
+        + '<div class="pcard-price">' + priceParts + '</div></div>'
+        + '<div class="pcard-divider"></div>'
+        + '<div class="pcard-features">' + features + '</div>'
         + btn + '</div>';
     }
 
     return '<div class="page active">'
       + H.innerTopbar('Recruiter Plan')
       + '<div class="inner-content" style="padding-bottom:40px">'
-      + '<div style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:18px;padding:20px;color:#fff;margin-bottom:18px">'
-      + '<div style="font-size:12px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:.4px">CURRENT PLAN</div>'
-      + '<div style="font-size:24px;font-weight:800;margin-top:2px">' + H.escHtml(ent.name) + '</div>'
-      + '<div style="font-size:12.5px;color:rgba(255,255,255,.8);margin-top:4px">' + jobsPosted + ' active job post' + (jobsPosted === 1 ? '' : 's') + (ent.activeJobPosts < 0 ? '' : ' of ' + ent.activeJobPosts) + '</div>'
+      + '<div class="sub-hero">'
+      + '<div class="sub-hero-label">CURRENT PLAN</div>'
+      + '<div class="sub-hero-row"><div class="sub-hero-plan">' + H.escHtml(ent.name) + '</div></div>'
+      + '<div class="sub-hero-meta">' + jobsPosted + ' active job post' + (jobsPosted === 1 ? '' : 's') + (ent.activeJobPosts < 0 ? '' : ' of ' + ent.activeJobPosts) + '</div>'
       + '</div>'
-      + '<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px">Plans</div>'
+      + '<div class="sub-gplay-badge">' + H.ICONS.googlePlay + '<div class="sub-gplay-txt"><b>Play Protect Certified</b>Payments handled entirely by Google Play</div></div>'
+      + '<div class="sub-section-title">Available plans</div>'
       + H.RECRUITER_PLANS.map(planCard).join('')
-      + '<div style="background:#EEF2FB;border:1px solid #c7d7f8;border-radius:14px;padding:16px;margin-top:8px">'
-      + '<div style="font-size:13px;font-weight:800;color:#1A3A8F;margin-bottom:4px">Upgrades activate instantly</div>'
-      + '<div style="font-size:12.5px;color:#475569;line-height:1.55">All recruiter plan upgrades are purchased securely through Google Play and activate automatically once confirmed.</div>'
-      + '</div></div></div>';
+      + '</div></div>';
   };
 
   H.pages.RecruiterSubscription_after = function () {

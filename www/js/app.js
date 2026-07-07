@@ -134,6 +134,10 @@ window.H = {
     boost:    `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
     eye:      `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
     share:    `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`,
+    // Real 4-color Google Play triangle mark — used on billing/purchase
+    // screens so payments visibly route through Google Play, not a generic
+    // lock/shield icon. Colors match Google's brand guidelines.
+    googlePlay: `<svg viewBox="0 0 512 512" width="20" height="20"><path fill="#00E6C3" d="M63 21C54 26 48 36 48 48v416c0 12 6 22 15 27l236-236z"/><path fill="#00D2FF" d="M348 236L63 21c-1 1-3 1-4 2l241 241z"/><path fill="#FFDD00" d="M348 276L63 491c1 1 3 1 4 2l281-160z"/><path fill="#FF3D57" d="M63 21l285 215-241 241z"/></svg>`,
   },
 
   CATEGORIES: [

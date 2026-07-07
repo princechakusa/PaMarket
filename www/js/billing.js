@@ -589,21 +589,20 @@
     sheet.addEventListener('click', function (ev) { if (ev.target === sheet) sheet.remove(); });
 
     var planHtml = H.getActiveProducts('rentalFeaturedSlots').map(function (p) {
-      return '<button onclick="document.getElementById(\'_rentalFeaturedSheet\')&&document.getElementById(\'_rentalFeaturedSheet\').remove();H.buyRentalFeaturedSlot(\'' + id + '\',\'' + p.productId + '\')" '
-        + 'style="background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;padding:14px 16px;'
-        + 'display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;width:100%">'
-        + '<div><div style="font-size:15px;font-weight:800">' + p.label + '</div>'
-        + (p.tag ? '<div style="font-size:11px;font-weight:700;opacity:.75;margin-top:2px">' + p.tag + '</div>' : '')
-        + '</div><div style="font-size:13px;font-weight:700;opacity:.9">Buy</div></button>';
+      return '<button class="buy-sheet-opt' + (p.tag ? ' recommended' : '') + '" onclick="document.getElementById(\'_rentalFeaturedSheet\')&&document.getElementById(\'_rentalFeaturedSheet\').remove();H.buyRentalFeaturedSlot(\'' + id + '\',\'' + p.productId + '\')">'
+        + '<div><div class="buy-sheet-opt-name-row"><span class="buy-sheet-opt-name">' + p.label + '</span>'
+        + (p.tag ? '<span class="buy-sheet-opt-tag">' + p.tag.toUpperCase() + '</span>' : '') + '</div></div>'
+        + '<div class="buy-sheet-opt-price">' + (p.estimatedPriceUsd ? '$' + p.estimatedPriceUsd : 'Buy') + '</div>'
+        + '</button>';
     }).join('');
 
-    sheet.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px calc(env(safe-area-inset-bottom,0px)+20px);box-sizing:border-box">'
-      + '<div style="width:36px;height:4px;background:#E8ECF4;border-radius:4px;margin:0 auto 18px"></div>'
-      + '<div style="font-size:17px;font-weight:800;color:#111;margin-bottom:4px">Feature this listing</div>'
-      + '<div style="font-size:13px;color:#666;margin-bottom:16px">Get top placement in rental search. Paid securely via Google Play.</div>'
-      + '<div style="display:flex;flex-direction:column;gap:10px">' + planHtml + '</div>'
-      + '<button onclick="document.getElementById(\'_rentalFeaturedSheet\')&&document.getElementById(\'_rentalFeaturedSheet\').remove()" '
-      + 'style="margin-top:12px;width:100%;padding:12px;border:1.5px solid #E8ECF4;border-radius:12px;background:#fff;font-size:14px;font-weight:700;color:#666;cursor:pointer;font-family:inherit">Cancel</button>'
+    sheet.innerHTML = '<div style="background:var(--card,#fff);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 18px calc(env(safe-area-inset-bottom,0px)+20px);box-sizing:border-box">'
+      + '<div style="width:36px;height:4px;background:var(--border-mid,#E2E2E7);border-radius:4px;margin:0 auto 16px"></div>'
+      + '<div class="buy-sheet-title">Feature this listing</div>'
+      + '<div class="buy-sheet-sub">Get top placement in rental search results.</div>'
+      + planHtml
+      + '<button class="buy-sheet-cancel" onclick="document.getElementById(\'_rentalFeaturedSheet\')&&document.getElementById(\'_rentalFeaturedSheet\').remove()">Cancel</button>'
+      + '<div class="buy-sheet-gplay-note">' + H.ICONS.googlePlay + '<span>Paid securely through Google Play — PaMarket never sees your card details.</span></div>'
       + '</div>';
 
     document.body.appendChild(sheet);
@@ -633,23 +632,20 @@
     sheet.addEventListener('click', function (ev) { if (ev.target === sheet) sheet.remove(); });
 
     var planHtml = H.getActiveProducts('boosts').map(function (p) {
-      return '<button onclick="H._buyBoost(\'' + id + '\',\'' + p.productId + '\')" '
-        + 'style="background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;padding:14px 16px;'
-        + 'display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;width:100%">'
-        + '<div><div style="font-size:15px;font-weight:800">' + p.label + '</div>'
-        + (p.tag ? '<div style="font-size:11px;font-weight:700;opacity:.75;margin-top:2px">' + p.tag + '</div>' : '')
-        + '</div>'
-        + '<div style="text-align:right"><div style="font-size:13px;font-weight:700;opacity:.9">Buy</div></div>'
+      return '<button class="buy-sheet-opt' + (p.tag ? ' recommended' : '') + '" onclick="H._buyBoost(\'' + id + '\',\'' + p.productId + '\')">'
+        + '<div><div class="buy-sheet-opt-name-row"><span class="buy-sheet-opt-name">' + p.label + '</span>'
+        + (p.tag ? '<span class="buy-sheet-opt-tag">' + p.tag.toUpperCase() + '</span>' : '') + '</div></div>'
+        + '<div class="buy-sheet-opt-price">' + (p.estimatedPriceUsd ? '$' + p.estimatedPriceUsd : 'Buy') + '</div>'
         + '</button>';
     }).join('');
 
-    sheet.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px calc(env(safe-area-inset-bottom,0px)+20px);box-sizing:border-box">'
-      + '<div style="width:36px;height:4px;background:#E8ECF4;border-radius:4px;margin:0 auto 18px"></div>'
-      + '<div style="font-size:17px;font-weight:800;color:#111;margin-bottom:4px">Boost your listing</div>'
-      + '<div style="font-size:13px;color:#666;margin-bottom:16px">Get 5\xD7 more views. Paid securely via Google Play.</div>'
-      + '<div style="display:flex;flex-direction:column;gap:10px">' + planHtml + '</div>'
-      + '<button onclick="document.getElementById(\'_boostSheet\')&&document.getElementById(\'_boostSheet\').remove()" '
-      + 'style="margin-top:12px;width:100%;padding:12px;border:1.5px solid #E8ECF4;border-radius:12px;background:#fff;font-size:14px;font-weight:700;color:#666;cursor:pointer;font-family:inherit">Cancel</button>'
+    sheet.innerHTML = '<div style="background:var(--card,#fff);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 18px calc(env(safe-area-inset-bottom,0px)+20px);box-sizing:border-box">'
+      + '<div style="width:36px;height:4px;background:var(--border-mid,#E2E2E7);border-radius:4px;margin:0 auto 16px"></div>'
+      + '<div class="buy-sheet-title">Boost your listing</div>'
+      + '<div class="buy-sheet-sub">Get up to 5\xD7 more views on search and category pages.</div>'
+      + planHtml
+      + '<button class="buy-sheet-cancel" onclick="document.getElementById(\'_boostSheet\')&&document.getElementById(\'_boostSheet\').remove()">Cancel</button>'
+      + '<div class="buy-sheet-gplay-note">' + H.ICONS.googlePlay + '<span>Paid securely through Google Play — PaMarket never sees your card details.</span></div>'
       + '</div>';
 
     document.body.appendChild(sheet);
@@ -709,23 +705,20 @@
     sheet.addEventListener('click', function (ev) { if (ev.target === sheet) sheet.remove(); });
 
     var planHtml = H.getActiveProducts('jobBoosts').map(function (p) {
-      return '<button onclick="H._buyBoost(\'' + id + '\',\'' + p.productId + '\')" '
-        + 'style="background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;padding:14px 16px;'
-        + 'display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;width:100%">'
-        + '<div><div style="font-size:15px;font-weight:800">' + p.label + '</div>'
-        + (p.tag ? '<div style="font-size:11px;font-weight:700;opacity:.75;margin-top:2px">' + p.tag + '</div>' : '')
-        + '</div>'
-        + '<div style="text-align:right"><div style="font-size:13px;font-weight:700;opacity:.9">Buy</div></div>'
+      return '<button class="buy-sheet-opt' + (p.tag ? ' recommended' : '') + '" onclick="H._buyBoost(\'' + id + '\',\'' + p.productId + '\')">'
+        + '<div><div class="buy-sheet-opt-name-row"><span class="buy-sheet-opt-name">' + p.label + '</span>'
+        + (p.tag ? '<span class="buy-sheet-opt-tag">' + p.tag.toUpperCase() + '</span>' : '') + '</div></div>'
+        + '<div class="buy-sheet-opt-price">' + (p.estimatedPriceUsd ? '$' + p.estimatedPriceUsd : 'Buy') + '</div>'
         + '</button>';
     }).join('');
 
-    sheet.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px calc(env(safe-area-inset-bottom,0px)+20px);box-sizing:border-box">'
-      + '<div style="width:36px;height:4px;background:#E8ECF4;border-radius:4px;margin:0 auto 18px"></div>'
-      + '<div style="font-size:17px;font-weight:800;color:#111;margin-bottom:4px">Boost your job listing</div>'
-      + '<div style="font-size:13px;color:#666;margin-bottom:16px">Get more visibility with candidates. Paid securely via Google Play.</div>'
-      + '<div style="display:flex;flex-direction:column;gap:10px">' + planHtml + '</div>'
-      + '<button onclick="document.getElementById(\'_jobBoostSheet\')&&document.getElementById(\'_jobBoostSheet\').remove()" '
-      + 'style="margin-top:12px;width:100%;padding:12px;border:1.5px solid #E8ECF4;border-radius:12px;background:#fff;font-size:14px;font-weight:700;color:#666;cursor:pointer;font-family:inherit">Cancel</button>'
+    sheet.innerHTML = '<div style="background:var(--card,#fff);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 18px calc(env(safe-area-inset-bottom,0px)+20px);box-sizing:border-box">'
+      + '<div style="width:36px;height:4px;background:var(--border-mid,#E2E2E7);border-radius:4px;margin:0 auto 16px"></div>'
+      + '<div class="buy-sheet-title">Boost your job listing</div>'
+      + '<div class="buy-sheet-sub">Get more visibility with candidates searching for jobs.</div>'
+      + planHtml
+      + '<button class="buy-sheet-cancel" onclick="document.getElementById(\'_jobBoostSheet\')&&document.getElementById(\'_jobBoostSheet\').remove()">Cancel</button>'
+      + '<div class="buy-sheet-gplay-note">' + H.ICONS.googlePlay + '<span>Paid securely through Google Play — PaMarket never sees your card details.</span></div>'
       + '</div>';
 
     document.body.appendChild(sheet);
