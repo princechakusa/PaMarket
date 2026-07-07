@@ -775,6 +775,29 @@
     } catch (e) { return 0; }
   };
 
+  // Finds the current still-entitling Play subscription for a target, so an
+  // upgrade/downgrade REPLACES it via Google's subscriptionUpdateParams
+  // (oldPurchaseToken + replacementMode) instead of opening a second,
+  // concurrently-billed subscription. Upgrades take effect immediately with
+  // time proration; downgrades are DEFERRED to the next renewal so the user
+  // keeps what they already paid for.
+  async function _subscriptionReplacement(table, filterCol, filterVal, newRank, rankOf) {
+    var sb = window.supabase;
+    if (!sb) return null;
+    try {
+      var r = await sb.from(table).select('purchase_token, plan_id')
+        .eq(filterCol, filterVal)
+        .in('subscription_state', ['active', 'in_grace_period', 'on_hold', 'pending'])
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (!r.data || !r.data.purchase_token) return null;
+      var curRank = rankOf(r.data.plan_id);
+      return {
+        oldPurchaseToken: r.data.purchase_token,
+        replacementMode: newRank > curRank ? 'IMMEDIATE_WITH_TIME_PRORATION' : 'DEFERRED',
+      };
+    } catch (e) { return null; }
+  }
+
   // ── UI: subscription upgrade — replaces the WhatsApp "Contact to Upgrade"
   // flow entirely. Called from pages.BusinessSubscription's plan cards.
   H.upgradeBusinessPlan = async function (businessId, planId, cycle) {
@@ -794,10 +817,18 @@
     var ready = await _ensureProductsLoaded();
     if (!ready) { H.toast('Could not load plan pricing. Check your connection and try again.', 4000, true); return; }
 
+    var replacement = await _subscriptionReplacement(
+      'play_subscriptions', 'business_id', businessId,
+      (typeof H.planEntitlements === 'function' ? H.planEntitlements(planId).rank : 0),
+      function (pid) { return typeof H.planEntitlements === 'function' ? H.planEntitlements(pid).rank : 0; }
+    );
+
     _pendingContext = { businessId: businessId };
     _saveCtx(product.productId, { businessId: businessId });
     try {
-      await P.subscribe({ productId: product.productId });
+      var subArgs = { productId: product.productId };
+      if (replacement) subArgs.additionalData = replacement;
+      await P.subscribe(subArgs);
       // No toast here — 'purchasesUpdated' drives verify → activate → toast.
     } catch (e) {
       _pendingContext = null;
@@ -829,9 +860,17 @@
     var ready = await _ensureProductsLoaded();
     if (!ready) { H.toast('Could not load plan pricing. Check your connection and try again.', 4000, true); return; }
 
+    var replacement = await _subscriptionReplacement(
+      'play_recruiter_subscriptions', 'user_id', u.id,
+      (typeof H.recruiterPlanEntitlements === 'function' ? H.recruiterPlanEntitlements(planId).rank : 0),
+      function (pid) { return typeof H.recruiterPlanEntitlements === 'function' ? H.recruiterPlanEntitlements(pid).rank : 0; }
+    );
+
     _pendingContext = { recruiter: true };
     try {
-      await P.subscribe({ productId: product.productId });
+      var subArgs = { productId: product.productId };
+      if (replacement) subArgs.additionalData = replacement;
+      await P.subscribe(subArgs);
       // No toast here — 'purchasesUpdated' drives verify → activate → toast.
     } catch (e) {
       _pendingContext = null;

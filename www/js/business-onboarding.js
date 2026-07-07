@@ -159,6 +159,14 @@
   H.saveBusinessSubscriptionToCloud = async function (b) {
     const sb = window.supabase;
     if (!sb || !b || !b.planId) return;
+    // Paid plans are NEVER recorded from the client — they activate only
+    // through a verified Google Play purchase (verify-play-subscription →
+    // activate_play_subscription). The DB additionally enforces this with a
+    // restrictive RLS policy (client inserts limited to plan_id='free'), so
+    // this early-return is UX, not the security boundary. Picking a paid
+    // plan during onboarding just routes the owner to the upgrade purchase
+    // on their Subscription page.
+    if (b.planId !== 'free') return;
     try {
       // Supersede any existing active subscription, then record the new one.
       await sb.from('business_subscriptions').update({ status: 'downgraded' })
@@ -720,7 +728,14 @@
       if (typeof H.pushNotif === 'function') {
         try { H.pushNotif(currentUser().id, 'Submitted for review', `${d.name} has been submitted. We will notify you once it is approved.`, 'business'); } catch (e) {}
       }
-      toast('Submitted for review');
+      // A paid plan picked during onboarding is an intent, not an
+      // entitlement — it only activates through a Google Play purchase on
+      // the Subscription page (server enforces this regardless).
+      if (d.planId && d.planId !== 'free') {
+        toast('Submitted for review. Complete your ' + d.planId + ' plan purchase from Manage Business → Subscription once approved.', 6000);
+      } else {
+        toast('Submitted for review');
+      }
       renderPage('BusinessActivated');
     }
   };

@@ -34,15 +34,10 @@
     } catch (e) { return adminList(); }
   };
 
-  H.fetchPendingInvoices = async function () {
-    const sb = window.supabase; if (!sb) return H.state.adminInvoices || [];
-    try {
-      const { data, error } = await sb.from('business_payments').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(20);
-      if (error || !Array.isArray(data)) return H.state.adminInvoices || [];
-      H.state.adminInvoices = data.map(r => ({ id: r.id, businessId: r.business_id, type: r.type, amount: Number(r.amount) || 0, description: r.description, createdAt: new Date(r.created_at || Date.now()).getTime() }));
-      saveState(); return H.state.adminInvoices;
-    } catch (e) { return H.state.adminInvoices || []; }
-  };
+  // (The legacy "pending invoices" queue and its markPaid reconciliation flow
+  // were removed 2026-07: plan upgrades are purchased through Google Play and
+  // activated by verified server-side purchases only. Admin overrides remain
+  // available via the "Set plan" button, which is admin-RLS-gated.)
 
   H.fetchPendingBizVerifs = async function () {
     const sb = window.supabase; if (!sb) return H.state.adminVerifs || [];
@@ -85,14 +80,7 @@
       </div>
     </div>`;
 
-    const invoices = H.state.adminInvoices || [];
     const verifs   = H.state.adminVerifs || [];
-
-    const invCard = (p) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border,#E8ECF4)">
-      <div style="min-width:0"><div style="font-size:13px;font-weight:700;color:var(--text)">${escHtml(bizNameOf(p.businessId))}</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:1px">${escHtml((p.description || p.type).replace(/\s*\[[a-z0-9]+\]\s*$/i, ''))} · ${typeof H.timeAgo === 'function' ? H.timeAgo(p.createdAt) : ''}</div></div>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0"><span style="font-size:14px;font-weight:800;color:#1A3A8F">$${(p.amount || 0).toFixed(2)}</span>
-        <button onclick="H._bizAdmin.markPaid('${p.id}')" style="padding:7px 12px;border-radius:9px;border:none;background:#16a34a;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Mark paid</button></div></div>`;
 
     const verCard = (v) => `<div style="padding:11px 0;border-bottom:1px solid var(--border,#E8ECF4)">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
@@ -124,7 +112,6 @@
           return queue('Businesses awaiting approval', pendingBiz.length,
             pendingBiz.length ? pendingBiz.map(card).join('') : `<div style="font-size:12.5px;color:var(--sub);padding:8px 0 12px">No businesses awaiting approval.</div>`);
         })()}
-        ${queue('Pending invoices', invoices.length, invoices.length ? invoices.map(invCard).join('') : `<div style="font-size:12.5px;color:var(--sub);padding:8px 0 12px">No invoices awaiting payment.</div>`)}
         ${queue('Verification requests', verifs.length, verifs.length ? verifs.map(verCard).join('') : `<div style="font-size:12.5px;color:var(--sub);padding:8px 0 12px">No pending verification requests.</div>`)}
         <div style="font-size:13px;font-weight:800;color:var(--text);margin:4px 0 8px">All businesses</div>
         ${list.length ? list.map(card).join('') : `<div style="text-align:center;color:var(--sub);font-size:13px;padding:24px 0">No businesses loaded. Pull to refresh or check admin access.</div>`}
@@ -137,34 +124,10 @@
   H._bizAdmin = {
     open() {
       H.openInner('BusinessAdmin');
-      Promise.all([H.fetchAllBusinesses(), H.fetchPendingInvoices(), H.fetchPendingBizVerifs()])
+      Promise.all([H.fetchAllBusinesses(), H.fetchPendingBizVerifs()])
         .then(() => renderPage('BusinessAdmin'));
     },
     _find(id) { return adminList().find(b => b.id === id); },
-
-    // Mark a pending invoice paid (admin reconciles off-app payment). If the
-    // invoice is a plan upgrade ("... [planid]"), this is also what ACTIVATES the
-    // plan — paid plans never activate until the admin confirms payment here.
-    async markPaid(id) {
-      const inv = (H.state.adminInvoices || []).find(x => x.id === id);
-      H.state.adminInvoices = (H.state.adminInvoices || []).filter(x => x.id !== id); saveState();
-      const sb = window.supabase;
-      if (sb) { try { await sb.from('business_payments').update({ status: 'paid' }).eq('id', id); } catch (e) {} }
-      if (inv && inv.type === 'subscription' && inv.description) {
-        const m = inv.description.match(/\[([a-z0-9]+)\]\s*$/i);
-        if (m && sb) {
-          const planId = m[1];
-          const cycle = /\(yearly\)/i.test(inv.description) ? 'yearly' : 'monthly';
-          try { await sb.from('business_subscriptions').update({ status: 'downgraded' }).eq('business_id', inv.businessId).eq('status', 'active'); } catch (e) {}
-          try { await sb.from('business_subscriptions').insert({ business_id: inv.businessId, plan_id: planId, billing_cycle: cycle, status: 'active' }); } catch (e) {}
-          try { await sb.from('businesses').update({ plan_id: planId }).eq('id', inv.businessId); } catch (e) {}
-          const b = this._find(inv.businessId); if (b) b.planId = planId;
-          const owner = bizOwnerOf(inv.businessId);
-          if (owner && H.pushNotif) H.pushNotif(owner, 'Plan activated', 'Your ' + planId.toUpperCase() + ' plan is now active.', 'info', null, 'BusinessView');
-        }
-      }
-      toast('Invoice marked paid'); renderPage('BusinessAdmin');
-    },
 
     // Approve a verification request: set the business verification level + notify owner.
     async approveVerify(vid, bizId, level) {
