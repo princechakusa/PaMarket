@@ -2193,7 +2193,7 @@
     if (l.sellerId) H.pushNotif(l.sellerId, 'New Application', (u.name || 'Someone') + ' applied for ' + (l.title || 'your job'), 'message');
     if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
     var ids = [u.id, l.sellerId].sort();
-    var convId = 'job_' + jobId.slice(-8) + '_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    var convId = 'job_' + H.idFrag(jobId) + '_' + H.idFrag(ids[0]) + '_' + H.idFrag(ids[1]);
     if (!H.state.conversations.find(function(c){ return c.id === convId; })) {
       var conv = {
         id: convId, members: [u.id, l.sellerId], listingId: jobId,
@@ -2532,7 +2532,7 @@
     var app = (H.state.applications || []).find(function(a){ return a.id === appId; });
     if (!app) return;
     var ids = [app.applicantId, app.employerId].sort();
-    var convId = 'job_' + app.jobId.slice(-8) + '_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    var convId = 'job_' + H.idFrag(app.jobId) + '_' + H.idFrag(ids[0]) + '_' + H.idFrag(ids[1]);
     if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
     var conv = H.state.conversations.find(function(c){ return c.id === convId; });
     if (!conv) {

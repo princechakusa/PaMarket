@@ -521,7 +521,7 @@
     // One conversation per person (listing kept as context, not in the id) and
     // reuse any existing thread with this seller so profile and listing entry
     // points never fork into separate threads.
-    let convId = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    let convId = 'conv_' + H.idFrag(ids[0]) + '_' + H.idFrag(ids[1]);
     const _pair = H.state.conversations.find(function (c) {
       return c && Array.isArray(c.members) && c.members.length === 2 &&
              c.members.map(String).indexOf(String(u.id)) !== -1 &&

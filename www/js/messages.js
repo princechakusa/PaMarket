@@ -84,7 +84,7 @@
       const group = groups[key];
       if (group.length < 2) return;
       const sorted = key.split('|').sort();
-      const pairKey = 'conv_' + sorted[0].slice(-6) + '_' + sorted[1].slice(-6);
+      const pairKey = 'conv_' + H.idFrag(sorted[0]) + '_' + H.idFrag(sorted[1]);
       // Canonical: the open chat (don't pull the rug out) > deterministic pairKey > most messages.
       let canonical = group.find(function (c) { return c.id === H._activeChat; })
         || group.find(function (c) { return c.id === pairKey; })
@@ -1517,7 +1517,7 @@
     // otherwise messaging the same seller from a listing vs their profile forks
     // into two separate threads (the reported bug).
     const ids = [myId, otherId].sort();
-    const pairKey = 'conv_' + ids[0].slice(-6) + '_' + ids[1].slice(-6);
+    const pairKey = 'conv_' + H.idFrag(ids[0]) + '_' + H.idFrag(ids[1]);
     let convId = pairKey;
     // Adopt any existing 1-to-1 thread with this same person — including older
     // threads that were keyed by listing id — so we never create a duplicate.

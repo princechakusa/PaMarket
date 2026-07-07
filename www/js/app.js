@@ -307,6 +307,18 @@ window.H = {
       const r = Math.random()*16|0; return (c==='x'?r:(r&0x3|0x8)).toString(16);
     });
   },
+
+  // Deterministic per-pair identifier fragment used to build conversation ids
+  // (conv_<a>_<b>, biz_<bizFrag>_<userFrag>, job_<jobFrag>_<a>_<b>). MUST use
+  // the full UUID with hyphens stripped, not a short suffix — a truncated
+  // suffix (previously 6-8 chars) can collide across unrelated UUIDs, which
+  // would merge two different people's conversations into the same row
+  // (wrong profile/messages shown to the wrong person). Strips hyphens only
+  // to keep ids shorter/URL-safer; this is NOT a truncation, every hex digit
+  // of the original UUID is preserved.
+  idFrag(id) {
+    return String(id || '').replace(/-/g, '');
+  },
   currentUser() {
     const H = window.H || this;
     const id = H.state && H.state.currentUserId;
@@ -1904,10 +1916,25 @@ window.H = {
             if(!ex){
               const localMsg = {id:msg.id,from:msg.sender_id,senderName:msg.sender_name||'',text:msg.text,image:msg.image||null,t:new Date(msg.created_at).getTime(),read:false,edited:!!msg.edited,deleted:!!msg.deleted,reactions:msg.reactions||{}};
               // Keep membership accurate so the chat resolves the correct "other"
-              // user: a real incoming sender that isn't us must be a member.
+              // user: a real incoming sender that isn't us must be a member —
+              // BUT only for biz_/job_ threads, where membership can legitimately
+              // grow (e.g. staff added to a business chat). A personal 1:1 (conv_)
+              // thread must NEVER silently gain a 3rd member: doing so merges an
+              // unrelated sender's messages into this conversation's existing
+              // avatar/name/history, which is exactly the "wrong profile shown"
+              // bug — the local members array must already be right for a 1:1
+              // thread, so an unexpected sender means something is stale/wrong,
+              // not that a new legitimate member showed up. Re-sync from the
+              // server's source of truth instead of guessing.
               if (!Array.isArray(conv.members)) conv.members = [];
+              const _isPersonalConv = typeof conv.id === 'string' && conv.id.indexOf('conv_') === 0;
               if (msg.sender_id && msg.sender_id !== H.state.currentUserId && conv.members.indexOf(msg.sender_id) === -1) {
-                conv.members.push(msg.sender_id);
+                if (_isPersonalConv && conv.members.length >= 2) {
+                  console.warn('Unexpected sender for 1:1 conversation (not merging):', conv.id, msg.sender_id);
+                  if (typeof H.syncConversations === 'function') H.syncConversations({ skipMessageFetch: false, convId: conv.id });
+                } else {
+                  conv.members.push(msg.sender_id);
+                }
               }
               // A biz_ conversation must carry its businessId so it stays in the
               // Business tab and never leaks into personal chats.
@@ -1938,10 +1965,17 @@ window.H = {
               if (_du) window.supabase.from('conversation_deletions').delete().eq('user_id', _du.id).eq('conversation_id', msg.conversation_id).then(()=>{});
             }
             if (typeof H.syncConversations === 'function') {
-              // skipMessageFetch: realtime already delivered this message via appendChatMessages;
-              // we only need conversation discovery here, not a full per-conv message re-fetch.
-              H.syncConversations({ skipMessageFetch: true }).then(function(){
-                if (H.currentPageName === 'Messages' && typeof H._refreshMessagesPage === 'function') H._refreshMessagesPage({ skipSync:true });
+              // This conversation did not exist locally, so the INSERT above
+              // was never appended anywhere (the `if(conv)` branch never ran)
+              // — skipMessageFetch would silently drop this first message.
+              // Must do a full fetch here so the new conversation's messages
+              // (including this one) actually land locally.
+              H.syncConversations({ skipMessageFetch: false, convId: msg.conversation_id }).then(function(){
+                if (H.currentPageName === 'Chat' && H.currentPageParams && H.currentPageParams.id === msg.conversation_id) {
+                  H.renderPage('Chat', H.currentPageParams);
+                } else if (H.currentPageName === 'Messages' && typeof H._refreshMessagesPage === 'function') {
+                  H._refreshMessagesPage({ skipSync:true });
+                }
               });
             }
           }
