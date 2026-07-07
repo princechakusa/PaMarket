@@ -514,10 +514,13 @@
       }
       // Clear any saved draft — post was successful
       try { localStorage.removeItem('pamarket_draft'); } catch (_) {}
-      if (finalStatus === 'pending') {
+      // Use the reconciled status: saveListingToCloud may have downgraded the ad
+      // to 'flagged' server-side, so honour l.status over the pre-save guess.
+      const liveStatus = l.status || finalStatus;
+      if (liveStatus !== 'active') {
         H.toast(mod.status === 'pending' && !needsApproval
           ? (mod.reason || 'Ad submitted for review before going live.')
-          : 'Ad submitted! It will go live after admin review.', 5000);
+          : 'Ad submitted! It will go live after review.', 5000);
         H.openInner('MyListings');
       } else {
         H.toast('Your ad is live!');

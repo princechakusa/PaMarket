@@ -1423,12 +1423,15 @@ window.H = {
         created_at:listing.createdAt?new Date(listing.createdAt).toISOString():new Date().toISOString()
       };
       const attrs = (typeof H.collectAttrs==='function') ? H.collectAttrs(listing) : (listing.attrs||{});
-      let {error}=await window.supabase.from('listings').upsert(Object.assign({attributes:attrs}, base));
+      // Read the status back so the client reflects the backend's moderation
+      // decision: the Phase A trigger may downgrade an 'active' post to 'flagged'.
+      // Supabase stays the source of truth — we reconcile the local row to it.
+      let {data,error}=await window.supabase.from('listings').upsert(Object.assign({attributes:attrs}, base)).select('status').maybeSingle();
       // If the attributes column hasn't been added yet, retry without it so
       // posting never breaks before the migration is run.
       if(error && /attributes|column|schema cache|PGRST204/i.test(error.message||'')){
-        const {error:e2}=await window.supabase.from('listings').upsert(base);
-        error=e2||null;
+        const retry=await window.supabase.from('listings').upsert(base).select('status').maybeSingle();
+        error=retry.error||null; data=retry.data||null;
       }
       if(error){
         // The Phase A moderation trigger blocks prohibited content and posts by
@@ -1440,7 +1443,14 @@ window.H = {
         console.warn('Cloud save failed:',error.message);
         return { ok:false, blocked:false, error:error };
       }
-      return { ok:true };
+      // Reconcile local status with the authoritative backend status (e.g. a
+      // silent FLAG). Only downgrade visibility — never override a local 'sold'.
+      const serverStatus = data && data.status;
+      if(serverStatus && serverStatus!==listing.status && listing.status!=='sold'){
+        listing.status=serverStatus;
+        if(typeof H.saveState==='function') H.saveState();
+      }
+      return { ok:true, status:serverStatus||listing.status };
     } catch(e){
       if(window.Safety && Safety.isModerationBlock(e)){
         return { ok:false, blocked:true, error:e, friendly:Safety.friendlyError(e) };

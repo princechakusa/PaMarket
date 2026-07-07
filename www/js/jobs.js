@@ -1526,7 +1526,7 @@
       + '<textarea id="' + id + '" placeholder="' + H.escHtml(placeholder) + '" rows="' + rows + '" style="width:100%;padding:13px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;resize:vertical;font-family:Inter,sans-serif"></textarea></div>';
   }
 
-  H._submitJob = function () {
+  H._submitJob = async function () {
     var company = (document.getElementById('jCompany') || {}).value || '';
     var title = (document.getElementById('jTitle') || {}).value || '';
     var cat = (document.getElementById('jCat') || {}).value || '';
@@ -1586,7 +1586,28 @@
     H.state.listings = H.state.listings || [];
     H.state.listings.push(listing);
     H.saveState();
-    if (typeof H.saveListingToCloud === 'function') H.saveListingToCloud(listing);
+    // Cloud save — same safety contract as the main post flow. saveListingToCloud
+    // surfaces the Phase A moderation trigger (content_blocked / account_banned /
+    // account_suspended) as { blocked:true }. The backend is the source of truth;
+    // no moderation rules are duplicated here — we only react to its decision.
+    if (typeof H.saveListingToCloud === 'function') {
+      var saveRes;
+      try {
+        saveRes = await (H.withTimeout ? H.withTimeout(H.saveListingToCloud(listing), 20000, 'save job') : H.saveListingToCloud(listing));
+      } catch (e) {
+        if (e && e._timeout && H.showError) H.showError('Saved on your device but the cloud didn’t respond — it will sync later.', e, 'jobs.cloud.timeout');
+      }
+      if (saveRes && saveRes.blocked) {
+        // Rejected by the backend: undo the optimistic local add so the job never
+        // shows as published, and show the friendly reason. No credit is spent.
+        H.state.listings = (H.state.listings || []).filter(function (x) { return x.id !== listing.id; });
+        H.saveState();
+        var msg = (saveRes.friendly && saveRes.friendly.message) ||
+          (window.Safety ? Safety.friendlyError(saveRes.error).message : 'This job could not be posted.');
+        H.toast(msg, 6000, true);
+        return;
+      }
+    }
     if (overLimit) {
       var sb = window.supabase;
       if (sb) {
@@ -1599,7 +1620,15 @@
         });
       }
     }
-    H.toast('Job posted! Candidates can now apply.');
+    // Reflect the backend's moderation state: a job flagged by the content filter
+    // comes back as status 'flagged' (or 'pending' under manual review), so tell
+    // the recruiter it's in review rather than falsely claiming it's live.
+    var finalStatus = (listing.status || 'active');
+    if (finalStatus !== 'active') {
+      H.toast('Job submitted — it will appear once it passes review.', 5000);
+    } else {
+      H.toast('Job posted! Candidates can now apply.');
+    }
     H.goBack();
   };
 
