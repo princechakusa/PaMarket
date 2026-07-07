@@ -486,7 +486,20 @@
       H.saveState();
       if (typeof H.saveListingToCloud === "function") {
         try {
-          await (H.withTimeout ? H.withTimeout(H.saveListingToCloud(l), 20000, 'save listing') : H.saveListingToCloud(l));
+          const saveRes = await (H.withTimeout ? H.withTimeout(H.saveListingToCloud(l), 20000, 'save listing') : H.saveListingToCloud(l));
+          // Backend moderation blocked the post (prohibited content or an account
+          // sanction). Undo the optimistic local add so it never appears "live",
+          // then show the friendly reason from the backend decision.
+          if (saveRes && saveRes.blocked) {
+            H.state.listings = (H.state.listings || []).filter(x => x.id !== listingId);
+            H.saveState();
+            H._post._posting = false;
+            if (btn) { btn.disabled = false; btn.textContent = 'Post Ad →'; }
+            const msg = (saveRes.friendly && saveRes.friendly.message) ||
+              (window.Safety ? Safety.friendlyError(saveRes.error).message : 'This ad could not be posted.');
+            H.toast(msg, 6000, true);
+            return;
+          }
         } catch (e) {
           if (e && e._timeout && H.showError) H.showError('Saved on your device but the cloud didn’t respond — it will sync later.', e, 'post.cloud.timeout');
         }
@@ -501,10 +514,13 @@
       }
       // Clear any saved draft — post was successful
       try { localStorage.removeItem('pamarket_draft'); } catch (_) {}
-      if (finalStatus === 'pending') {
+      // Use the reconciled status: saveListingToCloud may have downgraded the ad
+      // to 'flagged' server-side, so honour l.status over the pre-save guess.
+      const liveStatus = l.status || finalStatus;
+      if (liveStatus !== 'active') {
         H.toast(mod.status === 'pending' && !needsApproval
           ? (mod.reason || 'Ad submitted for review before going live.')
-          : 'Ad submitted! It will go live after admin review.', 5000);
+          : 'Ad submitted! It will go live after review.', 5000);
         H.openInner('MyListings');
       } else {
         H.toast('Your ad is live!');

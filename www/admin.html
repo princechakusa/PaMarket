@@ -328,6 +328,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
           Reports
           <span class="nav-badge" id="badge-reports" style="display:none">0</span>
         </button>
+        <button class="nav-item" data-tab="moderation" onclick="showTab('moderation')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.4 7.7 8 10 4.6-2.3 8-5 8-10V6z"/><path d="m9 12 2 2 4-4"/></svg>
+          Moderation
+          <span class="nav-badge red" id="badge-moderation" style="display:none">0</span>
+        </button>
         <button class="nav-item" data-tab="contacts" onclick="showTab('contacts')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-2-2"/></svg>
           Contact Requests
@@ -1056,7 +1061,7 @@ function closeSidebar(){ document.getElementById('sidebar').classList.remove('op
 // ── Tab navigation ────────────────────────────────────────
 var TAB_TITLES = {
   overview:'Operations Dashboard', listings:'Listings', users:'Users', verifications:'Verifications',
-  notifications:'Send Notification', reports:'Reports', contacts:'Contact Requests',
+  notifications:'Send Notification', reports:'Reports', moderation:'Moderation Center', contacts:'Contact Requests',
   ads:'Ads & Boosts', chats:'User Chats', analytics:'Analytics', settings:'Settings',
   businesses:'Business Platform', maintenance:'Maintenance',
   jobsAdmin:'Jobs', servicesAdmin:'Services', propertyAdmin:'Property', vehiclesAdmin:'Vehicle Sales',
@@ -1078,6 +1083,7 @@ var TAB_LOADERS = {
   verifications: function(){ return loadVerifications(); },
   notifications: function(){ return Promise.allSettled([loadUsers(), loadNotifHistory()]); },
   reports:       function(){ return loadReports(); },
+  moderation:    function(){ return loadModeration(); },
   contacts:      function(){ return loadContactRequests(); },
   ads:           function(){ return Promise.allSettled([loadAds(), DATA.users.length?Promise.resolve():loadUsers()]); },
   chats:         function(){ return loadChats(); },
@@ -1109,7 +1115,7 @@ function renderTab() {
   var fn = {
     overview: renderOverview, listings: renderListings, users: renderUsers,
     verifications: renderVerifications, notifications: renderNotifications,
-    reports: renderReports, contacts: renderContactRequests, ads: renderAds,
+    reports: renderReports, moderation: renderModeration, contacts: renderContactRequests, ads: renderAds,
     chats: renderChats, analytics: renderAnalytics, settings: renderSettings,
     businesses: renderBusinesses, maintenance: renderMaintenance,
     jobsAdmin: function(){ renderVertical('jobs'); },
@@ -2940,6 +2946,324 @@ async function sendNotification() {
 
 // ── REPORTS ───────────────────────────────────────────────
 var _reportView = 'support'; // 'support' | 'flags'
+// ═══════════════════════════════════════════════════════════════════════════
+// MODERATION CENTER (Phase B) — queue-based dashboard on the Phase A backend.
+// Every action writes public.moderation_actions; sanctions go through
+// public.user_sanctions. Reads respect RLS (moderator/admin only).
+// ═══════════════════════════════════════════════════════════════════════════
+var MOD_DATA = { reports:[], listings:[], sanctions:[], actions:[], missing:false };
+var _modSub    = 'queue';                 // queue | listings | users | resolved
+var _modType   = 'all';                   // all | listing | user | message | chat | appeal | support
+var _modSev    = 'all';                   // all | critical | high | medium | low
+var _modSort   = 'severity';              // severity | priority | recent | oldest | reported
+var _modPage   = 0;
+var _modSel    = {};
+var MOD_PAGE_SIZE = 25;
+// UI action → moderation_actions.action_type enum
+var MOD_ACT_ENUM = { approve:'approve', restore:'restore', reject:'reject', remove:'remove',
+  warn:'warning', suspend:'suspend', unsuspend:'unsuspend', ban:'ban', unban:'unban',
+  block_listing:'block_listing', unblock_listing:'unblock_listing' };
+var SEV_RANK = { critical:0, high:1, medium:2, low:3 };
+var SEV_COLOR = { critical:'#DC2626', high:'#F59E0B', medium:'#3B82F6', low:'#9CA3AF' };
+
+async function loadModeration(){
+  try{ if(!_adminUid){ var u=(await sb.auth.getUser()).data.user; _adminUid=u?u.id:null; } }catch(e){}
+  var res = await Promise.all([
+    sb.from('reports').select('*').order('created_at',{ascending:false}).limit(500),
+    sb.from('listings').select('id,title,seller_id,seller_name,price,currency,category,city,province,photos,description,status,created_at').in('status',['flagged','under_review','removed']).order('created_at',{ascending:false}).limit(200),
+    sb.from('user_sanctions').select('*').order('issued_at',{ascending:false}).limit(500),
+    sb.from('moderation_actions').select('*').order('created_at',{ascending:false}).limit(500)
+  ]);
+  MOD_DATA.reports   = (res[0]&&res[0].data)||[];
+  MOD_DATA.listings  = (res[1]&&res[1].data)||[];
+  MOD_DATA.sanctions = (res[2]&&res[2].data)||[];
+  MOD_DATA.actions   = (res[3]&&res[3].data)||[];
+  // If the audit-log or sanctions table is absent, Phase A hasn't been applied.
+  MOD_DATA.missing = !!((res[2]&&res[2].error) || (res[3]&&res[3].error));
+}
+
+function _sanctionActive(s){ return s.active && (!s.expires_at || new Date(s.expires_at) > new Date()); }
+function modCounts(){
+  var r = MOD_DATA.reports, open = r.filter(function(x){ return x.status==='open'||x.status==='reviewing'; });
+  return {
+    open: open.length,
+    critical: open.filter(function(x){ return x.severity==='critical'; }).length,
+    high: open.filter(function(x){ return x.severity==='high'; }).length,
+    pending: MOD_DATA.listings.filter(function(x){ return x.status==='flagged'||x.status==='under_review'; }).length,
+    suspensions: MOD_DATA.sanctions.filter(function(s){ return s.sanction_type==='suspension' && _sanctionActive(s); }).length,
+    bans: MOD_DATA.sanctions.filter(function(s){ return s.sanction_type==='permanent_ban' && _sanctionActive(s); }).length
+  };
+}
+function _reportCounts(){ // how many open reports target each user/listing
+  var m = {};
+  MOD_DATA.reports.forEach(function(r){ if(r.status==='open'||r.status==='reviewing'){ var k=(r.target_type||'')+':'+(r.target_id||''); m[k]=(m[k]||0)+1; } });
+  return m;
+}
+
+function renderModeration(){
+  if(!can('reports.manage') && !can('*')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">Your role does not have moderation access.</div>'; return; }
+  var c = modCounts();
+  var h = '<div class="sec-head"><div class="sec-title">Moderation Center</div></div>';
+  if(MOD_DATA.missing) h += '<div class="empty-msg" style="border:1.5px solid #FCD34D;background:#FEF9E7;color:#92400E">Phase A moderation tables not found. Run supabase/migrations/moderation_backend_phase_a.sql, then reload.</div>';
+
+  // Counter cards
+  var cards = [
+    ['Open reports', c.open, '#3B82F6'], ['Critical', c.critical, '#DC2626'],
+    ['High severity', c.high, '#F59E0B'], ['Pending reviews', c.pending, '#8B5CF6'],
+    ['Active suspensions', c.suspensions, '#0EA5E9'], ['Permanent bans', c.bans, '#111827']
+  ];
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">';
+  cards.forEach(function(k){ h += '<div style="background:var(--card);border:1px solid var(--border);border-left:3px solid '+k[2]+';border-radius:12px;padding:14px 16px"><div style="font-size:26px;font-weight:900;color:'+k[2]+'">'+k[1]+'</div><div style="font-size:12px;color:var(--sub);margin-top:2px">'+k[0]+'</div></div>'; });
+  h += '</div>';
+
+  // Sub-tabs
+  var subs = [['queue','Report Queue'],['listings','Flagged Listings ('+c.pending+')'],['users','Users & Sanctions'],['resolved','Resolved']];
+  h += '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">';
+  subs.forEach(function(s){ h += '<button class="filter-btn'+(_modSub===s[0]?' on':'')+'" onclick="_modSub=\''+s[0]+'\';_modPage=0;renderModeration()">'+s[1]+'</button>'; });
+  h += '</div>';
+
+  if(_modSub==='queue') h += modQueueHtml(false);
+  else if(_modSub==='resolved') h += modQueueHtml(true);
+  else if(_modSub==='listings') h += modListingsHtml();
+  else if(_modSub==='users') h += modUsersHtml();
+
+  document.getElementById('mainContent').innerHTML = h;
+}
+
+function modQueueHtml(resolved){
+  var open = MOD_DATA.reports.filter(function(r){ return resolved ? (r.status==='resolved'||r.status==='dismissed'||r.status==='actioned') : (r.status==='open'||r.status==='reviewing'); });
+  var rc = _reportCounts();
+  var h = '';
+  if(!resolved){
+    // type + severity + sort filters
+    var types = ['all','listing','user','message','chat','appeal','support'];
+    h += '<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">';
+    types.forEach(function(t){ var n=t==='all'?open.length:open.filter(function(r){return (r.target_type||'')===t;}).length; h += '<button class="filter-btn'+(_modType===t?' on':'')+'" onclick="_modType=\''+t+'\';_modPage=0;renderModeration()">'+t.charAt(0).toUpperCase()+t.slice(1)+' ('+n+')</button>'; });
+    h += '</div>';
+    h += '<div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">';
+    h += '<label style="font-size:12px;color:var(--sub)">Severity <select onchange="_modSev=this.value;_modPage=0;renderModeration()" style="font-size:12px;padding:4px;border-radius:6px;background:var(--bg);color:var(--text);border:1px solid var(--border)">'+['all','critical','high','medium','low'].map(function(s){return '<option'+(_modSev===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></label>';
+    h += '<label style="font-size:12px;color:var(--sub)">Sort <select onchange="_modSort=this.value;renderModeration()" style="font-size:12px;padding:4px;border-radius:6px;background:var(--bg);color:var(--text);border:1px solid var(--border)">'+[['severity','Highest severity'],['priority','Highest priority'],['recent','Most recent'],['oldest','Oldest'],['reported','Most reported target']].map(function(s){return '<option value="'+s[0]+'"'+(_modSort===s[0]?' selected':'')+'>'+s[1]+'</option>';}).join('')+'</select></label>';
+    var selCount = Object.keys(_modSel).filter(function(k){return _modSel[k];}).length;
+    if(selCount) h += '<span style="margin-left:auto;font-size:12px;color:var(--sub)">'+selCount+' selected</span><button class="filter-btn" onclick="modBulk(\'resolve\')">Bulk resolve</button><button class="filter-btn" onclick="modBulk(\'dismiss\')">Bulk dismiss</button>';
+    h += '</div>';
+  }
+  var rows = open.filter(function(r){
+    if(!resolved && _modType!=='all' && (r.target_type||'')!==_modType) return false;
+    if(!resolved && _modSev!=='all' && (r.severity||'medium')!==_modSev) return false;
+    return true;
+  });
+  rows.sort(function(a,b){
+    if(_modSort==='severity'){ var s=(SEV_RANK[a.severity||'medium'])-(SEV_RANK[b.severity||'medium']); if(s) return s; return new Date(b.created_at)-new Date(a.created_at); }
+    if(_modSort==='priority') return (b.priority||3)-(a.priority||3);
+    if(_modSort==='oldest') return new Date(a.created_at)-new Date(b.created_at);
+    if(_modSort==='reported'){ var ka=(a.target_type+':'+a.target_id), kb=(b.target_type+':'+b.target_id); return (rc[kb]||0)-(rc[ka]||0); }
+    return new Date(b.created_at)-new Date(a.created_at);
+  });
+  var total = rows.length, pages = Math.max(1, Math.ceil(total/MOD_PAGE_SIZE));
+  if(_modPage>=pages) _modPage=0;
+  var pageRows = rows.slice(_modPage*MOD_PAGE_SIZE, (_modPage+1)*MOD_PAGE_SIZE);
+  if(!pageRows.length) return h + '<div class="empty-msg">No reports in this view.</div>';
+
+  h += '<div class="tbl-wrap"><table class="tbl"><thead><tr>'+(resolved?'':'<th style="width:24px"></th>')+'<th>Sev</th><th>Type</th><th>Target</th><th>Reporter</th><th>Reason</th><th>Reports</th><th>When</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  pageRows.forEach(function(r){
+    var sev=r.severity||'medium', tType=r.target_type||'—', tId=r.target_id||'', k=tType+':'+tId;
+    var reporter = getUser(r.reporter_id)||{};
+    var esc2=function(x){return esc(String(x==null?'':x));};
+    h += '<tr>';
+    if(!resolved) h += '<td><input type="checkbox" '+(_modSel[r.id]?'checked':'')+' onclick="modToggleSel(\''+r.id+'\')"></td>';
+    h += '<td><span style="font-size:10px;font-weight:800;color:#fff;background:'+(SEV_COLOR[sev]||'#9CA3AF')+';border-radius:5px;padding:2px 7px">'+sev+'</span></td>';
+    h += '<td><span class="badge badge-info">'+esc2(tType)+'</span></td>';
+    h += '<td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis">'+esc2(modTargetLabel(tType,tId))+'</td>';
+    h += '<td style="font-size:12px">'+esc2(reporter.name||r.reported_by||(r.reporter_id?String(r.reporter_id).slice(0,8):'—'))+'</td>';
+    h += '<td style="font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis">'+esc2((r.reason||'').slice(0,80))+'</td>';
+    h += '<td>'+((rc[k]||0)>=3?'<span style="font-size:9px;font-weight:800;color:#fff;background:#DC2626;border-radius:4px;padding:1px 5px">×'+rc[k]+'</span>':(rc[k]||1))+'</td>';
+    h += '<td style="font-size:11px;color:var(--sub)">'+fmtDateTime(r.created_at)+'</td>';
+    h += '<td><span class="badge">'+esc2(r.status||'open')+'</span></td>';
+    h += '<td><button class="filter-btn" onclick="modReview(\''+r.id+'\')">Review</button></td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  if(pages>1){
+    h += '<div style="display:flex;gap:6px;justify-content:center;margin-top:14px">';
+    h += '<button class="filter-btn" '+(_modPage<=0?'disabled':'')+' onclick="_modPage--;renderModeration()">‹ Prev</button>';
+    h += '<span style="font-size:12px;color:var(--sub);padding:6px">Page '+(_modPage+1)+' / '+pages+'</span>';
+    h += '<button class="filter-btn" '+(_modPage>=pages-1?'disabled':'')+' onclick="_modPage++;renderModeration()">Next ›</button>';
+    h += '</div>';
+  }
+  return h;
+}
+
+function modTargetLabel(tType,tId){
+  if(tType==='listing'){ var l=MOD_DATA.listings.find(function(x){return x.id===tId;}); return l?l.title:('Listing '+String(tId).slice(0,8)); }
+  if(tType==='user'){ return userLabel(tId); }
+  if(tType==='message'||tType==='chat'){ return tType+' '+String(tId).slice(0,8); }
+  return String(tId).slice(0,12);
+}
+
+function modListingsHtml(){
+  var ls = MOD_DATA.listings.filter(function(l){ return l.status==='flagged'||l.status==='under_review'; });
+  if(!ls.length) return '<div class="empty-msg">No flagged or under-review listings.</div>';
+  var h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px">';
+  ls.forEach(function(l){
+    var img = (l.photos&&l.photos.length)?l.photos[0]:'';
+    h += '<div style="background:var(--card);border:1.5px solid #FCD34D;border-radius:14px;overflow:hidden">';
+    h += img?'<img src="'+esc(img)+'" style="width:100%;height:140px;object-fit:cover" onclick="viewImg(this)">':'';
+    h += '<div style="padding:14px">';
+    h += '<div style="display:flex;justify-content:space-between;gap:8px"><div style="font-size:14px;font-weight:800">'+esc(l.title||'Listing')+'</div><span class="badge">'+esc(l.status)+'</span></div>';
+    h += '<div style="font-size:12px;color:var(--sub);margin-top:4px">'+esc(l.category||'')+' · '+esc((l.currency||'USD'))+' '+esc(String(l.price||0))+' · '+esc(l.city||l.province||'')+'</div>';
+    h += '<div style="font-size:12px;color:var(--text);margin-top:8px;max-height:54px;overflow:hidden">'+esc((l.description||'').slice(0,160))+'</div>';
+    h += '<div style="font-size:11px;color:var(--sub);margin-top:8px">Seller: '+esc(l.seller_name||userLabel(l.seller_id))+'</div>';
+    h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">';
+    h += '<button class="filter-btn on" onclick="modAct(\'approve\',\'listing\',\''+l.id+'\',\''+(l.seller_id||'')+'\')">Approve</button>';
+    h += '<button class="filter-btn" onclick="modAct(\'remove\',\'listing\',\''+l.id+'\',\''+(l.seller_id||'')+'\')">Remove</button>';
+    h += '<button class="filter-btn" onclick="modAct(\'warn\',\'listing\',\''+l.id+'\',\''+(l.seller_id||'')+'\')">Warn seller</button>';
+    h += '<button class="filter-btn" onclick="modAct(\'suspend\',\'listing\',\''+l.id+'\',\''+(l.seller_id||'')+'\')">Suspend</button>';
+    h += '<button class="filter-btn" onclick="modAct(\'ban\',\'listing\',\''+l.id+'\',\''+(l.seller_id||'')+'\')">Ban</button>';
+    h += '</div></div></div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function modUsersHtml(){
+  var active = MOD_DATA.sanctions.filter(_sanctionActive);
+  var h = '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">';
+  h += '<div style="font-size:13px;font-weight:700;margin-bottom:8px">Sanction a user</div>';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">';
+  h += '<input id="modUserId" placeholder="User ID (uuid)" style="flex:1;min-width:220px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px">';
+  h += '<button class="filter-btn" onclick="modUserAct(\'warn\')">Warn</button>';
+  h += '<button class="filter-btn" onclick="modUserAct(\'suspend\',7)">Suspend 7d</button>';
+  h += '<button class="filter-btn" onclick="modUserAct(\'suspend\',30)">Suspend 30d</button>';
+  h += '<button class="filter-btn" onclick="modUserAct(\'ban\')">Permanent ban</button>';
+  h += '</div></div>';
+  h += '<div style="font-size:13px;font-weight:700;margin-bottom:8px">Active sanctions ('+active.length+')</div>';
+  if(!active.length) return h + '<div class="empty-msg">No active sanctions.</div>';
+  h += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>User</th><th>Type</th><th>Reason</th><th>Issued</th><th>Expires</th><th>Actions</th></tr></thead><tbody>';
+  active.forEach(function(s){
+    h += '<tr><td style="font-size:12px">'+esc(userLabel(s.user_id))+'</td>';
+    h += '<td><span class="badge '+(s.sanction_type==='permanent_ban'?'badge-danger':'')+'">'+esc(s.sanction_type)+'</span></td>';
+    h += '<td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">'+esc(s.reason||'—')+'</td>';
+    h += '<td style="font-size:11px;color:var(--sub)">'+fmtDate(s.issued_at)+'</td>';
+    h += '<td style="font-size:11px;color:var(--sub)">'+(s.expires_at?fmtDate(s.expires_at):'—')+'</td>';
+    h += '<td>'+(s.sanction_type==='suspension'?'<button class="filter-btn" onclick="modAct(\'unsuspend\',\'user\',\''+s.user_id+'\',\''+s.user_id+'\')">Unsuspend</button>':'<button class="filter-btn" onclick="modAct(\'unban\',\'user\',\''+s.user_id+'\',\''+s.user_id+'\')">Unban</button>')+'</td></tr>';
+  });
+  h += '</tbody></table></div>';
+  return h;
+}
+function modUserAct(action, days){
+  var el=document.getElementById('modUserId'); var id=el?el.value.trim():'';
+  if(!id){ toast('Enter a user ID','error'); return; }
+  modAct(action,'user',id,id,days);
+}
+
+// ── Report detail modal: timeline + related reports + notes + actions ──────
+function modReview(reportId){
+  var r = MOD_DATA.reports.find(function(x){return x.id===reportId;}); if(!r) return;
+  var tType=r.target_type||'—', tId=r.target_id||'';
+  var related = MOD_DATA.reports.filter(function(x){ return x.target_type===tType && x.target_id===tId; });
+  var history = MOD_DATA.actions.filter(function(a){ return String(a.target_id)===String(tId); }).slice(0,20);
+  var reporter = getUser(r.reporter_id)||{};
+  var h = '<div class="modal-title">Report — '+esc(tType)+' <button class="modal-close" onclick="closeModal()">×</button></div>';
+  h += '<div style="max-height:70vh;overflow:auto">';
+  h += '<div style="font-size:13px;margin-bottom:6px"><b>Target:</b> '+esc(modTargetLabel(tType,tId))+'</div>';
+  h += '<div style="font-size:12px;color:var(--sub);margin-bottom:6px">Reporter: '+esc(reporter.name||r.reported_by||'—')+' · '+fmtDateTime(r.created_at)+' · severity '+esc(r.severity||'medium')+' · priority '+esc(String(r.priority||3))+'</div>';
+  h += '<div style="background:var(--bg);border-radius:10px;padding:12px;font-size:13px;white-space:pre-wrap;margin-bottom:12px">'+esc(r.reason||'')+'</div>';
+  if(related.length>1) h += '<div style="font-size:12px;color:var(--sub);margin-bottom:10px"><b>'+related.length+'</b> reports against this target.</div>';
+  // automated detection note for flagged listings
+  if(tType==='listing'){ var l=MOD_DATA.listings.find(function(x){return x.id===tId;}); if(l && (l.status==='flagged'||l.status==='under_review')) h += '<div style="font-size:12px;color:#92400E;background:#FEF9E7;border-radius:8px;padding:8px 10px;margin-bottom:10px">Automated filter status: <b>'+esc(l.status)+'</b></div>'; }
+  // moderation history / timeline
+  h += '<div style="font-size:12px;font-weight:700;margin:6px 0">Moderation timeline</div>';
+  if(history.length){ h += '<div style="border-left:2px solid var(--border);padding-left:12px;margin-bottom:12px">'; history.forEach(function(a){ h += '<div style="margin-bottom:8px;font-size:12px"><b>'+esc(a.action_type)+'</b> <span style="color:var(--sub)">'+fmtDateTime(a.created_at)+'</span>'+(a.reason?'<div style="color:var(--sub)">'+esc(a.reason)+'</div>':'')+(a.notes?'<div style="color:var(--sub);font-style:italic">'+esc(a.notes)+'</div>':'')+'</div>'; }); h += '</div>'; }
+  else h += '<div style="font-size:12px;color:var(--sub);margin-bottom:12px">No prior actions.</div>';
+  // note (attached to a lightweight "reviewing" action, no status change to target)
+  h += '<input id="modNote" placeholder="Internal note (recorded, not shown to users)" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;margin-bottom:10px">';
+  // action buttons appropriate to the target
+  h += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  h += '<button class="filter-btn" onclick="modResolveReport(\''+r.id+'\',\'resolved\')">Resolve report</button>';
+  h += '<button class="filter-btn" onclick="modResolveReport(\''+r.id+'\',\'dismissed\')">Dismiss</button>';
+  if(tType==='listing'){ var l2=MOD_DATA.listings.find(function(x){return x.id===tId;}); var sid=l2?l2.seller_id:'';
+    h += '<button class="filter-btn on" onclick="modAct(\'approve\',\'listing\',\''+tId+'\',\''+sid+'\',null,\''+r.id+'\')">Approve listing</button>';
+    h += '<button class="filter-btn" onclick="modAct(\'remove\',\'listing\',\''+tId+'\',\''+sid+'\',null,\''+r.id+'\')">Remove listing</button>';
+    h += '<button class="filter-btn" onclick="modAct(\'warn\',\'listing\',\''+tId+'\',\''+sid+'\',null,\''+r.id+'\')">Warn seller</button>';
+    h += '<button class="filter-btn" onclick="modAct(\'suspend\',\'listing\',\''+tId+'\',\''+sid+'\',7,\''+r.id+'\')">Suspend seller</button>';
+    h += '<button class="filter-btn" onclick="modAct(\'ban\',\'listing\',\''+tId+'\',\''+sid+'\',null,\''+r.id+'\')">Ban seller</button>';
+  } else if(tType==='user'){
+    h += '<button class="filter-btn" onclick="modAct(\'warn\',\'user\',\''+tId+'\',\''+tId+'\',null,\''+r.id+'\')">Warn</button>';
+    h += '<button class="filter-btn" onclick="modAct(\'suspend\',\'user\',\''+tId+'\',\''+tId+'\',7,\''+r.id+'\')">Suspend 7d</button>';
+    h += '<button class="filter-btn" onclick="modAct(\'ban\',\'user\',\''+tId+'\',\''+tId+'\',null,\''+r.id+'\')">Ban</button>';
+  } else if(tType==='message'||tType==='chat'){
+    h += '<button class="filter-btn" onclick="modAct(\'remove\',\'message\',\''+tId+'\',\''+(r.reporter_id||'')+'\',null,\''+r.id+'\')">Delete message</button>';
+    h += '<button class="filter-btn" onclick="modAct(\'warn\',\'message\',\''+tId+'\',\''+(r.reporter_id||'')+'\',null,\''+r.id+'\')">Warn sender</button>';
+  }
+  h += '</div></div>';
+  openModal(h);
+}
+function _modNoteVal(){ var el=document.getElementById('modNote'); return el?el.value.trim():''; }
+
+async function modResolveReport(reportId, status){
+  if(!requirePerm('reports.manage')) return;
+  try{
+    var note=_modNoteVal();
+    var up = await sb.from('reports').update({status:status}).eq('id',reportId); if(up.error) throw up.error;
+    var r = MOD_DATA.reports.find(function(x){return x.id===reportId;})||{};
+    await modLog(status==='dismissed'?'approve':'approve','report',reportId,note||('report '+status),r.status,status,note);
+    toast('Report '+status,'success'); closeModal(); await loadModeration(); renderModeration();
+  }catch(e){ toast('Failed: '+(e.message||e),'error'); }
+}
+
+// Core action engine. action ∈ approve/restore/reject/remove/warn/suspend/unsuspend/ban/unban
+async function modAct(action, targetType, targetId, userId, days, reportId){
+  if(!requirePerm('reports.manage')) return;
+  var titles={approve:'Approve',restore:'Restore',reject:'Reject',remove:'Remove',warn:'Warn user',suspend:'Suspend user',unsuspend:'Lift suspension',ban:'Permanently ban',unban:'Lift ban'};
+  var destructive=['reject','remove','suspend','ban'].indexOf(action)>=0;
+  var reason = await confirm2(titles[action]||action, 'This is recorded in the moderation log.'+(destructive?' This action is significant.':''), titles[action]||'Confirm', destructive?'confirm-danger':'', true, 'Reason (recorded)');
+  if(reason===null) return; if(reason===true) reason='';
+  var note=_modNoteVal();
+  try{
+    var prev=null, next=null;
+    if(targetType==='listing' && ['approve','restore','reject','remove'].indexOf(action)>=0){
+      var l=MOD_DATA.listings.find(function(x){return x.id===targetId;}); prev=l?l.status:null;
+      next=(action==='approve'||action==='restore')?'active':'removed';
+      var up=await sb.from('listings').update({status:next}).eq('id',targetId); if(up.error) throw up.error;
+    }
+    if(targetType==='message' && action==='remove'){
+      var dm=await sb.from('messages').update({body:'[removed by moderator]'}).eq('id',targetId); /* soft-delete; tolerate schema */
+    }
+    if(['warn','suspend','ban','unsuspend','unban'].indexOf(action)>=0){
+      await modSanction(action, userId||targetId, reason, days);
+    }
+    await modLog(action, targetType, targetId, reason, prev, next, note);
+    if(reportId){ await sb.from('reports').update({status:'actioned'}).eq('id',reportId); }
+    toast('Done: '+action,'success'); closeModal(); await loadModeration(); renderModeration();
+  }catch(e){ toast('Failed: '+(e.message||e),'error'); }
+}
+
+async function modSanction(action, userId, reason, days){
+  if(action==='warn'){ var w=await sb.from('user_sanctions').insert({user_id:userId,sanction_type:'warning',reason:reason,issued_by:_adminUid}); if(w.error) throw w.error; return; }
+  if(action==='suspend'){ var exp=new Date(Date.now()+(days||7)*86400000).toISOString(); var s=await sb.from('user_sanctions').insert({user_id:userId,sanction_type:'suspension',reason:reason,issued_by:_adminUid,expires_at:exp}); if(s.error) throw s.error; return; }
+  if(action==='ban'){ var b=await sb.from('user_sanctions').insert({user_id:userId,sanction_type:'permanent_ban',reason:reason,issued_by:_adminUid}); if(b.error) throw b.error; return; }
+  if(action==='unsuspend'){ var u=await sb.from('user_sanctions').update({active:false}).eq('user_id',userId).eq('sanction_type','suspension').eq('active',true); if(u.error) throw u.error; return; }
+  if(action==='unban'){ var un=await sb.from('user_sanctions').update({active:false}).eq('user_id',userId).eq('sanction_type','permanent_ban').eq('active',true); if(un.error) throw un.error; return; }
+}
+
+async function modLog(action, targetType, targetId, reason, prev, next, notes){
+  var enumType = MOD_ACT_ENUM[action]||action;
+  var mt = (targetType==='listing'||targetType==='user'||targetType==='message'||targetType==='chat'||targetType==='report')?targetType:'report';
+  var r = await sb.from('moderation_actions').insert({ moderator_id:_adminUid, action_type:enumType, target_type:mt, target_id:String(targetId), reason:reason||null, notes:notes||null, previous_status:prev, new_status:next });
+  if(r.error) throw r.error;
+}
+
+function modToggleSel(id){ _modSel[id]=!_modSel[id]; }
+async function modBulk(kind){
+  var ids=Object.keys(_modSel).filter(function(k){return _modSel[k];}); if(!ids.length) return;
+  var ok=await confirm2('Bulk '+kind, kind+' '+ids.length+' report(s)?', kind.charAt(0).toUpperCase()+kind.slice(1)); if(ok===null) return;
+  var status = kind==='dismiss'?'dismissed':'resolved';
+  try{
+    for(var i=0;i<ids.length;i++){ await sb.from('reports').update({status:status}).eq('id',ids[i]); await modLog('approve','report',ids[i],'bulk '+kind,null,status,null); }
+    _modSel={}; toast(ids.length+' report(s) '+status,'success'); await loadModeration(); renderModeration();
+  }catch(e){ toast('Bulk failed: '+(e.message||e),'error'); }
+}
+
 function renderReports() {
   var support = DATA.reports.filter(function(r){ return (r.target_type||r.targetType)==='support'; });
   var flags   = DATA.reports.filter(function(r){ var t=r.target_type||r.targetType||''; return t!=='support'; });

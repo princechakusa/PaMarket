@@ -72,6 +72,14 @@
     const sellerPhone = seller.phone || l.sellerPhone || '';
     const sellerName  = seller.name  || l.sellerName  || 'Seller';
 
+    // Moderation-aware visibility: a listing in a hidden backend state
+    // (under_review / flagged / removed / deleted / pending) is only viewable by
+    // its owner. Buyers reaching it via a stale link or cached row see a neutral
+    // "not available" page instead. The seller still sees it with its status.
+    if (!isMine && window.Safety && !Safety.isPubliclyVisible(l.status) && l.status !== 'sold') {
+      return `<div class="page active">${H.innerTopbar('Listing')}<div class="empty-state"><div class="empty-icon">${S.crossCircle}</div><div class="empty-title">Listing not available</div><div class="empty-sub">This listing is no longer available or is being reviewed.</div></div></div>`;
+    }
+
     if (!isMine) {
       // Only count once per session — gates BOTH the local increment and the DB
       // write so re-renders (e.g. triggered by the ratings fetch) never double-count.

@@ -27,7 +27,7 @@
 <meta id="twTitle" name="twitter:title" content="Business Shop — PaMarket Zimbabwe">
 <meta id="twDesc" name="twitter:description" content="Browse products, read reviews and contact the seller directly on PaMarket.">
 <meta id="twImage" name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
-<meta name="robots" content="index, follow">
+<meta id="robotsMeta" name="robots" content="index, follow">
 <meta name="geo.region" content="ZW">
 <meta name="geo.placename" content="Zimbabwe">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -329,7 +329,8 @@ function setMeta(b, url){
 
 // Dynamic JSON-LD — real data only. AggregateRating/Review are emitted ONLY
 // when the seller actually has reviews (no fabricated ratings).
-function injectSchema(b, url, reviews, listingCount){
+function injectSchema(b, url, reviews, listings){
+  listings = listings || [];
   var address = { '@type':'PostalAddress', addressCountry:'ZW' };
   if (b.city) address.addressLocality = b.city;
   if (b.province) address.addressRegion = b.province;
@@ -346,13 +347,29 @@ function injectSchema(b, url, reviews, listingCount){
     url: url,
     image: b.cover || b.logo || 'https://pamarketzw.com/img/icon-512.png',
     address: address,
-    areaServed: { '@type':'Country', name:'Zimbabwe' }
+    areaServed: { '@type':'Country', name:'Zimbabwe' },
+    isPartOf: { '@type':'WebSite', name:'PaMarket', url:'https://pamarketzw.com/' },
+    publisher: { '@type':'Organization', name:'PaMarket', url:'https://pamarketzw.com/' }
   };
   if (b.logo) node.logo = b.logo;
   if (b.description) node.description = b.description.slice(0,300);
   if (b.phone) node.telephone = b.phone;
   if (b.email) node.email = b.email;
-  if (listingCount) node.makesOffer = { '@type':'Offer', itemOffered:{ '@type':'Product', name: b.name + ' listings' } };
+  // Real OfferCatalog from the shop's actual live listings (omitted when none).
+  if (listings.length){
+    node.hasOfferCatalog = {
+      '@type':'OfferCatalog',
+      name: b.name + ' — listings',
+      itemListElement: listings.slice(0,20).map(function(l){
+        return {
+          '@type':'Offer',
+          price: l.price,
+          priceCurrency: l.currency || 'USD',
+          itemOffered: { '@type':'Product', name: l.title, url:'https://pamarketzw.com/detail?id='+l.id }
+        };
+      })
+    };
+  }
   if (reviews && reviews.length){
     var sum = reviews.reduce(function(a,r){ return a + (Number(r.rating)||0); }, 0);
     node.aggregateRating = {
@@ -371,6 +388,14 @@ function injectSchema(b, url, reviews, listingCount){
       };
     });
   }
+  // ProfilePage wraps the shop entity for user/business-profile understanding.
+  var profilePage = {
+    '@context':'https://schema.org','@type':'ProfilePage','@id':url+'#page',
+    url:url, name:b.name+' — PaMarket',
+    isPartOf:{'@type':'WebSite',name:'PaMarket',url:'https://pamarketzw.com/'},
+    mainEntity:{'@id':url+'#store'}
+  };
+  if (b.updated_at) profilePage.dateModified = String(b.updated_at).slice(0,10);
   var breadcrumb = {
     '@context':'https://schema.org','@type':'BreadcrumbList',
     itemListElement:[
@@ -379,7 +404,7 @@ function injectSchema(b, url, reviews, listingCount){
       {'@type':'ListItem',position:3,name:b.name,item:url}
     ]
   };
-  [node, breadcrumb].forEach(function(obj){
+  [profilePage, node, breadcrumb].forEach(function(obj){
     var s=document.createElement('script'); s.type='application/ld+json';
     s.textContent=JSON.stringify(obj); document.head.appendChild(s);
   });
@@ -390,7 +415,7 @@ function render(b, extras){
   var reviews = extras.reviews || [], listings = extras.listings || [];
   var followers = extras.followers || 0, related = extras.related || [];
   setMeta(b, url);
-  injectSchema(b, url, reviews, listings.length ? extras.listingCount : 0);
+  injectSchema(b, url, reviews, listings);
 
   var loc = [b.suburb, b.city, b.province].filter(Boolean).filter(function(v,i,a){ return a.indexOf(v) === i; }).join(', ') || 'Zimbabwe';
   var avg = reviews.length ? (reviews.reduce(function(a,r){return a+(Number(r.rating)||0);},0)/reviews.length) : 0;
@@ -471,6 +496,9 @@ function render(b, extras){
 }
 
 function showNotFound(){
+  // A shop that isn't active must not be indexed (SEO — don't index removed
+  // content). Backend RLS/PM filters already keep hidden shops out of the fetch.
+  var rm=document.getElementById('robotsMeta');if(rm)rm.setAttribute('content','noindex, nofollow');
   document.getElementById('bizLoading').classList.add('hidden');
   var c = document.getElementById('bizContent');
   c.innerHTML = '<div class="biz-body"><div class="empty-state" style="margin-top:60px">'+

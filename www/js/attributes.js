@@ -58,7 +58,8 @@
       { key:'warranty',     label:'Warranty',      type:'select', options:['Yes','No'] }
     ],
     furniture: [
-      { key:'ftype',        label:'Type',          type:'select', options:['Sofa / Lounge','Bed','Wardrobe','Table','Chairs','Kitchen Unit','Office','Outdoor','Other'] },
+      { key:'ftype',        label:'Type',          type:'select', options:['Sofa / Lounge','Bed','Wardrobe','Table','Chairs','Kitchen Unit','Appliance','Office','Outdoor','Other'] },
+      { key:'brand',        label:'Brand',         type:'text',   placeholder:'e.g. Defy, Capri, Samsung', quick:true },
       { key:'condition',    label:'Condition',     type:'select', options:['Brand New','Used'] },
       { key:'material',     label:'Material',       type:'text',   placeholder:'e.g. Wood, Leather' }
     ],
@@ -92,6 +93,10 @@
       { key:'stype',        label:'Service Type',  type:'text',   placeholder:'e.g. Plumbing, Tutoring' },
       { key:'availability', label:'Availability',  type:'select', options:['Full-time','Part-time','Weekends','On Call'] },
       { key:'priceBasis',   label:'Pricing',       type:'select', options:['Per Hour','Per Day','Per Job','Negotiable'] }
+    ],
+    other: [
+      { key:'brand',        label:'Brand',         type:'text',   placeholder:'e.g. Samsung (optional)', quick:true },
+      { key:'condition',    label:'Condition',     type:'select', options:['Brand New','Used'] }
     ]
   };
 

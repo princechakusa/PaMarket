@@ -573,7 +573,7 @@
       H._chatAvatarTried[otherId] = true;
       var _sbAv = window.supabase;
       if (_sbAv && typeof _sbAv.from === 'function') {
-        _sbAv.from('profiles').select('avatar').eq('id', otherId).maybeSingle().then(function (res) {
+        _sbAv.from('profiles_public').select('avatar').eq('id', otherId).maybeSingle().then(function (res) {
           var p = res && res.data;
           if (!p || !p.avatar) return;
           var ex = (H.state.users || []).find(function (x) { return x.id === otherId; });
@@ -2111,6 +2111,19 @@
     var msgObj = { id: msgId, from: u.id, senderName: u.name||'', text: storeText, t: msgT, read: false };
     c.messages.push(msgObj);
     H.saveState();
+    // Safety nudge: if the message shares off-platform contact/payment info, show
+    // a gentle "keep it on PaMarket" reminder once per conversation. Advisory
+    // only — it never blocks the message (backend stays the source of truth).
+    if (window.Safety && Safety.chatSafetyHint) {
+      const hint = Safety.chatSafetyHint(text);
+      if (hint) {
+        H._chat._safetyHintShown = H._chat._safetyHintShown || {};
+        if (!H._chat._safetyHintShown[c.id]) {
+          H._chat._safetyHintShown[c.id] = true;
+          H.toast(hint, 6000, true);
+        }
+      }
+    }
     inp.value = '';
     if (typeof H._clearChatDraft === 'function') H._clearChatDraft(c.id);
     if (typeof H._autoGrowChat === 'function') H._autoGrowChat(inp);   // collapse back to one line
@@ -2498,15 +2511,43 @@
     const m = (c.messages || []).find(function(x){ return x.id === msgId; });
     if (!m) return;
     const u = H.currentUser(); if (!u) return;
+    // Canonical reason list (safety.js) so message reports match the admin panel.
+    const reasons = (window.Safety && Safety.reportReasons && Safety.reportReasons.message) ||
+      ['Scam or fraud', 'Harassment', 'Spam', 'Offensive content', 'Sharing off-platform contact', 'Other'];
+    const btns = reasons.map(function(r){
+      return '<button onclick="H._chat._doReportMsg(\'' + escHtml(msgId) + '\',\'' + escHtml(r) + '\')" ' +
+        'style="width:100%;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;text-align:left;margin-bottom:8px">' +
+        escHtml(r) + '</button>';
+    }).join('');
+    H.modal({ title: 'Report this message', body: '<div style="padding:4px 0">' + btns + '</div>', confirmText: null, cancelText: 'Cancel' });
+  };
+
+  H._chat._doReportMsg = function(msgId, reason) {
+    H.closeModal && H.closeModal();
+    const c = conversations().find(function(x){ return x.id === H._activeChat; });
+    if (!c) return;
+    const m = (c.messages || []).find(function(x){ return x.id === msgId; });
+    if (!m) return;
+    const u = H.currentUser(); if (!u) return;
     if (!Array.isArray(H.state.reports)) H.state.reports = [];
+    // Resolve chat context so moderators can see who sent/received the message.
+    const senderId   = m.senderId || m.sender_id || m.from || null;
+    const receiverId = (c.members || c.participants || []).filter(function(p){ return String(p) !== String(senderId); })[0] || null;
+    const reasonText = reason + (senderId ? ' [from ' + senderId + (receiverId ? ' → ' + receiverId : '') + ']' : '');
     const rep = { id: H.uid(), reporterId: u.id, targetType: 'message', targetId: msgId,
-      reason: 'Reported message in chat', t: Date.now(), status: 'open' };
+      chatId: c.id, senderId: senderId, receiverId: receiverId,
+      reason: reasonText, t: Date.now(), status: 'open' };
     H.state.reports.push(rep);
     H.saveState();
     H.toast('Message reported — our team will review within 24 hours');
     if (window.supabase && typeof window.supabase.from === 'function') {
-      window.supabase.from('reports').insert({ id: rep.id, reporter_id: u.id,
-        target_type: 'message', target_id: msgId, reason: rep.reason, status: 'open' })
+      // message_id is a uuid column; only set it when msgId is a real uuid
+      // (cloud-synced messages), otherwise rely on the text target_id.
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(msgId));
+      const row = { id: rep.id, reporter_id: u.id, target_type: 'message', target_id: msgId,
+        chat_id: String(c.id), reason: reasonText, status: 'open' };
+      if (isUuid) row.message_id = msgId;
+      window.supabase.from('reports').insert(row)
         .then(function(r){ if (r && r.error) console.warn('message report save failed:', r.error.message); }, function(e){ console.warn('message report save failed:', e && e.message); });
     }
   };
@@ -2644,23 +2685,37 @@
       if (!sb || typeof sb.from !== 'function') { H.toast('Connection unavailable', 3000, true); return; }
       if (!H._blockedIds) H._blockedIds = new Set();
       const already = H._blockedIds.has(userId);
-      try {
-        if (already) {
-          const r = await sb.from('blocked_users').delete().eq('blocker_id', u.id).eq('blocked_id', userId);
-          if (r.error) throw new Error(r.error.message);
-          H._blockedIds.delete(userId);
-          H.toast('User unblocked');
-        } else {
+      const doBlock = async () => {
+        try {
           const r = await sb.from('blocked_users').insert({ blocker_id: u.id, blocked_id: userId });
           if (r.error) throw new Error(r.error.message);
           H._blockedIds.add(userId);
           H.toast('User blocked — you will no longer receive messages from them');
           H.goBack();
+        } catch (e) {
+          console.warn('blockUser:', e.message);
+          H.toast('Could not update block. Try again.', 3000, true);
         }
-      } catch (e) {
-        console.warn('blockUser:', e.message);
-        H.toast('Could not update block. Try again.', 3000, true);
+      };
+      if (already) {
+        try {
+          const r = await sb.from('blocked_users').delete().eq('blocker_id', u.id).eq('blocked_id', userId);
+          if (r.error) throw new Error(r.error.message);
+          H._blockedIds.delete(userId);
+          H.toast('User unblocked');
+        } catch (e) {
+          console.warn('blockUser:', e.message);
+          H.toast('Could not update block. Try again.', 3000, true);
+        }
+        return;
       }
+      // Confirm before blocking so the consequence is explicit.
+      H.modal({
+        title: 'Block this user?',
+        body: 'You will no longer receive messages from this user, and they won’t be able to contact you on PaMarket. You can unblock them at any time.',
+        confirmText: 'Block user', danger: true,
+        onConfirm: doBlock,
+      });
     },
 
     reportUser(userId) {
