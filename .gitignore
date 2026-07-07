@@ -15,7 +15,6 @@ android/app/src/main/assets/capacitor.plugins.json
 .env
 *.txt
 !robots.txt
-js/supabase-config.js
 backup.sql
 package-lock - Copy.json
 package - Copy.json
