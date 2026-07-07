@@ -27,7 +27,7 @@
 <meta id="twTitle" name="twitter:title" content="Rental Vehicle — PaMarket Zimbabwe">
 <meta id="twDesc" name="twitter:description" content="View rental vehicle details on PaMarket — Zimbabwe's free marketplace.">
 <meta id="twImage" name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
-<meta name="robots" content="index, follow">
+<meta id="robotsMeta" name="robots" content="index, follow">
 <meta name="geo.region" content="ZW">
 <meta name="geo.placename" content="Zimbabwe">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -417,6 +417,10 @@ async function init(){
 }
 
 function showNotFound(){
+  // Unavailable rental → noindex so removed/withdrawn vehicles aren't indexed.
+  // The fetch already filters to available+approved rentals (backend is the
+  // source of truth); no private data or schema is rendered on this path.
+  var rm=document.getElementById('robotsMeta');if(rm)rm.setAttribute('content','noindex, nofollow');
   document.getElementById('loadingState').classList.add('hidden');
   document.getElementById('notFoundState').classList.remove('hidden');
 }

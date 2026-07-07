@@ -27,7 +27,7 @@
 <meta id="twTitle" name="twitter:title" content="Business Shop — PaMarket Zimbabwe">
 <meta id="twDesc" name="twitter:description" content="Browse products, read reviews and contact the seller directly on PaMarket.">
 <meta id="twImage" name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
-<meta name="robots" content="index, follow">
+<meta id="robotsMeta" name="robots" content="index, follow">
 <meta name="geo.region" content="ZW">
 <meta name="geo.placename" content="Zimbabwe">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -496,6 +496,9 @@ function render(b, extras){
 }
 
 function showNotFound(){
+  // A shop that isn't active must not be indexed (SEO — don't index removed
+  // content). Backend RLS/PM filters already keep hidden shops out of the fetch.
+  var rm=document.getElementById('robotsMeta');if(rm)rm.setAttribute('content','noindex, nofollow');
   document.getElementById('bizLoading').classList.add('hidden');
   var c = document.getElementById('bizContent');
   c.innerHTML = '<div class="biz-body"><div class="empty-state" style="margin-top:60px">'+

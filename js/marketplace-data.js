@@ -225,6 +225,102 @@
     return pgRpc(fn, { p_ad_id: id });
   }
 
+  // ── Session-aware access (Phase D) ────────────────────────────────
+  // The website stores a Supabase auth session under 'pm_session' (written by
+  // auth.html / auth-callback.html — same shape session.js reads). When present
+  // and unexpired, we send the user's access_token so PostgREST/RLS treats the
+  // request as that user (needed for a seller to read their own hidden listing,
+  // and to attribute a report to reporter_id = auth.uid()).
+  function getSession() {
+    try {
+      var s = global.localStorage && localStorage.getItem('pm_session');
+      if (!s) return null;
+      var session = JSON.parse(s);
+      if (session.expires_at && Date.now() / 1000 > session.expires_at - 60) return null;
+      return session;
+    } catch (e) { return null; }
+  }
+  function authHeaders() {
+    var h = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+    var s = getSession();
+    if (s && s.access_token) h.Authorization = 'Bearer ' + s.access_token;
+    return h;
+  }
+
+  // Coarse public moderation state for an old /detail URL whose listing is no
+  // longer publicly visible. Uses the read-only security-definer RPC so the
+  // page can show the right message WITHOUT exposing any private listing data
+  // and WITHOUT bypassing row visibility. Returns one of:
+  // 'active' | 'review' | 'removed' | 'sold' | 'unavailable' (falls back to
+  // 'unavailable' on any error).
+  function fetchListingState(id) {
+    if (!id) return Promise.resolve('unavailable');
+    return fetch(SB_URL + '/rest/v1/rpc/listing_public_state', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_id: String(id) }),
+    }).then(function (res) {
+      if (!res.ok) return 'unavailable';
+      return res.json();
+    }).then(function (v) {
+      return (typeof v === 'string' && v) ? v : 'unavailable';
+    }).catch(function () { return 'unavailable'; });
+  }
+
+  // Fetch a listing the current viewer owns, regardless of moderation status.
+  // Sent with the user's token so RLS returns the row only when the caller is
+  // the seller (or it is active). Non-owners get null. Used to show sellers the
+  // status of their own under-review / flagged / removed listing (Phase D #6).
+  function fetchOwnListingById(id) {
+    var s = getSession();
+    if (!id || !s || !s.access_token) return Promise.resolve(null);
+    return fetch(SB_URL + '/rest/v1/listings?id=eq.' + esc(id) + '&select=*', {
+      headers: authHeaders(),
+    }).then(function (res) {
+      if (!res.ok) return null;
+      return res.json();
+    }).then(function (rows) {
+      return (rows && rows[0]) || null;
+    }).catch(function () { return null; });
+  }
+
+  function currentUserId() {
+    var s = getSession();
+    return (s && s.user && s.user.id) || null;
+  }
+
+  // Submit a content report to the EXISTING reports table (no separate system).
+  // Works logged-in (reporter_id = auth.uid()) or anonymously (reporter_id null,
+  // which the table's INSERT policy permits). targetType: 'listing' | 'user'.
+  function submitReport(opts) {
+    opts = opts || {};
+    if (!opts.targetType || !opts.targetId || !opts.reason) {
+      return Promise.reject(new Error('missing report fields'));
+    }
+    var s = getSession();
+    var row = {
+      target_type: opts.targetType,
+      target_id: String(opts.targetId),
+      reason: String(opts.reason),
+      status: 'open',
+      reporter_id: (s && s.user && s.user.id) || null,
+      reported_by: (s && s.user && (s.user.email || s.user.id)) || 'website-anon',
+    };
+    return fetch(SB_URL + '/rest/v1/reports', {
+      method: 'POST',
+      headers: Object.assign({ Prefer: 'return=minimal' }, authHeaders()),
+      body: JSON.stringify(row),
+    }).then(function (res) {
+      // 23505 = duplicate report from the same reporter on the same target;
+      // treat as success so the user sees "reported" rather than an error.
+      if (res.ok || res.status === 409) return true;
+      return res.text().then(function (t) {
+        if (/duplicate key|23505/i.test(t)) return true;
+        throw new Error('report failed: ' + res.status);
+      });
+    });
+  }
+
   function money(n, currency) {
     var num = Number(n) || 0;
     return (currency === 'ZWG' ? 'ZWG ' : '$') + num.toLocaleString();
@@ -256,4 +352,10 @@
   global.PM.trackAdEvent = trackAdEvent;
   global.PM.money = money;
   global.PM.timeAgo = timeAgo;
+  // Phase D — moderation-aware website helpers.
+  global.PM.getSession = getSession;
+  global.PM.currentUserId = currentUserId;
+  global.PM.fetchListingState = fetchListingState;
+  global.PM.fetchOwnListingById = fetchOwnListingById;
+  global.PM.submitReport = submitReport;
 })(window);

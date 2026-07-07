@@ -27,7 +27,7 @@
 <meta id="twTitle" name="twitter:title" content="Listing — PaMarket Zimbabwe">
 <meta id="twDesc" name="twitter:description" content="View listing details on PaMarket — Zimbabwe's free marketplace.">
 <meta id="twImage" name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
-<meta name="robots" content="index, follow">
+<meta id="robotsMeta" name="robots" content="index, follow">
 <meta name="geo.region" content="ZW">
 <meta name="geo.placename" content="Zimbabwe">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -123,6 +123,31 @@ button{font-family:inherit;cursor:pointer}
 .safety-card h4{font-size:13px;font-weight:800;color:#92400E;margin-bottom:8px;display:flex;align-items:center;gap:7px}
 .safety-card ul{padding-left:18px}
 .safety-card li{font-size:12.5px;color:#92400E;line-height:1.7}
+.report-btn{width:100%;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:7px;background:#fff;border:1.5px solid #F5E1A4;color:#92400E;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.report-btn:hover{border-color:#DC2626;color:#DC2626}
+
+/* ══ SELLER STATUS BANNER (owner view) ══ */
+#sellerStatusBanner{max-width:1200px;margin:0 auto 4px;padding:14px 32px}
+.ssb-inner{border-radius:12px;padding:12px 16px;font-size:13.5px;font-weight:600;line-height:1.5;display:flex;gap:10px;align-items:flex-start}
+.ssb-inner svg{flex-shrink:0;margin-top:1px}
+.ssb-active{background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46}
+.ssb-review{background:#FFFBEB;border:1px solid #FDE68A;color:#92400E}
+.ssb-removed{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B}
+
+/* ══ REPORT MODAL ══ */
+.rpt-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.rpt-overlay.open{display:flex}
+.rpt-box{background:#fff;border-radius:16px;max-width:420px;width:100%;padding:22px;box-shadow:0 24px 60px rgba(15,36,96,.25)}
+.rpt-box h3{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:4px}
+.rpt-box p{font-size:13px;color:var(--sub);margin-bottom:14px}
+.rpt-reasons{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.rpt-reason{text-align:left;background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit;transition:all .12s}
+.rpt-reason:hover,.rpt-reason.on{border-color:var(--navy);background:#EEF2FF;color:var(--navy)}
+.rpt-actions{display:flex;gap:10px;margin-top:14px}
+.rpt-actions button{flex:1;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--line)}
+.rpt-cancel{background:#fff;color:var(--sub)}
+.rpt-submit{background:var(--navy);color:#fff;border-color:var(--navy)}
+.rpt-submit:disabled{opacity:.5;cursor:not-allowed}
 
 /* ══ SIMILAR ══ */
 .similar-sec{max-width:1200px;margin:0 auto;padding:0 32px 60px}
@@ -316,11 +341,13 @@ window.doSearch = window.doSearch || function(){
 </div>
 
 <div id="notFoundState" class="state-msg hidden">
-  This listing is no longer available or has been removed.<br><br>
+  <div id="notFoundMsg">This listing is no longer available or has been removed.</div>
+  <br>
   <a href="browse">Browse other listings</a>
 </div>
 
 <div id="detailContent" class="hidden">
+  <div id="sellerStatusBanner" class="hidden"></div>
   <div class="detail-wrap">
     <div>
       <div class="gallery">
@@ -351,6 +378,7 @@ window.doSearch = window.doSearch || function(){
         <a class="btn btn-navy contact-btn" id="profileBtn">
           View Full Profile
         </a>
+        <button type="button" id="reportSellerBtn" style="width:100%;margin-top:10px;background:none;border:none;color:var(--mute);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline">Report this seller</button>
       </div>
       <div class="safety-card">
         <h4>
@@ -361,8 +389,12 @@ window.doSearch = window.doSearch || function(){
           <li>Meet in a public place during daylight hours</li>
           <li>Never pay before seeing the item in person</li>
           <li>PaMarket does not handle payments or delivery</li>
-          <li>Report suspicious listings via the app</li>
+          <li>Keep all conversations and payments inside PaMarket</li>
         </ul>
+        <button type="button" class="report-btn" id="reportBtn">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Report this listing
+        </button>
       </div>
     </div>
   </div>
@@ -375,6 +407,19 @@ window.doSearch = window.doSearch || function(){
   <div class="related-searches hidden" id="relatedSearches">
     <h2>Related Searches</h2>
     <div class="related-searches-list" id="relatedSearchesList"></div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="rpt-overlay" id="rptOverlay">
+  <div class="rpt-box" role="dialog" aria-modal="true" aria-labelledby="rptTitle">
+    <h3 id="rptTitle">Report this listing</h3>
+    <p id="rptSub">Tell us what's wrong. Our safety team reviews every report.</p>
+    <div class="rpt-reasons" id="rptReasons"></div>
+    <div class="rpt-actions">
+      <button type="button" class="rpt-cancel" id="rptCancel">Cancel</button>
+      <button type="button" class="rpt-submit" id="rptSubmit" disabled>Submit report</button>
+    </div>
   </div>
 </div>
 
@@ -476,15 +521,34 @@ function simCard(l,idx){
   </a>`;
 }
 
+// Flip the page to noindex,nofollow so search engines don't index an
+// unavailable/moderated listing. (Backend RLS is the real gate; this is the
+// SEO signal so old indexed URLs get dropped and never re-indexed.)
+function setNoIndex(){
+  var m=document.getElementById('robotsMeta');
+  if(m)m.setAttribute('content','noindex, nofollow');
+}
+
+window.__reportTarget=null;
+
 async function init(){
   const id=new URLSearchParams(location.search).get('id');
   if(!id){showNotFound();return}
   try{
+    // Public (anon) fetch — RLS only returns active listings, so this is the
+    // authoritative public-visibility check. Hidden statuses never come back.
     const listing=await PM.fetchListingById(id);
-    if(!listing){showNotFound();return}
+    if(!listing){
+      // No active row for the public. Either the viewer owns a hidden listing
+      // (seller awareness) or it's genuinely unavailable/moderated.
+      await handleUnavailable(id);
+      return;
+    }
     // Seller reviews drive Product aggregateRating/review (real data only).
     const reviews=await PM.fetchSellerReviews(listing.seller_id,20).catch(()=>[]);
     renderListing(listing,reviews);
+    // Owner viewing their own live listing → confirm it's live.
+    maybeShowSellerBanner(listing,'active');
     document.getElementById('loadingState').classList.add('hidden');
     document.getElementById('detailContent').classList.remove('hidden');
     PM.fetchSimilarListings(listing.category,listing.id,4).then(rows=>{
@@ -493,16 +557,104 @@ async function init(){
         : '<div style="color:var(--mute);font-size:13.5px">No similar listings right now.</div>';
     }).catch(()=>{});
   }catch(e){
-    showNotFound();
+    await handleUnavailable(id);
   }
 }
 
-function showNotFound(){
+// Decide what to show when the public fetch returned nothing. Always noindex.
+async function handleUnavailable(id){
+  setNoIndex();
+  // If the signed-in viewer is the seller, RLS lets them read their own hidden
+  // listing — show them its moderation status (no schema, this is a dashboard
+  // view, not a public page). Otherwise show the correct public message.
+  const own=await PM.fetchOwnListingById(id).catch(()=>null);
+  if(own){
+    const st=own.status||'unavailable';
+    if(st==='active'){
+      // Edge case: became active between calls — render normally.
+      const reviews=await PM.fetchSellerReviews(own.seller_id,20).catch(()=>[]);
+      renderListing(own,reviews);
+      maybeShowSellerBanner(own,'active');
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('detailContent').classList.remove('hidden');
+      return;
+    }
+    // Owner sees a status-only view: no public schema, no re-indexing.
+    showSellerModeratedView(own);
+    return;
+  }
+  // Public visitor: reveal only the coarse state so we can pick the right copy.
+  const state=await PM.fetchListingState(id).catch(()=>'unavailable');
+  showUnavailable(state);
+}
+
+const STATE_COPY={
+  review:'This listing is currently under review and is unavailable.',
+  removed:'This listing has been removed.',
+  sold:'This listing has been sold and is no longer available.',
+  unavailable:'This listing is no longer available or has been removed.'
+};
+
+// Public unavailable page. Never renders seller details, phone, images or any
+// private data — only a neutral, state-appropriate message. Always noindex.
+function showUnavailable(state){
+  setNoIndex();
+  const msg=STATE_COPY[state]||STATE_COPY.unavailable;
+  const el=document.getElementById('notFoundMsg');
+  if(el)el.textContent=msg;
   document.getElementById('loadingState').classList.add('hidden');
+  document.getElementById('detailContent').classList.add('hidden');
   document.getElementById('notFoundState').classList.remove('hidden');
 }
 
+function showNotFound(){ showUnavailable('unavailable'); }
+
+// Seller-only moderated view: shows the seller their own listing's status with a
+// clear explanation, WITHOUT public schema/indexing. Contact CTAs are hidden.
+function showSellerModeratedView(l){
+  setNoIndex();
+  const banners={
+    pending:['ssb-review','Your listing is pending review. It will go live once our safety team approves it.'],
+    under_review:['ssb-review','Your listing is under review by the PaMarket safety team. It is temporarily hidden from buyers.'],
+    flagged:['ssb-review','Your listing was flagged and is being checked by our safety team. It is currently hidden from buyers.'],
+    removed:['ssb-removed','Your listing was removed for breaking our community guidelines. It is no longer visible to buyers.'],
+    deleted:['ssb-removed','This listing has been deleted.'],
+    sold:['ssb-active','This listing is marked as sold.']
+  };
+  const b=banners[l.status]||['ssb-review','Your listing is not currently visible to buyers.'];
+  const banner=document.getElementById('sellerStatusBanner');
+  banner.innerHTML='<div class="ssb-inner '+b[0]+'">'
+    +'<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+    +'<div><strong>'+esc(l.title||'Your listing')+'</strong><br>'+b[1]+'</div></div>';
+  banner.classList.remove('hidden');
+  document.getElementById('loadingState').classList.add('hidden');
+  document.getElementById('notFoundState').classList.add('hidden');
+  // Keep the rest of detailContent hidden — the owner just needs the status.
+  document.getElementById('detailContent').classList.remove('hidden');
+  ['galleryMain','galleryThumbs','dTitle','dPrice','dDesc','dMeta'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent='';});
+  var wrap=document.querySelector('#detailContent .detail-wrap');if(wrap)wrap.style.display='none';
+  var sim=document.querySelector('.similar-sec');if(sim)sim.style.display='none';
+}
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+// Show the owner a small "live" banner on their own active listing.
+function maybeShowSellerBanner(l,state){
+  const uid=PM.currentUserId&&PM.currentUserId();
+  if(!uid||!l.seller_id||String(uid)!==String(l.seller_id))return;
+  if(state==='active'){
+    const banner=document.getElementById('sellerStatusBanner');
+    banner.innerHTML='<div class="ssb-inner ssb-active">'
+      +'<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>'
+      +'<div>Your listing is live and visible to buyers.</div></div>';
+    banner.classList.remove('hidden');
+  }
+}
+
 function renderListing(l,reviews){
+  window.__listingId=l.id;
+  window.__sellerId=l.seller_id||null;
+  window.__sellerName=l.seller_name||'this seller';
   const loc=[l.suburb,l.city,l.province].filter(Boolean).join(', ')||'Zimbabwe';
   const catLabel=CAT_LABELS[l.category]||l.category;
   const pageTitle=l.title+' — '+PM.money(l.price,l.currency)+' | PaMarket Zimbabwe';
@@ -819,6 +971,60 @@ document.addEventListener('click',e=>{
   const n=document.getElementById('mobNav');
   if(n && n.classList.contains('open') && h && !h.contains(e.target))n.classList.remove('open');
 });
+
+// ── Reporting (Phase D) — submits to the existing reports table ──────────
+// Reasons match the app exactly (see js/safety.js reportReasons).
+const REPORT_REASONS={
+  listing:['Scam or fraud','Fake item','Incorrect information','Prohibited item','Spam','Offensive content','Suspicious behaviour','Other'],
+  user:['Scam or fraud','Suspicious behaviour','Harassment','Spam','Fake account','Impersonation','Other']
+};
+(function(){
+  const overlay=document.getElementById('rptOverlay');
+  const reasonsWrap=document.getElementById('rptReasons');
+  const submitBtn=document.getElementById('rptSubmit');
+  let chosen=null;
+  function open(type){
+    const targetId=type==='user'?window.__sellerId:window.__listingId;
+    if(!targetId){alert('Nothing to report here.');return;}
+    window.__reportTarget={type:type,id:targetId};
+    document.getElementById('rptTitle').textContent=type==='user'?'Report this seller':'Report this listing';
+    document.getElementById('rptSub').textContent=type==='user'
+      ?'Tell us what’s wrong with '+(window.__sellerName||'this seller')+'. Our safety team reviews every report.'
+      :'Tell us what’s wrong. Our safety team reviews every report.';
+    chosen=null;submitBtn.disabled=true;
+    reasonsWrap.innerHTML=(REPORT_REASONS[type]||REPORT_REASONS.listing).map(function(r){
+      return '<button type="button" class="rpt-reason" data-reason="'+esc(r)+'">'+esc(r)+'</button>';
+    }).join('');
+    reasonsWrap.querySelectorAll('.rpt-reason').forEach(function(b){
+      b.addEventListener('click',function(){
+        reasonsWrap.querySelectorAll('.rpt-reason').forEach(function(x){x.classList.remove('on');});
+        b.classList.add('on');chosen=b.dataset.reason;submitBtn.disabled=false;
+      });
+    });
+    overlay.classList.add('open');
+  }
+  function close(){overlay.classList.remove('open');}
+  window.__openReport=open;
+  const rb=document.getElementById('reportBtn');
+  if(rb)rb.addEventListener('click',function(){open('listing');});
+  const rsb=document.getElementById('reportSellerBtn');
+  if(rsb)rsb.addEventListener('click',function(){open('user');});
+  document.getElementById('rptCancel').addEventListener('click',close);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)close();});
+  submitBtn.addEventListener('click',function(){
+    if(!chosen||!window.__reportTarget)return;
+    submitBtn.disabled=true;submitBtn.textContent='Submitting…';
+    PM.submitReport({targetType:window.__reportTarget.type,targetId:window.__reportTarget.id,reason:chosen})
+      .then(function(){
+        close();submitBtn.textContent='Submit report';
+        alert('Thank you. Your report has been submitted and will be reviewed by our safety team.');
+      })
+      .catch(function(){
+        submitBtn.disabled=false;submitBtn.textContent='Submit report';
+        alert('Sorry, we couldn’t submit your report. Please try again.');
+      });
+  });
+})();
 
 init();
 </script>
