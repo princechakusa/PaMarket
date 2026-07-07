@@ -186,10 +186,11 @@
           ${bar('Staff seats', staffUsed, ent.staffLimit)}
         </div>
 
-        ${isOwner ? `<div style="display:flex;gap:8px;margin-bottom:16px">
-          <button onclick="H._bizSub.setCycle('${b.id}','monthly')" style="flex:1;padding:9px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;border:1.5px solid ${b.billingCycle !== 'yearly' ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${b.billingCycle !== 'yearly' ? '#1A3A8F' : 'var(--card,#fff)'};color:${b.billingCycle !== 'yearly' ? '#fff' : 'var(--text)'}">Monthly</button>
-          <button onclick="H._bizSub.setCycle('${b.id}','yearly')" style="flex:1;padding:9px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;border:1.5px solid ${b.billingCycle === 'yearly' ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${b.billingCycle === 'yearly' ? '#1A3A8F' : 'var(--card,#fff)'};color:${b.billingCycle === 'yearly' ? '#fff' : 'var(--text)'}">Yearly · save 2 months</button>
-        </div>` : ''}
+        <!-- Monthly/Yearly toggle removed until a real yearly base plan
+             exists in Play Console — shop_starter/shop_pro/shop_premium
+             currently have only a monthly base plan, so offering "Yearly"
+             here would lead to "not available for purchase" at buy time. -->
+
 
         <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px">Plans</div>
         ${H.BIZ_PLANS.map(planCard).join('')}

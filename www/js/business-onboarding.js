@@ -26,11 +26,16 @@
   // Subscription System (Module 3) owns pricing/feature enforcement; this list
   // is the selectable surface and must stay in sync with the plan_id CHECK
   // constraint in supabase/schema/businesses.sql.
+  // Prices must match the real Google Play Console subscription prices
+  // exactly (shop_starter/shop_pro/shop_premium) — Google's own purchase
+  // sheet is the actual source of truth and will show these prices
+  // regardless of what's displayed here, but this label must never
+  // contradict it.
   H.BIZ_PLANS = [
-    { id: 'free',    name: 'Free',    price: 0,  limit: 3,    tagline: 'Get started',     features: ['Up to 3 listings', 'Basic visibility'] },
-    { id: 'starter', name: 'Starter', price: 5,  limit: 15,   tagline: 'For small sellers',features: ['Up to 15 listings', 'Standard ranking', 'Basic analytics'] },
-    { id: 'pro',     name: 'Pro',     price: 15, limit: 60,   tagline: 'Grow faster',      features: ['Up to 60 listings', 'Higher ranking', 'Full analytics', '1 featured slot'] },
-    { id: 'premium', name: 'Premium', price: 40, limit: -1,   tagline: 'Maximum reach',    features: ['Unlimited listings', 'Top ranking', 'Full analytics', 'Featured placement'] }
+    { id: 'free',    name: 'Free',    price: 0,     limit: 3,    tagline: 'Get started',     features: ['Up to 3 listings', 'Basic visibility'] },
+    { id: 'starter', name: 'Starter', price: 9.99,  limit: 15,   tagline: 'For small sellers',features: ['Up to 15 listings', 'Standard ranking', 'Basic analytics'] },
+    { id: 'pro',     name: 'Pro',     price: 19.99, limit: 60,   tagline: 'Grow faster',      features: ['Up to 60 listings', 'Higher ranking', 'Full analytics', '1 featured slot'] },
+    { id: 'premium', name: 'Premium', price: 29.99, limit: -1,   tagline: 'Maximum reach',    features: ['Unlimited listings', 'Top ranking', 'Full analytics', 'Featured placement'] }
   ];
 
   // ── Category compatibility ───────────────────────────────────

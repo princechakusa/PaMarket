@@ -60,16 +60,24 @@
 
     shopSubscriptions: {
       status: 'active',
-      // Business shop subscriptions.
+      // Business shop subscriptions. Google Play Billing subscriptions have
+      // a top-level Product ID (what getAvailableProducts()/subscribe() use)
+      // and separate Base Plan IDs underneath it (e.g. 'premium-monthly') —
+      // these are NOT the same string. Each product below has exactly ONE
+      // base plan in Play Console today (monthly only), so the native plugin
+      // auto-selects it without needing an explicit offerToken (see
+      // PurchasePlugin.java's parseBillingFlowParams — it defaults to
+      // subscriptionOfferDetails[0] when no offerToken is given). Yearly
+      // billing does not exist as a real Play Console base plan yet, so it
+      // is NOT listed here — adding it means creating the yearly base plan
+      // in Play Console first, then adding an explicit offerToken-aware
+      // entry, not just appending a new string to this array.
       // supabase/migrations/add_play_subscriptions.sql — product_id CHECK constraint.
-      // planId/cycle mirror H.BIZ_PLANS' ids in business-onboarding.js.
+      // planId mirrors H.BIZ_PLANS' ids in business-onboarding.js.
       products: [
-        { productId: 'shop_starter_monthly', planId: 'starter', cycle: 'monthly' },
-        { productId: 'shop_starter_yearly',  planId: 'starter', cycle: 'yearly' },
-        { productId: 'shop_pro_monthly',     planId: 'pro',     cycle: 'monthly' },
-        { productId: 'shop_pro_yearly',      planId: 'pro',     cycle: 'yearly' },
-        { productId: 'shop_premium_monthly', planId: 'premium', cycle: 'monthly' },
-        { productId: 'shop_premium_yearly',  planId: 'premium', cycle: 'yearly' },
+        { productId: 'shop_starter', planId: 'starter', cycle: 'monthly' },
+        { productId: 'shop_pro',     planId: 'pro',     cycle: 'monthly' },
+        { productId: 'shop_premium', planId: 'premium', cycle: 'monthly' },
       ],
     },
 
@@ -84,8 +92,21 @@
       ],
     },
 
+    // ═══════════════════════════════════════════════════════════
+    // PLANNED — code/RPC/Edge Function backend is fully built for these, but
+    // NONE of these product ids exist in Google Play Console yet (only
+    // shop_starter/shop_pro/shop_premium are real, live products right now).
+    // Flipped back from 'active' after the shop-plan product-id mismatch
+    // incident, to avoid the exact same class of bug: _ensureProductsLoaded()
+    // batches every 'active' family into one getAvailableProducts() call, so
+    // requesting ids Google doesn't have risks breaking shop plan loading
+    // too, not just failing quietly on their own. Flip back to 'active' only
+    // after creating the real Play Console product(s) AND confirming the
+    // exact resulting Product ID string(s) match what's listed below.
+    // ═══════════════════════════════════════════════════════════
+
     recruiterSubscriptions: {
-      status: 'active',
+      status: 'planned',
       // planId mirrors H.JOB_PLAN_ENTITLEMENTS ('recruiter' | 'recruiter_pro').
       // supabase/migrations/add_recruiter_subscriptions.sql — product_id CHECK constraint.
       products: [
@@ -97,7 +118,7 @@
     },
 
     jobCredits: {
-      status: 'active',
+      status: 'planned',
       // Pay-per-post alternative to a recruiter subscription; one credit
       // spent per job posted beyond the recruiter plan's free post limit.
       // supabase/migrations/add_job_credits.sql — product_id CHECK constraint.
@@ -108,7 +129,7 @@
     },
 
     jobBoosts: {
-      status: 'active',
+      status: 'planned',
       // Same mechanics/backend as `boosts` (reuses play_purchases +
       // activate_play_boost — a job post is a listings row like any other),
       // kept as its own family so the UI can offer a distinct "boost this
@@ -120,7 +141,7 @@
     },
 
     rentalFeaturedSlots: {
-      status: 'active',
+      status: 'planned',
       // Duration-based featured placement for a rental listing — targets
       // rental_featured_listings (previously admin-only/unpaid; this adds a
       // purchased path that inserts a system row alongside it, same table).
