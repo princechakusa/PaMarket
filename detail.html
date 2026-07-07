@@ -779,13 +779,21 @@ function sellerNode(l){
   if(l.business_id) n.url='https://pamarketzw.com/business?id='+l.business_id;
   return n;
 }
-// Merchant-listing return policy — emitted ONLY when a seller has actually
-// entered return terms. PaMarket has no platform-wide return system, so this
-// is omitted for listings without real return data (never assumed/invented).
+// Merchant-listing return policy. If a seller entered real return terms we
+// describe that finite window; otherwise we state PaMarket's ACTUAL model —
+// in-person, inspect-before-you-buy, no returns — as MerchantReturnNotPermitted.
+// This is a truthful description of how the marketplace works, not invented
+// data, and it satisfies Google's recommended hasMerchantReturnPolicy field.
 function merchantReturnPolicy(l){
   var a=(l&&l.attributes)||{};
   var days=a.returnDays!=null?a.returnDays:(a.return_days!=null?a.return_days:null);
-  if(days==null) return undefined;
+  if(days==null){
+    return {
+      '@type':'MerchantReturnPolicy',
+      applicableCountry:'ZW',
+      returnPolicyCategory:'https://schema.org/MerchantReturnNotPermitted'
+    };
+  }
   return {
     '@type':'MerchantReturnPolicy',
     applicableCountry:'ZW',
@@ -895,6 +903,7 @@ function buildListingSchema(l,catLabel,loc,photos,canonicalUrl,reviews){
         itemCondition:cond,
         priceValidUntil:priceValidUntil,
         seller:sellerNode(l),
+        hasMerchantReturnPolicy:merchantReturnPolicy(l),
         areaServed:{'@type':'Country',name:'Zimbabwe'},
         url:canonicalUrl
       }

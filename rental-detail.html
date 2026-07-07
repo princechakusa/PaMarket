@@ -515,6 +515,13 @@ function render(v){
       availability:v.is_available?'https://schema.org/InStock':'https://schema.org/OutOfStock',
       businessFunction:'http://purl.org/goodrelations/v1#LeaseOut',
       areaServed:{'@type':'Country',name:'Zimbabwe'},
+      // Truthful for a rental: no purchase return/refund applies. States
+      // PaMarket's actual model and satisfies Google's recommended field.
+      hasMerchantReturnPolicy:{
+        '@type':'MerchantReturnPolicy',
+        applicableCountry:'ZW',
+        returnPolicyCategory:'https://schema.org/MerchantReturnNotPermitted'
+      },
       url:canonicalUrl
     },
     provider:{'@type':'Organization',name:company.trading_name||'PaMarket Rental Partner'}
