@@ -118,6 +118,7 @@
       + nchip(icPeople, 'Browse Candidates', "H.openInner('HireTalent')")
       + nchip(icPeople, 'My Requests', "H.openInner('MyContactRequests')")
       + nchip(icSend, 'Post a Job', "H.openInner('PostJob')")
+      + nchip(icBriefcase, 'Recruiter Plan', "H.openInner('RecruiterSubscription')")
       + '</div></div>'
       + '</div></div>';
   };
@@ -1430,7 +1431,10 @@
       + '<div class="det-topbar"><button class="back" onclick="H.goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="det-topbar-title">Post a Job</div></div>'
       + '<div style="margin:12px 14px;background:#1A3A8F18;border-radius:12px;padding:12px 14px;display:flex;gap:10px">'
       + '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-      + '<div style="font-size:12px;color:#1A3A8F;font-weight:600;line-height:1.6">Jobs go live immediately. Company name is always visible. Posting is free.</div>'
+      + '<div style="font-size:12px;color:#1A3A8F;font-weight:600;line-height:1.6">Jobs go live immediately. Company name is always visible. Posting is free up to your plan\'s limit — '
+      + '<span onclick="H.buyJobCreditsSheet()" style="text-decoration:underline;cursor:pointer">buy credits</span> or upgrade your '
+      + '<span onclick="H.openInner(\'RecruiterSubscription\')" style="text-decoration:underline;cursor:pointer">recruiter plan</span> to post more.'
+      + '<span id="jobCreditInfo">' + _jobCreditInfoText() + '</span></div>'
       + '</div>'
       + '<div style="padding:0 14px 100px">'
       + _field('jCompany', 'Company Name *', 'text', 'Your company or organisation name', H.escHtml(u.company || u.name || ''))
@@ -1466,9 +1470,50 @@
       + '</div></div>';
   };
 
+  function _jobCreditInfoText() {
+    var n = H.state.jobCreditBalance || 0;
+    return n > 0 ? ' You have ' + n + ' credit' + (n === 1 ? '' : 's') + '.' : '';
+  }
+
   H.pages.PostJob_after = function () {
     H._jobQuestionsArr = [];
     H._jqRender();
+    // Refresh credit balance / recruiter plan in the background, then patch
+    // ONLY the banner text in place. Never H.renderPage() from this hook —
+    // a full re-render wipes whatever the user has already typed into the
+    // form AND re-runs this hook, fetching in an endless loop.
+    if (typeof H.fetchJobCreditBalance === 'function') {
+      H.fetchJobCreditBalance().then(function () {
+        var el = document.getElementById('jobCreditInfo');
+        if (el) el.textContent = _jobCreditInfoText();
+      });
+    }
+    if (typeof H.fetchRecruiterProfile === 'function') H.fetchRecruiterProfile();
+  };
+
+  H.buyJobCreditsSheet = function () {
+    var products = H.getActiveProducts('jobCredits');
+    if (!products.length) return;
+    var old = document.getElementById('_jobCreditSheet');
+    if (old) old.remove();
+    var sheet = document.createElement('div');
+    sheet.id = '_jobCreditSheet';
+    sheet.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
+    sheet.addEventListener('click', function (ev) { if (ev.target === sheet) sheet.remove(); });
+    var planHtml = products.map(function (p) {
+      return '<button onclick="document.getElementById(\'_jobCreditSheet\').remove();H.buyJobCredits(\'' + p.productId + '\')" '
+        + 'style="background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;padding:14px 16px;'
+        + 'display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;width:100%">'
+        + '<div><div style="font-size:15px;font-weight:800">' + p.label + '</div>'
+        + (p.tag ? '<div style="font-size:11px;font-weight:700;opacity:.75;margin-top:2px">' + p.tag + '</div>' : '')
+        + '</div><div style="font-size:13px;font-weight:700;opacity:.9">Buy</div></button>';
+    }).join('');
+    sheet.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px calc(env(safe-area-inset-bottom,0px)+20px);box-sizing:border-box">'
+      + '<div style="width:36px;height:4px;background:#E8ECF4;border-radius:4px;margin:0 auto 18px"></div>'
+      + '<div style="font-size:17px;font-weight:800;color:#111;margin-bottom:4px">Buy job posting credits</div>'
+      + '<div style="font-size:13px;color:#666;margin-bottom:16px">Each credit publishes one extra job listing. Paid securely via Google Play.</div>'
+      + '<div style="display:flex;flex-direction:column;gap:10px">' + planHtml + '</div></div>';
+    document.body.appendChild(sheet);
   };
 
   function _field(id, label, type, placeholder, value) {
@@ -1497,6 +1542,22 @@
     var u = H.currentUser();
     if (!u) { H.toast('Please sign in first'); return; }
     if (!u.companyVerified) { H.toast('You must be verified to post jobs. Go to Profile > Get Verified.', 4000); return; }
+
+    // Posting stays free up to the recruiter's plan limit (grandfathered —
+    // this does not change existing free-posting behavior for anyone under
+    // their limit). Only once AT the limit do we require a job credit,
+    // consumed via spend_job_credit (server-side, auth.uid()-scoped) right
+    // after the listing is created — never gated purely client-side, since
+    // H.state.jobCreditBalance is just a locally cached read, not the
+    // source of truth.
+    var ent = typeof H.recruiterPlanEntitlements === 'function' ? H.recruiterPlanEntitlements((H.state.recruiterProfile || {}).planId || 'free') : { activeJobPosts: -1 };
+    var activePosts = (H.state.listings || []).filter(function (l) { return l.cat === 'jobs' && l.sellerId === u.id && l.status !== 'removed'; }).length;
+    var overLimit = ent.activeJobPosts >= 0 && activePosts >= ent.activeJobPosts;
+    if (overLimit && (H.state.jobCreditBalance || 0) <= 0) {
+      H.toast('You’ve reached your plan’s free job post limit. Buy a job credit or upgrade your recruiter plan to post more.', 5000, true);
+      return;
+    }
+
     var jobType = 'Full-time';
     document.querySelectorAll('input[name="jType"]').forEach(function (r) { if (r.checked) jobType = r.value; });
     var salaryRaw = ((document.getElementById('jSalary') || {}).value || '').trim();
@@ -1526,6 +1587,18 @@
     H.state.listings.push(listing);
     H.saveState();
     if (typeof H.saveListingToCloud === 'function') H.saveListingToCloud(listing);
+    if (overLimit) {
+      var sb = window.supabase;
+      if (sb) {
+        sb.rpc('spend_job_credit', { p_listing_id: listing.id }).then(function (r) {
+          if (r.error || !r.data || r.data.ok !== true) {
+            console.warn('spend_job_credit failed:', r.error && r.error.message, r.data && r.data.msg);
+          } else if (typeof H.fetchJobCreditBalance === 'function') {
+            H.fetchJobCreditBalance();
+          }
+        });
+      }
+    }
     H.toast('Job posted! Candidates can now apply.');
     H.goBack();
   };
@@ -1838,6 +1911,9 @@
       + '<div style="position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #e5e7eb;z-index:200">'
       + (isMine
         ? '<button onclick="H.openInner(\'JobApplications\',{jobId:\'' + id + '\'})" style="width:100%;padding:14px;background:#111827;color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px">View Applications (' + appCount + ')</button>'
+        + '<div style="display:flex;gap:8px;margin-bottom:8px">'
+        + '<button onclick="H.boostJobListing(\'' + id + '\')" style="flex:1;padding:11px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">Boost this Job</button>'
+        + '</div>'
         + '<div style="display:flex;gap:8px">'
         + '<button onclick="H.openInner(\'EditJob\',{listingId:\'' + id + '\'})" style="flex:1;padding:11px;background:#f9fafb;color:#374151;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">Edit</button>'
         + '<button onclick="H._markJobFilled(\'' + id + '\')" style="flex:1;padding:11px;background:#f0fdf4;color:#15803d;border:1.5px solid #bbf7d0;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">Mark Filled</button>'
@@ -3075,5 +3151,88 @@
       + '<div style="width:3px;height:16px;background:#1A3A8F;border-radius:2px"></div>' + sectionTitle + '</div>'
       + '<div style="font-size:13px;color:var(--sub);line-height:1.8;white-space:pre-line">' + H.escHtml(text) + '</div></div>';
   }
+
+  // ── Recruiter subscription entitlements (single source of truth) ──
+  // Mirrors H.PLAN_ENTITLEMENTS' shape in business-subscription.js.
+  // activeJobPosts limit is enforced client-side in H._submitJob below;
+  // -1 = unlimited.
+  H.RECRUITER_PLAN_ENTITLEMENTS = {
+    free:           { name: 'Free',            activeJobPosts: 2,  candidateAccess: 'limited', profileVisibility: 'standard', rank: 0 },
+    recruiter:      { name: 'Recruiter',       activeJobPosts: 10, candidateAccess: 'full',     profileVisibility: 'featured', rank: 1 },
+    recruiter_pro:  { name: 'Recruiter Pro',   activeJobPosts: -1, candidateAccess: 'full',     profileVisibility: 'featured', rank: 2 },
+  };
+  H.recruiterPlanEntitlements = function (planId) { return H.RECRUITER_PLAN_ENTITLEMENTS[planId] || H.RECRUITER_PLAN_ENTITLEMENTS.free; };
+
+  H.RECRUITER_PLANS = [
+    { id: 'free',          price: 0 },
+    { id: 'recruiter',     price: 12 },
+    { id: 'recruiter_pro', price: 30 },
+  ];
+
+  H.pages.RecruiterSubscription = function () {
+    var u = H.currentUser();
+    if (!u) return '<div class="page active">' + H.innerTopbar('Recruiter Plan') + H.emptyState('Sign in required', 'Sign in to manage your recruiter plan') + '</div>';
+
+    var prof = H.state.recruiterProfile || { planId: 'free' };
+    var curPlanId = prof.planId || 'free';
+    var ent = H.recruiterPlanEntitlements(curPlanId);
+    var curRank = ent.rank;
+
+    var jobsPosted = (H.state.listings || []).filter(function (l) { return l.cat === 'jobs' && l.sellerId === u.id; }).length;
+
+    function planCard(p) {
+      var pent = H.recruiterPlanEntitlements(p.id);
+      var cur = p.id === curPlanId;
+      var higher = pent.rank > curRank;
+      var priceLabel = p.price === 0 ? 'Free' : ('$' + p.price + '/mo');
+      var btn = '';
+      if (!cur && higher && p.price > 0) {
+        btn = '<button class="btn-pri" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit" onclick="H.upgradeRecruiterPlan(\'' + p.id + '\',\'monthly\')">Buy via Google Play</button>';
+      }
+      return '<div style="border:2px solid ' + (cur ? '#1A3A8F' : 'var(--border,#E8ECF4)') + ';border-radius:16px;padding:15px;margin-bottom:10px;background:' + (cur ? '#EEF2FB' : 'var(--card,#fff)') + '">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center">'
+        + '<div style="font-size:15px;font-weight:800;color:' + (cur ? '#1A3A8F' : 'var(--text)') + '">' + H.escHtml(pent.name) + (cur ? ' · Current' : '') + '</div>'
+        + '<div style="font-size:14px;font-weight:800;color:#1A3A8F">' + priceLabel + '</div></div>'
+        + '<div style="font-size:11.5px;color:var(--sub);margin-top:4px">' + (pent.activeJobPosts < 0 ? 'Unlimited' : pent.activeJobPosts) + ' active job posts · ' + pent.candidateAccess + ' candidate access · ' + pent.profileVisibility + ' visibility</div>'
+        + btn + '</div>';
+    }
+
+    return '<div class="page active">'
+      + H.innerTopbar('Recruiter Plan')
+      + '<div class="inner-content" style="padding-bottom:40px">'
+      + '<div style="background:linear-gradient(135deg,#1A3A8F,#0f2460);border-radius:18px;padding:20px;color:#fff;margin-bottom:18px">'
+      + '<div style="font-size:12px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:.4px">CURRENT PLAN</div>'
+      + '<div style="font-size:24px;font-weight:800;margin-top:2px">' + H.escHtml(ent.name) + '</div>'
+      + '<div style="font-size:12.5px;color:rgba(255,255,255,.8);margin-top:4px">' + jobsPosted + ' active job post' + (jobsPosted === 1 ? '' : 's') + (ent.activeJobPosts < 0 ? '' : ' of ' + ent.activeJobPosts) + '</div>'
+      + '</div>'
+      + '<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px">Plans</div>'
+      + H.RECRUITER_PLANS.map(planCard).join('')
+      + '<div style="background:#EEF2FB;border:1px solid #c7d7f8;border-radius:14px;padding:16px;margin-top:8px">'
+      + '<div style="font-size:13px;font-weight:800;color:#1A3A8F;margin-bottom:4px">Upgrades activate instantly</div>'
+      + '<div style="font-size:12.5px;color:#475569;line-height:1.55">All recruiter plan upgrades are purchased securely through Google Play and activate automatically once confirmed.</div>'
+      + '</div></div></div>';
+  };
+
+  H.pages.RecruiterSubscription_after = function () {
+    // Re-render ONLY when the fetched plan actually differs from what was
+    // rendered — an unconditional renderPage() here re-runs this hook and
+    // fetches in an endless loop. Reconcile first (re-syncs a missed
+    // renewal/cancellation with Google), then refresh the profile.
+    var prevPlanId = (H.state.recruiterProfile || {}).planId || 'free';
+    var refresh = function () {
+      if (typeof H.fetchRecruiterProfile !== 'function') return;
+      H.fetchRecruiterProfile().then(function (prof) {
+        var newPlanId = (prof || {}).planId || 'free';
+        if (newPlanId !== prevPlanId && H.currentPageName === 'RecruiterSubscription') {
+          H.renderPage('RecruiterSubscription', H.currentPageParams);
+        }
+      });
+    };
+    if (typeof H.reconcileRecruiterSubscription === 'function') {
+      H.reconcileRecruiterSubscription().then(refresh).catch(refresh);
+    } else {
+      refresh();
+    }
+  };
 
 })(window.H);

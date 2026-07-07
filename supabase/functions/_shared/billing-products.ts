@@ -76,14 +76,10 @@ const SLOT_PACKS: ProductFamily<{ extraSlots: number; estimatedPriceUsd: number 
   },
 };
 
-// ═══════════════════════════════════════════════════════════
-// PLANNED — documented only. NO Edge Function, RPC, migration, Play Console
-// product, or purchase UI exists for these yet. Do not flip to 'active'
-// until all four of those are actually built and deployed.
-// ═══════════════════════════════════════════════════════════
-
+// Recruiter subscriptions.
+// supabase/migrations/add_recruiter_subscriptions.sql — product_id CHECK constraint.
 const RECRUITER_SUBSCRIPTIONS: ProductFamily<{ planId: string; cycle: string }> = {
-  status: 'planned',
+  status: 'active',
   products: {
     recruiter_monthly:     { planId: 'recruiter',     cycle: 'monthly' },
     recruiter_yearly:      { planId: 'recruiter',     cycle: 'yearly' },
@@ -92,27 +88,36 @@ const RECRUITER_SUBSCRIPTIONS: ProductFamily<{ planId: string; cycle: string }> 
   },
 };
 
-const JOB_BOOSTS: ProductFamily<{ days: number }> = {
-  status: 'planned',
-  products: {
-    job_boost_7day:  { days: 7 },
-    job_boost_30day: { days: 30 },
-  },
-};
-
+// Job posting credit packs (consumable) — one credit spent per job posted
+// beyond the recruiter plan's free post limit.
+// supabase/migrations/add_job_credits.sql — product_id CHECK constraint.
 const JOB_CREDITS: ProductFamily<{ credits: number }> = {
-  status: 'planned',
+  status: 'active',
   products: {
     job_credit_pack_1: { credits: 1 },
     job_credit_pack_5: { credits: 5 },
   },
 };
 
-const RENTAL_FEATURED_SLOTS: ProductFamily<{ extraSlots: number }> = {
-  status: 'planned',
+// Job listing boosts — reuses play_purchases + activate_play_boost (a job
+// post is a listings row like any other), kept as its own family so the
+// verify-play-purchase 501-guard and client UI can distinguish it.
+// supabase/migrations/add_job_boosts.sql — product_id CHECK constraint.
+const JOB_BOOSTS: ProductFamily<{ days: number }> = {
+  status: 'active',
   products: {
-    rental_featured_slot_1: { extraSlots: 1 },
-    rental_featured_slot_3: { extraSlots: 3 },
+    job_boost_7day:  { days: 7 },
+    job_boost_30day: { days: 30 },
+  },
+};
+
+// Duration-based rental listing featured placement.
+// supabase/migrations/add_rental_featured_slot_packs.sql — product_id CHECK constraint.
+const RENTAL_FEATURED_SLOTS: ProductFamily<{ days: number }> = {
+  status: 'active',
+  products: {
+    rental_featured_slot_7day:  { days: 7 },
+    rental_featured_slot_30day: { days: 30 },
   },
 };
 
@@ -161,3 +166,7 @@ export function getProductStatus(productId: string): ProductLookupStatus {
 export const BOOST_PRODUCTS = BOOSTS.status === 'active' ? BOOSTS.products : {};
 export const SLOT_PACK_PRODUCTS = SLOT_PACKS.status === 'active' ? SLOT_PACKS.products : {};
 export const SUBSCRIPTION_PRODUCTS = SHOP_SUBSCRIPTIONS.status === 'active' ? SHOP_SUBSCRIPTIONS.products : {};
+export const RECRUITER_SUBSCRIPTION_PRODUCTS = RECRUITER_SUBSCRIPTIONS.status === 'active' ? RECRUITER_SUBSCRIPTIONS.products : {};
+export const JOB_CREDIT_PRODUCTS = JOB_CREDITS.status === 'active' ? JOB_CREDITS.products : {};
+export const JOB_BOOST_PRODUCTS = JOB_BOOSTS.status === 'active' ? JOB_BOOSTS.products : {};
+export const RENTAL_FEATURED_SLOT_PRODUCTS = RENTAL_FEATURED_SLOTS.status === 'active' ? RENTAL_FEATURED_SLOTS.products : {};

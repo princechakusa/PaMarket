@@ -84,16 +84,10 @@
       ],
     },
 
-    // ═══════════════════════════════════════════════════════════
-    // PLANNED — documented only. NO Edge Function, RPC, migration, Play
-    // Console product, or purchase UI exists for these yet. Do not flip to
-    // 'active' until all four of those are actually built and deployed.
-    // ═══════════════════════════════════════════════════════════
-
     recruiterSubscriptions: {
-      status: 'planned',
-      // planId mirrors a future H.JOB_PLAN_ENTITLEMENTS
-      // ('recruiter' | 'recruiter_pro'), same shape as shopSubscriptions.
+      status: 'active',
+      // planId mirrors H.JOB_PLAN_ENTITLEMENTS ('recruiter' | 'recruiter_pro').
+      // supabase/migrations/add_recruiter_subscriptions.sql — product_id CHECK constraint.
       products: [
         { productId: 'recruiter_monthly',      planId: 'recruiter',      cycle: 'monthly' },
         { productId: 'recruiter_yearly',       planId: 'recruiter',      cycle: 'yearly' },
@@ -102,33 +96,38 @@
       ],
     },
 
-    jobBoosts: {
-      status: 'planned',
-      // Same mechanics as `boosts`, targeting listings.featured_until where category='jobs'.
+    jobCredits: {
+      status: 'active',
+      // Pay-per-post alternative to a recruiter subscription; one credit
+      // spent per job posted beyond the recruiter plan's free post limit.
+      // supabase/migrations/add_job_credits.sql — product_id CHECK constraint.
       products: [
-        { productId: 'job_boost_7day',  days: 7,  label: '7 days',  tag: '' },
-        { productId: 'job_boost_30day', days: 30, label: '30 days', tag: 'Best value' },
+        { productId: 'job_credit_pack_1', credits: 1, label: '1 job post',  estimatedPriceUsd: 3 },
+        { productId: 'job_credit_pack_5', credits: 5, label: '5 job posts', tag: 'Best value', estimatedPriceUsd: 12 },
       ],
     },
 
-    jobCredits: {
-      status: 'planned',
-      // Pay-per-post alternative to a recruiter subscription; one credit
-      // spent per job posted.
+    jobBoosts: {
+      status: 'active',
+      // Same mechanics/backend as `boosts` (reuses play_purchases +
+      // activate_play_boost — a job post is a listings row like any other),
+      // kept as its own family so the UI can offer a distinct "boost this
+      // job" picker. supabase/migrations/add_job_boosts.sql — product_id CHECK constraint.
       products: [
-        { productId: 'job_credit_pack_1', credits: 1, label: '1 job post' },
-        { productId: 'job_credit_pack_5', credits: 5, label: '5 job posts', tag: 'Best value' },
+        { productId: 'job_boost_7day',  days: 7,  label: '7 days',  tag: '',           estimatedPriceUsd: 8 },
+        { productId: 'job_boost_30day', days: 30, label: '30 days', tag: 'Best value', estimatedPriceUsd: 20 },
       ],
     },
 
     rentalFeaturedSlots: {
-      status: 'planned',
-      // Same shape as `slotPacks`, targeting rental_featured_listings
-      // (currently an admin-only, unpaid mechanism — see the unified
-      // monetization design doc).
+      status: 'active',
+      // Duration-based featured placement for a rental listing — targets
+      // rental_featured_listings (previously admin-only/unpaid; this adds a
+      // purchased path that inserts a system row alongside it, same table).
+      // supabase/migrations/add_rental_featured_slot_packs.sql — product_id CHECK constraint.
       products: [
-        { productId: 'rental_featured_slot_1', extraSlots: 1, label: '+1 slot' },
-        { productId: 'rental_featured_slot_3', extraSlots: 3, label: '+3 slots', tag: 'Best value' },
+        { productId: 'rental_featured_slot_7day',  days: 7,  label: '7 days',  tag: '',           estimatedPriceUsd: 6 },
+        { productId: 'rental_featured_slot_30day', days: 30, label: '30 days', tag: 'Best value', estimatedPriceUsd: 18 },
       ],
     },
 
@@ -169,5 +168,9 @@
   H.BOOST_PRODUCTS        = H.getActiveProducts('boosts');
   H.SUBSCRIPTION_PRODUCTS = H.getActiveProducts('shopSubscriptions');
   H.SLOT_PACK_PRODUCTS    = H.getActiveProducts('slotPacks');
+  H.RECRUITER_SUBSCRIPTION_PRODUCTS = H.getActiveProducts('recruiterSubscriptions');
+  H.JOB_CREDIT_PRODUCTS = H.getActiveProducts('jobCredits');
+  H.JOB_BOOST_PRODUCTS = H.getActiveProducts('jobBoosts');
+  H.RENTAL_FEATURED_SLOT_PRODUCTS = H.getActiveProducts('rentalFeaturedSlots');
 
 })(window.H = window.H || {});

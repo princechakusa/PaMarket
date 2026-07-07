@@ -35,6 +35,40 @@
   // Play Billing only supports one purchase flow open at once per app.
   var _pendingContext = null;
 
+  // ── Durable purchase context ──
+  // _pendingContext lives in memory only, but Google can report a purchase
+  // LONG after the buy() call — including on the next app launch via
+  // getPurchases() if the app was killed mid-flow. Without a durable copy
+  // of "which listing/business was this purchase for", such a restored
+  // purchase could never be verified (the handler bails with no context)
+  // and Google would auto-refund it after 3 days. So every context-scoped
+  // buy also records {productId → context} here; handlers fall back to it,
+  // and it's cleared only once verification succeeds.
+  var _CTX_KEY = 'pm_billing_ctx';
+  function _readCtxMap() {
+    try { return JSON.parse(localStorage.getItem(_CTX_KEY) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function _saveCtx(productId, ctx) {
+    try {
+      var m = _readCtxMap();
+      m[productId] = { ctx: ctx, at: Date.now() };
+      localStorage.setItem(_CTX_KEY, JSON.stringify(m));
+    } catch (e) { /* best-effort */ }
+  }
+  function _loadCtx(productId) {
+    var entry = _readCtxMap()[productId];
+    // Ignore stale contexts (>7 days) — a purchase that old has already
+    // been refunded by Google anyway.
+    if (!entry || !entry.ctx || (Date.now() - (entry.at || 0)) > 7 * 86400000) return null;
+    return entry.ctx;
+  }
+  function _clearCtx(productId) {
+    try {
+      var m = _readCtxMap();
+      if (m[productId]) { delete m[productId]; localStorage.setItem(_CTX_KEY, JSON.stringify(m)); }
+    } catch (e) { /* best-effort */ }
+  }
+
   // Wires the native purchase-result listener once. Google Play Billing
   // reports purchase completion asynchronously via this event — never as
   // a direct return value from buy()/subscribe() — so this listener is the
@@ -69,7 +103,7 @@
       purchases2.forEach(function (p) { H._handlePlayPurchase(p); });
     } catch (e) { /* best-effort */ }
 
-    _ensureProductsLoaded().catch(function () {});
+    _ensureProductsLoaded().catch(function (e) { console.warn('_ensureProductsLoaded (boot) failed:', e && e.message, e); });
   };
 
   // Google Play Billing requires a product to be fetched via
@@ -85,11 +119,25 @@
     var P = _plugin();
     if (!P) return false;
     var active = H.getAllActiveProducts();
-    var subsIds = H.getActiveProducts('shopSubscriptions').map(function (p) { return p.productId; });
+    // Both subscription families (shop plans AND recruiter plans) must be
+    // requested as subsSkus, not just shopSubscriptions — otherwise
+    // recruiter_* ids fall into inAppSkus below and Google rejects them,
+    // since they're registered as subscription products in Play Console.
+    var subsIds = H.getActiveProducts('shopSubscriptions')
+      .concat(H.getActiveProducts('recruiterSubscriptions'))
+      .map(function (p) { return p.productId; });
     var inAppSkus = active.filter(function (p) { return subsIds.indexOf(p.productId) === -1; }).map(function (p) { return p.productId; });
-    var res = await P.getAvailableProducts({ inAppSkus: inAppSkus, subsSkus: subsIds });
+    var res;
+    try {
+      res = await P.getAvailableProducts({ inAppSkus: inAppSkus, subsSkus: subsIds });
+    } catch (e) {
+      console.warn('getAvailableProducts failed:', e && e.message, e);
+      return false;
+    }
     if (res && Array.isArray(res.products) && res.products.length) {
       _productsLoaded = true;
+    } else {
+      console.warn('getAvailableProducts returned no products. Requested:', { inAppSkus: inAppSkus, subsSkus: subsIds }, 'Response:', res);
     }
     return _productsLoaded;
   }
@@ -114,11 +162,23 @@
     var boost = H.getActiveProducts('boosts').find(function (x) { return x.productId === productId; });
     if (boost) { await H._handleBoostPurchase(boost, productId, purchaseToken, purchase.orderId || null); return; }
 
+    var jobBoost = H.getActiveProducts('jobBoosts').find(function (x) { return x.productId === productId; });
+    if (jobBoost) { await H._handleBoostPurchase(jobBoost, productId, purchaseToken, purchase.orderId || null); return; }
+
     var slotPack = H.getActiveProducts('slotPacks').find(function (x) { return x.productId === productId; });
     if (slotPack) { await H._handleSlotPackPurchase(slotPack, productId, purchaseToken, purchase.orderId || null); return; }
 
     var sub = H.getActiveProducts('shopSubscriptions').find(function (x) { return x.productId === productId; });
     if (sub) { await H._handleSubscriptionPurchase(sub, productId, purchaseToken); return; }
+
+    var recruiterSub = H.getActiveProducts('recruiterSubscriptions').find(function (x) { return x.productId === productId; });
+    if (recruiterSub) { await H._handleRecruiterSubscriptionPurchase(recruiterSub, productId, purchaseToken); return; }
+
+    var jobCredit = H.getActiveProducts('jobCredits').find(function (x) { return x.productId === productId; });
+    if (jobCredit) { await H._handleJobCreditPurchase(jobCredit, productId, purchaseToken, purchase.orderId || null); return; }
+
+    var rentalFeatured = H.getActiveProducts('rentalFeaturedSlots').find(function (x) { return x.productId === productId; });
+    if (rentalFeatured) { await H._handleRentalFeaturedPurchase(rentalFeatured, productId, purchaseToken, purchase.orderId || null); return; }
 
     // Unknown product — ignore rather than guess what it's for.
   };
@@ -126,6 +186,7 @@
   H._handleSlotPackPurchase = async function (product, productId, purchaseToken, orderId) {
     try {
       var businessId = _pendingContext && _pendingContext.businessId;
+      if (!businessId) { var saved = _loadCtx(productId); businessId = saved && saved.businessId; }
       if (!businessId) {
         console.warn('Slot pack purchase reported with no pending business context:', productId);
         return;
@@ -162,6 +223,7 @@
         return;
       }
 
+      _clearCtx(productId);
       H.toast('+' + product.extraSlots + ' featured slot' + (product.extraSlots === 1 ? '' : 's') + ' added!');
       if (H.currentPageName === 'BusinessFeatured') H.renderPage('BusinessFeatured', H.currentPageParams);
     } catch (e) {
@@ -175,6 +237,7 @@
   H._handleBoostPurchase = async function (product, productId, purchaseToken, orderId) {
     try {
       var listingId = _pendingContext && _pendingContext.listingId;
+      if (!listingId) { var saved = _loadCtx(productId); listingId = saved && saved.listingId; }
       if (!listingId) {
         console.warn('Boost purchase reported with no pending listing context:', productId);
         return;
@@ -212,6 +275,7 @@
       }
 
       // Verified and activated server-side — reflect it locally.
+      _clearCtx(productId);
       var listing = (H.state.listings || []).find(function (l) { return l.id === listingId; });
       if (listing) {
         listing.boost = true;
@@ -231,6 +295,7 @@
   H._handleSubscriptionPurchase = async function (product, productId, purchaseToken) {
     try {
       var businessId = _pendingContext && _pendingContext.businessId;
+      if (!businessId) { var saved = _loadCtx(productId); businessId = saved && saved.businessId; }
       if (!businessId) {
         console.warn('Subscription purchase reported with no pending business context:', productId);
         return;
@@ -271,6 +336,7 @@
       }
 
       // Verified and activated server-side — reflect it locally.
+      _clearCtx(productId);
       var biz = (H.state.businesses || []).find(function (b) { return b.id === businessId; });
       if (biz) { biz.planId = product.planId; biz.billingCycle = product.cycle; H.saveState(); }
       if (typeof H.fetchBusinessSubscriptions === 'function') await H.fetchBusinessSubscriptions(businessId);
@@ -282,6 +348,265 @@
     } finally {
       _pendingContext = null;
     }
+  };
+
+  // Recruiter subscriptions have no businessId — the target is always the
+  // signed-in caller's own recruiter profile (created lazily server-side on
+  // first purchase). _pendingContext is still used, just with a marker
+  // instead of an id, so _handlePlayPurchase's routing stays uniform.
+  H._handleRecruiterSubscriptionPurchase = async function (product, productId, purchaseToken) {
+    try {
+      var sb = window.supabase;
+      if (!sb) { H.toast('Connection unavailable — purchase will retry automatically', 4000, true); return; }
+
+      var sess = await sb.auth.getSession();
+      var jwt = sess && sess.data && sess.data.session && sess.data.session.access_token;
+      if (!jwt) { H.toast('Sign in required to complete your purchase', 4000, true); return; }
+
+      H.toast('Verifying subscription…', 3000, true);
+
+      var res = await fetch(window.SUPABASE_URL + '/functions/v1/verify-play-subscription', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + jwt,
+          'Content-Type': 'application/json',
+          'apikey': window.SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          productId: productId,
+          purchaseToken: purchaseToken,
+        }),
+      });
+      var result = await res.json();
+
+      if (!res.ok || !result.ok) {
+        console.warn('Recruiter subscription verification failed:', result && result.error);
+        H.toast('Could not verify your subscription. If you were charged, contact support.', 5000, true);
+        return;
+      }
+      if (result.granted === false) {
+        H.toast('Purchase received, but your subscription is not yet active (' + (result.subscription_state || 'pending') + ').', 5000, true);
+        return;
+      }
+
+      if (typeof H.fetchRecruiterProfile === 'function') await H.fetchRecruiterProfile();
+      H.toast('Recruiter plan upgraded!');
+      if (H.currentPageName === 'RecruiterSubscription') H.renderPage('RecruiterSubscription', H.currentPageParams);
+    } catch (e) {
+      console.warn('_handleRecruiterSubscriptionPurchase error:', e && e.message);
+      H.toast('Subscription purchase could not be completed. Please try again.', 4000, true);
+    } finally {
+      _pendingContext = null;
+    }
+  };
+
+  // Job credit packs have no target entity either — like recruiter
+  // subscriptions, they're scoped to the caller's own user_id server-side.
+  H._handleJobCreditPurchase = async function (product, productId, purchaseToken, orderId) {
+    try {
+      var sb = window.supabase;
+      if (!sb) { H.toast('Connection unavailable — purchase will retry automatically', 4000, true); return; }
+
+      var sess = await sb.auth.getSession();
+      var jwt = sess && sess.data && sess.data.session && sess.data.session.access_token;
+      if (!jwt) { H.toast('Sign in required to complete your purchase', 4000, true); return; }
+
+      H.toast('Verifying purchase…', 3000, true);
+
+      var res = await fetch(window.SUPABASE_URL + '/functions/v1/verify-play-purchase', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + jwt,
+          'Content-Type': 'application/json',
+          'apikey': window.SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          productId: productId,
+          purchaseToken: purchaseToken,
+          orderId: orderId,
+        }),
+      });
+      var result = await res.json();
+
+      if (!res.ok || !result.ok) {
+        console.warn('Job credit verification failed:', result && result.error);
+        H.toast('Could not verify your purchase. If you were charged, contact support.', 5000, true);
+        return;
+      }
+
+      H.toast('+' + product.credits + ' job posting credit' + (product.credits === 1 ? '' : 's') + ' added!');
+      if (typeof H.fetchJobCreditBalance === 'function') await H.fetchJobCreditBalance();
+      if (H.currentPageName === 'PostJob') H.renderPage('PostJob', H.currentPageParams);
+    } catch (e) {
+      console.warn('_handleJobCreditPurchase error:', e && e.message);
+      H.toast('Purchase could not be completed. Please try again.', 4000, true);
+    } finally {
+      _pendingContext = null;
+    }
+  };
+
+  // Kicks off the native Play Billing purchase sheet for a job credit pack.
+  H.buyJobCredits = async function (productId) {
+    var u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in to buy job posting credits'); return; }
+    if (!_isNative()) { H.toast('Buying job credits requires the PaMarket Android app.', 4000, true); return; }
+    if (!H.isActiveProductId(productId)) { H.toast('This product is not available yet.', 4000, true); return; }
+
+    var P = _plugin();
+    if (!P) { H.toast('Billing is not available on this device.', 4000, true); return; }
+
+    var ready = await _ensureProductsLoaded();
+    if (!ready) { H.toast('Could not load pricing. Check your connection and try again.', 4000, true); return; }
+
+    _pendingContext = { jobCredit: true };
+    try {
+      await P.buy({ productId: productId });
+    } catch (e) {
+      _pendingContext = null;
+      var msg = (e && e.message) || '';
+      if (!/cancel/i.test(msg)) {
+        H.toast('Purchase could not be started. Please try again.', 4000, true);
+      }
+    }
+  };
+
+  // Current job-posting credit balance for the signed-in user (purchased
+  // minus spent) — see get_job_credit_balance RPC, which is granted to
+  // authenticated since it's a pure read scoped to auth.uid() already.
+  H.fetchJobCreditBalance = async function () {
+    var sb = window.supabase;
+    var u = H.currentUser();
+    if (!sb || !u) return 0;
+    try {
+      var r = await sb.rpc('get_job_credit_balance');
+      if (r.error || typeof r.data !== 'number') return 0;
+      H.state.jobCreditBalance = r.data;
+      H.saveState();
+      return r.data;
+    } catch (e) { return 0; }
+  };
+
+  // Rental featured slot purchases are scoped to a rental listingId (the
+  // client already knows which listing to buy the placement for) — reuses
+  // the same _pendingContext.listingId shape as _handleBoostPurchase, just
+  // a different target table/RPC server-side.
+  H._handleRentalFeaturedPurchase = async function (product, productId, purchaseToken, orderId) {
+    try {
+      var listingId = _pendingContext && _pendingContext.listingId;
+      if (!listingId) { var saved = _loadCtx(productId); listingId = saved && saved.listingId; }
+      if (!listingId) {
+        console.warn('Rental featured purchase reported with no pending listing context:', productId);
+        return;
+      }
+
+      var sb = window.supabase;
+      if (!sb) { H.toast('Connection unavailable — purchase will retry automatically', 4000, true); return; }
+
+      var sess = await sb.auth.getSession();
+      var jwt = sess && sess.data && sess.data.session && sess.data.session.access_token;
+      if (!jwt) { H.toast('Sign in required to complete your purchase', 4000, true); return; }
+
+      H.toast('Verifying purchase…', 3000, true);
+
+      var res = await fetch(window.SUPABASE_URL + '/functions/v1/verify-play-purchase', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + jwt,
+          'Content-Type': 'application/json',
+          'apikey': window.SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          listingId: listingId,
+          productId: productId,
+          purchaseToken: purchaseToken,
+          orderId: orderId,
+        }),
+      });
+      var result = await res.json();
+
+      if (!res.ok || !result.ok) {
+        console.warn('Rental featured verification failed:', result && result.error);
+        H.toast('Could not verify your purchase. If you were charged, contact support.', 5000, true);
+        return;
+      }
+
+      _clearCtx(productId);
+      H.toast('Featured for ' + product.days + ' days! Your listing is now boosted in search.');
+      if (H.currentPageName === 'RentalListingDetail' || H.currentPageName === 'RentalManageListing') H.renderPage(H.currentPageName, H.currentPageParams);
+    } catch (e) {
+      console.warn('_handleRentalFeaturedPurchase error:', e && e.message);
+      H.toast('Purchase could not be completed. Please try again.', 4000, true);
+    } finally {
+      _pendingContext = null;
+    }
+  };
+
+  // Kicks off the native Play Billing purchase sheet for a rental featured
+  // placement package.
+  H.buyRentalFeaturedSlot = async function (listingId, productId) {
+    var u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in to feature your listing'); return; }
+    if (!_isNative()) { H.toast('Featuring listings requires the PaMarket Android app.', 4000, true); return; }
+    if (!H.isActiveProductId(productId)) { H.toast('This product is not available yet.', 4000, true); return; }
+
+    var P = _plugin();
+    if (!P) { H.toast('Billing is not available on this device.', 4000, true); return; }
+
+    var ready = await _ensureProductsLoaded();
+    if (!ready) { H.toast('Could not load pricing. Check your connection and try again.', 4000, true); return; }
+
+    _pendingContext = { listingId: listingId };
+    _saveCtx(productId, { listingId: listingId });
+    try {
+      await P.buy({ productId: productId });
+    } catch (e) {
+      _pendingContext = null;
+      _clearCtx(productId);
+      var msg = (e && e.message) || '';
+      if (!/cancel/i.test(msg)) {
+        H.toast('Purchase could not be started. Please try again.', 4000, true);
+      }
+    }
+  };
+
+  // ── UI: rental featured picker sheet ──
+  H.featureRentalListing = async function (id) {
+    var u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in to feature your listing'); return; }
+    if (!_isNative()) { H.toast('Featuring listings requires the PaMarket Android app.', 4000, true); return; }
+    var P = _plugin();
+    if (!P) { H.toast('Billing is not available on this device.', 4000, true); return; }
+
+    var ready = await _ensureProductsLoaded();
+    if (!ready) { H.toast('Could not load pricing. Check your connection and try again.', 4000, true); return; }
+
+    var old = document.getElementById('_rentalFeaturedSheet');
+    if (old) old.remove();
+
+    var sheet = document.createElement('div');
+    sheet.id = '_rentalFeaturedSheet';
+    sheet.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
+    sheet.addEventListener('click', function (ev) { if (ev.target === sheet) sheet.remove(); });
+
+    var planHtml = H.getActiveProducts('rentalFeaturedSlots').map(function (p) {
+      return '<button onclick="document.getElementById(\'_rentalFeaturedSheet\')&&document.getElementById(\'_rentalFeaturedSheet\').remove();H.buyRentalFeaturedSlot(\'' + id + '\',\'' + p.productId + '\')" '
+        + 'style="background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;padding:14px 16px;'
+        + 'display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;width:100%">'
+        + '<div><div style="font-size:15px;font-weight:800">' + p.label + '</div>'
+        + (p.tag ? '<div style="font-size:11px;font-weight:700;opacity:.75;margin-top:2px">' + p.tag + '</div>' : '')
+        + '</div><div style="font-size:13px;font-weight:700;opacity:.9">Buy</div></button>';
+    }).join('');
+
+    sheet.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px calc(env(safe-area-inset-bottom,0px)+20px);box-sizing:border-box">'
+      + '<div style="width:36px;height:4px;background:#E8ECF4;border-radius:4px;margin:0 auto 18px"></div>'
+      + '<div style="font-size:17px;font-weight:800;color:#111;margin-bottom:4px">Feature this listing</div>'
+      + '<div style="font-size:13px;color:#666;margin-bottom:16px">Get top placement in rental search. Paid securely via Google Play.</div>'
+      + '<div style="display:flex;flex-direction:column;gap:10px">' + planHtml + '</div>'
+      + '<button onclick="document.getElementById(\'_rentalFeaturedSheet\')&&document.getElementById(\'_rentalFeaturedSheet\').remove()" '
+      + 'style="margin-top:12px;width:100%;padding:12px;border:1.5px solid #E8ECF4;border-radius:12px;background:#fff;font-size:14px;font-weight:700;color:#666;cursor:pointer;font-family:inherit">Cancel</button>'
+      + '</div>';
+
+    document.body.appendChild(sheet);
   };
 
   // ── UI: boost picker sheet (replaces the old wallet-funded sheet) ──
@@ -334,27 +659,76 @@
   // returned here — it arrives asynchronously via the 'purchasesUpdated'
   // listener wired in setupBilling(), which is why _pendingContext is
   // stashed first so the listener knows which listing to attach the
-  // eventual verified purchase to.
+  // eventual verified purchase to. Shared by both listing boosts and job
+  // boosts — a job post IS a listing, so the same context/handler works.
   H._buyBoost = async function (listingId, productId) {
     var sheet = document.getElementById('_boostSheet');
     if (sheet) sheet.remove();
+    var jobSheet = document.getElementById('_jobBoostSheet');
+    if (jobSheet) jobSheet.remove();
     if (!H.isActiveProductId(productId)) { H.toast('This product is not available yet.', 4000, true); return; }
 
     var P = _plugin();
     if (!P) { H.toast('Billing is not available on this device.', 4000, true); return; }
 
     _pendingContext = { listingId: listingId };
+    _saveCtx(productId, { listingId: listingId });
     try {
       await P.buy({ productId: productId });
       // No toast here — 'purchasesUpdated' fires once Google completes the
       // flow and drives the rest of the process (verify → activate → toast).
     } catch (e) {
       _pendingContext = null;
+      _clearCtx(productId);
       var msg = (e && e.message) || '';
       if (!/cancel/i.test(msg)) {
         H.toast('Purchase could not be started. Please try again.', 4000, true);
       }
     }
+  };
+
+  // ── UI: job boost picker sheet — same purchase mechanics as boostListing,
+  // just sourcing the 'jobBoosts' family (7/30 day only, no 1-day option).
+  H.boostJobListing = async function (id) {
+    var u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in to boost your job listing'); return; }
+
+    if (!_isNative()) { H.toast('Boosting jobs requires the PaMarket Android app.', 4000, true); return; }
+    var P = _plugin();
+    if (!P) { H.toast('Billing is not available on this device.', 4000, true); return; }
+
+    var ready = await _ensureProductsLoaded();
+    if (!ready) { H.toast('Could not load boost pricing. Check your connection and try again.', 4000, true); return; }
+
+    var old = document.getElementById('_jobBoostSheet');
+    if (old) old.remove();
+
+    var sheet = document.createElement('div');
+    sheet.id = '_jobBoostSheet';
+    sheet.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
+    sheet.addEventListener('click', function (ev) { if (ev.target === sheet) sheet.remove(); });
+
+    var planHtml = H.getActiveProducts('jobBoosts').map(function (p) {
+      return '<button onclick="H._buyBoost(\'' + id + '\',\'' + p.productId + '\')" '
+        + 'style="background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:14px;padding:14px 16px;'
+        + 'display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;width:100%">'
+        + '<div><div style="font-size:15px;font-weight:800">' + p.label + '</div>'
+        + (p.tag ? '<div style="font-size:11px;font-weight:700;opacity:.75;margin-top:2px">' + p.tag + '</div>' : '')
+        + '</div>'
+        + '<div style="text-align:right"><div style="font-size:13px;font-weight:700;opacity:.9">Buy</div></div>'
+        + '</button>';
+    }).join('');
+
+    sheet.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px calc(env(safe-area-inset-bottom,0px)+20px);box-sizing:border-box">'
+      + '<div style="width:36px;height:4px;background:#E8ECF4;border-radius:4px;margin:0 auto 18px"></div>'
+      + '<div style="font-size:17px;font-weight:800;color:#111;margin-bottom:4px">Boost your job listing</div>'
+      + '<div style="font-size:13px;color:#666;margin-bottom:16px">Get more visibility with candidates. Paid securely via Google Play.</div>'
+      + '<div style="display:flex;flex-direction:column;gap:10px">' + planHtml + '</div>'
+      + '<button onclick="document.getElementById(\'_jobBoostSheet\')&&document.getElementById(\'_jobBoostSheet\').remove()" '
+      + 'style="margin-top:12px;width:100%;padding:12px;border:1.5px solid #E8ECF4;border-radius:12px;background:#fff;font-size:14px;font-weight:700;color:#666;cursor:pointer;font-family:inherit">Cancel</button>'
+      + '</div>';
+
+    document.body.appendChild(sheet);
   };
 
   // Kicks off the native Play Billing purchase sheet for an extra
@@ -373,10 +747,12 @@
     if (!ready) { H.toast('Could not load pricing. Check your connection and try again.', 4000, true); return; }
 
     _pendingContext = { businessId: businessId };
+    _saveCtx(productId, { businessId: businessId });
     try {
       await P.buy({ productId: productId });
     } catch (e) {
       _pendingContext = null;
+      _clearCtx(productId);
       var msg = (e && e.message) || '';
       if (!/cancel/i.test(msg)) {
         H.toast('Purchase could not be started. Please try again.', 4000, true);
@@ -419,6 +795,41 @@
     if (!ready) { H.toast('Could not load plan pricing. Check your connection and try again.', 4000, true); return; }
 
     _pendingContext = { businessId: businessId };
+    _saveCtx(product.productId, { businessId: businessId });
+    try {
+      await P.subscribe({ productId: product.productId });
+      // No toast here — 'purchasesUpdated' drives verify → activate → toast.
+    } catch (e) {
+      _pendingContext = null;
+      _clearCtx(product.productId);
+      var msg = (e && e.message) || '';
+      if (!/cancel/i.test(msg)) {
+        H.toast('Upgrade could not be started. Please try again.', 4000, true);
+      }
+    }
+  };
+
+  // ── UI: recruiter subscription upgrade — same subscribe()/RTDN pattern as
+  // upgradeBusinessPlan, but there's no target id to pass: the Edge Function
+  // always resolves (or lazily creates) the caller's OWN recruiter profile.
+  H.upgradeRecruiterPlan = async function (planId, cycle) {
+    var u = H.currentUser();
+    if (!u) { H.requireAuth('Sign in to upgrade your recruiter plan'); return; }
+
+    if (!_isNative()) {
+      H.toast('Upgrading requires the PaMarket Android app.', 4000, true);
+      return;
+    }
+    var P = _plugin();
+    if (!P) { H.toast('Billing is not available on this device.', 4000, true); return; }
+
+    var product = H.getActiveProducts('recruiterSubscriptions').find(function (x) { return x.planId === planId && x.cycle === (cycle || 'monthly'); });
+    if (!product) { H.toast('This plan is not available for purchase.', 4000, true); return; }
+
+    var ready = await _ensureProductsLoaded();
+    if (!ready) { H.toast('Could not load plan pricing. Check your connection and try again.', 4000, true); return; }
+
+    _pendingContext = { recruiter: true };
     try {
       await P.subscribe({ productId: product.productId });
       // No toast here — 'purchasesUpdated' drives verify → activate → toast.
@@ -429,6 +840,22 @@
         H.toast('Upgrade could not be started. Please try again.', 4000, true);
       }
     }
+  };
+
+  // Fetches the signed-in user's own recruiter profile (plan_id) — profile
+  // may not exist yet if they've never purchased a recruiter subscription,
+  // in which case this resolves to a 'free' default rather than erroring.
+  H.fetchRecruiterProfile = async function () {
+    var sb = window.supabase;
+    var u = H.currentUser();
+    if (!sb || !u) return { planId: 'free' };
+    try {
+      var r = await sb.from('recruiter_profiles').select('id, plan_id').eq('user_id', u.id).maybeSingle();
+      if (r.error || !r.data) return { planId: 'free' };
+      H.state.recruiterProfile = { id: r.data.id, planId: r.data.plan_id };
+      H.saveState();
+      return H.state.recruiterProfile;
+    } catch (e) { return { planId: 'free' }; }
   };
 
   // Reconciliation poll: re-checks a business's live subscription state
@@ -467,6 +894,42 @@
       // Best-effort — this just re-syncs state; no toast, no error surfaced,
       // since it runs silently in the background on every screen open.
       if (typeof H.fetchBusinessSubscriptions === 'function') await H.fetchBusinessSubscriptions(businessId);
+    } catch (e) { /* best-effort */ }
+  };
+
+  // Recruiter-side twin of reconcilePlaySubscription: re-checks the caller's
+  // own recruiter subscription against Google whenever they open the
+  // RecruiterSubscription screen, so a missed RTDN can't leave a lapsed
+  // recruiter on a paid plan (or a renewed one stuck on free) indefinitely.
+  H.reconcileRecruiterSubscription = async function () {
+    if (!_isNative()) return;
+    var sb = window.supabase;
+    var u = H.currentUser();
+    if (!sb || !u) return;
+    try {
+      var current = await sb.from('play_recruiter_subscriptions').select('id,purchase_token,product_id')
+        .eq('user_id', u.id)
+        .in('subscription_state', ['active', 'in_grace_period', 'on_hold', 'pending'])
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (!current.data) return;
+
+      var sess = await sb.auth.getSession();
+      var jwt = sess && sess.data && sess.data.session && sess.data.session.access_token;
+      if (!jwt) return;
+
+      await fetch(window.SUPABASE_URL + '/functions/v1/verify-play-subscription', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + jwt,
+          'Content-Type': 'application/json',
+          'apikey': window.SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          productId: current.data.product_id,
+          purchaseToken: current.data.purchase_token,
+        }),
+      }).catch(function () {});
+      if (typeof H.fetchRecruiterProfile === 'function') await H.fetchRecruiterProfile();
     } catch (e) { /* best-effort */ }
   };
 

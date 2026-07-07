@@ -1,11 +1,17 @@
 // verify-play-subscription — server-side verification of a Google Play
-// Billing subscription purchase (business plan upgrades: shop_starter_*,
-// shop_pro_*, shop_premium_*), then activates the plan only after Google
-// confirms the subscription is real and active. This replaces the
-// WhatsApp + admin "mark paid" upgrade flow entirely — the client never
-// grants its own entitlement.
+// Billing subscription purchase, then activates the plan only after Google
+// confirms the subscription is real and active. The client never grants its
+// own entitlement. Handles TWO subscription families that share the same
+// verify → activate mechanics but target different tables:
+//   - Shop plan upgrades (shop_starter_*, shop_pro_*, shop_premium_*)
+//     target `businesses`, keyed by the caller-supplied businessId.
+//   - Recruiter plan upgrades (recruiter_*, recruiter_pro_*) target
+//     `recruiter_profiles`, keyed by the CALLER'S OWN user id — there's no
+//     separate recruiter-onboarding step, a profile is created lazily via
+//     get_or_create_recruiter_profile on first purchase.
 //
-// Call shape: POST { businessId: uuid, productId: string, purchaseToken: string }
+// Call shape: POST { businessId?: uuid, productId: string, purchaseToken: string }
+// (businessId required only for shop-plan productIds; omitted for recruiter ones)
 // Auth: caller must be a signed-in user (their own JWT, not service-role).
 //
 // This function handles the INITIAL purchase/upgrade moment (synchronous
@@ -24,11 +30,11 @@
 // comment in _shared/billing-products.ts for why this can't be the exact
 // same file the client (www/js/billing-products.js) loads. getProductStatus
 // is the production-safety check: it tells us whether productId belongs to
-// an 'active' family (shop subscriptions — fully implemented below), a
-// 'planned' family (e.g. recruiter_monthly — documented in the catalogue,
-// no backend yet), or is genuinely 'unknown' (typo / garbage input).
-// PRODUCT_MAP itself only ever contains 'active' shop-subscription entries.
-import { SUBSCRIPTION_PRODUCTS as PRODUCT_MAP, getProductStatus } from '../_shared/billing-products.ts';
+// an 'active' family (shop + recruiter subscriptions — both fully
+// implemented below), a 'planned' family (documented in the catalogue, no
+// backend yet), or is genuinely 'unknown' (typo / garbage input). The
+// product maps themselves only ever contain 'active' entries.
+import { SUBSCRIPTION_PRODUCTS, RECRUITER_SUBSCRIPTION_PRODUCTS, getProductStatus } from '../_shared/billing-products.ts';
 
 const ALLOWED_ORIGINS = new Set([
   'https://pamarketzw.com',
@@ -115,7 +121,26 @@ export async function fetchSubscriptionV2(packageName: string, purchaseToken: st
     autoRenewing: !!lineItem?.autoRenewingPlan?.autoRenewEnabled,
     latestOrderId: body.latestOrderId as string | undefined,
     startTime: body.startTime as string | undefined,
+    acknowledged: body.acknowledgementState === 'ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED',
   };
+}
+
+// Google requires every subscription purchase to be ACKNOWLEDGED within
+// 3 days or it is automatically refunded and revoked — nothing else in the
+// stack does this (the client never calls the plugin's acknowledgePurchase,
+// and consuming only applies to one-time products), so the server must.
+// Uses the v3 subscriptions (v1-style) acknowledge endpoint, which is still
+// the only acknowledge call — subscriptionsv2 has no equivalent.
+export async function acknowledgeSubscription(
+  packageName: string, subscriptionProductId: string, purchaseToken: string, accessToken: string
+): Promise<boolean> {
+  const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${encodeURIComponent(packageName)}/purchases/subscriptions/${encodeURIComponent(subscriptionProductId)}/tokens/${encodeURIComponent(purchaseToken)}:acknowledge`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+  return res.ok;
 }
 
 Deno.serve(async (req) => {
@@ -143,42 +168,70 @@ Deno.serve(async (req) => {
     const productId = body?.productId;
     const purchaseToken = body?.purchaseToken;
 
-    if (!businessId || !productId || !purchaseToken) {
-      return json({ error: 'businessId, productId, and purchaseToken are required' }, 400);
+    if (!productId || !purchaseToken) {
+      return json({ error: 'productId and purchaseToken are required' }, 400);
     }
 
     const productStatus = getProductStatus(productId);
     if (productStatus === 'planned') {
-      // Recognized product (e.g. a recruiter_* id) whose backend doesn't
+      // Recognized product (e.g. a job_boost_* id) whose backend doesn't
       // exist yet — a clean, explicit "not implemented" response rather
-      // than a generic error. Never throws, never touches play_subscriptions,
-      // and does not affect the shop-subscription path below at all.
+      // than a generic error. Never throws, never touches any subscription
+      // ledger, and does not affect the shop/recruiter paths below at all.
       return json({ ok: false, notImplemented: true, error: 'This product is not available for purchase yet.' }, 501);
     }
     if (productStatus === 'unknown') {
       return json({ error: 'Unknown productId: ' + productId }, 400);
     }
-    const mapped = PRODUCT_MAP[productId];
+
+    // Two subscription families share this function today: shop plans
+    // (target: businesses, keyed by businessId) and recruiter plans (target:
+    // recruiter_profiles, keyed by the caller's own user id — a recruiter
+    // profile is created lazily on first purchase, there's no separate
+    // "recruiter onboarding" step the client has to complete first).
+    const isRecruiter = productId in RECRUITER_SUBSCRIPTION_PRODUCTS;
+    const mapped = isRecruiter ? RECRUITER_SUBSCRIPTION_PRODUCTS[productId] : SUBSCRIPTION_PRODUCTS[productId];
     if (!mapped) return json({ error: 'Unknown productId: ' + productId }, 400);
 
     const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
-    // Caller must own the business they're upgrading.
-    const bizRes = await db.from('businesses').select('id, owner_user_id').eq('id', businessId).maybeSingle();
-    if (bizRes.error || !bizRes.data) return json({ error: 'Business not found' }, 404);
-    if (bizRes.data.owner_user_id !== userId) return json({ error: 'You do not own this business' }, 403);
+    const table = isRecruiter ? 'play_recruiter_subscriptions' : 'play_subscriptions';
+    const activateFn = isRecruiter ? 'activate_recruiter_subscription' : 'activate_play_subscription';
+    const activateParam = isRecruiter ? 'p_play_recruiter_subscription_id' : 'p_play_subscription_id';
+
+    let targetId: string; // businessId for shop plans, recruiter_profiles.id for recruiter plans
+    if (isRecruiter) {
+      const profRes = await db.rpc('get_or_create_recruiter_profile', { p_user_id: userId });
+      if (profRes.error || !profRes.data) {
+        return json({ error: 'Could not resolve recruiter profile: ' + (profRes.error?.message || 'unknown error') }, 500);
+      }
+      targetId = profRes.data as string;
+    } else {
+      if (!businessId) return json({ error: 'businessId is required for a shop subscription purchase' }, 400);
+      // Caller must own the business they're upgrading.
+      const bizRes = await db.from('businesses').select('id, owner_user_id').eq('id', businessId).maybeSingle();
+      if (bizRes.error || !bizRes.data) return json({ error: 'Business not found' }, 404);
+      if (bizRes.data.owner_user_id !== userId) return json({ error: 'You do not own this business' }, 403);
+      targetId = businessId;
+    }
+    const targetColumn = isRecruiter ? 'recruiter_id' : 'business_id';
 
     // Idempotency: a token already processed is never re-verified.
-    const existing = await db.from('play_subscriptions').select('id, status, subscription_state, expiry_time').eq('purchase_token', purchaseToken).maybeSingle();
+    const existing = await db.from(table).select('id, status, subscription_state, expiry_time, user_id').eq('purchase_token', purchaseToken).maybeSingle();
     if (existing.error) {
       console.error('verify-play-subscription: existing-token lookup failed:', existing.error.message);
       return json({ error: 'Could not check purchase history: ' + existing.error.message }, 500);
+    }
+    if (existing.data && existing.data.user_id !== userId) {
+      // A token already recorded for a DIFFERENT account must never be
+      // retried/re-activated (or have its state disclosed) by this caller.
+      return json({ error: 'This purchase belongs to a different account' }, 403);
     }
     let rowId: string;
     if (existing.data) {
       rowId = existing.data.id;
       if (existing.data.status === 'verified') {
-        const activateRes = await db.rpc('activate_play_subscription', { p_play_subscription_id: rowId });
+        const activateRes = await db.rpc(activateFn, { [activateParam]: rowId });
         // Success requires BOTH no transport/DB error AND the RPC's own
         // jsonb payload saying ok:true — the RPC can resolve without
         // throwing and still report a business-logic failure (e.g. plan
@@ -191,8 +244,8 @@ Deno.serve(async (req) => {
       }
       // status is 'pending' or 'failed' — fall through and re-verify.
     } else {
-      const insertRes = await db.from('play_subscriptions').insert({
-        business_id: businessId,
+      const insertRes = await db.from(table).insert({
+        [targetColumn]: targetId,
         user_id: userId,
         product_id: productId,
         purchase_token: purchaseToken,
@@ -201,7 +254,7 @@ Deno.serve(async (req) => {
         status: 'pending',
       }).select('id').single();
       if (insertRes.error || !insertRes.data) {
-        if (String(insertRes.error?.message || '').includes('uq_play_subscription_token')) {
+        if (String(insertRes.error?.message || '').includes('uq_play_subscription_token') || String(insertRes.error?.message || '').includes('uq_play_recruiter_subscription_token')) {
           return json({ ok: true, already_processed: true });
         }
         return json({ error: 'Could not record subscription: ' + insertRes.error?.message }, 500);
@@ -212,7 +265,7 @@ Deno.serve(async (req) => {
     const saEnv = Deno.env.get('GOOGLE_PLAY_SERVICE_ACCOUNT');
     const packageName = Deno.env.get('ANDROID_PACKAGE_NAME');
     if (!saEnv || !packageName) {
-      const failRes = await db.from('play_subscriptions').update({ status: 'failed', verification_error: 'Server misconfigured' }).eq('id', rowId);
+      const failRes = await db.from(table).update({ status: 'failed', verification_error: 'Server misconfigured' }).eq('id', rowId);
       if (failRes.error) console.error('verify-play-subscription: failed to record "Server misconfigured" status:', failRes.error.message);
       return json({ error: 'Server misconfigured' }, 500);
     }
@@ -221,24 +274,24 @@ Deno.serve(async (req) => {
     try {
       accessToken = await getGoogleAccessToken(JSON.parse(saEnv));
     } catch (e) {
-      const failRes = await db.from('play_subscriptions').update({ status: 'failed', verification_error: 'Google auth failed: ' + (e as Error).message }).eq('id', rowId);
+      const failRes = await db.from(table).update({ status: 'failed', verification_error: 'Google auth failed: ' + (e as Error).message }).eq('id', rowId);
       if (failRes.error) console.error('verify-play-subscription: failed to record "Google auth failed" status:', failRes.error.message);
       return json({ error: 'Verification unavailable' }, 500);
     }
 
     const sub = await fetchSubscriptionV2(packageName, purchaseToken, accessToken);
     if (!sub.ok) {
-      const failRes = await db.from('play_subscriptions').update({ status: 'failed', verification_error: sub.reason }).eq('id', rowId);
+      const failRes = await db.from(table).update({ status: 'failed', verification_error: sub.reason }).eq('id', rowId);
       if (failRes.error) console.error('verify-play-subscription: failed to record verification-failure status:', failRes.error.message);
       return json({ error: 'Subscription verification failed: ' + sub.reason }, 402);
     }
     if (sub.productId && sub.productId !== productId) {
-      const failRes = await db.from('play_subscriptions').update({ status: 'failed', verification_error: 'Product mismatch: expected ' + productId + ', got ' + sub.productId }).eq('id', rowId);
+      const failRes = await db.from(table).update({ status: 'failed', verification_error: 'Product mismatch: expected ' + productId + ', got ' + sub.productId }).eq('id', rowId);
       if (failRes.error) console.error('verify-play-subscription: failed to record product-mismatch status:', failRes.error.message);
       return json({ error: 'Product mismatch' }, 402);
     }
 
-    const verifiedRes = await db.from('play_subscriptions').update({
+    const verifiedRes = await db.from(table).update({
       status: 'verified',
       subscription_state: sub.subscriptionState,
       auto_renewing: sub.autoRenewing,
@@ -256,10 +309,22 @@ Deno.serve(async (req) => {
       return json({ error: 'Subscription verified with Google but could not be recorded: ' + verifiedRes.error.message }, 500);
     }
 
-    const activateRes = await db.rpc('activate_play_subscription', { p_play_subscription_id: rowId });
+    const activateRes = await db.rpc(activateFn, { [activateParam]: rowId });
     if (activateRes.error || activateRes.data?.ok !== true) {
       console.error('verify-play-subscription: activation failed:', activateRes.error?.message || activateRes.data?.msg);
       return json({ error: 'Subscription verified but activation failed: ' + (activateRes.error?.message || activateRes.data?.msg || 'unknown error') }, 500);
+    }
+
+    // Acknowledge AFTER granting the entitlement (Play policy: only
+    // acknowledge once you've delivered). Unacknowledged subscriptions are
+    // auto-refunded by Google after 3 days. Retried once; if it still
+    // fails, the RTDN webhook re-attempts on the next lifecycle event.
+    if (sub.acknowledged === false) {
+      let acked = await acknowledgeSubscription(packageName, sub.productId || productId, purchaseToken, accessToken).catch(() => false);
+      if (!acked) {
+        acked = await acknowledgeSubscription(packageName, sub.productId || productId, purchaseToken, accessToken).catch(() => false);
+        if (!acked) console.error('verify-play-subscription: acknowledge failed twice for', productId, '— Google will auto-refund in 3 days unless the RTDN retry succeeds.');
+      }
     }
 
     return json({ ok: true, ...activateRes.data });
