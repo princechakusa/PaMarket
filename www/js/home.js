@@ -163,13 +163,13 @@
             <span style="font-size:15px;font-weight:800;color:var(--text)">Browse Categories</span>
             <span onclick="H.navTo('Browse',null)" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
             ${CATEGORIES.map(c => {
-              return `<div onclick="H.filterByCat('${c.id}')" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.96)'" ontouchend="this.style.transform=''" style="display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .15s;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none">
-                <div style="width:100%;aspect-ratio:1;border-radius:16px;background:#fff;border:1px solid var(--border);box-shadow:0 2px 8px rgba(16,24,40,.06);display:flex;align-items:center;justify-content:center;overflow:hidden">
-                  <img src="img/cats/cat_${c.id}.png" draggable="false" oncontextmenu="return false" style="width:62%;height:62%;object-fit:contain;mix-blend-mode:multiply;pointer-events:none">
+              return `<div onclick="H.filterByCat('${c.id}')" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.96)'" ontouchend="this.style.transform=''" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:transform .15s;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none">
+                <div style="width:52px;height:52px;border-radius:14px;background:#fff;border:1px solid var(--border);box-shadow:0 2px 8px rgba(16,24,40,.06);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+                  <img src="img/cats/cat_${c.id}.png" draggable="false" oncontextmenu="return false" style="width:60%;height:60%;object-fit:contain;mix-blend-mode:multiply;pointer-events:none">
                 </div>
-                <span style="font-size:12px;font-weight:700;color:var(--text);text-align:center;line-height:1.25">${c.name}</span>
+                <span style="font-size:11px;font-weight:600;color:var(--text);text-align:center;line-height:1.2">${c.name}</span>
               </div>`;
             }).join('')}
           </div>
