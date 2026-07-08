@@ -6663,6 +6663,9 @@ function billingSlotPackPriceByExtraSlots(extraSlots){
 var PB = { rows:null, missing:false, window:30, statusFilter:'', view:'boosts' };
 var PB_SUB = { rows:null, missing:false };
 var PB_PACK = { rows:null, missing:false };
+var PB_RECRUITER = { rows:null, missing:false };
+var PB_JOBCREDIT = { rows:null, missing:false };
+var PB_RENTALFEAT = { rows:null, missing:false };
 
 async function loadPlayBilling(){
   PB.rows = null;
@@ -6701,10 +6704,40 @@ async function loadPlayBilling(){
     if(bizIds2.length){ var br2 = await sb.from('businesses').select('id,name').in('id',bizIds2); (br2.data||[]).forEach(function(b){PB_PACK._bizNames[b.id]=b.name;}); }
   }
 
+  PB_RECRUITER.missing = !(await hasTable('play_recruiter_subscriptions'));
+  if(!PB_RECRUITER.missing){
+    var rr = await sb.from('play_recruiter_subscriptions').select('id,user_id,recruiter_id,product_id,plan_id,billing_cycle,status,verification_error,subscription_state,expiry_time,created_at')
+      .order('created_at',{ascending:false}).limit(300);
+    PB_RECRUITER.rows = rr.error ? [] : (rr.data||[]);
+    var recUids = [...new Set(PB_RECRUITER.rows.map(function(r){return r.user_id;}).filter(Boolean))];
+    await ensureProfiles(recUids);
+  }
+
+  PB_JOBCREDIT.missing = !(await hasTable('job_credit_packs'));
+  if(!PB_JOBCREDIT.missing){
+    var jr = await sb.from('job_credit_packs').select('id,user_id,product_id,credits,status,verification_error,created_at')
+      .order('created_at',{ascending:false}).limit(300);
+    PB_JOBCREDIT.rows = jr.error ? [] : (jr.data||[]);
+    var jcUids = [...new Set(PB_JOBCREDIT.rows.map(function(p){return p.user_id;}).filter(Boolean))];
+    await ensureProfiles(jcUids);
+  }
+
+  PB_RENTALFEAT.missing = !(await hasTable('rental_featured_slot_packs'));
+  if(!PB_RENTALFEAT.missing){
+    var fr = await sb.from('rental_featured_slot_packs').select('id,user_id,listing_id,company_id,product_id,duration_days,status,verification_error,created_at')
+      .order('created_at',{ascending:false}).limit(300);
+    PB_RENTALFEAT.rows = fr.error ? [] : (fr.data||[]);
+    var rfUids = [...new Set(PB_RENTALFEAT.rows.map(function(p){return p.user_id;}).filter(Boolean))];
+    await ensureProfiles(rfUids);
+  }
+
   var since2 = new Date(Date.now()-30*864e5).toISOString();
   var failedCount = (PB.missing?0:await cnt('play_purchases', function(q){ return q.eq('status','failed').gte('created_at',since2); }))
     + (PB_SUB.missing?0:await cnt('play_subscriptions', function(q){ return q.eq('status','failed').gte('created_at',since2); }))
-    + (PB_PACK.missing?0:await cnt('featured_slot_packs', function(q){ return q.eq('status','failed').gte('created_at',since2); }));
+    + (PB_PACK.missing?0:await cnt('featured_slot_packs', function(q){ return q.eq('status','failed').gte('created_at',since2); }))
+    + (PB_RECRUITER.missing?0:await cnt('play_recruiter_subscriptions', function(q){ return q.eq('status','failed').gte('created_at',since2); }))
+    + (PB_JOBCREDIT.missing?0:await cnt('job_credit_packs', function(q){ return q.eq('status','failed').gte('created_at',since2); }))
+    + (PB_RENTALFEAT.missing?0:await cnt('rental_featured_slot_packs', function(q){ return q.eq('status','failed').gte('created_at',since2); }));
   var badgeEl = document.getElementById('badge-playFailed');
   if(badgeEl){ badgeEl.textContent = failedCount||0; badgeEl.style.display = (failedCount>0) ? '' : 'none'; }
 }
@@ -6718,14 +6751,17 @@ function renderPlayBilling(){
   var html = '<div class="sec-head"><div class="sec-title">Play Billing</div><div class="sec-actions">'
     + '<button class="btn-refresh" onclick="loadPlayBilling().then(renderPlayBilling)">Refresh</button></div></div>';
 
-  html += '<div style="display:flex;gap:8px;margin-bottom:14px">'
-    + [['boosts','Listing Boosts'],['subs','Subscriptions'],['packs','Slot Packs']].map(function(v){
+  html += '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">'
+    + [['boosts','Listing Boosts'],['subs','Subscriptions'],['packs','Slot Packs'],['recruiter','Recruiter Plans'],['jobcredits','Job Credits'],['rentalfeatured','Rental Featured']].map(function(v){
         return '<button class="filter-btn'+(PB.view===v[0]?' on':'')+'" onclick="pbSetView(\''+v[0]+'\')">'+v[1]+'</button>';
       }).join('')
     + '</div>';
 
   if(PB.view==='subs'){ html += renderPlaySubs(); document.getElementById('mainContent').innerHTML = html; return; }
   if(PB.view==='packs'){ html += renderPlayPacks(); document.getElementById('mainContent').innerHTML = html; return; }
+  if(PB.view==='recruiter'){ html += renderPlayRecruiter(); document.getElementById('mainContent').innerHTML = html; return; }
+  if(PB.view==='jobcredits'){ html += renderPlayJobCredits(); document.getElementById('mainContent').innerHTML = html; return; }
+  if(PB.view==='rentalfeatured'){ html += renderPlayRentalFeatured(); document.getElementById('mainContent').innerHTML = html; return; }
 
   // ── Listing boosts (default view) ──
   html += '<div class="sec-actions" style="margin-bottom:10px">'
@@ -6852,6 +6888,111 @@ function renderPlayPacks(){
     html += '</tr>';
     if(p.status==='failed' && p.verification_error){
       html += '<tr><td colspan="4" style="font-size:11.5px;color:var(--red);padding:2px 8px 10px 8px">Reason: '+esc(p.verification_error)+'</td></tr>';
+    }
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderPlayRecruiter(){
+  if(PB_RECRUITER.missing) return migrationNotice('Recruiter subscription history', 'migrations/add_recruiter_subscriptions.sql');
+  if(PB_RECRUITER.rows===null) return '<div class="loading-msg">Loading recruiter subscriptions…</div>';
+  var rows = PB_RECRUITER.rows;
+  var active = rows.filter(function(r){return r.subscription_state==='active'||r.subscription_state==='in_grace_period';});
+  var failed = rows.filter(function(r){return r.status==='failed';});
+  var canceled = rows.filter(function(r){return r.subscription_state==='canceled'||r.subscription_state==='expired';});
+
+  var html = '<div class="stats-grid">';
+  html += statCard('Active Recruiter Subs','green',fmtCnt(active.length),'active or in grace period');
+  html += statCard('Canceled / Expired','amber',fmtCnt(canceled.length),'no longer entitling access');
+  html += statCard('Failed Verification','red',fmtCnt(failed.length),'rejected by Google');
+  html += statCard('Total Purchases','accent',fmtCnt(rows.length),'all-time');
+  html += '</div>';
+
+  if(!rows.length){ return html + '<div class="empty-msg">No recruiter subscription purchases yet.</div>'; }
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Recruiter</th><th>Plan</th><th>Cycle</th><th>State</th><th>Expiry</th><th>Purchased</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var buyer = userLabel(r.user_id);
+    var badgeClass = PB_SUB_STATE_BADGE[r.subscription_state] || 'pending';
+    html += '<tr>';
+    html += '<td style="font-size:12.5px;font-weight:600">'+esc(buyer)+'</td>';
+    html += '<td style="font-size:12.5px;text-transform:capitalize">'+esc(r.plan_id)+'</td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+esc(r.billing_cycle)+'</td>';
+    html += '<td><span class="badge badge-'+badgeClass+'">'+esc(r.subscription_state)+(r.status==='failed'&&r.verification_error?' ⓘ':'')+'</span></td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+(r.expiry_time?fmtDateTime(r.expiry_time):'—')+'</td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+fmtDateTime(r.created_at)+'</td>';
+    html += '</tr>';
+    if(r.status==='failed' && r.verification_error){
+      html += '<tr><td colspan="6" style="font-size:11.5px;color:var(--red);padding:2px 8px 10px 8px">Reason: '+esc(r.verification_error)+'</td></tr>';
+    }
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderPlayJobCredits(){
+  if(PB_JOBCREDIT.missing) return migrationNotice('Job credit pack history', 'migrations/add_job_credits.sql');
+  if(PB_JOBCREDIT.rows===null) return '<div class="loading-msg">Loading job credit packs…</div>';
+  var rows = PB_JOBCREDIT.rows;
+  var consumed = rows.filter(function(p){return p.status==='consumed';});
+  var failed = rows.filter(function(p){return p.status==='failed';});
+  var totalCredits = consumed.reduce(function(n,p){return n+(p.credits||0);},0);
+
+  var html = '<div class="stats-grid">';
+  html += statCard('Job Credits Sold','green',fmtCnt(totalCredits),'total across all recruiters');
+  html += statCard('Purchases','accent',fmtCnt(consumed.length),'successfully activated');
+  html += statCard('Failed Verification','red',fmtCnt(failed.length),'rejected by Google');
+  html += '</div>';
+
+  if(!rows.length){ return html + '<div class="empty-msg">No job credit pack purchases yet.</div>'; }
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Buyer</th><th>Credits</th><th>Status</th><th>Purchased</th></tr></thead><tbody>';
+  rows.forEach(function(p){
+    var buyer = userLabel(p.user_id);
+    var statusColor = { pending:'pending', verified:'active', consumed:'active', failed:'rejected' }[p.status] || 'pending';
+    html += '<tr>';
+    html += '<td style="font-size:12.5px;font-weight:600">'+esc(buyer)+'</td>';
+    html += '<td style="font-size:12.5px">+'+p.credits+'</td>';
+    html += '<td><span class="badge badge-'+statusColor+'">'+esc(p.status)+(p.status==='failed'&&p.verification_error?' ⓘ':'')+'</span></td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+fmtDateTime(p.created_at)+'</td>';
+    html += '</tr>';
+    if(p.status==='failed' && p.verification_error){
+      html += '<tr><td colspan="4" style="font-size:11.5px;color:var(--red);padding:2px 8px 10px 8px">Reason: '+esc(p.verification_error)+'</td></tr>';
+    }
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderPlayRentalFeatured(){
+  if(PB_RENTALFEAT.missing) return migrationNotice('Rental featured slot history', 'migrations/add_rental_featured_slot_packs.sql');
+  if(PB_RENTALFEAT.rows===null) return '<div class="loading-msg">Loading rental featured slots…</div>';
+  var rows = PB_RENTALFEAT.rows;
+  var consumed = rows.filter(function(p){return p.status==='consumed';});
+  var failed = rows.filter(function(p){return p.status==='failed';});
+
+  var html = '<div class="stats-grid">';
+  html += statCard('Featured Slots Sold','green',fmtCnt(consumed.length),'successfully activated');
+  html += statCard('Failed Verification','red',fmtCnt(failed.length),'rejected by Google');
+  html += statCard('Total Purchases','accent',fmtCnt(rows.length),'all-time');
+  html += '</div>';
+
+  if(!rows.length){ return html + '<div class="empty-msg">No rental featured slot purchases yet.</div>'; }
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Buyer</th><th>Listing</th><th>Days</th><th>Status</th><th>Purchased</th></tr></thead><tbody>';
+  rows.forEach(function(p){
+    var buyer = userLabel(p.user_id);
+    var statusColor = { pending:'pending', verified:'active', consumed:'active', failed:'rejected' }[p.status] || 'pending';
+    html += '<tr>';
+    html += '<td style="font-size:12.5px;font-weight:600">'+esc(buyer)+'</td>';
+    html += '<td style="font-size:12px;color:var(--sub2)">'+esc(String(p.listing_id||'').slice(0,8))+'</td>';
+    html += '<td style="font-size:12.5px">'+p.duration_days+'d</td>';
+    html += '<td><span class="badge badge-'+statusColor+'">'+esc(p.status)+(p.status==='failed'&&p.verification_error?' ⓘ':'')+'</span></td>';
+    html += '<td style="font-size:12px;color:var(--sub)">'+fmtDateTime(p.created_at)+'</td>';
+    html += '</tr>';
+    if(p.status==='failed' && p.verification_error){
+      html += '<tr><td colspan="5" style="font-size:11.5px;color:var(--red);padding:2px 8px 10px 8px">Reason: '+esc(p.verification_error)+'</td></tr>';
     }
   });
   html += '</tbody></table></div>';
