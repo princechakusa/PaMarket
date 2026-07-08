@@ -1846,6 +1846,35 @@ window.H = {
     } catch(e){ console.warn('fetchListingsFromSupabase:',e.message); }
   },
 
+  // Dedicated fetch for the My Listings page — scoped to the signed-in user's
+  // own rows only (any status, no 50-row cap, includes jobs). The shared feed
+  // fetch above (fetchListingsFromSupabase) only returns the newest 50 ACTIVE
+  // listings platform-wide for Home/Browse; reusing it for My Listings meant
+  // any of the user's own older active listings fell outside that window and
+  // were dropped from H.state.listings on every poll, then reappeared once a
+  // realtime event or another fetch restored them (the "disappear/reappear" bug).
+  async fetchMyListingsFromSupabase() {
+    try {
+      if (!window.supabase || typeof window.supabase.from !== 'function') return;
+      var u = H.currentUser();
+      if (!u) return;
+      const {data,error}=await window.supabase
+        .from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes')
+        .eq('seller_id', u.id)
+        .is('business_id', null)
+        .neq('status','deleted')
+        .order('created_at',{ascending:false});
+      if (error) return;
+      var mine = (data||[]).map(function(r){ return H._mapCloudListing(r); });
+      // Replace this user's own personal (non-business) rows verbatim with the
+      // server snapshot; every other listing in state (other sellers, business
+      // listings) is left completely untouched.
+      var others = (H.state.listings||[]).filter(function(l){ return !(l.sellerId === u.id && !l.businessId); });
+      H.state.listings = mine.concat(others);
+      H.saveState();
+    } catch(e){ console.warn('fetchMyListingsFromSupabase:',e.message); }
+  },
+
   async loadMoreListings() {
     if (H._listingsAllLoaded || H._loadingMoreListings) return;
     if (!window.supabase || typeof window.supabase.from !== 'function') return;

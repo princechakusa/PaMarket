@@ -21,6 +21,16 @@
       : Promise.resolve();
   }
 
+  var _lastMyListingsFetch = 0;
+  function _fetchMyListings() {
+    var now = Date.now();
+    if (now - _lastMyListingsFetch < _THROTTLE) return Promise.resolve();
+    _lastMyListingsFetch = now;
+    return typeof H.fetchMyListingsFromSupabase === 'function'
+      ? H.fetchMyListingsFromSupabase().catch(function () {})
+      : Promise.resolve();
+  }
+
   var _lastJobsFetch = 0;
   function _fetchJobs() {
     var now = Date.now();
@@ -44,6 +54,14 @@
   function _sigListings() {
     var ls = (H.state && H.state.listings) || [];
     return ls.length + (ls[0] ? '|' + ls[0].id + ls[0].status : '');
+  }
+  function _sigMyListings() {
+    var u = H.currentUser && H.currentUser();
+    if (!u) return '0';
+    var mine = ((H.state && H.state.listings) || []).filter(function (l) { return l.sellerId === u.id && !l.businessId; });
+    var sig = mine.length;
+    mine.forEach(function (l) { sig += '|' + l.id + l.status; });
+    return sig;
   }
   function _sigBiz() {
     var bz = (H.state && H.state.businesses) || [];
@@ -125,7 +143,7 @@
         return rs.length + '|' + vs.length + '|' + ls.length + '|' + pend;
       }
     },
-    MyListings: { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
+    MyListings: { interval: 60000,  fetch: _fetchMyListings, sig: _sigMyListings },
     Favorites:  { interval: 120000, fetch: _fetchListings, sig: _sigListings },
     Account:    { interval: 120000, fetch: function () { return Promise.resolve(); }, sig: function () { return ''; } },
     Profile:    { interval: 120000, fetch: function () { return Promise.resolve(); }, sig: function () { return ''; } },
