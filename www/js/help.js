@@ -109,7 +109,7 @@
             <div style="font-size:14px;font-weight:800;color:#fff">PaMarket Support Bot</div>
             <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:2px;display:flex;align-items:center;gap:5px">
               <span style="width:6px;height:6px;border-radius:50%;background:#4ADE80;flex-shrink:0"></span>
-              Answers instantly · 30 topics covered
+              Answers instantly · 37 topics covered
             </div>
           </div>
           ${S.chevron.replace('currentColor','rgba(255,255,255,.7)')}
@@ -360,7 +360,7 @@
     var PH   = 'tel:+971589772645';
     var WASVG= '<svg viewBox="0 0 24 24" width="17" height="17" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>';
 
-    /* ── knowledge base — 30 topics ── */
+    /* ── knowledge base — 37 topics ── */
     var KB = [
       {
         tags:['sign in','login','log in','signin','forgot password','reset password','locked out','wrong password','account access','cant sign','cannot sign','email not found','not signing','change password'],
@@ -498,8 +498,43 @@
         chips:['Get Verified','Post a Listing','Talk to a Human']
       },
       {
-        tags:['boost','sponsored','advertise','ad','promote listing','feature listing','paid ad','promote my listing'],
-        answer:'To promote your listing or run a sponsored ad:\n\nContact our team directly — we manage sponsored ads for businesses and individuals who want extra visibility on the platform.\n\nSponsored ads appear at the top of the home screen as featured banners and reach all users in Zimbabwe.\n\nPricing depends on the duration and placement. Get in touch to discuss options.',
+        tags:['boost','sponsored','advertise','promote listing','feature listing','paid ad','promote my listing','boost my listing','boost listing'],
+        answer:'To boost a listing so it ranks higher in search and browse:\n1. Go to My Listings and open the listing you want to boost\n2. Tap "Boost Listing"\n3. Choose a duration — 1 day, 7 days, or 30 days\n4. Pay securely with Google Play Billing (your normal Google account payment method — card, Play balance, or carrier billing)\n\nBoosted listings get priority placement for the duration you choose. Payment is a one-time purchase, not a subscription — it simply expires after the period ends.',
+        chips:['Featured Slot Pack','Shop Subscription','Ask Another Question']
+      },
+      {
+        tags:['shop subscription','shop plan','business plan','shop starter','shop pro','shop premium','upgrade shop','business subscription','shop billing'],
+        answer:'Shop subscriptions unlock extra features for your business profile — more featured slots, higher listing limits, and priority placement, depending on the tier.\n\nAvailable plans (monthly, billed via Google Play):\n• Shop Starter\n• Shop Pro\n• Shop Premium\n\nTo subscribe:\n1. Go to your Business Profile\n2. Tap "Upgrade" or "Manage Subscription"\n3. Pick a plan and confirm through Google Play Billing\n\nSubscriptions renew automatically each month through your Google account until you cancel. You can manage or cancel anytime from Google Play → Subscriptions — PaMarket cannot cancel it for you.',
+        chips:['Featured Slot Pack','Boost a Listing','Talk to a Human']
+      },
+      {
+        tags:['featured slot','slot pack','extra slots','featured slot pack','more featured slots'],
+        answer:'Featured Slot Packs give your shop extra featured-listing slots (on top of what your subscription tier includes).\n\nAvailable packs (one-time purchase via Google Play Billing):\n• +1 slot\n• +3 slots (best value)\n\nTo buy one: go to your Business Profile → Featured Slots → "Buy More Slots" and complete the purchase through Google Play. Slots are added to your account immediately after payment confirms.',
+        chips:['Shop Subscription','Boost a Listing','Ask Another Question']
+      },
+      {
+        tags:['recruiter','recruiter subscription','recruiter plan','recruiter monthly','job posting subscription','unlimited job posts'],
+        answer:'The Recruiter subscription is for employers who post jobs regularly. It gives you a monthly allowance of job posts plus recruiter tools, billed monthly through Google Play Billing.\n\nTo subscribe:\n1. Go to Post → Jobs (or your Recruiter dashboard)\n2. Tap "Subscribe" under Recruiter Plan\n3. Confirm the purchase through Google Play\n\nIt renews automatically each month. Manage or cancel anytime from Google Play → Subscriptions.\n\nPrefer to pay per job instead? Use Job Posting Credits — no subscription required.',
+        chips:['Job Posting Credits','Job Boost','Talk to a Human']
+      },
+      {
+        tags:['job credit','job posting credit','job credits','pay per job post','credit pack','job post credit'],
+        answer:'Job Posting Credits let you pay per job listing instead of subscribing to the Recruiter plan — each credit lets you post one job.\n\nAvailable packs (one-time purchase via Google Play Billing):\n• 1 job post credit\n• 5 job post credits (best value)\n\nTo buy: go to Post → Jobs → "Buy Job Credits" and complete the purchase through Google Play. Credits are added to your account instantly and are spent automatically the next time you post a job.',
+        chips:['Recruiter Subscription','Job Boost','Ask Another Question']
+      },
+      {
+        tags:['job boost','boost job','boost vacancy','promote job listing','feature job'],
+        answer:'To boost a job listing so it appears higher for job seekers:\n1. Go to My Listings and open the job posting\n2. Tap "Boost Job"\n3. Choose 7 days or 30 days (best value)\n4. Pay securely through Google Play Billing\n\nThis is a one-time purchase per boost, separate from the Recruiter subscription and Job Posting Credits.',
+        chips:['Recruiter Subscription','Job Posting Credits','Ask Another Question']
+      },
+      {
+        tags:['rental featured','feature my rental','featured rental','promote rental','rental slot','feature property'],
+        answer:'To feature a rental listing so it stands out to renters:\n1. Go to My Listings and open the rental listing\n2. Tap "Feature This Rental"\n3. Choose 7 days or 30 days (best value)\n4. Pay securely through Google Play Billing\n\nFeatured rentals get priority placement in rental search and browse for the duration purchased.',
+        chips:['Boost a Listing','Ask Another Question']
+      },
+      {
+        tags:['refund','cancel subscription','cancel purchase','billing issue','charged twice','wrong charge','purchase failed','payment failed','play billing','google play billing','manage subscription','restore purchase'],
+        answer:'All paid features (boosts, featured slots, shop plans, recruiter plans, job credits) are billed through Google Play Billing — PaMarket never sees or stores your card details.\n\nTo manage or cancel a subscription:\nGoogle Play Store → tap your profile icon → Payments & subscriptions → Subscriptions\n\nTo request a refund:\nGoogle Play Store → Order history → find the purchase → Report a problem\n\nIf a purchase completed but the feature did not activate in the app, contact our support team with your order number and we will resolve it manually.',
         chips:['Talk to a Human','Ask Another Question']
       },
       {
@@ -524,7 +559,8 @@
     var INIT_CHIPS = [
       'App Not Working','Sign In Issue','Post a Listing','Get Verified',
       'Messages Issue','Report a Scam','Job / CV Help','Account Banned',
-      'Pricing Info','Submit a Bug Report','Talk to a Human'
+      'Pricing Info','Shop Subscription','Recruiter Subscription','Boost a Listing',
+      'Submit a Bug Report','Talk to a Human'
     ];
 
     var CHIP_MAP = {
@@ -552,7 +588,14 @@
       'Change Password':   'password change reset forgot',
       'Privacy Settings':  'privacy hide number personal data',
       'Business Profile':  'business shop local profile account',
-      'Boost / Advertise': 'boost sponsored advertise promote listing',
+      'Boost a Listing':   'boost my listing promote feature listing',
+      'Shop Subscription': 'shop subscription plan starter pro premium upgrade',
+      'Featured Slot Pack':'featured slot pack extra slots',
+      'Recruiter Subscription': 'recruiter subscription plan monthly job posting',
+      'Job Posting Credits':   'job credit posting pay per job post',
+      'Job Boost':             'job boost promote vacancy feature job',
+      'Rental Featured':       'rental featured feature my rental promote rental',
+      'Billing Help':          'refund cancel subscription billing issue play billing manage',
     };
 
     function timeStr() {
@@ -819,8 +862,8 @@
       showChips(INIT_CHIPS);
     } else {
       var greeting = uName
-        ? 'Hi ' + uName + '! I am the PaMarket Support Bot.\n\nI can answer questions instantly across 30 topics. Tap a topic below or type your question.'
-        : 'Hi! I am the PaMarket Support Bot.\n\nI can answer questions instantly across 30 topics. Tap a topic below or type your question.';
+        ? 'Hi ' + uName + '! I am the PaMarket Support Bot.\n\nI can answer questions instantly across 37 topics. Tap a topic below or type your question.'
+        : 'Hi! I am the PaMarket Support Bot.\n\nI can answer questions instantly across 37 topics. Tap a topic below or type your question.';
       addMsg(greeting, false, true);
       showChips(INIT_CHIPS);
     }
@@ -833,7 +876,7 @@
       <div class="doc-content">
         <div class="doc-section">
           <h2>Terms of Service</h2>
-          <p style="color:var(--ash);font-size:12px">Last updated: June 2026 · Effective immediately</p>
+          <p style="color:var(--ash);font-size:12px">Last updated: July 2026 · Effective immediately</p>
 
           <h2>1. Agreement to Terms</h2>
           <p>By downloading, installing, or using the PaMarket application ("App"), you agree to be legally bound by these Terms of Service. If you do not agree to these terms, you must not use the App. These terms govern all users: buyers, sellers, job seekers, employers, and visitors.</p>
@@ -846,6 +889,10 @@
 
           <h2>4. What PaMarket Is</h2>
           <p>PaMarket is an online classifieds marketplace that connects buyers and sellers in Zimbabwe. We provide the platform — we are not a party to any transaction between users. We do not hold payments, guarantee delivery, or verify the condition of items unless stated. All transactions are conducted directly between users at their own risk.</p>
+
+          <h2>4A. Paid Platform Features and Google Play Billing</h2>
+          <p>Separately from peer-to-peer marketplace transactions, PaMarket sells certain optional paid platform features directly to you: listing boosts, featured slot packs, Business Shop subscriptions (Starter, Pro, Premium), Recruiter subscriptions, job posting credit packs, job boosts, and featured rental slots. These are processed exclusively through Google Play Billing using the payment method on your Google account — PaMarket never receives or stores your card details.</p>
+          <p>Subscriptions (Business Shop and Recruiter plans) renew automatically each billing period until you cancel them via Google Play Store &gt; Payments and subscriptions &gt; Subscriptions. One-time purchases (boosts, slot packs, job credits, job boosts, featured rental slots) grant the stated benefit for the stated duration or quantity and do not renew. Refunds are requested through Google Play (Order history &gt; Report a problem). Posting listings, applying for jobs, messaging, and browsing remain entirely free — paid features only add extra visibility or capacity.</p>
 
           <h2>5. Verification</h2>
 
@@ -918,7 +965,7 @@ pages.HelpPrivacy = function () {
       <div class="doc-content">
         <div class="doc-section">
           <h2>Privacy Policy</h2>
-          <p style="color:var(--ash);font-size:12px">Last updated: June 2026</p>
+          <p style="color:var(--ash);font-size:12px">Last updated: July 2026</p>
 
           <h2>1. Who We Are</h2>
           <p>PaMarket is a Zimbabwean marketplace application. We are committed to protecting your privacy and handling your data responsibly. This policy explains what data we collect, why we collect it, and how we protect it.</p>
@@ -933,6 +980,7 @@ pages.HelpPrivacy = function () {
             <li><strong>Usage data:</strong> Pages viewed, search queries, and listing interactions</li>
             <li><strong>Identity verification data:</strong> If you choose to verify your personal identity, we collect photos of your government-issued ID document (National ID, passport, or driver's licence — both sides where applicable) and a facial selfie photograph taken through the App. These are used solely to confirm that you are a real person and match your ID.</li>
             <li><strong>Business verification data:</strong> If you request business verification to post jobs, we collect photos of your business registration certificate, the owner or director's National ID or passport, a Tax Clearance Certificate, and a photo of your business premises. These are submitted by you through WhatsApp and reviewed by our team.</li>
+            <li><strong>Purchase data:</strong> If you buy a paid feature (listing boost, featured slot pack, Business Shop or Recruiter subscription, job posting credits, job boosts, or featured rental slots), we receive a purchase token, product ID, and subscription status from Google Play Billing so we can activate the feature on your account. We never receive or store your card number, bank details, or Google account password.</li>
           </ul>
 
           <h2>3. How We Use Your Data</h2>
@@ -958,6 +1006,7 @@ pages.HelpPrivacy = function () {
           <ul>
             <li><strong>Other users:</strong> Your public profile name, phone number (if provided), and listings are visible to all users</li>
             <li><strong>Supabase:</strong> Our secure database and authentication infrastructure provider</li>
+            <li><strong>Google LLC (Google Play Billing):</strong> If you purchase a paid feature (boost, featured slot pack, Business Shop or Recruiter subscription, job credits, job boosts, or featured rental slots), Google processes the payment and shares a purchase token, product ID, and subscription status with us so we can activate the feature. Google Play Billing's own privacy policy governs the payment method data Google collects directly from you.</li>
             <li><strong>Legal authorities:</strong> When required by Zimbabwean law, court order, or to protect public safety</li>
           </ul>
 

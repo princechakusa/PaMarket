@@ -965,4 +965,44 @@
     } catch (e) { /* best-effort */ }
   };
 
+  // ── Purchase history — reads across every Google Play Billing ledger
+  // table the app writes to (all already RLS-scoped to auth.uid() = user_id,
+  // owner-read-only — see each add_*.sql migration). This is a pure read,
+  // no new backend needed. Used by the My Activity page.
+  H.fetchPurchaseHistory = async function () {
+    var sb = window.supabase;
+    var u = H.currentUser();
+    if (!sb || !u) return [];
+    try {
+      var results = await Promise.all([
+        sb.from('play_purchases').select('id, product_id, status, purchase_time, created_at, expiry_time').eq('user_id', u.id),
+        sb.from('featured_slot_packs').select('id, product_id, status, purchase_time, created_at, extra_slots').eq('user_id', u.id),
+        sb.from('job_credit_packs').select('id, product_id, status, purchase_time, created_at, credits').eq('user_id', u.id),
+        sb.from('play_subscriptions').select('id, product_id, status, subscription_state, purchase_time, created_at').eq('user_id', u.id),
+        sb.from('play_recruiter_subscriptions').select('id, product_id, status, subscription_state, purchase_time, created_at').eq('user_id', u.id),
+        sb.from('rental_featured_slot_packs').select('id, product_id, status, purchase_time, created_at, duration_days').eq('user_id', u.id),
+      ]);
+      var kinds = ['boost', 'slotPack', 'jobCredit', 'shopSub', 'recruiterSub', 'rentalFeatured'];
+      var merged = [];
+      results.forEach(function (r, i) {
+        if (r.error || !Array.isArray(r.data)) return;
+        r.data.forEach(function (row) {
+          merged.push({
+            kind: kinds[i],
+            productId: row.product_id,
+            status: row.status,
+            subscriptionState: row.subscription_state || null,
+            extraSlots: row.extra_slots || null,
+            credits: row.credits || null,
+            durationDays: row.duration_days || null,
+            expiryTime: row.expiry_time || null,
+            t: row.purchase_time ? new Date(row.purchase_time).getTime() : new Date(row.created_at).getTime(),
+          });
+        });
+      });
+      merged.sort(function (a, b) { return b.t - a.t; });
+      return merged;
+    } catch (e) { return []; }
+  };
+
 })(window.H = window.H || {});

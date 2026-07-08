@@ -994,7 +994,7 @@ window.H = {
       await H.renderPage(name);
     } catch(e) {
       console.warn('navTo error:', e);
-      H.toast('Page not found');
+      H.toast('Page not found: ' + (e && e.message || e), 6000, true);
       const area=document.getElementById('mainArea');
       if(area) area.innerHTML='<div class="page active" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#1A3A8F" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Page not found</div><div style="font-size:14px;color:var(--sub);margin-bottom:24px">This page doesn\'t exist or couldn\'t load.</div><button onclick="H.navTo(\'Home\')" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Go Home</button></div>';
     }
@@ -1013,7 +1013,7 @@ window.H = {
     } catch(e) {
       console.warn('openInner error:',e);
       document.getElementById('bottomNav').style.display='flex';
-      H.toast('Page not found');
+      H.toast('Page not found: ' + (e && e.message || e), 6000, true);
       const area=document.getElementById('mainArea');
       if(area) area.innerHTML='<div class="page active" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#1A3A8F" stroke-width="1.5" style="opacity:.4;margin-bottom:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Page not found</div><div style="font-size:14px;color:var(--sub);margin-bottom:24px">This page doesn\'t exist or couldn\'t load.</div><button onclick="H.navTo(\'Home\')" style="background:#1A3A8F;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Go Home</button></div>';
     }
@@ -3206,7 +3206,9 @@ H.openAppRating = function() {
         // Write token to the isolated push_tokens table (not profiles) so it
         // is not exposed via the public profiles read policy.
         c.from('push_tokens').upsert({ user_id: u.id, token: token.value, updated_at: new Date().toISOString() })
-          .then(function(r) { if (r && r.error) console.warn('push_token save:', r.error.message); });
+          .then(function(r) {
+            if (r && r.error) console.warn('push_token save:', r.error.message);
+          });
       });
 
       PN.addListener('registrationError', function(err) {

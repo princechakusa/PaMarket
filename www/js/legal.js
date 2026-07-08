@@ -587,14 +587,14 @@
   }
 
   function _docBoosted() {
-    return _dateChip('June 2026')
-      + _p('These rules apply to all PaMarket Boost packages, featured listings, and paid promotional tools. Boosted listings receive greater visibility but must comply with all standard listing requirements.')
+    return _dateChip('July 2026')
+      + _p('These rules apply to all PaMarket paid platform features: listing boosts, featured slot packs, Business Shop subscriptions, Recruiter subscriptions, job posting credits, job boosts, and featured rental slots. All of these are purchased through Google Play Billing and must comply with all standard listing requirements.')
       + _s(1, 'What Boosting Does', _li([
           'Moves your listing to the top of search results and category pages',
           'Adds a "Featured" or "Boosted" label to your listing card',
           'Increases visibility in Browse and Home feeds',
           'May include placement in the PaMarket "Top Picks" carousel',
-          'Duration and intensity depend on the package purchased'
+          'Duration depends on the package purchased (1, 7, or 30 days)'
         ]))
       + _s(2, 'Eligibility', 'Listings must meet all of the following before a boost can be applied:' + _li([
           'Listing must be Active and comply with all Terms of Use',
@@ -603,31 +603,32 @@
           'Listings under review or flagged for policy violations are not eligible',
           'Prohibited items may not be boosted under any circumstances'
         ]))
-      + _s(3, 'Payment & Refunds', _li([
-          'Boost packages are paid in advance in USD',
-          'Boosts begin within 24 hours of payment confirmation',
-          'Refunds are available only if PaMarket is unable to deliver the boost due to a technical error',
-          'No refund is issued if a listing is removed for policy violations during an active boost period',
-          'Unused boost credit expires 90 days after purchase'
+      + _s(3, 'Payment & Refunds — Google Play Billing', _li([
+          'All paid features (boosts, featured slot packs, Business Shop and Recruiter subscriptions, job credits, job boosts, featured rental slots) are purchased and billed through Google Play Billing using the payment method on your Google account — PaMarket never receives or stores your card details',
+          'One-time purchases (boosts, slot packs, job credits, job boosts, featured rental slots) activate immediately after payment confirms and expire automatically at the end of the purchased duration or once the credits are used',
+          'Subscriptions (Business Shop and Recruiter plans) renew automatically each billing period until cancelled via Google Play Store > Payments and subscriptions > Subscriptions — PaMarket cannot cancel a subscription on your behalf',
+          'Refunds are requested through Google Play (Order history > Report a problem) and are subject to Google Play\'s refund policy',
+          'No refund is issued if a listing is removed for policy violations during an active boost or subscription period',
+          'If a purchase completes but the feature does not activate in the app, contact support with your Google Play order number and we will investigate and correct it'
         ]))
       + _s(4, 'Boost Limits', _li([
           'Free accounts: maximum 1 boosted listing at a time',
-          'Verified businesses: up to 10 boosted listings simultaneously',
+          'Verified businesses: additional featured slots depend on your Shop subscription tier plus any featured slot packs purchased',
           'No listing may be kept permanently at position #1 — rotation applies to ensure fair access',
           'Boosting does not exempt a listing from moderation or user reports'
         ]))
       + _s(5, 'Our Rights', _p('PaMarket reserves the right to:') + _li([
-          'Remove or suspend a boost if the listing violates platform policies, even if payment has been made',
+          'Remove or suspend a boost or featured placement if the listing violates platform policies, even if payment has been made',
           'Adjust the boost algorithm to ensure a fair and diverse marketplace experience',
-          'Refuse to boost any listing at our sole discretion',
-          'Issue a pro-rata refund for the unused portion of a boost removed for policy violations'
+          'Refuse to boost or feature any listing at our sole discretion',
+          'Direct you to Google Play for refund processing on any paid feature removed for policy violations'
         ]) + _contactLine());
   }
 
   // ── Document Registry ────────────────────────────────────
   H._legalDocs = {
-    terms_of_use:            { title: 'Terms of Use',             updated: 'June 2026', icon: IC.doc,     content: function() { return typeof H._termsText === 'function' ? H._termsText() : ''; } },
-    privacy_policy:          { title: 'Privacy Policy',           updated: 'June 2026', icon: IC.shield,  content: function() { return typeof H._privacyText === 'function' ? H._privacyText() : ''; } },
+    terms_of_use:            { title: 'Terms of Use',             updated: 'July 2026', icon: IC.doc,     content: function() { return typeof H._termsText === 'function' ? H._termsText() : ''; } },
+    privacy_policy:          { title: 'Privacy Policy',           updated: 'July 2026', icon: IC.shield,  content: function() { return typeof H._privacyText === 'function' ? H._privacyText() : ''; } },
     community_guidelines:    { title: 'Community Guidelines',     updated: 'June 2026', icon: IC.users,   content: function() { return typeof H._guidelinesText === 'function' ? H._guidelinesText() : ''; } },
     acceptable_use_policy:   { title: 'Acceptable Use Policy',    updated: 'June 2026', icon: IC.ban,     content: _docAUP },
     cookie_data_policy:      { title: 'Cookie & Data Policy',     updated: 'June 2026', icon: IC.cookie,  content: _docCookie },
@@ -643,7 +644,7 @@
     vehicle_listing_terms:   { title: 'Vehicle Listing Terms',    updated: 'June 2026', icon: IC.car,     content: _docVehicle },
     property_listing_terms:  { title: 'Property Listing Terms',   updated: 'June 2026', icon: IC.home,    content: _docProperty },
     verified_business_rules: { title: 'Verified Business Rules',  updated: 'June 2026', icon: IC.check,   content: _docVerifiedBiz },
-    boosted_listing_rules:   { title: 'Boosted Listings Rules',   updated: 'June 2026', icon: IC.zap,     content: _docBoosted },
+    boosted_listing_rules:   { title: 'Boosted Listings Rules',   updated: 'July 2026', icon: IC.zap,     content: _docBoosted },
   };
 
   // ── Hub section config ───────────────────────────────────
