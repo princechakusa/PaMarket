@@ -27,6 +27,21 @@
   <link rel="apple-touch-icon" href="img/icon-192.png?v=5">
   <link rel="manifest" href="manifest.json">
 
+  <!-- Preload category icons so the Home category grid renders instantly with
+       no visible pop-in as each PNG finishes downloading. -->
+  <link rel="preload" as="image" href="img/cats/cat_property.png">
+  <link rel="preload" as="image" href="img/cats/cat_vehicles.png">
+  <link rel="preload" as="image" href="img/cats/cat_rooms.png">
+  <link rel="preload" as="image" href="img/cats/cat_electronics.png">
+  <link rel="preload" as="image" href="img/cats/cat_jobs.png">
+  <link rel="preload" as="image" href="img/cats/cat_furniture.png">
+  <link rel="preload" as="image" href="img/cats/cat_fashion.png">
+  <link rel="preload" as="image" href="img/cats/cat_services.png">
+  <link rel="preload" as="image" href="img/cats/cat_agriculture.png">
+  <link rel="preload" as="image" href="img/cats/cat_pets.png">
+  <link rel="preload" as="image" href="img/cats/cat_kids.png">
+  <link rel="preload" as="image" href="img/cats/cat_other.png">
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -365,7 +380,7 @@
   <script src="js/business-analytics.js?v=1"></script>
   <script src="js/business-monetization.js?v=5"></script>
   <script src="js/business-admin.js?v=7"></script>
-  <script src="js/home.js?v=42"></script>
+  <script src="js/home.js?v=43"></script>
   <script src="js/refresh-manager.js?v=12"></script>
   <script src="js/lifecycle.js?v=1"></script>
 
