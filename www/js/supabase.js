@@ -201,25 +201,15 @@
     // from scratch (scroll jumped) and raced the canonical handler. That
     // duplication has been removed. Foreground re-sync is owned by
     // refresh-manager.js (RM.resume) and realtime-extras.js (the RT supervisor),
-    // so there is no appStateChange listener here either. This channel keeps only
-    // the unique profile-verification stream below.
-
-    // Profile verification approvals
-    sb.channel('rt-profiles')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, function(payload) {
-        var row = payload.new;
-        if (!row || !window.H || !window.H.state) return;
-        var u = (window.H.state.users || []).find(function(x){ return x.id === row.id; });
-        if (u) {
-          var wasUnverified = !u.verified;
-          u.verified = !!row.verified;
-          u.role     = row.role || u.role;
-          if (typeof window.H.saveState === 'function') window.H.saveState();
-          if (wasUnverified && u.verified && u.id === (window.H.state.currentUserId)) {
-            if (typeof window.H.toast === 'function') window.H.toast('Your identity has been verified!');
-          }
-        }
-      })
-      .subscribe();
+    // so there is no appStateChange listener here either.
+    //
+    // The 'rt-profiles' UPDATE subscription that used to live here (profile
+    // verification approvals) was removed: `profiles` is not in the
+    // supabase_realtime publication in any migration in this repo (confirmed by
+    // exhaustive grep of supabase/migrations/*.sql — only messages, listings,
+    // businesses, notifications are ever added, none of them profiles), so the
+    // channel received zero events. This function is now a no-op placeholder
+    // kept only because H.startRealtime() is still called from app.js/supabase.js
+    // during sign-in — safe to remove entirely once nothing calls it.
   };
 })();
