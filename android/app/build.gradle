@@ -31,8 +31,8 @@ android {
         applicationId "com.pamarket.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 96
-        versionName "1.27.18"
+        versionCode 97
+        versionName "1.27.19"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
