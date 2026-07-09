@@ -3334,7 +3334,11 @@ H.openAppRating = function() {
         if (LN && data.type === 'message' && notification.title && notification.body) {
           LN.schedule({
             notifications: [{
-              id: Math.abs(((notification.id || data.conversationId || '') + '').split('').reduce(function(h,c){return (h*31+c.charCodeAt(0))|0;},0)) || 1,
+              // Key the local notification by CONVERSATION (not message id) so
+              // consecutive messages from one chat update a single tray entry
+              // instead of piling up — matches the background path, where the
+              // server sets tag: conversationId for the same reason.
+              id: Math.abs(((data.conversationId || notification.id || '') + '').split('').reduce(function(h,c){return (h*31+c.charCodeAt(0))|0;},0)) || 1,
               title: notification.title,
               body: notification.body,
               channelId: 'pamarket_default',
