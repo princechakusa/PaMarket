@@ -22,7 +22,7 @@
 <meta property="og:type" content="website">
 <meta property="og:locale" content="en_ZW">
 <meta property="og:site_name" content="PaMarket">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="geo.region" content="ZW">
 <meta name="geo.placename" content="Zimbabwe">
 <meta name="ICBM" content="-19.0154, 29.1549">
@@ -36,10 +36,13 @@
 {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": "https://pamarketzw.com/#organization",
   "name": "PaMarket",
+  "alternateName": "PaMarket Zimbabwe",
   "url": "https://pamarketzw.com/",
-  "logo": "https://pamarketzw.com/img/icon-512.png",
-  "description": "Zimbabwe's free classifieds marketplace — buy, sell, find jobs and grow your business across all ten provinces.",
+  "logo": { "@type": "ImageObject", "url": "https://pamarketzw.com/img/icon-512.png", "width": 512, "height": 512 },
+  "slogan": "Zimbabwe's free classifieds marketplace — no fees, ever.",
+  "description": "PaMarket is Zimbabwe's free classifieds marketplace and small-business directory — buy and sell vehicles, property, electronics, furniture and more, find jobs, and open a verified storefront across all ten provinces.",
   "areaServed": {
     "@type": "Country",
     "name": "Zimbabwe"
@@ -74,24 +77,80 @@
 {
   "@context": "https://schema.org",
   "@type": "MobileApplication",
+  "@id": "https://pamarketzw.com/#androidapp",
   "name": "PaMarket",
   "operatingSystem": "ANDROID",
   "applicationCategory": "ShoppingApplication",
   "url": "https://pamarketzw.com/",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.pamarket.app",
   "installUrl": "https://play.google.com/store/apps/details?id=com.pamarket.app",
-  "screenshot": "https://pamarketzw.com/og.png",
+  "screenshot": [
+    "https://pamarketzw.com/img/screens/screen-home.png",
+    "https://pamarketzw.com/img/screens/screen-listing-detail.png",
+    "https://pamarketzw.com/img/screens/screen-chat.png",
+    "https://pamarketzw.com/img/screens/screen-jobs.png"
+  ],
   "featureList": "Buy and sell, post free ads, find jobs, rent property, message sellers, verified businesses",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-  "publisher": { "@type": "Organization", "name": "PaMarket", "url": "https://pamarketzw.com/" }
+  "publisher": { "@id": "https://pamarketzw.com/#organization" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "@id": "https://pamarketzw.com/#webapp",
+  "name": "PaMarket",
+  "alternateName": "PaMarket Zimbabwe",
+  "url": "https://pamarketzw.com/",
+  "applicationCategory": "ShoppingApplication",
+  "operatingSystem": "Web browser, Android",
+  "browserRequirements": "Runs in any modern web browser; JavaScript required.",
+  "description": "Zimbabwe's free classifieds marketplace and small-business directory — sell vehicles, property, electronics and more, find jobs, and open a verified storefront. No install needed.",
+  "featureList": [
+    "Post free classified ads",
+    "Buy and sell vehicles, property, electronics, furniture and fashion",
+    "Find jobs and hire talent in Zimbabwe",
+    "Verified business storefronts with product catalogs",
+    "Direct in-app chat with sellers",
+    "Local business directory across all ten provinces"
+  ],
+  "screenshot": [
+    "https://pamarketzw.com/img/screens/screen-home.png",
+    "https://pamarketzw.com/img/screens/screen-listing-detail.png"
+  ],
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "publisher": { "@id": "https://pamarketzw.com/#organization" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "PaMarket categories in Zimbabwe",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Vehicles & cars for sale in Zimbabwe", "url": "https://pamarketzw.com/browse?cat=vehicles" },
+    { "@type": "ListItem", "position": 2, "name": "Property & rooms to rent", "url": "https://pamarketzw.com/browse?cat=property" },
+    { "@type": "ListItem", "position": 3, "name": "Electronics & phones", "url": "https://pamarketzw.com/browse?cat=electronics" },
+    { "@type": "ListItem", "position": 4, "name": "Furniture & home", "url": "https://pamarketzw.com/browse?cat=furniture" },
+    { "@type": "ListItem", "position": 5, "name": "Fashion & clothing", "url": "https://pamarketzw.com/browse?cat=fashion" },
+    { "@type": "ListItem", "position": 6, "name": "Agriculture, livestock & equipment", "url": "https://pamarketzw.com/browse?cat=agriculture" },
+    { "@type": "ListItem", "position": 7, "name": "Services", "url": "https://pamarketzw.com/browse?cat=services" },
+    { "@type": "ListItem", "position": 8, "name": "Jobs in Zimbabwe", "url": "https://pamarketzw.com/jobs" },
+    { "@type": "ListItem", "position": 9, "name": "Verified business storefronts & directory", "url": "https://pamarketzw.com/browse?shops=1" }
+  ]
 }
 </script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": "https://pamarketzw.com/#website",
   "name": "PaMarket",
+  "alternateName": "PaMarket Zimbabwe",
   "url": "https://pamarketzw.com/",
+  "inLanguage": "en-ZW",
+  "publisher": { "@id": "https://pamarketzw.com/#organization" },
   "potentialAction": {
     "@type": "SearchAction",
     "target": "https://pamarketzw.com/browse?q={search_term_string}",
@@ -134,6 +193,38 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Open any listing and tap the WhatsApp or Chat button to message the seller directly. Contact details are never shared publicly until you choose to reach out."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I sell my car in Zimbabwe on PaMarket?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Tap Post a Free Ad, choose Vehicles, add photos, the make, model, year and price, and pick your location. Your car listing is live in under two minutes and buyers message you directly — with no listing fee and no commission on the sale."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a verified storefront on PaMarket?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A verified storefront is a free business profile with a blue verification badge, your own product catalog, a business inbox and lead tracking. It lets shops and small businesses in Zimbabwe list unlimited products and build buyer trust."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is PaMarket a small business directory?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Alongside classified listings, PaMarket is a directory of verified Zimbabwean businesses and shops. You can browse local storefronts, view their catalogs and message them directly across all ten provinces."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is PaMarket different from Facebook Marketplace?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "PaMarket is built specifically for Zimbabwe: local categories, all ten provinces, USD and ZiG pricing, verified storefronts, a real jobs board, and private in-app chat so your phone number stays hidden until you choose to share it. Posting and selling are always free."
       }
     }
   ]
@@ -543,7 +634,7 @@ window.doSearch = window.doSearch || function(){
 <section class="hero">
   <div class="hero-w">
     <h1>Buy, Sell &amp; Hire <span class="hl">Across Zimbabwe.</span></h1>
-    <p class="hero-sub">From Harare to Bulawayo, from phones to farms — find everything in one place. No fees to list, no commission on sales, ever.</p>
+    <p class="hero-sub">Zimbabwe's free classifieds marketplace — from Harare to Bulawayo, from phones to farms. Sell vehicles, rent property, find jobs and open a verified storefront. No fees to list, no commission on sales, ever.</p>
     <div class="hero-search">
       <div class="hs-field">
         <label for="heroCat">Category</label>
@@ -672,9 +763,9 @@ window.doSearch = window.doSearch || function(){
 <section class="shops-band rv">
   <div class="shops-w">
     <div>
-      <div class="shops-tag">For Businesses</div>
-      <h2 class="shops-h">Open your shop on<span> PaMarket</span></h2>
-      <p class="shops-sub">A verified storefront, your own product catalog, a business inbox, and lead tracking — all free. Built for Zimbabwean sellers.</p>
+      <div class="shops-tag">Verified Storefronts &amp; Business Directory</div>
+      <h2 class="shops-h">Open a verified storefront on<span> PaMarket</span></h2>
+      <p class="shops-sub">Join Zimbabwe's free small-business directory. Get a verified storefront with your own product catalog, a business inbox and lead tracking — all free. Built for Zimbabwean sellers and shops.</p>
       <ul class="shops-list">
         <li class="shops-item">
           <div class="shops-ic"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
@@ -781,6 +872,10 @@ window.doSearch = window.doSearch || function(){
     <div class="faq-item"><div class="faq-q" onclick="tog(this)">Is PaMarket free to use?<span class="faq-tog">+</span></div><div class="faq-a">Yes. Posting and browsing on PaMarket is always 100% free. There are no hidden fees, listing costs, or commissions on sales anywhere on the platform.</div></div>
     <div class="faq-item"><div class="faq-q" onclick="tog(this)">What areas does PaMarket cover?<span class="faq-tog">+</span></div><div class="faq-a">PaMarket covers all ten provinces of Zimbabwe, including Harare, Bulawayo, Mutare, Gweru, Masvingo, Chinhoyi, Kadoma, Kwekwe and Victoria Falls, with hundreds of suburbs and towns.</div></div>
     <div class="faq-item"><div class="faq-q" onclick="tog(this)">How do I contact a seller?<span class="faq-tog">+</span></div><div class="faq-a">Open any listing and tap the WhatsApp or Chat button to message the seller directly. Contact details are never shared publicly until you choose to reach out.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="tog(this)">How do I sell my car in Zimbabwe on PaMarket?<span class="faq-tog">+</span></div><div class="faq-a">Tap Post a Free Ad, choose Vehicles, add photos, the make, model, year and price, and pick your location. Your car listing is live in under two minutes and buyers message you directly — with no listing fee and no commission on the sale.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="tog(this)">What is a verified storefront on PaMarket?<span class="faq-tog">+</span></div><div class="faq-a">A verified storefront is a free business profile with a blue verification badge, your own product catalog, a business inbox and lead tracking. It lets shops and small businesses in Zimbabwe list unlimited products and build buyer trust.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="tog(this)">Is PaMarket a small business directory?<span class="faq-tog">+</span></div><div class="faq-a">Yes. Alongside classified listings, PaMarket is a directory of verified Zimbabwean businesses and shops. You can browse local storefronts, view their catalogs and message them directly across all ten provinces.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="tog(this)">How is PaMarket different from Facebook Marketplace?<span class="faq-tog">+</span></div><div class="faq-a">PaMarket is built specifically for Zimbabwe: local categories, all ten provinces, USD and ZiG pricing, verified storefronts, a real jobs board, and private in-app chat so your phone number stays hidden until you choose to share it. Posting and selling are always free.</div></div>
     <div class="home-faq-more"><a href="help">See all FAQs →</a></div>
   </div>
 </section>
