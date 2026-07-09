@@ -253,7 +253,20 @@
     </div>
     <div class="splash-dots"><span></span><span></span><span></span></div>
   </div>
-  <script>window._splashStart = Date.now();</script>
+  <script>
+    window._splashStart = Date.now();
+    // Production console hygiene: silence verbose console.log in the shipped
+    // native app (Capacitor WebView) so debug chatter like [Ads]/[Jobs]/realtime
+    // status never floods logcat or a connected devtools. console.warn and
+    // console.error are preserved so real problems are still visible. Left ON
+    // for normal web/desktop dev.
+    (function(){
+      try {
+        var isNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+        if (isNative && window.console && typeof console.log === 'function') { console.log = function(){}; }
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- Offline banner -->
   <div id="netBanner">📡 No internet connection — some features may be limited</div>
@@ -358,7 +371,7 @@
   <!-- ── Core ─────────────────────────────────────────── -->
   <script src="js/safety.js?v=2"></script>
   <script src="js/moderation.js?v=2"></script>
-  <script src="js/app.js?v=120"></script>
+  <script src="js/app.js?v=121"></script>
   <script src="js/attributes.js?v=5"></script>
   <script src="js/ads-carousel.js?v=2"></script>
   <script src="js/auth.js?v=14"></script>
@@ -377,7 +390,7 @@
   <script src="js/account.js?v=7"></script>
   <script src="js/settings.js?v=10"></script>
   <script src="js/security_pages.js?v=5"></script>
-  <script src="js/help.js?v=12"></script>
+  <script src="js/help.js?v=13"></script>
   <script src="js/legal.js?v=5"></script>
   <script src="js/verify.js?v=9"></script>
   <script src="js/business-onboarding.js?v=23"></script>
@@ -391,7 +404,7 @@
   <script src="js/business-analytics.js?v=1"></script>
   <script src="js/business-monetization.js?v=5"></script>
   <script src="js/business-admin.js?v=7"></script>
-  <script src="js/home.js?v=45"></script>
+  <script src="js/home.js?v=46"></script>
   <script src="js/refresh-manager.js?v=12"></script>
   <script src="js/lifecycle.js?v=1"></script>
 

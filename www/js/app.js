@@ -944,10 +944,16 @@ window.H = {
     if(typeof window._hideSplash==='function') window._hideSplash();
     // Poll paid_ads every 3 min as realtime fallback — announcements appear within
     // 3 minutes of admin posting even if the paid_ads table has no realtime publication.
+    // Guard against duplicate timers: boot() can run more than once per session
+    // (e.g. after re-login / OAuth return), and each unguarded setInterval leaked
+    // another 3-min poller — stacked, they fired the ad fetch every few seconds
+    // and spammed the DB. Create exactly one.
     var _self2 = this;
-    setInterval(function() {
-      if (typeof _self2.fetchAdsFromSupabase === 'function') _self2.fetchAdsFromSupabase().catch(function(){});
-    }, 180000);
+    if (!window._adsPollTimer) {
+      window._adsPollTimer = setInterval(function() {
+        if (typeof _self2.fetchAdsFromSupabase === 'function') _self2.fetchAdsFromSupabase().catch(function(){});
+      }, 180000);
+    }
   },
 
   // True while the user has a text field focused — background refreshes must
