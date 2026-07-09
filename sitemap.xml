@@ -643,12 +643,6 @@
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://pamarketzw.com/profile?id=27c5abbd-53dc-4d74-8f9a-701fc2eb2ed0</loc>
-    <lastmod>2026-05-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
     <loc>https://pamarketzw.com/profile?id=85e48754-0be4-49cf-a507-ea6442aff80a</loc>
     <lastmod>2026-06-04</lastmod>
     <changefreq>monthly</changefreq>
@@ -673,6 +667,12 @@
     <priority>0.4</priority>
   </url>
   <url>
+    <loc>https://pamarketzw.com/profile?id=27c5abbd-53dc-4d74-8f9a-701fc2eb2ed0</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
     <loc>https://pamarketzw.com/profile?id=a74027bd-9efe-47f4-9f45-5cf75d057692</loc>
     <lastmod>2026-06-16</lastmod>
     <changefreq>monthly</changefreq>
@@ -691,20 +691,14 @@
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://pamarketzw.com/profile?id=352c9214-a94a-409b-8d2c-da22af4a6a53</loc>
-    <lastmod>2026-06-16</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
     <loc>https://pamarketzw.com/profile?id=e96f3401-603d-404e-a207-900fc00792c2</loc>
     <lastmod>2026-05-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://pamarketzw.com/profile?id=b770372f-3dd8-476a-b3ba-a79322af5f39</loc>
-    <lastmod>2026-05-18</lastmod>
+    <loc>https://pamarketzw.com/profile?id=352c9214-a94a-409b-8d2c-da22af4a6a53</loc>
+    <lastmod>2026-06-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
@@ -765,6 +759,12 @@
   <url>
     <loc>https://pamarketzw.com/profile?id=08734bdc-d18a-4212-b4ba-2f9861e1e3a9</loc>
     <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pamarketzw.com/profile?id=b770372f-3dd8-476a-b3ba-a79322af5f39</loc>
+    <lastmod>2026-05-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
