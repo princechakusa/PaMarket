@@ -46,7 +46,7 @@
     </div>`;
   }
   function _contactLine() {
-    return `<div style="margin-top:8px;font-size:13px;color:var(--sub)">Questions? Email <a href="mailto:support@pamarket.app" style="color:#1A3A8F;font-weight:700">support@pamarket.app</a></div>`;
+    return `<div style="margin-top:8px;font-size:13px;color:var(--sub)">Questions? Email <a href="mailto:support@pamarketzw.com" style="color:#1A3A8F;font-weight:700">support@pamarketzw.com</a></div>`;
   }
 
   // ── Document content functions ───────────────────────────
@@ -220,7 +220,7 @@
       + _s(2, 'When a Deal Goes Wrong', _p('If you believe you have been defrauded:') + _li([
           '<strong>Report the listing</strong> — use the flag icon on the listing. We will investigate and may remove the seller\'s account',
           '<strong>Block the user</strong> — prevent further contact from the seller',
-          '<strong>Contact support</strong> — email support@pamarket.app with full details including screenshots',
+          '<strong>Contact support</strong> — email support@pamarketzw.com with full details including screenshots',
           '<strong>Report to police</strong> — for fraud involving money or goods, file a report with the Zimbabwe Republic Police. PaMarket will cooperate fully with law enforcement',
           '<strong>Contact your bank or mobile money provider</strong> — for EcoCash/OneMoney disputes, contact the provider directly as soon as possible'
         ]))
@@ -230,7 +230,7 @@
           'Accept deposits for items they do not own or cannot deliver'
         ]) + _p('...are in breach of our Terms of Use and Zimbabwean consumer protection law. Confirmed cases will result in permanent account suspension and may be referred to the Zimbabwe Republic Police.'))
       + _s(4, 'PaMarket Boost & Subscription Refunds', _p('For paid services within the PaMarket app (boosted listings, business subscriptions):') + _li([
-          'Refund requests must be submitted within 7 days of payment to support@pamarket.app',
+          'Refund requests must be submitted within 7 days of payment to support@pamarketzw.com',
           'Refunds are processed within 10 business days if approved',
           'Services already delivered (e.g. a completed boost campaign) are non-refundable',
           'Technical issues or errors that prevented delivery of a paid service qualify for a full refund'
@@ -310,7 +310,7 @@
       + _s(5, 'If You Have Been Scammed', _li([
           'Do not pay any more money — stop all further contact',
           'Screenshot all messages, listings, and payment receipts',
-          'Email support@pamarket.app immediately with full details',
+          'Email support@pamarketzw.com immediately with full details',
           'Report to Zimbabwe Republic Police (ZRP) — bring all evidence',
           'Contact your bank or mobile money provider (EcoCash, OneMoney) immediately for a possible chargeback',
           'Report the user in-app using the flag icon'
@@ -390,7 +390,7 @@
           'For permanent bans: send a detailed explanation by email within 48 hours'
         ]))
       + _s(4, 'Appealing an Account Action', _p('If you believe your account was suspended in error:') + _li([
-          'Email <a href="mailto:support@pamarket.app" style="color:#1A3A8F;font-weight:700">support@pamarket.app</a> within <strong>14 days</strong> of the action',
+          'Email <a href="mailto:support@pamarketzw.com" style="color:#1A3A8F;font-weight:700">support@pamarketzw.com</a> within <strong>14 days</strong> of the action',
           'Include your registered email address, the date of the action, and why you believe it was incorrect',
           'Provide any relevant evidence (screenshots, receipts, communications)',
           'We will review your appeal and respond within <strong>14 business days</strong>'
@@ -428,7 +428,7 @@
           'Remove the listing with or without warning',
           'Suspend or permanently ban the account'
         ]))
-      + _s(4, 'Appeals', _p('If your listing or content was removed and you believe this was incorrect, email <a href="mailto:support@pamarket.app" style="color:#1A3A8F;font-weight:700">support@pamarket.app</a> within 14 days. Include the listing details and your reason for appeal. We will review and respond within 7 business days.'))
+      + _s(4, 'Appeals', _p('If your listing or content was removed and you believe this was incorrect, email <a href="mailto:support@pamarketzw.com" style="color:#1A3A8F;font-weight:700">support@pamarketzw.com</a> within 14 days. Include the listing details and your reason for appeal. We will review and respond within 7 business days.'))
       + _s(5, 'Transparency', _p('PaMarket publishes moderation statistics quarterly to give users insight into the health of our marketplace. These include number of listings removed per category, number of accounts banned, and fraud reports processed. Statistics are published on our website at pamarket.app.') + _contactLine());
   }
 
@@ -734,18 +734,18 @@
       <div style="height:8px"></div>
       <div class="profile-section-label">Contact</div>
       <div class="pinfo-card">
-        <a href="mailto:support@pamarket.app" class="pinfo-row" style="text-decoration:none">
+        <a href="mailto:support@pamarketzw.com" class="pinfo-row" style="text-decoration:none">
           <div class="pinfo-icon pi-blue">${IC.mail}</div>
           <div style="flex:1">
-            <div class="pinfo-label" style="color:var(--blue)">support@pamarket.app</div>
+            <div class="pinfo-label" style="color:var(--blue)">support@pamarketzw.com</div>
             <div class="pinfo-value">General &amp; Terms</div>
           </div>
           ${_chev}
         </a>
-        <a href="mailto:privacy@pamarket.app" class="pinfo-row" style="text-decoration:none">
+        <a href="mailto:info@pamarketzw.com" class="pinfo-row" style="text-decoration:none">
           <div class="pinfo-icon pi-blue">${IC.shield}</div>
           <div style="flex:1">
-            <div class="pinfo-label" style="color:var(--blue)">privacy@pamarket.app</div>
+            <div class="pinfo-label" style="color:var(--blue)">info@pamarketzw.com</div>
             <div class="pinfo-value">Privacy &amp; Data</div>
           </div>
           ${_chev}
@@ -835,7 +835,7 @@
         <!-- Contact footer -->
         <div style="margin-top:24px;padding:14px 16px;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;text-align:center">
           <div style="font-size:12px;color:var(--sub);margin-bottom:6px">Questions about this document?</div>
-          <a href="mailto:support@pamarket.app" style="font-size:13px;font-weight:700;color:#1A3A8F;text-decoration:none">support@pamarket.app</a>
+          <a href="mailto:support@pamarketzw.com" style="font-size:13px;font-weight:700;color:#1A3A8F;text-decoration:none">support@pamarketzw.com</a>
         </div>
       </div>
     </div>`;

@@ -538,7 +538,7 @@
       + '<div class="lm-icon" style="background:#FEE4E2"><svg viewBox="0 0 32 32" width="28" height="28" fill="none"><rect x="6" y="13" width="20" height="16" rx="3" stroke="#D92D20" stroke-width="1.8"/><path d="M10 13V9a6 6 0 0112 0v4" stroke="#D92D20" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="21" r="2" fill="#D92D20"/></svg></div>'
       + '<div class="lm-heading" style="text-align:center;font-size:22px;margin-top:16px">Admin Portal</div>'
       + '<div class="lm-sub" style="text-align:center">Restricted access — authorised personnel only</div>'
-      + '<div class="lm-fg"><label class="lm-label">Admin email</label><input class="lm-input" id="admEmailPage" type="email" autocomplete="username" placeholder="admin@pamarket.app"></div>'
+      + '<div class="lm-fg"><label class="lm-label">Admin email</label><input class="lm-input" id="admEmailPage" type="email" autocomplete="username" placeholder="admin@pamarketzw.com"></div>'
       + '<div class="lm-fg"><label class="lm-label">Password</label><div class="lm-input-wrap"><input class="lm-input" id="admPassPage" type="password" placeholder="Password" onkeydown="if(event.key===\'Enter\')H.authAdminSignInPage()" autocomplete="current-password"><button type="button" class="lm-eye" onclick="H._toggleLmPw(\'admPassPage\',this)">' + EYESVG + '</button></div></div>'
       + '<button class="auth-btn" onclick="H.authAdminSignInPage()">Admin Sign In</button>';
     setTimeout(function(){ var p=document.getElementById('admEmailPage'); if(p) p.focus(); }, 80);

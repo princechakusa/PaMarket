@@ -124,11 +124,11 @@
           ${S.chevron}
         </a>
 
-        <a href="mailto:support@pamarket.app" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;-webkit-tap-highlight-color:transparent">
+        <a href="mailto:support@pamarketzw.com" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;-webkit-tap-highlight-color:transparent">
           <div style="width:42px;height:42px;border-radius:13px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">${S.mail}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:14px;font-weight:700;color:#1A3A8F">Email Support</div>
-            <div style="font-size:11px;color:var(--sub);margin-top:2px">support@pamarket.app · Reply within 24h</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">support@pamarketzw.com · Reply within 24h</div>
           </div>
           ${S.chevron}
         </a>
@@ -264,11 +264,11 @@
       ${H.innerTopbar('Contact Support')}
       <div class="form-wrap">
 
-        <a href="mailto:support@pamarket.app" style="display:flex;align-items:center;gap:14px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;text-decoration:none;-webkit-tap-highlight-color:transparent">
+        <a href="mailto:support@pamarketzw.com" style="display:flex;align-items:center;gap:14px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;text-decoration:none;-webkit-tap-highlight-color:transparent">
           <div style="width:42px;height:42px;border-radius:12px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">${S.mail}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;color:var(--sub);font-weight:500;margin-bottom:2px">Email Support</div>
-            <div style="font-size:14px;font-weight:700;color:#1A3A8F">support@pamarket.app</div>
+            <div style="font-size:14px;font-weight:700;color:#1A3A8F">support@pamarketzw.com</div>
           </div>
           <div style="color:var(--sub)">${S.chevron}</div>
         </a>
@@ -689,7 +689,7 @@
       card.innerHTML =
         '<div style="font-size:12px;color:#9CA3AF;padding:0 2px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Contact our team directly</div>' +
         '<a href="'+WA+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;background:#F0FDF4;border:1.5px solid #bbf7d0;border-radius:14px;padding:12px 14px;text-decoration:none">'+WASVG+'<div><div style="font-size:13px;font-weight:700;color:#16a34a">WhatsApp</div><div style="font-size:11px;color:#6B7280">+971 589 772 645 · Fastest reply</div></div></a>' +
-        '<a href="'+ML+'" style="display:flex;align-items:center;gap:10px;background:#EFF6FF;border:1.5px solid #bfdbfe;border-radius:14px;padding:12px 14px;text-decoration:none"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><div><div style="font-size:13px;font-weight:700;color:#1A3A8F">Email</div><div style="font-size:11px;color:#6B7280">support@pamarket.app</div></div></a>' +
+        '<a href="'+ML+'" style="display:flex;align-items:center;gap:10px;background:#EFF6FF;border:1.5px solid #bfdbfe;border-radius:14px;padding:12px 14px;text-decoration:none"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><div><div style="font-size:13px;font-weight:700;color:#1A3A8F">Email</div><div style="font-size:11px;color:#6B7280">support@pamarketzw.com</div></div></a>' +
         '<a href="'+PH+'" style="display:flex;align-items:center;gap:10px;background:#F0FDF4;border:1.5px solid #bbf7d0;border-radius:14px;padding:12px 14px;text-decoration:none"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 2.1.74 3.26a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c1.16.38 2.3.61 3.26.74a2 2 0 0 1 1.72 2.03z"/></svg><div><div style="font-size:13px;font-weight:700;color:#16a34a">Call / WhatsApp</div><div style="font-size:11px;color:#6B7280">+971 589 772 645</div></div></a>';
       row.appendChild(card);
       chat.appendChild(row);
@@ -1361,13 +1361,13 @@ pages.HelpCommunity = function () {
 
         ${sec('Contact Us')}
         <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;overflow:hidden">
-          <a href="mailto:support@pamarket.app" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;border-bottom:1px solid var(--border)">
+          <a href="mailto:support@pamarketzw.com" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;border-bottom:1px solid var(--border)">
             <div style="width:36px;height:36px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1A3A8F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             </div>
             <div>
               <div style="font-size:11px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Support Email</div>
-              <div style="font-size:13px;font-weight:700;color:#1A3A8F;margin-top:2px">support@pamarket.app</div>
+              <div style="font-size:13px;font-weight:700;color:#1A3A8F;margin-top:2px">support@pamarketzw.com</div>
             </div>
           </a>
           <a href="https://wa.me/971589772645" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none">
