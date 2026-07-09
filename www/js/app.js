@@ -2353,10 +2353,26 @@ window.H = {
       if (H.state.conversations.length !== _before) changed = true;
       const knownIds = new Set(H.state.conversations.map(c => c.id));
       try {
-        const { data: convs, error } = await sb.from('conversations')
+        const { data: convsRaw, error } = await sb.from('conversations')
           .select('id, members, listing_id')
           .contains('members', [u.id])
           .limit(20);
+        const convs = convsRaw ? convsRaw.slice() : convsRaw;
+        // A specific convId (e.g. opening from a push notification deep link)
+        // must never be missed just because it falls outside the arbitrary
+        // 20-row discovery window above — fetch it directly by id too, so
+        // "Conversation not found" can't happen for a conversation the user
+        // is genuinely a member of.
+        const _wantedConvId = opts.convId || null;
+        if (_wantedConvId && convs && !convs.some(c => c.id === _wantedConvId)) {
+          try {
+            const { data: wanted } = await sb.from('conversations')
+              .select('id, members, listing_id')
+              .eq('id', _wantedConvId)
+              .maybeSingle();
+            if (wanted) convs.push(wanted);
+          } catch (e) { /* best-effort */ }
+        }
         if (!error && convs) {
           for (const c of convs) {
             // Deleted convs stay OUT of knownIds so Phase 2 can still revive them
@@ -3266,7 +3282,7 @@ H.openAppRating = function() {
       PN.addListener('pushNotificationReceived', function(notification) {
         var data = (notification && notification.data) || {};
         if (data.type === 'message' && typeof H.syncConversations === 'function') {
-          H.syncConversations({ silent: true }).catch(function(){});
+          H.syncConversations({ silent: true, convId: data.conversationId || null }).catch(function(){});
         }
         // Relay as local notification with reply action when app is foreground
         var LN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications;
@@ -3284,14 +3300,23 @@ H.openAppRating = function() {
         }
       });
 
-      // User tapped a notification — sync messages immediately before routing
-      // so the conversation is populated when the Chat page opens.
+      // User tapped a notification — sync messages BEFORE routing so the
+      // conversation is actually populated when the Chat page opens. This must
+      // be awaited: routing in parallel with an unwaited sync is what caused
+      // "Conversation not found" on cold-start taps, since pages.Chat looks up
+      // the conversation in local state synchronously, before the fetch above
+      // had any chance to finish. convId is passed through so the sync is
+      // guaranteed to fetch this exact conversation even if it falls outside
+      // the general 20-row discovery window.
       PN.addListener('pushNotificationActionPerformed', function(action) {
         var data = (action && action.notification && action.notification.data) || {};
         if (data.type === 'message' && typeof H.syncConversations === 'function') {
-          H.syncConversations({ silent: true }).catch(function(){});
+          H.syncConversations({ silent: true, convId: data.conversationId || null })
+            .catch(function(){})
+            .then(function(){ H._routeNotifTapWhenReady(data); });
+        } else {
+          H._routeNotifTapWhenReady(data);
         }
-        H._routeNotifTapWhenReady(data);
       });
     }
 
