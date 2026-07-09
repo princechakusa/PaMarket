@@ -30,6 +30,16 @@
             </intent-filter>
         </activity>
 
+        <!-- Push notification small icon (white silhouette — Android status bar
+             requirement) and accent color. Without this, FCM/Capacitor fall back
+             to a generic white "i" info glyph. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_pamarket" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/pamarket_notif" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

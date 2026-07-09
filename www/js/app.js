@@ -3342,6 +3342,11 @@ H.openAppRating = function() {
               title: notification.title,
               body: notification.body,
               channelId: 'pamarket_default',
+              // White "P" status-bar icon (res/drawable/ic_stat_pamarket) — the
+              // local-notifications plugin needs the smallIcon set explicitly or
+              // it falls back to the generic white "i" glyph.
+              smallIcon: 'ic_stat_pamarket',
+              iconColor: '#1A3A8F',
               actionTypeId: 'PAMARKET_REPLY',
               extra: { conversationId: data.conversationId || '', deepLink: data.deepLink || '' }
             }]

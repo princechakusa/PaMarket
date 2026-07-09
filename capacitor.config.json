@@ -32,6 +32,10 @@
     "PushNotifications": {
       "presentationOptions": ["badge", "sound", "alert"]
     },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_pamarket",
+      "iconColor": "#1A3A8F"
+    },
     "SocialLogin": {
       "google": {
         "webClientId": "422898358324-lgfnlolso4qks1s3d39ro6ie5mhmcdo6.apps.googleusercontent.com"
