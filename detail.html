@@ -503,6 +503,7 @@ window.doSearch = window.doSearch || function(){
 
 <script src="js/supabase-config.js"></script>
 <script src="js/marketplace-data.js"></script>
+<script src="js/listing-schema.js"></script>
 <script src="js/nav-dropdowns.js"></script>
 <script>
 const PIN='<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
@@ -550,6 +551,13 @@ async function init(){
       // (seller awareness) or it's genuinely unavailable/moderated.
       await handleUnavailable(id);
       return;
+    }
+    // Consolidate onto the static pre-rendered page (real HTML + baked JSON-LD).
+    // Redirect only when that page actually exists — a listing posted since the
+    // last build isn't generated yet, so we fall back to rendering here.
+    if(window.PMSchema){
+      const staticPath='/'+PMSchema.listingPath(listing);
+      try{ const head=await fetch(staticPath,{method:'HEAD'}); if(head.ok){ location.replace(staticPath); return; } }catch(e){}
     }
     // Seller reviews drive Product aggregateRating/review (real data only).
     const reviews=await PM.fetchSellerReviews(listing.seller_id,20).catch(()=>[]);
@@ -742,233 +750,17 @@ function renderListing(l,reviews){
 
   const schema=document.createElement('script');
   schema.type='application/ld+json';
-  schema.textContent=JSON.stringify(buildListingSchema(l,catLabel,loc,photos,canonicalUrl,reviews));
+  schema.textContent=JSON.stringify(PMSchema.buildListingSchema(l,canonicalUrl,reviews));
   document.head.appendChild(schema);
 
   const breadcrumb=document.createElement('script');
   breadcrumb.type='application/ld+json';
-  breadcrumb.textContent=JSON.stringify({
-    '@context':'https://schema.org',
-    '@type':'BreadcrumbList',
-    itemListElement:[
-      {'@type':'ListItem',position:1,name:'Home',item:'https://pamarketzw.com/'},
-      {'@type':'ListItem',position:2,name:'Browse',item:'https://pamarketzw.com/browse'},
-      {'@type':'ListItem',position:3,name:catLabel,item:'https://pamarketzw.com/browse?cat='+l.category},
-      {'@type':'ListItem',position:4,name:l.title,item:canonicalUrl}
-    ]
-  });
+  breadcrumb.textContent=JSON.stringify(PMSchema.buildBreadcrumb(l,canonicalUrl));
   document.head.appendChild(breadcrumb);
 }
 
-// Map a free-text condition to a schema.org enum (omitted when unknown —
-// never guessed).
-function schemaCondition(l){
-  var c=((l.condition!=null?l.condition:(l.attributes&&l.attributes.condition))||'').toString().toLowerCase();
-  if(!c) return undefined;
-  if(/new|sealed|brand/.test(c)) return 'https://schema.org/NewCondition';
-  if(/refurb/.test(c)) return 'https://schema.org/RefurbishedCondition';
-  if(/used|second|pre|fair|good|excellent/.test(c)) return 'https://schema.org/UsedCondition';
-  return undefined;
-}
-// aggregateRating + review from real seller reviews; null when none exist.
-function ratingBlock(reviews){
-  if(!reviews||!reviews.length) return null;
-  var sum=reviews.reduce(function(a,r){return a+(Number(r.rating)||0);},0);
-  return {
-    aggregateRating:{'@type':'AggregateRating',ratingValue:(sum/reviews.length).toFixed(1),reviewCount:reviews.length,bestRating:5,worstRating:1},
-    review:reviews.slice(0,10).map(function(r){
-      return {'@type':'Review',author:{'@type':'Person',name:r.reviewer_name||'PaMarket user'},datePublished:(r.created_at||'').slice(0,10),reviewRating:{'@type':'Rating',ratingValue:Number(r.rating)||0,bestRating:5,worstRating:1},reviewBody:r.body||''};
-    })
-  };
-}
-function sellerNode(l){
-  var n={'@type':l.business_id?'Organization':'Person',name:l.seller_name||'PaMarket seller'};
-  if(l.business_id) n.url='https://pamarketzw.com/business?id='+l.business_id;
-  return n;
-}
-// Merchant-listing return policy. If a seller entered real return terms we
-// describe that finite window; otherwise we state PaMarket's ACTUAL model —
-// in-person, inspect-before-you-buy, no returns — as MerchantReturnNotPermitted.
-// This is a truthful description of how the marketplace works, not invented
-// data, and it satisfies Google's recommended hasMerchantReturnPolicy field.
-function merchantReturnPolicy(l){
-  var a=(l&&l.attributes)||{};
-  var days=a.returnDays!=null?a.returnDays:(a.return_days!=null?a.return_days:null);
-  if(days==null){
-    return {
-      '@type':'MerchantReturnPolicy',
-      applicableCountry:'ZW',
-      returnPolicyCategory:'https://schema.org/MerchantReturnNotPermitted'
-    };
-  }
-  return {
-    '@type':'MerchantReturnPolicy',
-    applicableCountry:'ZW',
-    returnPolicyCategory:'https://schema.org/MerchantReturnFiniteReturnWindow',
-    merchantReturnDays:Number(days),
-    returnMethod:'https://schema.org/ReturnInStore',
-    returnFees:'https://schema.org/FreeReturn'
-  };
-}
-// OfferShippingDetails — emitted ONLY when a seller has entered real delivery
-// data (rate). Buyers otherwise arrange collection/delivery directly, so no
-// shipping rate is invented.
-function offerShippingDetails(l){
-  var a=l.attributes||{};
-  var rate=a.shippingRate!=null?a.shippingRate:(a.deliveryFee!=null?a.deliveryFee:a.shipping_fee);
-  if(rate==null) return undefined;
-  return {
-    '@type':'OfferShippingDetails',
-    shippingRate:{'@type':'MonetaryAmount',value:Number(rate)||0,currency:l.currency||'USD'},
-    shippingDestination:{'@type':'DefinedRegion',addressCountry:'ZW'},
-    deliveryTime:{
-      '@type':'ShippingDeliveryTime',
-      handlingTime:{'@type':'QuantitativeValue',minValue:0,maxValue:1,unitCode:'DAY'},
-      transitTime:{'@type':'QuantitativeValue',minValue:1,maxValue:3,unitCode:'DAY'}
-    }
-  };
-}
-// Normalise a free-text job type to Google's employmentType enum. Falls back
-// to OTHER (a truthful "unspecified") rather than guessing a specific type.
-function jobEmploymentType(attrs){
-  var t=((attrs&&(attrs.employmentType||attrs.jobType||attrs.type))||'').toString().toUpperCase().replace(/[\s-]+/g,'_');
-  var valid=['FULL_TIME','PART_TIME','CONTRACTOR','TEMPORARY','INTERN','VOLUNTEER','PER_DIEM','OTHER'];
-  if(valid.indexOf(t)>=0) return t;
-  if(/FULL/.test(t)) return 'FULL_TIME';
-  if(/PART/.test(t)) return 'PART_TIME';
-  if(/CONTRACT|FREELAN/.test(t)) return 'CONTRACTOR';
-  if(/TEMP|CASUAL|SEASON/.test(t)) return 'TEMPORARY';
-  if(/INTERN|ATTACH/.test(t)) return 'INTERN';
-  if(/VOLUNT/.test(t)) return 'VOLUNTEER';
-  return 'OTHER';
-}
-// Job address with the most granular real data available. streetAddress
-// always resolves to a true value — the suburb, or the city as a fallback
-// when no suburb was entered — since Search Console flags the field as
-// missing if it is absent at all, and Google's own JobPosting docs list
-// streetAddress as optional-but-recommended, never requiring house-number
-// precision. postalCode is deliberately omitted when not provided: Zimbabwe
-// has no nationwide street-level postal code system, so there is no true
-// value to fall back to, and Google documents postalCode as optional —
-// inventing one would be fabricated data, which is worse than the low-
-// severity "missing recommended field" notice omitting it leaves behind.
-function jobAddress(l){
-  var a={'@type':'PostalAddress',addressCountry:'ZW'};
-  a.streetAddress=l.suburb||l.city||'Zimbabwe';
-  if(l.city) a.addressLocality=l.city;
-  if(l.province) a.addressRegion=l.province;
-  var pc=l.attributes&&(l.attributes.postalCode||l.attributes.postal_code||l.attributes.postcode);
-  if(pc) a.postalCode=pc;
-  return a;
-}
-
-function buildListingSchema(l,catLabel,loc,photos,canonicalUrl,reviews){
-  // Product requires an image; fall back to the brand mark only when the
-  // listing genuinely has no photos, to keep it eligible rather than erroring.
-  var image=photos.length?photos:['https://pamarketzw.com/img/icon-512.png'];
-  const base={
-    '@context':'https://schema.org',
-    name:l.title,
-    description:l.description||l.title,
-    image:image,
-    url:canonicalUrl
-  };
-  const address={'@type':'PostalAddress',addressLocality:l.city||l.suburb||undefined,addressRegion:l.province||undefined,addressCountry:'ZW'};
-  const cond=schemaCondition(l);
-  const priceValidUntil=l.expires_at?String(l.expires_at).slice(0,10):undefined;
-
-  if(l.category==='property'){
-    const rentalType=(l.attributes&&l.attributes.rentalType)||'';
-    return Object.assign(base,{
-      '@type':'RealEstateListing',
-      category:catLabel,
-      datePosted:l.created_at,
-      address,
-      offers:{
-        '@type':'Offer',
-        price:l.price,
-        priceCurrency:l.currency||'USD',
-        availability:'https://schema.org/InStock',
-        businessFunction:/rent/i.test(rentalType)?'http://purl.org/goodrelations/v1#LeaseOut':'http://purl.org/goodrelations/v1#Sell',
-        priceValidUntil:priceValidUntil,
-        seller:sellerNode(l),
-        url:canonicalUrl
-      }
-    });
-  }
-  if(l.category==='vehicles'){
-    const veh=Object.assign(base,{
-      '@type':'Vehicle',
-      category:catLabel,
-      itemCondition:cond,
-      areaServed:{'@type':'Country',name:'Zimbabwe'},
-      offers:{
-        '@type':'Offer',
-        price:l.price,
-        priceCurrency:l.currency||'USD',
-        availability:'https://schema.org/InStock',
-        itemCondition:cond,
-        priceValidUntil:priceValidUntil,
-        seller:sellerNode(l),
-        hasMerchantReturnPolicy:merchantReturnPolicy(l),
-        areaServed:{'@type':'Country',name:'Zimbabwe'},
-        url:canonicalUrl
-      }
-    });
-    const rb=ratingBlock(reviews);
-    if(rb){veh.aggregateRating=rb.aggregateRating;veh.review=rb.review;}
-    return veh;
-  }
-  if(l.category==='jobs'){
-    const org={'@type':'Organization',name:l.seller_name||'PaMarket Employer',sameAs:'https://pamarketzw.com/'};
-    if(l.business_id) org.url='https://pamarketzw.com/business?id='+l.business_id;
-    return {
-      '@context':'https://schema.org',
-      '@type':'JobPosting',
-      title:l.title,
-      description:l.description||l.title,
-      identifier:{'@type':'PropertyValue',name:'PaMarket',value:l.id},
-      datePosted:l.created_at,
-      validThrough:l.expires_at||undefined,
-      employmentType:jobEmploymentType(l.attributes),
-      hiringOrganization:org,
-      jobLocation:{'@type':'Place',address:jobAddress(l)},
-      directApply:false,
-      baseSalary:l.price?{'@type':'MonetaryAmount',currency:l.currency||'USD',value:{'@type':'QuantitativeValue',value:l.price,unitText:'MONTH'}}:undefined
-    };
-  }
-  // Default: Product (electronics, furniture, fashion, etc.)
-  const offer={
-    '@type':'Offer',
-    price:l.price,
-    priceCurrency:l.currency||'USD',
-    availability:'https://schema.org/InStock',
-    itemCondition:cond,
-    priceValidUntil:priceValidUntil,
-    seller:sellerNode(l),
-    hasMerchantReturnPolicy:merchantReturnPolicy(l),
-    shippingDetails:offerShippingDetails(l),
-    areaServed:{'@type':'Country',name:'Zimbabwe'},
-    url:canonicalUrl
-  };
-  const product=Object.assign(base,{
-    '@type':'Product',
-    category:catLabel,
-    sku:l.id,
-    productID:l.id,
-    itemCondition:cond,
-    offers:offer
-  });
-  if(l.attributes){
-    if(l.attributes.brand) product.brand={'@type':'Brand',name:l.attributes.brand};
-    if(l.attributes.mpn) product.mpn=String(l.attributes.mpn);
-    var gtin=l.attributes.gtin||l.attributes.gtin13||l.attributes.barcode;
-    if(gtin) product.gtin13=String(gtin);
-  }
-  const rb=ratingBlock(reviews);
-  if(rb){product.aggregateRating=rb.aggregateRating;product.review=rb.review;}
-  return product;
-}
+// Listing/breadcrumb JSON-LD now lives in js/listing-schema.js (PMSchema),
+// shared with the static pre-render generator so both build identical schema.
 
 function doSearch(){
   const q=document.getElementById('hQ')?.value?.trim();

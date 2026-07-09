@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const PMSchema = require('../js/listing-schema.js');
 
 const SITE = 'https://pamarketzw.com';
 
@@ -91,7 +92,8 @@ async function fetchAllRows(cfg, table, select, filter) {
 }
 
 async function fetchActiveListingIds(cfg) {
-  return fetchAllRows(cfg, 'listings', 'id,created_at', 'status=eq.active&order=created_at.desc');
+  // title + category needed to build the pre-rendered /l/<slug>-<id>.html URL.
+  return fetchAllRows(cfg, 'listings', 'id,title,category,created_at', 'status=eq.active&order=created_at.desc');
 }
 
 async function fetchActiveRentalIds(cfg) {
@@ -143,7 +145,9 @@ async function main() {
 
   for (const l of listings) {
     const lastmod = l.created_at ? l.created_at.slice(0, 10) : today;
-    xml += urlEntry('/detail?id=' + l.id, lastmod, 'weekly', '0.6');
+    // Point at the static pre-rendered page (real HTML + baked JSON-LD),
+    // not the client-rendered /detail?id= alias.
+    xml += urlEntry('/' + PMSchema.listingPath(l), lastmod, 'weekly', '0.6');
   }
 
   for (const r of rentals) {

@@ -4,6 +4,10 @@ on:
   push:
     branches: [main, master]
   workflow_dispatch:
+  schedule:
+    # Daily rebuild so listings/jobs posted since the last push get their static
+    # pre-rendered pages (and drop pages for ones that went inactive).
+    - cron: '0 4 * * *'
 
 permissions:
   contents: read
@@ -29,6 +33,16 @@ jobs:
         run: |
           rm -f www/admin.html
           rm -rf supabase android qa-system
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Pre-render static listing/job pages
+        # Generates l/<slug>-<id>.html (real HTML + baked JSON-LD) for every
+        # active listing so non-JS crawlers get full content. Reads the public
+        # anon key from js/supabase-config.js. Never fails the deploy — if the
+        # fetch hiccups, the client-rendered /detail?id= pages still serve.
+        run: node tools/prerender.js
+        continue-on-error: true
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
