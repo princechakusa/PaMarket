@@ -97,7 +97,8 @@ async function fetchActiveListingIds(cfg) {
 }
 
 async function fetchActiveRentalIds(cfg) {
-  return fetchAllRows(cfg, 'rental_vehicle_listings', 'id,updated_at', 'is_available=eq.true');
+  // Match the pre-render filter + fields needed for the /r/<slug>-<id> URL.
+  return fetchAllRows(cfg, 'rental_vehicle_listings', 'id,model,year,updated_at,rental_brands(label)', 'status=eq.active&admin_status=eq.approved&deleted_at=is.null');
 }
 
 async function fetchPublicProfileIds(cfg) {
@@ -105,7 +106,7 @@ async function fetchPublicProfileIds(cfg) {
 }
 
 async function fetchActiveBusinessIds(cfg) {
-  return fetchAllRows(cfg, 'businesses', 'id,updated_at', 'status=eq.active');
+  return fetchAllRows(cfg, 'businesses', 'id,name,updated_at', 'status=eq.active');
 }
 
 function xmlEscape(s) {
@@ -152,7 +153,7 @@ async function main() {
 
   for (const r of rentals) {
     const lastmod = r.updated_at ? r.updated_at.slice(0, 10) : today;
-    xml += urlEntry('/rental-detail?id=' + r.id, lastmod, 'weekly', '0.6');
+    xml += urlEntry('/' + PMSchema.rentalPath(r), lastmod, 'weekly', '0.6');
   }
 
   for (const p of profiles) {
@@ -162,7 +163,7 @@ async function main() {
 
   for (const b of businesses) {
     const lastmod = b.updated_at ? b.updated_at.slice(0, 10) : today;
-    xml += urlEntry('/business?id=' + b.id, lastmod, 'weekly', '0.7');
+    xml += urlEntry('/' + PMSchema.businessPath(b), lastmod, 'weekly', '0.7');
   }
 
   const blogPosts = loadBlogPosts();

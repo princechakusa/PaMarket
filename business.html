@@ -280,6 +280,7 @@ window.doSearch = window.doSearch || function(){
 
 <script src="js/supabase-config.js"></script>
 <script src="js/marketplace-data.js"></script>
+<script src="js/listing-schema.js"></script>
 <script src="js/session.js"></script>
 <script src="js/nav-dropdowns.js"></script>
 <script>
@@ -337,82 +338,10 @@ function setMeta(b, url){
 // Dynamic JSON-LD — real data only. AggregateRating/Review are emitted ONLY
 // when the seller actually has reviews (no fabricated ratings).
 function injectSchema(b, url, reviews, listings){
-  listings = listings || [];
-  var address = { '@type':'PostalAddress', addressCountry:'ZW' };
-  if (b.city) address.addressLocality = b.city;
-  if (b.province) address.addressRegion = b.province;
-  // streetAddress always resolves to a true value (suburb, then city, then
-  // province) — Search Console flags the field as missing if absent
-  // entirely, and Google's docs list it as optional-but-recommended rather
-  // than requiring house-number precision.
-  address.streetAddress = b.suburb || b.city || b.province || 'Zimbabwe';
-  var node = {
-    '@context':'https://schema.org',
-    '@type':'Store',
-    '@id': url + '#store',
-    name: b.name,
-    url: url,
-    image: b.cover || b.logo || 'https://pamarketzw.com/img/icon-512.png',
-    address: address,
-    areaServed: { '@type':'Country', name:'Zimbabwe' },
-    isPartOf: { '@type':'WebSite', name:'PaMarket', url:'https://pamarketzw.com/' },
-    publisher: { '@type':'Organization', name:'PaMarket', url:'https://pamarketzw.com/' }
-  };
-  if (b.logo) node.logo = b.logo;
-  if (b.description) node.description = b.description.slice(0,300);
-  if (b.phone) node.telephone = b.phone;
-  if (b.email) node.email = b.email;
-  // Real OfferCatalog from the shop's actual live listings (omitted when none).
-  if (listings.length){
-    node.hasOfferCatalog = {
-      '@type':'OfferCatalog',
-      name: b.name + ' — listings',
-      itemListElement: listings.slice(0,20).map(function(l){
-        return {
-          '@type':'Offer',
-          price: l.price,
-          priceCurrency: l.currency || 'USD',
-          itemOffered: { '@type':'Product', name: l.title, url:'https://pamarketzw.com/detail?id='+l.id }
-        };
-      })
-    };
-  }
-  if (reviews && reviews.length){
-    var sum = reviews.reduce(function(a,r){ return a + (Number(r.rating)||0); }, 0);
-    node.aggregateRating = {
-      '@type':'AggregateRating',
-      ratingValue: (sum / reviews.length).toFixed(1),
-      reviewCount: reviews.length,
-      bestRating: 5, worstRating: 1
-    };
-    node.review = reviews.slice(0,10).map(function(r){
-      return {
-        '@type':'Review',
-        author: { '@type':'Person', name: r.reviewer_name || 'PaMarket user' },
-        datePublished: (r.created_at||'').slice(0,10),
-        reviewRating: { '@type':'Rating', ratingValue: Number(r.rating)||0, bestRating:5, worstRating:1 },
-        reviewBody: r.body || ''
-      };
-    });
-  }
-  // ProfilePage wraps the shop entity for user/business-profile understanding.
-  var profilePage = {
-    '@context':'https://schema.org','@type':'ProfilePage','@id':url+'#page',
-    url:url, name:b.name+' — PaMarket',
-    isPartOf:{'@type':'WebSite',name:'PaMarket',url:'https://pamarketzw.com/'},
-    mainEntity:{'@id':url+'#store'}
-  };
-  if (b.updated_at) profilePage.dateModified = String(b.updated_at).slice(0,10);
-  var breadcrumb = {
-    '@context':'https://schema.org','@type':'BreadcrumbList',
-    itemListElement:[
-      {'@type':'ListItem',position:1,name:'Home',item:'https://pamarketzw.com/'},
-      {'@type':'ListItem',position:2,name:'Shops',item:'https://pamarketzw.com/browse?shops=1'},
-      {'@type':'ListItem',position:3,name:b.name,item:url}
-    ]
-  };
-  [profilePage, node, breadcrumb].forEach(function(obj){
-    var s=document.createElement('script'); s.type='application/ld+json';
+  // Schema built by the shared module (js/listing-schema.js) so this page and
+  // the static /b/ pre-render emit identical Store/ProfilePage/Breadcrumb JSON-LD.
+  (window.PMSchema ? PMSchema.buildBusinessSchema(b, url, reviews, listings || []) : []).forEach(function(obj){
+    var s=document.createElement("script"); s.type="application/ld+json";
     s.textContent=JSON.stringify(obj); document.head.appendChild(s);
   });
 }
@@ -520,6 +449,11 @@ function init(){
   if (!id){ showNotFound(); return; }
   PM.fetchBusinessById(id).then(function(b){
     if (!b){ showNotFound(); return; }
+    // Consolidate onto the static pre-rendered shop page when it exists.
+    if (window.PMSchema){
+      var _sp='/'+PMSchema.businessPath(b);
+      fetch(_sp,{method:'HEAD'}).then(function(h){ if(h.ok) location.replace(_sp); }).catch(function(){});
+    }
     Promise.all([
       PM.fetchListings({ businessId: id, limit: 12 }).catch(function(){ return []; }),
       PM.fetchSellerReviews(b.owner_user_id, 20),

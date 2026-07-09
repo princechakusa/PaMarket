@@ -407,6 +407,7 @@ window.doSearch = window.doSearch || function(){
 
 <script src="js/supabase-config.js"></script>
 <script src="js/marketplace-data.js"></script>
+<script src="js/listing-schema.js"></script>
 <script src="js/nav-dropdowns.js"></script>
 <script>
 async function init(){
@@ -415,6 +416,11 @@ async function init(){
   try{
     const v=await PM.fetchRentalListingById(id);
     if(!v){showNotFound();return}
+    // Consolidate onto the static pre-rendered page when it exists.
+    if(window.PMSchema){
+      const sp='/'+PMSchema.rentalPath(v);
+      try{const h=await fetch(sp,{method:'HEAD'});if(h.ok){location.replace(sp);return;}}catch(e){}
+    }
     render(v);
     document.getElementById('loadingState').classList.add('hidden');
     document.getElementById('detailContent').classList.remove('hidden');
@@ -505,47 +511,12 @@ function render(v){
 
   const schema=document.createElement('script');
   schema.type='application/ld+json';
-  schema.textContent=JSON.stringify({
-    '@context':'https://schema.org',
-    '@type':'Vehicle',
-    name:title||'Rental Vehicle',
-    description:v.description||pageDesc,
-    image:media.length?media.map(m=>m.url):undefined,
-    url:canonicalUrl,
-    brand:brand?{'@type':'Brand',name:brand}:undefined,
-    model:v.model||undefined,
-    vehicleModelDate:v.year?String(v.year):undefined,
-    offers:{
-      '@type':'Offer',
-      price:v.daily_rate||undefined,
-      priceCurrency:'USD',
-      availability:v.is_available?'https://schema.org/InStock':'https://schema.org/OutOfStock',
-      businessFunction:'http://purl.org/goodrelations/v1#LeaseOut',
-      areaServed:{'@type':'Country',name:'Zimbabwe'},
-      // Truthful for a rental: no purchase return/refund applies. States
-      // PaMarket's actual model and satisfies Google's recommended field.
-      hasMerchantReturnPolicy:{
-        '@type':'MerchantReturnPolicy',
-        applicableCountry:'ZW',
-        returnPolicyCategory:'https://schema.org/MerchantReturnNotPermitted'
-      },
-      url:canonicalUrl
-    },
-    provider:{'@type':'Organization',name:company.trading_name||'PaMarket Rental Partner'}
-  });
+  schema.textContent=JSON.stringify(PMSchema.buildRentalSchema(v,canonicalUrl));
   document.head.appendChild(schema);
 
   const breadcrumb=document.createElement('script');
   breadcrumb.type='application/ld+json';
-  breadcrumb.textContent=JSON.stringify({
-    '@context':'https://schema.org',
-    '@type':'BreadcrumbList',
-    itemListElement:[
-      {'@type':'ListItem',position:1,name:'Home',item:'https://pamarketzw.com/'},
-      {'@type':'ListItem',position:2,name:'Vehicle Rental',item:'https://pamarketzw.com/rentals'},
-      {'@type':'ListItem',position:3,name:title||'Rental Vehicle',item:canonicalUrl}
-    ]
-  });
+  breadcrumb.textContent=JSON.stringify(PMSchema.buildRentalBreadcrumb(v,canonicalUrl));
   document.head.appendChild(breadcrumb);
 }
 

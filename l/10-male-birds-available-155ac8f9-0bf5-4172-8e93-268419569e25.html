@@ -306,31 +306,12 @@ window.doSearch = window.doSearch || function(){
 </script>
 
 <div class="crumb"><a href="/">Home</a> / <a href="browse">Browse</a> / <a href="browse?cat=agriculture">Agriculture</a> / <span>10 male birds available</span></div>
-<div id="detailContent">
-  <div class="detail-wrap">
-    <div>
-      <div class="gallery"><div class="gallery-main" id="galleryMain"><img src="https://pub-3754d74883e94d189dfc6ec1e3114e0e.r2.dev/listings/08734bdc-d18a-4212-b4ba-2f9861e1e3a9/ct1rok2s6csmqpo1lku.jpg" alt="10 male birds available"></div></div>
-      <h1 class="d-title">10 male birds available</h1>
-      <div class="d-price">$30</div>
-      <div class="d-meta"><span>Harare CBD, Harare</span><span>Posted 24d ago</span><span style="background:#EEF2FF;color:var(--navy);padding:3px 10px;border-radius:20px;font-weight:700">Agriculture</span></div>
-      <div class="d-section"><h3>Description</h3><div class="d-desc">🐔🌟 PUREBRED LIGHT SUSSEX FOR SALE – MASVINGO, ZIMBABWE 🌟🐔
+<div id="detailContent"><div class="detail-wrap"><div><div class="gallery"><div class="gallery-main" id="galleryMain"><img src="https://pub-3754d74883e94d189dfc6ec1e3114e0e.r2.dev/listings/08734bdc-d18a-4212-b4ba-2f9861e1e3a9/ct1rok2s6csmqpo1lku.jpg" alt="10 male birds available"></div></div><h1 class="d-title">10 male birds available</h1><div class="d-price">$30</div><div class="d-meta"><span>Harare CBD, Harare</span><span>Posted 24d ago</span><span style="background:#EEF2FF;color:var(--navy);padding:3px 10px;border-radius:20px;font-weight:700">Agriculture</span></div><div class="d-section"><h3>Description</h3><div class="d-desc">🐔🌟 PUREBRED LIGHT SUSSEX FOR SALE – MASVINGO, ZIMBABWE 🌟🐔
 Looking for quality breeding stock? We have healthy, purebred Light Sussex birds available from a well-managed flock.
 ✅ Purebred Light Sussex ✅ 44 Weeks Old ✅ Excellent for Breeding ✅ Good Meat Production ✅ Strong, Healthy Genetics ✅ Males &amp; Fertile Eggs Available
 💰 Price: US$30 per bird
 📍 Location: Masvingo, Zimbabwe
-📲 WhatsApp: +971 55 990 7086 📞 Calls: +263 77 421 2319</div></div>
-    </div>
-    <div class="sidebar">
-      <div class="seller-card">
-        <div class="seller-top"><div class="seller-avatar">SZ</div><div><div class="seller-name">Shepherd Zivumbwa</div><div class="seller-sub">View profile →</div></div></div>
-<a class="btn btn-whatsapp contact-btn" href="https://wa.me/263781743805?text=Hi%2C%20I%20saw%20your%20listing%20%2210%20male%20birds%20available%22%20on%20PaMarket.%20Is%20it%20still%20available%3F" target="_blank" rel="noopener">Chat on WhatsApp</a>
-<a class="btn btn-navy contact-btn" href="profile?id=08734bdc-d18a-4212-b4ba-2f9861e1e3a9">View Full Profile</a>
-      </div>
-      <div class="safety-card"><h4>Stay Safe</h4><ul><li>Meet in a public place during daylight hours</li><li>Never pay before seeing the item in person</li><li>Keep all conversations and payments inside PaMarket</li></ul></div>
-    </div>
-  </div>
-</div>
-<div id="unavailableState" class="state-msg" style="display:none">This listing is no longer available or is being reviewed.<br><br><a href="browse">Browse other listings</a></div>
+📲 WhatsApp: +971 55 990 7086 📞 Calls: +263 77 421 2319</div></div></div><div class="sidebar"><div class="seller-card"><div class="seller-top"><div class="seller-avatar">SZ</div><div><div class="seller-name">Shepherd Zivumbwa</div><div class="seller-sub">View profile →</div></div></div><a class="btn btn-whatsapp contact-btn" href="https://wa.me/263781743805?text=Hi%2C%20I%20saw%20your%20listing%20%2210%20male%20birds%20available%22%20on%20PaMarket.%20Is%20it%20still%20available%3F" target="_blank" rel="noopener">Chat on WhatsApp</a><a class="btn btn-navy contact-btn" href="profile?id=08734bdc-d18a-4212-b4ba-2f9861e1e3a9">View Full Profile</a></div><div class="safety-card"><h4>Stay Safe</h4><ul><li>Meet in a public place during daylight hours</li><li>Never pay before seeing the item in person</li><li>Keep all conversations and payments inside PaMarket</li></ul></div></div></div></div><div id="unavailableState" class="state-msg" style="display:none">This listing is no longer available or is being reviewed.<br><br><a href="browse">Browse other listings</a></div>
 <!-- ============================================================
      PaMarket shared footer — SINGLE SOURCE OF TRUTH.
      Edit here only; run `node tools/build-includes.js` to stamp
@@ -402,18 +383,8 @@ Looking for quality breeding stock? We have healthy, purebred Light Sussex birds
 </footer>
 
 <script>window.__LISTING_ID="155ac8f9-0bf5-4172-8e93-268419569e25";</script>
-<script src="js/supabase-config.js"></script>
-<script src="js/marketplace-data.js"></script>
-<script src="js/nav-dropdowns.js"></script>
 <script>(function(){
-  // Progressive enhancement: confirm the listing is still publicly active.
-  // If it was moderated/sold/removed since this page was generated, hide the
-  // content and switch to noindex so crawlers drop the stale page.
   try{ if(window.PM&&PM.fetchListingState){ PM.fetchListingState(window.__LISTING_ID).then(function(state){
-    // FAIL OPEN: only hide/noindex on a DEFINITIVE backend hidden state.
-    // "unavailable" is also the fallback when the RPC is missing or errors,
-    // so never noindex on it — the page was generated for an active listing,
-    // and the daily rebuild removes pages for listings that truly went away.
     if(state==="removed"||state==="review"||state==="sold"){
       var c=document.getElementById("detailContent"); if(c)c.style.display="none";
       var u=document.getElementById("unavailableState"); if(u)u.style.display="block";
@@ -421,5 +392,8 @@ Looking for quality breeding stock? We have healthy, purebred Light Sussex birds
     }
   }).catch(function(){}); } }catch(e){}
 })();</script>
+<script src="js/supabase-config.js"></script>
+<script src="js/marketplace-data.js"></script>
+<script src="js/nav-dropdowns.js"></script>
 </body>
 </html>

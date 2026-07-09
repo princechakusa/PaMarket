@@ -303,26 +303,7 @@ window.doSearch = window.doSearch || function(){
 </script>
 
 <div class="crumb"><a href="/">Home</a> / <a href="browse">Browse</a> / <a href="browse?cat=furniture">Furniture</a> / <span>Single bed</span></div>
-<div id="detailContent">
-  <div class="detail-wrap">
-    <div>
-      <div class="gallery"><div class="gallery-main" id="galleryMain"><img src="https://pub-3754d74883e94d189dfc6ec1e3114e0e.r2.dev/listings/43d0fba4-9f8c-4a1e-845b-6f899c2b01bf/kbs3e4sqcrsmqpo21e1.jpg" alt="Single bed"></div></div>
-      <h1 class="d-title">Single bed</h1>
-      <div class="d-price">$200</div>
-      <div class="d-meta"><span>Chipinge, Chipinge, Manicaland</span><span>Posted 22d ago</span><span style="background:#EEF2FF;color:var(--navy);padding:3px 10px;border-radius:20px;font-weight:700">Furniture</span></div>
-      <div class="d-section"><h3>Description</h3><div class="d-desc">Come and buy now</div></div>
-    </div>
-    <div class="sidebar">
-      <div class="seller-card">
-        <div class="seller-top"><div class="seller-avatar">SM</div><div><div class="seller-name">Sanu Moncy</div><div class="seller-sub">View profile →</div></div></div>
-
-<a class="btn btn-navy contact-btn" href="profile?id=43d0fba4-9f8c-4a1e-845b-6f899c2b01bf">View Full Profile</a>
-      </div>
-      <div class="safety-card"><h4>Stay Safe</h4><ul><li>Meet in a public place during daylight hours</li><li>Never pay before seeing the item in person</li><li>Keep all conversations and payments inside PaMarket</li></ul></div>
-    </div>
-  </div>
-</div>
-<div id="unavailableState" class="state-msg" style="display:none">This listing is no longer available or is being reviewed.<br><br><a href="browse">Browse other listings</a></div>
+<div id="detailContent"><div class="detail-wrap"><div><div class="gallery"><div class="gallery-main" id="galleryMain"><img src="https://pub-3754d74883e94d189dfc6ec1e3114e0e.r2.dev/listings/43d0fba4-9f8c-4a1e-845b-6f899c2b01bf/kbs3e4sqcrsmqpo21e1.jpg" alt="Single bed"></div></div><h1 class="d-title">Single bed</h1><div class="d-price">$200</div><div class="d-meta"><span>Chipinge, Chipinge, Manicaland</span><span>Posted 22d ago</span><span style="background:#EEF2FF;color:var(--navy);padding:3px 10px;border-radius:20px;font-weight:700">Furniture</span></div><div class="d-section"><h3>Description</h3><div class="d-desc">Come and buy now</div></div></div><div class="sidebar"><div class="seller-card"><div class="seller-top"><div class="seller-avatar">SM</div><div><div class="seller-name">Sanu Moncy</div><div class="seller-sub">View profile →</div></div></div><a class="btn btn-navy contact-btn" href="profile?id=43d0fba4-9f8c-4a1e-845b-6f899c2b01bf">View Full Profile</a></div><div class="safety-card"><h4>Stay Safe</h4><ul><li>Meet in a public place during daylight hours</li><li>Never pay before seeing the item in person</li><li>Keep all conversations and payments inside PaMarket</li></ul></div></div></div></div><div id="unavailableState" class="state-msg" style="display:none">This listing is no longer available or is being reviewed.<br><br><a href="browse">Browse other listings</a></div>
 <!-- ============================================================
      PaMarket shared footer — SINGLE SOURCE OF TRUTH.
      Edit here only; run `node tools/build-includes.js` to stamp
@@ -394,18 +375,8 @@ window.doSearch = window.doSearch || function(){
 </footer>
 
 <script>window.__LISTING_ID="11b0e9e6-d6cb-4e1f-85a8-8ddd20358bec";</script>
-<script src="js/supabase-config.js"></script>
-<script src="js/marketplace-data.js"></script>
-<script src="js/nav-dropdowns.js"></script>
 <script>(function(){
-  // Progressive enhancement: confirm the listing is still publicly active.
-  // If it was moderated/sold/removed since this page was generated, hide the
-  // content and switch to noindex so crawlers drop the stale page.
   try{ if(window.PM&&PM.fetchListingState){ PM.fetchListingState(window.__LISTING_ID).then(function(state){
-    // FAIL OPEN: only hide/noindex on a DEFINITIVE backend hidden state.
-    // "unavailable" is also the fallback when the RPC is missing or errors,
-    // so never noindex on it — the page was generated for an active listing,
-    // and the daily rebuild removes pages for listings that truly went away.
     if(state==="removed"||state==="review"||state==="sold"){
       var c=document.getElementById("detailContent"); if(c)c.style.display="none";
       var u=document.getElementById("unavailableState"); if(u)u.style.display="block";
@@ -413,5 +384,8 @@ window.doSearch = window.doSearch || function(){
     }
   }).catch(function(){}); } }catch(e){}
 })();</script>
+<script src="js/supabase-config.js"></script>
+<script src="js/marketplace-data.js"></script>
+<script src="js/nav-dropdowns.js"></script>
 </body>
 </html>

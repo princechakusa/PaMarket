@@ -6,6 +6,8 @@ on:
     paths-ignore:
       - 'sitemap.xml'
       - 'l/**'
+      - 'r/**'
+      - 'b/**'
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch:
@@ -41,9 +43,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Remove pages for listings that are no longer active, then re-add the
-          # current set so deleted/sold listings drop out of the deploy.
-          git add -A sitemap.xml l
+          # Remove pages for entities that are no longer active, then re-add the
+          # current set so deleted/sold ones drop out of the deploy.
+          git add -A sitemap.xml l r b
           if git diff --cached --quiet; then
             echo "sitemap + static pages unchanged, nothing to commit"
             exit 0

@@ -184,10 +184,116 @@
     };
   }
 
+  // ── Rentals (rental_vehicle_listings) ─────────────────────────────────────
+  function rentalTitle(v) {
+    var brand = (v.rental_brands && v.rental_brands.label) || '';
+    return (((brand + ' ' + (v.model || '')).trim()) + (v.year ? ' ' + v.year : '')).trim() || 'Rental Vehicle';
+  }
+  function rentalPath(v) { return 'r/' + slugify(rentalTitle(v)) + '-' + v.id + '.html'; }
+  function rentalUrl(v) { return SITE + '/' + rentalPath(v); }
+
+  function buildRentalSchema(v, canonicalUrl) {
+    canonicalUrl = canonicalUrl || rentalUrl(v);
+    var brand = (v.rental_brands && v.rental_brands.label) || '';
+    var title = rentalTitle(v);
+    var media = (v.rental_vehicle_media || []).slice().sort(function (a, b) { return (a.sort_order || 0) - (b.sort_order || 0); });
+    var company = v.rental_companies || {};
+    return {
+      '@context': 'https://schema.org', '@type': 'Vehicle',
+      name: title,
+      description: v.description || ('Rent a ' + title + ' in Zimbabwe with a verified rental company on PaMarket.'),
+      image: media.length ? media.map(function (m) { return m.url; }) : undefined,
+      url: canonicalUrl,
+      brand: brand ? { '@type': 'Brand', name: brand } : undefined,
+      model: v.model || undefined,
+      vehicleModelDate: v.year ? String(v.year) : undefined,
+      offers: {
+        '@type': 'Offer', price: v.daily_rate || undefined, priceCurrency: 'USD',
+        availability: v.is_available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        businessFunction: 'http://purl.org/goodrelations/v1#LeaseOut',
+        areaServed: { '@type': 'Country', name: 'Zimbabwe' },
+        hasMerchantReturnPolicy: { '@type': 'MerchantReturnPolicy', applicableCountry: 'ZW', returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted' },
+        url: canonicalUrl
+      },
+      provider: { '@type': 'Organization', name: company.trading_name || 'PaMarket Rental Partner' }
+    };
+  }
+  function buildRentalBreadcrumb(v, canonicalUrl) {
+    canonicalUrl = canonicalUrl || rentalUrl(v);
+    return {
+      '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' },
+        { '@type': 'ListItem', position: 2, name: 'Vehicle Rental', item: SITE + '/rentals' },
+        { '@type': 'ListItem', position: 3, name: rentalTitle(v), item: canonicalUrl }
+      ]
+    };
+  }
+
+  // ── Businesses / shops (businesses) ───────────────────────────────────────
+  function businessPath(b) { return 'b/' + slugify(b.name) + '-' + b.id + '.html'; }
+  function businessUrl(b) { return SITE + '/' + businessPath(b); }
+
+  // Returns an ARRAY of schema objects: [ProfilePage, Store, BreadcrumbList].
+  function buildBusinessSchema(b, url, reviews, products) {
+    url = url || businessUrl(b);
+    products = products || [];
+    var address = { '@type': 'PostalAddress', addressCountry: 'ZW' };
+    if (b.city) address.addressLocality = b.city;
+    if (b.province) address.addressRegion = b.province;
+    address.streetAddress = b.suburb || b.city || b.province || 'Zimbabwe';
+    var store = {
+      '@context': 'https://schema.org', '@type': 'Store', '@id': url + '#store',
+      name: b.name, url: url,
+      image: b.cover || b.logo || (SITE + '/img/icon-512.png'),
+      address: address, areaServed: { '@type': 'Country', name: 'Zimbabwe' },
+      isPartOf: { '@type': 'WebSite', name: 'PaMarket', url: SITE + '/' },
+      publisher: { '@type': 'Organization', name: 'PaMarket', url: SITE + '/' }
+    };
+    if (b.logo) store.logo = b.logo;
+    if (b.description) store.description = String(b.description).slice(0, 300);
+    if (b.phone) store.telephone = b.phone;
+    if (b.email) store.email = b.email;
+    if (products.length) {
+      store.hasOfferCatalog = {
+        '@type': 'OfferCatalog', name: b.name + ' — listings',
+        itemListElement: products.slice(0, 20).map(function (l) {
+          return { '@type': 'Offer', price: l.price, priceCurrency: l.currency || 'USD', itemOffered: { '@type': 'Product', name: l.title, url: listingUrl(l) } };
+        })
+      };
+    }
+    if (reviews && reviews.length) {
+      var sum = reviews.reduce(function (a, r) { return a + (Number(r.rating) || 0); }, 0);
+      store.aggregateRating = { '@type': 'AggregateRating', ratingValue: (sum / reviews.length).toFixed(1), reviewCount: reviews.length, bestRating: 5, worstRating: 1 };
+      store.review = reviews.slice(0, 10).map(function (r) {
+        return { '@type': 'Review', author: { '@type': 'Person', name: r.reviewer_name || 'PaMarket user' }, datePublished: (r.created_at || '').slice(0, 10), reviewRating: { '@type': 'Rating', ratingValue: Number(r.rating) || 0, bestRating: 5, worstRating: 1 }, reviewBody: r.body || '' };
+      });
+    }
+    var profilePage = {
+      '@context': 'https://schema.org', '@type': 'ProfilePage', '@id': url + '#page',
+      url: url, name: b.name + ' — PaMarket',
+      isPartOf: { '@type': 'WebSite', name: 'PaMarket', url: SITE + '/' },
+      mainEntity: { '@id': url + '#store' }
+    };
+    if (b.updated_at) profilePage.dateModified = String(b.updated_at).slice(0, 10);
+    var breadcrumb = {
+      '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' },
+        { '@type': 'ListItem', position: 2, name: 'Shops', item: SITE + '/browse?shops=1' },
+        { '@type': 'ListItem', position: 3, name: b.name, item: url }
+      ]
+    };
+    return [profilePage, store, breadcrumb];
+  }
+
   return {
     SITE: SITE, CAT_LABELS: CAT_LABELS,
     slugify: slugify, listingPath: listingPath, listingUrl: listingUrl,
     catLabelOf: catLabelOf, locOf: locOf,
-    buildListingSchema: buildListingSchema, buildBreadcrumb: buildBreadcrumb
+    buildListingSchema: buildListingSchema, buildBreadcrumb: buildBreadcrumb,
+    rentalTitle: rentalTitle, rentalPath: rentalPath, rentalUrl: rentalUrl,
+    buildRentalSchema: buildRentalSchema, buildRentalBreadcrumb: buildRentalBreadcrumb,
+    businessPath: businessPath, businessUrl: businessUrl, buildBusinessSchema: buildBusinessSchema
   };
 });
