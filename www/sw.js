@@ -1,4 +1,4 @@
-const CACHE = 'pamarket-v283';
+const CACHE = 'pamarket-v284';
 
 // Never cache these — auth tokens, API data, realtime
 const NO_CACHE = [
