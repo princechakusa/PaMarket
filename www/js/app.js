@@ -3257,6 +3257,10 @@ H.openAppRating = function() {
   // so the token row went stale until the next interactive login and tray
   // notifications silently died. This waits for the session, resolves the user
   // at save time (not via a stale closure), and retries with backoff.
+  function _pushDiag(msg) {
+    try { if (typeof H.toast === 'function') H.toast('PUSH: ' + msg, 6000, true); } catch (e) {}
+    try { console.warn('[PUSH-DIAG] ' + msg); } catch (e) {}
+  }
   async function _savePushToken(c, tokenValue, attempt) {
     attempt = attempt || 0;
     try {
@@ -3268,10 +3272,13 @@ H.openAppRating = function() {
       var r = await c.from('push_tokens').upsert({ user_id: cu.id, token: tokenValue, updated_at: new Date().toISOString() });
       if (r && r.error) throw new Error(r.error.message);
       H._pushTokenSaved = true;
+      _pushDiag('token SAVED ok (attempt ' + attempt + ')');
     } catch (e) {
       if (attempt < 6) {
+        _pushDiag('save retry ' + attempt + ' — ' + (e && e.message));
         setTimeout(function(){ _savePushToken(c, tokenValue, attempt + 1); }, 1500 * (attempt + 1));
       } else {
+        _pushDiag('save FAILED permanently — ' + (e && e.message));
         console.warn('push_token save failed permanently:', e && e.message);
       }
     }
@@ -3279,19 +3286,21 @@ H.openAppRating = function() {
 
   async function _setupNativePush(c, u) {
     var PN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications;
-    if (!PN) return;
+    if (!PN) { _pushDiag('PushNotifications plugin MISSING'); return; }
 
     var perm = await PN.checkPermissions();
     if (perm.receive === 'prompt' || perm.receive === 'prompt-with-rationale') {
       perm = await PN.requestPermissions();
     }
-    if (perm.receive !== 'granted') return;
+    if (perm.receive !== 'granted') { _pushDiag('permission NOT granted (' + (perm && perm.receive) + ')'); return; }
+    _pushDiag('permission granted, registering…');
 
     if (!H._nativePushListeners) {
       H._nativePushListeners = true;
 
       PN.addListener('registration', function(token) {
-        if (!token || !token.value) return;
+        if (!token || !token.value) { _pushDiag('registration fired but NO token'); return; }
+        _pushDiag('FCM token received (' + token.value.slice(0, 10) + '…)');
         // Remember the token so setupPush can re-save it on later app opens /
         // re-logins (the registration event may not fire again once cached).
         H._fcmToken = token.value;
@@ -3302,6 +3311,7 @@ H.openAppRating = function() {
       });
 
       PN.addListener('registrationError', function(err) {
+        _pushDiag('FCM registrationError — ' + (err && (err.error || JSON.stringify(err))));
         console.warn('FCM registration error:', err && err.error);
       });
 
