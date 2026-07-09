@@ -52,5 +52,3 @@ website/_*.js
 website/_*.css
 website/_*.json
 
-# Pre-rendered static listing pages (generated in CI, never committed)
-/l/

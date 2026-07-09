@@ -1,10 +1,11 @@
-name: Update Sitemap
+name: Update Sitemap & Static Pages
 
 on:
   push:
     branches: [master]
     paths-ignore:
       - 'sitemap.xml'
+      - 'l/**'
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch:
@@ -26,14 +27,26 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: node tools/generate-sitemap.js
 
-      - name: Commit sitemap.xml if changed
+      - name: Pre-render static listing/job pages
+        # Same proven CI context (secrets) that generates the sitemap. Writes
+        # l/<slug>-<id>.html with real HTML + baked JSON-LD for every active
+        # listing so non-JS crawlers get full content. Committed below so the
+        # branch-based Pages deploy serves them reliably.
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: node tools/prerender.js
+
+      - name: Commit sitemap + static pages if changed
         run: |
-          if git diff --quiet -- sitemap.xml; then
-            echo "sitemap.xml unchanged, nothing to commit"
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add sitemap.xml
-          git commit -m "chore: update sitemap.xml"
+          # Remove pages for listings that are no longer active, then re-add the
+          # current set so deleted/sold listings drop out of the deploy.
+          git add -A sitemap.xml l
+          if git diff --cached --quiet; then
+            echo "sitemap + static pages unchanged, nothing to commit"
+            exit 0
+          fi
+          git commit -m "chore: refresh sitemap + pre-rendered listing pages"
           git push

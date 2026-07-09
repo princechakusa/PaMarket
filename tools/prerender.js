@@ -184,6 +184,9 @@ async function main() {
     listings = await fetchActiveListings(loadSupabaseConfig());
   }
   const chrome = loadChrome();
+  // Clean regen so pages for listings that are no longer active are removed
+  // (the commit step then stages those deletions out of the deploy).
+  fs.rmSync(OUT, { recursive: true, force: true });
   fs.mkdirSync(OUT, { recursive: true });
   let n = 0;
   for (const l of listings) {
