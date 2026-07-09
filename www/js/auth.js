@@ -711,7 +711,15 @@
       const onUrl = async function (event) {
         if (!event || !event.url || event.url.indexOf('login-callback') === -1) return;
         try { await urlListener.remove(); } catch (e) {}
-        try { if (Browser.close) await Browser.close(); } catch (e) {}
+        // iOS: the in-app browser (SFSafariViewController) stays presented over
+        // the app after the deep link fires, so it must be closed explicitly.
+        // Android: the login-callback deep link already cleared the Custom Tab
+        // from the task (MainActivity is singleTask) — and the plugin implements
+        // close() by startActivity()-ing its browser controller again to deliver
+        // a "close" intent, which re-surfaces the Google page over the app for a
+        // frame (the sign-in "flash"). Skip close() on Android.
+        const _plat = window.Capacitor && typeof window.Capacitor.getPlatform === 'function' ? window.Capacitor.getPlatform() : '';
+        if (_plat !== 'android') { try { if (Browser.close) await Browser.close(); } catch (e) {} }
         try {
           const url = new URL(event.url);
           const errDesc = url.searchParams.get('error_description') || url.searchParams.get('error');

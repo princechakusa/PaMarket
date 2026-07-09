@@ -2,7 +2,11 @@
    PaMarket — Zimbabwe's Marketplace
    Royal Blue · Gold · Inter · Clean Professional
    ═══════════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+/* Fonts: Plus Jakarta Sans is bundled locally and declared via @font-face in
+   index.html's critical <style> (preloaded, available at first paint). The old
+   network @import of Inter here caused a visible font-swap reflow on the splash
+   at cold start and was removed — 'Inter' in the --font stack now simply falls
+   through to the system font if PJS is ever unavailable. */
 
 /* ── TOKENS ─────────────────────────────────────────────────── */
 :root {

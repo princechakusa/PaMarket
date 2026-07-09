@@ -42,17 +42,28 @@
   <link rel="preload" as="image" href="img/cats/cat_kids.png">
   <link rel="preload" as="image" href="img/cats/cat_other.png">
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Fonts — bundled locally (variable font, weights 200-800 in one 27KB file).
+       Previously fetched from fonts.googleapis.com at every cold start, which made
+       the splash paint in fallback Roboto and then visibly reflow/shift when the
+       webfont arrived. A local preloaded font is ready at first paint, every
+       launch, offline included — no swap, no shift. -->
+  <link rel="preload" href="fonts/PlusJakartaSans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preconnect" href="https://gxgytumhknmnwspxjzxw.supabase.co">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="css/styles.css?v=40">
+  <link rel="stylesheet" href="css/styles.css?v=41">
   <link rel="stylesheet" href="css/pages-patch.css?v=3">
 
   <style>
+    /* ── Brand font (local, variable 200-800) ───────────── */
+    @font-face {
+      font-family: 'Plus Jakarta Sans';
+      font-style: normal;
+      font-weight: 200 800;
+      font-display: swap;
+      src: url('fonts/PlusJakartaSans-latin.woff2') format('woff2');
+    }
+
     /* ── Critical shell layout ─────────────────────────────
        Guarantees the app frame (scrollable content + bottom nav) even if the
        external stylesheet is stale or missing — e.g. an old cached service
@@ -350,7 +361,7 @@
   <script src="js/app.js?v=114"></script>
   <script src="js/attributes.js?v=5"></script>
   <script src="js/ads-carousel.js?v=2"></script>
-  <script src="js/auth.js?v=11"></script>
+  <script src="js/auth.js?v=12"></script>
 
   <!-- ── Pages ────────────────────────────────────────── -->
   <script src="js/browse.js?v=7"></script>
