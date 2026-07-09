@@ -2356,7 +2356,7 @@ window.H = {
         const { data: convsRaw, error } = await sb.from('conversations')
           .select('id, members, listing_id')
           .contains('members', [u.id])
-          .limit(20);
+          .limit(100);
         const convs = convsRaw ? convsRaw.slice() : convsRaw;
         // A specific convId (e.g. opening from a push notification deep link)
         // must never be missed just because it falls outside the arbitrary
@@ -2411,9 +2411,11 @@ window.H = {
       // extract the other member's ID even when only sent-side rows are found.
       try {
         const uidSuffix = u.id.slice(-6);
+        // 60 message ROWS per side (not conversations) — a few busy chats can
+        // eat a 20-row window and hide older threads from discovery entirely.
         const [sentRes, recvRes] = await Promise.all([
-          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(20),
-          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(20)
+          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').eq('sender_id', u.id).order('created_at',{ascending:false}).limit(60),
+          sb.from('messages').select('conversation_id,sender_id,sender_name,created_at').like('conversation_id',`%${uidSuffix}%`).neq('sender_id', u.id).order('created_at',{ascending:false}).limit(60)
         ]);
         // Build a map: convId -> first other-user sender_id found across both result sets
         const convOtherMap = {};
@@ -2497,12 +2499,25 @@ window.H = {
         const _convId = opts.convId || null;
         const toSync = _convId
           ? H.state.conversations.filter(function(c){ return c.id === _convId; })
-          : H.state.conversations.slice().sort(function(a,b){
-              // Most recently active first; cap at 10 to bound egress on boot
-              const ta = a.messages && a.messages.length ? a.messages[a.messages.length-1].t||0 : 0;
-              const tb = b.messages && b.messages.length ? b.messages[b.messages.length-1].t||0 : 0;
-              return tb - ta;
-            }).slice(0, 10);
+          : (function(){
+              const sorted = H.state.conversations.slice().sort(function(a,b){
+                // Most recently active first; cap at 10 to bound egress on boot
+                const ta = a.messages && a.messages.length ? a.messages[a.messages.length-1].t||0 : 0;
+                const tb = b.messages && b.messages.length ? b.messages[b.messages.length-1].t||0 : 0;
+                return tb - ta;
+              });
+              const top = sorted.slice(0, 10);
+              // A conversation with ZERO loaded messages is invisible in the
+              // Messages list (it filters on c.messages.length) — on a fresh
+              // install the discovery phases create shells for every thread
+              // but only the top-10 got messages, so the rest never appeared
+              // (users saw 11 of 22 chats). Always include still-empty shells
+              // so each gets at least one message and becomes visible; once
+              // loaded they drop out of this set, so steady-state cost is the
+              // same top-10 as before.
+              const shells = sorted.slice(10).filter(function(c){ return !Array.isArray(c.messages) || !c.messages.length; });
+              return top.concat(shells);
+            })();
         await Promise.all(toSync.map(async (local) => {
           if (!Array.isArray(local.messages)) { local.messages = []; changed = true; }
           const { data: msgs, error: msgErr } = await sb.from('messages')

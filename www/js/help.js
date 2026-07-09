@@ -1288,7 +1288,7 @@ pages.HelpCommunity = function () {
             <div style="font-size:10px;color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Always</div>
           </div>
         </div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:18px;font-weight:600">v1.27.9</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:18px;font-weight:600">v1.27.10</div>
       </div>
 
       <div class="doc-content" style="padding-top:4px">
@@ -1389,7 +1389,7 @@ pages.HelpCommunity = function () {
 
         <div style="text-align:center;padding:32px 0 8px">
           <div style="font-size:12px;color:var(--sub)">© ${year} PaMarket Zimbabwe · Made in Zimbabwe</div>
-          <div style="font-size:11px;color:var(--text-hint,#bbb);margin-top:4px">v1.27.9 · Built with care for Zimbabwe</div>
+          <div style="font-size:11px;color:var(--text-hint,#bbb);margin-top:4px">v1.27.10 · Built with care for Zimbabwe</div>
         </div>
       </div>
     </div>`;
