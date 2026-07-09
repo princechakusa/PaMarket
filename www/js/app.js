@@ -3248,6 +3248,35 @@ H.openAppRating = function() {
   // Native (installed app): register for FCM and save push_token.
   // The Android WebView does not support the Web Push API, so the app
   // must use the Capacitor PushNotifications plugin (FCM under the hood).
+
+  // Persist the device's FCM token for the signed-in user, robustly.
+  // On a cold start FCM returns its CACHED token in milliseconds — long before
+  // supabase-js finishes restoring the persisted auth session. An upsert issued
+  // in that window runs as anon, is rejected by push_tokens RLS (authenticated
+  // owner-only), and was previously just console.warn'd and never retried —
+  // so the token row went stale until the next interactive login and tray
+  // notifications silently died. This waits for the session, resolves the user
+  // at save time (not via a stale closure), and retries with backoff.
+  async function _savePushToken(c, tokenValue, attempt) {
+    attempt = attempt || 0;
+    try {
+      var sd = await c.auth.getSession();
+      var session = sd && sd.data && sd.data.session;
+      if (!session) throw new Error('session not restored yet');
+      var cu = H.currentUser();
+      if (!cu || !cu.id) throw new Error('no signed-in user yet');
+      var r = await c.from('push_tokens').upsert({ user_id: cu.id, token: tokenValue, updated_at: new Date().toISOString() });
+      if (r && r.error) throw new Error(r.error.message);
+      H._pushTokenSaved = true;
+    } catch (e) {
+      if (attempt < 6) {
+        setTimeout(function(){ _savePushToken(c, tokenValue, attempt + 1); }, 1500 * (attempt + 1));
+      } else {
+        console.warn('push_token save failed permanently:', e && e.message);
+      }
+    }
+  }
+
   async function _setupNativePush(c, u) {
     var PN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications;
     if (!PN) return;
@@ -3263,12 +3292,13 @@ H.openAppRating = function() {
 
       PN.addListener('registration', function(token) {
         if (!token || !token.value) return;
+        // Remember the token so setupPush can re-save it on later app opens /
+        // re-logins (the registration event may not fire again once cached).
+        H._fcmToken = token.value;
+        H._pushTokenSaved = false;
         // Write token to the isolated push_tokens table (not profiles) so it
         // is not exposed via the public profiles read policy.
-        c.from('push_tokens').upsert({ user_id: u.id, token: token.value, updated_at: new Date().toISOString() })
-          .then(function(r) {
-            if (r && r.error) console.warn('push_token save:', r.error.message);
-          });
+        _savePushToken(c, token.value, 0);
       });
 
       PN.addListener('registrationError', function(err) {
@@ -3336,6 +3366,12 @@ H.openAppRating = function() {
     }
 
     await PN.register();
+
+    // Re-save on every setup pass (app open / re-login): the registration
+    // event may have fired before the user was signed in, or a previous
+    // session's save may have failed — the upsert is idempotent and cheap,
+    // and this also re-claims the token after switching accounts.
+    if (H._fcmToken && !H._pushTokenSaved) _savePushToken(c, H._fcmToken, 0);
 
     // Register local notification action types for inline reply.
     // Requires @capacitor/local-notifications — gracefully skipped if not installed.
