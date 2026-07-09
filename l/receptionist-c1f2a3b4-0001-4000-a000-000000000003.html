@@ -426,7 +426,11 @@ Front desk receptionist for 5-star hotel.</div></div>
   // If it was moderated/sold/removed since this page was generated, hide the
   // content and switch to noindex so crawlers drop the stale page.
   try{ if(window.PM&&PM.fetchListingState){ PM.fetchListingState(window.__LISTING_ID).then(function(state){
-    if(state && state!=="active"){
+    // FAIL OPEN: only hide/noindex on a DEFINITIVE backend hidden state.
+    // "unavailable" is also the fallback when the RPC is missing or errors,
+    // so never noindex on it — the page was generated for an active listing,
+    // and the daily rebuild removes pages for listings that truly went away.
+    if(state==="removed"||state==="review"||state==="sold"){
       var c=document.getElementById("detailContent"); if(c)c.style.display="none";
       var u=document.getElementById("unavailableState"); if(u)u.style.display="block";
       var m=document.querySelector("meta[name=robots]"); if(m)m.setAttribute("content","noindex, nofollow");

@@ -166,7 +166,11 @@ function renderPage(l, chrome) {
     '  // If it was moderated/sold/removed since this page was generated, hide the\n' +
     '  // content and switch to noindex so crawlers drop the stale page.\n' +
     '  try{ if(window.PM&&PM.fetchListingState){ PM.fetchListingState(window.__LISTING_ID).then(function(state){\n' +
-    '    if(state && state!=="active"){\n' +
+    '    // FAIL OPEN: only hide/noindex on a DEFINITIVE backend hidden state.\n' +
+    '    // "unavailable" is also the fallback when the RPC is missing or errors,\n' +
+    '    // so never noindex on it — the page was generated for an active listing,\n' +
+    '    // and the daily rebuild removes pages for listings that truly went away.\n' +
+    '    if(state==="removed"||state==="review"||state==="sold"){\n' +
     '      var c=document.getElementById("detailContent"); if(c)c.style.display="none";\n' +
     '      var u=document.getElementById("unavailableState"); if(u)u.style.display="block";\n' +
     '      var m=document.querySelector("meta[name=robots]"); if(m)m.setAttribute("content","noindex, nofollow");\n' +
