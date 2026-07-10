@@ -800,9 +800,22 @@ async function runQuery(append){
   }
 }
 
-function loadMore(){
+let loadingMore=false;
+async function loadMore(){
+  if(loadingMore)return;
+  loadingMore=true;
   state.offset+=PAGE_SIZE;
-  runQuery(true);
+  try{await runQuery(true);}finally{loadingMore=false;}
+}
+
+// Infinite scroll: auto-trigger Load More when the button nears the viewport.
+// The button stays as a visible manual fallback (and for browsers without
+// IntersectionObserver). runQuery hides it when a page comes back short.
+if('IntersectionObserver' in window){
+  const btn=document.getElementById('loadMoreBtn');
+  if(btn)new IntersectionObserver((entries)=>{
+    if(entries.some(e=>e.isIntersecting)&&!btn.classList.contains('hidden'))loadMore();
+  },{rootMargin:'600px'}).observe(btn);
 }
 
 function syncFromUrl(){
