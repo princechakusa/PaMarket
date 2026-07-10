@@ -1026,9 +1026,28 @@ function renderCards(elId,listings){
   el.innerHTML=listings.map((l,i)=>lcard(l,i)).join('');
 }
 
+// Lazily run a loader when its section scrolls near the viewport (400px
+// early so cards are ready before the user reaches them). Falls back to
+// loading immediately when IntersectionObserver is unavailable.
+function lazySection(elId,loader){
+  const el=document.getElementById(elId);
+  if(!el||!('IntersectionObserver' in window)){loader();return}
+  const io=new IntersectionObserver((entries)=>{
+    if(entries.some(e=>e.isIntersecting)){io.disconnect();loader();}
+  },{rootMargin:'400px'});
+  io.observe(el);
+}
+
+// Above the fold: electronics loads eagerly. Everything below loads as the
+// user scrolls — cuts initial Supabase calls roughly in half.
 PM.fetchListings({category:'electronics',limit:8}).then(l=>renderCards('elCards',l)).catch(()=>renderCards('elCards',[]));
-PM.fetchListings({category:'vehicles',limit:8}).then(l=>renderCards('vCards',l)).catch(()=>renderCards('vCards',[]));
-PM.fetchListings({category:'property',limit:8}).then(l=>renderCards('pCards',l)).catch(()=>renderCards('pCards',[]));
+lazySection('vCards',()=>PM.fetchListings({category:'vehicles',limit:8}).then(l=>renderCards('vCards',l)).catch(()=>renderCards('vCards',[])));
+// Property + rentals load together: the rental section starts hidden (no
+// layout box, unobservable), and it directly follows the property section.
+lazySection('pCards',()=>{
+  PM.fetchListings({category:'property',limit:8}).then(l=>renderCards('pCards',l)).catch(()=>renderCards('pCards',[]));
+  loadRentalHighlights();
+});
 
 // Rental Highlights — only shown when there's at least one live rental to feature.
 function rentalCard(v,idx){
@@ -1053,23 +1072,39 @@ function rentalCard(v,idx){
     </div>
   </a>`;
 }
-PM.fetchRentalListings({limit:8}).then(rows=>{
-  if(!rows||!rows.length)return;
-  document.getElementById('rentalCards').innerHTML=rows.map((v,i)=>rentalCard(v,i)).join('');
-  document.getElementById('rentalSec').classList.remove('hidden');
-}).catch(()=>{});
+function loadRentalHighlights(){
+  PM.fetchRentalListings({limit:8}).then(rows=>{
+    if(!rows||!rows.length)return;
+    document.getElementById('rentalCards').innerHTML=rows.map((v,i)=>rentalCard(v,i)).join('');
+    document.getElementById('rentalSec').classList.remove('hidden');
+  }).catch(()=>{});
+}
 
-// Live stats bar — real counts, shown only once loaded so we never flash a fake number.
-Promise.all([
-  PM.fetchExactCount('listings','status=eq.active'),
-  PM.fetchExactCount('businesses','status=eq.active'),
-  PM.fetchExactCount('listings','status=eq.active&category=eq.jobs')
-]).then(([listings,businesses,jobs])=>{
-  document.getElementById('statListings').textContent=listings.toLocaleString()+'+';
-  document.getElementById('statBusinesses').textContent=businesses.toLocaleString()+'+';
-  document.getElementById('statJobs').textContent=jobs.toLocaleString()+'+';
+// Live stats bar — real counts, shown only once loaded so we never flash a
+// fake number. Counts change slowly, so cache them for an hour: repeat
+// visitors render instantly with zero requests, then refresh silently.
+function renderStats(s){
+  document.getElementById('statListings').textContent=s.listings.toLocaleString()+'+';
+  document.getElementById('statBusinesses').textContent=s.businesses.toLocaleString()+'+';
+  document.getElementById('statJobs').textContent=s.jobs.toLocaleString()+'+';
   document.getElementById('liveStats').style.display='';
-}).catch(()=>{});
+}
+(function(){
+  let cached=null;
+  try{cached=JSON.parse(localStorage.getItem('pm_home_stats')||'null');}catch(e){}
+  const fresh=cached&&(Date.now()-cached.t)<3600000;
+  if(cached)renderStats(cached);
+  if(fresh)return;
+  Promise.all([
+    PM.fetchExactCount('listings','status=eq.active'),
+    PM.fetchExactCount('businesses','status=eq.active'),
+    PM.fetchExactCount('listings','status=eq.active&category=eq.jobs')
+  ]).then(([listings,businesses,jobs])=>{
+    const s={t:Date.now(),listings,businesses,jobs};
+    try{localStorage.setItem('pm_home_stats',JSON.stringify(s));}catch(e){}
+    renderStats(s);
+  }).catch(()=>{});
+})();
 
 // Sponsored ads — same live paid_ads the app renders. Hidden entirely when none.
 function adEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -1112,11 +1147,11 @@ function jobCard(job){
   </a>`;
 }
 
-PM.fetchJobs({limit:8}).then(jobs=>{
+lazySection('jobCards',()=>PM.fetchJobs({limit:8}).then(jobs=>{
   const el=document.getElementById('jobCards');
   if(!jobs||!jobs.length){el.innerHTML='<div style="padding:20px;color:var(--mute);font-size:13.5px">No jobs posted yet — check back soon.</div>';return}
   el.innerHTML=jobs.map(jobCard).join('');
-}).catch(()=>{document.getElementById('jobCards').innerHTML='<div style="padding:20px;color:var(--mute);font-size:13.5px">No jobs posted yet — check back soon.</div>'});
+}).catch(()=>{document.getElementById('jobCards').innerHTML='<div style="padding:20px;color:var(--mute);font-size:13.5px">No jobs posted yet — check back soon.</div>'}));
 
 // Top Categories
 const CATS=[
