@@ -378,6 +378,10 @@ window.doSearch = window.doSearch || function(){
         <a class="btn btn-navy contact-btn" id="profileBtn">
           View Full Profile
         </a>
+        <button type="button" class="btn contact-btn" id="shareBtn" style="background:#fff;border:1.5px solid var(--line);color:var(--ink)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share Listing
+        </button>
         <button type="button" id="reportSellerBtn" style="width:100%;margin-top:10px;background:none;border:none;color:var(--mute);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline">Report this seller</button>
       </div>
       <div class="safety-card">
@@ -402,6 +406,11 @@ window.doSearch = window.doSearch || function(){
   <div class="similar-sec">
     <h2>Similar <span style="color:var(--navy)">Listings</span></h2>
     <div class="similar-grid" id="similarGrid"></div>
+  </div>
+
+  <div class="similar-sec hidden" id="recentSec" style="padding-top:28px">
+    <h2>Recently <span style="color:var(--navy)">Viewed</span></h2>
+    <div class="similar-grid" id="recentGrid"></div>
   </div>
 
   <div class="related-searches hidden" id="relatedSearches">
@@ -504,6 +513,7 @@ window.doSearch = window.doSearch || function(){
 <script src="js/supabase-config.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/listing-schema.js"></script>
+<script src="js/listing-extras.js"></script>
 <script src="js/nav-dropdowns.js"></script>
 <script>
 const PIN='<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
@@ -747,6 +757,13 @@ function renderListing(l,reviews){
     document.getElementById('relatedSearches').classList.remove('hidden');
     document.getElementById('relatedSearchesList').innerHTML=related.map(r=>`<a href="${r.href}">${r.label}</a>`).join('');
   }
+
+  // Share + recently-viewed — shared with the pre-rendered /l/ pages via
+  // js/listing-extras.js so the behavior exists in exactly one place.
+  if(window.PMListingExtras)PMListingExtras.init({
+    id:l.id,title:l.title,price:l.price,currency:l.currency,
+    photo:photos[0]||null,city:l.city,province:l.province,url:canonicalUrl
+  });
 
   const schema=document.createElement('script');
   schema.type='application/ld+json';
