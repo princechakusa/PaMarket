@@ -281,24 +281,42 @@
     H._rateSeller = function(sellerId, rating, listingId) {
       const u = H.currentUser();
       if (!u) { H.toast('Sign in to rate sellers'); return; }
-      if (!H.state.ratings) H.state.ratings = {};
-      if (!H.state.ratings[sellerId]) H.state.ratings[sellerId] = [];
-      H.state.ratings[sellerId] = H.state.ratings[sellerId].filter(r => r.userId !== u.id);
-      H.state.ratings[sellerId].push({ userId: u.id, rating: rating, at: Date.now() });
-      H.saveState();
-      H.toast('Thanks for your rating!');
-      H.openInner('Detail', { id: listingId || params.id });
       const _sb = window.supabase;
-      if (_sb && typeof _sb.from === 'function') {
-        // Omit 'text' so an existing written review is preserved on rating change.
-        // PostgREST only updates the columns present in the payload on conflict.
-        _sb.from('reviews').upsert({
-          seller_id: sellerId, reviewer_id: u.id,
-          reviewer_name: u.name || 'User', rating: rating
-        }, { onConflict: 'seller_id,reviewer_id' }).then(function(res) {
-          if (res && res.error) console.warn('Rating DB sync failed:', res.error.message);
-        });
-      }
+      if (!_sb || typeof _sb.from !== 'function') { H.toast('Connection unavailable — try again'); return; }
+
+      // Persist to the DB FIRST and only trust local state once the server
+      // confirms. Previously the local state was updated + "Thanks!" shown
+      // before (and regardless of) the write, so a silently-rejected write
+      // (e.g. the missing UPDATE RLS policy on a rating change) left an
+      // optimistic rating that the next server fetch wiped — the review
+      // "disappeared". Now the optimistic update is only committed on success,
+      // and a real failure is surfaced instead of a false success.
+      const _applyLocal = function() {
+        if (!H.state.ratings) H.state.ratings = {};
+        if (!H.state.ratings[sellerId]) H.state.ratings[sellerId] = [];
+        H.state.ratings[sellerId] = H.state.ratings[sellerId].filter(r => r.userId !== u.id);
+        H.state.ratings[sellerId].push({ userId: u.id, rating: rating, at: Date.now() });
+        H.saveState();
+      };
+
+      // Omit 'text' so an existing written review is preserved on rating change.
+      // PostgREST only updates the columns present in the payload on conflict.
+      _sb.from('reviews').upsert({
+        seller_id: sellerId, reviewer_id: u.id,
+        reviewer_name: u.name || 'User', rating: rating
+      }, { onConflict: 'seller_id,reviewer_id' }).then(function(res) {
+        if (res && res.error) {
+          console.warn('Rating DB sync failed:', res.error.message);
+          H.toast('Could not save your rating. Please try again.', 4000, true);
+          return;
+        }
+        _applyLocal();
+        H.toast('Thanks for your rating!');
+        if (H.currentPageName === 'Detail') H.renderPage('Detail', { id: listingId || params.id });
+      }).catch(function(e) {
+        console.warn('Rating save error:', e && e.message);
+        H.toast('Could not save your rating. Please try again.', 4000, true);
+      });
     };
 
     const l = H.state.listings.find(x => x.id === params.id);

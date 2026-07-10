@@ -595,6 +595,11 @@
     c.messages.forEach(m => { if (m.from !== u.id) m.read = true; });
     H.saveState();
     if (typeof H.updateMsgBadge === 'function') H.updateMsgBadge();
+    // WhatsApp-style: opening the conversation clears its tray notification(s)
+    // immediately, and pushes the read flags to the cloud so the sender's ticks
+    // and the server-side unread count ("N new messages") both reset.
+    if (typeof H._clearChatNotifications === 'function') H._clearChatNotifications(id);
+    if (otherId && typeof H.markConversationReadInCloud === 'function') H.markConversationReadInCloud(id, otherId);
     H._activeChat = id;
     if (H._chat) H._chat.replyTarget = null;   // no carried-over reply target
 
@@ -613,9 +618,25 @@
     H._activeOtherId = otherId || '';
     H._activeOtherName = chatDisplayName;
 
+    // ── Render pagination ────────────────────────────────────────────────
+    // Only render the most recent CHAT_WINDOW messages. Very long threads used
+    // to build a DOM node for EVERY message on open, which made opening a big
+    // conversation janky and slow to first paint. We render the latest slice
+    // (instant open, pinned to newest) and reveal older messages in chunks when
+    // the user scrolls to the top (see Chat_after's scroll handler). The FULL
+    // c.messages array is still used for offer-resolution logic below, so
+    // windowing only affects what's painted, never correctness.
+    const CHAT_WINDOW = 30;
+    const _total = c.messages.length;
+    if (H._chatWindow == null || H._chatWindowConv !== id) { H._chatWindow = CHAT_WINDOW; H._chatWindowConv = id; }
+    const _shown = Math.min(H._chatWindow, _total);
+    const _startIdx = Math.max(0, _total - _shown);
+    H._chatHasOlder = _startIdx > 0;
+
     // Date separators between calendar days + ✓/✓✓ receipts on the user's own messages.
     let lastDay = '';
-    const msgs = c.messages.map(function(m, idx) {
+    const msgs = c.messages.slice(_startIdx).map(function(m, _i) {
+      const idx = _startIdx + _i;   // real index into the full array (offer logic)
       let sep = '';
       const dl = chatDayLabel(m.t);
       if (dl !== lastDay) { lastDay = dl; sep = '<div class="chat-datesep"><span>' + escHtml(dl) + '</span></div>'; }
@@ -712,6 +733,7 @@
       + '<div class="chat-thread" id="chatThread"><div class="chat-thread-spacer"></div>'
       + (showBizBrand ? '<div style="margin:10px 16px 4px;padding:12px 16px;background:#EEF2FB;border:1.5px solid #1A3A8F;border-radius:14px"><div style="font-size:13.5px;font-weight:700;color:#1A3A8F">You are messaging ' + escHtml(chatDisplayName) + '</div><div style="font-size:12px;color:var(--sub);margin-top:3px">Replies come from the business, not a personal account</div></div>' : '')
       + (!showBizBrand && c.messages.length < 6 ? '<div class="chat-safety"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div><b>Stay safe.</b> Meet in a public place, inspect the item before you pay, and never send a deposit to someone you don\'t know.</div></div>' : '')
+      + (H._chatHasOlder ? '<div id="chatLoadOlder" style="text-align:center;padding:10px"><button onclick="H._chat.loadOlder()" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:7px 16px;font-size:12.5px;font-weight:600;color:var(--sub);cursor:pointer">Load earlier messages</button></div>' : '')
       + (msgs || '<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:var(--sub)">' + (showBizBrand ? 'Send a message to ' + escHtml(chatDisplayName) + '.' : 'No messages yet. Say hello!') + '</div>')
       + '<div class="chat-typing" id="chatTyping" style="display:none"><div class="chat-row-av">' + otherAvatar + '</div><div class="chat-bubble them chat-typing-bubble"><span></span><span></span><span></span></div></div>'
       + '</div>'
@@ -923,6 +945,24 @@
 
   H._chat = H._chat || {};
   H._pendingChatImages = H._pendingChatImages || [];
+
+  // ----- Pagination: reveal an older chunk, preserving scroll position -----
+  H._chat.loadOlder = function () {
+    if (!H._chatHasOlder) return;
+    var thread = document.getElementById('chatThread');
+    var prevH = thread ? thread.scrollHeight : 0;
+    var prevTop = thread ? thread.scrollTop : 0;
+    H._chatWindow = (H._chatWindow || 30) + 30;
+    if (H.currentPageName === 'Chat') {
+      H.renderPage('Chat', H.currentPageParams);
+      // Keep the viewport anchored on the same message after older ones are
+      // prepended (otherwise the list jumps to the top).
+      requestAnimationFrame(function () {
+        var t2 = document.getElementById('chatThread');
+        if (t2) t2.scrollTop = prevTop + (t2.scrollHeight - prevH);
+      });
+    }
+  };
 
   // ----- Swipe-to-reply -----
   H._chat.startReply = function (msgId) {

@@ -161,13 +161,29 @@ Deno.serve(async (req) => {
     const sa = JSON.parse(saEnv);
     const accessToken = await getFCMAccessToken(sa);
 
-    const title = record.sender_name || 'New message';
-    const body = preview(record.text, !!record.image);
-    const data = { type: 'message', deepLink: 'chat:' + convId, conversationId: convId };
+    const senderName = record.sender_name || 'New message';
+    const latestPreview = preview(record.text, !!record.image);
 
+    // WhatsApp-style grouping: count how many UNREAD messages this recipient has
+    // from this conversation (messages not sent by them, not yet read). One
+    // notification per conversation (tag = conversationId) whose body becomes
+    // "N new messages" once more than one is pending — instead of the tray only
+    // ever showing the single latest line.
     let sent = 0, failed = 0;
     const deadUserIds: string[] = [];
     await Promise.all(tokens.map(async (p: any) => {
+      let title = senderName;
+      let body = latestPreview;
+      try {
+        const cntRes = await db.from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('conversation_id', convId)
+          .neq('sender_id', p.user_id)
+          .eq('read', false);
+        const unread = cntRes && typeof cntRes.count === 'number' ? cntRes.count : 1;
+        if (unread > 1) body = unread + ' new messages';
+      } catch (_) { /* fall back to single-message body */ }
+      const data = { type: 'message', deepLink: 'chat:' + convId, conversationId: convId };
       const r = await sendFCM(p.token, sa['project_id'], accessToken, title, body, data);
       if (r.ok) { sent++; } else { failed++; if (r.invalid) deadUserIds.push(p.user_id); }
     }));

@@ -484,6 +484,30 @@
     if (!rating) { if (H.toast) H.toast('Please select a star rating'); return; }
     const b = getBiz(bizId); if (!b) return;
     const row = { id: H.uid(), bizId: bizId, reviewerId: u.id, reviewerName: u.name || u.phone || 'User', rating: rating, comment: comment || '', createdAt: Date.now() };
+
+    // Persist to the DB FIRST; only commit the local optimistic state and show
+    // success once the server confirms. Previously local state + "Review
+    // submitted" were shown before the write and the write error was swallowed
+    // by catch(e){} — so a silently-rejected upsert (e.g. the missing UPDATE
+    // RLS policy when changing an existing review) left a local-only review
+    // that the next server fetch wiped out ("review disappeared").
+    const sb = window.supabase;
+    if (!sb || typeof sb.from !== 'function') { if (H.toast) H.toast('Connection unavailable — try again'); return; }
+    let saveErr = null;
+    try {
+      const res = await sb.from('business_reviews').upsert(
+        { id: row.id, business_id: bizId, reviewer_id: u.id, reviewer_name: row.reviewerName, rating: rating, comment: row.comment || '' },
+        { onConflict: 'reviewer_id,business_id' }
+      );
+      if (res && res.error) saveErr = res.error.message;
+    } catch (e) { saveErr = (e && e.message) || 'network error'; }
+
+    if (saveErr) {
+      console.warn('business_review save failed:', saveErr);
+      if (H.toast) H.toast('Could not submit your review. Please try again.', 4000, true);
+      return;
+    }
+
     H.state.businessReviews = H.state.businessReviews || {};
     H.state.businessReviews[bizId] = (H.state.businessReviews[bizId] || []).filter(function(r){ return r.reviewerId !== u.id; });
     H.state.businessReviews[bizId].unshift(row);
@@ -493,8 +517,6 @@
     const sec = document.getElementById('shopReviewsSection'); if (sec) sec.innerHTML = _reviewsHtml(b);
     const statsEl = document.getElementById('shopRatingStats'); if (statsEl) statsEl.innerHTML = _ratingStatsHtml(b);
     if (typeof H.pushNotif === 'function') H.pushNotif(b.ownerUserId, 'New review', (u.name || 'Someone') + ' left a ' + rating + '-star review on ' + b.name, 'review');
-    const sb = window.supabase;
-    if (sb) { try { await sb.from('business_reviews').upsert({ id: row.id, business_id: bizId, reviewer_id: u.id, reviewer_name: row.reviewerName, rating: rating, comment: row.comment || '' }, { onConflict: 'reviewer_id,business_id' }); } catch(e) {} }
   };
 
   pages.BusinessShop = function (params) {

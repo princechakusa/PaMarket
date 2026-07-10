@@ -1078,6 +1078,10 @@ window.H = {
     }
     // Leave the per-conversation typing/broadcast channel when exiting Chat
     if (typeof this.leaveChatChannel === 'function') this.leaveChatChannel();
+    // Reset the chat render window so the next conversation opens at its latest
+    // slice (not carrying over a previous long thread's expanded window). Only
+    // when actually navigating AWAY from Chat, not on a same-chat re-render.
+    if (name !== 'Chat') { H._chatWindow = null; H._chatWindowConv = null; }
     // Restore mainArea styles that Chat overrides
     if(area) { area.style.overflowY='auto'; area.style.position=''; }
     const scrollTo=(opts&&opts.scrollTo)||0;
@@ -3147,6 +3151,43 @@ H._routeNotifTapWhenReady = function(data, attempts) {
   } else if (attempts < 40) {
     setTimeout(function(){ H._routeNotifTapWhenReady(data, attempts + 1); }, 250);
   }
+};
+
+// Clear the tray notification(s) for one conversation when it's opened —
+// WhatsApp behaviour. Push and local notifications are both tagged/grouped by
+// conversationId, so we remove any delivered notification whose tag/group or
+// data.conversationId matches. Native-only; a no-op on web.
+H._clearChatNotifications = function(convId) {
+  try {
+    if (!convId) return;
+    var Cap = window.Capacitor;
+    if (!Cap || typeof Cap.isNativePlatform !== 'function' || !Cap.isNativePlatform()) return;
+    var P = Cap.Plugins || {};
+    var match = function(n) {
+      var t = n && (n.tag || n.group || (n.data && n.data.conversationId) || (n.extra && n.extra.conversationId));
+      return t && String(t) === String(convId);
+    };
+    // FCM (background) notifications
+    var PN = P.PushNotifications;
+    if (PN && typeof PN.getDeliveredNotifications === 'function') {
+      PN.getDeliveredNotifications().then(function(res) {
+        var list = (res && res.notifications || []).filter(match);
+        if (list.length && typeof PN.removeDeliveredNotifications === 'function') {
+          PN.removeDeliveredNotifications({ notifications: list }).catch(function(){});
+        }
+      }).catch(function(){});
+    }
+    // Local (foreground-relayed) notifications
+    var LN = P.LocalNotifications;
+    if (LN && typeof LN.getDeliveredNotifications === 'function') {
+      LN.getDeliveredNotifications().then(function(res) {
+        var list = (res && res.notifications || []).filter(match);
+        if (list.length && typeof LN.removeDeliveredNotifications === 'function') {
+          LN.removeDeliveredNotifications({ notifications: list }).catch(function(){});
+        }
+      }).catch(function(){});
+    }
+  } catch (e) { /* best-effort */ }
 };
 
 H._handleNotifTap = function(data) {
