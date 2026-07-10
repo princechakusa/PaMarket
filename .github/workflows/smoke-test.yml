@@ -1,0 +1,33 @@
+name: Live Site Smoke Test
+
+on:
+  workflow_run:
+    workflows: ["Deploy to GitHub Pages"]
+    types: [completed]
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    # After a deploy, only test if the deploy actually succeeded.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
+        run: |
+          npm i --no-save playwright@1.61.1
+          npx playwright install --with-deps chromium
+
+      - name: Wait for CDN propagation
+        if: ${{ github.event_name == 'workflow_run' }}
+        run: sleep 60
+
+      - name: Run smoke checks against live site
+        run: node tools/smoke-test.js https://pamarketzw.com
