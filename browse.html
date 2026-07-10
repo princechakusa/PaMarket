@@ -749,9 +749,14 @@ function updateHero(){
 
   document.getElementById('rentalBanner').classList.toggle('hidden',state.cat!=='vehicles');
 
+  // The shared header (stamped by tools/build-includes.js) may not carry
+  // these ids — never let a missing element kill init, which blocks
+  // runQuery() and leaves the whole browse page stuck on "Loading…".
   const postAdHref='post-ad'+(state.cat==='vehicles'?'?type=vehicles':'');
-  document.getElementById('postAdBtn').href=postAdHref;
-  document.getElementById('postAdBtnMob').href=postAdHref;
+  const postAdBtn=document.getElementById('postAdBtn');
+  if(postAdBtn)postAdBtn.href=postAdHref;
+  const postAdBtnMob=document.getElementById('postAdBtnMob');
+  if(postAdBtnMob)postAdBtnMob.href=postAdHref;
 }
 
 function highlightCatNav(){
