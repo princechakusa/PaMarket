@@ -216,13 +216,14 @@ window.doSearch = window.doSearch || function(){
   <div id="dbContent" class="hidden">
     <div class="db-tiles" id="dbTiles"></div>
 
-    <!-- Admin-only platform overview -->
-    <div id="dbAdmin" class="db-adminbar hidden">
-      <h2>Platform overview</h2>
-      <div class="sub">Marketplace-wide figures &amp; website (Paynow) revenue. Visible to admins only.</div>
-      <div class="db-admin-tiles" id="dbAdminTiles"></div>
-      <div class="db-rev" id="dbRev"></div>
-    </div>
+    <!-- Admin-only: link to the full console -->
+    <a id="dbAdmin" class="db-adminbar hidden" href="admin" style="display:none;align-items:center;justify-content:space-between;gap:14px;text-decoration:none">
+      <div>
+        <h2>Admin Console →</h2>
+        <div class="sub">Platform stats, website revenue and ad management.</div>
+      </div>
+      <span class="btn" style="background:var(--gold);color:#1F2937;font-weight:800;flex-shrink:0">Open console</span>
+    </a>
 
     <div class="db-section">
       <h2>My Listings</h2>
@@ -443,38 +444,17 @@ window.doSearch = window.doSearch || function(){
   $('boostClose').addEventListener('click',function(){boostOverlay.classList.add('hidden');});
   boostOverlay.addEventListener('click',function(e){if(e.target===boostOverlay)boostOverlay.classList.add('hidden');});
 
-  // ── Admin overview ──
-  function renderAdmin(stats){
-    if(!stats)return;
-    $('dbAdmin').classList.remove('hidden');
-    var tiles=[
-      {n:Number(stats.listings_active||0).toLocaleString(),l:'Active listings'},
-      {n:Number(stats.businesses_active||0).toLocaleString(),l:'Active shops'},
-      {n:Number(stats.users_total||0).toLocaleString(),l:'Registered users'},
-      {n:Number(stats.jobs_active||0).toLocaleString(),l:'Active jobs'}
-    ];
-    $('dbAdminTiles').innerHTML=tiles.map(function(t){return '<div class="db-admin-tile"><div class="n">'+t.n+'</div><div class="l">'+t.l+'</div></div>';}).join('');
-    var byProd=stats.revenue_by_product||{};
-    var chips='<div class="chip">Total revenue: <b>$'+Number(stats.revenue_total||0).toLocaleString()+'</b></div>'+
-      '<div class="chip">Last 7 days: <b>$'+Number(stats.revenue_7d||0).toLocaleString()+'</b></div>'+
-      '<div class="chip">Paid orders: <b>'+Number(stats.payments_count||0).toLocaleString()+'</b></div>'+
-      Object.keys(byProd).map(function(k){return '<div class="chip">'+esc(PRODUCT_LABEL[k]||k)+': <b>$'+Number(byProd[k]||0).toLocaleString()+'</b></div>';}).join('');
-    $('dbRev').innerHTML=chips;
-  }
-
   var SPENT=0, PAYMENTS=[];
   Promise.all([
     PM.fetchMyListings(),
     PM.fetchMyPayments(),
     PM.fetchApplicationsForEmployer(),
-    PM.currentUserRole(),
-    PM.fetchPlatformStats()
+    PM.currentUserRole()
   ]).then(function(r){
     LISTINGS=r[0]||[];
     PAYMENTS=r[1]||[];
     var apps=r[2]||[];
     var role=r[3]||'user';
-    var stats=r[4];
     SPENT=PAYMENTS.filter(function(p){return p.status==='consumed';}).reduce(function(a,p){return a+(Number(p.amount_usd)||0);},0);
 
     $('dbLoading').classList.add('hidden');
@@ -483,7 +463,8 @@ window.doSearch = window.doSearch || function(){
     renderListings();
     renderPayments();
     if(apps.length){$('dbApplyWrap').style.display='';$('dbApplyCount').textContent=apps.length;}
-    if(role==='admin'&&stats)renderAdmin(stats);
+    // Admins get a link to the full console (stats + ads live there now).
+    if(role==='admin'){var a=$('dbAdmin');a.classList.remove('hidden');a.style.display='flex';}
   }).catch(function(){
     $('dbLoading').textContent='Could not load your dashboard. Please refresh.';
   });
