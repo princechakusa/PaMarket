@@ -547,7 +547,23 @@
   pages.Chat = function ({ id }) {
     try {
     const c = conversations().find(x => x.id === id);
-    if (!c) return '<div class="page active">' + H.innerTopbar('Chat') + '<div class="empty-state"><div class="empty-title">Conversation not found</div></div></div>';
+    if (!c) {
+      // Not in local cache yet — e.g. opened straight from a push notification
+      // on a cold start before conversations synced. Show a light loading state
+      // and pull this specific conversation; re-render in place once it lands,
+      // instead of dead-ending on "Conversation not found".
+      if (typeof H.syncConversations === 'function' && !H._chatFetchPending) {
+        H._chatFetchPending = id;
+        H.syncConversations({ silent: true, convId: id }).then(function () {
+          H._chatFetchPending = null;
+          if (H.currentPageName === 'Chat' && H.currentPageParams && H.currentPageParams.id === id) {
+            H.renderPage('Chat', H.currentPageParams);
+          }
+        }).catch(function () { H._chatFetchPending = null; });
+      }
+      return '<div class="page active">' + H.innerTopbar('Chat')
+        + '<div class="empty-state" style="padding-top:60px"><div class="empty-title" style="color:var(--sub)">Loading conversation…</div></div></div>';
+    }
     const u = currentUser();
     if (!u) {
       return `<div class="page active">${H.innerTopbar('Chat')}

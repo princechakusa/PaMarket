@@ -164,11 +164,16 @@ Deno.serve(async (req) => {
     const senderName = record.sender_name || 'New message';
     const latestPreview = preview(record.text, !!record.image);
 
-    // WhatsApp-style grouping: count how many UNREAD messages this recipient has
-    // from this conversation (messages not sent by them, not yet read). One
-    // notification per conversation (tag = conversationId) whose body becomes
-    // "N new messages" once more than one is pending — instead of the tray only
-    // ever showing the single latest line.
+    // WhatsApp-style grouping: when the OTHER person fires off a quick burst,
+    // the tray shows one entry that says "N new messages". The count must be
+    // "new messages in this burst", NOT lifetime-unread — an earlier version
+    // counted every read=false message ever, so a single new message showed as
+    // "6 new messages" if 5 old ones had never been opened. We instead count
+    // only messages from the last 2 minutes (the sender + any others in the
+    // same short window), which is what a real burst looks like. A lone message
+    // (count 1) keeps the normal single-line preview.
+    const RECENT_MS = 2 * 60 * 1000;
+    const sinceIso = new Date(Date.now() - RECENT_MS).toISOString();
     let sent = 0, failed = 0;
     const deadUserIds: string[] = [];
     await Promise.all(tokens.map(async (p: any) => {
@@ -179,9 +184,10 @@ Deno.serve(async (req) => {
           .select('id', { count: 'exact', head: true })
           .eq('conversation_id', convId)
           .neq('sender_id', p.user_id)
-          .eq('read', false);
-        const unread = cntRes && typeof cntRes.count === 'number' ? cntRes.count : 1;
-        if (unread > 1) body = unread + ' new messages';
+          .eq('read', false)
+          .gte('created_at', sinceIso);
+        const recent = cntRes && typeof cntRes.count === 'number' ? cntRes.count : 1;
+        if (recent > 1) body = recent + ' new messages';
       } catch (_) { /* fall back to single-message body */ }
       const data = { type: 'message', deepLink: 'chat:' + convId, conversationId: convId };
       const r = await sendFCM(p.token, sa['project_id'], accessToken, title, body, data);

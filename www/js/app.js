@@ -203,6 +203,8 @@ window.H = {
         savedSearches:   Array.isArray(loaded.savedSearches)   ? loaded.savedSearches   : base.savedSearches,
         followedBusinesses: Array.isArray(loaded.followedBusinesses) ? loaded.followedBusinesses : base.followedBusinesses,
         businesses:      Array.isArray(loaded.businesses)      ? loaded.businesses      : base.businesses,
+        ratings:         loaded.ratings && typeof loaded.ratings === 'object' ? loaded.ratings : (base.ratings || {}),
+        businessReviews: loaded.businessReviews && typeof loaded.businessReviews === 'object' ? loaded.businessReviews : (base.businessReviews || {}),
       });
       merged._v = this.STATE_VERSION;
       // Purge any legacy plain-text passwords that may exist in old snapshots
@@ -236,6 +238,11 @@ window.H = {
         followedBusinesses: this.state.followedBusinesses || [],
         deletedConvIds:    (this.state.deletedConvIds    || []).slice(0, 300),
         deletedConvMeta:    this.state.deletedConvMeta   || {},
+        // Seller/shop ratings the user has interacted with. Persisted so a
+        // user's own selected star rating survives a refresh/restart instead of
+        // resetting to empty before the server re-fetch lands.
+        ratings:            this.state.ratings           || {},
+        businessReviews:    this.state.businessReviews   || {},
       };
 
       // Current user's profile only (needed for instant Account page render).
@@ -3411,12 +3418,24 @@ H.openAppRating = function() {
       // the general 20-row discovery window.
       PN.addListener('pushNotificationActionPerformed', function(action) {
         var data = (action && action.notification && action.notification.data) || {};
+        // Route to the chat IMMEDIATELY — do not wait for syncConversations.
+        // pages.Chat opens instantly from cached state, and if the conversation
+        // isn't cached yet it shows a lightweight loading state rather than a
+        // wrong screen. Waiting on the network sync first caused the "tap →
+        // brief flicker/other screen → chat" delay from a locked/cold start.
+        // The sync then runs in the BACKGROUND to backfill any missing messages
+        // and re-renders in place when it lands.
+        H._routeNotifTapWhenReady(data);
         if (data.type === 'message' && typeof H.syncConversations === 'function') {
           H.syncConversations({ silent: true, convId: data.conversationId || null })
-            .catch(function(){})
-            .then(function(){ H._routeNotifTapWhenReady(data); });
-        } else {
-          H._routeNotifTapWhenReady(data);
+            .then(function(){
+              if (H.currentPageName === 'Chat' && H.currentPageParams &&
+                  H.currentPageParams.id === data.conversationId &&
+                  !(H._userIsTyping && H._userIsTyping())) {
+                H.renderPage('Chat', H.currentPageParams);
+              }
+            })
+            .catch(function(){});
         }
       });
     }

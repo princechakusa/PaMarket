@@ -343,15 +343,25 @@
     // Reaching a valid listing clears any stale not-found marker.
     if (H._detailFetchFailed === params.id) H._detailFetchFailed = null;
 
-    // Fetch ratings from Supabase once per seller per session so the star display
-    // is never stuck on stale local state. Re-renders only when data changed.
+    // Fetch ratings from Supabase so the star display is never stuck on stale
+    // local state. Re-renders in place when data lands.
     (function() {
       const _sb = window.supabase;
       const _sellerId = l.sellerId || l.seller_id;
       if (!_sb || !_sellerId) return;
+      const _me = H.currentUser && H.currentUser();
+      // Do we already have THIS user's own rating for THIS seller cached?
+      const _cached = (H.state.ratings && H.state.ratings[_sellerId]) || [];
+      const _haveMine = _me && _cached.some(function(r){ return r.userId === _me.id; });
+      // Only apply the 2-minute throttle when we already have the user's own
+      // rating in hand. Previously the throttle timestamp (a session var) could
+      // survive a page refresh while H.state.ratings did NOT — so the refetch
+      // was skipped while the data was gone, and the user's selected stars
+      // "reset". If our own rating isn't cached, always refetch regardless of
+      // the throttle so it comes back after a refresh.
       H._ratingsFetched = H._ratingsFetched || {};
       const _lastRF = H._ratingsFetched[_sellerId];
-      if (_lastRF && (Date.now() - _lastRF) < 120000) return;
+      if (_haveMine && _lastRF && (Date.now() - _lastRF) < 120000) return;
       H._ratingsFetched[_sellerId] = Date.now();
       _sb.from('reviews').select('reviewer_id,rating,created_at').eq('seller_id', _sellerId)
         .then(function(res) {
