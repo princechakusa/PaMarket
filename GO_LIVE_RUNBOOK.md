@@ -117,14 +117,48 @@ them in `/applications` → they get "You've been shortlisted".
 
 ---
 
-## 4. Make yourself an admin (for the dashboard's platform overview)
+## 4. Make yourself an admin (for the admin console)
 
 In Supabase → Table Editor → `profiles`, set your own row's `role` to
-`admin`. Then `/dashboard` shows the Platform Overview bar (active
-listings/shops/users/jobs + Paynow revenue). Non-admins never see it.
+`admin`. Then the **Admin Console** at `/admin` opens — platform stats,
+website (Paynow) revenue, and the **Ads manager** (create banners /
+spotlights / announcements / half-screen ads, schedule them, pause/delete).
+An "Admin Console" link also appears in your account menu.
 
-**If skipped:** you just don't see the admin panel; your personal seller
-dashboard still works.
+**If skipped:** `/admin` shows an "admins only" gate; the rest of the site
+is unaffected. (Ad *writes* are also enforced server-side by RLS, so a
+non-admin can never create ads even if they open the page.)
+
+---
+
+## 4b. Fix website image uploads (redeploy get-r2-upload-url + R2 CORS)
+
+Uploading photos when posting on the **website** was failing because the
+image-upload Edge Function's CORS allowlist didn't include the website
+domain (only the app's). Fixed in code — you must redeploy it:
+
+```
+supabase functions deploy get-r2-upload-url
+```
+
+If images STILL fail to upload after that, the second layer is the
+Cloudflare **R2 bucket's own CORS policy** (the browser PUTs the file
+straight to R2). In the Cloudflare dashboard → R2 → your public bucket →
+Settings → CORS Policy, ensure it allows the website origin, e.g.:
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://pamarketzw.com", "https://www.pamarketzw.com"],
+    "AllowedMethods": ["PUT", "GET"],
+    "AllowedHeaders": ["Content-Type"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+(Keep any existing app entries too.) **If skipped:** text posting works
+but photos won't attach on the website.
 
 ---
 
@@ -148,7 +182,9 @@ differ (app = Play, website = Paynow), which is correct and allowed.
 | Boost / featured-slot / job-credit **placement** | ✅ | — |
 | Boost / slots / credits **purchase** | — | §1 + §2 (Paynow) |
 | Application emails | — | §1 not needed; §3 (Resend) |
-| Admin platform revenue view | — | §1 (RPC) + §4 (role) |
+| Admin console + platform revenue | — | §4 (role); §1 RPC for revenue |
+| Admin **ad management** | ✅ (after §4 role) | — (paid_ads RLS already exists) |
+| Website **image upload** when posting | — | §4b (redeploy fn + R2 CORS) |
 
 ---
 

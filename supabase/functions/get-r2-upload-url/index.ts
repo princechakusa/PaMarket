@@ -4,6 +4,8 @@ import { getSignedUrl } from 'npm:@aws-sdk/s3-request-presigner'
 
 // Allowed request origins — tightened from wildcard (*)
 const ALLOWED_ORIGINS = new Set([
+  'https://pamarketzw.com',      // public website (image upload when posting)
+  'https://www.pamarketzw.com',
   'https://pamarket.app',
   'https://www.pamarket.app',
   'com.pamarket.app',       // Capacitor deep-link scheme treated as origin
@@ -12,9 +14,14 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:3000',
 ])
 
+// The fallback ACAO when an origin isn't in the set. The website is the
+// browser client that actually needs CORS (the Android app isn't subject to
+// it), so fall back to the website origin rather than the app scheme.
+const FALLBACK_ORIGIN = 'https://pamarketzw.com'
+
 function corsHeaders(req: Request) {
   const origin = req.headers.get('origin') ?? ''
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarket.app'
+  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : FALLBACK_ORIGIN
   return {
     'Access-Control-Allow-Origin': allowed,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
