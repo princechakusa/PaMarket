@@ -552,7 +552,7 @@ if(cityQ){
 }
 
 document.getElementById('jobCardsGrid').innerHTML=skeletons(6);
-PM.fetchJobs({limit:12,q:searchQ||undefined,city:cityQ||undefined}).then(jobs=>{
+PM.fetchJobs({featuredFirst:true,limit:12,q:searchQ||undefined,city:cityQ||undefined}).then(jobs=>{
   const grid=document.getElementById('jobCardsGrid');
   if(!jobs||!jobs.length){
     grid.innerHTML='<div class="empty-jobs">No jobs posted yet'+(searchQ?' for "'+searchQ+'"':'')+(cityQ?' in '+cityQ:'')+'. Check back soon or <a href="jobs" style="color:var(--navy);font-weight:700">clear your search</a>.</div>';

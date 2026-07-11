@@ -33,8 +33,7 @@
 
   // ── General listings (public.listings) ──────────────────────────
   // opts: { category, q, province, city, limit, offset, order }
-  function fetchListings(opts) {
-    opts = opts || {};
+  function listingFilters(opts) {
     var qp = ['status=eq.active'];
     if (opts.category) qp.push('category=eq.' + esc(opts.category));
     if (opts.province) qp.push('province=ilike.*' + esc(opts.province) + '*');
@@ -43,11 +42,37 @@
     if (opts.businessId) qp.push('business_id=eq.' + esc(opts.businessId));
     if (opts.sellerId) qp.push('seller_id=eq.' + esc(opts.sellerId));
     if (opts.subcat) qp.push('attributes->>subcat=eq.' + esc(opts.subcat));
-    qp.push('select=id,title,price,currency,category,province,city,suburb,photos,created_at,boost');
+    return qp;
+  }
+  var LISTING_SELECT = 'select=id,title,price,currency,category,province,city,suburb,photos,created_at,boost,featured_until';
+
+  function fetchListings(opts) {
+    opts = opts || {};
+    var limit = opts.limit || 24;
+    var qp = listingFilters(opts);
+    qp.push(LISTING_SELECT);
     qp.push('order=' + (opts.order || 'created_at.desc'));
-    qp.push('limit=' + (opts.limit || 24));
+    qp.push('limit=' + limit);
     if (opts.offset) qp.push('offset=' + opts.offset);
-    return pgFetch('listings?' + qp.join('&'));
+    var base = pgFetch('listings?' + qp.join('&'));
+    // featuredFirst: paid boosts (featured_until in the future) rank above
+    // organic results on the first page — this is the placement the app's
+    // Play Billing boosts and the website's Paynow boosts sell. Only applied
+    // to the default-ordered first page: an explicit sort or a deeper page
+    // keeps pure chronology so pagination never duplicates rows.
+    if (!opts.featuredFirst || opts.order || opts.offset) return base;
+    var fqp = listingFilters(opts);
+    fqp.push('featured_until=gt.' + encodeURIComponent(new Date().toISOString()));
+    fqp.push(LISTING_SELECT);
+    fqp.push('order=featured_until.desc');
+    fqp.push('limit=' + limit);
+    return Promise.all([pgFetch('listings?' + fqp.join('&')).catch(function () { return []; }), base])
+      .then(function (results) {
+        var featured = results[0] || [], rest = results[1] || [];
+        var seen = {};
+        featured.forEach(function (l) { seen[l.id] = true; });
+        return featured.concat(rest.filter(function (l) { return !seen[l.id]; })).slice(0, limit);
+      });
   }
 
   function fetchListingById(id) {
@@ -138,16 +163,37 @@
   }
 
   // ── Job listings (category = 'jobs' on public.listings) ──────────
-  function fetchJobs(opts) {
-    opts = opts || {};
+  function jobFilters(opts) {
     var qp = ['status=eq.active', 'category=eq.jobs'];
     if (opts.q) qp.push('title=ilike.*' + esc(opts.q) + '*');
     if (opts.city) qp.push('city=ilike.*' + esc(opts.city) + '*');
     if (opts.province) qp.push('province=ilike.*' + esc(opts.province) + '*');
-    qp.push('select=id,title,price,currency,city,province,attributes,created_at,seller_name');
+    return qp;
+  }
+  var JOB_SELECT = 'select=id,title,price,currency,city,province,attributes,created_at,seller_name,featured_until';
+
+  function fetchJobs(opts) {
+    opts = opts || {};
+    var limit = opts.limit || 12;
+    var qp = jobFilters(opts);
+    qp.push(JOB_SELECT);
     qp.push('order=' + (opts.order || 'created_at.desc'));
-    qp.push('limit=' + (opts.limit || 12));
-    return pgFetch('listings?' + qp.join('&'));
+    qp.push('limit=' + limit);
+    var base = pgFetch('listings?' + qp.join('&'));
+    // Boosted job posts rank first — same paid placement as fetchListings.
+    if (!opts.featuredFirst || opts.order) return base;
+    var fqp = jobFilters(opts);
+    fqp.push('featured_until=gt.' + encodeURIComponent(new Date().toISOString()));
+    fqp.push(JOB_SELECT);
+    fqp.push('order=featured_until.desc');
+    fqp.push('limit=' + limit);
+    return Promise.all([pgFetch('listings?' + fqp.join('&')).catch(function () { return []; }), base])
+      .then(function (results) {
+        var featured = results[0] || [], rest = results[1] || [];
+        var seen = {};
+        featured.forEach(function (l) { seen[l.id] = true; });
+        return featured.concat(rest.filter(function (l) { return !seen[l.id]; })).slice(0, limit);
+      });
   }
 
   // ── Public user profiles (public.profiles_public) ─────────────────
@@ -422,6 +468,55 @@
     return e;
   }
 
+  // ── Paynow listing boosts (website checkout) ─────────────────────
+  // Prices MUST match the app's Google Play products (www/js/
+  // billing-products.js) and the server catalogue (supabase/functions/
+  // _shared/paynow.ts) — the server is authoritative; these are for the
+  // picker UI only.
+  var BOOST_PRODUCTS = [
+    { productId: 'boost_1day',  days: 1,  label: '1 day',   tag: '',           priceUsd: 2 },
+    { productId: 'boost_7day',  days: 7,  label: '7 days',  tag: 'Popular',    priceUsd: 10 },
+    { productId: 'boost_30day', days: 30, label: '30 days', tag: 'Best value', priceUsd: 30 },
+  ];
+  var JOB_BOOST_PRODUCTS = [
+    { productId: 'job_boost_7day',  days: 7,  label: '7 days',  tag: '',           priceUsd: 8 },
+    { productId: 'job_boost_30day', days: 30, label: '30 days', tag: 'Best value', priceUsd: 20 },
+  ];
+
+  // Starts a Paynow checkout for a boost. Resolves { paymentId, redirectUrl }
+  // — the caller redirects the browser to redirectUrl (Paynow hosted page).
+  function createBoostPayment(listingId, productId) {
+    var s = getSession();
+    if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
+    return fetch(SB_URL + '/functions/v1/paynow-create-payment', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listingId: listingId, productId: productId }),
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (j) {
+        if (!res.ok || !j.ok) throw new Error(j.error || ('payment failed: ' + res.status));
+        return j;
+      });
+    });
+  }
+
+  // Asks the server to re-verify a payment with Paynow. Resolves
+  // { state: 'pending'|'boosted'|'cancelled'|'failed', until? }.
+  function checkBoostPayment(paymentId) {
+    var s = getSession();
+    if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
+    return fetch(SB_URL + '/functions/v1/paynow-check-payment', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentId: paymentId }),
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (j) {
+        if (!res.ok || !j.ok) throw new Error(j.error || ('check failed: ' + res.status));
+        return j;
+      });
+    });
+  }
+
   function money(n, currency) {
     var num = Number(n) || 0;
     return (currency === 'ZWG' ? 'ZWG ' : '$') + num.toLocaleString();
@@ -462,4 +557,9 @@
   // Website posting (create listing + R2 image upload).
   global.PM.createListing = createListing;
   global.PM.uploadListingPhoto = uploadListingPhoto;
+  // Paynow boost checkout (website twin of the app's Play Billing boosts).
+  global.PM.BOOST_PRODUCTS = BOOST_PRODUCTS;
+  global.PM.JOB_BOOST_PRODUCTS = JOB_BOOST_PRODUCTS;
+  global.PM.createBoostPayment = createBoostPayment;
+  global.PM.checkBoostPayment = checkBoostPayment;
 })(window);

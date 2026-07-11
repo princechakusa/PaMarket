@@ -1070,7 +1070,8 @@ function lcard(listing,idx){
   const photo=listing.photos&&listing.photos.length?listing.photos[0]:null;
   const loc=[listing.suburb,listing.city].filter(Boolean).join(', ')||listing.province||'Zimbabwe';
   const isNew=(Date.now()-new Date(listing.created_at).getTime())<86400000*3;
-  const badge=listing.boost?'FEATURED':(isNew?'NEW':'');
+  const isFeatured=listing.featured_until&&new Date(listing.featured_until)>new Date();
+  const badge=isFeatured?'FEATURED':(isNew?'NEW':'');
   const b=badge?`<div class="lcard-badge ${badge==='NEW'?'badge-new':badge==='FEATURED'?'badge-feat':'badge-hot'}">${badge}</div>`:'';
   const img=photo
     ?`<img class="lcard-img-inner" src="${photo}" alt="${listing.title.replace(/"/g,'&quot;')}" loading="lazy">`
@@ -1108,16 +1109,16 @@ function lazySection(elId,loader){
 
 // Above the fold: electronics loads eagerly. Everything below loads as the
 // user scrolls — cuts initial Supabase calls roughly in half.
-PM.fetchListings({category:'electronics',limit:8}).then(l=>renderCards('elCards',l)).catch(()=>renderCards('elCards',[]));
+PM.fetchListings({category:'electronics',featuredFirst:true,limit:8}).then(l=>renderCards('elCards',l)).catch(()=>renderCards('elCards',[]));
 // Vehicles + rentals load together: the rental section starts hidden (no
 // layout box, unobservable), and it directly follows the vehicles section.
 lazySection('vCards',()=>{
-  PM.fetchListings({category:'vehicles',limit:8}).then(l=>renderCards('vCards',l)).catch(()=>renderCards('vCards',[]));
+  PM.fetchListings({category:'vehicles',featuredFirst:true,limit:8}).then(l=>renderCards('vCards',l)).catch(()=>renderCards('vCards',[]));
   loadRentalHighlights();
 });
-lazySection('pCards',()=>PM.fetchListings({category:'property',limit:8}).then(l=>renderCards('pCards',l)).catch(()=>renderCards('pCards',[])));
+lazySection('pCards',()=>PM.fetchListings({category:'property',featuredFirst:true,limit:8}).then(l=>renderCards('pCards',l)).catch(()=>renderCards('pCards',[])));
 [['fashionCards','fashion'],['furnitureCards','furniture'],['agricultureCards','agriculture'],['servicesCards','services'],['roomsCards','rooms'],['petsCards','pets'],['kidsCards','kids']].forEach(([elId,cat])=>{
-  lazySection(elId,()=>PM.fetchListings({category:cat,limit:8}).then(l=>renderCards(elId,l)).catch(()=>renderCards(elId,[])));
+  lazySection(elId,()=>PM.fetchListings({category:cat,featuredFirst:true,limit:8}).then(l=>renderCards(elId,l)).catch(()=>renderCards(elId,[])));
 });
 
 // Rental Highlights — only shown when there's at least one live rental to feature.
@@ -1218,7 +1219,7 @@ function jobCard(job){
   </a>`;
 }
 
-lazySection('jobCards',()=>PM.fetchJobs({limit:8}).then(jobs=>{
+lazySection('jobCards',()=>PM.fetchJobs({featuredFirst:true,limit:8}).then(jobs=>{
   const el=document.getElementById('jobCards');
   if(!jobs||!jobs.length){el.innerHTML='<div style="padding:20px;color:var(--mute);font-size:13.5px">No jobs posted yet — check back soon.</div>';return}
   el.innerHTML=jobs.map(jobCard).join('');

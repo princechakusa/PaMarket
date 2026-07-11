@@ -610,7 +610,8 @@ function gcard(listing,idx){
   const photo=listing.photos&&listing.photos.length?listing.photos[0]:null;
   const loc=[listing.suburb,listing.city].filter(Boolean).join(', ')||listing.province||'Zimbabwe';
   const isNew=(Date.now()-new Date(listing.created_at).getTime())<86400000*3;
-  const badge=isNew?'<div class="gcard-badge">NEW</div>':'';
+  const isFeatured=listing.featured_until&&new Date(listing.featured_until)>new Date();
+  const badge=isFeatured?'<div class="gcard-badge badge-feat">FEATURED</div>':(isNew?'<div class="gcard-badge">NEW</div>':'');
   const img=photo
     ?`<img src="${photo}" alt="${listing.title.replace(/"/g,'&quot;')}" loading="lazy">`
     :`<div class="gcard-img-ph" style="color:${tc}">${listing.title.split(' ').slice(0,3).join('<br>')}</div>`;
@@ -782,7 +783,10 @@ async function runQuery(append){
       rows=await PM.fetchBusinesses({q:state.q||undefined,limit:PAGE_SIZE,offset:state.offset});
       cardFn=bcard;
     }else{
-      rows=await PM.fetchListings({category:state.cat||undefined,subcat:state.sub||undefined,q:state.q||undefined,province:state.prov||undefined,city:state.city||undefined,businessId:state.business||undefined,order:state.sort,limit:PAGE_SIZE,offset:state.offset});
+      // Default "newest" sort gets paid boosts pinned first (featuredFirst);
+      // an explicit sort choice (price etc.) is respected untouched.
+      const defaultSort=state.sort==='created_at.desc';
+      rows=await PM.fetchListings({category:state.cat||undefined,subcat:state.sub||undefined,q:state.q||undefined,province:state.prov||undefined,city:state.city||undefined,businessId:state.business||undefined,order:defaultSort?undefined:state.sort,featuredFirst:defaultSort,limit:PAGE_SIZE,offset:state.offset});
       cardFn=gcard;
     }
     if(!append)grid.innerHTML='';
