@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Your PaMarket dashboard — listing views, boosts, spending and applications.">
+<title>My Dashboard — PaMarket Zimbabwe</title>
+<link rel="canonical" href="https://pamarketzw.com/dashboard">
+<link rel="icon" href="img/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#1A3A8F;--navy-deep:#0F2460;--navy-mid:#1E4BB8;
+  --gold:#E8A33D;--ink:#0F172A;--sub:#475569;--mute:#94A3B8;
+  --line:#E2E8F0;--paper:#F8FAFC;--white:#FFFFFF;--green:#16A34A;--red:#DC2626;
+}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--paper);font-size:15px;line-height:1.6}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer}
+.hidden{display:none!important}
+
+.db-wrap{max-width:1000px;margin:0 auto;padding:26px 24px 80px}
+.db-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.db-head h1{font-size:26px;font-weight:900;letter-spacing:-.02em}
+.db-head p{font-size:14px;color:var(--sub);margin-top:4px}
+
+.db-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
+.db-tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.db-tile .n{font-size:26px;font-weight:900;letter-spacing:-.02em;color:var(--navy)}
+.db-tile .l{font-size:12.5px;color:var(--mute);margin-top:2px;font-weight:600}
+
+.db-section{margin-top:34px}
+.db-section h2{font-size:19px;font-weight:800;letter-spacing:-.01em;margin-bottom:4px}
+.db-section .sub{font-size:13.5px;color:var(--sub);margin-bottom:16px}
+
+.db-tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
+table.db-tbl{width:100%;border-collapse:collapse;min-width:640px}
+.db-tbl th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);font-weight:800;padding:12px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+.db-tbl td{padding:13px 16px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle}
+.db-tbl tr:last-child td{border-bottom:none}
+.db-tbl .t-title{font-weight:700;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.db-tbl .t-title:hover{color:var(--navy)}
+.pill{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em}
+.pill.active{background:#DCFCE7;color:#166534}
+.pill.sold{background:#E0E7FF;color:#3730A3}
+.pill.pending{background:#FEF3C7;color:#92400E}
+.pill.deleted{background:#FEE2E2;color:#991B1B}
+.pill.feat{background:var(--gold);color:#fff}
+.db-act{display:flex;gap:7px;flex-wrap:wrap}
+.db-act button,.db-act a{font-size:12.5px;font-weight:700;padding:6px 11px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--ink)}
+.db-act .b-boost{background:var(--navy);color:#fff;border-color:var(--navy)}
+.db-act button:disabled{opacity:.5}
+
+.db-empty{background:#fff;border:1px dashed var(--line);border-radius:14px;padding:34px;text-align:center;color:var(--sub)}
+.db-empty a{color:var(--navy);font-weight:700}
+
+.db-adminbar{background:linear-gradient(135deg,var(--navy-deep),var(--navy-mid));color:#fff;border-radius:16px;padding:22px 24px;margin-top:34px}
+.db-adminbar h2{font-size:18px;font-weight:800;color:#fff}
+.db-adminbar .sub{color:#A8C0EC;font-size:13px;margin-top:3px}
+.db-admin-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.db-admin-tile{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:14px 16px}
+.db-admin-tile .n{font-size:22px;font-weight:900;color:#fff}
+.db-admin-tile .l{font-size:11.5px;color:#A8C0EC;margin-top:2px;font-weight:600}
+.db-rev{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.db-rev .chip{background:rgba(255,255,255,.10);border-radius:9px;padding:8px 12px;font-size:12.5px;color:#EAF1FF}
+.db-rev .chip b{color:#fff}
+
+.db-gate{text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:48px 26px;margin-top:26px}
+.db-gate h2{font-size:20px;font-weight:900;margin-bottom:8px}
+.db-gate p{font-size:14px;color:var(--sub);max-width:420px;margin:0 auto 18px;line-height:1.6}
+
+.boost-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px}
+.boost-modal{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:26px;position:relative}
+.boost-modal h3{font-size:18px;font-weight:900}
+.boost-modal .bm-sub{font-size:13px;color:var(--sub);margin-top:5px;line-height:1.55}
+.boost-close{position:absolute;top:14px;right:14px;background:none;border:none;font-size:22px;color:var(--mute);cursor:pointer;line-height:1}
+.boost-opts{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.boost-opt{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;background:#fff;font-family:inherit;text-align:left}
+.boost-opt:hover{border-color:var(--navy)}
+.boost-opt .bo-days{font-size:15px;font-weight:800}
+.boost-opt .bo-tag{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;background:#FEF3C7;color:#92400E;padding:3px 8px;border-radius:12px}
+.boost-opt .bo-price{margin-left:auto;font-size:17px;font-weight:900;color:var(--navy)}
+.boost-pay-note{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:12px;color:var(--mute)}
+
+@media(max-width:820px){.db-tiles{grid-template-columns:repeat(2,1fr)}.db-admin-tiles{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<!-- HEADER:START -->
+<!-- ============================================================
+     PaMarket shared header — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the HEADER:START/END markers.
+     Styling lives in css/site.css. Do not edit the copies that
+     appear inside individual page files.
+     ============================================================ -->
+<div class="top-bar">
+  <div class="top-bar-w">
+    <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
+    <nav class="top-bar-links" aria-label="Primary">
+      <a href="browse">Browse</a>
+      <a href="advertise">Advertise</a>
+      <a href="contact">Contact Us</a>
+      <a href="blog">Blog</a>
+      <a href="about">About Us</a>
+    </nav>
+  </div>
+</div>
+
+<header id="hdr">
+  <div class="hdr-w">
+    <a href="/" class="logo">Pa<em>Market</em></a>
+    <div class="search-bar">
+      <select class="search-cat" id="hCat" aria-label="Category">
+        <option value="">All Categories</option>
+        <option value="property">Property</option><option value="vehicles">Vehicles</option><option value="electronics">Electronics</option>
+        <option value="jobs">Jobs</option><option value="furniture">Furniture</option><option value="fashion">Fashion</option>
+        <option value="services">Services</option><option value="agriculture">Agriculture</option><option value="rooms">Rooms</option>
+        <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option>
+      </select>
+      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." aria-label="Search" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()" aria-label="Search">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span class="sbtn-lbl">Search</span>
+      </button>
+    </div>
+    <div class="hdr-util">
+      <a href="auth" class="util-btn" title="Notifications" aria-label="Notifications">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="util-lbl">Notifications</span>
+      </a>
+      <a href="auth" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        <span class="util-lbl">My Searches</span>
+      </a>
+      <a href="auth" class="util-btn" title="Favorites" aria-label="Favorites">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        <span class="util-lbl">Favorites</span>
+      </a>
+      <a href="auth" class="util-btn" title="Chats" aria-label="Chats">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="util-lbl">Chats</span>
+      </a>
+      <a href="auth" class="util-btn" title="My Ads" aria-label="My Ads">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+        <span class="util-lbl">My Ads</span>
+      </a>
+    </div>
+    <div class="hdr-right">
+      <a href="auth" class="btn-sign" id="signInBtn">Sign In</a>
+      <a href="post-ad" class="btn-post">+ Post Free Ad</a>
+      <button class="ham" onclick="toggleMob()" aria-label="Menu" aria-expanded="false">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav id="mobNav" class="mob-nav">
+    <a href="/">Home</a>
+    <a href="browse">Browse</a>
+    <a href="advertise">Advertise</a>
+    <a href="contact">Contact Us</a>
+    <a href="blog">Blog</a>
+    <a href="about">About Us</a>
+    <a href="post-ad">+ Post Free Ad</a>
+  </nav>
+</header>
+<script>
+/* Self-contained header behaviour so the partial works on any page
+   regardless of what else the page loads. Guarded so pages that
+   already define these keep their own implementation. */
+window.toggleMob = window.toggleMob || function(){
+  var n = document.getElementById('mobNav');
+  var h = document.querySelector('#hdr .ham');
+  if (!n) return;
+  var open = n.classList.toggle('open');
+  if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+window.doSearch = window.doSearch || function(){
+  var cat = document.getElementById('hCat');
+  var q = document.getElementById('hQ');
+  var p = new URLSearchParams();
+  if (cat && cat.value) p.set('cat', cat.value);
+  if (q && q.value.trim()) p.set('q', q.value.trim());
+  var qs = p.toString();
+  window.location.href = (cat && cat.value === 'jobs' ? 'jobs' : 'browse') + (qs ? '?' + qs : '');
+};
+</script>
+<!-- HEADER:END -->
+
+<div class="db-wrap">
+  <div class="db-head">
+    <div>
+      <h1>My Dashboard</h1>
+      <p id="dbGreeting">Your listings, performance and spending at a glance.</p>
+    </div>
+    <a class="btn btn-navy" href="post-ad" style="flex-shrink:0">+ Post a listing</a>
+  </div>
+
+  <div id="dbGate" class="db-gate hidden">
+    <h2>Sign in to see your dashboard</h2>
+    <p>Track your listing views, boosts and applications in one place.</p>
+    <a class="btn btn-navy" id="dbSignIn" href="auth">Sign In</a>
+  </div>
+
+  <div id="dbLoading" style="text-align:center;color:var(--mute);padding:50px">Loading your dashboard…</div>
+
+  <div id="dbContent" class="hidden">
+    <div class="db-tiles" id="dbTiles"></div>
+
+    <!-- Admin-only platform overview -->
+    <div id="dbAdmin" class="db-adminbar hidden">
+      <h2>Platform overview</h2>
+      <div class="sub">Marketplace-wide figures &amp; website (Paynow) revenue. Visible to admins only.</div>
+      <div class="db-admin-tiles" id="dbAdminTiles"></div>
+      <div class="db-rev" id="dbRev"></div>
+    </div>
+
+    <div class="db-section">
+      <h2>My Listings</h2>
+      <div class="sub">Views update as buyers open your listings. Boost one to jump to the top of its category.</div>
+      <div id="dbListings"></div>
+    </div>
+
+    <div class="db-section" id="dbApplyWrap" style="display:none">
+      <h2>Job applications</h2>
+      <div class="sub"><span id="dbApplyCount">0</span> people have applied to your jobs. <a href="applications" style="color:var(--navy);font-weight:700">Review applicants →</a></div>
+    </div>
+
+    <div class="db-section">
+      <h2>Spending</h2>
+      <div class="sub">Your PaMarket purchases (boosts, featured slots, job credits) via Paynow.</div>
+      <div id="dbPayments"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOOST PICKER MODAL -->
+<div class="boost-overlay hidden" id="boostOverlay">
+  <div class="boost-modal" role="dialog" aria-modal="true" aria-labelledby="boostTitle">
+    <button type="button" class="boost-close" id="boostClose" aria-label="Close">&times;</button>
+    <h3 id="boostTitle">Boost this listing</h3>
+    <p class="bm-sub">Featured listings appear at the top of search and category pages with a FEATURED badge.</p>
+    <div class="boost-opts" id="boostOpts"></div>
+    <div class="boost-pay-note">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Secure checkout by Paynow — EcoCash, OneMoney &amp; cards. <a href="terms" target="_blank" style="text-decoration:underline;color:var(--sub)">Terms apply</a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER:START -->
+<!-- ============================================================
+     PaMarket shared footer — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the FOOTER:START/END markers.
+     Styling lives in css/site.css.
+     ============================================================ -->
+<footer>
+  <div class="foot-main">
+    <div>
+      <div class="foot-logo">Pa<em>Market</em></div>
+      <p class="foot-tagline">Zimbabwe's free marketplace. Buy, sell, find jobs and grow your business across all ten provinces. No fees, ever.</p>
+      <div class="foot-contact">
+        <a href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a>
+        <a href="mailto:support@pamarketzw.com">support@pamarketzw.com</a>
+      </div>
+      <nav class="foot-social" aria-label="PaMarket on social media" style="display:flex;gap:14px;margin-top:16px;flex-wrap:wrap;align-items:center">
+        <a href="https://www.facebook.com/share/1BYRHcg9C9/?mibextid=wwXIfr" target="_blank" rel="me noopener" aria-label="PaMarket on Facebook" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg></a>
+        <a href="https://www.instagram.com/pamarketzim" target="_blank" rel="me noopener" aria-label="PaMarket on Instagram" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.43.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.43.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.43-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.43-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.12 1.38C1.36 2.67.95 3.34.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.79.72 1.46 1.38 2.12.66.66 1.33 1.07 2.12 1.38.76.3 1.64.5 2.91.56 1.28.06 1.69.07 4.95.07s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.31 1.46-.72 2.12-1.38.66-.66 1.07-1.33 1.38-2.12.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.31-.79-.72-1.46-1.38-2.12-.66-.66-1.33-1.07-2.12-1.38-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4zm6.41-10.4a1.44 1.44 0 1 0 1.44 1.44 1.44 1.44 0 0 0-1.44-1.44z"/></svg></a>
+        <a href="https://x.com/pamarketzw" target="_blank" rel="me noopener" aria-label="PaMarket on X (Twitter)" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.46l8.6-9.83L0 1.15h7.6l5.24 6.93zm-1.29 19.5h2.04L6.49 3.24H4.3z"/></svg></a>
+        <a href="https://www.tiktok.com/@pamarketzw?_r=1&amp;_t=ZS-97w0qE4b22v" target="_blank" rel="me noopener" aria-label="PaMarket on TikTok" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
+        <a href="https://www.linkedin.com/company/pamarket-zim/" target="_blank" rel="me noopener" aria-label="PaMarket on LinkedIn" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg></a>
+      </nav>
+      <div class="foot-store">
+        <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener">
+          <img src="img/google-play-badge.png" alt="Get it on Google Play" class="play-badge-sm">
+        </a>
+      </div>
+    </div>
+    <div class="foot-col">
+      <h5>Categories</h5>
+      <a href="browse?cat=property">Property</a>
+      <a href="browse?cat=vehicles">Vehicles</a>
+      <a href="browse?cat=electronics">Electronics</a>
+      <a href="browse?cat=furniture">Furniture</a>
+      <a href="browse?cat=fashion">Fashion</a>
+      <a href="browse?cat=agriculture">Agriculture</a>
+      <a href="jobs">Jobs</a>
+      <a href="services">Services</a>
+      <a href="browse?shops=1">Shops</a>
+      <a href="plans">Shop Plans</a>
+    </div>
+    <div class="foot-col">
+      <h5>Customer Service</h5>
+      <a href="blog">Blog</a>
+      <a href="help">Help &amp; FAQ</a>
+      <a href="contact">Contact Us</a>
+      <a href="advertise">Advertise</a>
+      <a href="community-guidelines">Community Guidelines</a>
+      <a href="about">About PaMarket</a>
+    </div>
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <a href="terms">Terms of Service</a>
+      <a href="privacy">Privacy Policy</a>
+      <a href="post-ad">Post a Free Ad</a>
+      <a href="auth">Sign In</a>
+      <a href="auth?mode=signup">Create Account</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</span>
+    <div class="foot-bottom-links">
+      <a href="terms">Terms</a>
+      <a href="privacy">Privacy</a>
+      <a href="community-guidelines">Guidelines</a>
+      <a href="contact">Contact</a>
+    </div>
+  </div>
+</footer>
+<!-- FOOTER:END -->
+
+<script src="js/supabase-config.js"></script>
+<script src="js/marketplace-data.js"></script>
+<script src="js/session.js"></script>
+<script src="js/nav-dropdowns.js"></script>
+<script>
+'use strict';
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var session=(window.PM&&PM.getSession)?PM.getSession():null;
+  if(!(session&&session.user&&session.user.id)){
+    $('dbLoading').classList.add('hidden');
+    $('dbGate').classList.remove('hidden');
+    $('dbSignIn').href='auth?return='+encodeURIComponent(location.pathname);
+    return;
+  }
+  var meta=session.user.user_metadata||{};
+  var firstName=((meta.full_name||meta.name||'').trim().split(/\s+/)[0])||'';
+  if(firstName)$('dbGreeting').textContent='Welcome back, '+firstName+'. Here’s how your listings are doing.';
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var PRODUCT_LABEL={boost_1day:'Boost 1 day',boost_7day:'Boost 7 days',boost_30day:'Boost 30 days',job_boost_7day:'Job boost 7 days',job_boost_30day:'Job boost 30 days',featured_slot_pack_1:'Featured slot +1',featured_slot_pack_3:'Featured slots +3',job_credit_pack_1:'Job credit ×1',job_credit_pack_5:'Job credits ×5'};
+  function isFeatured(l){return l.featured_until&&new Date(l.featured_until)>new Date();}
+
+  var LISTINGS=[];
+
+  function renderTiles(){
+    var totalViews=LISTINGS.reduce(function(a,l){return a+(Number(l.views)||0);},0);
+    var active=LISTINGS.filter(function(l){return l.status==='active';}).length;
+    var boosted=LISTINGS.filter(isFeatured).length;
+    var tiles=[
+      {n:active,l:'Active listings'},
+      {n:totalViews.toLocaleString(),l:'Total views'},
+      {n:boosted,l:'Boosted now'},
+      {n:'$'+SPENT.toLocaleString(),l:'Total spent'}
+    ];
+    $('dbTiles').innerHTML=tiles.map(function(t){return '<div class="db-tile"><div class="n">'+t.n+'</div><div class="l">'+t.l+'</div></div>';}).join('');
+  }
+
+  function renderListings(){
+    if(!LISTINGS.length){
+      $('dbListings').innerHTML='<div class="db-empty">You have no listings yet. <a href="post-ad">Post your first ad</a> — it’s free.</div>';
+      return;
+    }
+    var rows=LISTINGS.map(function(l){
+      var feat=isFeatured(l);
+      var statusPill='<span class="pill '+esc(l.status)+'">'+esc(l.status)+'</span>'+(feat?' <span class="pill feat">Featured</span>':'');
+      var acts='<div class="db-act">'+
+        (l.status==='active'?'<button class="b-boost" data-boost="'+esc(l.id)+'" data-cat="'+esc(l.category||'')+'">'+(feat?'Extend':'Boost')+'</button>':'')+
+        '<a href="detail?id='+esc(l.id)+'" target="_blank" rel="noopener">View</a>'+
+        (l.status==='active'?'<button data-sold="'+esc(l.id)+'">Mark sold</button>':'')+
+        '</div>';
+      return '<tr>'+
+        '<td><a class="t-title" href="detail?id='+esc(l.id)+'" target="_blank" rel="noopener">'+esc(l.title)+'</a></td>'+
+        '<td>'+esc((l.category||'').charAt(0).toUpperCase()+(l.category||'').slice(1))+'</td>'+
+        '<td>'+esc(PM.money(l.price,l.currency))+'</td>'+
+        '<td><b>'+(Number(l.views)||0).toLocaleString()+'</b></td>'+
+        '<td>'+statusPill+'</td>'+
+        '<td>'+acts+'</td>'+
+      '</tr>';
+    }).join('');
+    $('dbListings').innerHTML='<div class="db-tablewrap"><table class="db-tbl"><thead><tr>'+
+      '<th>Listing</th><th>Category</th><th>Price</th><th>Views</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+    // Wire actions
+    $('dbListings').querySelectorAll('[data-boost]').forEach(function(b){
+      b.addEventListener('click',function(){openBoost(b.getAttribute('data-boost'),b.getAttribute('data-cat'));});
+    });
+    $('dbListings').querySelectorAll('[data-sold]').forEach(function(b){
+      b.addEventListener('click',function(){
+        if(!confirm('Mark this listing as sold? It will no longer appear in search.'))return;
+        b.disabled=true;b.textContent='Saving…';
+        PM.markListingSold(b.getAttribute('data-sold')).then(function(r){
+          if(r&&r.ok){var l=LISTINGS.find(function(x){return x.id===b.getAttribute('data-sold');});if(l)l.status='sold';renderTiles();renderListings();}
+          else{b.disabled=false;b.textContent='Mark sold';alert('Could not update.');}
+        }).catch(function(){b.disabled=false;b.textContent='Mark sold';alert('Could not update.');});
+      });
+    });
+  }
+
+  function renderPayments(){
+    if(!PAYMENTS.length){$('dbPayments').innerHTML='<div class="db-empty">No purchases yet. Boosting a listing puts it at the top of its category.</div>';return;}
+    var rows=PAYMENTS.map(function(p){
+      var st=p.status==='consumed'?'<span class="pill active">Completed</span>':p.status==='failed'||p.status==='cancelled'?'<span class="pill deleted">'+esc(p.status)+'</span>':'<span class="pill pending">'+esc(p.status)+'</span>';
+      var when=new Date(p.paid_at||p.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      return '<tr><td>'+esc(PRODUCT_LABEL[p.product_id]||p.product_id)+'</td><td><b>$'+(Number(p.amount_usd)||0)+'</b></td><td>'+st+'</td><td>'+when+'</td></tr>';
+    }).join('');
+    $('dbPayments').innerHTML='<div class="db-tablewrap"><table class="db-tbl"><thead><tr>'+
+      '<th>Item</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }
+
+  // ── Boost picker (reused) ──
+  var boostOverlay=$('boostOverlay');
+  function openBoost(listingId,category){
+    var optsEl=$('boostOpts');
+    var products=category==='jobs'?PM.JOB_BOOST_PRODUCTS:PM.BOOST_PRODUCTS;
+    function renderOpts(){
+      optsEl.innerHTML=products.map(function(p){
+        return '<button type="button" class="boost-opt" data-product="'+p.productId+'"><span class="bo-days">'+p.label+'</span>'+
+          (p.tag?'<span class="bo-tag">'+p.tag+'</span>':'')+'<span class="bo-price">$'+p.priceUsd+'</span></button>';
+      }).join('');
+      optsEl.querySelectorAll('.boost-opt').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          optsEl.querySelectorAll('.boost-opt').forEach(function(b){b.disabled=true;});
+          btn.innerHTML='<span class="bo-days">Starting secure checkout…</span>';
+          PM.createBoostPayment(listingId,btn.getAttribute('data-product')).then(function(r){window.location.href=r.redirectUrl;})
+            .catch(function(err){boostOverlay.classList.add('hidden');renderOpts();alert(err&&err.message==='not-authenticated'?'Please sign in again.':'Could not start the payment: '+((err&&err.message)||'unknown error'));});
+        });
+      });
+    }
+    renderOpts();
+    boostOverlay.classList.remove('hidden');
+  }
+  $('boostClose').addEventListener('click',function(){boostOverlay.classList.add('hidden');});
+  boostOverlay.addEventListener('click',function(e){if(e.target===boostOverlay)boostOverlay.classList.add('hidden');});
+
+  // ── Admin overview ──
+  function renderAdmin(stats){
+    if(!stats)return;
+    $('dbAdmin').classList.remove('hidden');
+    var tiles=[
+      {n:Number(stats.listings_active||0).toLocaleString(),l:'Active listings'},
+      {n:Number(stats.businesses_active||0).toLocaleString(),l:'Active shops'},
+      {n:Number(stats.users_total||0).toLocaleString(),l:'Registered users'},
+      {n:Number(stats.jobs_active||0).toLocaleString(),l:'Active jobs'}
+    ];
+    $('dbAdminTiles').innerHTML=tiles.map(function(t){return '<div class="db-admin-tile"><div class="n">'+t.n+'</div><div class="l">'+t.l+'</div></div>';}).join('');
+    var byProd=stats.revenue_by_product||{};
+    var chips='<div class="chip">Total revenue: <b>$'+Number(stats.revenue_total||0).toLocaleString()+'</b></div>'+
+      '<div class="chip">Last 7 days: <b>$'+Number(stats.revenue_7d||0).toLocaleString()+'</b></div>'+
+      '<div class="chip">Paid orders: <b>'+Number(stats.payments_count||0).toLocaleString()+'</b></div>'+
+      Object.keys(byProd).map(function(k){return '<div class="chip">'+esc(PRODUCT_LABEL[k]||k)+': <b>$'+Number(byProd[k]||0).toLocaleString()+'</b></div>';}).join('');
+    $('dbRev').innerHTML=chips;
+  }
+
+  var SPENT=0, PAYMENTS=[];
+  Promise.all([
+    PM.fetchMyListings(),
+    PM.fetchMyPayments(),
+    PM.fetchApplicationsForEmployer(),
+    PM.currentUserRole(),
+    PM.fetchPlatformStats()
+  ]).then(function(r){
+    LISTINGS=r[0]||[];
+    PAYMENTS=r[1]||[];
+    var apps=r[2]||[];
+    var role=r[3]||'user';
+    var stats=r[4];
+    SPENT=PAYMENTS.filter(function(p){return p.status==='consumed';}).reduce(function(a,p){return a+(Number(p.amount_usd)||0);},0);
+
+    $('dbLoading').classList.add('hidden');
+    $('dbContent').classList.remove('hidden');
+    renderTiles();
+    renderListings();
+    renderPayments();
+    if(apps.length){$('dbApplyWrap').style.display='';$('dbApplyCount').textContent=apps.length;}
+    if(role==='admin'&&stats)renderAdmin(stats);
+  }).catch(function(){
+    $('dbLoading').textContent='Could not load your dashboard. Please refresh.';
+  });
+})();
+</script>
+</body>
+</html>

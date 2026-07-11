@@ -575,6 +575,64 @@
     return post(row);
   }
 
+  // ── Seller / owner dashboard ─────────────────────────────────────
+  // The signed-in user's own listings across ALL statuses (RLS select policy
+  // allows owner reads regardless of status), with view counts + boost state.
+  function fetchMyListings() {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user) return Promise.resolve([]);
+    return fetch(SB_URL + '/rest/v1/listings?seller_id=eq.' + esc(s.user.id) +
+      '&select=id,title,category,price,currency,status,views,boost,featured_until,created_at,photos&order=created_at.desc&limit=200', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
+    }).then(function (res) { return res.ok ? res.json() : []; }).catch(function () { return []; });
+  }
+
+  // The user's own Paynow payment history (own-read RLS).
+  function fetchMyPayments() {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user) return Promise.resolve([]);
+    return fetch(SB_URL + '/rest/v1/paynow_payments?user_id=eq.' + esc(s.user.id) +
+      '&select=id,product_id,amount_usd,status,created_at,paid_at&order=created_at.desc&limit=100', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
+    }).then(function (res) { return res.ok ? res.json() : []; }).catch(function () { return []; });
+  }
+
+  // Mark one of the caller's own listings sold (RLS: owner update only).
+  function markListingSold(listingId) {
+    var s = getSession();
+    if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
+    return fetch(SB_URL + '/rest/v1/listings?id=eq.' + esc(listingId), {
+      method: 'PATCH',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify({ status: 'sold' }),
+    }).then(function (res) {
+      if (res.ok) return res.json().then(function (rows) { return { ok: true, listing: rows[0] || null }; });
+      return res.text().then(function (t) { throw new Error(t || ('update failed: ' + res.status)); });
+    });
+  }
+
+  // Aggregate platform stats for the owner dashboard — returns null for
+  // non-admins (the RPC is gated by is_admin() server-side).
+  function fetchPlatformStats() {
+    var s = getSession();
+    if (!s || !s.access_token) return Promise.resolve(null);
+    return fetch(SB_URL + '/rest/v1/rpc/get_platform_stats', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: '{}',
+    }).then(function (res) { return res.ok ? res.json() : null; }).catch(function () { return null; });
+  }
+
+  // The signed-in user's role ('user' | 'admin' | 'moderator'); '' if unknown.
+  function currentUserRole() {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user) return Promise.resolve('');
+    return fetch(SB_URL + '/rest/v1/profiles?id=eq.' + esc(s.user.id) + '&select=role', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
+    }).then(function (res) { return res.ok ? res.json() : []; })
+      .then(function (rows) { return (rows && rows[0] && rows[0].role) || 'user'; }).catch(function () { return ''; });
+  }
+
   // ── Employer applications inbox (website) ────────────────────────
   // Every application to jobs owned by the caller. RLS lets an employer read
   // applications where employer_id = auth.uid(), so this is naturally scoped
@@ -711,4 +769,9 @@
   global.PM.hasAppliedToJob = hasAppliedToJob;
   global.PM.fetchApplicationsForEmployer = fetchApplicationsForEmployer;
   global.PM.updateApplicationStatus = updateApplicationStatus;
+  global.PM.fetchMyListings = fetchMyListings;
+  global.PM.fetchMyPayments = fetchMyPayments;
+  global.PM.markListingSold = markListingSold;
+  global.PM.fetchPlatformStats = fetchPlatformStats;
+  global.PM.currentUserRole = currentUserRole;
 })(window);

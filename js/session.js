@@ -76,6 +76,7 @@
         '<svg class="acct-caret" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>' +
       '</div>' +
       '<div class="acct-menu">' +
+        '<a href="dashboard">My Dashboard</a>' +
         '<a href="' + profileUrl + '">My Profile</a>' +
         '<a href="' + profileUrl + '">My Ads</a>' +
         '<a href="post-job">Post a Job</a>' +
