@@ -119,6 +119,20 @@ button{font-family:inherit;cursor:pointer}
 
 .btn-app{background:var(--navy);color:#fff;border:none}
 .btn-app:hover{background:var(--navy-deep)}
+.seller-rating{display:flex;align-items:center;gap:7px;margin-top:12px;font-size:13px;color:var(--sub)}
+.seller-rating .stars{color:var(--gold);font-size:14px;letter-spacing:1px}
+.rating-hero{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.rating-big{font-size:38px;font-weight:900;color:var(--navy);letter-spacing:-.03em;line-height:1}
+.rating-stars{color:var(--gold);font-size:16px;letter-spacing:2px}
+.rating-count{font-size:12.5px;color:var(--mute);margin-top:3px}
+.rev-list{display:flex;flex-direction:column;gap:12px}
+.rev{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.rev-top{display:flex;align-items:center;gap:10px}
+.rev-av{width:36px;height:36px;border-radius:50%;background:#EEF2FF;color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+.rev-who{font-size:14px;font-weight:700;color:var(--ink)}
+.rev-date{font-size:12px;color:var(--mute)}
+.rev-stars{margin-left:auto;color:var(--gold);font-size:14px;letter-spacing:1px}
+.rev-body{font-size:14px;color:var(--sub);margin-top:9px;line-height:1.6}
 .safety-card{background:#FEF9E7;border:1px solid #F5E1A4;border-radius:14px;padding:18px 20px}
 .safety-card h4{font-size:13px;font-weight:800;color:#92400E;margin-bottom:8px;display:flex;align-items:center;gap:7px}
 .safety-card ul{padding-left:18px}
@@ -363,6 +377,11 @@ window.doSearch = window.doSearch || function(){
         <h3>Description</h3>
         <div class="d-desc" id="dDesc"></div>
       </div>
+      <div class="d-section hidden" id="revSection">
+        <h3>Seller Reviews</h3>
+        <div class="rating-hero" id="revHero"></div>
+        <div class="rev-list" id="revList"></div>
+      </div>
     </div>
     <div class="sidebar">
       <div class="seller-card">
@@ -373,6 +392,7 @@ window.doSearch = window.doSearch || function(){
             <div class="seller-sub">View profile →</div>
           </div>
         </a>
+        <div class="seller-rating hidden" id="sellerRating"></div>
         <a class="btn btn-whatsapp contact-btn" id="waBtn" target="_blank" rel="noopener">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
           Chat on WhatsApp
@@ -729,6 +749,25 @@ function renderListing(l,reviews){
   const seller=l.seller_name||'PaMarket Seller';
   document.getElementById('sellerName').textContent=seller;
   document.getElementById('sellerAvatar').textContent=seller.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+
+  // Seller reviews — visible on every listing, not just in the JSON-LD.
+  if(reviews&&reviews.length){
+    const escR=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const starsOf=r=>{const f=Math.max(0,Math.min(5,Math.round(Number(r)||0)));return '★★★★★'.slice(0,f)+'☆☆☆☆☆'.slice(0,5-f);};
+    const avg=reviews.reduce((a,r)=>a+(Number(r.rating)||0),0)/reviews.length;
+    const sr=document.getElementById('sellerRating');
+    sr.innerHTML=`<span class="stars">${starsOf(avg)}</span><span>${avg.toFixed(1)} · ${reviews.length} review${reviews.length>1?'s':''}</span>`;
+    sr.classList.remove('hidden');
+    document.getElementById('revHero').innerHTML=
+      `<div class="rating-big">${avg.toFixed(1)}</div><div><div class="rating-stars">${starsOf(avg)}</div>`+
+      `<div class="rating-count">Based on ${reviews.length} verified review${reviews.length>1?'s':''} of this seller</div></div>`;
+    document.getElementById('revList').innerHTML=reviews.slice(0,10).map(r=>
+      `<div class="rev"><div class="rev-top"><div class="rev-av">${escR((r.reviewer_name||'P').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase())}</div>`+
+      `<div><div class="rev-who">${escR(r.reviewer_name||'PaMarket user')}</div><div class="rev-date">${escR(PM.timeAgo(r.created_at))}</div></div>`+
+      `<div class="rev-stars">${starsOf(r.rating)}</div></div>`+
+      (r.body?`<div class="rev-body">${escR(r.body)}</div>`:'')+`</div>`).join('');
+    document.getElementById('revSection').classList.remove('hidden');
+  }
 
   const profileUrl=l.seller_id?('profile?id='+l.seller_id):null;
   const sellerLink=document.getElementById('sellerLink');

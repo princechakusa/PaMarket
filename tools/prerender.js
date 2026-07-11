@@ -48,11 +48,28 @@ async function fetchActiveListings(cfg) {
   return LIMIT ? rows.slice(0, LIMIT) : rows;
 }
 
+// One bulk fetch of recent reviews, grouped by seller — powers the visible
+// "Seller Reviews" section (and JSON-LD aggregateRating) on every /l/ page
+// without a per-listing request.
+async function fetchReviewsBySeller(cfg) {
+  const bySeller = {}; let offset = 0;
+  for (;;) {
+    const page = await pget(cfg, 'reviews?select=seller_id,reviewer_name,rating,body,created_at&order=created_at.desc&limit=1000&offset=' + offset);
+    for (const r of page) {
+      if (!r.seller_id) continue;
+      (bySeller[r.seller_id] = bySeller[r.seller_id] || []).push(r);
+    }
+    if (page.length < 1000 || offset >= 9000) break;
+    offset += 1000;
+  }
+  return bySeller;
+}
+
 async function fetchActiveRentals(cfg) {
   const select = '*,rental_brands(label),rental_categories(label),rental_locations(city,province),' +
     'rental_vehicle_media(url,is_cover,sort_order),rental_vehicle_features(feature),' +
     'rental_companies(business_id,trading_name,rental_phone,rental_whatsapp,rental_email,' +
-    'year_established,deposit_policy,driver_available,cross_border,insurance_included)';
+    'year_established,deposit_policy,driver_available,cross_border,insurance_included,avg_rating,review_count)';
   const rows = await pget(cfg, 'rental_vehicle_listings?status=eq.active&admin_status=eq.approved&deleted_at=is.null&order=created_at.desc&select=' + encodeURIComponent(select) + '&limit=1000');
   return LIMIT ? rows.slice(0, LIMIT) : rows;
 }
@@ -60,10 +77,11 @@ async function fetchActiveRentals(cfg) {
 async function fetchActiveBusinesses(cfg) {
   const businesses = await pget(cfg, 'businesses?status=eq.active&order=updated_at.desc&select=*&limit=1000');
   const list = LIMIT ? businesses.slice(0, LIMIT) : businesses;
+  const prodSelect = 'id,title,price,currency,category,photos,suburb,city,province';
   for (const b of list) {
-    let products = await pget(cfg, 'listings?business_id=eq.' + encodeURIComponent(b.id) + '&status=eq.active&select=id,title,price,currency,category&limit=20');
+    let products = await pget(cfg, 'listings?business_id=eq.' + encodeURIComponent(b.id) + '&status=eq.active&select=' + prodSelect + '&limit=20');
     if ((!products || !products.length) && b.owner_user_id) {
-      products = await pget(cfg, 'listings?seller_id=eq.' + encodeURIComponent(b.owner_user_id) + '&status=eq.active&select=id,title,price,currency,category&limit=20');
+      products = await pget(cfg, 'listings?seller_id=eq.' + encodeURIComponent(b.owner_user_id) + '&status=eq.active&select=' + prodSelect + '&limit=20');
     }
     b._products = products || [];
     b._reviews = b.owner_user_id
@@ -86,12 +104,36 @@ function timeAgo(iso) {
 // Escape "<" so a "</script>" in any user string can't break out of a
 // <script type="application/ld+json"> tag.
 function jsonld(o) { return JSON.stringify(o).replace(/</g, '\\u003c'); }
+function stars(r) { const f = Math.max(0, Math.min(5, Math.round(Number(r) || 0))); return '★★★★★'.slice(0, f) + '☆☆☆☆☆'.slice(0, 5 - f); }
+function initialsOf(name) { return esc(String(name || 'P').trim().split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase() || 'P'); }
+function avgRating(reviews) { return reviews.length ? reviews.reduce(function (a, r) { return a + (Number(r.rating) || 0); }, 0) / reviews.length : 0; }
+
+// Styled review cards + rating summary, shared by listing and business pages.
+// The .rev/.rating-* CSS lives in the page style blocks (detail.html and
+// business.html) that shell() bakes in.
+function reviewsHtml(reviews, subjectLabel) {
+  if (!reviews || !reviews.length) return '';
+  const avg = avgRating(reviews);
+  const hero = '<div class="rating-hero"><div class="rating-big">' + avg.toFixed(1) + '</div><div>' +
+    '<div class="rating-stars">' + stars(avg) + '</div>' +
+    '<div class="rating-count">Based on ' + reviews.length + ' verified review' + (reviews.length > 1 ? 's' : '') + (subjectLabel ? ' of ' + esc(subjectLabel) : '') + '</div></div></div>';
+  const list = '<div class="rev-list">' + reviews.slice(0, 10).map(function (r) {
+    return '<div class="rev"><div class="rev-top"><div class="rev-av">' + initialsOf(r.reviewer_name) + '</div>' +
+      '<div><div class="rev-who">' + esc(r.reviewer_name || 'PaMarket user') + '</div><div class="rev-date">' + esc(timeAgo(r.created_at)) + '</div></div>' +
+      '<div class="rev-stars">' + stars(r.rating) + '</div></div>' +
+      (r.body ? '<div class="rev-body">' + esc(r.body) + '</div>' : '') + '</div>';
+  }).join('') + '</div>';
+  return hero + list;
+}
 
 function loadChrome() {
   const detail = fs.readFileSync(path.join(ROOT, 'detail.html'), 'utf8');
+  const business = fs.readFileSync(path.join(ROOT, 'business.html'), 'utf8');
   const styleMatch = detail.match(/<style>([\s\S]*?)<\/style>/);
+  const bizStyleMatch = business.match(/<style>([\s\S]*?)<\/style>/);
   return {
     style: styleMatch ? styleMatch[1] : '',
+    bizStyle: bizStyleMatch ? bizStyleMatch[1] : '',
     header: fs.readFileSync(path.join(ROOT, 'partials', 'header.html'), 'utf8'),
     footer: fs.readFileSync(path.join(ROOT, 'partials', 'footer.html'), 'utf8')
   };
@@ -130,7 +172,7 @@ function shell(o) {
     '<meta name="twitter:image" content="' + esc(o.ogImg) + '">\n' +
     '<meta name="geo.region" content="ZW">\n<meta name="geo.placename" content="Zimbabwe">\n' +
     '<link rel="icon" href="img/icon-192.png" type="image/png">\n' +
-    '<link rel="stylesheet" href="css/site.css">\n<style>' + o.chrome.style + '</style>\n' +
+    '<link rel="stylesheet" href="css/site.css">\n<style>' + (o.style || o.chrome.style) + '</style>\n' +
     blocks + '\n</head>\n<body>\n' + o.chrome.header + '\n' + o.crumb + '\n' + o.main + '\n' + o.chrome.footer + '\n' +
     hyd +
     '<script src="js/supabase-config.js"></script>\n<script src="js/marketplace-data.js"></script>\n<script src="js/nav-dropdowns.js"></script>\n' +
@@ -156,6 +198,14 @@ function renderListing(l, chrome) {
   const shareBtn = '<button type="button" class="btn contact-btn" id="shareBtn" style="background:#fff;border:1.5px solid var(--line);color:var(--ink)">' +
     '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share Listing</button>';
   const initials = esc((l.seller_name || 'Seller').split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase());
+  const reviews = l._reviews || [];
+  const avg = avgRating(reviews);
+  const ratingLine = reviews.length
+    ? '<div class="seller-rating"><span class="stars">' + stars(avg) + '</span><span>' + avg.toFixed(1) + ' · ' + reviews.length + ' review' + (reviews.length > 1 ? 's' : '') + '</span></div>'
+    : '';
+  const revSection = reviews.length
+    ? '<div class="d-section"><h3>Seller Reviews</h3>' + reviewsHtml(reviews, 'this seller') + '</div>'
+    : '';
   const crumb = '<div class="crumb"><a href="/">Home</a> / <a href="browse">Browse</a> / <a href="browse?cat=' + esc(l.category) + '">' + esc(catLabel) + '</a> / <span>' + title + '</span></div>';
   const main = '<div id="detailContent"><div class="detail-wrap"><div>' +
     '<div class="gallery"><div class="gallery-main" id="galleryMain">' + mainImg + '</div>' + thumbs + '</div>' +
@@ -163,8 +213,9 @@ function renderListing(l, chrome) {
     '<div class="d-meta"><span>' + esc(loc) + '</span><span>Posted ' + esc(timeAgo(l.created_at)) + '</span>' +
     '<span style="background:#EEF2FF;color:var(--navy);padding:3px 10px;border-radius:20px;font-weight:700">' + esc(catLabel) + '</span></div>' +
     '<div class="d-section"><h3>Description</h3><div class="d-desc">' + esc(l.description || 'No description provided.') + '</div></div>' +
+    revSection +
     '</div><div class="sidebar"><div class="seller-card">' +
-    '<div class="seller-top"><div class="seller-avatar">' + initials + '</div><div><div class="seller-name">' + esc(l.seller_name || 'PaMarket Seller') + '</div><div class="seller-sub">View profile →</div></div></div>' + waBtn + profileBtn + shareBtn + '</div>' +
+    '<div class="seller-top"><div class="seller-avatar">' + initials + '</div><div><div class="seller-name">' + esc(l.seller_name || 'PaMarket Seller') + '</div><div class="seller-sub">View profile →</div></div></div>' + ratingLine + waBtn + profileBtn + shareBtn + '</div>' +
     '<div class="safety-card"><h4>Stay Safe</h4><ul><li>Meet in a public place during daylight hours</li><li>Never pay before seeing the item in person</li><li>Keep all conversations and payments inside PaMarket</li></ul></div>' +
     '</div></div>' +
     '<div class="similar-sec hidden" id="recentSec" style="padding-top:28px"><h2>Recently <span style="color:var(--navy)">Viewed</span></h2><div class="similar-grid" id="recentGrid"></div></div>' +
@@ -174,7 +225,7 @@ function renderListing(l, chrome) {
     url: url, pageTitle: l.title + ' — ' + priceStr + ' | PaMarket Zimbabwe',
     desc: l.description ? String(l.description).slice(0, 155) : (l.title + ' — ' + catLabel + ' in ' + loc + ' on PaMarket, Zimbabwe.'),
     ogImg: photos[0] || (SITE + '/img/icon-512.png'), ogType: isJob ? 'website' : 'product',
-    schema: [PMSchema.buildListingSchema(l), PMSchema.buildBreadcrumb(l, url)],
+    schema: [PMSchema.buildListingSchema(l, url, reviews), PMSchema.buildBreadcrumb(l, url)],
     crumb: crumb, main: main, hydrateListingId: l.id, chrome: chrome,
     extrasMeta: { id: l.id, title: l.title, price: l.price, currency: l.currency, photo: photos[0] || null, city: l.city, province: l.province, url: url }
   });
@@ -203,6 +254,9 @@ function renderRental(v, chrome) {
   const profileBtn = company.business_id ? '<a class="btn btn-navy contact-btn" href="business?id=' + esc(company.business_id) + '">View Business Profile</a>' : '';
   const companyName = company.trading_name || 'Rental Company';
   const companyInitials = esc(companyName.split(' ').map(function (w) { return w[0]; }).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'RC');
+  const companyRating = (company.review_count > 0 && company.avg_rating)
+    ? '<div class="seller-rating"><span class="stars">' + stars(company.avg_rating) + '</span><span>' + Number(company.avg_rating).toFixed(1) + ' · ' + company.review_count + ' review' + (company.review_count > 1 ? 's' : '') + '</span></div>'
+    : '';
   const infoChips = [];
   if (company.year_established) infoChips.push('Est. ' + company.year_established);
   if (company.driver_available) infoChips.push('Driver available');
@@ -221,7 +275,7 @@ function renderRental(v, chrome) {
     '<div class="d-section"><h3>Description</h3><div class="d-desc">' + esc(v.description || 'No description provided.') + '</div></div>' + featHtml +
     '</div><div class="sidebar"><div class="seller-card">' +
     '<div class="seller-top"><div class="seller-avatar">' + companyInitials + '</div><div><div class="seller-name">' + esc(companyName) + '</div><div class="seller-sub">Verified rental partner on PaMarket</div></div></div>' +
-    infoChipsHtml + waBtn + emailBtn + profileBtn + '</div>' +
+    companyRating + infoChipsHtml + waBtn + emailBtn + profileBtn + '</div>' +
     '<div class="safety-card"><h4>Stay Safe</h4><ul><li>Confirm the vehicle and terms before paying</li><li>Keep all conversations and payments inside PaMarket</li></ul></div>' +
     '</div></div></div>';
   return shell({
@@ -233,39 +287,87 @@ function renderRental(v, chrome) {
   });
 }
 
+// Mirrors the live business.html render() so the static /b/ page and the
+// client-rendered /business?id= page look identical. Uses business.html's
+// own <style> block (chrome.bizStyle) — the .biz-*/.rev-*/.rating-* classes
+// don't exist in detail.html's styles.
+const BIZ_TYPE_LABEL = { individual: 'Individual Seller', company: 'Registered Company', agency: 'Agency' };
+const CAT_LABEL = { property: 'Property', vehicles: 'Vehicles', electronics: 'Electronics', furniture: 'Furniture', fashion: 'Fashion', services: 'Services', agriculture: 'Agriculture', rooms: 'Rooms', pets: 'Pets', kids: 'Baby & Kids', jobs: 'Jobs', other: 'Other' };
+
+function bizProdCard(l) {
+  const photo = l.photos && l.photos.length ? l.photos[0] : null;
+  const loc = [l.suburb, l.city].filter(Boolean).join(', ') || l.province || 'Zimbabwe';
+  const media = photo
+    ? '<img class="pm-card-img-el" src="' + esc(photo) + '" alt="' + esc(l.title) + '" loading="lazy">'
+    : '<div class="pm-card-ph" style="color:var(--navy)">' + esc(String(l.title || '').split(' ').slice(0, 3).join(' ')) + '</div>';
+  return '<a class="pm-card" href="' + PMSchema.listingPath(l) + '">' +
+    '<div class="pm-card-img" style="background:var(--paper)">' + media + '</div>' +
+    '<div class="pm-card-body">' +
+    '<div class="pm-card-price">' + esc(money(l.price, l.currency)) + '</div>' +
+    '<div class="pm-card-title">' + esc(l.title) + '</div>' +
+    '<div class="pm-card-loc">📍 ' + esc(loc) + '</div>' +
+    '</div></a>';
+}
+
 function renderBusiness(b, chrome) {
   const url = PMSchema.businessUrl(b);
   const products = b._products || [];
   const reviews = b._reviews || [];
-  const logo = b.logo ? '<img src="' + esc(b.logo) + '" alt="' + esc(b.name) + ' logo" style="width:88px;height:88px;border-radius:18px;object-fit:cover">' : '<div class="biz-logo">' + esc((b.name || 'S')[0].toUpperCase()) + '</div>';
-  const loc = [b.suburb, b.city, b.province].filter(Boolean).join(', ') || 'Zimbabwe';
-  const prodCards = products.length ? products.slice(0, 12).map(function (l) {
-    return '<a class="gcard" href="' + PMSchema.listingPath(l) + '" style="display:block;border:1px solid var(--line);border-radius:12px;padding:12px;color:inherit"><div style="font-weight:700;font-size:14px">' + esc(l.title) + '</div><div style="color:var(--navy);font-weight:800;margin-top:4px">' + esc(money(l.price, l.currency)) + '</div></a>';
-  }).join('') : '<div style="color:var(--mute)">No products listed yet.</div>';
-  const revHtml = reviews.length ? '<div class="biz-section"><h2>Reviews</h2>' + reviews.slice(0, 8).map(function (r) {
-    return '<div class="rev"><div class="rev-top"><div class="rev-who">' + esc(r.reviewer_name || 'PaMarket user') + '</div><div class="rev-stars">' + '★'.repeat(Math.max(0, Math.min(5, Math.round(Number(r.rating) || 0)))) + '</div></div><div class="rev-body">' + esc(r.body || '') + '</div></div>';
-  }).join('') + '</div>' : '';
-  const desc = b.description ? String(b.description).slice(0, 155) : (b.name + ' — a verified business storefront on PaMarket, Zimbabwe.');
-  const crumb = '<div class="crumb"><a href="/">Home</a> / <a href="browse?shops=1">Shops</a> / <span>' + esc(b.name) + '</span></div>';
+  const verified = (b.verification_level || 0) > 0;
+  const loc = [b.suburb, b.city, b.province].filter(Boolean).filter(function (v, i, a) { return a.indexOf(v) === i; }).join(', ') || 'Zimbabwe';
+  const avg = avgRating(reviews);
+  const year = b.created_at ? new Date(b.created_at).getFullYear() : '';
+  const cats = (b.category || '').split('|').filter(Boolean);
+  const cover = b.cover ? '<img src="' + esc(b.cover) + '" alt="' + esc(b.name) + ' cover">' : '';
+  const logo = b.logo ? '<img src="' + esc(b.logo) + '" alt="' + esc(b.name) + ' logo">' : initialsOf(b.name);
+
+  let actions = '';
   const wa = b.whatsapp || b.phone;
-  const actions = [];
-  if (wa) actions.push('<a class="btn btn-whatsapp" href="https://wa.me/' + esc(String(wa).replace(/[^0-9]/g, '')) + '" target="_blank" rel="noopener">WhatsApp</a>');
-  if (b.phone) actions.push('<a class="btn btn-outline" href="tel:' + esc(b.phone) + '">Call</a>');
-  if (b.email) actions.push('<a class="btn btn-outline" href="mailto:' + esc(b.email) + '">Email: ' + esc(b.email) + '</a>');
-  const actionsHtml = actions.length
-    ? '<div class="biz-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">' + actions.join('') + '</div>'
-    : '<div class="biz-actions" style="margin-top:16px;color:var(--mute);font-size:13.5px">No contact details provided</div>';
-  const main = '<div class="biz-body" style="max-width:1000px;margin:0 auto;padding:24px">' +
-    '<div style="display:flex;gap:18px;align-items:center">' + logo + '<div><h1 class="biz-name" style="font-size:26px;font-weight:900">' + esc(b.name) + (b.verified ? ' <span class="biz-verified">✓ Verified</span>' : '') + '</h1><div class="biz-meta"><span>' + esc(loc) + '</span></div></div></div>' +
-    actionsHtml +
-    (b.description ? '<div class="biz-section"><h2>About</h2><div class="biz-about"><p>' + esc(b.description) + '</p></div></div>' : '') +
-    '<div class="biz-section"><h2>Products</h2><div class="prod-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:12px">' + prodCards + '</div></div>' +
-    revHtml + '</div>';
+  if (wa) actions += '<a class="btn btn-whatsapp" href="https://wa.me/' + esc(String(wa).replace(/[^0-9]/g, '')) + '" target="_blank" rel="noopener">WhatsApp</a>';
+  if (b.phone) actions += '<a class="btn btn-navy" href="tel:' + esc(b.phone) + '">Call</a>';
+  if (b.email) actions += '<a class="btn btn-outline" href="mailto:' + esc(b.email) + '">Email</a>';
+
+  let statHtml = '';
+  if (reviews.length) statHtml += '<div class="biz-stat"><div class="n">' + avg.toFixed(1) + ' ★</div><div class="l">' + reviews.length + ' review' + (reviews.length > 1 ? 's' : '') + '</div></div>';
+  statHtml += '<div class="biz-stat"><div class="n">' + products.length + '</div><div class="l">Listings</div></div>';
+  if (year) statHtml += '<div class="biz-stat"><div class="n">' + year + '</div><div class="l">On PaMarket since</div></div>';
+
+  const crumb = '<div class="crumb"><a href="/">Home</a> / <a href="browse?shops=1">Shops</a> / <span>' + esc(b.name) + '</span></div>';
+  const main =
+    '<div class="biz-cover">' + cover + '</div>' +
+    '<div class="biz-head">' +
+      '<div class="biz-id">' +
+        '<div class="biz-logo">' + logo + '</div>' +
+        '<div class="biz-id-name">' +
+          '<div class="biz-name-row"><h1 class="biz-name">' + esc(b.name) + '</h1>' +
+            (verified ? '<span class="biz-verified">✓ Verified</span>' : '') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="biz-meta">' +
+        '<span>🏷️ ' + esc(BIZ_TYPE_LABEL[b.biz_type] || 'Seller') + '</span>' +
+        '<span>📍 ' + esc(loc) + '</span>' +
+      '</div>' +
+      '<div class="biz-stats">' + statHtml + '</div>' +
+      '<div class="biz-actions">' + (actions || '<span class="sub" style="color:var(--mute);font-size:13px">No contact details provided</span>') + '</div>' +
+    '</div>' +
+    '<div class="biz-body">' +
+      (b.description ? '<div class="biz-section biz-about"><h2>About</h2><p>' + esc(b.description) + '</p>' +
+        (cats.length ? '<div class="cat-chips">' + cats.map(function (c) { return '<span class="pm-chip">' + esc(CAT_LABEL[c] || c) + '</span>'; }).join('') + '</div>' : '') + '</div>' : '') +
+      '<div class="biz-section"><h2>Listings</h2><div class="sub">Products &amp; services from ' + esc(b.name) + '</div>' +
+        (products.length
+          ? '<div class="prod-grid">' + products.slice(0, 12).map(bizProdCard).join('') + '</div>'
+          : '<div class="empty-state">No live listings yet. Check back soon.</div>') +
+      '</div>' +
+      '<div class="biz-section"><h2>Reviews &amp; Ratings</h2>' +
+        (reviews.length ? reviewsHtml(reviews) : '<div class="empty-state">This shop has no reviews yet.</div>') +
+      '</div>' +
+    '</div>';
+  const desc = b.description ? String(b.description).slice(0, 155) : (b.name + ' — a verified business storefront on PaMarket, Zimbabwe.');
   return shell({
     url: url, pageTitle: b.name + ' — Verified Shop on PaMarket Zimbabwe', desc: desc,
     ogImg: b.cover || b.logo || (SITE + '/img/icon-512.png'), ogType: 'website',
     schema: PMSchema.buildBusinessSchema(b, url, reviews, products),
-    crumb: crumb, main: main, chrome: chrome
+    crumb: crumb, main: main, chrome: chrome, style: chrome.bizStyle
   });
 }
 
@@ -286,16 +388,19 @@ function writeAll(dir, rows, renderFn, chrome, pathFn) {
 }
 
 async function main() {
-  let listings, rentals, businesses, chrome = loadChrome();
+  let listings, rentals, businesses, reviewsBySeller = {}, chrome = loadChrome();
   if (process.env.PRERENDER_FIXTURE) {
     const fx = JSON.parse(fs.readFileSync(process.env.PRERENDER_FIXTURE, 'utf8'));
     listings = fx.listings || []; rentals = fx.rentals || []; businesses = fx.businesses || [];
+    reviewsBySeller = fx.reviewsBySeller || {};
   } else {
     const cfg = loadSupabaseConfig();
     listings = await fetchActiveListings(cfg);
     rentals = await fetchActiveRentals(cfg);
     businesses = await fetchActiveBusinesses(cfg);
+    reviewsBySeller = await fetchReviewsBySeller(cfg);
   }
+  for (const l of listings) l._reviews = (l.seller_id && reviewsBySeller[l.seller_id]) || [];
   writeAll('l', listings, renderListing, chrome, function (l) { return PMSchema.listingPath(l); });
   writeAll('r', rentals, renderRental, chrome, function (v) { return PMSchema.rentalPath(v); });
   writeAll('b', businesses, renderBusiness, chrome, function (b) { return PMSchema.businessPath(b); });

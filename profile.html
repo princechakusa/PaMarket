@@ -121,6 +121,16 @@ button{font-family:inherit;cursor:pointer}
 .pf-meta-row svg{flex-shrink:0;color:var(--navy)}
 .pf-bio{font-size:13.5px;color:var(--sub);line-height:1.7;margin-top:16px}
 .pf-contact-btn{width:100%;margin-top:20px}
+.pf-rating{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;font-size:13px;color:var(--sub)}
+.pf-rating .stars{color:var(--gold);font-size:14px;letter-spacing:1px}
+.rev-list{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.rev{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.rev-top{display:flex;align-items:center;gap:10px}
+.rev-av{width:36px;height:36px;border-radius:50%;background:#EEF2FF;color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+.rev-who{font-size:14px;font-weight:700;color:var(--ink)}
+.rev-date{font-size:12px;color:var(--mute)}
+.rev-stars{margin-left:auto;color:var(--gold);font-size:14px;letter-spacing:1px}
+.rev-body{font-size:14px;color:var(--sub);margin-top:9px;line-height:1.6}
 
 
 .pf-listings h2{font-size:20px;font-weight:800;margin-bottom:18px}
@@ -283,6 +293,7 @@ window.doSearch = window.doSearch || function(){
       <div class="pf-avatar" id="pfAvatar"></div>
       <h1 class="pf-name" id="pfName"></h1>
       <div class="pf-role" id="pfRole"></div>
+      <div class="pf-rating hidden" id="pfRating"></div>
       <div class="pf-meta" id="pfMeta"></div>
       <div class="pf-bio hidden" id="pfBio"></div>
       <a class="btn btn-whatsapp pf-contact-btn" id="pfWaBtn" target="_blank" rel="noopener">
@@ -296,6 +307,10 @@ window.doSearch = window.doSearch || function(){
     <div class="pf-listings">
       <h2>Active Listings</h2>
       <div class="pf-grid" id="pfGrid"></div>
+      <div class="pf-reviews hidden" id="pfReviews">
+        <h2 style="margin-top:36px">Reviews</h2>
+        <div class="rev-list" id="pfRevList"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -420,6 +435,7 @@ async function init(){
     }).catch(()=>{
       document.getElementById('pfGrid').innerHTML='<div class="empty-state">Couldn\'t load listings right now.</div>';
     });
+    PM.fetchSellerReviews(id,10).then(renderReviews).catch(()=>{});
   }catch(e){
     showNotFound();
   }
@@ -428,6 +444,23 @@ async function init(){
 function showNotFound(){
   document.getElementById('loadingState').classList.add('hidden');
   document.getElementById('notFoundState').classList.remove('hidden');
+}
+
+// Seller reviews — rating summary in the profile card + full review list.
+function renderReviews(reviews){
+  if(!reviews||!reviews.length)return;
+  const escR=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const starsOf=r=>{const f=Math.max(0,Math.min(5,Math.round(Number(r)||0)));return '★★★★★'.slice(0,f)+'☆☆☆☆☆'.slice(0,5-f);};
+  const avg=reviews.reduce((a,r)=>a+(Number(r.rating)||0),0)/reviews.length;
+  const sr=document.getElementById('pfRating');
+  sr.innerHTML=`<span class="stars">${starsOf(avg)}</span><span>${avg.toFixed(1)} · ${reviews.length} review${reviews.length>1?'s':''}</span>`;
+  sr.classList.remove('hidden');
+  document.getElementById('pfRevList').innerHTML=reviews.map(r=>
+    `<div class="rev"><div class="rev-top"><div class="rev-av">${escR((r.reviewer_name||'P').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase())}</div>`+
+    `<div><div class="rev-who">${escR(r.reviewer_name||'PaMarket user')}</div><div class="rev-date">${escR(PM.timeAgo(r.created_at))}</div></div>`+
+    `<div class="rev-stars">${starsOf(r.rating)}</div></div>`+
+    (r.body?`<div class="rev-body">${escR(r.body)}</div>`:'')+`</div>`).join('');
+  document.getElementById('pfReviews').classList.remove('hidden');
 }
 
 function render(p){

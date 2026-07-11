@@ -36,7 +36,12 @@
 <link rel="stylesheet" href="css/site.css">
 <style>
 /* Business-profile-specific layout only; cards, buttons, badges, chips,
-   skeletons and empty states come from css/site.css (shared components). */
+   skeletons and empty states come from css/site.css (shared components).
+   This block is also baked into the pre-rendered /b/ pages by
+   tools/prerender.js, so the static shop pages match this page exactly. */
+.crumb{max-width:1000px;margin:0 auto;padding:16px 24px 0;font-size:13px;color:var(--mute)}
+.crumb a{color:var(--sub);font-weight:500}
+.crumb a:hover{color:var(--navy)}
 .biz-cover{height:200px;background:linear-gradient(135deg,var(--navy-deep),var(--navy-mid));position:relative;overflow:hidden}
 .biz-cover img{width:100%;height:100%;object-fit:cover}
 .biz-head{max-width:1000px;margin:0 auto;padding:0 24px}
