@@ -136,6 +136,24 @@ button{font-family:inherit;cursor:pointer}
 .pf-listings h2{font-size:20px;font-weight:800;margin-bottom:18px}
 .pf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 
+/* Owner-only "My Ads" boost controls on each listing card */
+.gcard{position:relative}
+.gcard-feat{position:absolute;top:8px;left:8px;font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;z-index:2;background:var(--gold);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.gcard-boost{position:absolute;top:8px;right:8px;z-index:3;display:inline-flex;align-items:center;gap:5px;background:var(--navy);color:#fff;border:none;border-radius:20px;padding:6px 12px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 10px rgba(15,36,96,.28)}
+.gcard-boost:hover{background:var(--navy-deep)}
+.boost-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px}
+.boost-modal{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:26px;position:relative}
+.boost-modal h3{font-size:18px;font-weight:900;letter-spacing:-.01em}
+.boost-modal .bm-sub{font-size:13px;color:var(--sub);margin-top:5px;line-height:1.55}
+.boost-close{position:absolute;top:14px;right:14px;background:none;border:none;font-size:22px;color:var(--mute);cursor:pointer;line-height:1}
+.boost-opts{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.boost-opt{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;background:#fff;font-family:inherit;text-align:left;transition:border-color .15s}
+.boost-opt:hover{border-color:var(--navy)}
+.boost-opt .bo-days{font-size:15px;font-weight:800}
+.boost-opt .bo-tag{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;background:#FEF3C7;color:#92400E;padding:3px 8px;border-radius:12px}
+.boost-opt .bo-price{margin-left:auto;font-size:17px;font-weight:900;color:var(--navy)}
+.boost-pay-note{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:12px;color:var(--mute)}
+
 
 
 
@@ -305,7 +323,7 @@ window.doSearch = window.doSearch || function(){
       </a>
     </div>
     <div class="pf-listings">
-      <h2>Active Listings</h2>
+      <h2 id="pfListingsHeading">Active Listings</h2>
       <div class="pf-grid" id="pfGrid"></div>
       <div class="pf-reviews hidden" id="pfReviews">
         <h2 style="margin-top:36px">Reviews</h2>
@@ -387,6 +405,20 @@ window.doSearch = window.doSearch || function(){
 </footer>
 <!-- FOOTER:END -->
 
+<!-- BOOST PICKER MODAL (owner only; Paynow checkout) -->
+<div class="boost-overlay hidden" id="boostOverlay">
+  <div class="boost-modal" role="dialog" aria-modal="true" aria-labelledby="boostTitle">
+    <button type="button" class="boost-close" id="boostClose" aria-label="Close">&times;</button>
+    <h3 id="boostTitle">Boost this listing</h3>
+    <p class="bm-sub">Featured listings appear at the top of search and category pages with a FEATURED badge. Same prices as the PaMarket app.</p>
+    <div class="boost-opts" id="boostOpts"></div>
+    <div class="boost-pay-note">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Secure checkout by Paynow — EcoCash, OneMoney &amp; cards. <a href="terms" target="_blank" style="text-decoration:underline;color:var(--sub)">Terms apply</a>
+    </div>
+  </div>
+</div>
+
 <a href="https://wa.me/971589772645" class="wa" target="_blank" rel="noopener" aria-label="WhatsApp">
   <div class="wa-btn">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
@@ -401,6 +433,8 @@ const PIN='<svg width="11" height="11" fill="none" stroke="currentColor" stroke-
 const COLORS=['#EEF2FF','#FEF3C7','#DCFCE7','#FCE7F3','#E0F2FE','#FEF9C3','#F3E8FF','#FFEDD5'];
 const TCOLORS=['#1A3A8F','#B27D22','#16A34A','#9D174D','#0369A1','#92400E','#7B2D8B','#C2410C'];
 
+let IS_OWNER=false;
+
 function gcard(listing,idx){
   const bg=COLORS[idx%COLORS.length],tc=TCOLORS[idx%TCOLORS.length];
   const photo=listing.photos&&listing.photos.length?listing.photos[0]:null;
@@ -408,7 +442,17 @@ function gcard(listing,idx){
   const img=photo
     ?`<img src="${photo}" alt="${listing.title.replace(/"/g,'&quot;')}" loading="lazy">`
     :`<div class="gcard-img-ph" style="color:${tc}">${listing.title.split(' ').slice(0,3).join('<br>')}</div>`;
+  const isFeatured=listing.featured_until&&new Date(listing.featured_until)>new Date();
+  // Owner-only overlays: a FEATURED marker if it's live, and a Boost button
+  // that opens the Paynow picker for this specific listing.
+  const featBadge=(IS_OWNER&&isFeatured)?'<span class="gcard-feat">FEATURED</span>':'';
+  const boostBtn=IS_OWNER
+    ?`<button type="button" class="gcard-boost" data-boost-id="${listing.id}" data-boost-cat="${listing.category||''}">`+
+      `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`+
+      (isFeatured?'Extend':'Boost')+`</button>`
+    :'';
   return`<a class="gcard" href="detail?id=${listing.id}">
+    ${featBadge}${boostBtn}
     <div class="gcard-img" style="background:${bg}">${img}</div>
     <div class="gcard-body">
       <div class="gcard-price">${PM.money(listing.price,listing.currency)}</div>
@@ -418,12 +462,59 @@ function gcard(listing,idx){
   </a>`;
 }
 
+// Boost picker — opens for one listing, redirects to Paynow checkout.
+function openBoost(listingId,category){
+  const overlay=document.getElementById('boostOverlay');
+  const optsEl=document.getElementById('boostOpts');
+  const products=category==='jobs'?PM.JOB_BOOST_PRODUCTS:PM.BOOST_PRODUCTS;
+  function renderOpts(){
+    optsEl.innerHTML=products.map(p=>
+      `<button type="button" class="boost-opt" data-product="${p.productId}">`+
+      `<span class="bo-days">${p.label}</span>`+(p.tag?`<span class="bo-tag">${p.tag}</span>`:'')+
+      `<span class="bo-price">$${p.priceUsd}</span></button>`).join('');
+    optsEl.querySelectorAll('.boost-opt').forEach(btn=>btn.addEventListener('click',()=>{
+      optsEl.querySelectorAll('.boost-opt').forEach(b=>b.disabled=true);
+      btn.innerHTML='<span class="bo-days">Starting secure checkout…</span>';
+      PM.createBoostPayment(listingId,btn.getAttribute('data-product')).then(r=>{
+        window.location.href=r.redirectUrl;
+      }).catch(err=>{
+        overlay.classList.add('hidden');
+        renderOpts();
+        alert(err&&err.message==='not-authenticated'
+          ?'Please sign in again to boost your listing.'
+          :'Could not start the payment: '+((err&&err.message)||'unknown error'));
+      });
+    }));
+  }
+  renderOpts();
+  overlay.classList.remove('hidden');
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const overlay=document.getElementById('boostOverlay');
+  document.getElementById('boostClose').addEventListener('click',()=>overlay.classList.add('hidden'));
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.add('hidden');});
+  // Delegated: boost buttons live inside listing-card <a> tags, so cancel
+  // the navigation and open the picker instead.
+  document.getElementById('pfGrid').addEventListener('click',e=>{
+    const btn=e.target.closest('.gcard-boost');
+    if(!btn)return;
+    e.preventDefault();e.stopPropagation();
+    openBoost(btn.getAttribute('data-boost-id'),btn.getAttribute('data-boost-cat'));
+  });
+});
+
 async function init(){
   const id=new URLSearchParams(location.search).get('id');
   if(!id){showNotFound();return}
   try{
     const profile=await PM.fetchProfileById(id);
     if(!profile){showNotFound();return}
+    const viewer=PM.currentUserId&&PM.currentUserId();
+    IS_OWNER=!!(viewer&&viewer===id);
+    if(IS_OWNER){
+      const h=document.getElementById('pfListingsHeading');
+      if(h)h.textContent='My Listings';
+    }
     render(profile);
     document.getElementById('loadingState').classList.add('hidden');
     document.getElementById('profileContent').classList.remove('hidden');
