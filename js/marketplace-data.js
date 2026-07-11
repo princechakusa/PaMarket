@@ -130,7 +130,8 @@
         '&status=eq.active&admin_status=eq.approved&deleted_at=is.null&select=*,' +
         'rental_brands(label),rental_categories(label),rental_locations(city,province),' +
         'rental_vehicle_media(url,is_cover,sort_order),rental_vehicle_specs(*),' +
-        'rental_vehicle_features(feature),rental_companies(trading_name,rental_phone,rental_whatsapp)'
+        'rental_vehicle_features(feature),rental_companies(business_id,trading_name,rental_phone,rental_whatsapp,rental_email,' +
+        'year_established,deposit_policy,driver_available,cross_border,insurance_included,min_rental_days)'
     ).then(function (rows) {
       return rows[0] || null;
     });
