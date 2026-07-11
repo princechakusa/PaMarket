@@ -250,7 +250,7 @@ function renderRental(v, chrome) {
   const phone = company.rental_whatsapp || company.rental_phone;
   const waHref = phone ? ('https://wa.me/' + String(phone).replace(/[^\d+]/g, '').replace('+', '') + '?text=' + encodeURIComponent('Hi, I saw your ' + title + ' rental on PaMarket. Is it available?')) : '';
   const waBtn = waHref ? '<a class="btn btn-whatsapp contact-btn" href="' + esc(waHref) + '" target="_blank" rel="noopener">Chat on WhatsApp</a>' : '';
-  const emailBtn = company.rental_email ? '<a class="btn btn-outline contact-btn" href="mailto:' + esc(company.rental_email) + '">Email: ' + esc(company.rental_email) + '</a>' : '';
+  const emailBtn = company.rental_email ? '<a class="btn btn-outline contact-btn" href="mailto:' + esc(company.rental_email) + '">Email the Company</a>' : '';
   const profileBtn = company.business_id ? '<a class="btn btn-navy contact-btn" href="business?id=' + esc(company.business_id) + '">View Business Profile</a>' : '';
   const companyName = company.trading_name || 'Rental Company';
   const companyInitials = esc(companyName.split(' ').map(function (w) { return w[0]; }).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'RC');
