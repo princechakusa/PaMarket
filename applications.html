@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Review candidates who applied to your job postings on PaMarket.">
+<title>Job Applications — PaMarket Zimbabwe</title>
+<link rel="canonical" href="https://pamarketzw.com/applications">
+<link rel="icon" href="img/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#1A3A8F;--navy-deep:#0F2460;--navy-mid:#1E4BB8;
+  --gold:#E8A33D;--ink:#0F172A;--sub:#475569;--mute:#94A3B8;
+  --line:#E2E8F0;--paper:#F8FAFC;--white:#FFFFFF;--green:#16A34A;--red:#DC2626;
+}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--paper);font-size:15px;line-height:1.6}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer}
+.hidden{display:none!important}
+
+.ap-wrap{max-width:860px;margin:0 auto;padding:28px 24px 80px}
+.ap-head h1{font-size:26px;font-weight:900;letter-spacing:-.02em}
+.ap-head p{font-size:14px;color:var(--sub);margin-top:6px}
+
+.ap-jobtabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.ap-tab{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:8px 15px;font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}
+.ap-tab.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ap-tab .n{opacity:.7;margin-left:5px}
+
+.ap-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:14px}
+.ap-top{display:flex;align-items:center;gap:12px}
+.ap-av{width:44px;height:44px;border-radius:50%;background:#EEF2FF;color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0}
+.ap-name{font-size:15.5px;font-weight:800}
+.ap-for{font-size:12.5px;color:var(--mute)}
+.ap-status{margin-left:auto;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:4px 10px;border-radius:20px}
+.ap-status.pending{background:#FEF3C7;color:#92400E}
+.ap-status.shortlisted{background:#DCFCE7;color:#166534}
+.ap-status.declined{background:#FEE2E2;color:#991B1B}
+.ap-contact{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.ap-contact a{font-size:12.5px;font-weight:700;color:var(--navy);border:1px solid var(--line);border-radius:9px;padding:6px 11px}
+.ap-msg{font-size:13.5px;color:var(--sub);line-height:1.6;margin-top:12px;background:var(--paper);border-radius:10px;padding:11px 13px;white-space:pre-wrap}
+.ap-qa{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}
+.ap-qa .qa{margin-bottom:9px}
+.ap-qa .q{font-size:12.5px;font-weight:700;color:var(--ink)}
+.ap-qa .a{font-size:13.5px;color:var(--sub);margin-top:1px}
+.ap-actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+.ap-actions .btn{font-size:13px;padding:8px 14px}
+
+.ap-empty,.ap-gate{text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:44px 26px;margin-top:22px}
+.ap-empty h2,.ap-gate h2{font-size:20px;font-weight:900;margin-bottom:8px}
+.ap-empty p,.ap-gate p{font-size:14px;color:var(--sub);max-width:420px;margin:0 auto 18px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<!-- HEADER:START -->
+<!-- ============================================================
+     PaMarket shared header — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the HEADER:START/END markers.
+     Styling lives in css/site.css. Do not edit the copies that
+     appear inside individual page files.
+     ============================================================ -->
+<div class="top-bar">
+  <div class="top-bar-w">
+    <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
+    <nav class="top-bar-links" aria-label="Primary">
+      <a href="browse">Browse</a>
+      <a href="advertise">Advertise</a>
+      <a href="contact">Contact Us</a>
+      <a href="blog">Blog</a>
+      <a href="about">About Us</a>
+    </nav>
+  </div>
+</div>
+
+<header id="hdr">
+  <div class="hdr-w">
+    <a href="/" class="logo">Pa<em>Market</em></a>
+    <div class="search-bar">
+      <select class="search-cat" id="hCat" aria-label="Category">
+        <option value="">All Categories</option>
+        <option value="property">Property</option><option value="vehicles">Vehicles</option><option value="electronics">Electronics</option>
+        <option value="jobs">Jobs</option><option value="furniture">Furniture</option><option value="fashion">Fashion</option>
+        <option value="services">Services</option><option value="agriculture">Agriculture</option><option value="rooms">Rooms</option>
+        <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option>
+      </select>
+      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." aria-label="Search" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()" aria-label="Search">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span class="sbtn-lbl">Search</span>
+      </button>
+    </div>
+    <div class="hdr-util">
+      <a href="auth" class="util-btn" title="Notifications" aria-label="Notifications">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="util-lbl">Notifications</span>
+      </a>
+      <a href="auth" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        <span class="util-lbl">My Searches</span>
+      </a>
+      <a href="auth" class="util-btn" title="Favorites" aria-label="Favorites">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        <span class="util-lbl">Favorites</span>
+      </a>
+      <a href="auth" class="util-btn" title="Chats" aria-label="Chats">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="util-lbl">Chats</span>
+      </a>
+      <a href="auth" class="util-btn" title="My Ads" aria-label="My Ads">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+        <span class="util-lbl">My Ads</span>
+      </a>
+    </div>
+    <div class="hdr-right">
+      <a href="auth" class="btn-sign" id="signInBtn">Sign In</a>
+      <a href="post-ad" class="btn-post">+ Post Free Ad</a>
+      <button class="ham" onclick="toggleMob()" aria-label="Menu" aria-expanded="false">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav id="mobNav" class="mob-nav">
+    <a href="/">Home</a>
+    <a href="browse">Browse</a>
+    <a href="advertise">Advertise</a>
+    <a href="contact">Contact Us</a>
+    <a href="blog">Blog</a>
+    <a href="about">About Us</a>
+    <a href="post-ad">+ Post Free Ad</a>
+  </nav>
+</header>
+<script>
+/* Self-contained header behaviour so the partial works on any page
+   regardless of what else the page loads. Guarded so pages that
+   already define these keep their own implementation. */
+window.toggleMob = window.toggleMob || function(){
+  var n = document.getElementById('mobNav');
+  var h = document.querySelector('#hdr .ham');
+  if (!n) return;
+  var open = n.classList.toggle('open');
+  if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+window.doSearch = window.doSearch || function(){
+  var cat = document.getElementById('hCat');
+  var q = document.getElementById('hQ');
+  var p = new URLSearchParams();
+  if (cat && cat.value) p.set('cat', cat.value);
+  if (q && q.value.trim()) p.set('q', q.value.trim());
+  var qs = p.toString();
+  window.location.href = (cat && cat.value === 'jobs' ? 'jobs' : 'browse') + (qs ? '?' + qs : '');
+};
+</script>
+<!-- HEADER:END -->
+
+<div class="ap-wrap">
+  <div class="ap-head">
+    <h1>Job Applications</h1>
+    <p>Candidates who applied to your job postings. Shortlist the best and reach out directly.</p>
+  </div>
+
+  <div id="apGate" class="ap-gate hidden">
+    <h2>Sign in to view applications</h2>
+    <p>Sign in with the account you used to post your jobs.</p>
+    <a class="btn btn-navy" id="apSignIn" href="auth">Sign In</a>
+  </div>
+
+  <div id="apLoading" style="text-align:center;color:var(--mute);padding:50px">Loading applications…</div>
+
+  <div id="apContent" class="hidden">
+    <div class="ap-jobtabs" id="apTabs"></div>
+    <div id="apList"></div>
+  </div>
+
+  <div id="apEmpty" class="ap-empty hidden">
+    <h2>No applications yet</h2>
+    <p>When someone applies to one of your job postings, they’ll show up here. Post a vacancy to start receiving applications.</p>
+    <a class="btn btn-navy" href="post-job">Post a job</a>
+  </div>
+</div>
+
+<!-- FOOTER:START -->
+<!-- ============================================================
+     PaMarket shared footer — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the FOOTER:START/END markers.
+     Styling lives in css/site.css.
+     ============================================================ -->
+<footer>
+  <div class="foot-main">
+    <div>
+      <div class="foot-logo">Pa<em>Market</em></div>
+      <p class="foot-tagline">Zimbabwe's free marketplace. Buy, sell, find jobs and grow your business across all ten provinces. No fees, ever.</p>
+      <div class="foot-contact">
+        <a href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a>
+        <a href="mailto:support@pamarketzw.com">support@pamarketzw.com</a>
+      </div>
+      <nav class="foot-social" aria-label="PaMarket on social media" style="display:flex;gap:14px;margin-top:16px;flex-wrap:wrap;align-items:center">
+        <a href="https://www.facebook.com/share/1BYRHcg9C9/?mibextid=wwXIfr" target="_blank" rel="me noopener" aria-label="PaMarket on Facebook" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg></a>
+        <a href="https://www.instagram.com/pamarketzim" target="_blank" rel="me noopener" aria-label="PaMarket on Instagram" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.43.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.43.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.43-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.43-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.12 1.38C1.36 2.67.95 3.34.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.79.72 1.46 1.38 2.12.66.66 1.33 1.07 2.12 1.38.76.3 1.64.5 2.91.56 1.28.06 1.69.07 4.95.07s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.31 1.46-.72 2.12-1.38.66-.66 1.07-1.33 1.38-2.12.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.31-.79-.72-1.46-1.38-2.12-.66-.66-1.33-1.07-2.12-1.38-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4zm6.41-10.4a1.44 1.44 0 1 0 1.44 1.44 1.44 1.44 0 0 0-1.44-1.44z"/></svg></a>
+        <a href="https://x.com/pamarketzw" target="_blank" rel="me noopener" aria-label="PaMarket on X (Twitter)" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.46l8.6-9.83L0 1.15h7.6l5.24 6.93zm-1.29 19.5h2.04L6.49 3.24H4.3z"/></svg></a>
+        <a href="https://www.tiktok.com/@pamarketzw?_r=1&amp;_t=ZS-97w0qE4b22v" target="_blank" rel="me noopener" aria-label="PaMarket on TikTok" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
+        <a href="https://www.linkedin.com/company/pamarket-zim/" target="_blank" rel="me noopener" aria-label="PaMarket on LinkedIn" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg></a>
+      </nav>
+      <div class="foot-store">
+        <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener">
+          <img src="img/google-play-badge.png" alt="Get it on Google Play" class="play-badge-sm">
+        </a>
+      </div>
+    </div>
+    <div class="foot-col">
+      <h5>Categories</h5>
+      <a href="browse?cat=property">Property</a>
+      <a href="browse?cat=vehicles">Vehicles</a>
+      <a href="browse?cat=electronics">Electronics</a>
+      <a href="browse?cat=furniture">Furniture</a>
+      <a href="browse?cat=fashion">Fashion</a>
+      <a href="browse?cat=agriculture">Agriculture</a>
+      <a href="jobs">Jobs</a>
+      <a href="services">Services</a>
+      <a href="browse?shops=1">Shops</a>
+      <a href="plans">Shop Plans</a>
+    </div>
+    <div class="foot-col">
+      <h5>Customer Service</h5>
+      <a href="blog">Blog</a>
+      <a href="help">Help &amp; FAQ</a>
+      <a href="contact">Contact Us</a>
+      <a href="advertise">Advertise</a>
+      <a href="community-guidelines">Community Guidelines</a>
+      <a href="about">About PaMarket</a>
+    </div>
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <a href="terms">Terms of Service</a>
+      <a href="privacy">Privacy Policy</a>
+      <a href="post-ad">Post a Free Ad</a>
+      <a href="auth">Sign In</a>
+      <a href="auth?mode=signup">Create Account</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</span>
+    <div class="foot-bottom-links">
+      <a href="terms">Terms</a>
+      <a href="privacy">Privacy</a>
+      <a href="community-guidelines">Guidelines</a>
+      <a href="contact">Contact</a>
+    </div>
+  </div>
+</footer>
+<!-- FOOTER:END -->
+
+<script src="js/supabase-config.js"></script>
+<script src="js/marketplace-data.js"></script>
+<script src="js/session.js"></script>
+<script src="js/nav-dropdowns.js"></script>
+<script>
+'use strict';
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var session=(window.PM&&PM.getSession)?PM.getSession():null;
+  if(!(session&&session.user&&session.user.id)){
+    $('apLoading').classList.add('hidden');
+    $('apGate').classList.remove('hidden');
+    $('apSignIn').href='auth?return='+encodeURIComponent(location.pathname);
+    return;
+  }
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function initials(n){return (String(n||'?').trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('')||'?').toUpperCase();}
+  function statusLabel(s){return s==='shortlisted'?'Shortlisted':s==='declined'?'Declined':'New';}
+
+  var ALL=[], activeJob='all';
+
+  function render(){
+    var jobs={};
+    ALL.forEach(function(a){ if(!jobs[a.job_id]) jobs[a.job_id]={title:a.job_title||'Job',count:0}; jobs[a.job_id].count++; });
+    var tabs='<button class="ap-tab'+(activeJob==='all'?' on':'')+'" data-job="all">All<span class="n">'+ALL.length+'</span></button>';
+    tabs+=Object.keys(jobs).map(function(id){
+      return '<button class="ap-tab'+(activeJob===id?' on':'')+'" data-job="'+esc(id)+'">'+esc(jobs[id].title)+'<span class="n">'+jobs[id].count+'</span></button>';
+    }).join('');
+    $('apTabs').innerHTML=tabs;
+    $('apTabs').querySelectorAll('.ap-tab').forEach(function(b){
+      b.addEventListener('click',function(){activeJob=b.getAttribute('data-job');render();});
+    });
+
+    var rows=ALL.filter(function(a){return activeJob==='all'||a.job_id===activeJob;});
+    $('apList').innerHTML=rows.map(function(a){
+      var st=a.status||'pending';
+      var wa=a.applicant_phone?('https://wa.me/'+String(a.applicant_phone).replace(/[^0-9]/g,'')):'';
+      var answers=Array.isArray(a.answers)?a.answers.filter(function(x){return x&&x.answer;}):[];
+      return '<div class="ap-card" data-id="'+esc(a.id)+'">'+
+        '<div class="ap-top"><div class="ap-av">'+esc(initials(a.applicant_name))+'</div>'+
+          '<div><div class="ap-name">'+esc(a.applicant_name||'Applicant')+'</div>'+
+          '<div class="ap-for">Applied for '+esc(a.job_title||'your job')+' · '+esc(PM.timeAgo(a.applied_at))+'</div></div>'+
+          '<span class="ap-status '+esc(st)+'">'+statusLabel(st)+'</span></div>'+
+        '<div class="ap-contact">'+
+          (a.applicant_email?'<a href="mailto:'+esc(a.applicant_email)+'">✉ '+esc(a.applicant_email)+'</a>':'')+
+          (a.applicant_phone?'<a href="tel:'+esc(a.applicant_phone)+'">☎ '+esc(a.applicant_phone)+'</a>':'')+
+          (wa?'<a href="'+esc(wa)+'" target="_blank" rel="noopener">WhatsApp</a>':'')+
+        '</div>'+
+        (a.message?'<div class="ap-msg">'+esc(a.message)+'</div>':'')+
+        (answers.length?'<div class="ap-qa">'+answers.map(function(qa){
+          return '<div class="qa"><div class="q">'+esc(qa.question)+'</div><div class="a">'+esc(qa.answer)+'</div></div>';
+        }).join('')+'</div>':'')+
+        '<div class="ap-actions">'+
+          (st!=='shortlisted'?'<button class="btn btn-primary" data-act="shortlisted">Shortlist</button>':'')+
+          (st!=='declined'?'<button class="btn btn-outline" data-act="declined">Decline</button>':'')+
+          (st!=='pending'?'<button class="btn btn-outline" data-act="pending">Reset</button>':'')+
+        '</div>'+
+      '</div>';
+    }).join('');
+
+    $('apList').querySelectorAll('.ap-card').forEach(function(card){
+      card.querySelectorAll('[data-act]').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var id=card.getAttribute('data-id'), act=btn.getAttribute('data-act');
+          card.querySelectorAll('[data-act]').forEach(function(b){b.disabled=true;});
+          PM.updateApplicationStatus(id,act).then(function(r){
+            if(r&&r.ok){ var a=ALL.find(function(x){return x.id===id;}); if(a)a.status=act; render(); }
+            else { card.querySelectorAll('[data-act]').forEach(function(b){b.disabled=false;}); alert('Could not update.'); }
+          }).catch(function(){ card.querySelectorAll('[data-act]').forEach(function(b){b.disabled=false;}); alert('Could not update.'); });
+        });
+      });
+    });
+  }
+
+  PM.fetchApplicationsForEmployer().then(function(rows){
+    ALL=rows||[];
+    $('apLoading').classList.add('hidden');
+    if(!ALL.length){ $('apEmpty').classList.remove('hidden'); return; }
+    $('apContent').classList.remove('hidden');
+    render();
+  }).catch(function(){
+    $('apLoading').classList.add('hidden');
+    $('apEmpty').classList.remove('hidden');
+  });
+})();
+</script>
+</body>
+</html>

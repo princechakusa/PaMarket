@@ -147,8 +147,12 @@ button{font-family:inherit;cursor:pointer}
 .apply-done{margin-top:12px;font-size:12.5px;font-weight:700;color:#BBF7D0}
 .boost-modal .bm-field{display:flex;flex-direction:column;margin-top:12px}
 .boost-modal .bm-field label{font-size:12.5px;font-weight:700;margin-bottom:5px}
-.boost-modal .bm-field input,.boost-modal .bm-field textarea{font-family:inherit;font-size:14px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;resize:vertical}
-.boost-modal .bm-field input:focus,.boost-modal .bm-field textarea:focus{outline:none;border-color:var(--navy)}
+.boost-modal .bm-field input,.boost-modal .bm-field textarea,.boost-modal .bm-field select{font-family:inherit;font-size:14px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;resize:vertical;background:#fff}
+.boost-modal .bm-field input:focus,.boost-modal .bm-field textarea:focus,.boost-modal .bm-field select:focus{outline:none;border-color:var(--navy)}
+.ap-req{color:var(--red);margin-right:3px}
+.ap-yesno{display:flex;gap:8px}
+.ap-yesno button{flex:1;padding:10px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;background:#fff;color:var(--ink);cursor:pointer}
+.ap-yesno button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 .rating-hero{display:flex;align-items:center;gap:16px;margin-bottom:16px}
 .rating-big{font-size:38px;font-weight:900;color:var(--navy);letter-spacing:-.03em;line-height:1}
 .rating-stars{color:var(--gold);font-size:16px;letter-spacing:2px}
@@ -504,7 +508,8 @@ window.doSearch = window.doSearch || function(){
     <div class="bm-field"><label for="apName">Full name</label><input type="text" id="apName" maxlength="120" placeholder="Your name"></div>
     <div class="bm-field"><label for="apEmail">Email</label><input type="email" id="apEmail" maxlength="120" placeholder="you@email.com"></div>
     <div class="bm-field"><label for="apPhone">Phone / WhatsApp</label><input type="text" id="apPhone" maxlength="30" placeholder="+263 …"></div>
-    <div class="bm-field"><label for="apMsg">Message to employer</label><textarea id="apMsg" rows="4" maxlength="2000" placeholder="Briefly say why you're a good fit and your availability."></textarea></div>
+    <div id="apQuestions"></div>
+    <div class="bm-field"><label for="apMsg">Message to employer <span style="color:var(--mute);font-weight:500">(optional)</span></label><textarea id="apMsg" rows="4" maxlength="2000" placeholder="Briefly say why you're a good fit and your availability."></textarea></div>
     <button type="button" class="btn btn-navy" id="apSubmit" style="width:100%;margin-top:16px">Send Application</button>
   </div>
 </div>
@@ -923,9 +928,38 @@ function renderListing(l,reviews){
       document.getElementById('apPhone').value=m.phone||sess.user.phone||'';
       if(PM.hasAppliedToJob)PM.hasAppliedToJob(l.id).then(a=>{if(a)markApplied();});
     }
+    // Employer's screening questions (LinkedIn-style).
+    const questions=Array.isArray(l.custom_questions)?l.custom_questions:[];
+    const escQ=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    function renderQuestions(){
+      const wrap=document.getElementById('apQuestions');
+      wrap.innerHTML=questions.map((q,i)=>{
+        const lbl='<label>'+(q.required?'<span class="ap-req">*</span>':'')+escQ(q.question)+'</label>';
+        let inp;
+        if(q.type==='yesno'){
+          inp='<div class="ap-yesno" id="apQ_'+i+'" data-value="">'+
+            '<button type="button" data-v="Yes">Yes</button><button type="button" data-v="No">No</button></div>';
+        }else if(q.type==='select'){
+          inp='<select id="apQ_'+i+'"><option value="">Choose…</option>'+
+            (q.options||[]).map(o=>'<option>'+escQ(o)+'</option>').join('')+'</select>';
+        }else{
+          inp='<textarea id="apQ_'+i+'" rows="2" placeholder="Your answer…"></textarea>';
+        }
+        return '<div class="bm-field">'+lbl+inp+'</div>';
+      }).join('');
+      // Yes/No toggle behaviour.
+      wrap.querySelectorAll('.ap-yesno').forEach(box=>{
+        box.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+          box.dataset.value=b.getAttribute('data-v');
+          box.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+          b.classList.add('on');
+        }));
+      });
+    }
     applyBtn.onclick=()=>{
       if(!(PM.getSession&&PM.getSession())){window.location='auth?return='+encodeURIComponent(location.pathname+location.search);return;}
       document.getElementById('applySub').textContent='Applying to "'+l.title+'" at '+company+'.';
+      renderQuestions();
       applyOverlay.classList.remove('hidden');
     };
     document.getElementById('applyClose').onclick=()=>applyOverlay.classList.add('hidden');
@@ -937,8 +971,16 @@ function renderListing(l,reviews){
       const msg=document.getElementById('apMsg').value.trim();
       if(!name){alert('Please enter your name.');return;}
       if(!email&&!phone){alert('Please add an email or phone so the employer can reach you.');return;}
+      // Collect + validate screening answers.
+      const answers=[];
+      for(let i=0;i<questions.length;i++){
+        const q=questions[i], el=document.getElementById('apQ_'+i);
+        let v=q.type==='yesno'?(el?el.dataset.value||'':''):(el?(el.value||'').trim():'');
+        if(q.required&&!v){alert('Please answer: '+String(q.question).slice(0,80));if(el)el.scrollIntoView({block:'center'});return;}
+        answers.push({questionId:q.id,question:q.question,answer:v});
+      }
       const btn=this;btn.disabled=true;btn.textContent='Sending…';
-      PM.applyToJob({jobId:l.id,jobTitle:l.title,company:company,employerId:l.seller_id,name:name,email:email,phone:phone,message:msg})
+      PM.applyToJob({jobId:l.id,jobTitle:l.title,company:company,employerId:l.seller_id,name:name,email:email,phone:phone,message:msg,answers:answers})
         .then(r=>{
           applyOverlay.classList.add('hidden');
           if(r.duplicate){alert('You have already applied to this job.');}

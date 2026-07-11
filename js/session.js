@@ -78,6 +78,8 @@
       '<div class="acct-menu">' +
         '<a href="' + profileUrl + '">My Profile</a>' +
         '<a href="' + profileUrl + '">My Ads</a>' +
+        '<a href="post-job">Post a Job</a>' +
+        '<a href="applications">Job Applications</a>' +
         '<a href="' + APP_URL + '" target="_blank" rel="noopener">Favorites (open app)</a>' +
         '<a href="' + APP_URL + '" target="_blank" rel="noopener">Chats (open app)</a>' +
         '<div class="acct-sep"></div>' +

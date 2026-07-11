@@ -76,6 +76,19 @@ button{font-family:inherit;cursor:pointer}
 .boost-opt .bo-price{margin-left:auto;font-size:17px;font-weight:900;color:var(--navy)}
 .boost-pay-note{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:12px;color:var(--mute)}
 
+.jq-add{background:#EEF2FF;color:var(--navy);border:1.5px dashed #C7D2F0;border-radius:11px;padding:11px 14px;font-weight:700;font-size:13.5px;width:100%}
+.jq-add:hover{background:#E3E9FB}
+.jq-item{display:flex;align-items:flex-start;gap:12px;border:1.5px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:10px;background:#fff}
+.jq-item .jq-body{flex:1;min-width:0}
+.jq-item .jq-q{font-size:14px;font-weight:700;line-height:1.4}
+.jq-item .jq-meta{font-size:11.5px;color:var(--mute);margin-top:4px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.jq-item .jq-tag{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-weight:700}
+.jq-item .jq-req{color:var(--red);font-weight:700}
+.jq-item .jq-del{background:none;border:none;color:var(--mute);font-size:20px;line-height:1;cursor:pointer;padding:0 2px}
+.jq-item .jq-del:hover{color:var(--red)}
+.jqm-radio{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.jqm-radio label{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;cursor:pointer}
+.jqm-radio input{accent-color:var(--navy)}
 @media(max-width:600px){.pf-row{grid-template-columns:1fr;gap:0}}
 </style>
 </head>
@@ -283,6 +296,14 @@ window.doSearch = window.doSearch || function(){
         </div>
       </div>
 
+      <!-- Screening questions (LinkedIn-style) -->
+      <div class="pf-field">
+        <label>Screening questions <span style="color:var(--mute);font-weight:500">(optional)</span></label>
+        <div class="pf-hint" style="margin-top:0;margin-bottom:10px">Ask applicants a few questions up front — great for filtering candidates fast.</div>
+        <div id="jqList"></div>
+        <button type="button" class="jq-add" id="jqAdd">+ Add a question</button>
+      </div>
+
       <div class="pf-field">
         <label style="display:flex;align-items:center;gap:9px;font-weight:600;cursor:pointer">
           <input type="checkbox" id="jAnon" style="width:auto;accent-color:var(--navy)">
@@ -303,9 +324,38 @@ window.doSearch = window.doSearch || function(){
     <h2 id="pjSuccessTitle">Job submitted!</h2>
     <p id="pjSuccessMsg">Your vacancy will appear on the Jobs board once it passes review.</p>
     <div class="pj-success-btns">
-      <a class="btn btn-navy" href="jobs">View Jobs board</a>
+      <a class="btn btn-navy" href="applications">View Applications</a>
+      <a class="btn btn-outline" href="jobs">Jobs board</a>
       <a class="btn btn-outline" href="post-job">Post another</a>
     </div>
+  </div>
+</div>
+
+<!-- ADD SCREENING QUESTION MODAL -->
+<div class="boost-overlay hidden" id="jqOverlay">
+  <div class="boost-modal" role="dialog" aria-modal="true" aria-labelledby="jqTitle">
+    <button type="button" class="boost-close" id="jqClose" aria-label="Close">&times;</button>
+    <h3 id="jqTitle">Add a screening question</h3>
+    <div class="bm-field" style="display:flex;flex-direction:column;margin-top:16px">
+      <label for="jqText" style="font-size:12.5px;font-weight:700;margin-bottom:5px">Question</label>
+      <input type="text" id="jqText" maxlength="160" placeholder="e.g. How many years of experience do you have?" style="font-family:inherit;font-size:14px;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;width:100%">
+    </div>
+    <div style="margin-top:16px">
+      <label style="font-size:12.5px;font-weight:700">Answer type</label>
+      <div class="jqm-radio">
+        <label><input type="radio" name="jqType" value="text" checked> Short text answer</label>
+        <label><input type="radio" name="jqType" value="yesno"> Yes / No</label>
+        <label><input type="radio" name="jqType" value="select"> Multiple choice</label>
+      </div>
+    </div>
+    <div class="bm-field hidden" id="jqOptsWrap" style="display:flex;flex-direction:column;margin-top:14px">
+      <label for="jqOpts" style="font-size:12.5px;font-weight:700;margin-bottom:5px">Choices (one per line)</label>
+      <textarea id="jqOpts" rows="3" placeholder="Diploma&#10;Degree&#10;Postgraduate" style="font-family:inherit;font-size:14px;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;width:100%;resize:vertical"></textarea>
+    </div>
+    <label style="display:flex;align-items:center;gap:9px;margin-top:16px;font-size:13.5px;font-weight:600;cursor:pointer">
+      <input type="checkbox" id="jqRequired" style="accent-color:var(--navy)"> Required — applicants must answer
+    </label>
+    <button type="button" class="btn btn-navy" id="jqSave" style="width:100%;margin-top:18px">Add question</button>
   </div>
 </div>
 
@@ -425,6 +475,53 @@ window.doSearch = window.doSearch || function(){
   var jDesc=$('jDesc'),jDescCount=$('jDescCount');
   jDesc.addEventListener('input',function(){jDescCount.textContent=jDesc.value.length;});
 
+  // ── Screening-questions builder ──
+  var QUESTIONS=[];
+  var TYPE_LABEL={text:'Short text',yesno:'Yes / No',select:'Multiple choice'};
+  function escH(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function uid(){return 'q'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+  function renderQuestions(){
+    var list=$('jqList');
+    list.innerHTML=QUESTIONS.map(function(q,i){
+      return '<div class="jq-item"><div class="jq-body"><div class="jq-q">'+escH(q.question)+'</div>'+
+        '<div class="jq-meta"><span class="jq-tag">'+TYPE_LABEL[q.type]+'</span>'+
+        (q.required?'<span class="jq-req">Required</span>':'<span>Optional</span>')+
+        (q.type==='select'&&q.options&&q.options.length?'<span>· '+escH(q.options.join(', '))+'</span>':'')+
+        '</div></div><button type="button" class="jq-del" data-i="'+i+'" aria-label="Remove">&times;</button></div>';
+    }).join('');
+    list.querySelectorAll('.jq-del').forEach(function(btn){
+      btn.addEventListener('click',function(){QUESTIONS.splice(Number(btn.getAttribute('data-i')),1);renderQuestions();});
+    });
+  }
+  var jqOverlay=$('jqOverlay');
+  function openQ(){
+    $('jqText').value=''; $('jqOpts').value=''; $('jqRequired').checked=false;
+    document.querySelectorAll('input[name="jqType"]').forEach(function(r,i){r.checked=(i===0);});
+    $('jqOptsWrap').classList.add('hidden');
+    jqOverlay.classList.remove('hidden'); $('jqText').focus();
+  }
+  $('jqAdd').addEventListener('click',openQ);
+  $('jqClose').addEventListener('click',function(){jqOverlay.classList.add('hidden');});
+  jqOverlay.addEventListener('click',function(e){if(e.target===jqOverlay)jqOverlay.classList.add('hidden');});
+  document.querySelectorAll('input[name="jqType"]').forEach(function(r){
+    r.addEventListener('change',function(){$('jqOptsWrap').classList.toggle('hidden',r.value!=='select'||!r.checked);});
+  });
+  $('jqSave').addEventListener('click',function(){
+    var q=$('jqText').value.trim();
+    if(!q){alert('Please type the question.');return;}
+    var type='text';
+    document.querySelectorAll('input[name="jqType"]').forEach(function(r){if(r.checked)type=r.value;});
+    var opts=[];
+    if(type==='select'){
+      opts=$('jqOpts').value.split('\n').map(function(x){return x.trim();}).filter(Boolean);
+      if(opts.length<2){alert('Add at least two choices for a multiple-choice question.');return;}
+    }
+    if(QUESTIONS.length>=10){alert('You can add up to 10 screening questions.');return;}
+    QUESTIONS.push({id:uid(),question:q,type:type,options:opts,required:$('jqRequired').checked});
+    jqOverlay.classList.add('hidden');
+    renderQuestions();
+  });
+
   // Credit balance + how many active jobs the user already has.
   var activeJobCount=0, creditBalance=0;
   function refreshStatus(){
@@ -523,7 +620,8 @@ window.doSearch = window.doSearch || function(){
       sellerName:company,
       attributes:{ job_type:jobType, company:company, industry:cat,
                    apply_email:email||undefined, apply_phone:phone||undefined,
-                   anonymous:anon||undefined }
+                   anonymous:anon||undefined },
+      customQuestions:QUESTIONS.slice()
     }).then(function(res){
       var listing=res && res.listing;
       if(!listing){ throw new Error('The job could not be posted.'); }

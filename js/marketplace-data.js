@@ -433,6 +433,9 @@
       created_at: new Date().toISOString(),
     };
     if (opts.attributes && typeof opts.attributes === 'object') row.attributes = opts.attributes;
+    // Screening questions for a job (LinkedIn-style), same jsonb shape the app
+    // writes: [{ id, question, type:'text'|'yesno'|'select', options:[], required }].
+    if (Array.isArray(opts.customQuestions) && opts.customQuestions.length) row.custom_questions = opts.customQuestions;
 
     function insert(body) {
       return fetch(SB_URL + '/rest/v1/listings', {
@@ -441,21 +444,23 @@
         body: JSON.stringify(body),
       });
     }
-    return insert(row).then(function (res) {
-      if (res.ok) return res.json().then(function (rows) { return { ok: true, listing: rows[0] || null }; });
-      return res.text().then(function (t) {
-        // attributes column not migrated yet → retry without it so posting
-        // never breaks before the migration lands (same fallback as the app).
-        if (row.attributes && /attributes|column|schema cache|PGRST204/i.test(t)) {
-          var bare = Object.assign({}, row); delete bare.attributes;
-          return insert(bare).then(function (r2) {
-            if (r2.ok) return r2.json().then(function (rows) { return { ok: true, listing: rows[0] || null }; });
-            return r2.text().then(function (t2) { throw moderationOrError(t2, r2.status); });
-          });
-        }
-        throw moderationOrError(t, res.status);
+    // Strip whichever optional jsonb column the DB complains about (attributes
+    // or custom_questions may predate their migrations) and retry, so posting
+    // never breaks before a migration lands — same contract as the app.
+    function insertWithFallback(body) {
+      return insert(body).then(function (res) {
+        if (res.ok) return res.json().then(function (rows) { return { ok: true, listing: rows[0] || null }; });
+        return res.text().then(function (t) {
+          var stripped = Object.assign({}, body);
+          var didStrip = false;
+          if (body.custom_questions && /custom_questions|column|schema cache|PGRST204/i.test(t)) { delete stripped.custom_questions; didStrip = true; }
+          else if (body.attributes && /attributes|column|schema cache|PGRST204/i.test(t)) { delete stripped.attributes; didStrip = true; }
+          if (didStrip) return insertWithFallback(stripped);
+          throw moderationOrError(t, res.status);
+        });
       });
-    });
+    }
+    return insertWithFallback(row);
   }
 
   // A Phase A moderation block surfaces as a raised exception (P0001 / message
@@ -545,16 +550,56 @@
       message: String(opts.message || '').slice(0, 4000),
       employer_id: opts.employerId,
     };
-    return fetch(SB_URL + '/rest/v1/applications', {
-      method: 'POST',
+    // Screening-question answers, same jsonb shape the app writes:
+    // [{ questionId, question, answer }].
+    if (Array.isArray(opts.answers) && opts.answers.length) row.answers = opts.answers;
+
+    function post(body) {
+      return fetch(SB_URL + '/rest/v1/applications', {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+        body: JSON.stringify(body),
+      }).then(function (res) {
+        if (res.ok) return res.json().then(function (rows) { return { ok: true, application: rows[0] || null }; });
+        return res.text().then(function (t) {
+          if (/duplicate|unique|23505/i.test(t)) return { ok: false, duplicate: true };
+          // answers column not migrated yet → retry without it.
+          if (body.answers && /answers|column|schema cache|PGRST204/i.test(t)) {
+            var bare = Object.assign({}, body); delete bare.answers;
+            return post(bare);
+          }
+          throw new Error(t || ('apply failed: ' + res.status));
+        });
+      });
+    }
+    return post(row);
+  }
+
+  // ── Employer applications inbox (website) ────────────────────────
+  // Every application to jobs owned by the caller. RLS lets an employer read
+  // applications where employer_id = auth.uid(), so this is naturally scoped
+  // to the signed-in employer's own postings.
+  function fetchApplicationsForEmployer() {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user) return Promise.resolve([]);
+    return fetch(SB_URL + '/rest/v1/applications?employer_id=eq.' + esc(s.user.id) +
+      '&select=id,job_id,job_title,company,applicant_name,applicant_phone,applicant_email,message,answers,status,applied_at&order=applied_at.desc', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
+    }).then(function (res) { return res.ok ? res.json() : []; }).catch(function () { return []; });
+  }
+
+  // Employer updates an application's status (pending → shortlisted/declined).
+  // RLS "applications: employer update" restricts this to the employer.
+  function updateApplicationStatus(applicationId, status) {
+    var s = getSession();
+    if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
+    return fetch(SB_URL + '/rest/v1/applications?id=eq.' + esc(applicationId), {
+      method: 'PATCH',
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json', Prefer: 'return=representation' },
-      body: JSON.stringify(row),
+      body: JSON.stringify({ status: status }),
     }).then(function (res) {
       if (res.ok) return res.json().then(function (rows) { return { ok: true, application: rows[0] || null }; });
-      return res.text().then(function (t) {
-        if (/duplicate|unique|23505/i.test(t)) return { ok: false, duplicate: true };
-        throw new Error(t || ('apply failed: ' + res.status));
-      });
+      return res.text().then(function (t) { throw new Error(t || ('update failed: ' + res.status)); });
     });
   }
 
@@ -664,4 +709,6 @@
   global.PM.spendJobCredit = spendJobCredit;
   global.PM.applyToJob = applyToJob;
   global.PM.hasAppliedToJob = hasAppliedToJob;
+  global.PM.fetchApplicationsForEmployer = fetchApplicationsForEmployer;
+  global.PM.updateApplicationStatus = updateApplicationStatus;
 })(window);
