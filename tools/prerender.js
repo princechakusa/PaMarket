@@ -51,7 +51,8 @@ async function fetchActiveListings(cfg) {
 async function fetchActiveRentals(cfg) {
   const select = '*,rental_brands(label),rental_categories(label),rental_locations(city,province),' +
     'rental_vehicle_media(url,is_cover,sort_order),rental_vehicle_features(feature),' +
-    'rental_companies(trading_name,rental_phone,rental_whatsapp)';
+    'rental_companies(business_id,trading_name,rental_phone,rental_whatsapp,rental_email,' +
+    'year_established,deposit_policy,driver_available,cross_border,insurance_included)';
   const rows = await pget(cfg, 'rental_vehicle_listings?status=eq.active&admin_status=eq.approved&deleted_at=is.null&order=created_at.desc&select=' + encodeURIComponent(select) + '&limit=1000');
   return LIMIT ? rows.slice(0, LIMIT) : rows;
 }
@@ -198,6 +199,17 @@ function renderRental(v, chrome) {
   const phone = company.rental_whatsapp || company.rental_phone;
   const waHref = phone ? ('https://wa.me/' + String(phone).replace(/[^\d+]/g, '').replace('+', '') + '?text=' + encodeURIComponent('Hi, I saw your ' + title + ' rental on PaMarket. Is it available?')) : '';
   const waBtn = waHref ? '<a class="btn btn-whatsapp contact-btn" href="' + esc(waHref) + '" target="_blank" rel="noopener">Chat on WhatsApp</a>' : '';
+  const emailBtn = company.rental_email ? '<a class="btn btn-outline contact-btn" href="mailto:' + esc(company.rental_email) + '">Email: ' + esc(company.rental_email) + '</a>' : '';
+  const profileBtn = company.business_id ? '<a class="btn btn-navy contact-btn" href="business?id=' + esc(company.business_id) + '">View Business Profile</a>' : '';
+  const companyName = company.trading_name || 'Rental Company';
+  const companyInitials = esc(companyName.split(' ').map(function (w) { return w[0]; }).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'RC');
+  const infoChips = [];
+  if (company.year_established) infoChips.push('Est. ' + company.year_established);
+  if (company.driver_available) infoChips.push('Driver available');
+  if (company.cross_border) infoChips.push('Cross-border allowed');
+  if (company.insurance_included) infoChips.push('Insurance included');
+  if (company.deposit_policy) infoChips.push(company.deposit_policy);
+  const infoChipsHtml = infoChips.length ? '<div class="feat-chips" style="margin:10px 0">' + infoChips.map(function (c) { return '<span class="feat-chip">' + esc(c) + '</span>'; }).join('') + '</div>' : '';
   const crumb = '<div class="crumb"><a href="/">Home</a> / <a href="rentals">Vehicle Rental</a> / <span>' + esc(title) + '</span></div>';
   const main = '<div id="detailContent"><div class="detail-wrap"><div>' +
     '<div class="gallery"><div class="gallery-main" id="galleryMain">' + mainImg + '</div>' + thumbs + '</div>' +
@@ -208,7 +220,8 @@ function renderRental(v, chrome) {
     '<div class="d-meta"><span>' + esc(loc) + '</span>' + (catLabel ? '<span style="background:#EEF2FF;color:var(--navy);padding:3px 10px;border-radius:20px;font-weight:700">' + esc(catLabel) + '</span>' : '') + (v.min_rental_days ? '<span>Min ' + v.min_rental_days + ' day' + (v.min_rental_days === 1 ? '' : 's') + '</span>' : '') + '</div>' +
     '<div class="d-section"><h3>Description</h3><div class="d-desc">' + esc(v.description || 'No description provided.') + '</div></div>' + featHtml +
     '</div><div class="sidebar"><div class="seller-card">' +
-    '<div class="seller-name">' + esc(company.trading_name || 'Rental Company') + '</div><div class="seller-sub">Verified rental partner</div>' + waBtn + '</div>' +
+    '<div class="seller-top"><div class="seller-avatar">' + companyInitials + '</div><div><div class="seller-name">' + esc(companyName) + '</div><div class="seller-sub">Verified rental partner on PaMarket</div></div></div>' +
+    infoChipsHtml + waBtn + emailBtn + profileBtn + '</div>' +
     '<div class="safety-card"><h4>Stay Safe</h4><ul><li>Confirm the vehicle and terms before paying</li><li>Keep all conversations and payments inside PaMarket</li></ul></div>' +
     '</div></div></div>';
   return shell({
@@ -234,8 +247,17 @@ function renderBusiness(b, chrome) {
   }).join('') + '</div>' : '';
   const desc = b.description ? String(b.description).slice(0, 155) : (b.name + ' — a verified business storefront on PaMarket, Zimbabwe.');
   const crumb = '<div class="crumb"><a href="/">Home</a> / <a href="browse?shops=1">Shops</a> / <span>' + esc(b.name) + '</span></div>';
+  const wa = b.whatsapp || b.phone;
+  const actions = [];
+  if (wa) actions.push('<a class="btn btn-whatsapp" href="https://wa.me/' + esc(String(wa).replace(/[^0-9]/g, '')) + '" target="_blank" rel="noopener">WhatsApp</a>');
+  if (b.phone) actions.push('<a class="btn btn-outline" href="tel:' + esc(b.phone) + '">Call</a>');
+  if (b.email) actions.push('<a class="btn btn-outline" href="mailto:' + esc(b.email) + '">Email: ' + esc(b.email) + '</a>');
+  const actionsHtml = actions.length
+    ? '<div class="biz-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">' + actions.join('') + '</div>'
+    : '<div class="biz-actions" style="margin-top:16px;color:var(--mute);font-size:13.5px">No contact details provided</div>';
   const main = '<div class="biz-body" style="max-width:1000px;margin:0 auto;padding:24px">' +
     '<div style="display:flex;gap:18px;align-items:center">' + logo + '<div><h1 class="biz-name" style="font-size:26px;font-weight:900">' + esc(b.name) + (b.verified ? ' <span class="biz-verified">✓ Verified</span>' : '') + '</h1><div class="biz-meta"><span>' + esc(loc) + '</span></div></div></div>' +
+    actionsHtml +
     (b.description ? '<div class="biz-section"><h2>About</h2><div class="biz-about"><p>' + esc(b.description) + '</p></div></div>' : '') +
     '<div class="biz-section"><h2>Products</h2><div class="prod-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:12px">' + prodCards + '</div></div>' +
     revHtml + '</div>';
