@@ -3886,6 +3886,11 @@ async function saveNewAd() {
       business_name: biz,
       advertiser_id: advertId||null,
       headline: head,
+      // The public website (pamarketzw.com) renders paid_ads by `title` and
+      // filters by `placement`, so persist both — otherwise ads created here
+      // show on the website with no headline and can't be targeted to Home.
+      title: head,
+      placement: placement,
       tagline: (document.getElementById('adTag')||{}).value.trim(),
       image_url: (document.getElementById('adImg')||{}).value||null,
       bg_color: bgColor,

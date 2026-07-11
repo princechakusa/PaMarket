@@ -77,7 +77,6 @@
       '</div>' +
       '<div class="acct-menu">' +
         '<a href="dashboard">My Dashboard</a>' +
-        '<a href="admin" id="acctAdminLink" style="display:none">Admin Console</a>' +
         '<a href="' + profileUrl + '">My Profile</a>' +
         '<a href="' + profileUrl + '">My Ads</a>' +
         '<a href="post-job">Post a Job</a>' +
@@ -103,19 +102,6 @@
     document.addEventListener('click', function (e) {
       if (!wrap.contains(e.target)) wrap.classList.remove('open');
     });
-
-    // Reveal the Admin Console link only for admins (best-effort; the /admin
-    // page enforces access server-side regardless).
-    try {
-      if (window.PM && PM.currentUserRole) {
-        PM.currentUserRole().then(function (role) {
-          if (role === 'admin') {
-            var link = wrap.querySelector('#acctAdminLink');
-            if (link) link.style.display = 'block';
-          }
-        }).catch(function () {});
-      }
-    } catch (e) {}
   }
 
   if (document.readyState === 'loading') {

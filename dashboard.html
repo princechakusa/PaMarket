@@ -216,14 +216,6 @@ window.doSearch = window.doSearch || function(){
   <div id="dbContent" class="hidden">
     <div class="db-tiles" id="dbTiles"></div>
 
-    <!-- Admin-only: link to the full console -->
-    <a id="dbAdmin" class="db-adminbar hidden" href="admin" style="display:none;align-items:center;justify-content:space-between;gap:14px;text-decoration:none">
-      <div>
-        <h2>Admin Console →</h2>
-        <div class="sub">Platform stats, website revenue and ad management.</div>
-      </div>
-      <span class="btn" style="background:var(--gold);color:#1F2937;font-weight:800;flex-shrink:0">Open console</span>
-    </a>
 
     <div class="db-section">
       <h2>My Listings</h2>
@@ -448,13 +440,11 @@ window.doSearch = window.doSearch || function(){
   Promise.all([
     PM.fetchMyListings(),
     PM.fetchMyPayments(),
-    PM.fetchApplicationsForEmployer(),
-    PM.currentUserRole()
+    PM.fetchApplicationsForEmployer()
   ]).then(function(r){
     LISTINGS=r[0]||[];
     PAYMENTS=r[1]||[];
     var apps=r[2]||[];
-    var role=r[3]||'user';
     SPENT=PAYMENTS.filter(function(p){return p.status==='consumed';}).reduce(function(a,p){return a+(Number(p.amount_usd)||0);},0);
 
     $('dbLoading').classList.add('hidden');
@@ -463,8 +453,6 @@ window.doSearch = window.doSearch || function(){
     renderListings();
     renderPayments();
     if(apps.length){$('dbApplyWrap').style.display='';$('dbApplyCount').textContent=apps.length;}
-    // Admins get a link to the full console (stats + ads live there now).
-    if(role==='admin'){var a=$('dbAdmin');a.classList.remove('hidden');a.style.display='flex';}
   }).catch(function(){
     $('dbLoading').textContent='Could not load your dashboard. Please refresh.';
   });

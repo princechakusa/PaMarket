@@ -117,17 +117,22 @@ them in `/applications` → they get "You've been shortlisted".
 
 ---
 
-## 4. Make yourself an admin (for the admin console)
+## 4. Admin & ads — use your existing admin portal (www/admin.html)
 
-In Supabase → Table Editor → `profiles`, set your own row's `role` to
-`admin`. Then the **Admin Console** at `/admin` opens — platform stats,
-website (Paynow) revenue, and the **Ads manager** (create banners /
-spotlights / announcements / half-screen ads, schedule them, pause/delete).
-An "Admin Console" link also appears in your account menu.
+Admin (moderation, ads, revenue) lives in your existing hardened portal
+`www/admin.html`, which is deliberately kept OFF the public website
+(`.github/workflows/pages.yml` strips it from the deploy). Keep running it
+the way you already do.
 
-**If skipped:** `/admin` shows an "admins only" gate; the rest of the site
-is unaffected. (Ad *writes* are also enforced server-side by RLS, so a
-non-admin can never create ads even if they open the page.)
+**Ads on the website:** the portal's "Create Paid Ad" tool now writes the
+two fields the public website needs (`title` + `placement`), so an ad you
+create there with **placement = Home** appears in the homepage sponsored
+band on pamarketzw.com (with its headline), as well as in the app. No
+separate website admin — one portal. (This is a change to
+`www/admin.html`, so rebuild/redeploy your admin the way you normally do.)
+
+**Make yourself admin** (if not already): Supabase → Table Editor →
+`profiles`, set your row's `role` to `admin`.
 
 ---
 
@@ -182,8 +187,7 @@ differ (app = Play, website = Paynow), which is correct and allowed.
 | Boost / featured-slot / job-credit **placement** | ✅ | — |
 | Boost / slots / credits **purchase** | — | §1 + §2 (Paynow) |
 | Application emails | — | §1 not needed; §3 (Resend) |
-| Admin console + platform revenue | — | §4 (role); §1 RPC for revenue |
-| Admin **ad management** | ✅ (after §4 role) | — (paid_ads RLS already exists) |
+| Admin (moderation/ads/revenue) | ✅ your existing www/admin.html | §4 (admin role) |
 | Website **image upload** when posting | — | §4b (redeploy fn + R2 CORS) |
 
 ---
