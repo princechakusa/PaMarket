@@ -172,10 +172,58 @@ button{font-family:inherit;cursor:pointer}
 .hero-cta h2{font-size:28px;font-weight:900;color:#fff;margin:10px 0}
 .hero-cta p{font-size:15px;color:#9BB4E0;margin-bottom:28px;max-width:480px;margin-left:auto;margin-right:auto}
 
+/* ══ POSTING FORM ══ */
+.pf-wrap{max-width:640px;margin:0 auto;padding:0 20px}
+.pf-card{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:28px 26px;box-shadow:0 10px 30px rgba(15,36,96,.05)}
+.pf-h{font-size:22px;font-weight:900;color:var(--ink);margin-bottom:22px}
+.pf-field{margin-bottom:18px;display:flex;flex-direction:column}
+.pf-field label{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:7px}
+.pf-req{color:var(--red)}
+.pf-hint-inline{font-weight:500;color:var(--mute);font-size:12px}
+.pf-field input,.pf-field select,.pf-field textarea{width:100%;font-family:inherit;font-size:15px;color:var(--ink);background:#fff;border:1.5px solid var(--line);border-radius:11px;padding:12px 14px;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none}
+.pf-field textarea{resize:vertical;line-height:1.6}
+.pf-field input:focus,.pf-field select:focus,.pf-field textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,58,143,.1)}
+.pf-field input.pf-invalid,.pf-field select.pf-invalid,.pf-field textarea.pf-invalid{border-color:var(--red)}
+.pf-hint{font-size:12px;color:var(--mute);margin-top:6px}
+.pf-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pf-photos{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.pf-photo{position:relative;width:88px;height:88px;border-radius:11px;overflow:hidden;border:1.5px solid var(--line);background:var(--paper)}
+.pf-photo img{width:100%;height:100%;object-fit:cover}
+.pf-photo .pf-cover{position:absolute;bottom:0;left:0;right:0;background:rgba(26,58,143,.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:2px;letter-spacing:.04em}
+.pf-photo .pf-rm{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;line-height:1;padding:0}
+.pf-photo.pf-uploading{opacity:.55}
+.pf-photo .pf-spin{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.pf-photo .pf-spin::after{content:'';width:22px;height:22px;border:2.5px solid rgba(26,58,143,.25);border-top-color:var(--navy);border-radius:50%;animation:pfspin .7s linear infinite}
+@keyframes pfspin{to{transform:rotate(360deg)}}
+.pf-addphoto{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--navy);background:#EEF2FF;border:1.5px dashed rgba(26,58,143,.35);border-radius:11px;padding:11px 18px;cursor:pointer;transition:all .15s}
+.pf-addphoto:hover{background:#E0E7FF}
+.pf-submit{width:100%;margin-top:6px;font-size:15px;padding:14px}
+.pf-submit:disabled{opacity:.6;cursor:not-allowed}
+.pf-terms{font-size:12px;color:var(--mute);line-height:1.6;margin-top:14px;text-align:center}
+.pf-terms a{color:var(--navy);font-weight:600}
+.pf-error{background:#FEF2F2;border:1.5px solid #FECACA;color:#991B1B;border-radius:11px;padding:12px 14px;font-size:13.5px;font-weight:600;margin-bottom:16px;line-height:1.5}
+.pf-gate,.pf-success{text-align:center}
+.pf-gate-ic,.pf-success-ic{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.pf-gate-ic{background:#EEF2FF;color:var(--navy)}
+.pf-success-ic{background:#DCFCE7;color:#16A34A}
+.pf-gate h2,.pf-success h2{font-size:22px;font-weight:900;color:var(--ink);margin-bottom:8px}
+.pf-gate p,.pf-success p{font-size:14.5px;color:var(--sub);margin-bottom:22px;max-width:400px;margin-left:auto;margin-right:auto;line-height:1.6}
+.pf-gate-btns,.pf-success-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-outline{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+.btn-outline:hover{border-color:var(--navy);color:var(--navy)}
+.pf-appnote{max-width:640px;margin:20px auto 0;padding:18px 22px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:14px;display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}
+.pf-appnote strong{font-size:14px;color:#92400E;display:block}
+.pf-appnote p{font-size:13px;color:#92400E;margin-top:3px;max-width:380px}
+
 @media(max-width:860px) {
   .grid-2{grid-template-columns:1fr;gap:32px;text-align:center}
   .pa-img{order:-1}
   .tip-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px) {
+  .pf-card{padding:22px 18px}
+  .pf-row{grid-template-columns:1fr;gap:0}
+  .pf-appnote{flex-direction:column;align-items:flex-start}
 }
 </style>
 </head>
@@ -295,87 +343,126 @@ window.doSearch = window.doSearch || function(){
   <div class="pa-hero-w">
     <span class="p-tag" id="paTag">Post a Free Ad</span>
     <h1 id="paTitle">Sell anything. Reach all of Zimbabwe.</h1>
-    <p id="paSub">Your listing goes live in under 2 minutes. No fees, no commissions, no catch.</p>
-    <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener" class="btn btn-primary btn-gold" id="paCta">Post Your Ad — Get the App</a>
+    <p id="paSub">Your listing goes live in minutes. No fees, no commissions, no catch — post right here from your browser.</p>
   </div>
 </section>
 
+<!-- POSTING FORM -->
 <section class="band">
-  <div class="w grid-2">
-    <div>
-      <div class="eyebrow">How to Post</div>
-      <h2 class="sec-title">Ready in 4 steps</h2>
-      <div class="rule"></div>
-      <div class="steps-v">
-        <div class="step-v">
-          <div class="step-num-v">1</div>
-          <div class="step-body">
-            <h3 id="paStep1Title">Choose your category</h3>
-            <p id="paStep1Desc">Select from 12 categories: Property, Vehicles, Electronics, Fashion, Furniture, Agriculture, Services, Kids, Pets, Sports, Business, and Other.</p>
-          </div>
-        </div>
-        <div class="step-v">
-          <div class="step-num-v">2</div>
-          <div class="step-body">
-            <h3 id="paStep2Title">Write your listing</h3>
-            <p id="paStep2Desc">Add a clear title, honest description, price in USD, and choose your province and suburb. The more detail you add, the more enquiries you get.</p>
-          </div>
-        </div>
-        <div class="step-v">
-          <div class="step-num-v">3</div>
-          <div class="step-body">
-            <h3 id="paStep3Title">Upload photos</h3>
-            <p id="paStep3Desc">Add up to 8 real photos of your item. Listings with photos get significantly more views. Use good lighting and show the actual condition.</p>
-          </div>
-        </div>
-        <div class="step-v">
-          <div class="step-num-v">4</div>
-          <div class="step-body">
-            <h3>Submit and go live</h3>
-            <p>Your listing is reviewed by our team and usually approved within 24 hours. You will be notified when it is live.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="pa-img">
-      <img src="img/screens/screen-listing-detail.png" alt="A live PaMarket listing">
-    </div>
-  </div>
-</section>
+  <div class="pf-wrap">
 
-<section class="band" style="background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
-  <div class="w center">
-    <div class="eyebrow">Tips for Success</div>
-    <h2 class="sec-title">Get more enquiries</h2>
-    <div class="rule"></div>
-    <div class="tip-grid">
-      <div class="tip-card">
-        <h3>Write a clear title</h3>
-        <p>Include the brand, model, year, and key spec. "2018 Toyota Hilux Double Cab 4x4" outperforms "Hilux for sale" every time.</p>
+    <!-- Signed-out gate -->
+    <div class="pf-card pf-gate hidden" id="pfGate">
+      <div class="pf-gate-ic">
+        <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </div>
-      <div class="tip-card">
-        <h3>Set a fair price</h3>
-        <p>Research what similar items sell for. Prices that are too high get ignored. Too low and buyers question the condition.</p>
-      </div>
-      <div class="tip-card">
-        <h3>Use real photos</h3>
-        <p>Take photos yourself in good daylight. Show any defects honestly. Buyers trust listings with real photos far more than stock images.</p>
-      </div>
-      <div class="tip-card">
-        <h3>Choose the right province</h3>
-        <p>Select the province and suburb where the item is located. Buyers filter by location so this determines who sees your listing.</p>
+      <h2>Sign in to post your ad</h2>
+      <p>Create a free account or sign in — it takes 30 seconds, and lets buyers contact you safely.</p>
+      <div class="pf-gate-btns">
+        <a class="btn btn-primary btn-gold" id="pfSignInBtn">Sign In / Register</a>
       </div>
     </div>
-  </div>
-</section>
 
-<section class="band">
-  <div class="w">
-    <div class="hero-cta">
-      <div class="eyebrow" style="color:var(--gold)">Ready?</div>
-      <h2>Post your first ad now. It's free.</h2>
-      <p>Open the app, tap Post Free Ad, and your listing can be live today. No account charges, no listing fees, no commission on sales.</p>
-      <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener" class="btn btn-primary btn-gold">Download on Google Play</a>
+    <!-- The form (shown when signed in) -->
+    <form class="pf-card hidden" id="pfForm" novalidate>
+      <h2 class="pf-h">Post your listing</h2>
+
+      <div class="pf-field">
+        <label for="pfCat">Category <span class="pf-req">*</span></label>
+        <select id="pfCat" required>
+          <option value="">Choose a category…</option>
+          <option value="property">Property</option>
+          <option value="vehicles">Vehicles</option>
+          <option value="electronics">Electronics</option>
+          <option value="furniture">Furniture</option>
+          <option value="fashion">Fashion</option>
+          <option value="agriculture">Agriculture</option>
+          <option value="services">Services</option>
+          <option value="rooms">Rooms to Rent</option>
+          <option value="pets">Pets</option>
+          <option value="kids">Baby &amp; Kids</option>
+          <option value="other">Other</option>
+        </select>
+        <div class="pf-hint" id="pfCatHint"></div>
+      </div>
+
+      <div class="pf-field">
+        <label for="pfTitle">Title <span class="pf-req">*</span></label>
+        <input type="text" id="pfTitle" maxlength="80" placeholder="e.g. 2018 Toyota Hilux Double Cab 4x4" required>
+        <div class="pf-hint">Include brand, model and key detail. <span id="pfTitleCount">0</span>/80</div>
+      </div>
+
+      <div class="pf-field">
+        <label for="pfDesc">Description <span class="pf-req">*</span></label>
+        <textarea id="pfDesc" rows="5" maxlength="2000" placeholder="Describe the condition, features, and anything a buyer should know. Be honest — it builds trust." required></textarea>
+        <div class="pf-hint"><span id="pfDescCount">0</span>/2000</div>
+      </div>
+
+      <div class="pf-row">
+        <div class="pf-field">
+          <label for="pfPrice">Price (USD) <span class="pf-req">*</span></label>
+          <input type="number" id="pfPrice" min="0" step="1" inputmode="numeric" placeholder="0" required>
+          <div class="pf-hint">Enter 0 for "Contact for price".</div>
+        </div>
+        <div class="pf-field">
+          <label for="pfProv">Province <span class="pf-req">*</span></label>
+          <select id="pfProv" required>
+            <option value="">Choose…</option>
+            <option>Harare</option><option>Bulawayo</option><option>Manicaland</option>
+            <option>Mashonaland Central</option><option>Mashonaland East</option>
+            <option>Mashonaland West</option><option>Masvingo</option>
+            <option>Matabeleland North</option><option>Matabeleland South</option><option>Midlands</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pf-row">
+        <div class="pf-field">
+          <label for="pfCity">City / Town</label>
+          <input type="text" id="pfCity" maxlength="60" placeholder="e.g. Harare">
+        </div>
+        <div class="pf-field">
+          <label for="pfSuburb">Suburb / Area</label>
+          <input type="text" id="pfSuburb" maxlength="60" placeholder="e.g. Avondale">
+        </div>
+      </div>
+
+      <div class="pf-field">
+        <label>Photos <span class="pf-hint-inline">(up to 8 — first is the cover)</span></label>
+        <div class="pf-photos" id="pfPhotos"></div>
+        <label class="pf-addphoto" id="pfAddPhoto">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Add photos
+          <input type="file" id="pfFile" accept="image/*" multiple hidden>
+        </label>
+      </div>
+
+      <div class="pf-error hidden" id="pfError"></div>
+
+      <button type="submit" class="btn btn-primary btn-gold pf-submit" id="pfSubmit">Post Listing</button>
+      <p class="pf-terms">By posting you confirm the item is legal, you own it, and the photos are real. Listings are reviewed and may be removed if they break our <a href="community-guidelines">Community Guidelines</a>.</p>
+    </form>
+
+    <!-- Success -->
+    <div class="pf-card pf-success hidden" id="pfSuccess">
+      <div class="pf-success-ic">
+        <svg width="34" height="34" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+      <h2>Your listing is live!</h2>
+      <p id="pfSuccessMsg">Buyers across Zimbabwe can now find it.</p>
+      <div class="pf-success-btns">
+        <a class="btn btn-primary btn-gold" id="pfViewBtn">View Listing</a>
+        <button type="button" class="btn btn-outline" id="pfAnotherBtn">Post Another</button>
+      </div>
+    </div>
+
+    <!-- App note for the categories that still need the app's richer flow -->
+    <div class="pf-appnote hidden" id="pfAppNote">
+      <div>
+        <strong id="pfAppNoteTitle">This category posts in the app</strong>
+        <p id="pfAppNoteDesc">Jobs and vehicle rentals use extra fields best handled in the free PaMarket app.</p>
+      </div>
+      <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener" class="btn btn-primary btn-gold">Get the App</a>
     </div>
   </div>
 </section>
@@ -459,61 +546,186 @@ window.doSearch = window.doSearch || function(){
 </a>
 
 <script src="js/supabase-config.js"></script>
+<script src="js/marketplace-data.js"></script>
 <script src="js/session.js"></script>
 <script src="js/nav-dropdowns.js"></script>
 <script>
+// ══════════════════════════════════════════════════════════════════
+//  POSTING FORM CONTROLLER — real listing creation from the website.
+// ══════════════════════════════════════════════════════════════════
 (function(){
-  const type=new URLSearchParams(location.search).get('type');
-  const modes={
-    job:{
-      title:'Post a Job — PaMarket Zimbabwe',
-      desc:'Post a free job vacancy on PaMarket and reach job seekers across Zimbabwe. No fees for employers, no charge for candidates to apply.',
-      tag:'Post a Job',
-      h1:'Hire faster. Reach candidates across Zimbabwe.',
-      sub:'Your job posting goes live after a quick review — usually within 24 hours. No fees, no commissions.',
-      cta:'Post Your Job — Get the App',
-      step1Title:'Choose "Jobs" as your category',
-      step1Desc:'Select Jobs from the category list, then choose the industry, job type (full-time, part-time, contract) and province.',
-      step2Title:'Write the job listing',
-      step2Desc:'Add a clear job title, responsibilities, requirements and salary range in USD. Detailed listings attract better candidates.',
-      step3Title:'Submit for review',
-      step3Desc:'All job postings are reviewed by our team before going live — this keeps fake or scam listings off PaMarket. Charging job seekers any fee is strictly prohibited.'
-    },
-    vehicles:{
-      title:'Post a Vehicle for Sale — PaMarket Zimbabwe',
-      desc:'Sell your car, bakkie, SUV or motorbike for free on PaMarket. Reach buyers across Zimbabwe with no listing fees or commission.',
-      tag:'Post a Vehicle',
-      h1:'Sell your vehicle. Reach buyers across Zimbabwe.',
-      sub:'Your listing goes live in under 2 minutes. No fees, no commissions, no catch.',
-      cta:'Post Your Vehicle — Get the App',
-      step1Title:'Choose "Vehicles" as your category',
-      step1Desc:'Select Vehicles from the category list, then choose the make, model, year and condition.',
-      step2Title:'Write your listing',
-      step2Desc:'Add mileage, condition details, price in USD, and your province and suburb. Honest, detailed listings sell faster.',
-      step3Title:'Upload photos',
-      step3Desc:'Add up to 8 real photos from multiple angles, including the interior and any damage. Listings with clear photos get significantly more enquiries.'
+  const $=id=>document.getElementById(id);
+  const gate=$('pfGate'), form=$('pfForm'), success=$('pfSuccess'), appNote=$('pfAppNote');
+  const params=new URLSearchParams(location.search);
+  const type=params.get('type');
+
+  // Categories that need the app's richer flow (extra structured fields).
+  const APP_ONLY={job:{title:'Jobs post in the free app',desc:'Job postings use structured fields (employment type, salary bands, requirements) best handled in the PaMarket app.'}};
+
+  const session=(window.PM&&PM.getSession)?PM.getSession():null;
+  const signedIn=!!(session&&session.user&&session.user.id);
+
+  // App-only category (e.g. jobs): show the app note, hide the form entirely.
+  if(type&&APP_ONLY[type]){
+    appNote.classList.remove('hidden');
+    $('pfAppNoteTitle').textContent=APP_ONLY[type].title;
+    $('pfAppNoteDesc').textContent=APP_ONLY[type].desc;
+    return;
+  }
+
+  if(!signedIn){
+    gate.classList.remove('hidden');
+    // Preserve intent: after auth, come back here (with any ?type= pre-select).
+    $('pfSignInBtn').href='auth?return='+encodeURIComponent(location.pathname+location.search);
+    return;
+  }
+
+  form.classList.remove('hidden');
+
+  // Pre-select category from ?type=vehicles etc.
+  if(type&&$('pfCat').querySelector('option[value="'+type+'"]')) $('pfCat').value=type;
+
+  // Char counters
+  const bind=(inp,out)=>{const el=$(inp),o=$(out);const upd=()=>o.textContent=el.value.length;el.addEventListener('input',upd);upd();};
+  bind('pfTitle','pfTitleCount');
+  bind('pfDesc','pfDescCount');
+
+  // Light per-category hint
+  const CAT_HINT={vehicles:'Include make, model, year and mileage.',property:'State whether it is for sale or rent, and the number of rooms.',electronics:'Mention brand, model and condition.',jobs:''};
+  $('pfCat').addEventListener('change',()=>{$('pfCatHint').textContent=CAT_HINT[$('pfCat').value]||'';});
+
+  // ── Image compression (canvas → JPEG blob), mirrors the app's approach ──
+  function compress(file,maxDim=1200,q=0.8){
+    return new Promise((resolve,reject)=>{
+      const url=URL.createObjectURL(file);
+      const img=new Image();
+      img.onload=()=>{
+        URL.revokeObjectURL(url);
+        let w=img.naturalWidth,h=img.naturalHeight;
+        if(w>maxDim||h>maxDim){ if(w>=h){h=Math.round(h*maxDim/w);w=maxDim;} else {w=Math.round(w*maxDim/h);h=maxDim;} }
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        c.toBlob(b=>b?resolve(b):reject(new Error('compress failed')),'image/jpeg',q);
+      };
+      img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('bad image'));};
+      img.src=url;
+    });
+  }
+
+  // Photos state: array of {url} once uploaded. Max 8.
+  const photos=[];
+  const MAX_PHOTOS=8;
+  const photosEl=$('pfPhotos'), fileInput=$('pfFile');
+  $('pfAddPhoto').addEventListener('click',(e)=>{ if(e.target.tagName!=='INPUT') fileInput.click(); });
+
+  function renderPhotos(){
+    photosEl.innerHTML=photos.map((p,i)=>{
+      if(p.uploading) return '<div class="pf-photo pf-uploading"><div class="pf-spin"></div></div>';
+      return '<div class="pf-photo">'+
+        '<img src="'+p.url+'" alt="">'+
+        (i===0?'<div class="pf-cover">COVER</div>':'')+
+        '<button type="button" class="pf-rm" data-i="'+i+'" aria-label="Remove photo">×</button>'+
+      '</div>';
+    }).join('');
+    photosEl.querySelectorAll('.pf-rm').forEach(b=>b.addEventListener('click',()=>{
+      photos.splice(Number(b.dataset.i),1);renderPhotos();
+    }));
+    $('pfAddPhoto').style.display=photos.length>=MAX_PHOTOS?'none':'';
+  }
+
+  fileInput.addEventListener('change',async()=>{
+    const files=Array.from(fileInput.files||[]);
+    fileInput.value='';
+    for(const file of files){
+      if(photos.length>=MAX_PHOTOS){showError('You can add up to '+MAX_PHOTOS+' photos.');break;}
+      if(!/^image\//.test(file.type))continue;
+      const slot={uploading:true};
+      photos.push(slot);renderPhotos();
+      try{
+        const blob=await compress(file);
+        const url=await PM.uploadListingPhoto(blob,'image/jpeg');
+        slot.uploading=false;slot.url=url;
+      }catch(err){
+        const idx=photos.indexOf(slot);if(idx>=0)photos.splice(idx,1);
+        showError('A photo failed to upload. Please try a different image.');
+      }
+      renderPhotos();
     }
-  };
-  const m=modes[type];
-  if(!m)return;
-  document.title=m.title;
-  document.getElementById('pageTitle')&&(document.getElementById('pageTitle').textContent=m.title);
-  document.getElementById('metaDesc')&&document.getElementById('metaDesc').setAttribute('content',m.desc);
-  document.getElementById('ogTitle')&&document.getElementById('ogTitle').setAttribute('content',m.title);
-  document.getElementById('ogDesc')&&document.getElementById('ogDesc').setAttribute('content',m.desc);
-  document.getElementById('twTitle')&&document.getElementById('twTitle').setAttribute('content',m.title);
-  document.getElementById('twDesc')&&document.getElementById('twDesc').setAttribute('content',m.desc);
-  document.getElementById('paTag').textContent=m.tag;
-  document.getElementById('paTitle').textContent=m.h1;
-  document.getElementById('paSub').textContent=m.sub;
-  document.getElementById('paCta').textContent=m.cta;
-  document.getElementById('paStep1Title').textContent=m.step1Title;
-  document.getElementById('paStep1Desc').textContent=m.step1Desc;
-  document.getElementById('paStep2Title').textContent=m.step2Title;
-  document.getElementById('paStep2Desc').textContent=m.step2Desc;
-  document.getElementById('paStep3Title').textContent=m.step3Title;
-  document.getElementById('paStep3Desc').textContent=m.step3Desc;
+  });
+
+  // ── Validation + submit ──
+  function showError(msg){const e=$('pfError');e.textContent=msg;e.classList.remove('hidden');e.scrollIntoView({behavior:'smooth',block:'center'});}
+  function clearError(){$('pfError').classList.add('hidden');}
+  function markInvalid(id){const el=$(id);el.classList.add('pf-invalid');el.addEventListener('input',()=>el.classList.remove('pf-invalid'),{once:true});el.addEventListener('change',()=>el.classList.remove('pf-invalid'),{once:true});}
+
+  form.addEventListener('submit',async(e)=>{
+    e.preventDefault();
+    clearError();
+    const cat=$('pfCat').value, title=$('pfTitle').value.trim(),
+          desc=$('pfDesc').value.trim(), price=$('pfPrice').value, prov=$('pfProv').value;
+
+    // Required-field validation with focus on the first problem.
+    let bad=null;
+    if(!cat)bad='pfCat';
+    else if(title.length<4){bad='pfTitle';}
+    else if(desc.length<10){bad='pfDesc';}
+    else if(price===''||Number(price)<0){bad='pfPrice';}
+    else if(!prov)bad='pfProv';
+    if(bad){
+      markInvalid(bad);$(bad).focus();
+      showError(bad==='pfTitle'?'Please enter a title of at least 4 characters.'
+        :bad==='pfDesc'?'Please add a description (at least 10 characters).'
+        :bad==='pfPrice'?'Please enter a valid price (0 for "contact for price").'
+        :'Please fill in all required fields.');
+      return;
+    }
+    if(photos.some(p=>p.uploading)){showError('Please wait for photos to finish uploading.');return;}
+
+    const btn=$('pfSubmit');
+    btn.disabled=true;btn.textContent='Posting…';
+    try{
+      const res=await PM.createListing({
+        title,description:desc,price:Number(price),currency:'USD',
+        category:cat,province:prov,city:$('pfCity').value.trim(),
+        suburb:$('pfSuburb').value.trim(),
+        photos:photos.filter(p=>p.url).map(p=>p.url)
+      });
+      const listing=res&&res.listing;
+      form.classList.add('hidden');
+      success.classList.remove('hidden');
+      if(listing&&listing.id){
+        $('pfViewBtn').href='detail?id='+listing.id;
+        $('pfSuccessMsg').textContent=(listing.status==='active')
+          ? 'Buyers across Zimbabwe can now find it.'
+          : 'It has been submitted and will appear once reviewed (usually within 24 hours).';
+      }else{
+        $('pfViewBtn').href='browse';
+      }
+      window.scrollTo({top:0,behavior:'smooth'});
+    }catch(err){
+      btn.disabled=false;btn.textContent='Post Listing';
+      if(err&&err.message==='not-authenticated'){
+        showError('Your session expired. Please sign in again.');
+        setTimeout(()=>{location.href='auth?return='+encodeURIComponent(location.pathname+location.search);},1500);
+      }else if(err&&err.blocked){
+        showError('This listing could not be posted — it may contain prohibited content, or your account may be restricted. Please review our Community Guidelines.');
+      }else{
+        showError('Something went wrong posting your listing. Please check your connection and try again.');
+      }
+    }
+  });
+
+  // Post Another → reset form
+  $('pfAnotherBtn').addEventListener('click',()=>{
+    form.reset();photos.length=0;renderPhotos();clearError();
+    $('pfTitleCount').textContent='0';$('pfDescCount').textContent='0';$('pfCatHint').textContent='';
+    success.classList.add('hidden');form.classList.remove('hidden');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  renderPhotos();
 })();
+
 function doSearch(){
   const q=document.getElementById('hQ')?.value?.trim();
   const cat=document.getElementById('hCat')?.value;

@@ -321,6 +321,106 @@
     });
   }
 
+  // ── Listing creation (website posting) ───────────────────────────
+  // Upload one image blob to Cloudflare R2 via the same security-definer
+  // edge function the app uses (get-r2-upload-url → presigned PUT → public
+  // URL). Requires a signed-in session (RLS: the function checks auth.uid()).
+  function uploadListingPhoto(blob, contentType) {
+    var s = getSession();
+    if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
+    var userId = (s.user && s.user.id) || 'anon';
+    var key = 'listings/' + userId + '/' + Date.now() + '-' +
+      Math.random().toString(36).slice(2, 9) + '.jpg';
+    return fetch(SB_URL + '/functions/v1/get-r2-upload-url', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: key, contentType: contentType || 'image/jpeg' }),
+    }).then(function (res) {
+      if (!res.ok) return res.json().catch(function () { return {}; }).then(function (j) {
+        throw new Error('upload-url: ' + (j.error || res.status));
+      });
+      return res.json();
+    }).then(function (payload) {
+      return fetch(payload.signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': contentType || 'image/jpeg' },
+        body: blob,
+      }).then(function (up) {
+        if (!up.ok) throw new Error('R2 PUT failed: ' + up.status);
+        return payload.publicUrl;
+      });
+    });
+  }
+
+  // Insert a new listing. Mirrors the app's saveListingToCloud column map so
+  // both clients write identical rows, and honours the backend Phase A
+  // moderation trigger: a prohibited/banned INSERT raises a Postgres error,
+  // which we surface as { blocked:true } rather than a generic failure. The
+  // trigger may also downgrade status active→flagged; we read it back.
+  // opts: { title, description, price, currency, category, province, city,
+  //         suburb, photos:[url], attributes:{} }
+  function createListing(opts) {
+    opts = opts || {};
+    var s = getSession();
+    if (!s || !s.access_token || !s.user || !s.user.id) {
+      return Promise.reject(new Error('not-authenticated'));
+    }
+    var meta = (s.user.user_metadata) || {};
+    var row = {
+      seller_id: s.user.id,
+      seller_name: meta.full_name || meta.name || s.user.email || '',
+      seller_phone: meta.phone || s.user.phone || '',
+      title: String(opts.title || '').trim(),
+      description: String(opts.description || '').trim(),
+      price: Number(opts.price) || 0,
+      currency: opts.currency || 'USD',
+      category: opts.category || 'other',
+      province: opts.province || '',
+      city: opts.city || '',
+      suburb: opts.suburb || '',
+      photos: Array.isArray(opts.photos) ? opts.photos : [],
+      status: 'active',
+      views: 0,
+      created_at: new Date().toISOString(),
+    };
+    if (opts.attributes && typeof opts.attributes === 'object') row.attributes = opts.attributes;
+
+    function insert(body) {
+      return fetch(SB_URL + '/rest/v1/listings', {
+        method: 'POST',
+        headers: Object.assign({ Prefer: 'return=representation' }, authHeaders()),
+        body: JSON.stringify(body),
+      });
+    }
+    return insert(row).then(function (res) {
+      if (res.ok) return res.json().then(function (rows) { return { ok: true, listing: rows[0] || null }; });
+      return res.text().then(function (t) {
+        // attributes column not migrated yet → retry without it so posting
+        // never breaks before the migration lands (same fallback as the app).
+        if (row.attributes && /attributes|column|schema cache|PGRST204/i.test(t)) {
+          var bare = Object.assign({}, row); delete bare.attributes;
+          return insert(bare).then(function (r2) {
+            if (r2.ok) return r2.json().then(function (rows) { return { ok: true, listing: rows[0] || null }; });
+            return r2.text().then(function (t2) { throw moderationOrError(t2, r2.status); });
+          });
+        }
+        throw moderationOrError(t, res.status);
+      });
+    });
+  }
+
+  // A Phase A moderation block surfaces as a raised exception (P0001 / message
+  // mentioning prohibited/suspended/banned). Flag those so the UI can show the
+  // real reason instead of a generic error.
+  function moderationOrError(text, status) {
+    var e = new Error(text || ('insert failed: ' + status));
+    if (/prohibited|suspend|banned|blocked|not allowed|P0001|moderation/i.test(text || '')) {
+      e.blocked = true;
+    }
+    e.status = status;
+    return e;
+  }
+
   function money(n, currency) {
     var num = Number(n) || 0;
     return (currency === 'ZWG' ? 'ZWG ' : '$') + num.toLocaleString();
@@ -358,4 +458,7 @@
   global.PM.fetchListingState = fetchListingState;
   global.PM.fetchOwnListingById = fetchOwnListingById;
   global.PM.submitReport = submitReport;
+  // Website posting (create listing + R2 image upload).
+  global.PM.createListing = createListing;
+  global.PM.uploadListingPhoto = uploadListingPhoto;
 })(window);
