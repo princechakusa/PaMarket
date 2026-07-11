@@ -1,13 +1,16 @@
-// paynow-create-payment — starts a Paynow checkout for a listing boost
+// paynow-create-payment — starts a Paynow checkout for a paid feature
 // bought on the WEBSITE (the app uses Google Play Billing instead; see
-// verify-play-purchase). Creates the transaction with Paynow server-side
-// and returns the hosted-checkout URL to redirect the buyer to. The
-// boost itself is only ever activated by paynow-check-payment after a
-// hash-verified status poll says the money arrived — nothing in this
-// function grants an entitlement.
+// verify-play-purchase). Handles three product families: listing boosts,
+// shop featured-slot packs, and job-posting credit packs. Creates the
+// transaction with Paynow server-side and returns the hosted-checkout URL.
+// The entitlement is only ever granted by paynow-check-payment after a
+// hash-verified status poll says the money arrived — nothing here grants
+// anything.
 //
-// Call shape: POST { listingId: uuid, productId: 'boost_1day'|'boost_7day'|
-//                    'boost_30day'|'job_boost_7day'|'job_boost_30day' }
+// Call shape:
+//   boost:      POST { listingId: uuid, productId: 'boost_1day'|'boost_7day'|'boost_30day'|'job_boost_7day'|'job_boost_30day' }
+//   slot pack:  POST { businessId: uuid, productId: 'featured_slot_pack_1'|'featured_slot_pack_3' }
+//   job credit: POST { productId: 'job_credit_pack_1'|'job_credit_pack_5' }
 // Auth: caller must be a signed-in user (their own JWT). The price is
 // looked up server-side from _shared/paynow.ts — an amount in the request
 // body would be ignored.
@@ -18,7 +21,7 @@
 //   PAYNOW_INTEGRATION_ID   (from the Paynow merchant dashboard)
 //   PAYNOW_INTEGRATION_KEY  (from the Paynow merchant dashboard)
 
-import { PAYNOW_BOOST_PRODUCTS, paynowInitiate } from '../_shared/paynow.ts';
+import { PAYNOW_PRODUCTS, paynowInitiate } from '../_shared/paynow.ts';
 
 const SITE = 'https://pamarketzw.com';
 
@@ -60,11 +63,12 @@ Deno.serve(async (req) => {
     const user = authResult.data.user;
 
     const body = await req.json();
-    const listingId = body?.listingId;
     const productId = body?.productId;
-    if (!listingId || !productId) return json({ error: 'listingId and productId are required' }, 400);
+    const listingId = body?.listingId;
+    const businessId = body?.businessId;
+    if (!productId) return json({ error: 'productId is required' }, 400);
 
-    const product = PAYNOW_BOOST_PRODUCTS[productId];
+    const product = PAYNOW_PRODUCTS[productId];
     if (!product) return json({ error: 'Unknown productId: ' + productId }, 400);
 
     const integrationId = Deno.env.get('PAYNOW_INTEGRATION_ID');
@@ -73,29 +77,43 @@ Deno.serve(async (req) => {
 
     const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
-    // Ownership + product/category pairing — same rules as
-    // verify-play-purchase: the two boost families are priced differently,
-    // so a job listing must use job_boost_* and a marketplace listing must
-    // use boost_*.
-    const listingRes = await db.from('listings').select('id, seller_id, category, title, status').eq('id', listingId).maybeSingle();
-    if (listingRes.error || !listingRes.data) return json({ error: 'Listing not found' }, 404);
-    if (listingRes.data.seller_id !== user.id) return json({ error: 'You do not own this listing' }, 403);
-    if (listingRes.data.status !== 'active') return json({ error: 'Only active listings can be boosted' }, 400);
-    const isJobListing = listingRes.data.category === 'jobs';
-    if (product.family === 'job_boost' && !isJobListing) return json({ error: 'Job boost products can only be applied to job listings' }, 400);
-    if (product.family === 'boost' && isJobListing) return json({ error: 'Use a job boost product to boost a job listing' }, 400);
+    // Per-kind ownership validation + a human description for the Paynow page.
+    const ledger: Record<string, unknown> = {
+      user_id: user.id,
+      product_id: productId,
+      amount_usd: product.amountUsd,
+      reference: 'PM-' + crypto.randomUUID(),
+      status: 'created',
+    };
+    let description = 'PaMarket';
+
+    if (product.kind === 'boost') {
+      if (!listingId) return json({ error: 'listingId is required for a boost' }, 400);
+      const listingRes = await db.from('listings').select('id, seller_id, category, title, status').eq('id', listingId).maybeSingle();
+      if (listingRes.error || !listingRes.data) return json({ error: 'Listing not found' }, 404);
+      if (listingRes.data.seller_id !== user.id) return json({ error: 'You do not own this listing' }, 403);
+      if (listingRes.data.status !== 'active') return json({ error: 'Only active listings can be boosted' }, 400);
+      const isJobListing = listingRes.data.category === 'jobs';
+      if (product.boostFamily === 'job_boost' && !isJobListing) return json({ error: 'Job boost products can only be applied to job listings' }, 400);
+      if (product.boostFamily === 'boost' && isJobListing) return json({ error: 'Use a job boost product to boost a job listing' }, 400);
+      ledger.listing_id = listingId;
+      description = 'PaMarket boost (' + product.days + ' day' + ((product.days || 0) > 1 ? 's' : '') + '): ' + String(listingRes.data.title || '').slice(0, 50);
+    } else if (product.kind === 'slot_pack') {
+      if (!businessId) return json({ error: 'businessId is required for a featured-slot pack' }, 400);
+      const bizRes = await db.from('businesses').select('id, owner_user_id, name').eq('id', businessId).maybeSingle();
+      if (bizRes.error || !bizRes.data) return json({ error: 'Business not found' }, 404);
+      if (bizRes.data.owner_user_id !== user.id) return json({ error: 'You do not own this business' }, 403);
+      ledger.business_id = businessId;
+      description = 'PaMarket featured slots (+' + product.extraSlots + '): ' + String(bizRes.data.name || '').slice(0, 50);
+    } else if (product.kind === 'job_credit') {
+      // No target entity — the credits attach to the buyer's account.
+      description = 'PaMarket job credits (' + product.credits + ' post' + ((product.credits || 0) > 1 ? 's' : '') + ')';
+    }
 
     // Ledger row first (status 'created') so there's a durable record even
     // if the Paynow call fails mid-flight. The reference doubles as our
     // idempotency handle and what shows on the merchant dashboard.
-    const insertRes = await db.from('paynow_payments').insert({
-      user_id: user.id,
-      listing_id: listingId,
-      product_id: productId,
-      amount_usd: product.amountUsd,
-      reference: 'PMBOOST-' + crypto.randomUUID(),
-      status: 'created',
-    }).select('id, reference').single();
+    const insertRes = await db.from('paynow_payments').insert(ledger).select('id, reference').single();
     if (insertRes.error || !insertRes.data) {
       return json({ error: 'Could not record payment: ' + insertRes.error?.message }, 500);
     }
@@ -107,7 +125,7 @@ Deno.serve(async (req) => {
       integrationKey,
       reference: insertRes.data.reference,
       amountUsd: product.amountUsd,
-      description: 'PaMarket boost (' + product.days + ' day' + (product.days > 1 ? 's' : '') + '): ' + String(listingRes.data.title || '').slice(0, 60),
+      description,
       returnUrl: SITE + '/boost-return?payment=' + paymentId,
       resultUrl: functionsBase + '/paynow-check-payment?payment=' + paymentId,
       authEmail: user.email || undefined,
@@ -127,7 +145,7 @@ Deno.serve(async (req) => {
       return json({ error: 'Could not record the payment session. You have not been charged — please try again.' }, 500);
     }
 
-    return json({ ok: true, paymentId, redirectUrl: init.browserUrl, amountUsd: product.amountUsd, days: product.days });
+    return json({ ok: true, paymentId, redirectUrl: init.browserUrl, amountUsd: product.amountUsd });
   } catch (err) {
     return json({ error: (err as Error).message }, 500);
   }

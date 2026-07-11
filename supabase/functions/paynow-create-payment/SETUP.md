@@ -54,3 +54,27 @@ docs — the flow is identical.
 - The legal pages (app Terms in www/js/auth.js §11, terms.html) say paid
   features are sold "exclusively through Google Play Billing" — update
   that wording to mention Paynow for website purchases.
+
+## Update — more paid features now sold via Paynow
+
+The website now also sells shop featured-slot packs and job-posting credit
+packs through the same two functions. Additional deploy steps:
+
+1. Run the extra migration in the SQL editor:
+       supabase/migrations/add_paynow_products.sql
+   (widens paynow_payments to carry slot-pack / job-credit purchases; the
+   entitlements are granted into the app's existing featured_slot_packs /
+   job_credit_packs tables, so web + app balances stay unified.)
+
+2. Re-deploy both functions so they pick up the new product handling:
+       supabase functions deploy paynow-create-payment
+       supabase functions deploy paynow-check-payment --no-verify-jwt
+
+Prices (must match the app):
+  featured_slot_pack_1 $2, featured_slot_pack_3 $5
+  job_credit_pack_1 $3, job_credit_pack_5 $12
+
+Job posting + applying on the website need NO Paynow setup — they work as
+soon as the site is deployed (posting is free up to 2 active jobs, then a
+job credit is required; applying is always free). The applications and
+job_credit RPCs already exist from the app's migrations.

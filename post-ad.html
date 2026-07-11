@@ -561,19 +561,11 @@ window.doSearch = window.doSearch || function(){
   const params=new URLSearchParams(location.search);
   const type=params.get('type');
 
-  // Categories that need the app's richer flow (extra structured fields).
-  const APP_ONLY={job:{title:'Jobs post in the free app',desc:'Job postings use structured fields (employment type, salary bands, requirements) best handled in the PaMarket app.'}};
+  // Jobs have their own dedicated recruiter form on the website now.
+  if(type==='job'||type==='jobs'){ window.location.replace('post-job'); return; }
 
   const session=(window.PM&&PM.getSession)?PM.getSession():null;
   const signedIn=!!(session&&session.user&&session.user.id);
-
-  // App-only category (e.g. jobs): show the app note, hide the form entirely.
-  if(type&&APP_ONLY[type]){
-    appNote.classList.remove('hidden');
-    $('pfAppNoteTitle').textContent=APP_ONLY[type].title;
-    $('pfAppNoteDesc').textContent=APP_ONLY[type].desc;
-    return;
-  }
 
   if(!signedIn){
     gate.classList.remove('hidden');

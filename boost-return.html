@@ -269,6 +269,16 @@ window.doSearch = window.doSearch || function(){
           '<a class="btn btn-navy" href="/">Go to homepage</a> <a class="btn btn-outline" href="browse">Browse listings</a>');
         return;
       }
+      if(r.state==='slots_added'){
+        show('ok','Featured slots added! ⭐','Your shop can now feature '+(r.extraSlots?('+'+r.extraSlots+' '):'')+'more listing'+(r.extraSlots===1?'':'s')+' at once. Manage them from your shop.',
+          '<a class="btn btn-navy" href="browse?shops=1">Go to Shops</a>');
+        return;
+      }
+      if(r.state==='credits_added'){
+        show('ok','Job credits added! ✅','You now have '+(r.credits?(r.credits+' '):'')+'more job-post credit'+(r.credits===1?'':'s')+'. Post your next vacancy any time.',
+          '<a class="btn btn-navy" href="post-job">Post a job</a> <a class="btn btn-outline" href="jobs">Browse jobs</a>');
+        return;
+      }
       if(r.state==='cancelled'){
         show('bad','Payment cancelled','The payment was cancelled and you have not been charged. You can try again from your listing page.',
           '<a class="btn btn-navy" href="browse">Browse listings</a>');

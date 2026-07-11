@@ -19,7 +19,7 @@
 //   SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (automatic)
 //   PAYNOW_INTEGRATION_KEY  (from the Paynow merchant dashboard)
 
-import { paynowPollStatus } from '../_shared/paynow.ts';
+import { PAYNOW_PRODUCTS, paynowPollStatus } from '../_shared/paynow.ts';
 
 const ALLOWED_ORIGINS = new Set([
   'https://pamarketzw.com',
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
     const payRes = await db.from('paynow_payments')
-      .select('id, user_id, listing_id, product_id, amount_usd, poll_url, status, expiry_time')
+      .select('id, user_id, listing_id, business_id, product_id, amount_usd, poll_url, status, expiry_time, target_id')
       .eq('id', paymentId).maybeSingle();
     if (payRes.error || !payRes.data) return json({ error: 'Payment not found' }, 404);
     const payment = payRes.data;
@@ -93,12 +93,71 @@ Deno.serve(async (req) => {
       return json({ error: 'Missing authorization' }, 401);
     }
 
+    const product = PAYNOW_PRODUCTS[payment.product_id];
+    const grantedState = product?.kind === 'boost' ? 'boosted'
+      : product?.kind === 'slot_pack' ? 'slots_added'
+      : product?.kind === 'job_credit' ? 'credits_added' : 'done';
+
+    // Grants the entitlement for a paid payment. For boosts this is the
+    // boost RPC (which reads paynow_payments and stacks featured_until). For
+    // slot packs / job credits, the entitlement lives in the SAME tables the
+    // app uses — we insert a row keyed by 'paynow:<reference>' (unique, so a
+    // retry is a no-op) and call the app's own activation RPC, keeping web
+    // and app balances unified. Returns null on success, or an error string.
+    async function grantEntitlement(): Promise<{ ok: boolean; detail?: unknown; error?: string }> {
+      if (!product) return { ok: false, error: 'Unknown product on payment: ' + payment.product_id };
+
+      if (product.kind === 'boost') {
+        const r = await db.rpc('activate_paynow_boost', { p_payment_id: paymentId });
+        if (r.error || !r.data?.ok) return { ok: false, error: r.error?.message || r.data?.msg };
+        return { ok: true, detail: { until: r.data.until, days: r.data.days } };
+      }
+
+      const token = 'paynow:' + payment.id;
+      const table = product.kind === 'slot_pack' ? 'featured_slot_packs' : 'job_credit_packs';
+      const activateFn = product.kind === 'slot_pack' ? 'activate_featured_slot_pack' : 'activate_job_credit_pack';
+
+      // Create the entitlement row if it isn't there yet (idempotent via the
+      // table's unique purchase_token). ignoreDuplicates so a retry no-ops.
+      const row: Record<string, unknown> = {
+        user_id: payment.user_id, product_id: payment.product_id,
+        purchase_token: token, order_id: payment.id, status: 'verified',
+        verified_at: new Date().toISOString(),
+      };
+      if (product.kind === 'slot_pack') { row.business_id = payment.business_id; row.extra_slots = product.extraSlots; }
+      else { row.credits = product.credits; }
+
+      const ins = await db.from(table).upsert(row, { onConflict: 'purchase_token', ignoreDuplicates: true });
+      if (ins.error) return { ok: false, error: 'Could not record entitlement: ' + ins.error.message };
+
+      const found = await db.from(table).select('id').eq('purchase_token', token).maybeSingle();
+      if (found.error || !found.data) return { ok: false, error: 'Entitlement row not found after insert' };
+      const packId = found.data.id;
+
+      const act = await db.rpc(activateFn, { p_pack_id: packId });
+      if (act.error || !act.data?.ok) return { ok: false, error: act.error?.message || act.data?.msg };
+
+      // Mark the payment consumed and remember the granted row for idempotency.
+      const upd = await db.from('paynow_payments').update({ status: 'consumed', target_id: packId }).eq('id', paymentId);
+      if (upd.error) console.error('paynow-check-payment: entitlement granted but could not mark payment consumed:', upd.error.message);
+      return { ok: true, detail: product.kind === 'slot_pack' ? { extraSlots: product.extraSlots } : { credits: product.credits } };
+    }
+
     // Fast paths — already settled one way or the other.
     if (payment.status === 'consumed') {
-      return json({ ok: true, state: 'boosted', until: payment.expiry_time });
+      return json({ ok: true, state: grantedState, until: payment.expiry_time });
     }
     if (payment.status === 'failed' || payment.status === 'cancelled') {
       return json({ ok: true, state: payment.status });
+    }
+    // Verified-but-not-consumed retry (e.g. activation crashed last time).
+    if (payment.status === 'paid') {
+      const g = await grantEntitlement();
+      if (!g.ok) {
+        console.error('[BILLING_ALERT] paynow-check-payment: paid-but-activation-failed (retry):', g.error);
+        return json({ error: 'Payment received but activation failed — it will be retried' }, 500);
+      }
+      return json({ ok: true, state: grantedState, ...(g.detail as object || {}) });
     }
     if (!payment.poll_url) return json({ error: 'Payment has no verification URL' }, 500);
 
@@ -133,7 +192,7 @@ Deno.serve(async (req) => {
     }
 
     // Mark paid (only from 'created' — a concurrent call that already moved
-    // it is harmless because activate_paynow_boost is idempotent).
+    // it is harmless because grantEntitlement is idempotent).
     const paidRes = await db.from('paynow_payments')
       .update({ status: 'paid', paid_at: new Date().toISOString(), paynow_reference: poll.paynowReference || null })
       .eq('id', paymentId).in('status', ['created']);
@@ -142,16 +201,16 @@ Deno.serve(async (req) => {
       return json({ error: 'Payment verified but could not be recorded' }, 500);
     }
 
-    const activateRes = await db.rpc('activate_paynow_boost', { p_payment_id: paymentId });
-    if (activateRes.error || !activateRes.data?.ok) {
-      // Money confirmed but boost not applied — loud log so it's findable;
-      // the next poll (buyer page retries, and Paynow re-POSTs) will land in
-      // the 'paid' state and retry activation.
-      console.error('[BILLING_ALERT] paynow-check-payment: paid-but-activation-failed:', activateRes.error?.message || activateRes.data?.msg);
-      return json({ error: 'Payment received but boost activation failed — it will be retried' }, 500);
+    const g = await grantEntitlement();
+    if (!g.ok) {
+      // Money confirmed but entitlement not granted — loud log; the next poll
+      // (buyer page retries, and Paynow re-POSTs) lands in the 'paid' branch
+      // above and retries activation.
+      console.error('[BILLING_ALERT] paynow-check-payment: paid-but-activation-failed:', g.error);
+      return json({ error: 'Payment received but activation failed — it will be retried' }, 500);
     }
 
-    return json({ ok: true, state: 'boosted', until: activateRes.data.until, days: activateRes.data.days });
+    return json({ ok: true, state: grantedState, ...(g.detail as object || {}) });
   } catch (err) {
     return json({ error: (err as Error).message }, 500);
   }

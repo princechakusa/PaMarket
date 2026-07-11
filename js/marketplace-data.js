@@ -415,7 +415,9 @@
     var meta = (s.user.user_metadata) || {};
     var row = {
       seller_id: s.user.id,
-      seller_name: meta.full_name || meta.name || s.user.email || '',
+      // sellerName override lets a job show the company as the employer
+      // (or post anonymously) instead of the poster's personal name.
+      seller_name: (opts.sellerName && String(opts.sellerName).trim()) || meta.full_name || meta.name || s.user.email || '',
       seller_phone: meta.phone || s.user.phone || '',
       title: String(opts.title || '').trim(),
       description: String(opts.description || '').trim(),
@@ -482,16 +484,25 @@
     { productId: 'job_boost_7day',  days: 7,  label: '7 days',  tag: '',           priceUsd: 8 },
     { productId: 'job_boost_30day', days: 30, label: '30 days', tag: 'Best value', priceUsd: 20 },
   ];
+  var SLOT_PACK_PRODUCTS = [
+    { productId: 'featured_slot_pack_1', extraSlots: 1, label: '+1 slot',  tag: '',           priceUsd: 2 },
+    { productId: 'featured_slot_pack_3', extraSlots: 3, label: '+3 slots', tag: 'Best value', priceUsd: 5 },
+  ];
+  var JOB_CREDIT_PRODUCTS = [
+    { productId: 'job_credit_pack_1', credits: 1, label: '1 job post',  tag: '',           priceUsd: 3 },
+    { productId: 'job_credit_pack_5', credits: 5, label: '5 job posts', tag: 'Best value', priceUsd: 12 },
+  ];
 
-  // Starts a Paynow checkout for a boost. Resolves { paymentId, redirectUrl }
-  // — the caller redirects the browser to redirectUrl (Paynow hosted page).
-  function createBoostPayment(listingId, productId) {
+  // Generic Paynow checkout starter. `body` is { productId, listingId? |
+  // businessId? } depending on the product. Resolves { paymentId,
+  // redirectUrl } — the caller redirects to redirectUrl (Paynow page).
+  function createPayment(body) {
     var s = getSession();
     if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
     return fetch(SB_URL + '/functions/v1/paynow-create-payment', {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ listingId: listingId, productId: productId }),
+      body: JSON.stringify(body),
     }).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (j) {
         if (!res.ok || !j.ok) throw new Error(j.error || ('payment failed: ' + res.status));
@@ -499,9 +510,90 @@
       });
     });
   }
+  function createBoostPayment(listingId, productId) { return createPayment({ listingId: listingId, productId: productId }); }
+  function createSlotPackPayment(businessId, productId) { return createPayment({ businessId: businessId, productId: productId }); }
+  function createJobCreditPayment(productId) { return createPayment({ productId: productId }); }
+
+  // Current user's job-credit balance (server-side, auth.uid()-scoped RPC).
+  function fetchJobCreditBalance() {
+    var s = getSession();
+    if (!s || !s.access_token) return Promise.resolve(0);
+    return fetch(SB_URL + '/rest/v1/rpc/get_job_credit_balance', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: '{}',
+    }).then(function (res) { return res.ok ? res.json() : 0; }).then(function (v) { return Number(v) || 0; }).catch(function () { return 0; });
+  }
+
+  // ── Job applications (website) ───────────────────────────────────
+  // Insert an application for a job. RLS requires applicant_id = auth.uid(),
+  // and the table's unique (job_id, applicant_id) blocks duplicates (surfaced
+  // as { duplicate:true }). Mirrors the app's applications column map.
+  function applyToJob(opts) {
+    opts = opts || {};
+    var s = getSession();
+    if (!s || !s.access_token || !s.user || !s.user.id) return Promise.reject(new Error('not-authenticated'));
+    var meta = (s.user.user_metadata) || {};
+    var row = {
+      job_id: opts.jobId,
+      job_title: String(opts.jobTitle || '').slice(0, 200),
+      company: String(opts.company || '').slice(0, 200),
+      applicant_id: s.user.id,
+      applicant_name: String(opts.name || meta.full_name || meta.name || '').slice(0, 200),
+      applicant_phone: String(opts.phone || meta.phone || s.user.phone || '').slice(0, 60),
+      applicant_email: String(opts.email || s.user.email || '').slice(0, 200),
+      message: String(opts.message || '').slice(0, 4000),
+      employer_id: opts.employerId,
+    };
+    return fetch(SB_URL + '/rest/v1/applications', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify(row),
+    }).then(function (res) {
+      if (res.ok) return res.json().then(function (rows) { return { ok: true, application: rows[0] || null }; });
+      return res.text().then(function (t) {
+        if (/duplicate|unique|23505/i.test(t)) return { ok: false, duplicate: true };
+        throw new Error(t || ('apply failed: ' + res.status));
+      });
+    });
+  }
+
+  // Whether the current user already applied to a job (to pre-disable the form).
+  function hasAppliedToJob(jobId) {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user || !jobId) return Promise.resolve(false);
+    return fetch(SB_URL + '/rest/v1/applications?job_id=eq.' + esc(jobId) + '&applicant_id=eq.' + esc(s.user.id) + '&select=id', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
+    }).then(function (res) { return res.ok ? res.json() : []; }).then(function (rows) { return !!(rows && rows.length); }).catch(function () { return false; });
+  }
+
+  // Spend one job credit on a listing the caller owns (server-side RPC,
+  // guarded by balance + a unique-per-listing constraint). Called right
+  // after a job listing is created when the recruiter is over the free
+  // post limit. Resolves the RPC's { ok, remaining?, msg? }.
+  function spendJobCredit(listingId) {
+    var s = getSession();
+    if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
+    return fetch(SB_URL + '/rest/v1/rpc/spend_job_credit', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_listing_id: listingId }),
+    }).then(function (res) { return res.json().catch(function () { return { ok: false }; }); });
+  }
+
+  // Sum of a business's purchased extra featured slots (owner-read RLS).
+  function fetchExtraSlotBalance(businessId) {
+    var s = getSession();
+    if (!s || !s.access_token || !businessId) return Promise.resolve(0);
+    return fetch(SB_URL + '/rest/v1/featured_slot_packs?business_id=eq.' + esc(businessId) + '&status=eq.consumed&select=extra_slots', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
+    }).then(function (res) { return res.ok ? res.json() : []; })
+      .then(function (rows) { return (rows || []).reduce(function (a, r) { return a + (Number(r.extra_slots) || 0); }, 0); })
+      .catch(function () { return 0; });
+  }
 
   // Asks the server to re-verify a payment with Paynow. Resolves
-  // { state: 'pending'|'boosted'|'cancelled'|'failed', until? }.
+  // { state: 'pending'|'boosted'|'slots_added'|'credits_added'|'cancelled'|'failed', ... }.
   function checkBoostPayment(paymentId) {
     var s = getSession();
     if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
@@ -557,9 +649,19 @@
   // Website posting (create listing + R2 image upload).
   global.PM.createListing = createListing;
   global.PM.uploadListingPhoto = uploadListingPhoto;
-  // Paynow boost checkout (website twin of the app's Play Billing boosts).
+  // Paynow checkout (website twin of the app's Play Billing paid features).
   global.PM.BOOST_PRODUCTS = BOOST_PRODUCTS;
   global.PM.JOB_BOOST_PRODUCTS = JOB_BOOST_PRODUCTS;
+  global.PM.SLOT_PACK_PRODUCTS = SLOT_PACK_PRODUCTS;
+  global.PM.JOB_CREDIT_PRODUCTS = JOB_CREDIT_PRODUCTS;
+  global.PM.createPayment = createPayment;
   global.PM.createBoostPayment = createBoostPayment;
+  global.PM.createSlotPackPayment = createSlotPackPayment;
+  global.PM.createJobCreditPayment = createJobCreditPayment;
   global.PM.checkBoostPayment = checkBoostPayment;
+  global.PM.fetchJobCreditBalance = fetchJobCreditBalance;
+  global.PM.fetchExtraSlotBalance = fetchExtraSlotBalance;
+  global.PM.spendJobCredit = spendJobCredit;
+  global.PM.applyToJob = applyToJob;
+  global.PM.hasAppliedToJob = hasAppliedToJob;
 })(window);

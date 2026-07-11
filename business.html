@@ -42,6 +42,13 @@
 .crumb{max-width:1000px;margin:0 auto;padding:16px 24px 0;font-size:13px;color:var(--mute)}
 .crumb a{color:var(--sub);font-weight:500}
 .crumb a:hover{color:var(--navy)}
+.owner-panel{background:linear-gradient(135deg,#EEF2FF,#F8FAFC);border:1px solid var(--line);border-radius:16px;padding:22px 24px}
+.slot-buy{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.slot-opt{display:inline-flex;align-items:center;gap:9px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:12px 16px;cursor:pointer;font-family:inherit;transition:border-color .15s}
+.slot-opt:hover{border-color:var(--navy)}
+.slot-opt .so-label{font-size:14px;font-weight:800}
+.slot-opt .so-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;background:#FEF3C7;color:#92400E;padding:2px 7px;border-radius:10px}
+.slot-opt .so-price{font-size:16px;font-weight:900;color:var(--navy)}
 .biz-cover{height:200px;background:linear-gradient(135deg,var(--navy-deep),var(--navy-mid));position:relative;overflow:hidden}
 .biz-cover img{width:100%;height:100%;object-fit:cover}
 .biz-head{max-width:1000px;margin:0 auto;padding:0 24px}
@@ -382,6 +389,16 @@ function render(b, extras){
   statHtml += '<div class="biz-stat"><div class="n">'+followers+'</div><div class="l">Followers</div></div>';
   if (year) statHtml += '<div class="biz-stat"><div class="n">'+year+'</div><div class="l">On PaMarket since</div></div>';
 
+  // Owner-only: buy extra featured slots for this shop (Paynow).
+  var viewer = PM.currentUserId && PM.currentUserId();
+  var isOwner = !!(viewer && b.owner_user_id && viewer === b.owner_user_id);
+  var ownerPanel = isOwner
+    ? '<div class="biz-section owner-panel"><h2>Featured slots for your shop</h2>'+
+      '<div class="sub">Featured slots let you keep more of your listings pinned to the top of their category at once. '+
+      '<span id="slotBalance">Checking your balance…</span></div>'+
+      '<div class="slot-buy" id="slotBuy"></div></div>'
+    : '';
+
   var html =
     '<div class="biz-cover">'+cover+'</div>'+
     '<div class="biz-head">'+
@@ -400,6 +417,7 @@ function render(b, extras){
       '<div class="biz-actions">'+(actions||'<span class="sub" style="color:var(--mute);font-size:13px">No contact details provided</span>')+'</div>'+
     '</div>'+
     '<div class="biz-body">'+
+      ownerPanel+
       (b.description ? '<div class="biz-section biz-about"><h2>About</h2><p>'+esc(b.description)+'</p>'+
         (cats.length?'<div class="cat-chips">'+cats.map(function(c){return '<span class="pm-chip">'+esc(CAT_LABEL[c]||c)+'</span>';}).join('')+'</div>':'')+'</div>' : '')+
 
@@ -436,6 +454,39 @@ function render(b, extras){
 
   // WhatsApp float → this shop
   if (wa) document.getElementById('waFloat').setAttribute('href','https://wa.me/'+String(wa).replace(/[^0-9]/g,''));
+
+  if (isOwner) initSlotBuy(b.id);
+}
+
+// Owner-only featured-slot purchase (Paynow). Shows the current balance and
+// buy buttons priced identically to the app.
+function initSlotBuy(businessId){
+  var buy = document.getElementById('slotBuy');
+  if (!buy) return;
+  PM.fetchExtraSlotBalance(businessId).then(function(n){
+    var el = document.getElementById('slotBalance');
+    if (el) el.textContent = n>0 ? ('You have '+n+' extra slot'+(n===1?'':'s')+'.') : 'You have no extra slots yet.';
+  });
+  buy.innerHTML = (PM.SLOT_PACK_PRODUCTS||[]).map(function(p){
+    return '<button type="button" class="slot-opt" data-product="'+p.productId+'">'+
+      '<span class="so-label">'+p.label+'</span>'+(p.tag?'<span class="so-tag">'+p.tag+'</span>':'')+
+      '<span class="so-price">$'+p.priceUsd+'</span></button>';
+  }).join('');
+  buy.querySelectorAll('.slot-opt').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buy.querySelectorAll('.slot-opt').forEach(function(b){ b.disabled = true; });
+      btn.querySelector('.so-label').textContent = 'Starting checkout…';
+      PM.createSlotPackPayment(businessId, btn.getAttribute('data-product')).then(function(r){
+        window.location.href = r.redirectUrl;
+      }).catch(function(err){
+        buy.querySelectorAll('.slot-opt').forEach(function(b){ b.disabled = false; });
+        initSlotBuy(businessId);
+        alert(err && err.message==='not-authenticated'
+          ? 'Please sign in again to buy featured slots.'
+          : 'Could not start the payment: '+((err&&err.message)||'unknown error'));
+      });
+    });
+  });
 }
 
 function showNotFound(){

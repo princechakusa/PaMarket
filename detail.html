@@ -139,6 +139,16 @@ button{font-family:inherit;cursor:pointer}
 .boost-opt .bo-tag{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;background:#FEF3C7;color:#92400E;padding:3px 8px;border-radius:12px}
 .boost-opt .bo-price{margin-left:auto;font-size:17px;font-weight:900;color:var(--navy)}
 .boost-pay-note{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:12px;color:var(--mute)}
+.apply-card{background:linear-gradient(135deg,#0F2460,#1E4BB8);border-radius:14px;padding:20px 22px;color:#fff}
+.apply-card h4{font-size:15px;font-weight:800}
+.apply-card p{font-size:12.5px;color:#A8C0EC;margin-top:6px;line-height:1.5}
+.apply-btn{width:100%;margin-top:14px;background:var(--gold);color:#1F2937;font-weight:800;border:none}
+.apply-btn:hover{background:#F0B45A}
+.apply-done{margin-top:12px;font-size:12.5px;font-weight:700;color:#BBF7D0}
+.boost-modal .bm-field{display:flex;flex-direction:column;margin-top:12px}
+.boost-modal .bm-field label{font-size:12.5px;font-weight:700;margin-bottom:5px}
+.boost-modal .bm-field input,.boost-modal .bm-field textarea{font-family:inherit;font-size:14px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;resize:vertical}
+.boost-modal .bm-field input:focus,.boost-modal .bm-field textarea:focus{outline:none;border-color:var(--navy)}
 .rating-hero{display:flex;align-items:center;gap:16px;margin-bottom:16px}
 .rating-big{font-size:38px;font-weight:900;color:var(--navy);letter-spacing:-.03em;line-height:1}
 .rating-stars{color:var(--gold);font-size:16px;letter-spacing:2px}
@@ -402,6 +412,12 @@ window.doSearch = window.doSearch || function(){
       </div>
     </div>
     <div class="sidebar">
+      <div class="apply-card hidden" id="applyCard">
+        <h4>Apply for this job</h4>
+        <p>Send your application straight to the employer. Applying is always free.</p>
+        <button type="button" class="btn apply-btn" id="applyBtn">Apply Now</button>
+        <div class="apply-done hidden" id="applyDone">✓ You’ve applied to this job.</div>
+      </div>
       <div class="seller-card">
         <a class="seller-top" id="sellerLink" style="text-decoration:none">
           <div class="seller-avatar" id="sellerAvatar"></div>
@@ -476,6 +492,20 @@ window.doSearch = window.doSearch || function(){
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       Secure checkout by Paynow — EcoCash, OneMoney &amp; cards. <a href="terms" target="_blank" style="text-decoration:underline;color:var(--sub)">Terms apply</a>
     </div>
+  </div>
+</div>
+
+<!-- JOB APPLY MODAL -->
+<div class="boost-overlay hidden" id="applyOverlay">
+  <div class="boost-modal" role="dialog" aria-modal="true" aria-labelledby="applyTitle">
+    <button type="button" class="boost-close" id="applyClose" aria-label="Close">&times;</button>
+    <h3 id="applyTitle">Apply for this job</h3>
+    <p class="bm-sub" id="applySub">Your details are shared with the employer so they can contact you.</p>
+    <div class="bm-field"><label for="apName">Full name</label><input type="text" id="apName" maxlength="120" placeholder="Your name"></div>
+    <div class="bm-field"><label for="apEmail">Email</label><input type="email" id="apEmail" maxlength="120" placeholder="you@email.com"></div>
+    <div class="bm-field"><label for="apPhone">Phone / WhatsApp</label><input type="text" id="apPhone" maxlength="30" placeholder="+263 …"></div>
+    <div class="bm-field"><label for="apMsg">Message to employer</label><textarea id="apMsg" rows="4" maxlength="2000" placeholder="Briefly say why you're a good fit and your availability."></textarea></div>
+    <button type="button" class="btn btn-navy" id="apSubmit" style="width:100%;margin-top:16px">Send Application</button>
   </div>
 </div>
 
@@ -874,6 +904,51 @@ function renderListing(l,reviews){
     document.getElementById('boostBtn').onclick=()=>overlay.classList.remove('hidden');
     document.getElementById('boostClose').onclick=()=>overlay.classList.add('hidden');
     overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.add('hidden');});
+  }
+
+  // Job listings: let signed-in seekers apply (not the employer themselves).
+  if(l.category==='jobs' && !(viewerId && l.seller_id===viewerId)){
+    const company=(l.attributes&&l.attributes.company)||l.seller_name||'the employer';
+    const card=document.getElementById('applyCard');
+    card.classList.remove('hidden');
+    const applyOverlay=document.getElementById('applyOverlay');
+    const applyBtn=document.getElementById('applyBtn');
+    const markApplied=()=>{document.getElementById('applyDone').classList.remove('hidden');applyBtn.classList.add('hidden');};
+    // Pre-fill from session; disable if already applied.
+    const sess=PM.getSession&&PM.getSession();
+    if(sess&&sess.user){
+      const m=sess.user.user_metadata||{};
+      document.getElementById('apName').value=m.full_name||m.name||'';
+      document.getElementById('apEmail').value=sess.user.email||'';
+      document.getElementById('apPhone').value=m.phone||sess.user.phone||'';
+      if(PM.hasAppliedToJob)PM.hasAppliedToJob(l.id).then(a=>{if(a)markApplied();});
+    }
+    applyBtn.onclick=()=>{
+      if(!(PM.getSession&&PM.getSession())){window.location='auth?return='+encodeURIComponent(location.pathname+location.search);return;}
+      document.getElementById('applySub').textContent='Applying to "'+l.title+'" at '+company+'.';
+      applyOverlay.classList.remove('hidden');
+    };
+    document.getElementById('applyClose').onclick=()=>applyOverlay.classList.add('hidden');
+    applyOverlay.addEventListener('click',e=>{if(e.target===applyOverlay)applyOverlay.classList.add('hidden');});
+    document.getElementById('apSubmit').onclick=function(){
+      const name=document.getElementById('apName').value.trim();
+      const email=document.getElementById('apEmail').value.trim();
+      const phone=document.getElementById('apPhone').value.trim();
+      const msg=document.getElementById('apMsg').value.trim();
+      if(!name){alert('Please enter your name.');return;}
+      if(!email&&!phone){alert('Please add an email or phone so the employer can reach you.');return;}
+      const btn=this;btn.disabled=true;btn.textContent='Sending…';
+      PM.applyToJob({jobId:l.id,jobTitle:l.title,company:company,employerId:l.seller_id,name:name,email:email,phone:phone,message:msg})
+        .then(r=>{
+          applyOverlay.classList.add('hidden');
+          if(r.duplicate){alert('You have already applied to this job.');}
+          markApplied();
+        })
+        .catch(err=>{
+          btn.disabled=false;btn.textContent='Send Application';
+          alert(err&&err.message==='not-authenticated'?'Please sign in again to apply.':'Could not send your application: '+((err&&err.message)||'please try again.'));
+        });
+    };
   }
 
   // Share + recently-viewed — shared with the pre-rendered /l/ pages via

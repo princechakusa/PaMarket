@@ -18,6 +18,36 @@
 //   (reference, paynowreference, amount, status, hash) — hash-verified
 //   the same way.
 
+// Every product sellable on the website through Paynow, with its USD price
+// (must match the app's Google Play prices in www/js/billing-products.js).
+//   kind 'boost'      → grants featured_until on a listing (needs listingId)
+//   kind 'slot_pack'  → grants extra featured slots to a business (needs businessId)
+//   kind 'job_credit' → grants job-post credits to the buyer (no target)
+export interface PaynowProduct {
+  kind: 'boost' | 'slot_pack' | 'job_credit';
+  amountUsd: number;
+  days?: number;        // boost
+  boostFamily?: 'boost' | 'job_boost';
+  extraSlots?: number;  // slot_pack
+  credits?: number;     // job_credit
+}
+
+export const PAYNOW_PRODUCTS: Record<string, PaynowProduct> = {
+  // Listing boosts
+  boost_1day:      { kind: 'boost', days: 1,  amountUsd: 2,  boostFamily: 'boost' },
+  boost_7day:      { kind: 'boost', days: 7,  amountUsd: 10, boostFamily: 'boost' },
+  boost_30day:     { kind: 'boost', days: 30, amountUsd: 30, boostFamily: 'boost' },
+  job_boost_7day:  { kind: 'boost', days: 7,  amountUsd: 8,  boostFamily: 'job_boost' },
+  job_boost_30day: { kind: 'boost', days: 30, amountUsd: 20, boostFamily: 'job_boost' },
+  // Shop featured-slot packs
+  featured_slot_pack_1: { kind: 'slot_pack', extraSlots: 1, amountUsd: 2 },
+  featured_slot_pack_3: { kind: 'slot_pack', extraSlots: 3, amountUsd: 5 },
+  // Job posting credit packs
+  job_credit_pack_1: { kind: 'job_credit', credits: 1, amountUsd: 3 },
+  job_credit_pack_5: { kind: 'job_credit', credits: 5, amountUsd: 12 },
+};
+
+// Back-compat: the boost-only map the first version exported.
 export const PAYNOW_BOOST_PRODUCTS: Record<string, { days: number; amountUsd: number; family: 'boost' | 'job_boost' }> = {
   boost_1day:      { days: 1,  amountUsd: 2,  family: 'boost' },
   boost_7day:      { days: 7,  amountUsd: 10, family: 'boost' },

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta id="metaDesc" name="description" content="Post a job vacancy on PaMarket — reach candidates across Zimbabwe. Free up to your plan limit, then pay per post. Every job is reviewed before going live.">
+<title id="pageTitle">Post a Job — PaMarket Zimbabwe</title>
+<link id="canonicalLink" rel="canonical" href="https://pamarketzw.com/post-job">
+<link rel="icon" href="img/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta property="og:title" content="Post a Job — PaMarket Zimbabwe">
+<meta property="og:description" content="Hire across Zimbabwe. Post a vacancy in minutes.">
+<meta property="og:image" content="https://pamarketzw.com/img/icon-512.png">
+<meta name="robots" content="noindex, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#1A3A8F;--navy-deep:#0F2460;--navy-mid:#1E4BB8;
+  --gold:#E8A33D;--ink:#0F172A;--sub:#475569;--mute:#94A3B8;
+  --line:#E2E8F0;--paper:#F8FAFC;--white:#FFFFFF;--green:#16A34A;--red:#DC2626;
+}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--paper);font-size:15px;line-height:1.6}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer}
+.hidden{display:none!important}
+
+.pj-wrap{max-width:720px;margin:0 auto;padding:28px 24px 80px}
+.pj-head h1{font-size:26px;font-weight:900;letter-spacing:-.02em}
+.pj-head p{font-size:14px;color:var(--sub);margin-top:6px}
+.pj-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px;margin-top:20px}
+
+.pj-balance{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#EEF2FF;border:1px solid #D9E2FB;border-radius:12px;padding:14px 16px;font-size:13.5px;color:var(--navy);font-weight:600;margin-top:20px}
+.pj-balance .grow{flex:1;min-width:180px}
+.pj-buy-credits{background:var(--navy);color:#fff;border:none;border-radius:9px;padding:9px 14px;font-weight:700;font-size:13px}
+
+.pf-field{margin-bottom:18px;display:flex;flex-direction:column}
+.pf-field label{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:7px}
+.pf-req{color:var(--red)}
+.pf-field input,.pf-field select,.pf-field textarea{width:100%;font-family:inherit;font-size:15px;color:var(--ink);background:#fff;border:1.5px solid var(--line);border-radius:11px;padding:12px 14px;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none}
+.pf-field textarea{resize:vertical;line-height:1.6}
+.pf-field input:focus,.pf-field select:focus,.pf-field textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,58,143,.1)}
+.pf-field input.pf-invalid,.pf-field select.pf-invalid,.pf-field textarea.pf-invalid{border-color:var(--red)}
+.pf-hint{font-size:12px;color:var(--mute);margin-top:5px}
+.pf-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pj-types{display:flex;flex-wrap:wrap;gap:10px}
+.pj-types label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13.5px;font-weight:600;border:1.5px solid var(--line);border-radius:10px;padding:9px 13px}
+.pj-types input{accent-color:var(--navy)}
+.pj-submit{width:100%;background:var(--navy);color:#fff;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:800;margin-top:8px}
+.pj-submit:disabled{opacity:.6;cursor:default}
+.pj-note{font-size:12px;color:var(--mute);margin-top:12px;text-align:center}
+
+.pf-gate,.pj-success{text-align:center;padding:20px}
+.pf-gate-ic,.pj-success-ic{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.pf-gate-ic{background:#EEF2FF;color:var(--navy)}
+.pj-success-ic{background:#DCFCE7;color:var(--green)}
+.pf-gate h2,.pj-success h2{font-size:22px;font-weight:900;margin-bottom:8px}
+.pf-gate p,.pj-success p{font-size:14.5px;color:var(--sub);margin-bottom:22px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.6}
+.pf-gate-btns,.pj-success-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+.boost-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px}
+.boost-modal{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:26px;position:relative}
+.boost-modal h3{font-size:18px;font-weight:900}
+.boost-modal .bm-sub{font-size:13px;color:var(--sub);margin-top:5px;line-height:1.55}
+.boost-close{position:absolute;top:14px;right:14px;background:none;border:none;font-size:22px;color:var(--mute);cursor:pointer;line-height:1}
+.boost-opts{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.boost-opt{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;background:#fff;font-family:inherit;text-align:left}
+.boost-opt:hover{border-color:var(--navy)}
+.boost-opt .bo-days{font-size:15px;font-weight:800}
+.boost-opt .bo-tag{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;background:#FEF3C7;color:#92400E;padding:3px 8px;border-radius:12px}
+.boost-opt .bo-price{margin-left:auto;font-size:17px;font-weight:900;color:var(--navy)}
+.boost-pay-note{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:12px;color:var(--mute)}
+
+@media(max-width:600px){.pf-row{grid-template-columns:1fr;gap:0}}
+</style>
+</head>
+<body>
+
+<!-- HEADER:START -->
+<!-- ============================================================
+     PaMarket shared header — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the HEADER:START/END markers.
+     Styling lives in css/site.css. Do not edit the copies that
+     appear inside individual page files.
+     ============================================================ -->
+<div class="top-bar">
+  <div class="top-bar-w">
+    <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
+    <nav class="top-bar-links" aria-label="Primary">
+      <a href="browse">Browse</a>
+      <a href="advertise">Advertise</a>
+      <a href="contact">Contact Us</a>
+      <a href="blog">Blog</a>
+      <a href="about">About Us</a>
+    </nav>
+  </div>
+</div>
+
+<header id="hdr">
+  <div class="hdr-w">
+    <a href="/" class="logo">Pa<em>Market</em></a>
+    <div class="search-bar">
+      <select class="search-cat" id="hCat" aria-label="Category">
+        <option value="">All Categories</option>
+        <option value="property">Property</option><option value="vehicles">Vehicles</option><option value="electronics">Electronics</option>
+        <option value="jobs">Jobs</option><option value="furniture">Furniture</option><option value="fashion">Fashion</option>
+        <option value="services">Services</option><option value="agriculture">Agriculture</option><option value="rooms">Rooms</option>
+        <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option>
+      </select>
+      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." aria-label="Search" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()" aria-label="Search">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span class="sbtn-lbl">Search</span>
+      </button>
+    </div>
+    <div class="hdr-util">
+      <a href="auth" class="util-btn" title="Notifications" aria-label="Notifications">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="util-lbl">Notifications</span>
+      </a>
+      <a href="auth" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        <span class="util-lbl">My Searches</span>
+      </a>
+      <a href="auth" class="util-btn" title="Favorites" aria-label="Favorites">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        <span class="util-lbl">Favorites</span>
+      </a>
+      <a href="auth" class="util-btn" title="Chats" aria-label="Chats">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="util-lbl">Chats</span>
+      </a>
+      <a href="auth" class="util-btn" title="My Ads" aria-label="My Ads">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+        <span class="util-lbl">My Ads</span>
+      </a>
+    </div>
+    <div class="hdr-right">
+      <a href="auth" class="btn-sign" id="signInBtn">Sign In</a>
+      <a href="post-ad" class="btn-post">+ Post Free Ad</a>
+      <button class="ham" onclick="toggleMob()" aria-label="Menu" aria-expanded="false">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav id="mobNav" class="mob-nav">
+    <a href="/">Home</a>
+    <a href="browse">Browse</a>
+    <a href="advertise">Advertise</a>
+    <a href="contact">Contact Us</a>
+    <a href="blog">Blog</a>
+    <a href="about">About Us</a>
+    <a href="post-ad">+ Post Free Ad</a>
+  </nav>
+</header>
+<script>
+/* Self-contained header behaviour so the partial works on any page
+   regardless of what else the page loads. Guarded so pages that
+   already define these keep their own implementation. */
+window.toggleMob = window.toggleMob || function(){
+  var n = document.getElementById('mobNav');
+  var h = document.querySelector('#hdr .ham');
+  if (!n) return;
+  var open = n.classList.toggle('open');
+  if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+window.doSearch = window.doSearch || function(){
+  var cat = document.getElementById('hCat');
+  var q = document.getElementById('hQ');
+  var p = new URLSearchParams();
+  if (cat && cat.value) p.set('cat', cat.value);
+  if (q && q.value.trim()) p.set('q', q.value.trim());
+  var qs = p.toString();
+  window.location.href = (cat && cat.value === 'jobs' ? 'jobs' : 'browse') + (qs ? '?' + qs : '');
+};
+</script>
+<!-- HEADER:END -->
+
+<div class="pj-wrap">
+  <div class="pj-head">
+    <h1>Post a Job</h1>
+    <p>Reach candidates across Zimbabwe. Every vacancy is reviewed before it goes live, usually within 24 hours.</p>
+  </div>
+
+  <!-- Sign-in gate -->
+  <div class="pj-card pf-gate hidden" id="pjGate">
+    <div class="pf-gate-ic">
+      <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15a2 2 0 100-4 2 2 0 000 4z"/><path d="M19 11V8a7 7 0 10-14 0v3a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2z"/></svg>
+    </div>
+    <h2>Sign in to post a job</h2>
+    <p>You need a free PaMarket account to post a vacancy and receive applications.</p>
+    <div class="pf-gate-btns">
+      <a class="btn btn-navy" id="pjSignIn" href="auth">Sign In</a>
+      <a class="btn btn-outline" href="auth?mode=signup">Create Account</a>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="pj-card hidden" id="pjFormCard">
+    <div class="pj-balance hidden" id="pjBalance">
+      <span class="grow" id="pjBalanceText"></span>
+      <button type="button" class="pj-buy-credits" id="pjBuyCredits">Buy job credits</button>
+    </div>
+
+    <form id="pjForm" style="margin-top:20px">
+      <div class="pf-row">
+        <div class="pf-field">
+          <label for="jCompany">Company / Employer name <span class="pf-req">*</span></label>
+          <input type="text" id="jCompany" maxlength="80" placeholder="e.g. Zimbabwe Traders Ltd">
+        </div>
+        <div class="pf-field">
+          <label for="jTitle">Job title <span class="pf-req">*</span></label>
+          <input type="text" id="jTitle" maxlength="80" placeholder="e.g. Sales Representative">
+        </div>
+      </div>
+
+      <div class="pf-row">
+        <div class="pf-field">
+          <label for="jCat">Industry <span class="pf-req">*</span></label>
+          <select id="jCat">
+            <option value="">Select industry…</option>
+          </select>
+        </div>
+        <div class="pf-field">
+          <label for="jSalary">Salary (USD/month)</label>
+          <input type="text" id="jSalary" maxlength="40" placeholder="e.g. 500 or Negotiable">
+        </div>
+      </div>
+
+      <div class="pf-field">
+        <label>Employment type <span class="pf-req">*</span></label>
+        <div class="pj-types" id="jTypes"></div>
+      </div>
+
+      <div class="pf-row">
+        <div class="pf-field">
+          <label for="jProv">Province <span class="pf-req">*</span></label>
+          <select id="jProv">
+            <option value="">Choose…</option>
+            <option>Harare</option><option>Bulawayo</option><option>Manicaland</option>
+            <option>Mashonaland Central</option><option>Mashonaland East</option>
+            <option>Mashonaland West</option><option>Masvingo</option>
+            <option>Matabeleland North</option><option>Matabeleland South</option><option>Midlands</option>
+            <option>Remote</option>
+          </select>
+        </div>
+        <div class="pf-field">
+          <label for="jCity">City / Town <span class="pf-req">*</span></label>
+          <input type="text" id="jCity" maxlength="60" placeholder="e.g. Harare or Remote">
+        </div>
+      </div>
+
+      <div class="pf-field">
+        <label for="jDesc">Job description <span class="pf-req">*</span></label>
+        <textarea id="jDesc" rows="5" maxlength="4000" placeholder="Describe the role, who you're looking for, and what the day-to-day looks like."></textarea>
+        <div class="pf-hint"><span id="jDescCount">0</span> / 4000 — minimum 30 characters</div>
+      </div>
+
+      <div class="pf-field">
+        <label for="jResp">Key responsibilities <span style="color:var(--mute);font-weight:500">(optional)</span></label>
+        <textarea id="jResp" rows="3" maxlength="2000" placeholder="One per line, e.g.&#10;Manage the sales pipeline&#10;Report weekly to the branch manager"></textarea>
+      </div>
+
+      <div class="pf-field">
+        <label for="jReqs">Requirements <span style="color:var(--mute);font-weight:500">(optional)</span></label>
+        <textarea id="jReqs" rows="3" maxlength="2000" placeholder="e.g.&#10;2+ years in a similar role&#10;Valid driver's licence"></textarea>
+      </div>
+
+      <div class="pf-row">
+        <div class="pf-field">
+          <label for="jEmail">Application email <span style="color:var(--mute);font-weight:500">(optional)</span></label>
+          <input type="email" id="jEmail" maxlength="120" placeholder="jobs@company.co.zw">
+        </div>
+        <div class="pf-field">
+          <label for="jPhone">WhatsApp for applicants <span style="color:var(--mute);font-weight:500">(optional)</span></label>
+          <input type="text" id="jPhone" maxlength="30" placeholder="+263 77 123 4567">
+        </div>
+      </div>
+
+      <div class="pf-field">
+        <label style="display:flex;align-items:center;gap:9px;font-weight:600;cursor:pointer">
+          <input type="checkbox" id="jAnon" style="width:auto;accent-color:var(--navy)">
+          Hide my personal name — show only the company name to candidates
+        </label>
+      </div>
+
+      <button type="submit" class="pj-submit" id="pjSubmit">Post Job</button>
+      <div class="pj-note">Charging candidates any fee to apply is strictly prohibited. By posting you agree to our <a href="terms" target="_blank" style="text-decoration:underline">Terms</a>.</div>
+    </form>
+  </div>
+
+  <!-- Success -->
+  <div class="pj-card pj-success hidden" id="pjSuccess">
+    <div class="pj-success-ic">
+      <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 id="pjSuccessTitle">Job submitted!</h2>
+    <p id="pjSuccessMsg">Your vacancy will appear on the Jobs board once it passes review.</p>
+    <div class="pj-success-btns">
+      <a class="btn btn-navy" href="jobs">View Jobs board</a>
+      <a class="btn btn-outline" href="post-job">Post another</a>
+    </div>
+  </div>
+</div>
+
+<!-- BUY JOB CREDITS MODAL (Paynow) -->
+<div class="boost-overlay hidden" id="creditOverlay">
+  <div class="boost-modal" role="dialog" aria-modal="true" aria-labelledby="creditTitle">
+    <button type="button" class="boost-close" id="creditClose" aria-label="Close">&times;</button>
+    <h3 id="creditTitle">Buy job credits</h3>
+    <p class="bm-sub">Posting is free up to your plan limit. Each credit lets you publish one extra job. Same prices as the PaMarket app.</p>
+    <div class="boost-opts" id="creditOpts"></div>
+    <div class="boost-pay-note">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Secure checkout by Paynow — EcoCash, OneMoney &amp; cards. <a href="terms" target="_blank" style="text-decoration:underline;color:var(--sub)">Terms apply</a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER:START -->
+<!-- ============================================================
+     PaMarket shared footer — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the FOOTER:START/END markers.
+     Styling lives in css/site.css.
+     ============================================================ -->
+<footer>
+  <div class="foot-main">
+    <div>
+      <div class="foot-logo">Pa<em>Market</em></div>
+      <p class="foot-tagline">Zimbabwe's free marketplace. Buy, sell, find jobs and grow your business across all ten provinces. No fees, ever.</p>
+      <div class="foot-contact">
+        <a href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a>
+        <a href="mailto:support@pamarketzw.com">support@pamarketzw.com</a>
+      </div>
+      <nav class="foot-social" aria-label="PaMarket on social media" style="display:flex;gap:14px;margin-top:16px;flex-wrap:wrap;align-items:center">
+        <a href="https://www.facebook.com/share/1BYRHcg9C9/?mibextid=wwXIfr" target="_blank" rel="me noopener" aria-label="PaMarket on Facebook" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg></a>
+        <a href="https://www.instagram.com/pamarketzim" target="_blank" rel="me noopener" aria-label="PaMarket on Instagram" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.43.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.43.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.43-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.43-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.12 1.38C1.36 2.67.95 3.34.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.79.72 1.46 1.38 2.12.66.66 1.33 1.07 2.12 1.38.76.3 1.64.5 2.91.56 1.28.06 1.69.07 4.95.07s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.31 1.46-.72 2.12-1.38.66-.66 1.07-1.33 1.38-2.12.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.31-.79-.72-1.46-1.38-2.12-.66-.66-1.33-1.07-2.12-1.38-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4zm6.41-10.4a1.44 1.44 0 1 0 1.44 1.44 1.44 1.44 0 0 0-1.44-1.44z"/></svg></a>
+        <a href="https://x.com/pamarketzw" target="_blank" rel="me noopener" aria-label="PaMarket on X (Twitter)" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.46l8.6-9.83L0 1.15h7.6l5.24 6.93zm-1.29 19.5h2.04L6.49 3.24H4.3z"/></svg></a>
+        <a href="https://www.tiktok.com/@pamarketzw?_r=1&amp;_t=ZS-97w0qE4b22v" target="_blank" rel="me noopener" aria-label="PaMarket on TikTok" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
+        <a href="https://www.linkedin.com/company/pamarket-zim/" target="_blank" rel="me noopener" aria-label="PaMarket on LinkedIn" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg></a>
+      </nav>
+      <div class="foot-store">
+        <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener">
+          <img src="img/google-play-badge.png" alt="Get it on Google Play" class="play-badge-sm">
+        </a>
+      </div>
+    </div>
+    <div class="foot-col">
+      <h5>Categories</h5>
+      <a href="browse?cat=property">Property</a>
+      <a href="browse?cat=vehicles">Vehicles</a>
+      <a href="browse?cat=electronics">Electronics</a>
+      <a href="browse?cat=furniture">Furniture</a>
+      <a href="browse?cat=fashion">Fashion</a>
+      <a href="browse?cat=agriculture">Agriculture</a>
+      <a href="jobs">Jobs</a>
+      <a href="services">Services</a>
+      <a href="browse?shops=1">Shops</a>
+      <a href="plans">Shop Plans</a>
+    </div>
+    <div class="foot-col">
+      <h5>Customer Service</h5>
+      <a href="blog">Blog</a>
+      <a href="help">Help &amp; FAQ</a>
+      <a href="contact">Contact Us</a>
+      <a href="advertise">Advertise</a>
+      <a href="community-guidelines">Community Guidelines</a>
+      <a href="about">About PaMarket</a>
+    </div>
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <a href="terms">Terms of Service</a>
+      <a href="privacy">Privacy Policy</a>
+      <a href="post-ad">Post a Free Ad</a>
+      <a href="auth">Sign In</a>
+      <a href="auth?mode=signup">Create Account</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</span>
+    <div class="foot-bottom-links">
+      <a href="terms">Terms</a>
+      <a href="privacy">Privacy</a>
+      <a href="community-guidelines">Guidelines</a>
+      <a href="contact">Contact</a>
+    </div>
+  </div>
+</footer>
+<!-- FOOTER:END -->
+
+<script src="js/supabase-config.js"></script>
+<script src="js/marketplace-data.js"></script>
+<script src="js/session.js"></script>
+<script src="js/nav-dropdowns.js"></script>
+<script>
+'use strict';
+(function(){
+  var FREE_JOB_LIMIT = 2; // matches app RECRUITER_PLAN_ENTITLEMENTS.free.activeJobPosts
+  var INDUSTRIES = ['Accounting / Finance','Administration / Office','Agriculture / Farming','Construction / Trades','Customer Service','Driving / Logistics','Education / Teaching','Engineering','Events / Hospitality','General Worker / Labour','Healthcare / Medical','Human Resources','IT / Technology','Legal','Manufacturing','Marketing / Sales','NGO / Development','Retail','Security','Other'];
+  var JOB_TYPES = ['Full-time','Part-time','Contract','Freelance','Internship'];
+
+  var $=function(id){return document.getElementById(id);};
+  var session=(window.PM&&PM.getSession)?PM.getSession():null;
+  var signedIn=!!(session&&session.user&&session.user.id);
+
+  if(!signedIn){
+    $('pjGate').classList.remove('hidden');
+    $('pjSignIn').href='auth?return='+encodeURIComponent(location.pathname+location.search);
+    return;
+  }
+  $('pjFormCard').classList.remove('hidden');
+
+  // Populate selects
+  $('jCat').innerHTML='<option value="">Select industry…</option>'+INDUSTRIES.map(function(i){return '<option>'+i+'</option>';}).join('');
+  $('jTypes').innerHTML=JOB_TYPES.map(function(t,i){return '<label><input type="radio" name="jType" value="'+t+'"'+(i===0?' checked':'')+'>'+t+'</label>';}).join('');
+
+  // Description counter
+  var jDesc=$('jDesc'),jDescCount=$('jDescCount');
+  jDesc.addEventListener('input',function(){jDescCount.textContent=jDesc.value.length;});
+
+  // Credit balance + how many active jobs the user already has.
+  var activeJobCount=0, creditBalance=0;
+  function refreshStatus(){
+    var uid=PM.currentUserId();
+    Promise.all([
+      PM.fetchListings({sellerId:uid,category:'jobs',limit:50}).catch(function(){return[];}),
+      PM.fetchJobCreditBalance().catch(function(){return 0;})
+    ]).then(function(r){
+      activeJobCount=(r[0]||[]).length; creditBalance=r[1]||0;
+      var remainingFree=Math.max(0,FREE_JOB_LIMIT-activeJobCount);
+      var bal=$('pjBalance'), txt=$('pjBalanceText');
+      bal.classList.remove('hidden');
+      if(remainingFree>0){
+        txt.textContent='You can post '+remainingFree+' more job'+(remainingFree===1?'':'s')+' free'+(creditBalance>0?(' — plus '+creditBalance+' paid credit'+(creditBalance===1?'':'s')+' available.'):'.');
+      }else if(creditBalance>0){
+        txt.textContent='You have '+creditBalance+' job credit'+(creditBalance===1?'':'s')+'. Posting this job will use one.';
+      }else{
+        txt.textContent='You have reached your '+FREE_JOB_LIMIT+' free job posts. Buy a credit to post more.';
+      }
+    });
+  }
+  refreshStatus();
+
+  // ── Buy-credits modal ──
+  var creditOverlay=$('creditOverlay');
+  function renderCreditOpts(){
+    $('creditOpts').innerHTML=(PM.JOB_CREDIT_PRODUCTS||[]).map(function(p){
+      return '<button type="button" class="boost-opt" data-product="'+p.productId+'">'+
+        '<span class="bo-days">'+p.label+'</span>'+(p.tag?'<span class="bo-tag">'+p.tag+'</span>':'')+
+        '<span class="bo-price">$'+p.priceUsd+'</span></button>';
+    }).join('');
+    $('creditOpts').querySelectorAll('.boost-opt').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        $('creditOpts').querySelectorAll('.boost-opt').forEach(function(b){b.disabled=true;});
+        btn.innerHTML='<span class="bo-days">Starting secure checkout…</span>';
+        PM.createJobCreditPayment(btn.getAttribute('data-product')).then(function(r){
+          window.location.href=r.redirectUrl;
+        }).catch(function(err){
+          creditOverlay.classList.add('hidden'); renderCreditOpts();
+          alert(err&&err.message==='not-authenticated'?'Please sign in again.':'Could not start the payment: '+((err&&err.message)||'unknown error'));
+        });
+      });
+    });
+  }
+  renderCreditOpts();
+  $('pjBuyCredits').addEventListener('click',function(){creditOverlay.classList.remove('hidden');});
+  $('creditClose').addEventListener('click',function(){creditOverlay.classList.add('hidden');});
+  creditOverlay.addEventListener('click',function(e){if(e.target===creditOverlay)creditOverlay.classList.add('hidden');});
+
+  // ── Submit ──
+  function invalid(el){el.classList.add('pf-invalid');el.focus();}
+  $('pjForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    ['jCompany','jTitle','jCat','jProv','jCity','jDesc'].forEach(function(id){$(id).classList.remove('pf-invalid');});
+    var company=$('jCompany').value.trim(), title=$('jTitle').value.trim(), cat=$('jCat').value,
+        prov=$('jProv').value, city=$('jCity').value.trim(), desc=$('jDesc').value.trim();
+    if(!company)return invalid($('jCompany'));
+    if(!title)return invalid($('jTitle'));
+    if(!cat)return invalid($('jCat'));
+    if(!prov)return invalid($('jProv'));
+    if(!city)return invalid($('jCity'));
+    if(desc.length<30){alert('Please write a job description of at least 30 characters.');return invalid($('jDesc'));}
+
+    // Free-limit / credit gate (server re-checks on spend; this is UX only).
+    var overLimit=activeJobCount>=FREE_JOB_LIMIT;
+    if(overLimit && creditBalance<=0){
+      alert('You have reached your '+FREE_JOB_LIMIT+' free job posts. Buy a job credit to post more.');
+      creditOverlay.classList.remove('hidden');
+      return;
+    }
+
+    var jobType='Full-time';
+    document.querySelectorAll('input[name="jType"]').forEach(function(r){if(r.checked)jobType=r.value;});
+    var salary=($('jSalary').value||'').trim()||'Negotiable';
+    var resp=$('jResp').value.trim(), reqs=$('jReqs').value.trim();
+    var email=$('jEmail').value.trim(), phone=$('jPhone').value.trim();
+    var anon=$('jAnon').checked;
+
+    // Structured description mirrors the app so the app + web parse jobs identically.
+    var fullDesc='COMPANY: '+company+'\nJOB TYPE: '+jobType+'\nINDUSTRY: '+cat+'\nSALARY: '+salary+
+      '\n\nDESCRIPTION:\n'+desc+
+      (resp?'\n\nRESPONSIBILITIES:\n'+resp:'')+
+      (reqs?'\n\nREQUIREMENTS:\n'+reqs:'')+
+      ((email||phone)?('\n\nHOW TO APPLY:\n'+(email?'Email: '+email+'\n':'')+(phone?'WhatsApp: '+phone:'')):'');
+
+    var meta=(session.user.user_metadata)||{};
+    var btn=$('pjSubmit'); btn.disabled=true; btn.textContent='Posting…';
+
+    PM.createListing({
+      title:title, description:fullDesc,
+      price:(parseFloat(salary)||0), currency:'USD',
+      category:'jobs', province:(prov==='Remote'?'':prov), city:city,
+      photos:[],
+      // Jobs show the employer as the "seller"; use the company name (always,
+      // for a consistent employer label, and mandatory when posting anon).
+      sellerName:company,
+      attributes:{ job_type:jobType, company:company, industry:cat,
+                   apply_email:email||undefined, apply_phone:phone||undefined,
+                   anonymous:anon||undefined }
+    }).then(function(res){
+      var listing=res && res.listing;
+      if(!listing){ throw new Error('The job could not be posted.'); }
+      // If posting anonymously, hide the personal seller name.
+      var afterSpend=Promise.resolve();
+      if(overLimit){
+        afterSpend=PM.spendJobCredit(listing.id).then(function(sr){
+          if(!sr||sr.ok!==true){ console.warn('spend_job_credit:', sr&&sr.msg); }
+        }).catch(function(){});
+      }
+      return afterSpend.then(function(){
+        $('pjFormCard').classList.add('hidden');
+        var s=$('pjSuccess'); s.classList.remove('hidden');
+        var pending=(listing.status && listing.status!=='active');
+        $('pjSuccessTitle').textContent=pending?'Job submitted for review':'Job posted!';
+        $('pjSuccessMsg').textContent=pending
+          ? 'Your vacancy will appear on the Jobs board once it passes review (usually within 24 hours).'
+          : 'Candidates can now find and apply to your vacancy on the Jobs board.';
+        window.scrollTo(0,0);
+      });
+    }).catch(function(err){
+      btn.disabled=false; btn.textContent='Post Job';
+      alert(err&&err.blocked
+        ? (err.message||'This job could not be posted because it may breach our content rules.')
+        : 'Could not post the job: '+((err&&err.message)||'please try again.'));
+    });
+  });
+})();
+</script>
+</body>
+</html>
