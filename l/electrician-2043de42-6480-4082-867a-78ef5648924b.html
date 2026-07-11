@@ -153,8 +153,12 @@ button{font-family:inherit;cursor:pointer}
 .apply-done{margin-top:12px;font-size:12.5px;font-weight:700;color:#BBF7D0}
 .boost-modal .bm-field{display:flex;flex-direction:column;margin-top:12px}
 .boost-modal .bm-field label{font-size:12.5px;font-weight:700;margin-bottom:5px}
-.boost-modal .bm-field input,.boost-modal .bm-field textarea{font-family:inherit;font-size:14px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;resize:vertical}
-.boost-modal .bm-field input:focus,.boost-modal .bm-field textarea:focus{outline:none;border-color:var(--navy)}
+.boost-modal .bm-field input,.boost-modal .bm-field textarea,.boost-modal .bm-field select{font-family:inherit;font-size:14px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;resize:vertical;background:#fff}
+.boost-modal .bm-field input:focus,.boost-modal .bm-field textarea:focus,.boost-modal .bm-field select:focus{outline:none;border-color:var(--navy)}
+.ap-req{color:var(--red);margin-right:3px}
+.ap-yesno{display:flex;gap:8px}
+.ap-yesno button{flex:1;padding:10px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;background:#fff;color:var(--ink);cursor:pointer}
+.ap-yesno button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 .rating-hero{display:flex;align-items:center;gap:16px;margin-bottom:16px}
 .rating-big{font-size:38px;font-weight:900;color:var(--navy);letter-spacing:-.03em;line-height:1}
 .rating-stars{color:var(--gold);font-size:16px;letter-spacing:2px}
