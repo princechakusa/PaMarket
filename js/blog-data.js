@@ -819,6 +819,162 @@
         { label: 'Browse available rental vehicles', href: 'rentals' },
         { label: 'Register your rental fleet', href: 'rentals#fleet' }
       ]
+    },
+
+    // ── Local informational posts ────────────────────────────────────────────
+    // These target real question-shaped queries Zimbabweans actually search.
+    // Search Console shows this is what earns impressions: specific, local,
+    // answerable. Every claim below is written to be generally true and durable
+    // — no invented statistics, no fabricated prices that would age badly.
+    {
+      slug: 'best-suburbs-in-harare-for-families',
+      title: 'Best Suburbs in Harare for Families in 2026',
+      description: 'Which Harare suburbs suit families best — weighing schools, space, safety and commute across Mount Pleasant, Borrowdale, Greendale and more.',
+      category: 'Buying Guides',
+      datePublished: '2026-07-14',
+      dateModified: '2026-07-14',
+      readTime: '6 min read',
+      keyword: 'best suburbs in Harare for families',
+      heroIntro: 'Choosing a family suburb in Harare comes down to four things: proximity to good schools, usable outdoor space, security, and how bad the commute gets at 7am. Very few suburbs win on all four.',
+      isHowTo: false,
+      body: [
+        'Mount Pleasant is the default family answer for good reason. It sits close to the University of Zimbabwe and a cluster of well-regarded private and government schools, the stands are generous, and the tree cover makes it noticeably quieter than the CBD-adjacent suburbs. The trade-off is price: you pay for the address and the school access.',
+        'Borrowdale and Borrowdale Brooke offer the largest stands and the highest density of gated communities and security estates, which is what draws families who prioritise safety above everything else. Sam Levy\'s Village puts shopping and services within easy reach. This is the premium end of the market, and rents and purchase prices reflect that.',
+        'Greendale and Highlands sit in a practical middle ground — established, leafy, solid older houses on decent-sized plots, with reasonable access to both the CBD and the northern suburbs. Families who want space without Borrowdale pricing tend to end up looking here.',
+        'Avondale and Milton Park work better for smaller families and young professionals with one child than for large households. Stands are smaller and the housing stock skews toward townhouses and older homes, but the commute is short and the amenities are genuinely walkable — a rare thing in Harare.',
+        'Marlborough and Bluff Hill are worth considering if space matters more to you than a short commute. You get more stand for your money, but factor in the drive honestly: Harare peak traffic turns a 15-minute map estimate into 40 minutes with regularity.',
+        'Whatever the suburb, visit at the times you will actually live there — a school-run morning and a weekday evening — rather than judging on a quiet Sunday viewing. Confirm water supply and borehole status before committing, as this varies street to street across the city and is one of the most common post-move regrets.'
+      ],
+      faqs: [
+        { q: 'Which Harare suburb is best for families with school-going children?', a: 'Mount Pleasant is the most popular choice, because it sits close to the University of Zimbabwe and a cluster of well-regarded schools, with larger stands and a quieter feel than suburbs nearer the CBD.' },
+        { q: 'Which Harare suburbs have the best security for families?', a: 'Borrowdale and Borrowdale Brooke have the highest concentration of gated communities and security estates, which is why families prioritising security most often look there first.' },
+        { q: 'Is Greendale a good area for families in Harare?', a: 'Yes. Greendale and Highlands are established, leafy suburbs with solid older houses on decent-sized plots, offering more space than Avondale at lower prices than Borrowdale.' },
+        { q: 'What should I check before renting or buying a family home in Harare?', a: 'Confirm the water supply and borehole status, which varies street to street, view the property during a weekday morning and evening to judge the real commute, and always verify the landlord or seller\'s ownership before paying any deposit.' }
+      ],
+      internalLinks: [
+        { label: 'Browse property in Harare', href: 'browse?cat=property&city=Harare' },
+        { label: 'Best suburbs to rent in Harare', href: 'blog-post?slug=best-areas-to-rent-in-harare' }
+      ]
+    },
+    {
+      slug: 'cost-of-living-harare-vs-bulawayo',
+      title: 'Cost of Living: Harare vs Bulawayo in 2026',
+      description: 'How Zimbabwe\'s two largest cities compare on rent, transport, food and utilities — and which one actually leaves more in your pocket.',
+      category: 'Comparisons',
+      datePublished: '2026-07-14',
+      dateModified: '2026-07-14',
+      readTime: '6 min read',
+      keyword: 'cost of living Harare vs Bulawayo',
+      heroIntro: 'Bulawayo is consistently the cheaper city to live in, but the gap is not uniform — it is widest on housing and narrowest on imported goods, which cost much the same everywhere in Zimbabwe.',
+      isHowTo: false,
+      body: [
+        'Housing is where the two cities diverge most sharply. Bulawayo\'s rental and purchase prices sit well below Harare\'s for comparable properties, and the difference grows as you move upmarket — a suburb-standard family home in Bulawayo typically costs meaningfully less than its Harare equivalent. Harare\'s premium suburbs, particularly Borrowdale, have no real price equivalent in Bulawayo.',
+        'Transport costs favour Bulawayo too, though for a structural reason rather than a pricing one. Bulawayo is a flatter, more grid-like and less congested city, so the same journey burns less fuel and less time. Harare\'s peak-hour congestion is a genuine and recurring cost, in fuel and in hours.',
+        'Food and groceries are much closer than people expect. Basic staples and fresh produce can be slightly cheaper in Bulawayo, especially at the municipal markets, but anything imported — which is a large share of Zimbabwean retail — is priced nationally and costs about the same in both cities.',
+        'Utilities and services follow national tariffs, so electricity and water bills are broadly comparable. What differs is reliability, and that varies more by suburb than by city. Boreholes and solar backup are common considerations in both, and both add to the real cost of a household in ways a rent figure alone will not show.',
+        'The honest summary: Bulawayo lowers your fixed costs, particularly housing, while Harare offers a larger job market, more business activity and more buyers if you are selling something. Which city leaves more in your pocket depends less on the price list than on whether your income is portable.',
+        'Prices in Zimbabwe move, sometimes quickly, and vary by suburb and by season. Treat any figure you read as a starting point for your own checking, not a settled fact — and compare current, actual listings rather than relying on averages.'
+      ],
+      faqs: [
+        { q: 'Is Bulawayo cheaper than Harare?', a: 'Yes, Bulawayo is generally the cheaper city, with the largest difference in housing costs. Rent and property prices are noticeably lower than in Harare for comparable homes.' },
+        { q: 'Is food cheaper in Bulawayo than Harare?', a: 'Only slightly. Fresh produce and staples can be a little cheaper in Bulawayo, especially at municipal markets, but imported goods are priced nationally and cost roughly the same in both cities.' },
+        { q: 'Why is rent so much higher in Harare?', a: 'Harare is the capital and the centre of Zimbabwe\'s job market and business activity, which drives higher demand for housing. Its premium suburbs, such as Borrowdale, have no direct price equivalent in Bulawayo.' },
+        { q: 'Which city is better for doing business, Harare or Bulawayo?', a: 'Harare has the larger job market, more business activity and a bigger pool of buyers, which is why many people accept its higher living costs. Bulawayo\'s advantage is lower fixed costs, especially housing.' }
+      ],
+      internalLinks: [
+        { label: 'Browse listings in Bulawayo', href: 'browse?city=Bulawayo' },
+        { label: 'Browse property in Harare', href: 'browse?cat=property&city=Harare' }
+      ]
+    },
+    {
+      slug: 'how-much-is-a-nissan-champ-in-zimbabwe',
+      title: 'How Much Is a Nissan Champ in Zimbabwe?',
+      description: 'What determines the price of a Nissan Champ in Zimbabwe, what to inspect before buying, and how to avoid overpaying for a tired workhorse.',
+      category: 'Buying Guides',
+      datePublished: '2026-07-14',
+      dateModified: '2026-07-14',
+      readTime: '5 min read',
+      keyword: 'Nissan Champ price Zimbabwe',
+      heroIntro: 'The Nissan Champ is one of Zimbabwe\'s most sought-after light trucks because it earns its keep. Prices swing widely, and the deciding factor is almost never the year — it is condition, mileage and whether the vehicle has been worked hard.',
+      isHowTo: false,
+      body: [
+        'Nissan Champ prices in Zimbabwe vary far more by condition than by model year. These are working vehicles, and two Champs of the same age can differ enormously in price depending on how hard they have been used. A well-maintained, lightly-worked example will command a significant premium over one that has spent years hauling at capacity.',
+        'The main price drivers are mileage, engine condition, body and chassis rust, and whether the vehicle is a locally-used unit or a recent import. Ex-Japan imports typically carry lower mileage and command higher prices; locally-used vehicles are cheaper but demand much closer inspection.',
+        'Before you commit, inspect the chassis and load bed carefully for rust and welding repairs — this is where hard-worked trucks fail first, and it is expensive to fix properly. Check for oil leaks, listen to the engine from cold, and be sceptical of a suspiciously low reading on a truck with a worn interior; the two should tell the same story.',
+        'Always confirm the paperwork before any money changes hands. Check that the registration book matches the seller\'s identity, verify the chassis and engine numbers against the documents physically on the vehicle, and confirm there is no outstanding finance on it. A cheap Champ with unclear papers is not a bargain.',
+        'Because prices move with the exchange rate and with supply, the only reliable way to price one is to compare several current listings side by side rather than trusting a remembered figure. Look at what is actually listed today, in the condition you are willing to accept.',
+        'If you are buying a Champ to work, budget for immediate servicing on top of the purchase price. Most used working trucks in Zimbabwe need something attended to in the first month, and pricing that in from the start prevents an unpleasant surprise.'
+      ],
+      faqs: [
+        { q: 'What determines the price of a Nissan Champ in Zimbabwe?', a: 'Condition matters more than model year. Mileage, engine condition, rust in the chassis and load bed, and whether the vehicle is a recent import or a locally-used unit are the main price drivers.' },
+        { q: 'What should I inspect before buying a used Nissan Champ?', a: 'Inspect the chassis and load bed for rust and welding repairs, check for oil leaks, listen to the engine from cold, and confirm the mileage is consistent with the wear on the interior and body.' },
+        { q: 'Are imported Nissan Champs better than locally-used ones?', a: 'Ex-Japan imports typically have lower mileage and command higher prices, while locally-used vehicles are cheaper but need much closer inspection, especially for rust and hard-work damage.' },
+        { q: 'How do I avoid buying a stolen or encumbered vehicle in Zimbabwe?', a: 'Confirm the registration book matches the seller\'s identity, verify the chassis and engine numbers physically against the documents, and check there is no outstanding finance before paying anything.' }
+      ],
+      internalLinks: [
+        { label: 'Browse vehicles for sale in Zimbabwe', href: 'browse?cat=vehicles' },
+        { label: 'How to buy a used car safely in Zimbabwe', href: 'blog-post?slug=how-to-buy-a-used-car-safely-in-zimbabwe' }
+      ]
+    },
+    {
+      slug: 'best-areas-to-rent-in-harare-for-young-professionals',
+      title: 'Best Areas to Rent in Harare for Young Professionals',
+      description: 'Where to rent in Harare if you want a short commute, walkable amenities and a social scene, without paying Borrowdale prices.',
+      category: 'Buying Guides',
+      datePublished: '2026-07-14',
+      dateModified: '2026-07-14',
+      readTime: '5 min read',
+      keyword: 'best areas to rent in Harare for young professionals',
+      heroIntro: 'Young professionals in Harare want three things that rarely come together: a short commute, somewhere to actually go in the evening, and rent that does not eat the whole salary. A handful of suburbs get close.',
+      isHowTo: false,
+      body: [
+        'Avondale is the strongest all-round answer. It is close enough to the CBD that the commute stays sane, the amenities are genuinely walkable — a rarity in a city built around driving — and the mix of older houses, flats and townhouses means there is stock at several price points. Shared houses are common here, which brings the effective rent down considerably.',
+        'Milton Park sits right alongside Avondale with a similar profile and often slightly softer rents. It suits someone who wants the same short commute and access to amenities, but is willing to trade a little of Avondale\'s buzz for a lower monthly figure.',
+        'Belgravia and the Avenues put you closest to the CBD, and the flats there are the most affordable way to live centrally in Harare. This is the pragmatic choice if your priority is a genuinely short commute and a low rent, and you are less concerned with a garden or a quiet street.',
+        'Mount Pleasant is worth a look if you can share. Rents on the larger family houses become reasonable when split two or three ways, and you get space, quiet and tree cover that the CBD-adjacent flats cannot match. The commute is longer but not punishing.',
+        'Borrowdale is where many young professionals aspire to and few sensibly start. Unless you are sharing or your employer is covering it, the rent is difficult to justify early in a career — and the commute from the northern suburbs into town at peak hour is a real daily cost that the address does not offset.',
+        'Two practical notes wherever you land: confirm the water and borehole situation before signing, as this varies street by street in Harare, and never pay a deposit before viewing in person and confirming the landlord actually owns the property. Rental deposit scams are the single most common property fraud in the city.'
+      ],
+      faqs: [
+        { q: 'Where should a young professional rent in Harare?', a: 'Avondale is the strongest all-round choice, offering a short commute, genuinely walkable amenities and a mix of housing at several price points. Milton Park offers a similar profile at often slightly lower rents.' },
+        { q: 'What is the cheapest area to rent in Harare close to the CBD?', a: 'Flats in Belgravia and the Avenues are the most affordable way to live centrally in Harare, and put you closest to the CBD for the shortest commute.' },
+        { q: 'Is Borrowdale worth it for a young professional?', a: 'Usually not early in a career, unless you are sharing or your employer covers it. The rent is hard to justify, and the peak-hour commute from the northern suburbs into town is a real daily cost.' },
+        { q: 'How can I avoid rental scams in Harare?', a: 'Never pay a deposit before viewing the property in person and confirming the landlord actually owns it. Rental deposit fraud is the most common property scam in Harare.' }
+      ],
+      internalLinks: [
+        { label: 'Browse property for rent in Harare', href: 'browse?cat=property&city=Harare' },
+        { label: 'Best suburbs to rent in Harare', href: 'blog-post?slug=best-areas-to-rent-in-harare' }
+      ]
+    },
+    {
+      slug: 'where-to-buy-and-sell-online-in-zimbabwe',
+      title: 'Where to Buy and Sell Online in Zimbabwe',
+      description: 'The main ways Zimbabweans buy and sell online — marketplaces, social media groups and classifieds — and the trade-offs of each.',
+      category: 'Comparisons',
+      datePublished: '2026-07-14',
+      dateModified: '2026-07-14',
+      readTime: '5 min read',
+      keyword: 'online market Zimbabwe',
+      heroIntro: 'Zimbabweans buy and sell online in three main places: dedicated marketplaces, social media groups, and classifieds sites. Each solves a different problem, and each fails in a different way.',
+      isHowTo: false,
+      body: [
+        'Dedicated marketplaces are built for the transaction. Listings are structured, so you can filter by category, price and location rather than scrolling; sellers can be verified; and there is a moderation process behind the scenes removing prohibited and fraudulent listings. The trade-off is that a marketplace only works if enough people are on it, so the depth of listings matters as much as the features.',
+        'Social media groups are where a great deal of Zimbabwean trade actually happens, and their strength is reach — a post can travel fast. The weaknesses are structural: there is no search worth the name, listings vanish down the feed within hours, prices and details are inconsistent, and there is essentially no verification. Scams are common precisely because there is no accountability layer.',
+        'Classifieds sites sit in between. They offer better structure than a social feed and have been established longer, but many carry stale listings — items sold months ago that were never taken down — which wastes buyers\' time and erodes trust in what is listed.',
+        'What actually matters when choosing where to sell is where your buyers already are and whether the platform lets a serious buyer find you. A listing that cannot be searched or filtered is only found by luck. Structured categories, working location filters and a listing that stays visible are worth more than raw audience size.',
+        'What matters when buying is verification and recourse. Ask whether sellers can be identified and verified, whether reported listings are actually reviewed and removed, and whether prices and item details are complete enough to compare properly. If none of that is true, you are relying entirely on the good faith of a stranger.',
+        'Whichever route you choose, the safety fundamentals are constant: meet in a public place during daylight, inspect before paying, be sceptical of prices far below the market, and never send money to someone who refuses to meet or insists on an unusual payment method.'
+      ],
+      faqs: [
+        { q: 'What is the best way to sell something online in Zimbabwe?', a: 'A dedicated marketplace with structured listings gives serious buyers a way to actually find you through search, category and location filters — something social media feeds, where posts disappear within hours, cannot do.' },
+        { q: 'Are social media groups safe for buying and selling in Zimbabwe?', a: 'They offer reach but little protection. There is no meaningful search, no verification of sellers, and no real accountability, which is why scams are common in group-based selling.' },
+        { q: 'How do I avoid scams when buying online in Zimbabwe?', a: 'Meet in a public place during daylight, inspect the item before paying, be sceptical of prices far below the market, and never send money to a seller who refuses to meet in person.' },
+        { q: 'Is it free to list an item for sale on PaMarket?', a: 'Yes. PaMarket lets you post listings for free, with structured categories and location filters so buyers can actually find what you are selling.' }
+      ],
+      internalLinks: [
+        { label: 'Post a free ad on PaMarket', href: 'post-ad' },
+        { label: 'Browse all listings', href: 'browse' }
+      ]
     }
   ];
 
