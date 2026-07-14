@@ -136,6 +136,7 @@ button{font-family:inherit;cursor:pointer}
 .results-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
 .results-count{font-size:14.5px;color:var(--sub)}
 .results-count b{color:var(--ink)}
+.results-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.save-search-btn{border:1.5px solid var(--navy);background:#fff;color:var(--navy);border-radius:8px;padding:8px 12px;font:700 13px Inter,system-ui,sans-serif}.save-search-btn.saved{background:#ecfdf5;border-color:#16a34a;color:#166534}.gcard{position:relative}.gcard-save{position:absolute;right:9px;top:9px;z-index:3;width:34px;height:34px;border:1px solid rgba(15,23,42,.12);border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;color:#334155}.gcard-save.saved{background:#1a3a8f;color:#fff}.gcard-save svg{width:17px;height:17px}
 .sort-select{border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;color:var(--ink);background:#fff;outline:none}
 
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
@@ -270,23 +271,23 @@ button{font-family:inherit;cursor:pointer}
       </button>
     </div>
     <div class="hdr-util">
-      <a href="auth" class="util-btn" title="Notifications" aria-label="Notifications">
+      <a href="notifications" class="util-btn" title="Notifications" aria-label="Notifications">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
         <span class="util-lbl">Notifications</span>
       </a>
-      <a href="auth" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
+      <a href="saved-searches" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         <span class="util-lbl">My Searches</span>
       </a>
-      <a href="auth" class="util-btn" title="Favorites" aria-label="Favorites">
+      <a href="favourites" class="util-btn" title="Favourites" aria-label="Favourites">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-        <span class="util-lbl">Favorites</span>
+        <span class="util-lbl">Favourites</span>
       </a>
       <a href="auth" class="util-btn" title="Chats" aria-label="Chats">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <span class="util-lbl">Chats</span>
       </a>
-      <a href="auth" class="util-btn" title="My Ads" aria-label="My Ads">
+      <a href="dashboard" class="util-btn" title="My Ads" aria-label="My Ads">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
         <span class="util-lbl">My Ads</span>
       </a>
@@ -302,6 +303,10 @@ button{font-family:inherit;cursor:pointer}
   <nav id="mobNav" class="mob-nav">
     <a href="/">Home</a>
     <a href="browse">Browse</a>
+    <a href="favourites">My Favourites</a>
+    <a href="saved-searches">Saved Searches</a>
+    <a href="notifications">Notifications</a>
+    <a href="dashboard">My Ads</a>
     <a href="advertise">Advertise</a>
     <a href="contact">Contact Us</a>
     <a href="blog">Blog</a>
@@ -426,11 +431,11 @@ window.doSearch = window.doSearch || function(){
     </div>
     <div class="results-head">
       <div class="results-count" id="resultsCount">Loading listings…</div>
-      <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+      <div class="results-tools"><button type="button" class="save-search-btn" id="saveSearchBtn" onclick="saveCurrentSearch()">Save this search</button><select class="sort-select" id="sortSelect" onchange="applyFilters()">
         <option value="created_at.desc">Newest first</option>
         <option value="price.asc">Price: Low to High</option>
         <option value="price.desc">Price: High to Low</option>
-      </select>
+      </select></div>
     </div>
     <div class="grid" id="resultsGrid"></div>
     <button class="load-more hidden" id="loadMoreBtn" onclick="loadMore()">Load More Listings</button>
@@ -616,6 +621,7 @@ function gcard(listing,idx){
     ?`<img src="${photo}" alt="${listing.title.replace(/"/g,'&quot;')}" loading="lazy">`
     :`<div class="gcard-img-ph" style="color:${tc}">${listing.title.split(' ').slice(0,3).join('<br>')}</div>`;
   return`<a class="gcard" href="detail?id=${listing.id}">
+    <button type="button" class="gcard-save" data-save-listing="${listing.id}" aria-label="Save ${listing.title.replace(/"/g,'&quot;')}" onclick="event.preventDefault();event.stopPropagation();toggleFavourite(this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></button>
     <div class="gcard-img" style="background:${bg}">${badge}${img}</div>
     <div class="gcard-body">
       <div class="gcard-price">${PM.money(listing.price,listing.currency)}</div>
@@ -796,6 +802,7 @@ async function runQuery(append){
       return;
     }
     grid.insertAdjacentHTML('beforeend',rows.map((r,i)=>cardFn(r,state.offset+i)).join(''));
+    if(!state.shops)syncFavouriteButtons();
     const shown=grid.querySelectorAll('.gcard, .shopcard').length;
     countEl.innerHTML='<b>'+shown+'</b> '+noun+(shown===1?'':'s')+' shown';
     loadBtn.classList.toggle('hidden',rows.length<PAGE_SIZE);
@@ -866,6 +873,33 @@ function applyFiltersMobile(){
   document.getElementById('fCity').value=document.getElementById('fCityM').value;
   closeDrawer();
   applyFilters();
+}
+
+async function saveCurrentSearch(){
+  const session=PM.getSession();
+  if(!(session&&session.user)){location.href='auth?return='+encodeURIComponent(location.pathname+location.search);return;}
+  const filters={category:state.cat||'',q:state.q||'',province:state.prov||'',city:state.city||'',sort:state.sort||'created_at.desc'};
+  const suggestion=[state.q,state.city||state.prov,state.cat].filter(Boolean).join(' · ')||'All listings';
+  const name=prompt('Name this search',suggestion);
+  if(name===null)return;
+  const button=document.getElementById('saveSearchBtn');button.disabled=true;
+  try{await PM.saveSearch(name||suggestion,filters);button.textContent='Search saved';button.classList.add('saved');}
+  catch(e){alert('Could not save this search. Please try again.');}
+  finally{button.disabled=false;}
+}
+
+async function toggleFavourite(button){
+  const session=PM.getSession();
+  if(!(session&&session.user)){location.href='auth?return='+encodeURIComponent(location.pathname+location.search);return;}
+  const id=button.getAttribute('data-save-listing');button.disabled=true;
+  try{if(button.classList.contains('saved')){await PM.unsaveListing(id);button.classList.remove('saved');button.setAttribute('aria-label','Save listing');}else{await PM.saveListing(id);button.classList.add('saved');button.setAttribute('aria-label','Remove from favourites');}}
+  catch(e){alert('Could not update favourites. Please try again.');}
+  finally{button.disabled=false;}
+}
+
+function syncFavouriteButtons(){
+  if(!(PM.getSession&&PM.getSession()))return;
+  PM.listFavouriteIds().then(rows=>{const ids=new Set(rows.map(r=>String(r.listing_id)));document.querySelectorAll('[data-save-listing]').forEach(b=>b.classList.toggle('saved',ids.has(b.getAttribute('data-save-listing'))));}).catch(()=>{});
 }
 
 function openDrawer(){

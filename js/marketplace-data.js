@@ -611,6 +611,125 @@
     });
   }
 
+  // Owner-scoped listing mutations. RLS remains the authority; the explicit
+  // seller_id filter also prevents an accidental broad update in the browser.
+  function updateListing(listingId, patch) {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
+    var allowed = ['title','description','category','subcategory','price','currency','condition','province','city','suburb','phone','whatsapp','photos','attributes','custom_questions','status'];
+    var body = {};
+    allowed.forEach(function (key) { if (Object.prototype.hasOwnProperty.call(patch || {}, key)) body[key] = patch[key]; });
+    if (!Object.keys(body).length) return Promise.reject(new Error('no-valid-fields'));
+    return fetch(SB_URL + '/rest/v1/listings?id=eq.' + esc(listingId) + '&seller_id=eq.' + esc(s.user.id), {
+      method: 'PATCH',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify(body),
+    }).then(function (res) {
+      if (res.ok) return res.json().then(function (rows) { return { ok: true, listing: rows[0] || null }; });
+      return res.text().then(function (t) { throw new Error(t || ('update failed: ' + res.status)); });
+    });
+  }
+
+  function setListingStatus(listingId, status) {
+    var valid = { active: 1, paused: 1, sold: 1, deleted: 1 };
+    if (!valid[status]) return Promise.reject(new Error('invalid-status'));
+    return updateListing(listingId, { status: status });
+  }
+
+  // Soft-delete preserves the listing for moderation/audit history.
+  function deleteListing(listingId) { return setListingStatus(listingId, 'deleted'); }
+
+  // ── Favourites ──────────────────────────────────────────────────
+  function favouriteRpc(name, listingId) {
+    var s = getSession();
+    if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
+    return fetch(SB_URL + '/rest/v1/rpc/' + name, {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_listing_id: String(listingId) }),
+    }).then(function (res) {
+      if (res.ok) return { ok: true };
+      return res.text().then(function (t) { throw new Error(t || (name + ' failed: ' + res.status)); });
+    });
+  }
+  function saveListing(listingId) { return favouriteRpc('save_listing', listingId); }
+  function unsaveListing(listingId) { return favouriteRpc('unsave_listing', listingId); }
+  function listFavouriteIds() {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user) return Promise.resolve([]);
+    return fetch(SB_URL + '/rest/v1/user_saves?user_id=eq.' + esc(s.user.id) + '&select=listing_id,saved_at&order=saved_at.desc', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
+    }).then(function (res) { if (!res.ok) throw new Error('favourites-read-failed'); return res.json(); });
+  }
+  function listFavourites() {
+    return listFavouriteIds().then(function (saves) {
+      if (!saves.length) return [];
+      var ids = saves.map(function (x) { return String(x.listing_id).replace(/[^a-zA-Z0-9_-]/g, ''); }).filter(Boolean);
+      if (!ids.length) return [];
+      return pgFetch('listings?id=in.(' + ids.join(',') + ')&status=eq.active&select=*').then(function (rows) {
+        var byId = {}; rows.forEach(function (row) { byId[String(row.id)] = row; });
+        return saves.map(function (save) {
+          var row = byId[String(save.listing_id)];
+          if (row) row.saved_at = save.saved_at;
+          return row;
+        }).filter(Boolean);
+      });
+    });
+  }
+  function isListingSaved(listingId) {
+    return listFavouriteIds().then(function (rows) { return rows.some(function (x) { return String(x.listing_id) === String(listingId); }); });
+  }
+
+  // ── Saved searches ──────────────────────────────────────────────
+  function listSavedSearches() {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user) return Promise.resolve([]);
+    return fetch(SB_URL + '/rest/v1/saved_searches?user_id=eq.' + esc(s.user.id) + '&select=*&order=saved_at.desc', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
+    }).then(function (res) { if (!res.ok) throw new Error('saved-searches-read-failed'); return res.json(); });
+  }
+  function saveSearch(name, filters) {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
+    var clean = filters || {};
+    var row = { user_id: s.user.id, name: String(name || clean.q || clean.category || 'Saved search').slice(0, 80), query: clean.q || null, category: clean.category || null, filters: clean };
+    return fetch(SB_URL + '/rest/v1/saved_searches', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify(row),
+    }).then(function (res) { if (res.ok) return res.json().then(function (rows) { return rows[0] || row; }); return res.text().then(function (t) { throw new Error(t || 'save-search-failed'); }); });
+  }
+  function deleteSavedSearch(id) {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
+    return fetch(SB_URL + '/rest/v1/saved_searches?id=eq.' + esc(id) + '&user_id=eq.' + esc(s.user.id), {
+      method: 'DELETE', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
+    }).then(function (res) { if (res.ok) return { ok: true }; return res.text().then(function (t) { throw new Error(t || 'delete-search-failed'); }); });
+  }
+
+  // ── Website notification centre ────────────────────────────────
+  function listNotifications() {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user) return Promise.resolve([]);
+    return fetch(SB_URL + '/rest/v1/notifications?user_id=eq.' + esc(s.user.id) + '&select=*&order=created_at.desc&limit=200', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
+    }).then(function (res) { if (!res.ok) throw new Error('notifications-read-failed'); return res.json(); });
+  }
+  function updateNotification(id, patch) {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
+    return fetch(SB_URL + '/rest/v1/notifications?id=eq.' + esc(id) + '&user_id=eq.' + esc(s.user.id), {
+      method: 'PATCH', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+    }).then(function (res) { if (res.ok) return { ok: true }; return res.text().then(function (t) { throw new Error(t || 'notification-update-failed'); }); });
+  }
+  function markAllNotificationsRead() {
+    var s = getSession();
+    if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
+    return fetch(SB_URL + '/rest/v1/notifications?user_id=eq.' + esc(s.user.id) + '&read=eq.false', {
+      method: 'PATCH', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify({ read: true }),
+    }).then(function (res) { if (res.ok) return { ok: true }; return res.text().then(function (t) { throw new Error(t || 'notifications-update-failed'); }); });
+  }
+
   // Aggregate platform stats for the owner dashboard — returns null for
   // non-admins (the RPC is gated by is_admin() server-side).
   function fetchPlatformStats() {
@@ -772,6 +891,20 @@
   global.PM.fetchMyListings = fetchMyListings;
   global.PM.fetchMyPayments = fetchMyPayments;
   global.PM.markListingSold = markListingSold;
+  global.PM.updateListing = updateListing;
+  global.PM.setListingStatus = setListingStatus;
+  global.PM.deleteListing = deleteListing;
+  global.PM.saveListing = saveListing;
+  global.PM.unsaveListing = unsaveListing;
+  global.PM.listFavouriteIds = listFavouriteIds;
+  global.PM.listFavourites = listFavourites;
+  global.PM.isListingSaved = isListingSaved;
+  global.PM.listSavedSearches = listSavedSearches;
+  global.PM.saveSearch = saveSearch;
+  global.PM.deleteSavedSearch = deleteSavedSearch;
+  global.PM.listNotifications = listNotifications;
+  global.PM.updateNotification = updateNotification;
+  global.PM.markAllNotificationsRead = markAllNotificationsRead;
   global.PM.fetchPlatformStats = fetchPlatformStats;
   global.PM.currentUserRole = currentUserRole;
 })(window);

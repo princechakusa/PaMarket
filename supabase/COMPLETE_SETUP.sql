@@ -112,7 +112,7 @@ create table if not exists public.listings (
   city        text not null default '',
   suburb      text not null default '',
   photos      text[] not null default '{}',
-  status      text not null default 'active' check (status in ('active','sold','deleted','pending')),
+  status      text not null default 'active' check (status in ('active','paused','sold','deleted','pending')),
   condition   text check (condition in ('new','like-new','used','refurbished')),
   boost       jsonb,
   views       integer not null default 0,
@@ -451,9 +451,10 @@ create table if not exists saved_searches (
   user_id     uuid not null references auth.users(id) on delete cascade,
   query       text,
   category    text,
+  name        text not null default 'Saved search',
+  filters     jsonb not null default '{}'::jsonb,
   saved_at    timestamptz default now(),
-  last_check  timestamptz default now(),
-  constraint  uq_saved_search unique (user_id, query, category)
+  last_check  timestamptz default now()
 );
 
 alter table saved_searches enable row level security;

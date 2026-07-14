@@ -294,20 +294,20 @@
 
   // ── CSS class helpers ─────────────────────────────────────
   function _notifTypeClass(type) {
-    const m = { boost:'ni-boost', verify:'ni-verify', message:'ni-msg', ban:'ni-ban', report:'ni-report', sale:'ni-sale', review:'ni-review', info:'ni-info', job_alert:'ni-job', security:'ni-security' };
+    const m = { boost:'ni-boost', verify:'ni-verify', message:'ni-msg', ban:'ni-ban', report:'ni-report', sale:'ni-sale', review:'ni-review', lead:'ni-sale', info:'ni-info', job_alert:'ni-job', security:'ni-security' };
     return m[type] || 'ni-info';
   }
   function _notifNavClass(type) {
-    const m = { message:'nn-msg', sale:'nn-blue', verify:'nn-blue', boost:'nn-gold', ban:'nn-red', report:'nn-red', review:'nn-purple', job_alert:'nn-job', security:'nn-red', info:'nn-blue' };
+    const m = { message:'nn-msg', sale:'nn-blue', verify:'nn-blue', boost:'nn-gold', ban:'nn-red', report:'nn-red', review:'nn-purple', lead:'nn-blue', job_alert:'nn-job', security:'nn-red', info:'nn-blue' };
     return m[type] || 'nn-blue';
   }
   function _notifDotColor(type) {
-    const m = { message:'#16A34A', sale:'#1D4ED8', boost:'#CA8A04', job_alert:'#475569', verify:'#1A3A8F', ban:'#DC2626', report:'#C2410C', review:'#7C3AED', security:'#DC2626', info:'#1A3A8F' };
+    const m = { message:'#16A34A', sale:'#1D4ED8', boost:'#CA8A04', lead:'#1A3A8F', job_alert:'#475569', verify:'#1A3A8F', ban:'#DC2626', report:'#C2410C', review:'#7C3AED', security:'#DC2626', info:'#1A3A8F' };
     return m[type] || '#1A3A8F';
   }
   function _notifNavHint(type, deepLink) {
     if (deepLink && /^https?:\/\//i.test(deepLink)) return 'Open ›';
-    const m = { message:'Messages ›', sale:'View listing ›', boost:'Boost again ›', verify:'View profile ›', ban:'View account ›', report:'View report ›', review:'Review ›', job_alert:'View job ›', security:'Security ›' };
+    const m = { message:'Messages ›', sale:'View listing ›', boost:'Boost again ›', verify:'View profile ›', ban:'View account ›', report:'View report ›', review:'Review ›', lead:'View lead ›', job_alert:'View job ›', security:'Security ›' };
     return m[type] || (deepLink ? 'Open ›' : 'View ›');
   }
 
@@ -321,6 +321,7 @@
     if (t.includes('report')) return 'report';
     if (t.includes('sold') || t.includes('paid') || t.includes('payment')) return 'sale';
     if (t.includes('review') || t.includes('appeal')) return 'review';
+    if (t.includes('lead') || t.includes('interested') || t.includes('contacted your shop')) return 'lead';
     if (t.includes('job') || t.includes('hiring') || t.includes('vacancy') || t.includes('position')) return 'job_alert';
     if (t.includes('security') || t.includes('sign-in') || t.includes('login')) return 'security';
     if (t.includes('draft') || t.includes('unfinished') || t.includes('saved')) return 'info';
@@ -338,6 +339,7 @@
       report:  `<svg viewBox="0 0 24 24" style="${s}"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`,
       sale:    `<svg viewBox="0 0 24 24" style="${s}"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
       review:    `<svg viewBox="0 0 24 24" style="${s}"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+      lead:      `<svg viewBox="0 0 24 24" style="${s}"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v2"/><path d="M19 8v6M16 11h6"/></svg>`,
       job_alert: `<svg viewBox="0 0 24 24" style="${s}"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
       security:  `<svg viewBox="0 0 24 24" style="${s}"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
       info:      `<svg viewBox="0 0 24 24" style="${s}"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`
@@ -350,7 +352,7 @@
       boost: 'rgba(245,166,35,.12)', verify: 'rgba(29,155,240,.12)',
       message: 'rgba(34,197,94,.12)', ban: 'rgba(255,59,48,.12)',
       report: 'rgba(255,149,0,.12)', sale: 'rgba(0,122,255,.12)',
-      review: 'rgba(139,92,246,.12)', info: 'var(--bg2)',
+      review: 'rgba(139,92,246,.12)', lead: 'rgba(26,58,143,.12)', info: 'var(--bg2)',
       job_alert: 'rgba(84,110,122,.12)', security: 'rgba(255,59,48,.1)'
     };
     return map[type] || 'var(--bg2)';
@@ -360,7 +362,7 @@
     const map = {
       boost: '#F5A623', verify: '#1D9BF0', message: '#22C55E',
       ban: '#FF3B30', report: '#FF9500', sale: '#007AFF',
-      review: '#8B5CF6', info: '#1A3A8F',
+      review: '#8B5CF6', lead: '#1A3A8F', info: '#1A3A8F',
       job_alert: '#546E7A', security: '#FF3B30'
     };
     return map[type] || '#1A3A8F';
@@ -378,7 +380,7 @@
   // Navigational notification types jump straight to a screen. Everything else
   // (admin broadcasts / info / announcements) opens a detail view so the user can
   // read the full message and see the shared image.
-  var _NAV_TYPES = { message: 1, sale: 1, boost: 1, verify: 1, review: 1, ban: 1, report: 1 };
+  var _NAV_TYPES = { message: 1, sale: 1, boost: 1, verify: 1, review: 1, lead: 1, ban: 1, report: 1, job_alert: 1, security: 1 };
 
   H._closeNotifDetail = function () { var m = document.getElementById('notifDetailModal'); if (m) m.remove(); };
 
@@ -460,7 +462,8 @@
     // No usable deep link — navigate based on notification type
     const t = type || '';
     if (t === 'message')                                                       { H.navTo('Messages'); return; }
-    if (t === 'sale' || t === 'boost' || t === 'verify' || t === 'review' || t === 'ban' || t === 'report') { H.navTo('Account'); return; }
+    if (t === 'sale' || t === 'boost' || t === 'verify' || t === 'review' || t === 'lead' || t === 'ban' || t === 'report' || t === 'security') { H.navTo('Account'); return; }
+    if (t === 'job_alert')                                                     { H.navTo('Browse'); return; }
     // info / system / unknown — go to Home so something always happens
     H.navTo('Home');
   };
@@ -469,6 +472,7 @@
   var _NOTIF_TABS = [
     { id: 'all',      label: 'All',           types: null },
     { id: 'listings', label: 'Active Ads',     types: ['sale', 'boost', 'review'] },
+    { id: 'business', label: 'Business Leads', types: ['lead'] },
     { id: 'jobs',     label: 'Job Alerts',     types: ['job_alert'] },
     { id: 'account',  label: 'Account',        types: ['verify', 'ban', 'report', 'security'] },
     { id: 'promo',    label: 'Promotions',     types: ['info', 'system'] }

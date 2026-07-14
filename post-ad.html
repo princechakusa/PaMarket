@@ -268,23 +268,23 @@ button{font-family:inherit;cursor:pointer}
       </button>
     </div>
     <div class="hdr-util">
-      <a href="auth" class="util-btn" title="Notifications" aria-label="Notifications">
+      <a href="notifications" class="util-btn" title="Notifications" aria-label="Notifications">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
         <span class="util-lbl">Notifications</span>
       </a>
-      <a href="auth" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
+      <a href="saved-searches" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         <span class="util-lbl">My Searches</span>
       </a>
-      <a href="auth" class="util-btn" title="Favorites" aria-label="Favorites">
+      <a href="favourites" class="util-btn" title="Favourites" aria-label="Favourites">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-        <span class="util-lbl">Favorites</span>
+        <span class="util-lbl">Favourites</span>
       </a>
       <a href="auth" class="util-btn" title="Chats" aria-label="Chats">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <span class="util-lbl">Chats</span>
       </a>
-      <a href="auth" class="util-btn" title="My Ads" aria-label="My Ads">
+      <a href="dashboard" class="util-btn" title="My Ads" aria-label="My Ads">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
         <span class="util-lbl">My Ads</span>
       </a>
@@ -300,6 +300,10 @@ button{font-family:inherit;cursor:pointer}
   <nav id="mobNav" class="mob-nav">
     <a href="/">Home</a>
     <a href="browse">Browse</a>
+    <a href="favourites">My Favourites</a>
+    <a href="saved-searches">Saved Searches</a>
+    <a href="notifications">Notifications</a>
+    <a href="dashboard">My Ads</a>
     <a href="advertise">Advertise</a>
     <a href="contact">Contact Us</a>
     <a href="blog">Blog</a>
@@ -560,6 +564,7 @@ window.doSearch = window.doSearch || function(){
   const gate=$('pfGate'), form=$('pfForm'), success=$('pfSuccess'), appNote=$('pfAppNote');
   const params=new URLSearchParams(location.search);
   const type=params.get('type');
+  const editingId=params.get('edit');
 
   // Jobs have their own dedicated recruiter form on the website now.
   if(type==='job'||type==='jobs'){ window.location.replace('post-job'); return; }
@@ -610,6 +615,22 @@ window.doSearch = window.doSearch || function(){
   const photos=[];
   const MAX_PHOTOS=8;
   const photosEl=$('pfPhotos'), fileInput=$('pfFile');
+
+  if(editingId){
+    document.title='Edit Listing — PaMarket Zimbabwe';
+    $('paTag').textContent='Edit Listing';
+    $('paTitle').textContent='Update your listing.';
+    $('paSub').textContent='Keep your price, description, location and photos accurate for buyers.';
+    const heading=form.querySelector('.pf-h');if(heading)heading.textContent='Edit your listing';
+    $('pfSubmit').textContent='Save Changes';
+    PM.fetchOwnListingById(editingId).then(listing=>{
+      if(!listing||String(listing.seller_id)!==String(session.user.id)){showError('This listing was not found, or you do not have permission to edit it.');$('pfSubmit').disabled=true;return;}
+      $('pfCat').value=listing.category||'';$('pfTitle').value=listing.title||'';$('pfDesc').value=listing.description||'';
+      $('pfPrice').value=listing.price==null?'':listing.price;$('pfProv').value=listing.province||'';$('pfCity').value=listing.city||'';$('pfSuburb').value=listing.suburb||'';
+      (listing.photos||[]).slice(0,MAX_PHOTOS).forEach(url=>photos.push({url:url}));renderPhotos();
+      $('pfTitle').dispatchEvent(new Event('input'));$('pfDesc').dispatchEvent(new Event('input'));$('pfCat').dispatchEvent(new Event('change'));
+    }).catch(()=>{showError('Could not load this listing. Please return to your dashboard and try again.');$('pfSubmit').disabled=true;});
+  }
   $('pfAddPhoto').addEventListener('click',(e)=>{ if(e.target.tagName!=='INPUT') fileInput.click(); });
 
   function renderPhotos(){
@@ -676,20 +697,22 @@ window.doSearch = window.doSearch || function(){
     if(photos.some(p=>p.uploading)){showError('Please wait for photos to finish uploading.');return;}
 
     const btn=$('pfSubmit');
-    btn.disabled=true;btn.textContent='Posting…';
+    btn.disabled=true;btn.textContent=editingId?'Saving…':'Posting…';
     try{
-      const res=await PM.createListing({
+      const payload={
         title,description:desc,price:Number(price),currency:'USD',
         category:cat,province:prov,city:$('pfCity').value.trim(),
         suburb:$('pfSuburb').value.trim(),
         photos:photos.filter(p=>p.url).map(p=>p.url)
-      });
+      };
+      const res=editingId?await PM.updateListing(editingId,payload):await PM.createListing(payload);
       const listing=res&&res.listing;
       form.classList.add('hidden');
       success.classList.remove('hidden');
+      if(editingId){const successTitle=success.querySelector('h2');if(successTitle)successTitle.textContent='Listing updated!';$('pfAnotherBtn').textContent='Back to Dashboard';}
       if(listing&&listing.id){
         $('pfViewBtn').href='detail?id='+listing.id;
-        $('pfSuccessMsg').textContent=(listing.status==='active')
+        $('pfSuccessMsg').textContent=editingId?'Your changes have been saved.':(listing.status==='active')
           ? 'Buyers across Zimbabwe can now find it.'
           : 'It has been submitted and will appear once reviewed (usually within 24 hours).';
       }else{
@@ -697,7 +720,7 @@ window.doSearch = window.doSearch || function(){
       }
       window.scrollTo({top:0,behavior:'smooth'});
     }catch(err){
-      btn.disabled=false;btn.textContent='Post Listing';
+      btn.disabled=false;btn.textContent=editingId?'Save Changes':'Post Listing';
       if(err&&err.message==='not-authenticated'){
         showError('Your session expired. Please sign in again.');
         setTimeout(()=>{location.href='auth?return='+encodeURIComponent(location.pathname+location.search);},1500);
@@ -711,6 +734,7 @@ window.doSearch = window.doSearch || function(){
 
   // Post Another → reset form
   $('pfAnotherBtn').addEventListener('click',()=>{
+    if(editingId){location.href='dashboard';return;}
     form.reset();photos.length=0;renderPhotos();clearError();
     $('pfTitleCount').textContent='0';$('pfDescCount').textContent='0';$('pfCatHint').textContent='';
     success.classList.add('hidden');form.classList.remove('hidden');

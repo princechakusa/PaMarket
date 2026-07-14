@@ -16,7 +16,7 @@ create table if not exists public.listings (
   city        text not null default '',
   suburb      text not null default '',
   photos      text[] not null default '{}',
-  status      text not null default 'active' check (status in ('active','sold','deleted','pending')),
+  status      text not null default 'active' check (status in ('active','paused','sold','deleted','pending')),
   condition   text check (condition in ('new','like-new','used','refurbished')),
   boost       jsonb,
   views       integer not null default 0,

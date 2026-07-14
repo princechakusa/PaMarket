@@ -55,6 +55,17 @@
     var ls = (H.state && H.state.listings) || [];
     return ls.length + (ls[0] ? '|' + ls[0].id + ls[0].status : '');
   }
+  // Scoped to the jobs subset specifically — _sigListings only looks at
+  // ls[0] (almost never a job, since fetchJobsFromSupabase places non-job
+  // listings first in the merged array), so it's blind to a job being
+  // deleted/added/changed whenever that doesn't happen to change the
+  // overall array's first entry or length in a distinguishing way.
+  function _sigJobs() {
+    var jobs = ((H.state && H.state.listings) || []).filter(function (l) { return (l.cat || l.category || '').toLowerCase() === 'jobs'; });
+    var sig = jobs.length;
+    jobs.forEach(function (l) { sig += '|' + l.id + l.status; });
+    return sig;
+  }
   function _sigMyListings() {
     var u = H.currentUser && H.currentUser();
     if (!u) return '0';
@@ -84,7 +95,7 @@
 
   // Per-page config: interval(ms), fetch(params)->Promise, sig(params)->string
   var _cfg = {
-    Home:        { interval: 45000,  fetch: function () { return Promise.all([_fetchListings(), _fetchBiz()]); }, sig: function () { return _sigListings() + '|' + _sigBiz(); } },
+    Home:        { interval: 45000,  fetch: function () { return Promise.all([_fetchListings(), _fetchBiz()]); }, sig: function () { return _sigListings() + '|' + _sigJobs() + '|' + _sigBiz(); } },
     Browse:      { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
     Categories:  { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
     Property:    { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
@@ -97,9 +108,9 @@
     Pets:        { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
     Kids:        { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
     Other:       { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
-    Jobs:        { interval: 60000,  fetch: _fetchJobs, sig: _sigListings },
-    FindJobs:    { interval: 60000,  fetch: _fetchJobs, sig: _sigListings },
-    JobDetail:   { interval: 60000,  fetch: _fetchJobs, sig: _sigListings },
+    Jobs:        { interval: 60000,  fetch: _fetchJobs, sig: _sigJobs },
+    FindJobs:    { interval: 60000,  fetch: _fetchJobs, sig: _sigJobs },
+    JobDetail:   { interval: 60000,  fetch: _fetchJobs, sig: _sigJobs },
     Rooms:       { interval: 60000,  fetch: _fetchListings, sig: _sigListings },
     Detail: {
       interval: 60000,

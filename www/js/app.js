@@ -3263,13 +3263,22 @@ H._showRatingPrompt = function() {
   var ov = document.createElement('div');
   ov.id = 'rateAppModal';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(16,24,40,.5);z-index:9600;display:flex;align-items:center;justify-content:center;padding:24px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)';
+  var STAR = '<svg viewBox="0 0 24 24" fill="var(--gold)"><path d="M12 2.5l2.9 6.06 6.6.83-4.86 4.63 1.28 6.55L12 17.35l-5.92 3.22 1.28-6.55L2.5 9.39l6.6-.83L12 2.5z"/></svg>';
   ov.innerHTML =
-    '<div style="background:var(--card);border-radius:20px;max-width:340px;width:100%;padding:26px 22px 18px;text-align:center;box-shadow:0 20px 60px rgba(16,24,40,.32);font-family:Inter,sans-serif">'
-    + '<div style="font-size:36px;line-height:1;margin-bottom:8px">⭐</div>'
-    + '<div style="font-size:19px;font-weight:800;color:var(--text);margin-bottom:8px">Rate Our App</div>'
-    + '<div style="font-size:14px;color:var(--sub);line-height:1.55;margin-bottom:22px">Enjoying the app? Your rating helps us improve and reach more users.</div>'
-    + '<button onclick="H.openAppRating()" style="width:100%;padding:13px;background:linear-gradient(135deg,#1A3A8F,#2952cc);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px">Rate Now</button>'
-    + '<button onclick="H._dismissRating()" style="width:100%;padding:11px;background:transparent;color:var(--sub);border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Later</button>'
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:22px;max-width:320px;width:100%;padding:28px 24px 20px;text-align:center;box-shadow:0 20px 60px rgba(16,24,40,.28),0 2px 8px rgba(16,24,40,.1);font-family:inherit">'
+    + '<div style="width:64px;height:64px;border-radius:18px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--gold-light),var(--blue-light) 130%)">'
+    +   '<svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 2.5l2.9 6.06 6.6.83-4.86 4.63 1.28 6.55L12 17.35l-5.92 3.22 1.28-6.55L2.5 9.39l6.6-.83L12 2.5z" fill="var(--gold)" stroke="var(--gold-dark)" stroke-width="1" stroke-linejoin="round"/></svg>'
+    + '</div>'
+    + '<div style="display:flex;gap:4px;justify-content:center;margin-bottom:14px">'
+    +   STAR + STAR + STAR + STAR + STAR
+    + '</div>'
+    + '<div style="font-size:19px;font-weight:800;letter-spacing:-.2px;color:var(--text);margin-bottom:8px">Enjoying PaMarket?</div>'
+    + '<div style="font-size:14px;color:var(--sub);line-height:1.55;margin-bottom:24px">Tell us with a rating — it takes <b style="color:var(--text);font-weight:700">10 seconds</b> and helps other Zimbabweans find the app.</div>'
+    + '<button onclick="H.openAppRating()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--blue-mid));color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;box-shadow:0 8px 20px rgba(26,58,143,.28);display:flex;align-items:center;justify-content:center;gap:8px">'
+    +   '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.06 6.6.83-4.86 4.63 1.28 6.55L12 17.35l-5.92 3.22 1.28-6.55L2.5 9.39l6.6-.83L12 2.5z"/></svg>'
+    +   'Rate on Play Store'
+    + '</button>'
+    + '<button onclick="H._dismissRating()" style="width:100%;padding:11px;background:transparent;color:var(--sub);border:none;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;border-radius:10px">Maybe later</button>'
     + '</div>';
   ov.addEventListener('click', function(e){ if (e.target === ov) H._dismissRating(); });
   document.body.appendChild(ov);

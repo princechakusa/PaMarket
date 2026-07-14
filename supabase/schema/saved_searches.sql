@@ -6,9 +6,10 @@ create table if not exists saved_searches (
   user_id     uuid not null references auth.users(id) on delete cascade,
   query       text,
   category    text,
+  name        text not null default 'Saved search',
+  filters     jsonb not null default '{}'::jsonb,
   saved_at    timestamptz default now(),
-  last_check  timestamptz default now(),
-  constraint  uq_saved_search unique (user_id, query, category)
+  last_check  timestamptz default now()
 );
 
 alter table saved_searches enable row level security;

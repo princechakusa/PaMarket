@@ -78,10 +78,12 @@
       '<div class="acct-menu">' +
         '<a href="dashboard">My Dashboard</a>' +
         '<a href="' + profileUrl + '">My Profile</a>' +
-        '<a href="' + profileUrl + '">My Ads</a>' +
+        '<a href="dashboard">My Ads</a>' +
         '<a href="post-job">Post a Job</a>' +
         '<a href="applications">Job Applications</a>' +
-        '<a href="' + APP_URL + '" target="_blank" rel="noopener">Favorites (open app)</a>' +
+        '<a href="favourites">My Favourites</a>' +
+        '<a href="saved-searches">Saved Searches</a>' +
+        '<a href="notifications">Notifications</a>' +
         '<a href="' + APP_URL + '" target="_blank" rel="noopener">Chats (open app)</a>' +
         '<div class="acct-sep"></div>' +
         '<a href="rentals#fleet">My Rental Fleet</a>' +
