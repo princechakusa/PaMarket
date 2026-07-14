@@ -42,16 +42,17 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/site.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --navy:#1A3A8F;--navy-deep:#0F2460;--navy-mid:#1E4BB8;
-  --gold:#E8A33D;--gold-dark:#C5871A;
-  --ink:#0F172A;--sub:#475569;--mute:#94A3B8;
-  --line:#E2E8F0;--paper:#F8FAFC;--white:#FFFFFF;
-  --green:#16A34A;--red:#DC2626;
+  --navy:#1A3A8F;--navy-deep:#0B1C4D;--navy-mid:#2952CC;
+  --gold:#E8A33D;--gold-dark:#B9791E;
+  --ink:#151A2E;--sub:#5B6478;--mute:#646A78;
+  --line:#E6DFD1;--paper:#F7F4EE;--white:#FFFFFF;
+  --green:#1F7A4D;--red:#DC2626;
+  --navy-tint:#EEF2FF;--gold-tint:#FBF4E6;
 }
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--paper);font-size:15px;line-height:1.6}
@@ -136,7 +137,7 @@ button{font-family:inherit;cursor:pointer}
 .results-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
 .results-count{font-size:14.5px;color:var(--sub)}
 .results-count b{color:var(--ink)}
-.results-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.save-search-btn{border:1.5px solid var(--navy);background:#fff;color:var(--navy);border-radius:8px;padding:8px 12px;font:700 13px Inter,system-ui,sans-serif}.save-search-btn.saved{background:#ecfdf5;border-color:#16a34a;color:#166534}.gcard{position:relative}.gcard-save{position:absolute;right:9px;top:9px;z-index:3;width:34px;height:34px;border:1px solid rgba(15,23,42,.12);border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;color:#334155}.gcard-save.saved{background:#1a3a8f;color:#fff}.gcard-save svg{width:17px;height:17px}
+.results-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.save-search-btn{border:1.5px solid var(--navy);background:#fff;color:var(--navy);border-radius:8px;padding:8px 12px;font:700 13px Inter,system-ui,sans-serif}.save-search-btn.saved{background:#ecfdf5;border-color:#1F7A4D;color:#166534}.gcard{position:relative}.gcard-save{position:absolute;right:9px;top:9px;z-index:3;width:34px;height:34px;border:1px solid rgba(15,23,42,.12);border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;color:#334155}.gcard-save.saved{background:#1a3a8f;color:#fff}.gcard-save svg{width:17px;height:17px}
 .sort-select{border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;color:var(--ink);background:#fff;outline:none}
 
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
@@ -228,6 +229,8 @@ button{font-family:inherit;cursor:pointer}
   .p-hero-w{padding:0 20px}
   .p-hero h1{font-size:22px}
 }
+
+h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,.logo,.auth-brand{font-family:'Fraunces',Georgia,serif;font-weight:700;letter-spacing:-.02em}
 </style>
 </head>
 <body>
@@ -575,7 +578,7 @@ window.doSearch = window.doSearch || function(){
 <script>
 const PIN='<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
 const COLORS=['#EEF2FF','#FEF3C7','#DCFCE7','#FCE7F3','#E0F2FE','#FEF9C3','#F3E8FF','#FFEDD5'];
-const TCOLORS=['#1A3A8F','#B27D22','#16A34A','#9D174D','#0369A1','#92400E','#7B2D8B','#C2410C'];
+const TCOLORS=['#1A3A8F','#B27D22','#1F7A4D','#9D174D','#0369A1','#92400E','#7B2D8B','#C2410C'];
 const CAT_LABELS={property:'Property',vehicles:'Vehicles',electronics:'Electronics',furniture:'Furniture',fashion:'Fashion',services:'Services',agriculture:'Agriculture',rooms:'Rooms to Rent',pets:'Pets',kids:'Baby & Kids',jobs:'Jobs'};
 
 // Sponsored ads — same live paid_ads as the app. Hidden when none active.
@@ -622,6 +625,36 @@ const CATEGORY_HEROES={
     sub:'Live listings from real sellers. Updated continuously.',
     image:'img/category-heroes/hero-furniture.jpg',alt:'Modern sofas, chairs and tables in a furniture showroom',
     chips:[['Sofas & Lounge','browse?cat=furniture&sub=sofas'],['Beds & Bedroom','browse?cat=furniture&sub=beds'],['Dining & Kitchen','browse?cat=furniture&sub=dining'],['Home Décor','browse?cat=furniture&sub=decor']]
+  },
+  fashion:{
+    title:'Style for every occasion.',
+    sub:'Discover clothing, shoes and accessories from sellers across Zimbabwe.',
+    image:'img/category-heroes/hero-fashion.jpg',alt:'Fashionable woman walking through a city square',
+    chips:[['Clothing','browse?cat=fashion&sub=clothing'],['Shoes','browse?cat=fashion&sub=shoes'],['Bags & Luggage','browse?cat=fashion&sub=bags'],['Jewellery','browse?cat=fashion&sub=jewellery']]
+  },
+  services:{
+    title:'Find trusted help for every job.',
+    sub:'Connect with local professionals offering practical services across Zimbabwe.',
+    image:'img/category-heroes/hero-services.jpg',alt:'Professional plumber repairing pipes beneath a kitchen sink',
+    chips:[['Home & Repairs','browse?cat=services&sub=home'],['Building & Construction','browse?cat=services&sub=building'],['Tutoring & Lessons','browse?cat=services&sub=tutoring'],['Transport & Moving','browse?cat=services&sub=transport']]
+  },
+  agriculture:{
+    title:'Everything you need to keep Zimbabwe growing.',
+    sub:'Browse farm equipment, livestock, produce and supplies from local sellers.',
+    image:'img/category-heroes/hero-agriculture.jpg',alt:'Agricultural mechanic repairing farm machinery',
+    chips:[['Livestock','browse?cat=agriculture&sub=livestock'],['Crops & Produce','browse?cat=agriculture&sub=produce'],['Farm Equipment','browse?cat=agriculture&sub=equipment'],['Irrigation','browse?cat=agriculture&sub=irrigation']]
+  },
+  rooms:{
+    title:'Find a room that feels like home.',
+    sub:'Browse rooms, cottages and shared homes available across Zimbabwe.',
+    image:'img/category-heroes/hero-rooms.jpg',alt:'Bright furnished bedroom available to rent',
+    chips:[['Single Rooms','browse?cat=rooms&sub=single'],['Shared Rooms','browse?cat=rooms&sub=shared'],['Self-Contained','browse?cat=rooms&sub=self-contained'],['Student Digs','browse?cat=rooms&sub=student']]
+  },
+  pets:{
+    title:'Find everything your pets need.',
+    sub:'Browse pets, supplies and accessories from sellers across Zimbabwe.',
+    image:'img/category-heroes/hero-pets.jpg',alt:'Comfortable pet room with cats, dogs, beds and pet supplies',
+    chips:[['Dogs','browse?cat=pets&sub=dogs'],['Cats','browse?cat=pets&sub=cats'],['Birds','browse?cat=pets&sub=birds'],['Pet Accessories','browse?cat=pets&sub=accessories']]
   },
   shops:{
     title:'Shop from trusted Zimbabwean businesses.',

@@ -15,14 +15,17 @@
 <meta name="robots" content="noindex, follow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/site.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --navy:#1A3A8F;--navy-deep:#0F2460;--navy-mid:#1E4BB8;
-  --gold:#E8A33D;--ink:#0F172A;--sub:#475569;--mute:#94A3B8;
-  --line:#E2E8F0;--paper:#F8FAFC;--white:#FFFFFF;--green:#16A34A;--red:#DC2626;
+  --navy:#1A3A8F;--navy-deep:#0B1C4D;--navy-mid:#2952CC;
+  --gold:#E8A33D;--gold-dark:#B9791E;
+  --ink:#151A2E;--sub:#5B6478;--mute:#646A78;
+  --line:#E6DFD1;--paper:#F7F4EE;--white:#FFFFFF;
+  --green:#1F7A4D;--red:#DC2626;
+  --navy-tint:#EEF2FF;--gold-tint:#FBF4E6;
 }
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--paper);font-size:15px;line-height:1.6}
@@ -56,6 +59,7 @@ button{font-family:inherit;cursor:pointer}
 .pj-note{font-size:12px;color:var(--mute);margin-top:12px;text-align:center}
 
 .pf-gate,.pj-success{text-align:center;padding:20px}
+.pj-gate-image{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;margin-bottom:22px}
 .pf-gate-ic,.pj-success-ic{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
 .pf-gate-ic{background:#EEF2FF;color:var(--navy)}
 .pj-success-ic{background:#DCFCE7;color:var(--green)}
@@ -90,6 +94,8 @@ button{font-family:inherit;cursor:pointer}
 .jqm-radio label{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;cursor:pointer}
 .jqm-radio input{accent-color:var(--navy)}
 @media(max-width:600px){.pf-row{grid-template-columns:1fr;gap:0}}
+
+h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,.logo,.auth-brand{font-family:'Fraunces',Georgia,serif;font-weight:700;letter-spacing:-.02em}
 </style>
 </head>
 <body>
@@ -207,6 +213,7 @@ window.doSearch = window.doSearch || function(){
 
   <!-- Sign-in gate -->
   <div class="pj-card pf-gate hidden" id="pjGate">
+    <img class="pj-gate-image" src="img/jobs/post-job-sign-in.jpg" alt="Recruiting workspace prepared to reach candidates across Zimbabwe" decoding="async">
     <div class="pf-gate-ic">
       <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15a2 2 0 100-4 2 2 0 000 4z"/><path d="M19 11V8a7 7 0 10-14 0v3a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2z"/></svg>
     </div>

@@ -12,13 +12,13 @@
 
 :root{
   /* Brand */
-  --navy:#1A3A8F; --navy-deep:#0F2460; --navy-mid:#1E4BB8;
-  --gold:#E8A33D; --gold-dark:#C5871A;
+  --navy:#1A3A8F; --navy-deep:#0B1C4D; --navy-mid:#2952CC;
+  --gold:#E8A33D; --gold-dark:#B9791E;
   /* Ink & neutrals */
-  --ink:#0F172A; --sub:#475569; --mute:#94A3B8;
-  --line:#E2E8F0; --paper:#F8FAFC; --white:#FFFFFF;
+  --ink:#151A2E; --sub:#5B6478; --mute:#646A78;
+  --line:#E6DFD1; --paper:#F7F4EE; --white:#FFFFFF;
   /* Semantic */
-  --green:#16A34A; --red:#DC2626;
+  --green:#1F7A4D; --red:#DC2626;
   /* Tints (kept for shared components) */
   --navy-tint:#EEF2FF; --gold-tint:#FBF4E6;
 }
@@ -27,6 +27,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 body{font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);background:#fff;font-size:15px;line-height:1.6}
+h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,.logo,.auth-brand{font-family:'Fraunces',Georgia,serif;font-weight:700;letter-spacing:-.02em}
 a{text-decoration:none;color:inherit}
 img{max-width:100%;height:auto;display:block}
 button{font-family:inherit;cursor:pointer}
@@ -52,7 +53,7 @@ button{font-family:inherit;cursor:pointer}
 /* ── Header ───────────────────────────────────────────────── */
 #hdr{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:300;box-shadow:0 1px 12px rgba(15,36,96,.07)}
 .hdr-w{max-width:1200px;margin:0 auto;padding:0 32px;height:66px;display:flex;align-items:center;gap:18px}
-.logo{font-size:23px;font-weight:900;color:var(--navy);flex-shrink:0;letter-spacing:-.02em;cursor:pointer;transition:opacity .15s}
+.logo{font-size:23px;font-weight:700;color:var(--navy);flex-shrink:0;letter-spacing:-.02em;cursor:pointer;transition:opacity .15s}
 .logo:hover{opacity:.8}
 .logo em{color:var(--gold);font-style:normal}
 
