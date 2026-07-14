@@ -142,8 +142,10 @@ button{font-family:inherit;cursor:pointer}
 .cat-pill:hover,.cat-pill.on{border-color:var(--navy);color:var(--navy);background:#EEF2FF}
 
 .post-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.post-card{border:1.5px solid var(--line);border-radius:16px;padding:24px;transition:all .2s;display:flex;flex-direction:column}
+.post-card{border:1.5px solid var(--line);border-radius:16px;overflow:hidden;background:#fff;transition:all .2s;display:flex;flex-direction:column}
 .post-card:hover{border-color:rgba(26,58,143,.25);box-shadow:0 12px 30px rgba(26,58,143,.1);transform:translateY(-2px)}
+.post-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--paper)}
+.post-card-body{padding:20px;display:flex;flex-direction:column;flex:1}
 .post-cat{display:inline-block;background:#EEF2FF;color:var(--navy);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;margin-bottom:12px;align-self:flex-start}
 .post-title{font-size:17px;font-weight:800;letter-spacing:-.01em;line-height:1.35;margin-bottom:8px}
 .post-desc{font-size:13.5px;color:var(--sub);line-height:1.6;flex:1}
@@ -380,10 +382,13 @@ function renderPosts(cat){
   const posts=cat?PMBlog.getPostsByCategory(cat):PMBlog.getAllPosts();
   document.getElementById('postGrid').innerHTML=posts.map(p=>`
     <a class="post-card" href="blog-post?slug=${encodeURIComponent(p.slug)}">
-      <span class="post-cat">${p.category}</span>
-      <div class="post-title">${p.title}</div>
-      <div class="post-desc">${p.description}</div>
-      <div class="post-meta">${fmtDate(p.datePublished)} · ${p.readTime}</div>
+      <img class="post-thumb" src="${PMBlog.getCategoryImage(p.category)}" alt="${p.category}: ${p.title}" loading="lazy" decoding="async">
+      <div class="post-card-body">
+        <span class="post-cat">${p.category}</span>
+        <div class="post-title">${p.title}</div>
+        <div class="post-desc">${p.description}</div>
+        <div class="post-meta">${fmtDate(p.datePublished)} · ${p.readTime}</div>
+      </div>
     </a>
   `).join('');
 }

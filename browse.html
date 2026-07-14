@@ -602,6 +602,12 @@ let state={cat:'',q:'',prov:'',city:'',sort:'created_at.desc',offset:0,shops:fal
 const ZW_CITIES=['Harare','Bulawayo','Mutare','Gweru','Masvingo','Chinhoyi','Kadoma','Kwekwe','Victoria Falls'];
 
 const CATEGORY_HEROES={
+  all:{
+    title:'All listings across Zimbabwe.',
+    sub:'Explore property, vehicles, electronics, services and more from sellers nationwide.',
+    image:'img/category-heroes/hero-all-listings.jpg',alt:'Zimbabwe marketplace featuring property, vehicles, technology and local services',
+    chips:[['Property','browse?cat=property'],['Vehicles','browse?cat=vehicles'],['Electronics','browse?cat=electronics'],['Furniture','browse?cat=furniture']]
+  },
   property:{
     title:'Find your next home in Zimbabwe.',
     sub:'Live listings from real sellers. Updated continuously.',
@@ -665,7 +671,7 @@ const CATEGORY_HEROES={
 };
 
 function renderCategoryHero(){
-  const key=state.shops?'shops':state.cat;
+  const key=state.shops?'shops':(state.cat||'all');
   const cfg=CATEGORY_HEROES[key];
   const hero=document.getElementById('catHero');
   if(!cfg||state.business){hero.hidden=true;return;}
@@ -679,7 +685,7 @@ function renderCategoryHero(){
   eyebrow.textContent='';
   const countPromise=key==='shops'
     ? PM.fetchExactCount('businesses','status=eq.active&verification_level=gt.0')
-    : PM.fetchListingCount(key);
+    : PM.fetchListingCount(key==='all'?'':key);
   countPromise.then(count=>{
     eyebrow.textContent=Number(count).toLocaleString()+(key==='shops'?' verified storefront'+(count===1?'':'s'):' live listing'+(count===1?'':'s'));
   }).catch(()=>{eyebrow.textContent='';});

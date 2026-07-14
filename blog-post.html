@@ -25,7 +25,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta id="twTitle" name="twitter:title" content="Blog — PaMarket Zimbabwe">
 <meta id="twDesc" name="twitter:description" content="Guides on buying, selling, renting and hiring in Zimbabwe — from PaMarket, Zimbabwe's free marketplace.">
-<meta name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
+<meta id="twImage" name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
 <meta id="ogUrl" property="og:url" content="https://pamarketzw.com/blog-post">
 <meta name="robots" content="index, follow">
 <meta name="geo.region" content="ZW">
@@ -111,6 +111,7 @@ button{font-family:inherit;cursor:pointer}
 .crumb a{color:var(--sub);font-weight:500}
 .crumb a:hover{color:var(--navy)}
 .article-wrap{max-width:840px;margin:0 auto;padding:24px 32px 70px}
+.blog-article-hero{min-height:320px}
 .article-cat{display:inline-block;background:#EEF2FF;color:var(--navy);font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em}
 .article-h1{font-size:32px;font-weight:900;letter-spacing:-.02em;margin-top:16px;line-height:1.25}
 .article-meta{display:flex;gap:14px;margin-top:14px;font-size:13px;color:var(--mute);flex-wrap:wrap}
@@ -264,6 +265,10 @@ window.doSearch = window.doSearch || function(){
 
 <div class="crumb" id="crumb"><a href="/">Home</a> / <a href="blog">Blog</a> / <span id="crumbCur">Loading…</span></div>
 
+<section class="cat-hero blog-article-hero" id="articleHero" hidden>
+  <img class="cat-hero-bg" id="articleHeroImage" alt="" fetchpriority="high" decoding="async">
+</section>
+
 <div class="article-wrap" id="articleContent">
   <span class="article-cat" id="artCat"></span>
   <h1 class="article-h1" id="artTitle"></h1>
@@ -384,15 +389,25 @@ if(!post){
 }else{
   const canonicalUrl='https://pamarketzw.com/blog-post?slug='+encodeURIComponent(post.slug);
   const pageTitle=post.title+' | PaMarket Blog';
+  const categoryImage=PMBlog.getCategoryImage(post.category);
+  const categoryImageUrl='https://pamarketzw.com/'+categoryImage;
   document.title=pageTitle;
   document.getElementById('pageTitle').textContent=pageTitle;
   document.getElementById('metaDesc').setAttribute('content',post.description);
   document.getElementById('canonicalLink').setAttribute('href',canonicalUrl);
   document.getElementById('ogTitle').setAttribute('content',pageTitle);
   document.getElementById('ogDesc').setAttribute('content',post.description);
+  document.getElementById('ogImage').setAttribute('content',categoryImageUrl);
   document.getElementById('ogUrl').setAttribute('content',canonicalUrl);
   document.getElementById('twTitle').setAttribute('content',pageTitle);
   document.getElementById('twDesc').setAttribute('content',post.description);
+  document.getElementById('twImage').setAttribute('content',categoryImageUrl);
+
+  const articleHero=document.getElementById('articleHero');
+  const articleHeroImage=document.getElementById('articleHeroImage');
+  articleHeroImage.src=categoryImage;
+  articleHeroImage.alt=post.category+': '+post.title;
+  articleHero.hidden=false;
 
   document.getElementById('crumbCur').textContent=post.title;
   document.getElementById('artCat').textContent=post.category;
@@ -430,7 +445,7 @@ if(!post){
     '@type':'Article',
     headline:post.title,
     description:post.description,
-    image:'https://pamarketzw.com/img/icon-512.png',
+    image:categoryImageUrl,
     datePublished:post.datePublished,
     dateModified:post.dateModified,
     author:{'@type':'Organization',name:'PaMarket',url:'https://pamarketzw.com/'},

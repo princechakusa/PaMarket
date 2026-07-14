@@ -823,16 +823,25 @@
   ];
 
   var CATEGORIES = ['Buying Guides', 'Selling Guides', 'Safety & Trust', 'Comparisons', 'Platform Education'];
+  var CATEGORY_IMAGES = {
+    'Selling Guides': 'img/blog-heroes/hero-selling-guides.jpg',
+    'Buying Guides': 'img/blog-heroes/hero-buying-guides.jpg',
+    'Comparisons': 'img/blog-heroes/hero-comparisons.jpg',
+    'Platform Education': 'img/blog-heroes/hero-platform-education.jpg',
+    'Safety & Trust': 'img/blog-heroes/hero-safety-trust.jpg'
+  };
 
   function getAllPosts() { return POSTS; }
   function getPostBySlug(slug) { return POSTS.filter(function (p) { return p.slug === slug; })[0] || null; }
   function getPostsByCategory(cat) { return POSTS.filter(function (p) { return p.category === cat; }); }
   function getCategories() { return CATEGORIES; }
+  function getCategoryImage(category) { return CATEGORY_IMAGES[category] || ''; }
 
   global.PMBlog = {
     getAllPosts: getAllPosts,
     getPostBySlug: getPostBySlug,
     getPostsByCategory: getPostsByCategory,
-    getCategories: getCategories
+    getCategories: getCategories,
+    getCategoryImage: getCategoryImage
   };
 })(window);
