@@ -342,25 +342,12 @@ CREATE TRIGGER trg_profiles_guard BEFORE UPDATE ON profiles
 -- that line from the function body and re-run — everything else still applies.
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 9. RECOMMENDED pg_cron AUTOMATION (uncomment if pg_cron is enabled)
---    These make expiry/renewal/cleanup automatic and write to job_runs so the
---    Automation Center shows their health.
+-- 9. SCHEDULED AUTOMATION (pg_cron)
 -- ─────────────────────────────────────────────────────────────────────────
--- SELECT cron.schedule('unban-expired', '*/15 * * * *', $$
---   UPDATE profiles SET status='active', ban_until=NULL
---   WHERE status='banned' AND ban_until IS NOT NULL AND ban_until < now();
---   INSERT INTO job_runs(job, ok, detail) VALUES ('unban_expired', true, 'ran');
--- $$);
--- SELECT cron.schedule('expire-ads', '0 * * * *', $$
---   UPDATE paid_ads SET active=false WHERE active AND ends_at IS NOT NULL AND ends_at < now();
---   INSERT INTO job_runs(job, ok, detail) VALUES ('expire_ads', true, 'ran');
--- $$);
--- SELECT cron.schedule('expire-subscriptions', '0 2 * * *', $$
---   UPDATE business_subscriptions SET status='expired'
---   WHERE status='active' AND current_period_end < now();
---   INSERT INTO job_runs(job, ok, detail) VALUES ('expire_subscriptions', true, 'ran');
--- $$);
--- SELECT cron.schedule('purge-old-notifications', '0 3 * * 0', $$
---   DELETE FROM notifications WHERE created_at < (extract(epoch from now())*1000 - 30::bigint*86400000);
---   INSERT INTO job_runs(job, ok, detail) VALUES ('purge_notifications', true, 'weekly');
--- $$);
+-- Moved to its own file: supabase/ADMIN_CRON_AUTOMATION.sql
+--
+-- Do NOT hand-roll cron jobs that INSERT into job_runs directly. pg_cron runs
+-- as the `postgres` role, not as an authenticated admin, so the admin-team RLS
+-- policy on job_runs rejects the write — the jobs would run but the Automation
+-- Center would show "never ran" forever. ADMIN_CRON_AUTOMATION.sql routes the
+-- heartbeat through a SECURITY DEFINER function to avoid exactly that trap.
