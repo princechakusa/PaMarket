@@ -444,16 +444,21 @@ if(!post){
     ).join('');
   }
 
-  document.getElementById('faqItems').innerHTML=post.faqs.map(f=>`
-    <div class="faq-item">
-      <div class="faq-q" onclick="tog(this)">${f.q}<span class="faq-tog">+</span></div>
-      <div class="faq-a">${f.a}</div>
-    </div>
-  `).join('');
+  const postFaqs=Array.isArray(post.faqs)?post.faqs:[];
+  if(postFaqs.length){
+    document.getElementById('faqItems').innerHTML=postFaqs.map(f=>`
+      <div class="faq-item">
+        <div class="faq-q" onclick="tog(this)">${f.q}<span class="faq-tog">+</span></div>
+        <div class="faq-a">${f.a}</div>
+      </div>
+    `).join('');
+  }else{
+    document.getElementById('faqBlock').hidden=true;
+  }
 
   const articleSchema={
     '@context':'https://schema.org',
-    '@type':'Article',
+    '@type':'BlogPosting',
     headline:post.title,
     description:post.description,
     image:categoryImageUrl,
@@ -482,15 +487,17 @@ if(!post){
   breadcrumbScript.textContent=JSON.stringify(breadcrumbSchema);
   document.head.appendChild(breadcrumbScript);
 
-  const faqSchema={
-    '@context':'https://schema.org',
-    '@type':'FAQPage',
-    mainEntity:post.faqs.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))
-  };
-  const faqScript=document.createElement('script');
-  faqScript.type='application/ld+json';
-  faqScript.textContent=JSON.stringify(faqSchema);
-  document.head.appendChild(faqScript);
+  if(postFaqs.length){
+    const faqSchema={
+      '@context':'https://schema.org',
+      '@type':'FAQPage',
+      mainEntity:postFaqs.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))
+    };
+    const faqScript=document.createElement('script');
+    faqScript.type='application/ld+json';
+    faqScript.textContent=JSON.stringify(faqSchema);
+    document.head.appendChild(faqScript);
+  }
 
   if(post.isHowTo && post.steps && post.steps.length){
     const howtoSchema={
