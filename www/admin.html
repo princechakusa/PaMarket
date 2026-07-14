@@ -2789,6 +2789,37 @@ async function rejectVerification(userId, verifId) {
 // ── NOTIFICATIONS ─────────────────────────────────────────
 var PROVINCES = ['Harare','Bulawayo','Manicaland','Mashonaland West','Mashonaland East','Mashonaland Central','Midlands','Masvingo','Matabeleland North','Matabeleland South'];
 
+var _siteLiveAnnouncement = null;
+
+function siteAnnouncementPanelHtml() {
+  return '<div class="notif-form" id="siteAnnouncementPanel">'
+    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap">'
+    + '<div><div style="font-size:15px;font-weight:800">Website Announcement Banner</div>'
+    + '<div style="font-size:12px;color:var(--sub);margin-top:3px">Shown on the public website to signed-in and signed-out visitors. This does not send browser push.</div></div>'
+    + '<div id="siteAnnStatus" style="font-size:12px;color:var(--sub)">Checking current announcement...</div></div>'
+    + '<div id="siteAnnCurrent" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:13px 15px;margin-bottom:16px"></div>'
+    + '<div class="form-row"><label class="form-label">Message</label><textarea class="form-textarea" id="siteAnnMessage" maxlength="200" placeholder="e.g. PaMarket Shops are now live across Zimbabwe" oninput="updateSiteAnnouncementPreview()"></textarea><div class="char-count" id="siteAnnMessageCount">0/200</div></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+    + '<div class="form-row"><label class="form-label">Link URL <span style="font-weight:400;text-transform:none">(optional)</span></label><input class="form-input" id="siteAnnLinkUrl" maxlength="500" placeholder="e.g. /blog or https://pamarketzw.com/plans" oninput="updateSiteAnnouncementPreview()"></div>'
+    + '<div class="form-row"><label class="form-label">Link Label <span style="font-weight:400;text-transform:none">(optional)</span></label><input class="form-input" id="siteAnnLinkLabel" maxlength="40" placeholder="Learn more" oninput="updateSiteAnnouncementPreview()"></div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+    + '<div class="form-row"><label class="form-label">Starts At <span style="font-weight:400;text-transform:none">(optional)</span></label><input class="form-input" type="datetime-local" id="siteAnnStartsAt"></div>'
+    + '<div class="form-row"><label class="form-label">Ends At <span style="font-weight:400;text-transform:none">(optional)</span></label><input class="form-input" type="datetime-local" id="siteAnnEndsAt"></div>'
+    + '</div>'
+    + '<label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:14px"><input type="checkbox" id="siteAnnActive" checked style="accent-color:var(--accent)"> Active (future start dates remain hidden until their scheduled time)</label>'
+    + '<div class="notif-preview"><div class="notif-preview-label">Website Preview</div>'
+    + '<div id="siteAnnPreview" style="background:linear-gradient(90deg,#0B1C4D,#1A3A8F);border-radius:10px;padding:11px 42px 11px 15px;color:#fff;position:relative">'
+    + '<span id="siteAnnPreviewMessage" style="font-size:12px;font-weight:600">Announcement message will appear here</span> '
+    + '<span id="siteAnnPreviewLink" style="font-size:12px;font-weight:800;color:#E8A33D"></span><span style="position:absolute;right:14px;font-size:20px;top:4px">&times;</span></div></div>'
+    + '<div style="display:flex;align-items:center;gap:9px;margin-top:16px;flex-wrap:wrap">'
+    + '<button class="btn-send" id="saveSiteAnnBtn" onclick="saveSiteAnnouncement()">Create Announcement</button>'
+    + '<button class="filter-btn" id="deactivateSiteAnnBtn" onclick="deactivateSiteAnnouncement()" disabled>Deactivate Current</button>'
+    + '<button class="filter-btn" onclick="clearSiteAnnouncementForm()">Clear Form</button>'
+    + '<span id="siteAnnSaveStatus" style="font-size:12px;color:var(--sub)"></span></div>'
+    + '</div>';
+}
+
 function renderNotifications(prefilledUserId) {
   var typeOpts = ['info','verify','message','boost','ban','report','sale','review'].map(function(t){
     return '<option value="'+t+'">'+t.charAt(0).toUpperCase()+t.slice(1)+'</option>';
@@ -2818,7 +2849,7 @@ function renderNotifications(prefilledUserId) {
   var templates = (DATA.settings && DATA.settings.notifTemplates) || [];
   var tplOpts = '<option value="">— Templates —</option>' + templates.map(function(t,i){ return '<option value="'+i+'">'+esc(t.name)+'</option>'; }).join('');
 
-  var html = '<div class="notif-form">'
+  var html = siteAnnouncementPanelHtml() + '<div class="notif-form">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px;flex-wrap:wrap">'
     + '<div style="font-size:15px;font-weight:800"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Push Notification</div>'
     + '<div style="display:flex;gap:8px;align-items:center">'
@@ -2891,6 +2922,131 @@ function renderNotifications(prefilledUserId) {
     var sel = document.getElementById('notifTarget');
     if(sel){ sel.value=prefilledUserId; onNotifTargetChange(); updateNotifPreview(); }
   }
+  loadSiteAnnouncementPanel();
+}
+
+function updateSiteAnnouncementPreview() {
+  var message = (document.getElementById('siteAnnMessage')||{}).value || '';
+  var label = (document.getElementById('siteAnnLinkLabel')||{}).value || '';
+  var previewMessage = document.getElementById('siteAnnPreviewMessage');
+  var previewLink = document.getElementById('siteAnnPreviewLink');
+  var count = document.getElementById('siteAnnMessageCount');
+  if(previewMessage) previewMessage.textContent = message || 'Announcement message will appear here';
+  if(previewLink) previewLink.textContent = label;
+  if(count) count.textContent = message.length + '/200';
+}
+
+function clearSiteAnnouncementForm() {
+  ['siteAnnMessage','siteAnnLinkUrl','siteAnnLinkLabel','siteAnnStartsAt','siteAnnEndsAt'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  var active=document.getElementById('siteAnnActive'); if(active) active.checked=true;
+  updateSiteAnnouncementPreview();
+}
+
+function siteAnnouncementLinkIsSafe(raw) {
+  if(!raw) return true;
+  try {
+    var url=new URL(raw,location.origin);
+    return url.protocol==='http:' || url.protocol==='https:';
+  } catch(e) { return false; }
+}
+
+async function loadSiteAnnouncementPanel() {
+  var status=document.getElementById('siteAnnStatus');
+  var current=document.getElementById('siteAnnCurrent');
+  var deactivate=document.getElementById('deactivateSiteAnnBtn');
+  if(!status||!current) return;
+  status.textContent='Checking current announcement...';
+  try {
+    var res=await sb.from('site_announcements').select('*').eq('is_active',true).order('created_at',{ascending:false}).limit(50);
+    if(res.error) throw res.error;
+    var now=Date.now();
+    var rows=res.data||[];
+    _siteLiveAnnouncement=rows.find(function(row){
+      return (!row.starts_at || new Date(row.starts_at).getTime()<=now) && (!row.ends_at || new Date(row.ends_at).getTime()>now);
+    }) || null;
+    var scheduled=rows.find(function(row){ return row.starts_at && new Date(row.starts_at).getTime()>now; }) || null;
+    if(_siteLiveAnnouncement){
+      status.textContent='Currently live'; status.style.color='var(--green)';
+      current.style.display='block';
+      current.innerHTML='<div style="font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Live website announcement</div>'
+        +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(_siteLiveAnnouncement.message)+'</div>'
+        +(_siteLiveAnnouncement.link_url?'<div style="font-size:11px;color:var(--sub);margin-top:4px">'+esc(_siteLiveAnnouncement.link_label||'Link')+' &rarr; '+esc(_siteLiveAnnouncement.link_url)+'</div>':'')
+        +'<div style="font-size:10px;color:var(--sub2);margin-top:5px">'+(_siteLiveAnnouncement.ends_at?'Ends '+fmtDateTime(_siteLiveAnnouncement.ends_at):'No end date')+'</div>';
+      if(deactivate) deactivate.disabled=false;
+    } else {
+      status.style.color='var(--sub)';
+      status.textContent=scheduled?'Scheduled for '+fmtDateTime(scheduled.starts_at):'No announcement is live';
+      current.style.display=scheduled?'block':'none';
+      if(scheduled) current.innerHTML='<div style="font-size:10px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Next scheduled announcement</div><div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(scheduled.message)+'</div>';
+      if(deactivate) deactivate.disabled=true;
+    }
+  } catch(e) {
+    _siteLiveAnnouncement=null;
+    status.style.color='var(--red)';
+    status.textContent=e && e.code==='42P01'?'Migration required: site_announcements table not found':'Could not load announcement status';
+    current.style.display='none';
+    if(deactivate) deactivate.disabled=true;
+  }
+}
+
+async function saveSiteAnnouncement() {
+  var message=((document.getElementById('siteAnnMessage')||{}).value||'').trim();
+  var linkUrl=((document.getElementById('siteAnnLinkUrl')||{}).value||'').trim();
+  var linkLabel=((document.getElementById('siteAnnLinkLabel')||{}).value||'').trim();
+  var startsRaw=(document.getElementById('siteAnnStartsAt')||{}).value||'';
+  var endsRaw=(document.getElementById('siteAnnEndsAt')||{}).value||'';
+  var isActive=!!((document.getElementById('siteAnnActive')||{}).checked);
+  if(!message){toast('Enter an announcement message','error');return;}
+  if(message.length>200){toast('Announcement message must be 200 characters or fewer','error');return;}
+  if(!siteAnnouncementLinkIsSafe(linkUrl)){toast('Link must be a website URL or relative site path','error');return;}
+  if(linkLabel&&!linkUrl){toast('Add a Link URL or clear the Link Label','error');return;}
+  if(linkUrl&&!linkLabel) linkLabel='Learn more';
+  var startsAt=startsRaw?new Date(startsRaw):null;
+  var endsAt=endsRaw?new Date(endsRaw):null;
+  if(startsAt&&isNaN(startsAt.getTime())){toast('Invalid start date','error');return;}
+  if(endsAt&&isNaN(endsAt.getTime())){toast('Invalid end date','error');return;}
+  if(endsAt&&startsAt&&endsAt<=startsAt){toast('End date must be after the start date','error');return;}
+  if(endsAt&&endsAt<=new Date()){toast('End date must be in the future','error');return;}
+
+  var btn=document.getElementById('saveSiteAnnBtn');
+  var status=document.getElementById('siteAnnSaveStatus');
+  if(btn){btn.disabled=true;btn.textContent='Saving...';}
+  if(status) status.textContent='';
+  try {
+    if(!_adminUid){var user=(await sb.auth.getUser()).data.user;_adminUid=user&&user.id;}
+    var rec={message:message,link_url:linkUrl||null,link_label:linkUrl?linkLabel:null,is_active:isActive,
+      starts_at:startsAt?startsAt.toISOString():null,ends_at:endsAt?endsAt.toISOString():null,created_by:_adminUid||null};
+    var result=await sb.from('site_announcements').insert(rec).select('id').single();
+    if(result.error) throw result.error;
+    if(isActive){
+      // Keep the existing announcement live until the replacement insert succeeds.
+      var off=await sb.from('site_announcements').update({is_active:false}).eq('is_active',true).neq('id',result.data.id);
+      if(off.error) throw off.error;
+    }
+    auditLog('create_site_announcement','site_announcements',result.data.id,null,rec,null);
+    toast(isActive?(startsAt&&startsAt>new Date()?'Announcement scheduled':'Announcement is live'):'Inactive announcement saved');
+    clearSiteAnnouncementForm();
+    await loadSiteAnnouncementPanel();
+  } catch(e) {
+    toast('Error: '+e.message,'error');
+    if(status) status.textContent='Save failed';
+  } finally {
+    if(btn){btn.disabled=false;btn.textContent='Create Announcement';}
+  }
+}
+
+async function deactivateSiteAnnouncement() {
+  if(!_siteLiveAnnouncement){toast('No live announcement to deactivate','info');return;}
+  var id=_siteLiveAnnouncement.id;
+  try {
+    var res=await sb.from('site_announcements').update({is_active:false}).eq('id',id);
+    if(res.error) throw res.error;
+    auditLog('deactivate_site_announcement','site_announcements',id,{is_active:true},{is_active:false},null);
+    toast('Website announcement deactivated','info');
+    await loadSiteAnnouncementPanel();
+  } catch(e){toast('Error: '+e.message,'error');}
 }
 
 function onNotifTargetChange() {

@@ -281,6 +281,16 @@
       ? global.PMSession.getSession()
       : null;
   }
+
+  // Latest public site announcement. RLS enforces active state and the
+  // starts_at/ends_at window for anonymous and authenticated visitors.
+  function fetchActiveSiteAnnouncement() {
+    return pgFetch(
+      'site_announcements?is_active=eq.true' +
+      '&select=id,message,link_url,link_label,starts_at,ends_at' +
+      '&order=created_at.desc&limit=1'
+    ).then(function (rows) { return rows[0] || null; });
+  }
   function authHeaders() {
     var h = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
     var s = sharedSession();
@@ -853,6 +863,7 @@
   global.PM.fetchSellerReviews = fetchSellerReviews;
   global.PM.fetchJobs = fetchJobs;
   global.PM.fetchActiveAds = fetchActiveAds;
+  global.PM.fetchActiveSiteAnnouncement = fetchActiveSiteAnnouncement;
   global.PM.trackAdEvent = trackAdEvent;
   global.PM.money = money;
   global.PM.timeAgo = timeAgo;
