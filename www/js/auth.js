@@ -494,7 +494,7 @@
     var c = sb();
     if (c) {
       var capTok = await H._captcha();
-      var res = await c.auth.signUp({email:email, password:password, options: Object.assign({data:{full_name:name}}, capTok ? {captchaToken: capTok} : {})});
+      var res = await c.auth.signUp({email:email, password:password, options: Object.assign({data:{full_name:name}, emailRedirectTo:'com.pamarket.app://login-callback'}, capTok ? {captchaToken: capTok} : {})});
       if (res.error) {
         var msg = res.error.message;
         if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('unique constraint')) {
@@ -511,12 +511,17 @@
       }
       var userId = res.data.user.id;
       await c.from('profiles').upsert({id:userId, name:name, phone:phone||null, verified:false});
-      var u = {id:userId,email:email,name:name,phone:phone||'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]};
-      (H.state.users = H.state.users||[]).push(u);
-      H.state.currentUserId = userId;
-      H.saveState();
       setAuthBusy(false);
-      if (res.data.session) {
+      // Only treat the account as logged-in once Supabase has actually issued a
+      // session — it only does that when email confirmation is either disabled
+      // or already satisfied. An unconfirmed signup returns no session, so we
+      // must NOT touch H.state.currentUserId here or the user ends up "logged
+      // in" locally before ever confirming their email.
+      if (res.data.session && res.data.user.email_confirmed_at) {
+        var u = {id:userId,email:email,name:name,phone:phone||'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]};
+        (H.state.users = H.state.users||[]).push(u);
+        H.state.currentUserId = userId;
+        H.saveState();
         H.toast('Account created! Welcome to PaMarket');
         if (H.closeLoginModal) H.closeLoginModal();
         H.boot();
@@ -743,6 +748,9 @@
     }
 
     // Last resort if the Browser/App plugins are unavailable: standard web OAuth.
+    // This full-page redirect comes back with ?code= in the URL — detected and
+    // exchanged manually by _handleWebOAuthReturn on page load, below, since
+    // the client is created with detectSessionInUrl:false (see supabase.js).
     const _webOpts = { redirectTo: window.location.origin + window.location.pathname };
     if (provider === 'google') _webOpts.queryParams = { prompt: 'select_account' };
     const { error } = await c.auth.signInWithOAuth({
@@ -751,6 +759,40 @@
     });
     if (error) H.toast(error.message || 'Sign-in failed', 6000, true);
   }
+
+  // Handles the plain-browser OAuth return (see the "last resort" branch of
+  // _oauthInCap above): the page reloads with ?code=... in the URL, and since
+  // detectSessionInUrl is off, nothing exchanges it unless we do it here.
+  (function _handleWebOAuthReturn() {
+    var isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+    if (isNative) return;
+    var qs = new URLSearchParams(window.location.search);
+    var code = qs.get('code');
+    var errDesc = qs.get('error_description') || qs.get('error');
+    if (!code && !errDesc) return;
+    var cleanUrl = window.location.pathname + window.location.hash;
+    try { window.history.replaceState({}, '', cleanUrl); } catch (e) {}
+    if (errDesc) { H.toast('Google: ' + errDesc, 7000, true); return; }
+    var attempts = 0;
+    var run = function () {
+      var c = sb();
+      if (!c) { if (++attempts < 40) { setTimeout(run, 100); } return; }
+      c.auth.exchangeCodeForSession(code).then(function (res) {
+        var session = res && res.data && res.data.session;
+        var ex = res && res.error;
+        if (ex) { H.toast('Google: ' + ex.message, 7000, true); return; }
+        if (!session) { H.toast('Sign-in did not complete. Please try again.', 5000, true); return; }
+        var finishWhenReady = function () {
+          if (typeof _finishOAuthLogin !== 'function' || !H.state) { if (++attempts < 40) { setTimeout(finishWhenReady, 100); } return; }
+          _finishOAuthLogin(c, session).catch(function (fe) {
+            H.toast('Signed in, but loading profile failed: ' + ((fe && fe.message) || ''), 6000, true);
+          });
+        };
+        finishWhenReady();
+      });
+    };
+    run();
+  })();
 
   H.authGoogle = async function() {
     const c = sb();

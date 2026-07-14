@@ -51,7 +51,7 @@
 
   H._updateNotifBadge = function () {
     const u = H.currentUser(); if (!u) return;
-    const count = (H.state.notifs[u.id] || []).filter(n => !n.read).length;
+    const count = (H.state.notifs[u.id] || []).filter(n => !n.read && n.type !== 'message').length;
     // Update the home header bell badge (rendered as span inside the bell div)
     document.querySelectorAll('[data-notif-badge]').forEach(b => {
       b.textContent = count > 9 ? '9+' : count;
@@ -468,7 +468,6 @@
   // Category tab definitions for the notifications page
   var _NOTIF_TABS = [
     { id: 'all',      label: 'All',           types: null },
-    { id: 'messages', label: 'Messages',       types: ['message'] },
     { id: 'listings', label: 'Active Ads',     types: ['sale', 'boost', 'review'] },
     { id: 'jobs',     label: 'Job Alerts',     types: ['job_alert'] },
     { id: 'account',  label: 'Account',        types: ['verify', 'ban', 'report', 'security'] },
@@ -492,6 +491,9 @@
   };
 
   function _matchesTab(n, tabId) {
+    // Chat messages have their own Messages tab in-app; exclude any legacy
+    // 'message'-type rows from the notification center entirely.
+    if ((n.type || _inferType(n.title)) === 'message') return false;
     if (tabId === 'all') return true;
     var tab = _NOTIF_TABS.find(function(t) { return t.id === tabId; });
     if (!tab || !tab.types) return true;

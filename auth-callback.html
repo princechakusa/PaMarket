@@ -29,6 +29,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:
   <div class="spinner" id="spinner"></div>
   <p class="msg" id="msg">Signing you in...</p>
   <p class="error hidden" id="errMsg"></p>
+  <button class="confirm-btn hidden" id="confirmBtn" style="margin-top:20px;padding:12px 28px;border:none;border-radius:10px;background:#1A3A8F;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Confirm my email</button>
 </div>
 <script>
 const SB_URL='https://gxgytumhknmnwspxjzxw.supabase.co';
@@ -49,23 +50,92 @@ function safeReturnUrl(url){
   return url;
 }
 
+// PaMarket's Android/Capacitor app can't be opened directly from links inside
+// HTML emails — most mail clients strip or refuse custom URI schemes
+// (com.pamarket.app://...). So Supabase's Site URL/email templates point here
+// (a normal https page every mail client opens fine), and this page forwards
+// into the app via the custom scheme, which mail-client restrictions don't
+// apply to once you're already in a real browser context.
+function forwardToApp(query){
+  const appUrl='com.pamarket.app://login-callback'+(query?('?'+query):'');
+  document.getElementById('msg').textContent='Opening PaMarket…';
+  window.location.href=appUrl;
+  setTimeout(function(){
+    document.getElementById('spinner').style.display='none';
+    document.getElementById('msg').innerHTML='If PaMarket didn\'t open automatically, <a href="'+appUrl+'">tap here</a>.';
+  },1500);
+}
+
+// Mail servers/clients (Gmail, Outlook Safe Links, corporate scanners) often
+// prefetch every link in an HTML email to scan for phishing BEFORE the user
+// ever taps it. Supabase's confirmation token is single-use, so an
+// auto-verify on page load gets silently burned by that prefetch and the
+// real click sees "invalid or expired". Requiring an explicit button tap
+// avoids this — scanners fetch the page but don't click buttons.
+async function verifyEmailToken(tokenHash, type){
+  document.getElementById('confirmBtn').classList.add('hidden');
+  document.getElementById('spinner').style.display='block';
+  document.getElementById('msg').textContent='Confirming your email…';
+  try{
+    const r=await fetch(`${SB_URL}/auth/v1/verify`,{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({token_hash:tokenHash,type:type||'signup'})
+    });
+    if(!r.ok){
+      const err=await r.json().catch(()=>({}));
+      throw new Error(err.error_description||err.msg||'Email link is invalid or has expired');
+    }
+    const data=await r.json();
+    if(!data.access_token) throw new Error('Email link is invalid or has expired');
+    forwardToApp('access_token='+encodeURIComponent(data.access_token)+
+      '&refresh_token='+encodeURIComponent(data.refresh_token||'')+
+      '&expires_in='+encodeURIComponent(data.expires_in||3600)+
+      '&token_type='+encodeURIComponent(data.token_type||'bearer'));
+  }catch(err){
+    showErr(err.message||'Email link is invalid or has expired');
+  }
+}
+
 async function handleCallback(){
-  // Supabase puts tokens in URL hash after OAuth redirect
+  const qp=new URLSearchParams(location.search);
   const hash=window.location.hash.substring(1);
-  const params=new URLSearchParams(hash);
+  const hashParams=new URLSearchParams(hash);
+
+  const code=qp.get('code');
+  const tokenHash=qp.get('token_hash');
+  const type=qp.get('type')||hashParams.get('type');
+
+  // Signup/magic-link confirmations: wait for an explicit tap before
+  // spending the single-use token (see comment on verifyEmailToken above).
+  if(tokenHash && type!=='recovery'){
+    document.getElementById('spinner').style.display='none';
+    document.getElementById('msg').textContent='Tap below to confirm your email address.';
+    const btn=document.getElementById('confirmBtn');
+    btn.classList.remove('hidden');
+    btn.onclick=function(){ verifyEmailToken(tokenHash,type); };
+    return;
+  }
+  // NOTE: this page is only ever reached by the WEBSITE's own auth flows
+  // (auth.html's doGoogle()/doForgot()) — the Android app's Google Sign-In
+  // never lands here at all; it opens Supabase's authorize URL directly in
+  // an in-app Browser tab and catches the com.pamarket.app://login-callback
+  // deep link itself, via _oauthInCap in auth.js. So both a query-string
+  // ?code= (PKCE, e.g. if the project's flow_type doesn't honor the
+  // implicit request from doGoogle()) and a hash #access_token= (implicit)
+  // must complete a WEBSITE session below, never forward into the app.
+
+  // Supabase puts tokens in URL hash after OAuth redirect
+  const params=hashParams;
 
   const accessToken=params.get('access_token');
   const refreshToken=params.get('refresh_token');
   const expiresIn=parseInt(params.get('expires_in')||'3600',10);
   const tokenType=params.get('token_type')||'bearer';
-  const type=params.get('type');  // 'recovery', 'signup', 'magiclink', etc.
 
   if(!accessToken){
-    const qp=new URLSearchParams(location.search);
     const error=qp.get('error_description')||qp.get('error');
     if(error){showErr(error);return}
-    // PKCE flow: ?code= in query string — exchange for session
-    const code=qp.get('code');
     if(code){
       try{
         document.getElementById('msg').textContent='Completing sign-in…';

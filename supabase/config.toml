@@ -1,0 +1,18 @@
+project_id = "pamarket"
+
+[db]
+major_version = 17
+
+[db.migrations]
+enabled = true
+schema_paths = []
+
+[db.seed]
+enabled = false
+
+[functions.send-push]
+verify_jwt = true
+
+[functions.automation-runner]
+verify_jwt = true
+

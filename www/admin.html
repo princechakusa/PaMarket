@@ -15,11 +15,11 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#0F172A;--card:#1E293B;--card2:#263044;--border:#334155;
-  --text:#F1F5F9;--sub:#94A3B8;--sub2:#64748B;
-  --accent:#6366F1;--accent2:#4F46E5;
+  --bg:#F5F7FB;--card:#FFFFFF;--card2:#F1F4F9;--border:#E1E7F0;
+  --text:#15213B;--sub:#69758B;--sub2:#8B96A9;
+  --accent:#173887;--accent2:#0E2359;
   --green:#10B981;--amber:#F59E0B;--red:#EF4444;--blue:#3B82F6;
-  --sidebar-w:220px;
+  --gold:#E9A23B;--sidebar-w:264px;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;overflow-x:hidden;}
 .content{min-width:0;}
@@ -45,37 +45,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
 .layout{display:flex;min-height:100vh;}
 
 /* ── SIDEBAR ── */
-.sidebar{width:var(--sidebar-w);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .25s;}
-.sidebar-brand{padding:20px 16px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
-.sidebar-brand-name{font-size:20px;font-weight:900;letter-spacing:-.5px;}
-.sidebar-brand-name em{font-style:normal;color:var(--accent);}
-.sidebar-badge{font-size:10px;background:rgba(99,102,241,.2);color:var(--accent);border-radius:6px;padding:2px 6px;margin-left:6px;font-weight:700;}
-.sidebar-nav{flex:1;overflow-y:auto;padding:8px 0;}
-.nav-section{font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.8px;padding:12px 16px 4px;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;border-radius:0;transition:background .15s;color:var(--sub);font-size:13px;font-weight:500;position:relative;border:none;background:none;width:100%;text-align:left;font-family:inherit;}
-.nav-item:hover{background:rgba(255,255,255,.05);color:var(--text);}
-.nav-item.active{background:rgba(99,102,241,.15);color:var(--accent);font-weight:700;}
-.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--accent);border-radius:0 2px 2px 0;}
+.sidebar{width:var(--sidebar-w);background:#0E2359;border-right:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .25s;box-shadow:8px 0 28px rgba(14,35,89,.08);}
+.sidebar-brand{padding:23px 20px 19px;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0;}
+.sidebar-brand-name{font-size:23px;font-weight:900;letter-spacing:-.7px;color:#fff;}
+.sidebar-brand-name em{font-style:normal;color:var(--gold);}
+.sidebar-badge{font-size:9px;background:rgba(233,162,59,.16);color:var(--gold);border:1px solid rgba(233,162,59,.3);border-radius:20px;padding:3px 7px;margin-left:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;vertical-align:3px;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:9px 11px 16px;scrollbar-width:thin;scrollbar-color:#42588d transparent;}
+.nav-section{font-size:9px;font-weight:800;color:#8295c4;text-transform:uppercase;letter-spacing:1.25px;padding:17px 10px 7px;display:flex;align-items:center;gap:8px;}
+.nav-section::after{content:'';height:1px;background:rgba(255,255,255,.08);flex:1;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 11px;cursor:pointer;border-radius:9px;transition:background .15s,color .15s,transform .15s;color:#B9C6E4;font-size:12.5px;font-weight:550;position:relative;border:none;background:none;width:100%;text-align:left;font-family:inherit;margin:2px 0;}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff;transform:translateX(2px);}
+.nav-item.active{background:#fff;color:#0E2359;font-weight:750;box-shadow:0 7px 18px rgba(0,0,0,.15);}
+.nav-item.active::before{display:none;}
 .nav-item svg{width:16px;height:16px;flex-shrink:0;}
 .nav-badge{background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:auto;}
 .nav-badge.amber{background:var(--amber);}
-.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;}
-.sidebar-user{font-size:12px;color:var(--sub);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sidebar-footer{padding:14px 16px;border-top:1px solid rgba(255,255,255,.1);flex-shrink:0;}
+.sidebar-user{font-size:12px;color:#A8B7DB;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .btn-signout{width:100%;padding:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s;}
 .btn-signout:hover{background:rgba(239,68,68,.2);}
 
 /* ── MAIN ── */
 .main{margin-left:var(--sidebar-w);flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh;}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:50;flex-shrink:0;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:17px 28px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.94);position:sticky;top:0;z-index:50;flex-shrink:0;backdrop-filter:blur(12px);}
 .topbar-title{font-size:16px;font-weight:800;color:var(--text);}
 .topbar-actions{display:flex;gap:8px;align-items:center;}
 .btn-refresh{padding:7px 14px;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--sub);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s;}
 .btn-refresh:hover{background:rgba(255,255,255,.1);color:var(--text);}
-.content{padding:20px 24px 40px;flex:1;}
+.content{padding:26px 28px 44px;flex:1;max-width:1600px;width:100%;margin:0 auto;}
 
 /* ── STAT CARDS ── */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:22px;}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;transition:border-color .15s,transform .15s;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:18px;transition:border-color .15s,transform .15s;box-shadow:0 4px 18px rgba(21,33,59,.035);}
 .stat-card[onclick]:hover{border-color:var(--accent);transform:translateY(-2px);}
 .stat-label{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
 .stat-val{font-size:26px;font-weight:900;color:var(--text);line-height:1;}
@@ -96,7 +97,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
 .search-input:focus{border-color:var(--accent);}
 
 /* ── TABLE ── */
-.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:15px;overflow:hidden;box-shadow:0 4px 18px rgba(21,33,59,.035);}
 .tbl{width:100%;border-collapse:collapse;}
 .tbl th{padding:10px 14px;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1px solid var(--border);background:rgba(255,255,255,.03);}
 .tbl td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;}
@@ -265,6 +266,56 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
 .chat-bubble-name{font-size:10.5px;font-weight:700;color:var(--accent);margin-bottom:2px;}
 .chat-bubble-text{font-size:13.5px;color:var(--text);line-height:1.45;white-space:pre-wrap;word-break:break-word;}
 .chat-bubble-time{font-size:10px;color:var(--sub2);margin-top:4px;}
+
+/* PaMarket admin visual system — shared by every inner view */
+body{line-height:1.5;}
+button,input,select,textarea{font-family:inherit;}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(23,56,135,.14);outline-offset:1px;}
+.topbar-title{font-size:15px;font-weight:800;letter-spacing:-.15px;}
+.hamburger{display:flex;border:1px solid var(--border);background:#fff;border-radius:9px;width:38px;height:38px;align-items:center;justify-content:center;padding:0;color:var(--text)}
+.topbar-title{display:none}
+.sidebar.collapsed{transform:translateX(-100%)}.sidebar.collapsed~.main{margin-left:0}
+.topbar-search{width:min(460px,38vw);height:40px;border:1px solid var(--border);border-radius:10px;background:#F8FAFD;color:var(--sub);display:flex;align-items:center;gap:9px;padding:0 13px;cursor:pointer;transition:border-color .15s,box-shadow .15s;}
+.topbar-search:hover{border-color:#B9C5D8;box-shadow:0 4px 14px rgba(21,33,59,.05);}
+.topbar-search span{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topbar-search kbd{margin-left:auto;border:1px solid #D7DEEA;background:#fff;border-radius:5px;padding:1px 6px;font-size:9px;color:var(--sub2);}
+.btn-refresh{height:38px;padding:0 13px;background:#fff;border:1px solid var(--border);color:#59657A;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;}
+.btn-refresh:hover{background:#F7F9FC;color:var(--accent);border-color:#C9D3E3;}
+.btn-marketplace{height:38px;padding:0 14px;background:var(--accent);border:1px solid var(--accent);color:#fff;border-radius:9px;font-size:11.5px;font-weight:750;display:inline-flex;align-items:center;gap:7px;transition:background .15s,transform .15s;}
+.btn-marketplace:hover{background:var(--accent2);transform:translateY(-1px);}
+.stats-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;}
+.stat-card{position:relative;overflow:hidden;min-height:116px;}
+.stat-card::after{content:'';position:absolute;inset:0 0 auto;height:3px;background:#D9E1EF;}
+.stat-card.green::after{background:var(--green)}.stat-card.amber::after{background:var(--amber)}.stat-card.red::after{background:var(--red)}.stat-card.blue::after{background:var(--blue)}.stat-card.accent::after{background:var(--gold)}
+.stat-label{color:var(--sub);font-size:10px;letter-spacing:.7px;margin-top:2px;}
+.stat-val{font-size:25px;color:var(--text)!important;letter-spacing:-.6px;}
+.stat-sub{margin-top:7px;}
+.sec-head{margin-bottom:13px;}.sec-title{font-size:15px;letter-spacing:-.15px;}
+.filter-btn{background:#fff;color:#5F6B80;border-color:var(--border);min-height:34px;}
+.filter-btn:hover{border-color:#B8C4D6;color:var(--accent);background:#F9FAFC;}
+.filter-btn.on{background:#EEF3FF;border-color:#AFC0E8;color:var(--accent);}
+.search-input,.form-input,.form-select,.form-textarea,.fi,.confirm-input{background:#fff;color:var(--text);border-color:#DCE3EE;box-shadow:0 1px 2px rgba(21,33,59,.02);}
+.search-input::placeholder,.form-input::placeholder,.form-textarea::placeholder,.fi::placeholder{color:#9AA5B6;}.form-select{background-color:#fff;}
+.notif-form,.verif-card,.modal-box,.confirm-box{background:#fff;border-color:var(--border);box-shadow:0 14px 38px rgba(21,33,59,.08);}
+.notif-preview{background:#F5F7FB;}.notif-preview-card{background:#fff;border:1px solid var(--border);}
+.tbl th{background:#F8FAFD;color:#7E899B;padding:11px 14px;}.tbl td{border-bottom:1px solid #EDF1F6;padding:12px 14px;}.tbl tr:hover td{background:#FAFBFD;}.tbl-thumb-ph{background:#EEF2F7;}
+.modal-box{border-radius:16px;}.modal-img{background:#F3F5F8;}#modalOverlay,#confirmOverlay{background:rgba(14,35,89,.48);backdrop-filter:blur(4px);}
+.chat-shell{background:#fff;border-color:var(--border);box-shadow:0 5px 22px rgba(21,33,59,.04);}.chat-list-pane,.chat-thread-hdr{background:#fff;}.chat-thread-pane{background:#F7F9FC;}
+.chat-list-row{border-color:#EDF1F6;}.chat-list-row:hover{background:#F8FAFD;}.chat-list-row.active{background:#EEF3FF;}
+.chat-bubble{background:#fff;border-color:#DEE5F0;box-shadow:0 2px 8px rgba(21,33,59,.04);}.chat-bubble-row.mine .chat-bubble{background:#EEF3FF;border-color:#C9D6F3;}
+.bar-track{background:#E9EEF5;}.setting-row{border-color:#E8EDF4;}
+.login-card{background:#fff;border-color:var(--border);box-shadow:0 25px 60px rgba(14,35,89,.18);}.login-logo{color:var(--text)}.login-logo em{color:var(--accent)}#loginWrap{background:radial-gradient(ellipse at 50% 0%,#E8EEFA 0%,#F5F7FB 64%);}
+.btn-login,.btn-send{background:var(--accent)}.btn-login:hover,.btn-send:hover{background:var(--accent2)}
+.sidebar-nav::-webkit-scrollbar{width:5px}.sidebar-nav::-webkit-scrollbar-thumb{background:#42598E;border-radius:10px}.sidebar-nav::-webkit-scrollbar-track{background:transparent}
+.empty-msg,.loading-msg{color:var(--sub);}code,kbd{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;}
+.overview-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:20px}.overview-heading h1{font-size:27px;line-height:1.15;letter-spacing:-.7px;margin:0 0 5px}.overview-heading p{margin:0;color:var(--sub);font-size:12.5px}.overview-date{font-size:11px;font-weight:700;color:var(--sub);border:1px solid var(--border);background:#fff;border-radius:9px;padding:8px 11px;white-space:nowrap}.overview-primary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:20px}.primary-metric{background:#fff;border:1px solid var(--border);border-radius:15px;padding:18px;display:flex;align-items:center;gap:13px;box-shadow:0 4px 18px rgba(21,33,59,.035)}.primary-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#EDF3FF;color:var(--accent);flex:0 0 auto}.primary-icon svg{width:20px;height:20px}.primary-metric.gold .primary-icon{background:#FFF4E4;color:#C57908}.primary-metric.green .primary-icon{background:#EAF8F2;color:var(--green)}.primary-metric.red .primary-icon{background:#FFF0F0;color:var(--red)}.primary-label{font-size:11px;color:var(--sub);margin-bottom:2px}.primary-value{font-size:23px;font-weight:900;letter-spacing:-.5px;line-height:1.1}.primary-note{font-size:9.5px;color:var(--sub2);margin-top:4px}
+.command-card{background:#fff;border:1px solid var(--border);border-radius:15px;box-shadow:0 4px 18px rgba(21,33,59,.035);margin-bottom:14px;overflow:hidden}.command-title{padding:13px 16px 0;font-size:12px;font-weight:800}.command-grid{display:grid;grid-template-columns:repeat(6,1fr);padding:11px 6px 14px}.command-item{padding:4px 14px;border-right:1px solid var(--border);min-width:0}.command-item:last-child{border:0}.command-label{font-size:9.5px;color:var(--sub);font-weight:700;white-space:nowrap}.command-value{font-size:18px;font-weight:900;margin-top:3px;letter-spacing:-.25px}.command-meta{font-size:8.5px;color:var(--sub2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.command-value.good{color:var(--green)}.command-value.warn{color:var(--amber)}.command-value.bad{color:var(--red)}
+.overview-actions{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin-bottom:16px}.overview-action{height:40px;border:1px solid #C9D5E8;background:#fff;color:var(--accent);border-radius:9px;font-size:10.5px;font-weight:750;display:flex;align-items:center;justify-content:center;gap:7px;transition:.15s}.overview-action:hover{background:#EEF3FF;border-color:#9CB0D8;transform:translateY(-1px)}.overview-action svg{width:14px;height:14px}
+.overview-panels{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:15px}.overview-panel{background:#fff;border:1px solid var(--border);border-radius:15px;overflow:hidden;box-shadow:0 4px 18px rgba(21,33,59,.035)}.overview-panel-head{min-height:52px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--border)}.overview-panel-title{font-size:13px;font-weight:850}.overview-panel-title span{font-size:10px;font-weight:500;color:var(--sub)}.overview-link{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 9px;color:var(--accent);font-size:9.5px;font-weight:750}.overview-table{width:100%;border-collapse:collapse}.overview-table th{text-align:left;padding:9px 12px;background:#F8FAFD;color:#8792A3;font-size:8.5px;text-transform:uppercase;letter-spacing:.45px}.overview-table td{padding:10px 12px;border-top:1px solid #EDF1F6;font-size:10.5px;vertical-align:middle}.overview-table tr:hover td{background:#FAFBFD}.overview-item-title{font-size:10.5px;font-weight:750;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.overview-item-sub{font-size:8.5px;color:var(--sub);margin-top:2px}.overview-pill{display:inline-flex;padding:4px 7px;border-radius:6px;font-size:8.5px;font-weight:750;background:#EEF3FF;color:var(--accent)}.overview-pill.pending{background:#FFF5E6;color:#B96F06}.overview-pill.success{background:#EAF8F2;color:#158057}.overview-pill.danger{background:#FFF0F0;color:#CF4040}.overview-empty{padding:34px 18px;text-align:center;color:var(--sub);font-size:11px}
+@media(max-width:1100px){.overview-primary{grid-template-columns:repeat(2,1fr)}.command-grid{grid-template-columns:repeat(3,1fr);row-gap:14px}.command-item:nth-child(3){border-right:0}.overview-actions{grid-template-columns:repeat(3,1fr)}.overview-panels{grid-template-columns:1fr}}
+@media(max-width:980px){.topbar-search{width:280px}.btn-marketplace span{display:none}.btn-marketplace{width:38px;padding:0;justify-content:center}}
+@media(max-width:768px){.topbar-search{display:none}.topbar-title{display:none}.topbar{padding:12px 14px}.content{padding:18px 14px 38px}.stats-grid{grid-template-columns:1fr 1fr}.stat-card{min-height:105px;padding:14px}.btn-refresh .btn-label{display:none}.btn-refresh{width:38px;padding:0}.sidebar{box-shadow:18px 0 45px rgba(14,35,89,.28)}}
+@media(max-width:430px){.stats-grid,.overview-primary{grid-template-columns:1fr}.stat-card{min-height:100px}.topbar-actions{gap:5px}.btn-marketplace{display:none}.overview-date{display:none}.overview-heading h1{font-size:23px}.command-grid{grid-template-columns:repeat(2,1fr)}.command-item:nth-child(2n){border-right:0}.command-item:nth-child(3){border-right:1px solid var(--border)}.overview-actions{grid-template-columns:repeat(2,1fr)}.overview-table th:nth-child(2),.overview-table td:nth-child(2){display:none}}
 </style>
 </head>
 <body>
@@ -476,15 +527,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
     <!-- Main content -->
     <div class="main">
       <div class="topbar">
-        <div style="display:flex;align-items:center;gap:12px">
-          <button class="hamburger" onclick="openSidebar()">
+        <div style="display:flex;align-items:center;gap:12px;min-width:0">
+          <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle navigation">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
           <div class="topbar-title" id="topbarTitle">Overview</div>
         </div>
+        <button class="topbar-search" onclick="openGlobalSearch()" aria-label="Search admin console">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Search listings, users or businesses</span><kbd>G</kbd>
+        </button>
         <div class="topbar-actions">
-          <button class="btn-refresh" onclick="openGlobalSearch()" title="Global search (press g)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search</button>
-          <button class="btn-refresh" onclick="refreshAll()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button>
+          <button class="btn-refresh" onclick="refreshAll()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg><span class="btn-label" style="margin-left:6px">Refresh</span></button>
+          <a class="btn-marketplace" href="https://pamarketzw.com/" target="_blank" rel="noopener noreferrer"><span>View PaMarket</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3h7v7M10 14 21 3M21 14v7H3V3h7"/></svg></a>
         </div>
       </div>
       <div class="content" id="mainContent">
@@ -1055,12 +1110,17 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeMod
 document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 
 // ── Sidebar ───────────────────────────────────────────────
+function toggleSidebar(){
+  var side=document.getElementById('sidebar');
+  if(window.innerWidth<=768){ openSidebar(); return; }
+  side.classList.toggle('collapsed');
+}
 function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); }
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
 
 // ── Tab navigation ────────────────────────────────────────
 var TAB_TITLES = {
-  overview:'Operations Dashboard', listings:'Listings', users:'Users', verifications:'Verifications',
+  overview:'Overview', listings:'Listings', users:'Users', verifications:'Verifications',
   notifications:'Send Notification', reports:'Reports', moderation:'Moderation Center', contacts:'Contact Requests',
   ads:'Ads & Boosts', chats:'User Chats', analytics:'Analytics', settings:'Settings',
   businesses:'Business Platform', maintenance:'Maintenance',
@@ -1441,7 +1501,7 @@ function renderBizUpgradeSection() {
   var recent  = (DATA.bizUpgradeRequests||[]).filter(function(r){ return r.status==='paid'||r.status==='failed'; }).slice(0,5);
   if (!pending.length && !recent.length) return '';
 
-  var html = '<div style="background:#1E293B;border:1px solid #334155;border-radius:16px;padding:18px;margin-bottom:20px">';
+  var html = '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:20px;box-shadow:0 4px 18px rgba(21,33,59,.035)">';
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">';
   html += '<div style="display:flex;align-items:center;gap:8px">';
   html += '<div style="background:'+(pending.length?'#F59E0B':'#334155')+';border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>';
@@ -1459,7 +1519,7 @@ function renderBizUpgradeSection() {
     var planId = extractPlanFromDesc(req.description);
     var planLabel = planId ? (planId.charAt(0).toUpperCase()+planId.slice(1)) : (req.description||'Unknown');
     var cleanDesc = (req.description||'').replace(/\s*\[[a-z0-9]+\]\s*$/i,'');
-    html += '<div style="background:#263044;border:1px solid #FFE2A8;border-radius:12px;padding:14px;margin-bottom:8px">';
+    html += '<div style="background:#FFF9EE;border:1px solid #F1D49B;border-radius:12px;padding:14px;margin-bottom:8px">';
     html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">';
     html += '<div style="min-width:0">';
     html += '<div style="font-size:13.5px;font-weight:700;color:var(--text)">'+(biz?esc(biz.name):'<span style="color:var(--sub)">Unknown Business</span>')+'</div>';
@@ -1475,7 +1535,7 @@ function renderBizUpgradeSection() {
   });
 
   if(recent.length) {
-    html += '<div style="border-top:1px solid #334155;padding-top:12px;margin-top:4px">';
+    html += '<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">';
     html += '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Recent</div>';
     recent.forEach(function(req) {
       var biz = DATA.businesses.find(function(b){ return b.id===req.business_id; });
@@ -1483,7 +1543,7 @@ function renderBizUpgradeSection() {
       var planLabel = planId ? (planId.charAt(0).toUpperCase()+planId.slice(1)) : 'Unknown';
       var statusColor = req.status==='paid' ? 'var(--green)' : 'var(--red)';
       var statusLabel = req.status==='paid' ? 'Approved' : 'Declined';
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1E293B;font-size:12px">';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">';
       html += '<span style="color:var(--sub)">'+(biz?esc(biz.name):'Unknown')+' <span style="color:var(--text)">'+esc(planLabel)+'</span></span>';
       html += '<span style="font-weight:700;color:'+statusColor+'">'+statusLabel+'</span>';
       html += '</div>';
@@ -1863,10 +1923,18 @@ function toggleOvAuto(on){
     loadCounts().then(function(){ updateBadges(); if(currentTab==='overview') renderOverview(); });
   }, 30000); toast('Auto-refresh on (30s)','info'); }
 }
-function renderOverview() {
+function renderOverviewLegacy() {
   if(!COUNTS.loadedAt){ loadCounts().then(function(){ updateBadges(); if(currentTab==='overview') renderOverview(); }); document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading platform statistics…</div>'; return; }
   var c = COUNTS;
   var s = RA_DATA.summary || {};
+
+  var overviewHead = '<div class="overview-heading"><div><h1>Marketplace overview</h1><p>Monitor PaMarket activity and keep the community running smoothly.</p></div><div class="overview-date">'+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})+'</div></div>';
+  overviewHead += '<div class="overview-primary">'
+    + '<div class="primary-metric"><div class="primary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10l8-6 8 6v10H4Z"/><path d="M9 20v-6h6v6"/></svg></div><div><div class="primary-label">Active listings</div><div class="primary-value">'+fmtCnt(c.listingsActive)+'</div><div class="primary-note">'+fmtCnt(c.listings)+' total submissions</div></div></div>'
+    + '<div class="primary-metric gold"><div class="primary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M18 15a6 6 0 0 1 4 6"/></svg></div><div><div class="primary-label">Registered users</div><div class="primary-value">'+fmtCnt(c.users)+'</div><div class="primary-note">+'+fmtCnt(c.usersToday)+' joined today</div></div></div>'
+    + '<div class="primary-metric green"><div class="primary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9h18l-1-5H4L3 9Z"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></svg></div><div><div class="primary-label">Verified businesses</div><div class="primary-value">'+fmtCnt(c.businessesActive)+'</div><div class="primary-note">'+fmtCnt(c.upgradesPending)+' upgrade requests</div></div></div>'
+    + '<div class="primary-metric red"><div class="primary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v5c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6l-8-3Z"/><path d="M12 8v5M12 16h.01"/></svg></div><div><div class="primary-label">Open reports</div><div class="primary-value">'+fmtCnt(c.reportsOpen)+'</div><div class="primary-note">Requires moderation review</div></div></div>'
+    + '</div>';
 
   var alerts = '';
   if(c.listingsPendingOld) alerts += alertBox('red','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.listingsPendingOld+' pending listing'+(c.listingsPendingOld>1?'s have':' has')+' waited over 48h — SLA breach.','listings');
@@ -1874,7 +1942,7 @@ function renderOverview() {
   if(c.verifPending) alerts += alertBox('blue','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>'+c.verifPending+' verification'+(c.verifPending>1?'s':'')+' pending.','verifications');
   if(c.reportsOpen) alerts += alertBox('red','<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>'+c.reportsOpen+' open report'+(c.reportsOpen>1?'s':'')+' need attention.','reports');
 
-  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px"><div style="font-size:13px;font-weight:700;color:var(--sub)">Executive Command Center</div><div style="display:flex;align-items:center;gap:10px">'+refreshStamp()+'<label style="font-size:11px;color:var(--sub2);display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="ovAuto" '+(_ovAuto?'checked':'')+' onchange="toggleOvAuto(this.checked)">Auto-refresh</label></div></div>';
+  var html = overviewHead + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px"><div style="font-size:13px;font-weight:700;color:var(--sub)">Executive Command Center</div><div style="display:flex;align-items:center;gap:10px">'+refreshStamp()+'<label style="font-size:11px;color:var(--sub2);display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="ovAuto" '+(_ovAuto?'checked':'')+' onchange="toggleOvAuto(this.checked)">Auto-refresh</label></div></div>';
 
   // ── Live command strip: online now, today, health pulse, SLA ──
   var slaBreaches = (c.listingsPendingOld||0);
@@ -1896,8 +1964,8 @@ function renderOverview() {
 
   // ── Quick actions ──
   html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">';
-  [['Moderation Inbox','modInbox','▤'],['Send Notification','notifications','✉'],['Support Center','supportCenter','◉'],['Finance','financeCenter','$'],['Analytics','analytics','▨'],['Operations','opsCenter','⚙']].forEach(function(q){
-    html += '<button class="filter-btn" style="display:inline-flex;align-items:center;gap:6px" onclick="showTab(\''+q[1]+'\')"><span style="color:var(--accent)">'+q[2]+'</span> '+q[0]+'</button>';
+  [['Moderation Inbox','modInbox'],['Send Notification','notifications'],['Support Center','supportCenter'],['Finance','financeCenter'],['Analytics','analytics'],['Operations','opsCenter']].forEach(function(q){
+    html += '<button class="filter-btn" style="display:inline-flex;align-items:center;gap:6px" onclick="showTab(\''+q[1]+'\')">'+q[0]+'</button>';
   });
   html += '</div>';
 
@@ -1986,6 +2054,71 @@ function renderOverview() {
       if(currentTab==='overview') renderOverview();
     });
   }
+}
+
+function renderOverview() {
+  if(!COUNTS.loadedAt){
+    loadCounts().then(function(){ updateBadges(); if(currentTab==='overview') renderOverview(); });
+    document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading platform statistics...</div>';
+    return;
+  }
+  var c=COUNTS, s=RA_DATA.summary||{};
+  var icon={
+    listings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/></svg>',
+    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M18 15a6 6 0 0 1 4 6"/></svg>',
+    business:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9h18l-1-5H4L3 9Z"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></svg>',
+    report:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v5c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6l-8-3Z"/><path d="M12 8v5M12 16h.01"/></svg>'
+  };
+  function metric(cls,ic,label,value,note){return '<div class="primary-metric '+cls+'"><div class="primary-icon">'+ic+'</div><div><div class="primary-label">'+label+'</div><div class="primary-value">'+fmtCnt(value)+'</div><div class="primary-note">'+note+'</div></div></div>';}
+  function command(label,value,meta,cls){return '<div class="command-item"><div class="command-label">'+label+'</div><div class="command-value '+(cls||'')+'">'+value+'</div><div class="command-meta">'+meta+'</div></div>';}
+  function action(label,tab,path){return '<button class="overview-action" onclick="showTab(\''+tab+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+path+'</svg>'+label+'</button>';}
+
+  var html='<div class="overview-heading"><div><h1>Marketplace overview</h1><p>Monitor PaMarket activity and keep the community running smoothly.</p></div><div class="overview-date">'+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})+'</div></div>';
+  html+='<div class="overview-primary">'
+    +metric('',icon.listings,'Active listings',c.listingsActive,fmtCnt(c.listings)+' total submissions')
+    +metric('gold',icon.users,'Registered users',c.users,'+'+fmtCnt(c.usersToday)+' joined today')
+    +metric('green',icon.business,'Verified businesses',c.businessesActive,fmtCnt(c.upgradesPending)+' upgrade requests')
+    +metric('red',icon.report,'Open reports',c.reportsOpen,'Requires moderation review')+'</div>';
+
+  var pending=(c.listingsPending||0)+(c.verifPending||0)+(c.reportsOpen||0)+(c.supportOpen||0);
+  html+='<section class="command-card"><div class="command-title">Executive Command Center</div><div class="command-grid">'
+    +command('Online now',c.online5m==null?'—':fmtCnt(c.online5m),'Users online','good')
+    +command('Active today',c.onlineDay==null?'—':fmtCnt(c.onlineDay),'Platform activity','')
+    +command('New today',fmtCnt(c.usersToday),'Registered users','')
+    +command('SLA breaches',fmtCnt(c.listingsPendingOld),'Needs attention',c.listingsPendingOld?'bad':'good')
+    +command('Pending work',fmtCnt(pending),'Across all queues','warn')
+    +command('Support open',c.supportOpen==null?'—':fmtCnt(c.supportOpen),'Tickets open','')+'</div></section>';
+
+  html+='<div class="overview-actions">'
+    +action('Listings','listings','<path d="M5 3h14v18H5zM8 7h8M8 11h8"/>')
+    +action('Users','users','<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>')
+    +action('Verify businesses','verifications','<path d="M3 9h18l-1-5H4L3 9Z"/><path d="M5 9v11h14V9"/>')
+    +action('Send notification','notifications','<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M10 21h4"/>')
+    +action('Moderation inbox','modInbox','<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5 5h14l3 7v6H2v-6l3-7Z"/>')
+    +action('View reports','reports','<path d="M4 20V4h11l1 4h4l-1 7H4"/>')+'</div>';
+
+  html+='<div class="overview-panels"><section class="overview-panel"><div class="overview-panel-head"><div class="overview-panel-title">Work Queue <span>(oldest first)</span></div><button class="overview-link" onclick="showTab(\'modInbox\')">View all</button></div>';
+  if(_ovQueue===null) html+='<div class="overview-empty">Loading moderation queue...</div>';
+  else if(!_ovQueue.length) html+='<div class="overview-empty">Queue is clear. Nothing is waiting for review.</div>';
+  else{
+    html+='<table class="overview-table"><thead><tr><th>Item</th><th>Waiting</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+    _ovQueue.slice(0,6).forEach(function(l){html+='<tr><td><div class="overview-item-title">'+esc(l.title)+'</div><div class="overview-item-sub">'+esc(l.seller_name||'Unknown seller')+'</div></td><td>'+ageChip(l.created_at,24,48)+'</td><td><span class="overview-pill pending">Pending</span></td><td><button class="ab ab-view" onclick="viewListing(\''+esc(l.id)+'\')">Review</button></td></tr>';});
+    html+='</tbody></table>';
+  }
+  html+='</section><section class="overview-panel"><div class="overview-panel-head"><div class="overview-panel-title">Recent Admin Actions</div><button class="overview-link" onclick="showTab(\'auditCenter\')">Audit trail</button></div>';
+  if(_ovActions===null) html+='<div class="overview-empty">Loading recent actions...</div>';
+  else if(_ovActions==='missing') html+='<div class="overview-empty">Audit logging is not installed yet.</div>';
+  else if(!_ovActions.length) html+='<div class="overview-empty">No admin actions have been recorded.</div>';
+  else{
+    html+='<table class="overview-table"><thead><tr><th>Action</th><th>Entity</th><th>Administrator</th><th>Time</th></tr></thead><tbody>';
+    _ovActions.slice(0,6).forEach(function(a){html+='<tr><td><div class="overview-item-title">'+esc(a.action)+'</div></td><td><span class="overview-pill success">'+esc(a.entity||'Platform')+'</span></td><td>'+esc((a.actor_email||'system').split('@')[0])+'</td><td style="white-space:nowrap;color:var(--sub)">'+ago(a.created_at)+' ago</td></tr>';});
+    html+='</tbody></table>';
+  }
+  html+='</section></div>';
+  document.getElementById('mainContent').innerHTML=html;
+
+  if(_ovQueue===null){sb.from('listings').select('id,title,seller_name,created_at').eq('status','pending').order('created_at',{ascending:true}).limit(8).then(function(r){_ovQueue=(!r.error&&r.data)?r.data:[];if(currentTab==='overview')renderOverview();});}
+  if(_ovActions===null){sb.from('admin_audit_logs').select('action,entity,actor_email,created_at').order('created_at',{ascending:false}).limit(8).then(function(r){_ovActions=r.error?'missing':(r.data||[]);if(currentTab==='overview')renderOverview();});}
 }
 
 function statCard(label, cls, val, sub, tab) {
@@ -3812,20 +3945,23 @@ function _onAdActionChange(){
   if(v==='inapp')   (document.getElementById('adInappRow')||{style:{}}).style.display='';
 }
 
-// Upload the compressed creative to Cloudflare R2 (same path the app uses for
-// all media). Falls back to inline base64 only if the R2 Edge Function fails,
-// so ad creation never hard-blocks on storage.
+// Upload the compressed creative to Cloudflare R2. Ad images are always
+// persisted as public URLs; inline base64 is never written to paid_ads.
 async function _adUploadToR2(blob, contentType) {
   var sess = await sb.auth.getSession();
   var tok = sess && sess.data && sess.data.session && sess.data.session.access_token;
+  var uid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
   if(!tok) throw new Error('Not authenticated');
-  var key = 'ads/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now()) + '.jpg';
+  if(!uid) throw new Error('Admin user ID unavailable');
+  // Store ad creatives inside the authenticated admin's existing R2 namespace.
+  // This path is accepted by both current and earlier storage-function versions.
+  var key = 'profiles/' + uid + '/ads/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now()) + '.jpg';
   var res = await fetch(SUPABASE_URL + '/functions/v1/get-r2-upload-url', {
     method:'POST', headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},
     body: JSON.stringify({ key:key, contentType:contentType })
   });
-  if(!res.ok) throw new Error('R2 upload-url error: '+res.status);
-  var payload = await res.json();
+  var payload = await res.json().catch(function(){ return {}; });
+  if(!res.ok) throw new Error(payload.error||('R2 upload-url error: '+res.status));
   var up = await fetch(payload.signedUrl, { method:'PUT', headers:{'Content-Type':contentType}, body:blob });
   if(!up.ok) throw new Error('R2 PUT failed: '+up.status);
   if(!payload.publicUrl) throw new Error('No public URL returned');
@@ -3834,6 +3970,8 @@ async function _adUploadToR2(blob, contentType) {
 
 window._adLoadImage = function(e) {
   var f = e.target.files[0]; if(!f) return;
+  var imageField = document.getElementById('adImg');
+  if(imageField){ imageField.value=''; imageField.dataset.uploading='true'; }
   var reader = new FileReader();
   reader.onload = function(ev) {
     var dataUrl = ev.target.result;
@@ -3850,10 +3988,25 @@ window._adLoadImage = function(e) {
       var prev = document.getElementById('adImgPreview');
       if(prev) prev.innerHTML = '<img src="'+compressed+'" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:contain"><div style="font-size:11px;color:var(--sub);margin-top:4px">Uploading to R2…</div>';
       canvas.toBlob(async function(blob){
-        var stored = compressed, note = '~'+Math.round(compressed.length*0.75/1024)+' KB inline (R2 unavailable)';
-        try { stored = await _adUploadToR2(blob, 'image/jpeg'); note = 'stored on R2'; }
-        catch(err){ console.warn('ad R2 upload failed, falling back to inline:', err.message); }
+        if(!blob){
+          var emptyFld=document.getElementById('adImg');
+          if(emptyFld){ emptyFld.value=''; emptyFld.dataset.uploading='false'; }
+          toast('Could not prepare the ad image','error');
+          return;
+        }
+        var stored = null, note = 'stored on R2';
+        try { stored = await _adUploadToR2(blob, 'image/jpeg'); }
+        catch(err){
+          console.error('Ad image upload failed:', err);
+          var failedFld = document.getElementById('adImg');
+          if(failedFld){ failedFld.value=''; failedFld.dataset.uploading='false'; }
+          var failedPv = document.getElementById('adImgPreview');
+          if(failedPv) failedPv.innerHTML='<div style="color:var(--red);font-size:12px;font-weight:700">Upload failed</div><div style="color:var(--sub);font-size:11px;margin-top:4px">'+esc(err.message||'R2 upload failed')+'. Select the image to retry.</div>';
+          toast('Ad image upload failed: '+(err.message||'R2 error'),'error');
+          return;
+        }
         var fld = document.getElementById('adImg'); if(fld) fld.value = stored;
+        if(fld) fld.dataset.uploading='false';
         var pv = document.getElementById('adImgPreview');
         if(pv) pv.innerHTML = '<img src="'+compressed+'" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:contain"><div style="font-size:11px;color:var(--sub);margin-top:4px">'+w+'×'+h+' px · '+note+'</div>';
       }, 'image/jpeg', 0.72);
@@ -3868,8 +4021,12 @@ async function saveNewAd() {
   var advertId = (_advertRaw && _advertRaw !== '__pamarket__') ? _advertRaw : null;
   var biz = (document.getElementById('adBiz')||{}).value.trim();
   var head = (document.getElementById('adHead')||{}).value.trim();
+  var imageField = document.getElementById('adImg');
+  var imageFile = document.getElementById('adImgFile');
   if(!biz){ toast('Enter business name','error'); return; }
   if(!head){ toast('Enter a headline for the ad','error'); return; }
+  if(imageField && imageField.dataset.uploading==='true'){ toast('Wait for the ad image upload to finish','error'); return; }
+  if(imageFile && imageFile.files && imageFile.files.length && !(imageField&&imageField.value)){ toast('The ad image did not upload. Select it again to retry.','error'); return; }
   try {
     var adAction = (document.querySelector('input[name="adAction"]:checked')||{}).value||'none';
     var listingId = adAction==='listing' ? ((document.getElementById('adListingId')||{}).value||'').trim()||null : null;
@@ -3881,24 +4038,29 @@ async function saveNewAd() {
     var placementCat = (placement==='category') ? ((document.getElementById('adCat')||{}).value||'other') : null;
     var targetCat = actionCat || placementCat || null;
     var bgColor = (document.getElementById('adBgColor')||{}).value||'#1A3A8F';
+    var startValue = (document.getElementById('adStart')||{}).value
+      ? (document.getElementById('adStart')||{}).value + 'T00:00:00Z' : null;
+    var endValue = (document.getElementById('adEnd')||{}).value
+      ? (document.getElementById('adEnd')||{}).value + 'T23:59:59Z' : null;
+    if(startValue && endValue && new Date(endValue)<=new Date(startValue)){ toast('End date must be after the start date','error'); return; }
+    var isScheduled = startValue && new Date(startValue)>new Date();
     var rec = {
       id: crypto.randomUUID ? crypto.randomUUID() : Date.now()+'',
       business_name: biz,
       advertiser_id: advertId||null,
       headline: head,
       tagline: (document.getElementById('adTag')||{}).value.trim(),
-      image_url: (document.getElementById('adImg')||{}).value||null,
+      image_url: (imageField||{}).value||null,
       bg_color: bgColor,
       type: (document.getElementById('adType')||{}).value||'banner',
       target_cat: targetCat,
       listing_id: listingId,
       link_url: linkUrl,
-      starts_at: (document.getElementById('adStart')||{}).value
-        ? (document.getElementById('adStart')||{}).value + 'T00:00:00Z' : null,
-      ends_at: (document.getElementById('adEnd')||{}).value
-        ? (document.getElementById('adEnd')||{}).value + 'T23:59:59Z' : null,
+      starts_at: startValue,
+      ends_at: endValue,
       price_paid: parseFloat((document.getElementById('adPrice')||{}).value)||0,
-      active: true, impressions: 0, clicks: 0,
+      status: isScheduled ? 'scheduled' : 'active',
+      active: !isScheduled, impressions: 0, clicks: 0,
       created_at: new Date().toISOString()
     };
     var r = await sb.from('paid_ads').insert(rec);
@@ -7137,12 +7299,19 @@ async function verifyRLS(){
 // Reads job_runs (V2) for scheduled-job health; exposes the manual runners
 // (expire ads/subs, unban, purge) so automation is one place.
 // ════════════════════════════════════════════════════════════
-var AUTO = { runs:null, missing:false };
+var AUTO = { runs:null, scheduled:[], scheduledAds:[], missing:false };
 async function loadAutomation(){
-  AUTO.runs=null; AUTO.missing=false;
-  if(!(await hasTable('job_runs'))){ AUTO.missing=true; return; }
-  var r = await sb.from('job_runs').select('*').order('created_at',{ascending:false}).limit(100);
-  AUTO.runs = r.data||[];
+  AUTO.runs=null; AUTO.scheduled=[]; AUTO.scheduledAds=[]; AUTO.missing=false;
+  if(!(await hasTable('job_runs'))){ AUTO.missing=true; }
+  var results = await Promise.allSettled([
+    sb.from('job_runs').select('*').order('created_at',{ascending:false}).limit(100),
+    sb.from('scheduled_notifications').select('id,target,title,type,scheduled_for,status,attempts,max_attempts,last_error,delivery_count,failure_count,created_at').order('scheduled_for',{ascending:false}).limit(100),
+    sb.from('paid_ads').select('id,headline,business_name,starts_at,ends_at,status,active').in('status',['scheduled','active']).order('starts_at',{ascending:true}).limit(100)
+  ]);
+  var runsRes=results[0].value, schedRes=results[1].value, adsRes=results[2].value;
+  AUTO.runs = runsRes&&!runsRes.error ? (runsRes.data||[]) : [];
+  AUTO.scheduled = schedRes&&!schedRes.error ? (schedRes.data||[]) : [];
+  AUTO.scheduledAds = adsRes&&!adsRes.error ? (adsRes.data||[]) : [];
 }
 function renderAutomation(){
   if(!requirePerm('*')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">Automation Center is restricted to full admins.</div>'; return; }
@@ -7150,6 +7319,7 @@ function renderAutomation(){
 
   // Known automation jobs and their expected cadence.
   var JOBS = [
+    {job:'automation_runner', label:'Notification and ad campaign worker', cadence:'every minute', manual:null},
     {job:'unban_expired', label:'Auto-unban expired bans', cadence:'every 15m', manual:'runUnbanExpired'},
     {job:'expire_ads', label:'Deactivate expired ads', cadence:'hourly', manual:'runExpireAdsAuto'},
     {job:'expire_subscriptions', label:'Downgrade lapsed subscriptions', cadence:'daily', manual:'runExpireSubsAuto'},
@@ -7165,10 +7335,31 @@ function renderAutomation(){
       + '<td style="font-size:12px;color:var(--sub)">'+esc(j.cadence)+'</td>'
       + '<td style="font-size:12px;color:var(--sub)">'+(last?ago(last.created_at)+' ago':'—')+'</td>'
       + '<td>'+health+'</td>'
-      + '<td><button class="ab ab-view" onclick="'+j.manual+'()">Run</button></td></tr>';
+      + '<td>'+(j.manual?'<button class="ab ab-view" onclick="'+j.manual+'()">Run</button>':'<span style="font-size:11px;color:var(--sub)">Cron managed</span>')+'</td></tr>';
   });
   html += '</tbody></table></div>';
   if(AUTO.missing) html += '<div style="margin-top:12px">'+migrationNotice('Scheduled-job health tracking')+'</div>';
+
+  html += '<div class="sec-head" style="margin-top:20px"><div class="sec-title">Notification Schedule</div><button class="filter-btn" onclick="showTab(\'notifications\')">Create notification</button></div>';
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Campaign</th><th>Audience</th><th>Scheduled for</th><th>Status</th><th>Delivery</th><th>Actions</th></tr></thead><tbody>';
+  if(!AUTO.scheduled.length) html += '<tr><td colspan="6"><div class="empty-msg">No scheduled notification campaigns yet.</div></td></tr>';
+  AUTO.scheduled.forEach(function(n){
+    var statusClass=n.status==='sent'?'active':n.status==='failed'?'rejected':'pending';
+    html += '<tr><td><div style="font-weight:700">'+esc(n.title)+'</div>'+(n.last_error?'<div style="font-size:10.5px;color:var(--red);max-width:320px">'+esc(n.last_error)+'</div>':'')+'</td>'
+      +'<td><span class="badge badge-info">'+esc(n.target||'all')+'</span></td><td style="white-space:nowrap">'+fmtDateTime(n.scheduled_for)+'</td>'
+      +'<td><span class="badge badge-'+statusClass+'">'+esc(n.status)+'</span><div style="font-size:10px;color:var(--sub)">'+fmtCnt(n.attempts||0)+'/'+fmtCnt(n.max_attempts||5)+' attempts</div></td>'
+      +'<td style="font-size:11px">'+fmtCnt(n.delivery_count||0)+' delivered'+(n.failure_count?' · '+fmtCnt(n.failure_count)+' failed':'')+'</td><td><div style="display:flex;gap:5px">'
+      +(n.status==='pending'?'<button class="ab ab-reject" onclick="cancelScheduledNotification(\''+esc(n.id)+'\')">Cancel</button>':'')
+      +(n.status==='failed'?'<button class="ab ab-view" onclick="retryScheduledNotification(\''+esc(n.id)+'\')">Retry</button>':'')
+      +'</div></td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  html += '<div class="sec-head" style="margin-top:20px"><div class="sec-title">Automated Ad Lifecycle</div><button class="filter-btn" onclick="showTab(\'ads\')">Manage ads</button></div>';
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ad</th><th>Start</th><th>End</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+  if(!AUTO.scheduledAds.length) html += '<tr><td colspan="5"><div class="empty-msg">No scheduled or active ads.</div></td></tr>';
+  AUTO.scheduledAds.forEach(function(a){ html+='<tr><td><div style="font-weight:700">'+esc(a.headline||'Untitled ad')+'</div><div style="font-size:10.5px;color:var(--sub)">'+esc(a.business_name||'')+'</div></td><td>'+fmtDateTime(a.starts_at)+'</td><td>'+fmtDateTime(a.ends_at)+'</td><td><span class="badge badge-'+(a.status==='active'?'active':'pending')+'">'+esc(a.status)+'</span></td><td>'+(a.status==='scheduled'?'<button class="ab ab-reject" onclick="pauseScheduledAd(\''+esc(a.id)+'\')">Pause</button>':'<button class="ab ab-view" onclick="showTab(\'ads\')">View</button>')+'</td></tr>'; });
+  html += '</tbody></table></div>';
 
   // Auto-moderation rules (client-side, config-driven, transparent)
   html += '<div class="tbl-wrap" style="padding:18px;margin-top:16px"><div style="font-size:14px;font-weight:800;margin-bottom:8px">Auto-Moderation Rules</div>';
@@ -7184,6 +7375,21 @@ function renderAutomation(){
 async function toggleAutoRule(key, on){
   var rules = Object.assign({autoEscalate:true,spamFlag:true,newAccountRisk:true}, (DATA.settings&&DATA.settings.autoModRules)||{});
   rules[key]=on; await saveSetting('autoModRules', rules); toast('Rule updated');
+}
+async function cancelScheduledNotification(id){
+  if(!requirePerm('*')) return;
+  var r=await sb.from('scheduled_notifications').update({status:'cancelled',completed_at:new Date().toISOString(),locked_at:null}).eq('id',id).eq('status','pending');
+  if(r.error){toast('Error: '+r.error.message,'error');return;} auditLog('cancel_scheduled_notification','scheduled_notifications',id,null,{status:'cancelled'},null); toast('Scheduled notification cancelled'); loadAutomation().then(renderAutomation);
+}
+async function retryScheduledNotification(id){
+  if(!requirePerm('*')) return;
+  var r=await sb.from('scheduled_notifications').update({status:'pending',attempts:0,next_attempt_at:new Date().toISOString(),locked_at:null,last_error:null,completed_at:null}).eq('id',id).eq('status','failed');
+  if(r.error){toast('Error: '+r.error.message,'error');return;} auditLog('retry_scheduled_notification','scheduled_notifications',id,null,{status:'pending'},null); toast('Notification queued for retry'); loadAutomation().then(renderAutomation);
+}
+async function pauseScheduledAd(id){
+  if(!requirePerm('ads.manage')&&!requirePerm('*')) return;
+  var r=await sb.from('paid_ads').update({status:'paused',active:false}).eq('id',id).eq('status','scheduled');
+  if(r.error){toast('Error: '+r.error.message,'error');return;} auditLog('pause_scheduled_ad','paid_ads',id,null,{status:'paused'},null); toast('Scheduled ad paused'); loadAutomation().then(renderAutomation);
 }
 async function logJobRun(job, ok, detail, rows){
   try { if(await hasTable('job_runs')) await sb.from('job_runs').insert({job:job, ok:ok, detail:detail||null, rows_affected:rows||null}); } catch(e){}

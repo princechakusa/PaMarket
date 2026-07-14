@@ -40,7 +40,13 @@
   }
 
   window.supabase = window.supabase.createClient(supabaseUrl || '', supabaseAnonKey || '', {
-    auth: { flowType: 'pkce' }
+    // detectSessionInUrl is off: the app exchanges OAuth/email-confirmation
+    // codes itself (see auth.js _oauthInCap and app.js getLaunchUrl handling).
+    // Leaving it on lets the SDK ALSO try to auto-detect and exchange the same
+    // one-time PKCE code from window.location, racing the manual exchange —
+    // whichever runs second finds the verifier already deleted from storage
+    // and throws "PKCE code verifier not found in storage".
+    auth: { flowType: 'pkce', detectSessionInUrl: false }
   });
 
   window.H = window.H || {};
@@ -175,6 +181,7 @@
     }
     if (event !== 'SIGNED_IN' || !session || !session.user) return;
     if (!_isOAuthCallback) return;
+    if (!session.user.email_confirmed_at && !session.user.confirmed_at) return;
     handleOAuthSession(session);
   });
 

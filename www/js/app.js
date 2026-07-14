@@ -770,7 +770,8 @@ window.H = {
           const code = new URL(url).searchParams.get('code');
           if (code && _sb) {
             const { data: sessData, error } = await _sb.auth.exchangeCodeForSession(code);
-            if (!error && sessData && sessData.session && sessData.session.user) {
+            if (!error && sessData && sessData.session && sessData.session.user &&
+                (sessData.session.user.email_confirmed_at || sessData.session.user.confirmed_at)) {
               const user   = sessData.session.user;
               const userId = user.id;
               const meta   = user.user_metadata || {};
@@ -822,7 +823,15 @@ window.H = {
           new Promise(res => setTimeout(() => res({ data: { session: null }, _timedOut: true }), 4000))
         ]);
         if (_sr && _sr._timedOut) console.warn('[PaMarket] getSession() timed out on boot — continuing with local session.');
-        const _sid = _sr && _sr.data && _sr.data.session && _sr.data.session.user && _sr.data.session.user.id;
+        const _sessUser = _sr && _sr.data && _sr.data.session && _sr.data.session.user;
+        // A session for an unconfirmed email should never happen (Supabase
+        // doesn't issue one), but guard anyway — never treat it as logged in.
+        if (_sessUser && !_sessUser.email_confirmed_at && !_sessUser.confirmed_at) {
+          try { await _sb.auth.signOut(); } catch(e) {}
+          this.state.currentUserId = null;
+          this.saveState();
+        }
+        const _sid = (_sessUser && (_sessUser.email_confirmed_at || _sessUser.confirmed_at)) ? _sessUser.id : null;
         if (_sid) {
           if (this.state.currentUserId !== _sid) { this.state.currentUserId = _sid; this.saveState(); }
           // Backfill the login email from the auth session (Google sign-ins

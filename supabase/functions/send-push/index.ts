@@ -1,6 +1,6 @@
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-automation-secret',
 };
 
 // ── FCM HTTP v1 ───────────────────────────────────────────
@@ -175,16 +175,23 @@ Deno.serve(async (req) => {
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
     const db = createClient(Deno.env.get('SUPABASE_URL'), Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'));
 
-    const authHeader = req.headers.get('Authorization') || '';
-    const userJwt = authHeader.replace('Bearer ', '').trim();
-    if (!userJwt) return json({ error: 'Missing authorization' }, 401);
+    const configuredAutomationSecret = Deno.env.get('AUTOMATION_SECRET') || '';
+    const suppliedAutomationSecret = req.headers.get('x-automation-secret') || '';
+    const internalAutomation = Boolean(configuredAutomationSecret) && suppliedAutomationSecret === configuredAutomationSecret;
+    let callerId: string | null = null;
 
-    const authResult = await db.auth.getUser(userJwt);
-    if (authResult.error || !authResult.data || !authResult.data.user) return json({ error: 'Invalid token' }, 401);
-    const callerId = authResult.data.user['id'];
+    if (!internalAutomation) {
+      const authHeader = req.headers.get('Authorization') || '';
+      const userJwt = authHeader.replace('Bearer ', '').trim();
+      if (!userJwt) return json({ error: 'Missing authorization' }, 401);
 
-    const profileResult = await db.from('profiles').select('role').eq('id', callerId).single();
-    if (!profileResult.data || profileResult.data['role'] !== 'admin') return json({ error: 'Admin only' }, 403);
+      const authResult = await db.auth.getUser(userJwt);
+      if (authResult.error || !authResult.data || !authResult.data.user) return json({ error: 'Invalid token' }, 401);
+      callerId = authResult.data.user['id'];
+
+      const profileResult = await db.from('profiles').select('role').eq('id', callerId).single();
+      if (!profileResult.data || profileResult.data['role'] !== 'admin') return json({ error: 'Admin only' }, 403);
+    }
 
     const reqBody = await req.json();
     const target       = reqBody['target'];
@@ -199,7 +206,13 @@ Deno.serve(async (req) => {
     if (!title || !msg) return json({ error: 'title and body required' }, 400);
 
     if (scheduledFor) {
-      const schedResult = await db.from('scheduled_notifications').insert({ target: target, title: title, body: msg, type: type, deep_link: deepLink, image_url: imageUrl, provinces: provinces, scheduled_for: scheduledFor, status: 'pending' });
+      if (internalAutomation) return json({ error: 'Automation workers cannot create nested schedules' }, 400);
+      const schedResult = await db.from('scheduled_notifications').insert({
+        target: target, title: title, body: msg, type: type,
+        deep_link: deepLink, image_url: imageUrl, provinces: provinces,
+        scheduled_for: scheduledFor, status: 'pending', created_by: callerId,
+        idempotency_key: crypto.randomUUID(),
+      });
       if (schedResult.error) throw schedResult.error;
       return json({ scheduled: true, scheduled_for: scheduledFor });
     }

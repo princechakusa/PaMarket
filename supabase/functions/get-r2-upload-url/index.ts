@@ -6,6 +6,8 @@ import { getSignedUrl } from 'npm:@aws-sdk/s3-request-presigner'
 const ALLOWED_ORIGINS = new Set([
   'https://pamarket.app',
   'https://www.pamarket.app',
+  'https://pamarketzw.com',
+  'https://www.pamarketzw.com',
   'com.pamarket.app',       // Capacitor deep-link scheme treated as origin
   'http://127.0.0.1:5500',  // Local dev (Live Server)
   'http://localhost:5500',
@@ -57,6 +59,7 @@ Deno.serve(async (req) => {
     if (!key || typeof key !== 'string') throw new Error('key required')
 
     const isVerification = key.startsWith('verification/')
+    const isAd = key.startsWith('ads/')
     const isGet = verb === 'GET'
 
     if (isGet && isVerification) {
@@ -65,7 +68,18 @@ Deno.serve(async (req) => {
       const isAdmin = profile?.role === 'admin'
       if (!isAdmin && !key.startsWith(`verification/${user.id}/`)) throw new Error('Forbidden')
     } else {
-      // PUT: user may only write under their own path prefix
+      // Ad creatives use a shared public namespace, but only administrators
+      // may request upload URLs for that namespace.
+      if (isAd) {
+        const { data: profile, error: profileErr } = await sb
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        if (profileErr || profile?.role !== 'admin') throw new Error('Forbidden')
+      }
+
+      // Non-ad PUTs remain scoped to the authenticated user's path prefix.
       const allowed = [
         `listings/${user.id}/`,
         `chat/${user.id}/`,
@@ -74,7 +88,7 @@ Deno.serve(async (req) => {
         `profiles/${user.id}/`,
         `rentals/${user.id}/`,
       ]
-      if (!allowed.some(p => key.startsWith(p))) throw new Error('Forbidden path')
+      if (!isAd && !allowed.some(p => key.startsWith(p))) throw new Error('Forbidden path')
       if (!contentType) throw new Error('contentType required for upload')
 
       // Validate content type against allowlist
