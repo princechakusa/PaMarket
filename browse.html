@@ -356,13 +356,17 @@ window.doSearch = window.doSearch || function(){
 </nav>
 
 <div class="crumb" id="crumb"><a href="/">Home</a> / <span id="crumbCur">Browse</span></div>
-<section class="p-hero">
-  <div class="p-hero-w">
-    <span class="p-tag" id="heroTag">Browse</span>
-    <h1 id="heroTitle">All listings across Zimbabwe</h1>
-    <p id="heroSub">Live listings from real sellers. Updated continuously.</p>
+<section class="cat-hero" id="catHero" hidden>
+  <img class="cat-hero-bg" id="catHeroImg" alt="" fetchpriority="high" decoding="async">
+  <div class="cat-hero-w">
+    <span class="cat-hero-eyebrow" id="catHeroEyebrow" aria-live="polite"></span>
+    <h1 id="catHeroTitle"></h1>
+    <p id="catHeroSub"></p>
+    <div class="cat-hero-chips" id="catHeroChips" aria-label="Popular filters"></div>
   </div>
 </section>
+<!-- Kept for the existing metadata/city-copy controller; not rendered. -->
+<div class="hidden" aria-hidden="true"><span id="heroTag"></span><span id="heroTitle"></span><span id="heroSub"></span></div>
 
 <section class="band" style="padding:28px 0 0" id="browseIntroSection">
   <div class="w">
@@ -565,6 +569,7 @@ window.doSearch = window.doSearch || function(){
 </a>
 
 <script src="js/supabase-config.js"></script>
+<script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
 <script>
@@ -592,6 +597,60 @@ PM.fetchActiveAds({placement:'browse',limit:8})
 const PAGE_SIZE=20;
 let state={cat:'',q:'',prov:'',city:'',sort:'created_at.desc',offset:0,shops:false};
 const ZW_CITIES=['Harare','Bulawayo','Mutare','Gweru','Masvingo','Chinhoyi','Kadoma','Kwekwe','Victoria Falls'];
+
+const CATEGORY_HEROES={
+  property:{
+    title:'Find your next home in Zimbabwe.',
+    sub:'Live listings from real sellers. Updated continuously.',
+    image:'img/category-heroes/hero-property.jpg',alt:'Large modern house with landscaped gardens',
+    chips:[['Houses','browse?cat=property&sub=houses'],['Flats & Apartments','browse?cat=property&sub=flats'],['Stands & Land','browse?cat=property&sub=stands'],['Commercial','browse?cat=property&sub=commercial']]
+  },
+  vehicles:{
+    title:'Cars, bakkies and bikes, ready to drive.',
+    sub:'Live listings from real sellers. Updated continuously.',
+    image:'img/category-heroes/hero-vehicles.jpg',alt:'Toyota pickup overlooking a mountain lake',
+    chips:[['Cars','browse?cat=vehicles&sub=cars'],['SUVs & 4x4','browse?cat=vehicles&sub=suvs'],['Bakkies & Trucks','browse?cat=vehicles&sub=bakkies'],['Spares & Parts','browse?cat=vehicles&sub=parts']]
+  },
+  electronics:{
+    title:'Phones, laptops and gadgets you can trust.',
+    sub:'Live listings from real sellers. Updated continuously.',
+    image:'img/category-heroes/hero-electronics.jpg',alt:'Laptops, phones, headphones and electronic accessories on display',
+    chips:[['Phones & Tablets','browse?cat=electronics&sub=phones'],['Laptops & Computers','browse?cat=electronics&sub=computers'],['TVs & Monitors','browse?cat=electronics&sub=tvs'],['Gaming','browse?cat=electronics&sub=gaming']]
+  },
+  furniture:{
+    title:'Furnish your home for less.',
+    sub:'Live listings from real sellers. Updated continuously.',
+    image:'img/category-heroes/hero-furniture.jpg',alt:'Modern sofas, chairs and tables in a furniture showroom',
+    chips:[['Sofas & Lounge','browse?cat=furniture&sub=sofas'],['Beds & Bedroom','browse?cat=furniture&sub=beds'],['Dining & Kitchen','browse?cat=furniture&sub=dining'],['Home Décor','browse?cat=furniture&sub=decor']]
+  },
+  shops:{
+    title:'Shop from trusted Zimbabwean businesses.',
+    sub:'Browse verified businesses selling on PaMarket across Zimbabwe.',
+    image:'img/category-heroes/hero-shops.jpg',alt:'Customer speaking with a shop owner inside a local boutique',
+    chips:[['Electronics Shops','browse?shops=1&q=electronics'],['Fashion Shops','browse?shops=1&q=fashion'],['Hardware Shops','browse?shops=1&q=hardware'],['Open Your Shop','advertise']]
+  }
+};
+
+function renderCategoryHero(){
+  const key=state.shops?'shops':state.cat;
+  const cfg=CATEGORY_HEROES[key];
+  const hero=document.getElementById('catHero');
+  if(!cfg||state.business){hero.hidden=true;return;}
+  hero.hidden=false;
+  const image=document.getElementById('catHeroImg');
+  image.src=cfg.image;image.alt=cfg.alt;
+  document.getElementById('catHeroTitle').textContent=cfg.title;
+  document.getElementById('catHeroSub').textContent=cfg.sub;
+  document.getElementById('catHeroChips').innerHTML=cfg.chips.map(chip=>'<a class="cat-hero-chip" href="'+chip[1]+'">'+chip[0]+'</a>').join('');
+  const eyebrow=document.getElementById('catHeroEyebrow');
+  eyebrow.textContent='';
+  const countPromise=key==='shops'
+    ? PM.fetchExactCount('businesses','status=eq.active&verification_level=gt.0')
+    : PM.fetchListingCount(key);
+  countPromise.then(count=>{
+    eyebrow.textContent=Number(count).toLocaleString()+(key==='shops'?' verified storefront'+(count===1?'':'s'):' live listing'+(count===1?'':'s'));
+  }).catch(()=>{eyebrow.textContent='';});
+}
 
 function bcard(biz,idx){
   const bg=COLORS[idx%COLORS.length],tc=TCOLORS[idx%TCOLORS.length];
@@ -757,6 +816,7 @@ function updateHero(){
   document.getElementById('ogUrl').setAttribute('content',canonicalUrl);
 
   document.getElementById('rentalBanner').classList.toggle('hidden',state.cat!=='vehicles');
+  renderCategoryHero();
 
   // The shared header (stamped by tools/build-includes.js) may not carry
   // these ids — never let a missing element kill init, which blocks

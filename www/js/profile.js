@@ -901,6 +901,34 @@
     </div>`;
   };
 
+  // Reviews are written from two places — this Profile "Leave a Review" flow
+  // and the Detail page's "Rate this Seller" widget (detail.js H._rateSeller)
+  // — both to the same public.reviews table, but neither ever populated
+  // u.reviews from the server; it only ever held whatever the CURRENT
+  // session's own H._submitReview call had just pushed locally. So any
+  // review, from either flow, was invisible to everyone else (and even to
+  // the same user on a fresh session) opening "See Reviews". Fetch the real
+  // rows here and merge them in before rendering.
+  H.pages.Reviews_after = function (params) {
+    const viewId = (params && params.id) || (H.currentUser() && H.currentUser().id);
+    if (!viewId) return;
+    const c = window.supabase;
+    if (!c || typeof c.from !== 'function') return;
+    c.from('reviews').select('reviewer_id, reviewer_name, rating, text, created_at')
+      .eq('seller_id', viewId).order('created_at', { ascending: false }).limit(50)
+      .then(function (res) {
+        if (!res || res.error || !res.data) return;
+        const u = (H.state.users || []).find(x => x.id === viewId);
+        if (!u) return;
+        u.reviews = res.data.map(r => ({
+          reviewerId: r.reviewer_id, reviewerName: r.reviewer_name || 'Anonymous',
+          rating: r.rating, text: r.text || '', date: new Date(r.created_at).getTime()
+        }));
+        H.saveState();
+        if (H.currentPageName === 'Reviews') H.renderPage('Reviews', params);
+      });
+  };
+
   H.leaveReview = function (sellerId) {
     const me = H.currentUser();
     if (!me) { H.requireAuth('Sign in to leave a review'); return; }

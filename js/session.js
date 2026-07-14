@@ -3,27 +3,116 @@
 // Injects an account chip + dropdown into #signInBtn's parent when a session exists.
 (function (global) {
   var APP_URL = 'https://play.google.com/store/apps/details?id=com.pamarket.app';
+  var SB_URL = global.SUPABASE_URL || 'https://gxgytumhknmnwspxjzxw.supabase.co';
+  var SB_KEY = global.SUPABASE_ANON_KEY || 'sb_publishable_cf3Z72lUE6PLCb2m42OFLA_znE8JK2r';
+  var SESSION_KEY = 'pm_session';
+  var REFRESH_AHEAD_SECONDS = 300;
+  var REFRESH_CHECK_MS = 30000;
+  var refreshInFlight = null;
 
-  function getSession() {
+  function readStoredSession(value) {
     try {
-      var s = localStorage.getItem('pm_session');
-      if (!s) return null;
-      var session = JSON.parse(s);
-      if (session.expires_at && Date.now() / 1000 > session.expires_at - 60) {
-        localStorage.removeItem('pm_session');
-        return null;
-      }
-      return session;
+      var raw = arguments.length ? value : localStorage.getItem(SESSION_KEY);
+      return raw ? JSON.parse(raw) : null;
     } catch (e) {
       return null;
     }
   }
 
+  function saveSession(session) {
+    if (!session) return null;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    return session;
+  }
+
+  function clearSession(reloadPage) {
+    localStorage.removeItem(SESSION_KEY);
+    if (reloadPage && global.location && typeof global.location.reload === 'function') {
+      global.location.reload();
+    }
+  }
+
+  function refreshSession() {
+    if (refreshInFlight) return refreshInFlight;
+    var current = readStoredSession();
+    if (!current || !current.refresh_token) return Promise.resolve(null);
+
+    refreshInFlight = fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: current.refresh_token }),
+    }).then(function (res) {
+      if (!res.ok) {
+        var error = new Error('Session refresh failed: ' + res.status);
+        error.status = res.status;
+        throw error;
+      }
+      return res.json();
+    }).then(function (data) {
+      if (!data || !data.access_token) throw new Error('Session refresh returned no access token');
+      var latest = readStoredSession();
+      // Another tab may have signed out while this request was in flight.
+      if (!latest) return null;
+      var renewed = Object.assign({}, latest, {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token || latest.refresh_token,
+        expires_at: Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+        user: data.user || latest.user,
+      });
+      return saveSession(renewed);
+    }).catch(function (error) {
+      // Auth rejections mean the refresh token is genuinely unusable. Preserve
+      // the session on network/server failures so an outage does not sign out
+      // otherwise valid users; the background check will retry.
+      if (error && (error.status === 400 || error.status === 401 || error.status === 403)) {
+        clearSession(true);
+      }
+      throw error;
+    }).then(function (session) {
+      refreshInFlight = null;
+      return session;
+    }, function (error) {
+      refreshInFlight = null;
+      throw error;
+    });
+
+    return refreshInFlight;
+  }
+
+  function maybeRefreshSession() {
+    var session = readStoredSession();
+    if (!session || !session.expires_at) return Promise.resolve(session);
+    var secondsLeft = Number(session.expires_at) - Date.now() / 1000;
+    if (secondsLeft > REFRESH_AHEAD_SECONDS) return Promise.resolve(session);
+    if (session.refresh_token) return refreshSession();
+    if (secondsLeft <= 0) clearSession(true);
+    return Promise.resolve(secondsLeft <= 0 ? null : session);
+  }
+
+  function getSession() {
+    var session = readStoredSession();
+    if (!session) return null;
+    if (session.expires_at && Number(session.expires_at) <= Date.now() / 1000 && !session.refresh_token) {
+      clearSession(false);
+      return null;
+    }
+    // Keep this API synchronous for the many existing callers. A near-expiry
+    // session remains available while its token is renewed in the background.
+    maybeRefreshSession().catch(function () {});
+    return session;
+  }
+
   function pmSignOut() {
-    localStorage.removeItem('pm_session');
-    window.location.reload();
+    clearSession(true);
   }
   global.pmSignOut = pmSignOut;
+  global.PMSession = {
+    getSession: getSession,
+    saveSession: saveSession,
+    clearSession: clearSession,
+    refreshSession: refreshSession,
+    maybeRefresh: maybeRefreshSession,
+  };
 
   function injectStyles() {
     if (document.getElementById('pmAcctStyles')) return;
@@ -111,4 +200,25 @@
   } else {
     initAccountUI();
   }
+
+  // Refresh immediately when needed, keep checking while a page stays open,
+  // and catch sessions that became stale while the tab was in the background.
+  maybeRefreshSession().catch(function () {});
+  global.setInterval(function () { maybeRefreshSession().catch(function () {}); }, REFRESH_CHECK_MS);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') maybeRefreshSession().catch(function () {});
+  });
+
+  // localStorage events fire in the other tabs. Token rotation for the same
+  // user needs no UI reset; sign-in, sign-out, or an account switch does.
+  global.addEventListener('storage', function (event) {
+    if (event.key !== SESSION_KEY) return;
+    var before = readStoredSession(event.oldValue);
+    var after = readStoredSession(event.newValue);
+    var beforeId = before && before.user && before.user.id;
+    var afterId = after && after.user && after.user.id;
+    if (beforeId !== afterId && global.location && typeof global.location.reload === 'function') {
+      global.location.reload();
+    }
+  });
 })(window);

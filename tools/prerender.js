@@ -175,7 +175,7 @@ function shell(o) {
     '<link rel="stylesheet" href="css/site.css">\n<style>' + (o.style || o.chrome.style) + '</style>\n' +
     blocks + '\n</head>\n<body>\n' + o.chrome.header + '\n' + o.crumb + '\n' + o.main + '\n' + o.chrome.footer + '\n' +
     hyd +
-    '<script src="js/supabase-config.js"></script>\n<script src="js/marketplace-data.js"></script>\n<script src="js/nav-dropdowns.js"></script>\n' +
+    '<script src="js/supabase-config.js"></script>\n<script src="js/session.js"></script>\n<script src="js/marketplace-data.js"></script>\n<script src="js/nav-dropdowns.js"></script>\n' +
     (o.extrasMeta ? '<script src="js/listing-extras.js"></script>\n<script>window.PMListingExtras&&PMListingExtras.init(' + jsonld(o.extrasMeta) + ');</script>\n' : '') +
     '</body>\n</html>\n';
 }

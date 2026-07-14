@@ -551,9 +551,15 @@
         return ts && (now - ts < _RT_WIN_MS) && !cloudIds[l.id];
       });
 
-      // 5. Non-active local items (the user's own pending/sold posts) — these
-      //    come from a different query and are not contradicted by this snapshot.
-      var nonActive = H.state.listings.filter(function (l) { return l.status !== 'active'; });
+      // 5. Non-active local items (the CURRENT USER's own pending/sold posts) —
+      //    these come from a different query and are not contradicted by this
+      //    snapshot. Scoped to _cu.id like ownNonActiveIds above: without this,
+      //    every other user's non-active rows (declined jobs, removed listings,
+      //    anything not status='active') get swept up too and kept forever —
+      //    this snapshot only contains 'active' rows, so a declined/removed
+      //    listing can never appear in `cloud` to naturally correct it, and
+      //    the resulting zombie entry keeps resurfacing on every refresh.
+      var nonActive = H.state.listings.filter(function (l) { return l.status !== 'active' && _cu && l.sellerId === _cu.id; });
 
       // 6. Expire the short-lived reconciliation structures.
       Object.keys(H._rtInsertWindow).forEach(function (id) {

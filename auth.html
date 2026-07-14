@@ -261,6 +261,8 @@ input,select,textarea{font-family:var(--font)}
 
 <div id="toastC"></div>
 
+<script src="js/supabase-config.js"></script>
+<script src="js/session.js"></script>
 <script>
 const SB_URL='https://gxgytumhknmnwspxjzxw.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
@@ -339,21 +341,9 @@ function saveSession(data){
   };
   localStorage.setItem('pm_session',JSON.stringify(session));
 }
-function getSession(){
-  try{
-    const s=localStorage.getItem('pm_session');
-    if(!s)return null;
-    const session=JSON.parse(s);
-    if(session.expires_at&&Date.now()/1000>session.expires_at-60){
-      localStorage.removeItem('pm_session');return null;
-    }
-    return session;
-  }catch{return null}
-}
-
 /* ---- CHECK IF ALREADY SIGNED IN ---- */
 (function checkExisting(){
-  const s=getSession();
+  const s=window.PMSession.getSession();
   if(s&&s.access_token){
     // Already signed in — redirect
     const returnUrl=getReturnUrl();

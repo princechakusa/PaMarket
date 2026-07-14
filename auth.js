@@ -18,25 +18,16 @@ const paAuth={
   session:null,
 
   init(){
-    try{
-      const s=localStorage.getItem('pm_session');
-      if(s){
-        this.session=JSON.parse(s);
-        // Discard if expired
-        if(this.session.expires_at && Date.now()/1000 > this.session.expires_at-60){
-          this.session=null;
-          localStorage.removeItem('pm_session');
-        }
-      }
-    }catch{this.session=null}
+    this.session=window.PMSession?.getSession()||null;
     const ready=()=>this._render();
     if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',ready)}
     else{ready()}
   },
 
-  getUser(){return this.session?.user||null},
-  getToken(){return this.session?.access_token||SB_KEY},
-  isSignedIn(){return!!(this.session?.access_token)},
+  _current(){this.session=window.PMSession?.getSession()||null;return this.session},
+  getUser(){return this._current()?.user||null},
+  getToken(){return this._current()?.access_token||SB_KEY},
+  isSignedIn(){return!!(this._current()?.access_token)},
 
   signInWithGoogle(){
     sessionStorage.setItem('pm_return_url',location.href);
@@ -51,22 +42,22 @@ const paAuth={
   },
 
   async signOut(){
+    const current=this._current();
     try{
-      if(this.session?.access_token){
+      if(current?.access_token){
         await fetch(`${SB_URL}/auth/v1/logout`,{
           method:'POST',
-          headers:{'apikey':SB_KEY,'Authorization':'Bearer '+this.session.access_token}
+          headers:{'apikey':SB_KEY,'Authorization':'Bearer '+current.access_token}
         });
       }
     }catch{}
-    localStorage.removeItem('pm_session');
+    window.PMSession?.clearSession(false);
     this.session=null;
     this._render();
   },
 
   setSession(s){
-    this.session=s;
-    localStorage.setItem('pm_session',JSON.stringify(s));
+    this.session=window.PMSession?.saveSession(s)||s;
     this._render();
   },
 

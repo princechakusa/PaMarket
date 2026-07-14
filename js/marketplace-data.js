@@ -273,23 +273,17 @@
   }
 
   // ── Session-aware access (Phase D) ────────────────────────────────
-  // The website stores a Supabase auth session under 'pm_session' (written by
-  // auth.html / auth-callback.html — same shape session.js reads). When present
-  // and unexpired, we send the user's access_token so PostgREST/RLS treats the
-  // request as that user (needed for a seller to read their own hidden listing,
-  // and to attribute a report to reporter_id = auth.uid()).
-  function getSession() {
-    try {
-      var s = global.localStorage && localStorage.getItem('pm_session');
-      if (!s) return null;
-      var session = JSON.parse(s);
-      if (session.expires_at && Date.now() / 1000 > session.expires_at - 60) return null;
-      return session;
-    } catch (e) { return null; }
+  // js/session.js is the website's single source of truth for the Supabase
+  // session. When present, its current access_token lets PostgREST/RLS treat
+  // the request as that user (needed for private account data and own listings).
+  function sharedSession() {
+    return global.PMSession && typeof global.PMSession.getSession === 'function'
+      ? global.PMSession.getSession()
+      : null;
   }
   function authHeaders() {
     var h = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
-    var s = getSession();
+    var s = sharedSession();
     if (s && s.access_token) h.Authorization = 'Bearer ' + s.access_token;
     return h;
   }
@@ -319,7 +313,7 @@
   // the seller (or it is active). Non-owners get null. Used to show sellers the
   // status of their own under-review / flagged / removed listing (Phase D #6).
   function fetchOwnListingById(id) {
-    var s = getSession();
+    var s = sharedSession();
     if (!id || !s || !s.access_token) return Promise.resolve(null);
     return fetch(SB_URL + '/rest/v1/listings?id=eq.' + esc(id) + '&select=*', {
       headers: authHeaders(),
@@ -332,7 +326,7 @@
   }
 
   function currentUserId() {
-    var s = getSession();
+    var s = sharedSession();
     return (s && s.user && s.user.id) || null;
   }
 
@@ -344,7 +338,7 @@
     if (!opts.targetType || !opts.targetId || !opts.reason) {
       return Promise.reject(new Error('missing report fields'));
     }
-    var s = getSession();
+    var s = sharedSession();
     var row = {
       target_type: opts.targetType,
       target_id: String(opts.targetId),
@@ -373,7 +367,7 @@
   // edge function the app uses (get-r2-upload-url → presigned PUT → public
   // URL). Requires a signed-in session (RLS: the function checks auth.uid()).
   function uploadListingPhoto(blob, contentType) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
     var userId = (s.user && s.user.id) || 'anon';
     var key = 'listings/' + userId + '/' + Date.now() + '-' +
@@ -408,7 +402,7 @@
   //         suburb, photos:[url], attributes:{} }
   function createListing(opts) {
     opts = opts || {};
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user || !s.user.id) {
       return Promise.reject(new Error('not-authenticated'));
     }
@@ -502,7 +496,7 @@
   // businessId? } depending on the product. Resolves { paymentId,
   // redirectUrl } — the caller redirects to redirectUrl (Paynow page).
   function createPayment(body) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
     return fetch(SB_URL + '/functions/v1/paynow-create-payment', {
       method: 'POST',
@@ -521,7 +515,7 @@
 
   // Current user's job-credit balance (server-side, auth.uid()-scoped RPC).
   function fetchJobCreditBalance() {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token) return Promise.resolve(0);
     return fetch(SB_URL + '/rest/v1/rpc/get_job_credit_balance', {
       method: 'POST',
@@ -536,7 +530,7 @@
   // as { duplicate:true }). Mirrors the app's applications column map.
   function applyToJob(opts) {
     opts = opts || {};
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user || !s.user.id) return Promise.reject(new Error('not-authenticated'));
     var meta = (s.user.user_metadata) || {};
     var row = {
@@ -579,7 +573,7 @@
   // The signed-in user's own listings across ALL statuses (RLS select policy
   // allows owner reads regardless of status), with view counts + boost state.
   function fetchMyListings() {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
     return fetch(SB_URL + '/rest/v1/listings?seller_id=eq.' + esc(s.user.id) +
       '&select=id,title,category,price,currency,status,views,boost,featured_until,created_at,photos&order=created_at.desc&limit=200', {
@@ -589,7 +583,7 @@
 
   // The user's own Paynow payment history (own-read RLS).
   function fetchMyPayments() {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
     return fetch(SB_URL + '/rest/v1/paynow_payments?user_id=eq.' + esc(s.user.id) +
       '&select=id,product_id,amount_usd,status,created_at,paid_at&order=created_at.desc&limit=100', {
@@ -599,7 +593,7 @@
 
   // Mark one of the caller's own listings sold (RLS: owner update only).
   function markListingSold(listingId) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
     return fetch(SB_URL + '/rest/v1/listings?id=eq.' + esc(listingId), {
       method: 'PATCH',
@@ -614,7 +608,7 @@
   // Owner-scoped listing mutations. RLS remains the authority; the explicit
   // seller_id filter also prevents an accidental broad update in the browser.
   function updateListing(listingId, patch) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
     var allowed = ['title','description','category','subcategory','price','currency','condition','province','city','suburb','phone','whatsapp','photos','attributes','custom_questions','status'];
     var body = {};
@@ -641,7 +635,7 @@
 
   // ── Favourites ──────────────────────────────────────────────────
   function favouriteRpc(name, listingId) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
     return fetch(SB_URL + '/rest/v1/rpc/' + name, {
       method: 'POST',
@@ -655,7 +649,7 @@
   function saveListing(listingId) { return favouriteRpc('save_listing', listingId); }
   function unsaveListing(listingId) { return favouriteRpc('unsave_listing', listingId); }
   function listFavouriteIds() {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
     return fetch(SB_URL + '/rest/v1/user_saves?user_id=eq.' + esc(s.user.id) + '&select=listing_id,saved_at&order=saved_at.desc', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
@@ -682,14 +676,14 @@
 
   // ── Saved searches ──────────────────────────────────────────────
   function listSavedSearches() {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
     return fetch(SB_URL + '/rest/v1/saved_searches?user_id=eq.' + esc(s.user.id) + '&select=*&order=saved_at.desc', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
     }).then(function (res) { if (!res.ok) throw new Error('saved-searches-read-failed'); return res.json(); });
   }
   function saveSearch(name, filters) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
     var clean = filters || {};
     var row = { user_id: s.user.id, name: String(name || clean.q || clean.category || 'Saved search').slice(0, 80), query: clean.q || null, category: clean.category || null, filters: clean };
@@ -700,7 +694,7 @@
     }).then(function (res) { if (res.ok) return res.json().then(function (rows) { return rows[0] || row; }); return res.text().then(function (t) { throw new Error(t || 'save-search-failed'); }); });
   }
   function deleteSavedSearch(id) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
     return fetch(SB_URL + '/rest/v1/saved_searches?id=eq.' + esc(id) + '&user_id=eq.' + esc(s.user.id), {
       method: 'DELETE', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
@@ -709,21 +703,21 @@
 
   // ── Website notification centre ────────────────────────────────
   function listNotifications() {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
     return fetch(SB_URL + '/rest/v1/notifications?user_id=eq.' + esc(s.user.id) + '&select=*&order=created_at.desc&limit=200', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
     }).then(function (res) { if (!res.ok) throw new Error('notifications-read-failed'); return res.json(); });
   }
   function updateNotification(id, patch) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
     return fetch(SB_URL + '/rest/v1/notifications?id=eq.' + esc(id) + '&user_id=eq.' + esc(s.user.id), {
       method: 'PATCH', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
     }).then(function (res) { if (res.ok) return { ok: true }; return res.text().then(function (t) { throw new Error(t || 'notification-update-failed'); }); });
   }
   function markAllNotificationsRead() {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
     return fetch(SB_URL + '/rest/v1/notifications?user_id=eq.' + esc(s.user.id) + '&read=eq.false', {
       method: 'PATCH', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify({ read: true }),
@@ -733,7 +727,7 @@
   // Aggregate platform stats for the owner dashboard — returns null for
   // non-admins (the RPC is gated by is_admin() server-side).
   function fetchPlatformStats() {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token) return Promise.resolve(null);
     return fetch(SB_URL + '/rest/v1/rpc/get_platform_stats', {
       method: 'POST',
@@ -744,7 +738,7 @@
 
   // The signed-in user's role ('user' | 'admin' | 'moderator'); '' if unknown.
   function currentUserRole() {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve('');
     return fetch(SB_URL + '/rest/v1/profiles?id=eq.' + esc(s.user.id) + '&select=role', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
@@ -757,7 +751,7 @@
   // applications where employer_id = auth.uid(), so this is naturally scoped
   // to the signed-in employer's own postings.
   function fetchApplicationsForEmployer() {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
     return fetch(SB_URL + '/rest/v1/applications?employer_id=eq.' + esc(s.user.id) +
       '&select=id,job_id,job_title,company,applicant_name,applicant_phone,applicant_email,message,answers,status,applied_at&order=applied_at.desc', {
@@ -768,7 +762,7 @@
   // Employer updates an application's status (pending → shortlisted/declined).
   // RLS "applications: employer update" restricts this to the employer.
   function updateApplicationStatus(applicationId, status) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
     return fetch(SB_URL + '/rest/v1/applications?id=eq.' + esc(applicationId), {
       method: 'PATCH',
@@ -782,7 +776,7 @@
 
   // Whether the current user already applied to a job (to pre-disable the form).
   function hasAppliedToJob(jobId) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !s.user || !jobId) return Promise.resolve(false);
     return fetch(SB_URL + '/rest/v1/applications?job_id=eq.' + esc(jobId) + '&applicant_id=eq.' + esc(s.user.id) + '&select=id', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
@@ -794,7 +788,7 @@
   // after a job listing is created when the recruiter is over the free
   // post limit. Resolves the RPC's { ok, remaining?, msg? }.
   function spendJobCredit(listingId) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
     return fetch(SB_URL + '/rest/v1/rpc/spend_job_credit', {
       method: 'POST',
@@ -805,7 +799,7 @@
 
   // Sum of a business's purchased extra featured slots (owner-read RLS).
   function fetchExtraSlotBalance(businessId) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token || !businessId) return Promise.resolve(0);
     return fetch(SB_URL + '/rest/v1/featured_slot_packs?business_id=eq.' + esc(businessId) + '&status=eq.consumed&select=extra_slots', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
@@ -817,7 +811,7 @@
   // Asks the server to re-verify a payment with Paynow. Resolves
   // { state: 'pending'|'boosted'|'slots_added'|'credits_added'|'cancelled'|'failed', ... }.
   function checkBoostPayment(paymentId) {
-    var s = getSession();
+    var s = sharedSession();
     if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
     return fetch(SB_URL + '/functions/v1/paynow-check-payment', {
       method: 'POST',
@@ -863,7 +857,7 @@
   global.PM.money = money;
   global.PM.timeAgo = timeAgo;
   // Phase D — moderation-aware website helpers.
-  global.PM.getSession = getSession;
+  global.PM.getSession = sharedSession;
   global.PM.currentUserId = currentUserId;
   global.PM.fetchListingState = fetchListingState;
   global.PM.fetchOwnListingById = fetchOwnListingById;

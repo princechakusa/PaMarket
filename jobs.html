@@ -109,13 +109,14 @@ button{font-family:inherit;cursor:pointer}
 .crumb{max-width:1200px;margin:0 auto;padding:14px 32px;font-size:13px;color:var(--mute)}
 .crumb a{color:var(--sub);font-weight:500}
 .crumb a:hover{color:var(--navy)}
-.j-hero{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:64px 0 56px;position:relative;overflow:hidden}
-.j-hero::before{content:'';position:absolute;top:-120px;right:-100px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(232,163,61,.12),transparent 70%)}
-.j-hero-w{max-width:1200px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
+.j-hero{min-height:420px;background:var(--navy-deep);padding:0;position:relative;overflow:hidden}
+.j-hero::before{content:'';position:absolute;inset:0;width:auto;height:auto;border-radius:0;z-index:1;background:linear-gradient(100deg,rgba(11,28,77,.94) 0%,rgba(11,28,77,.82) 38%,rgba(11,28,77,.42) 68%,rgba(11,28,77,.15) 100%)}
+.j-hero-w{max-width:1240px;margin:0 auto;padding:48px 32px;position:relative;z-index:2;width:100%}
 .p-tag{display:inline-block;background:rgba(255,255,255,.12);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 13px;border-radius:20px;color:#C7D8F5}
-.j-hero h1{font-size:38px;font-weight:900;color:#fff;margin-top:16px;letter-spacing:-.02em;max-width:640px}
-.j-hero p{font-size:16px;color:#9BB4E0;margin-top:14px;max-width:540px}
-.j-hero-btns{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+.j-hero .p-tag{display:inline-flex;background:none;color:var(--gold);padding:0;border-radius:0;margin:0 0 16px;font-size:12.5px;letter-spacing:.04em}
+.j-hero h1{font-size:44px;font-weight:900;color:#fff;margin:0 0 14px;letter-spacing:-.025em;max-width:640px}
+.j-hero p{font-size:15.5px;color:#D7DEF3;margin:0 0 24px;max-width:540px}
+.j-hero-btns{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
 
 
 
@@ -330,11 +331,22 @@ window.doSearch = window.doSearch || function(){
 </nav>
 
 <div class="crumb" id="crumb"><a href="/">Home</a> / <span id="crumbCur">Jobs</span></div>
-<section class="j-hero">
-  <div class="j-hero-w">
-    <span class="p-tag" id="heroTag">Hire Talent</span>
-    <h1 id="heroTitle">Find the right people across Zimbabwe.</h1>
+<section class="j-hero cat-hero">
+  <img class="cat-hero-bg" src="img/category-heroes/hero-jobs.jpg" alt="Graduate holding a diploma at a graduation ceremony" fetchpriority="high" decoding="async">
+  <div class="j-hero-w cat-hero-w">
+    <span class="p-tag cat-hero-eyebrow" id="heroTag" aria-live="polite">Open roles</span>
+    <h1 id="heroTitle">Your next role starts here.</h1>
     <p id="heroSub">Post jobs, browse live vacancies, and connect directly. Free for employers and job seekers.</p>
+    <form class="cat-hero-search" onsubmit="submitJobHeroSearch(event)" role="search">
+      <input id="jobHeroSearch" type="search" placeholder="Search job title or keyword" aria-label="Search jobs">
+      <button type="submit">Search Jobs</button>
+    </form>
+    <div class="cat-hero-chips" aria-label="Popular job searches">
+      <a class="cat-hero-chip" href="jobs?q=graduate">Graduate &amp; Entry Level</a>
+      <a class="cat-hero-chip" href="jobs?q=sales">Sales &amp; Marketing</a>
+      <a class="cat-hero-chip" href="jobs?q=engineering">IT &amp; Engineering</a>
+      <a class="cat-hero-chip" href="post-job">Post a Vacancy</a>
+    </div>
     <div class="j-hero-btns">
       <a href="post-job" class="btn btn-primary btn-gold">Post a Job Free</a>
       <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener" class="btn btn-outline-white">Get the App</a>
@@ -501,6 +513,7 @@ window.doSearch = window.doSearch || function(){
 </a>
 
 <script src="js/supabase-config.js"></script>
+<script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
 <script>
@@ -536,6 +549,7 @@ const params=new URLSearchParams(location.search);
 const searchQ=params.get('q')||'';
 const cityQ=params.get('city')||'';
 if(searchQ)document.getElementById('hQ').value=searchQ;
+if(searchQ)document.getElementById('jobHeroSearch').value=searchQ;
 
 if(cityQ){
   const pageTitle='Jobs in '+cityQ+', Zimbabwe | PaMarket';
@@ -553,6 +567,12 @@ if(cityQ){
   document.getElementById('heroSub').textContent='Live vacancies from real employers in '+cityQ+'. Free for employers and job seekers.';
   document.getElementById('jobsIntro').textContent='PaMarket lists live job vacancies in '+cityQ+' from real employers, updated as new roles are posted throughout the day. Every vacancy is reviewed by our team before it goes live, typically within 24 hours, to keep fake or scam listings off the platform. Employers in '+cityQ+' can post a vacancy for free, with no charge to advertise a role or contact candidates who apply. Job seekers browse and apply at no cost too — charging a candidate any fee to apply, interview, or be placed is strictly against PaMarket\'s rules. If you cannot find the right role in '+cityQ+' right now, try browsing jobs across all of Zimbabwe, or check back soon as new vacancies are added regularly.';
   document.getElementById('crumbCur').textContent='Jobs in '+cityQ;
+}
+
+if(!cityQ){
+  PM.fetchListingCount('jobs').then(count=>{
+    document.getElementById('heroTag').textContent=Number(count).toLocaleString()+' open role'+(count===1?'':'s');
+  }).catch(()=>{document.getElementById('heroTag').textContent='Open roles';});
 }
 
 document.getElementById('jobCardsGrid').innerHTML=skeletons(6);
@@ -577,6 +597,11 @@ function doSearch(){
   if(q)u+='q='+encodeURIComponent(q);
   if(cat)u+=(q?'&':'')+'cat='+encodeURIComponent(cat);
   window.location=u==='browse?'?'browse':u;
+}
+function submitJobHeroSearch(event){
+  event.preventDefault();
+  const q=document.getElementById('jobHeroSearch').value.trim();
+  window.location='jobs'+(q?'?q='+encodeURIComponent(q):'');
 }
 function toggleMob(){
   document.getElementById('mobNav').classList.toggle('open');

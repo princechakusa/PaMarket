@@ -54,6 +54,11 @@
     vehicles: '<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 17H5v-5l2-6h10l2 6v5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>',
     electronics: '<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>',
     furniture: '<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="8" rx="2"/><rect x="5" y="7" width="3" height="3" rx="1"/><rect x="16" y="7" width="3" height="3" rx="1"/></svg>',
+    key: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m11 12 9-9m-3 3 3 3m-6 0 3 3"/></svg>',
+    search: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
+    briefcase: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></svg>',
+    shop: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h18l-2-6H5zM5 10v10h14V10M9 20v-6h6v6"/><path d="M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/></svg>',
+    plus: '<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
   };
 
   var CONFIG = [
@@ -101,7 +106,7 @@
       .join('');
     var featured = entry.cat === 'vehicles'
       ? '<a href="rentals" class="mega-featured">' +
-          '<span class="mega-featured-ic">🔑</span>' +
+          '<span class="mega-featured-ic">' + ICONS.key + '</span>' +
           '<span><span class="mega-featured-title">Vehicle Rental</span>' +
           '<span class="mega-featured-sub">Rent a car by the day, week or month</span></span>' +
         '</a>'
@@ -126,11 +131,11 @@
       return (
         '<div class="mega-simple">' +
           '<a href="jobs" class="mega-simple-card">' +
-            '<div class="mega-simple-ic">🔍</div>' +
+            '<div class="mega-simple-ic">' + ICONS.search + '</div>' +
             '<div><div class="mega-simple-title">Find a Job</div><div class="mega-simple-sub">Browse live vacancies across Zimbabwe</div></div>' +
           '</a>' +
           '<a href="jobs#hire" class="mega-simple-card">' +
-            '<div class="mega-simple-ic">💼</div>' +
+            '<div class="mega-simple-ic">' + ICONS.briefcase + '</div>' +
             '<div><div class="mega-simple-title">Hire Talent</div><div class="mega-simple-sub">Post a job and reach candidates for free</div></div>' +
           '</a>' +
         '</div>'
@@ -139,11 +144,11 @@
     return (
       '<div class="mega-simple">' +
         '<a href="browse?shops=1" class="mega-simple-card">' +
-          '<div class="mega-simple-ic">🏬</div>' +
+          '<div class="mega-simple-ic">' + ICONS.shop + '</div>' +
           '<div><div class="mega-simple-title">Browse All Shops</div><div class="mega-simple-sub">Verified business storefronts near you</div></div>' +
         '</a>' +
         '<a href="advertise" class="mega-simple-card">' +
-          '<div class="mega-simple-ic">➕</div>' +
+          '<div class="mega-simple-ic">' + ICONS.plus + '</div>' +
           '<div><div class="mega-simple-title">Open Your Shop</div><div class="mega-simple-sub">Free storefront, product catalog & inbox</div></div>' +
         '</a>' +
       '</div>'
@@ -173,14 +178,14 @@
       '.mega-link{display:block;padding:8px 0;font-size:13.5px;color:#475569;font-weight:500;break-inside:avoid}' +
       '.mega-link:hover{color:#1A3A8F;text-decoration:underline}' +
       '.mega-featured{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid #E2E8F0}' +
-      '.mega-featured-ic{font-size:20px;width:36px;height:36px;border-radius:9px;background:#FBF4E6;display:flex;align-items:center;justify-content:center;flex-shrink:0}' +
+      '.mega-featured-ic{width:36px;height:36px;border-radius:9px;background:#FBF4E6;color:#C5871A;display:flex;align-items:center;justify-content:center;flex-shrink:0}' +
       '.mega-featured-title{display:block;font-size:13.5px;font-weight:800;color:#C5871A}' +
       '.mega-featured-sub{display:block;font-size:11.5px;color:#94A3B8;margin-top:1px}' +
       '.mega-featured:hover .mega-featured-title{text-decoration:underline}' +
       '.mega-simple{padding:14px;min-width:340px;display:flex;flex-direction:column;gap:4px}' +
       '.mega-simple-card{display:flex;align-items:center;gap:14px;padding:12px;border-radius:10px;transition:background .12s}' +
       '.mega-simple-card:hover{background:#F8FAFC}' +
-      '.mega-simple-ic{font-size:22px;width:40px;height:40px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0}' +
+      '.mega-simple-ic{width:40px;height:40px;border-radius:10px;background:#EEF2FF;color:#1A3A8F;display:flex;align-items:center;justify-content:center;flex-shrink:0}' +
       '.mega-simple-title{font-size:14px;font-weight:700;color:#0F172A}' +
       '.mega-simple-sub{font-size:12px;color:#94A3B8;margin-top:2px}';
     document.head.appendChild(style);
