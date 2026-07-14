@@ -721,7 +721,19 @@ window.H = {
     this.saveState();
   },
 
-  authLogoTap() { window.location.href='admin.html'; },
+  // Admin console is NOT bundled into the native apps (see capacitor.config.json
+  // `includePlugins`/copy exclusion + scripts/strip-admin.js). Inside Capacitor we
+  // open the hosted console in the system browser; on the web the local file is served.
+  authLogoTap() {
+    var ADMIN_URL = 'https://pamarketzw.com/admin.html';
+    var isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    if (!isNative) { window.location.href = 'admin.html'; return; }
+    try {
+      var Browser = window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+      if (Browser && typeof Browser.open === 'function') { Browser.open({ url: ADMIN_URL }); return; }
+    } catch (e) {}
+    window.open(ADMIN_URL, '_blank');
+  },
 
   async boot() {
     H.openInner  = H.openInner.bind(H);

@@ -192,7 +192,12 @@ ALTER TABLE search_logs ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "search_logs read" ON search_logs;
 CREATE POLICY "search_logs read" ON search_logs FOR SELECT USING (is_admin_team());
 DROP POLICY IF EXISTS "search_logs insert" ON search_logs;
-CREATE POLICY "search_logs insert" ON search_logs FOR INSERT WITH CHECK (true);
+-- Writers may only attribute a row to themselves (or to nobody, for anonymous
+-- browsing). This still allows anon inserts — searches by signed-out visitors
+-- are exactly the catalogue-gap signal we want — but nobody can forge a row as
+-- another user. Written by www/js/telemetry.js → H.logSearch().
+CREATE POLICY "search_logs insert" ON search_logs FOR INSERT
+  WITH CHECK (user_id IS NULL OR user_id = auth.uid());
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 7. SERVER-SIDE AGGREGATION RPCs  (Analytics / Finance / Dashboard at scale)
@@ -286,8 +291,10 @@ GRANT EXECUTE ON FUNCTION admin_cohorts(int)           TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION admin_top_payers(int,int)    TO anon, authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 8. OPTIONAL PROFILE COLUMNS for CRM depth (safe no-ops if unused by the app)
---    last_seen_at powers "online users"; the app can update it on activity.
+-- 8. PROFILE COLUMNS for presence + CRM depth
+--    last_seen_at powers "Online now", "Active today", and the "engaged" step
+--    of the acquisition funnel. It is written by www/js/telemetry.js
+--    (H.touchPresence, throttled to one write per 5 minutes per user).
 -- ─────────────────────────────────────────────────────────────────────────
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_seen_at timestamptz;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS admin_notes  text;
@@ -297,6 +304,42 @@ CREATE INDEX IF NOT EXISTS idx_profiles_last_seen ON profiles (last_seen_at DESC
 -- Only the admin themselves and the admin team can read/write it via existing
 -- profile policies. Verified entirely client-side in the panel (RFC 6238).
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS mfa_secret text;
+
+-- Presence requires that a signed-in user may update their OWN profile row.
+-- Most installs already have such a policy; this makes it explicit and is a
+-- no-op if an equivalent one exists (the names are namespaced to avoid clashes).
+-- It grants nothing beyond "your own row" — it does NOT let users edit others.
+DROP POLICY IF EXISTS "profiles self update" ON profiles;
+CREATE POLICY "profiles self update" ON profiles FOR UPDATE
+  USING (id = auth.uid()) WITH CHECK (id = auth.uid());
+
+-- CRITICAL: a self-update policy on its own would let a user set their own
+-- role='admin' or verified=true. This trigger pins every privileged column to
+-- its previous value for non-admins, so self-update can only ever touch benign
+-- fields (name, phone, avatar, last_seen_at…). Admin-team members bypass it,
+-- which is what lets the admin panel verify/ban/promote other users.
+--
+-- Defensive by design: it re-pins even if a future policy is loosened.
+CREATE OR REPLACE FUNCTION profiles_guard_privileged()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF is_admin_team() THEN RETURN NEW; END IF;   -- admins may change anything
+  NEW.role                 := OLD.role;
+  NEW.verified             := OLD.verified;
+  NEW.status               := OLD.status;
+  NEW.ban_reason           := OLD.ban_reason;
+  NEW.ban_until            := OLD.ban_until;
+  NEW.verification_pending := OLD.verification_pending;
+  NEW.mfa_secret           := OLD.mfa_secret;
+  RETURN NEW;
+END; $$;
+
+DROP TRIGGER IF EXISTS trg_profiles_guard ON profiles;
+CREATE TRIGGER trg_profiles_guard BEFORE UPDATE ON profiles
+  FOR EACH ROW EXECUTE FUNCTION profiles_guard_privileged();
+
+-- If your schema lacks any of the columns above (e.g. no `ban_reason`), delete
+-- that line from the function body and re-run — everything else still applies.
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 9. RECOMMENDED pg_cron AUTOMATION (uncomment if pg_cron is enabled)

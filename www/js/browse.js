@@ -244,6 +244,9 @@
             ? renderListingsWithSponsored(filtered)
             : H.emptyState('No matches', 'Try a different search term', null, null);
           if (q.trim()) {
+            // Search analytics: `filtered.length` is exactly what the user saw,
+            // so 0 records a real catalogue gap. Fire-and-forget (telemetry.js).
+            if (typeof H.logSearch === 'function') H.logSearch(q, filtered.length);
             const u = H.currentUser();
             if (u) {
               if (!u.recentSearches) u.recentSearches = [];

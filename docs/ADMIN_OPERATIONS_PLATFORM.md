@@ -84,7 +84,36 @@ Health of scheduled jobs (unban-expired, expire-ads, expire-subscriptions, purge
 - **Lazy loading:** each module fetches on first open; the dashboard optionally polls.
 - **Media:** ad creatives already moved to R2 (previous pass).
 
-Remaining scale caveats (documented, not blocking): the **Chats** viewer still loads recent messages client-side (needs a conversations RPC); revenue fallback path is bounded to ~1,500 rows when the RPC isn't installed; **search analytics** and **online users** require the app to write `search_logs` / `last_seen_at`.
+Remaining scale caveat: the revenue fallback path is bounded to ~1,500 rows when the `admin_revenue_summary` RPC isn't installed (install it and the bound disappears).
+
+**Closed in the follow-up pass** (see next section): admin console removed from the native bundles, `last_seen_at` + `search_logs` now written by the app, and the Chats viewer confirmed already server-paged against the real `conversations` table.
+
+---
+
+## Follow-up pass — closing the last gaps
+
+### 1. Admin console removed from the native app bundles
+Capacitor copies all of `webDir` (`www/`), so `admin.html` was shipping inside every installed Android/iOS app — the full console, every table name, every expected RLS policy — protected only by RLS.
+
+- `scripts/strip-admin.js` deletes it from all three bundle dirs (android assets, iOS public, and the Android release `mergeReleaseAssets` copy).
+- `package.json` now has `npm run sync` / `npm run copy`, which chain `cap sync|copy` **and** the strip. **Use these instead of raw `npx cap sync` from now on.**
+- Admins still reach the console: `H.authLogoTap()` (the hidden logo-tap) now opens the **hosted** admin at `https://pamarketzw.com/admin.html` in the system browser on native, and the local file on web.
+
+### 2. Product telemetry — `www/js/telemetry.js` (new)
+Feeds the Operations Center with the two signals it was missing. Both are fire-and-forget, never block, never throw, and **self-disable permanently on first failure** — so they are harmless today, before the migration is run.
+
+- `H.touchPresence()` → `profiles.last_seen_at`. Throttled to **one write per 5 minutes per user**, wired into `lifecycle.js` (foreground/online) plus a slow keepalive. Powers **Online now**, **Active today**, and the **"engaged"** step of the acquisition funnel.
+- `H.logSearch(term, results)` → `search_logs`. Hooked into the real `browse.js` search handler, which already knows the exact result count the user saw — so `results = 0` records a genuine **catalogue gap**. Keystroke bursts are de-duplicated (prefix-collapsing, 3s window); terms under 2 chars are ignored. Powers **Top searches** and **Top zero-result searches**.
+
+Both were behaviour-tested: presence throttles 3 rapid calls to 1 write; a `sofa`→`sofab` burst collapses to one row; and on a missing table/column they attempt exactly once, disable, and never surface an error.
+
+### 3. RLS hardening that presence made necessary
+Presence needs a signed-in user to update their own profile row. `ADMIN_ENTERPRISE_V2.sql` now creates that policy explicitly — **and a `trg_profiles_guard` trigger that pins the privileged columns** (`role`, `verified`, `status`, `ban_reason`, `ban_until`, `verification_pending`, `mfa_secret`) to their previous values for non-admins.
+
+Without the trigger, a self-update policy would let any user set their own `role='admin'`. Admin-team members bypass the trigger, which is what still allows the panel to verify/ban/promote. `search_logs` inserts are likewise constrained to `user_id IS NULL OR user_id = auth.uid()` — anonymous searches still count, but nobody can forge a row as another user.
+
+### 4. Chats — the documented gap was stale
+The admin chat viewer is already server-paged against the real `conversations` table (`CHAT_PAGE = 20`, `.range()`, `{count:'exact'}`, plus paged message loading with a "load more"). No RPC was needed; the earlier note was out of date.
 
 ---
 
