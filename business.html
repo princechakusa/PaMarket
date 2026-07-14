@@ -108,7 +108,7 @@
      ============================================================ -->
 <div class="top-bar">
   <div class="top-bar-w">
-    <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
+    <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14" loading="eager" decoding="async">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
     <nav class="top-bar-links" aria-label="Primary">
       <a href="browse">Browse</a>
       <a href="advertise">Advertise</a>
@@ -254,7 +254,7 @@ window.doSearch = window.doSearch || function(){
       </nav>
       <div class="foot-store">
         <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener">
-          <img src="img/google-play-badge.png" alt="Get it on Google Play" class="play-badge-sm">
+          <img src="img/google-play-badge.png" alt="Get it on Google Play" class="play-badge-sm" loading="lazy" decoding="async">
         </a>
       </div>
     </div>
@@ -327,7 +327,7 @@ function prodCard(l){
   var photo = l.photos && l.photos.length ? l.photos[0] : null;
   var loc = [l.suburb, l.city].filter(Boolean).join(', ') || l.province || 'Zimbabwe';
   var media = photo
-    ? '<img class="pm-card-img-el" src="'+esc(photo)+'" alt="'+esc(l.title)+'" loading="lazy">'
+    ? '<img class="pm-card-img-el" src="'+esc(photo)+'" alt="'+esc(l.title)+'" loading="lazy" decoding="async">'
     : '<div class="pm-card-ph" style="color:var(--navy)">'+esc(l.title.split(' ').slice(0,3).join(' '))+'</div>';
   return '<a class="pm-card" href="detail?id='+esc(l.id)+'">'+
     '<div class="pm-card-img" style="background:var(--paper)">'+media+'</div>'+
@@ -341,7 +341,7 @@ function prodCard(l){
 function bizCard(b){
   var loc = [b.city, b.province].filter(Boolean).join(', ') || 'Zimbabwe';
   var logo = b.logo
-    ? '<img src="'+esc(b.logo)+'" alt="'+esc(b.name)+'">'
+    ? '<img src="'+esc(b.logo)+'" alt="'+esc(b.name)+'" loading="lazy" decoding="async">'
     : esc(initials(b.name));
   var vf = b.verification_level > 0 ? '<span class="pm-biz-verified" title="Verified">✓</span>' : '';
   return '<a class="pm-biz" href="business?id='+esc(b.id)+'">'+
@@ -389,8 +389,8 @@ function render(b, extras){
   var cats = (b.category || '').split('|').filter(Boolean);
   var verified = b.verification_level > 0;
 
-  var cover = b.cover ? '<img src="'+esc(b.cover)+'" alt="'+esc(b.name)+' cover">' : '';
-  var logo = b.logo ? '<img src="'+esc(b.logo)+'" alt="'+esc(b.name)+' logo">' : esc(initials(b.name));
+  var cover = b.cover ? '<img src="'+esc(b.cover)+'" alt="'+esc(b.name)+' cover" fetchpriority="high" decoding="async">' : '';
+  var logo = b.logo ? '<img src="'+esc(b.logo)+'" alt="'+esc(b.name)+' logo" loading="eager" decoding="async">' : esc(initials(b.name));
 
   // Contact actions — brand-preserving .btn variants
   var actions = '';
