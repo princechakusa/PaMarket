@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-EGS078J4Q2"></script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2601167334065110"
+     crossorigin="anonymous"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -136,6 +138,19 @@ button{font-family:inherit;cursor:pointer}
 .bl-hero h1{font-size:34px;font-weight:900;color:#fff;margin-top:14px;letter-spacing:-.02em}
 .bl-hero p{font-size:15.5px;color:#9BB4E0;margin-top:10px;max-width:560px;margin-left:auto;margin-right:auto}
 
+.video-band{padding:52px 0 8px;background:var(--paper)}
+.video-head{margin-bottom:24px}
+.video-kicker{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--gold-dark);margin-bottom:6px}
+.video-head h2{font-size:28px;line-height:1.2;color:var(--ink)}
+.video-head p{font-size:14px;color:var(--sub);margin-top:6px}
+.video-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.video-card{background:#fff;border:1.5px solid var(--line);border-radius:16px;overflow:hidden}
+.video-frame{aspect-ratio:16/9;background:var(--navy-deep)}
+.video-frame iframe{display:block;width:100%;height:100%;border:0}
+.video-body{padding:18px 20px 20px}
+.video-title{font-size:18px;font-weight:800;line-height:1.35;color:var(--ink)}
+.video-desc{font-size:13.5px;line-height:1.6;color:var(--sub);margin-top:7px}
+
 .band{padding:48px 0}
 .cat-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px}
 .cat-pill{padding:8px 16px;border-radius:20px;border:1.5px solid var(--line);font-size:13px;font-weight:600;color:var(--sub);transition:all .15s}
@@ -152,6 +167,7 @@ button{font-family:inherit;cursor:pointer}
 .post-meta{font-size:12px;color:var(--mute);margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 
 @media(max-width:860px) {.post-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px) {.video-grid{grid-template-columns:1fr}.video-band{padding-top:38px}.video-head h2{font-size:24px}}
 @media(max-width:560px) {.post-grid{grid-template-columns:1fr}.bl-hero h1{font-size:26px}}
 
 h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,.logo,.auth-brand{font-family:'Fraunces',Georgia,serif;font-weight:700;letter-spacing:-.02em}
@@ -295,6 +311,8 @@ window.doSearch = window.doSearch || function(){
   </div>
 </section>
 
+<div id="blogVideosMount"></div>
+
 <section class="band">
   <div class="w">
     <div class="cat-filter" id="catFilter"></div>
@@ -383,9 +401,47 @@ window.doSearch = window.doSearch || function(){
 <script src="js/blog-data.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/session.js"></script>
+<script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
 <script>
 function fmtDate(d){return new Date(d).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}
+
+function blogEsc(value){
+  return String(value==null?'':value).replace(/[&<>"']/g,function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+
+function safeBlogVideoEmbed(provider,embedId){
+  provider=String(provider||'').toLowerCase();
+  embedId=String(embedId||'');
+  if(provider==='youtube'&&/^[A-Za-z0-9_-]{6,20}$/.test(embedId)){
+    return 'https://www.youtube.com/embed/'+embedId;
+  }
+  if(provider==='vimeo'&&/^[0-9]{5,15}$/.test(embedId)){
+    return 'https://player.vimeo.com/video/'+embedId;
+  }
+  return '';
+}
+
+function renderBlogVideos(rows){
+  var videos=(rows||[]).map(function(row){
+    return {row:row,embedUrl:safeBlogVideoEmbed(row.provider,row.embed_id)};
+  }).filter(function(item){return item.embedUrl&&item.row.title;});
+  if(!videos.length)return;
+  document.getElementById('blogVideosMount').innerHTML='<section class="video-band"><div class="w">'
+    +'<div class="video-head"><div class="video-kicker">Videos</div><h2>Watch &amp; Learn</h2><p>Practical PaMarket guides you can watch at your own pace.</p></div>'
+    +'<div class="video-grid">'+videos.map(function(item){
+      var row=item.row;
+      return '<article class="video-card"><div class="video-frame"><iframe src="'+item.embedUrl+'" title="'+blogEsc(row.title)+'" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>'
+        +'<div class="video-body"><h3 class="video-title">'+blogEsc(row.title)+'</h3>'
+        +(row.description?'<p class="video-desc">'+blogEsc(row.description)+'</p>':'')+'</div></article>';
+    }).join('')+'</div></div></section>';
+}
+
+if(window.PM&&typeof PM.fetchPublishedBlogVideos==='function'){
+  PM.fetchPublishedBlogVideos().then(renderBlogVideos).catch(function(){});
+}
 
 function renderPosts(cat){
   const posts=cat?PMBlog.getPostsByCategory(cat):PMBlog.getAllPosts();

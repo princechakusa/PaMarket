@@ -393,6 +393,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
           Ads & Boosts
         </button>
+        <button class="nav-item" data-tab="videos" onclick="showTab('videos')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3V9z"/></svg>
+          Blog Videos
+        </button>
         <button class="nav-item" data-tab="chats" onclick="showTab('chats')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           User Chats
@@ -588,7 +592,7 @@ try {
 // ── State ─────────────────────────────────────────────────
 var DATA = {
   users:[], listings:[], verifications:[], reports:[], contactRequests:[],
-  ads:[], settings:{}, notifHistory:[], chats:[],
+  ads:[], blogVideos:[], settings:{}, notifHistory:[], chats:[],
   businesses:[], businessSubs:[], businessLeads:[], bizUpgradeRequests:[]
 };
 var _bizFilter = 'all';
@@ -599,6 +603,7 @@ var _listingSearch = '';
 var _userSearch = '';
 var _reportFilter = 'open';
 var _adminEmail = '';
+var _blogVideosMissing = false;
 
 // ── Helpers ───────────────────────────────────────────────
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1122,7 +1127,7 @@ function closeSidebar(){ document.getElementById('sidebar').classList.remove('op
 var TAB_TITLES = {
   overview:'Overview', listings:'Listings', users:'Users', verifications:'Verifications',
   notifications:'Send Notification', reports:'Reports', moderation:'Moderation Center', contacts:'Contact Requests',
-  ads:'Ads & Boosts', chats:'User Chats', analytics:'Analytics', settings:'Settings',
+  ads:'Ads & Boosts', videos:'Blog Videos', chats:'User Chats', analytics:'Analytics', settings:'Settings',
   businesses:'Business Platform', maintenance:'Maintenance',
   jobsAdmin:'Jobs', servicesAdmin:'Services', propertyAdmin:'Property', vehiclesAdmin:'Vehicle Sales',
   reviewsCenter:'Reviews Center', auditCenter:'Audit Center', opsCenter:'Operations Center',
@@ -1146,6 +1151,7 @@ var TAB_LOADERS = {
   moderation:    function(){ return loadModeration(); },
   contacts:      function(){ return loadContactRequests(); },
   ads:           function(){ return Promise.allSettled([loadAds(), DATA.users.length?Promise.resolve():loadUsers()]); },
+  videos:        function(){ return loadBlogVideos(); },
   chats:         function(){ return loadChats(); },
   businesses:    function(){ return loadBusinesses(); },
   jobsAdmin:     function(){ return loadVertical('jobs'); },
@@ -1175,7 +1181,7 @@ function renderTab() {
   var fn = {
     overview: renderOverview, listings: renderListings, users: renderUsers,
     verifications: renderVerifications, notifications: renderNotifications,
-    reports: renderReports, moderation: renderModeration, contacts: renderContactRequests, ads: renderAds,
+    reports: renderReports, moderation: renderModeration, contacts: renderContactRequests, ads: renderAds, videos: renderVideos,
     chats: renderChats, analytics: renderAnalytics, settings: renderSettings,
     businesses: renderBusinesses, maintenance: renderMaintenance,
     jobsAdmin: function(){ renderVertical('jobs'); },
@@ -1470,6 +1476,19 @@ async function loadAds() {
     else DATA.ads=[];
   } catch(e){ DATA.ads=[]; }
   await ensureProfiles(DATA.ads.map(function(a){ return a.advertiser_id; }));
+}
+async function loadBlogVideos() {
+  try {
+    var r = await sb.from('blog_videos').select('*').order('sort_order',{ascending:true}).order('created_at',{ascending:false}).limit(200);
+    _blogVideosMissing = !!(r.error && r.error.code === '42P01');
+    if(!r.error && r.data) DATA.blogVideos = r.data;
+    else DATA.blogVideos = [];
+    if(r.error && !_blogVideosMissing) toast('Videos load error: '+r.error.message,'error');
+  } catch(e){
+    DATA.blogVideos=[];
+    _blogVideosMissing=false;
+    toast('Videos load error: '+e.message,'error');
+  }
 }
 async function loadSettings() {
   try {
@@ -3845,6 +3864,152 @@ async function decideContact(id, status) {
 }
 
 // ── ADS ───────────────────────────────────────────────────
+function parseBlogVideoUrl(raw) {
+  var url;
+  try { url = new URL(String(raw||'').trim()); }
+  catch(e) { return null; }
+  if(url.protocol!=='https:' && url.protocol!=='http:') return null;
+  var host=url.hostname.toLowerCase();
+  var id='';
+  if(host==='youtu.be') {
+    id=url.pathname.split('/').filter(Boolean)[0]||'';
+  } else if(host==='youtube.com'||host==='www.youtube.com'||host==='m.youtube.com'||host==='music.youtube.com') {
+    if(url.pathname==='/watch') id=url.searchParams.get('v')||'';
+    else {
+      var embedMatch=url.pathname.match(/^\/embed\/([A-Za-z0-9_-]+)\/?$/);
+      if(embedMatch) id=embedMatch[1];
+    }
+  }
+  if(id && /^[A-Za-z0-9_-]{6,20}$/.test(id)) {
+    return {provider:'youtube',embedId:id,embedUrl:'https://www.youtube.com/embed/'+id};
+  }
+  if(host==='vimeo.com'||host==='www.vimeo.com') {
+    var parts=url.pathname.split('/').filter(Boolean);
+    id=parts.length===1?parts[0]:'';
+    if(/^[0-9]{5,15}$/.test(id)) {
+      return {provider:'vimeo',embedId:id,embedUrl:'https://player.vimeo.com/video/'+id};
+    }
+  }
+  return null;
+}
+
+function renderVideos() {
+  var html='<div class="sec-head"><div><div class="sec-title">Blog Videos</div><div style="font-size:12px;color:var(--sub);margin-top:3px">Published YouTube and Vimeo embeds shown on the website blog.</div></div><button class="btn-send" onclick="openBlogVideoEditor()" style="padding:8px 16px;font-size:13px">+ Add Video</button></div>';
+  if(_blogVideosMissing){
+    html+='<div class="empty-msg">Migration required: the blog_videos table does not exist yet.</div>';
+    document.getElementById('mainContent').innerHTML=html;
+    return;
+  }
+  if(!DATA.blogVideos.length){
+    html+='<div class="empty-msg">No blog videos yet. Add a YouTube or Vimeo link to get started.</div>';
+    document.getElementById('mainContent').innerHTML=html;
+    return;
+  }
+  html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Title</th><th>Provider</th><th>Status</th><th>Sort</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+  DATA.blogVideos.forEach(function(video){
+    html+='<tr><td><div style="font-weight:700;color:var(--text)">'+esc(video.title||'Untitled')+'</div>'+(video.description?'<div style="font-size:11px;color:var(--sub);margin-top:3px;max-width:340px">'+esc(video.description)+'</div>':'')+'</td>'
+      +'<td><span class="badge badge-info">'+esc(video.provider||'invalid')+'</span></td>'
+      +'<td><span class="badge badge-'+(video.is_published?'active':'pending')+'">'+(video.is_published?'Published':'Draft')+'</span></td>'
+      +'<td>'+Number(video.sort_order||0)+'</td><td>'+fmtDate(video.created_at)+'</td>'
+      +'<td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="ab ab-view" onclick="openBlogVideoEditor(\''+video.id+'\')">Edit</button>'
+      +'<button class="ab '+(video.is_published?'ab-reject':'ab-approve')+'" onclick="toggleBlogVideoPublished(\''+video.id+'\','+(!video.is_published)+')">'+(video.is_published?'Unpublish':'Publish')+'</button>'
+      +'<button class="ab ab-delete" onclick="deleteBlogVideo(\''+video.id+'\')">Delete</button></div></td></tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+function openBlogVideoEditor(id) {
+  var video=id?DATA.blogVideos.find(function(row){return row.id===id;}):null;
+  var title=video?video.title:'';
+  var description=video&&video.description?video.description:'';
+  var rawUrl=video?video.video_url:'';
+  var sortOrder=video?Number(video.sort_order||0):0;
+  var published=!!(video&&video.is_published);
+  openModal('<div class="modal-title">'+(video?'Edit':'Add')+' Blog Video<button class="modal-close" onclick="closeModal()">&times;</button></div>'
+    +'<div class="form-row"><label class="form-label">Title <span style="color:var(--red)">*</span></label><input class="form-input" id="blogVideoTitle" maxlength="120" value="'+esc(title)+'" placeholder="e.g. How to post a great listing"></div>'
+    +'<div class="form-row"><label class="form-label">Description <span style="font-weight:400;color:var(--sub)">(optional)</span></label><textarea class="form-textarea" id="blogVideoDescription" maxlength="500" placeholder="A short description shown below the video">'+esc(description)+'</textarea></div>'
+    +'<div class="form-row"><label class="form-label">YouTube or Vimeo URL <span style="color:var(--red)">*</span></label><input class="form-input" id="blogVideoUrl" value="'+esc(rawUrl)+'" placeholder="https://www.youtube.com/watch?v=..." oninput="updateBlogVideoPreview()"><div id="blogVideoUrlStatus" style="font-size:11px;color:var(--sub);margin-top:5px">Accepted: YouTube watch, youtu.be, YouTube embed, or Vimeo video URLs.</div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px"><div class="form-row"><label class="form-label">Sort Order</label><input class="form-input" id="blogVideoSort" type="number" step="1" value="'+sortOrder+'"></div>'
+    +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer"><input type="checkbox" id="blogVideoPublished" '+(published?'checked':'')+' style="accent-color:var(--accent)"> Published</label></div>'
+    +'<div id="blogVideoPreview" style="display:none;aspect-ratio:16/9;background:#0B1C4D;border-radius:12px;overflow:hidden;margin:4px 0 18px"></div>'
+    +'<div style="display:flex;align-items:center;gap:10px"><button class="btn-send" id="saveBlogVideoBtn" onclick="saveBlogVideo(\''+(video?video.id:'')+'\')">'+(video?'Save Changes':'Add Video')+'</button><button class="filter-btn" onclick="closeModal()">Cancel</button></div>');
+  updateBlogVideoPreview();
+}
+
+function updateBlogVideoPreview() {
+  var field=document.getElementById('blogVideoUrl');
+  var status=document.getElementById('blogVideoUrlStatus');
+  var preview=document.getElementById('blogVideoPreview');
+  if(!field||!status||!preview)return;
+  var raw=field.value.trim();
+  var parsed=parseBlogVideoUrl(raw);
+  if(!raw){status.textContent='Accepted: YouTube watch, youtu.be, YouTube embed, or Vimeo video URLs.';status.style.color='var(--sub)';preview.style.display='none';preview.innerHTML='';return;}
+  if(!parsed){status.textContent='This is not a recognized YouTube or Vimeo video URL.';status.style.color='var(--red)';preview.style.display='none';preview.innerHTML='';return;}
+  status.textContent=(parsed.provider==='youtube'?'YouTube':'Vimeo')+' video recognized';
+  status.style.color='var(--green)';
+  preview.style.display='block';
+  preview.innerHTML='<iframe src="'+parsed.embedUrl+'" title="Video preview" style="width:100%;height:100%;border:0" allowfullscreen></iframe>';
+}
+
+async function saveBlogVideo(id) {
+  if(!requirePerm('ads.manage'))return;
+  var title=((document.getElementById('blogVideoTitle')||{}).value||'').trim();
+  var description=((document.getElementById('blogVideoDescription')||{}).value||'').trim();
+  var rawUrl=((document.getElementById('blogVideoUrl')||{}).value||'').trim();
+  var parsed=parseBlogVideoUrl(rawUrl);
+  var sortRaw=((document.getElementById('blogVideoSort')||{}).value||'0').trim();
+  var sortOrder=Number(sortRaw);
+  var published=!!((document.getElementById('blogVideoPublished')||{}).checked);
+  if(!title){toast('Enter a video title','error');return;}
+  if(!parsed){toast('Enter a recognized YouTube or Vimeo video URL','error');return;}
+  if(!Number.isInteger(sortOrder)){toast('Sort order must be a whole number','error');return;}
+  var rec={title:title,description:description||null,video_url:rawUrl,provider:parsed.provider,embed_id:parsed.embedId,sort_order:sortOrder,is_published:published};
+  var btn=document.getElementById('saveBlogVideoBtn');
+  if(btn){btn.disabled=true;btn.textContent='Saving...';}
+  try {
+    var before=id?DATA.blogVideos.find(function(row){return row.id===id;}):null;
+    var result;
+    if(id) result=await sb.from('blog_videos').update(rec).eq('id',id).select('*').single();
+    else {
+      if(!_adminUid){var user=(await sb.auth.getUser()).data.user;_adminUid=user&&user.id;}
+      rec.created_by=_adminUid||null;
+      result=await sb.from('blog_videos').insert(rec).select('*').single();
+    }
+    if(result.error)throw result.error;
+    if(id) DATA.blogVideos=DATA.blogVideos.map(function(row){return row.id===id?result.data:row;});
+    else DATA.blogVideos.push(result.data);
+    DATA.blogVideos.sort(function(a,b){return Number(a.sort_order||0)-Number(b.sort_order||0)||new Date(b.created_at)-new Date(a.created_at);});
+    auditLog(id?'update_blog_video':'create_blog_video','blog_videos',result.data.id,before||null,rec,null);
+    closeModal();renderVideos();toast(id?'Video updated':'Video added');
+  } catch(e){toast('Error: '+e.message,'error');if(btn){btn.disabled=false;btn.textContent=id?'Save Changes':'Add Video';}}
+}
+
+async function toggleBlogVideoPublished(id,published) {
+  if(!requirePerm('ads.manage'))return;
+  try {
+    var result=await sb.from('blog_videos').update({is_published:!!published}).eq('id',id).select('*').single();
+    if(result.error)throw result.error;
+    DATA.blogVideos=DATA.blogVideos.map(function(row){return row.id===id?result.data:row;});
+    auditLog(published?'publish_blog_video':'unpublish_blog_video','blog_videos',id,{is_published:!published},{is_published:!!published},null);
+    renderVideos();toast(published?'Video published':'Video unpublished','info');
+  } catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function deleteBlogVideo(id) {
+  if(!requirePerm('ads.manage'))return;
+  var video=DATA.blogVideos.find(function(row){return row.id===id;});
+  var ok=await confirm2('Delete Video','Remove this blog video permanently?','Delete','red');
+  if(!ok)return;
+  try {
+    var result=await sb.from('blog_videos').delete().eq('id',id);
+    if(result.error)throw result.error;
+    DATA.blogVideos=DATA.blogVideos.filter(function(row){return row.id!==id;});
+    auditLog('delete_blog_video','blog_videos',id,video||null,null,null);
+    renderVideos();toast('Video deleted','info');
+  } catch(e){toast('Error: '+e.message,'error');}
+}
+
 function renderAds() {
   var html = '<div class="sec-head"><div class="sec-title">Paid Ads &amp; Announcements</div><button class="btn-send" onclick="openCreateAd()" style="padding:8px 16px;font-size:13px">+ Create Ad</button></div>';
 

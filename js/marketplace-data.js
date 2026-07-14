@@ -291,6 +291,14 @@
       '&order=created_at.desc&limit=1'
     ).then(function (rows) { return rows[0] || null; });
   }
+
+  function fetchPublishedBlogVideos() {
+    return pgFetch(
+      'blog_videos?is_published=eq.true' +
+      '&select=id,title,description,provider,embed_id,sort_order,created_at' +
+      '&order=sort_order.asc,created_at.desc'
+    );
+  }
   function authHeaders() {
     var h = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
     var s = sharedSession();
@@ -864,6 +872,7 @@
   global.PM.fetchJobs = fetchJobs;
   global.PM.fetchActiveAds = fetchActiveAds;
   global.PM.fetchActiveSiteAnnouncement = fetchActiveSiteAnnouncement;
+  global.PM.fetchPublishedBlogVideos = fetchPublishedBlogVideos;
   global.PM.trackAdEvent = trackAdEvent;
   global.PM.money = money;
   global.PM.timeAgo = timeAgo;
