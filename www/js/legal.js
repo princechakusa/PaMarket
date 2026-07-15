@@ -716,7 +716,7 @@
        </a>`
     ).join('');
 
-    return `<div class="page active">
+    return `<div class="page active sticky-topbar">
       ${H.innerTopbar('Legal Hub')}
 
       <div style="background:var(--card);border-bottom:1px solid var(--border);padding:18px 16px 16px">

@@ -2586,13 +2586,13 @@
 
   H.pages.AppliedJobs = function () {
     var u = H.currentUser();
-    if (!u) return '<div class="page active">' + H.innerTopbar('My Applications') + H.emptyState('Sign in required', '', null, null) + '</div>';
+    if (!u) return '<div class="page active sticky-topbar">' + H.innerTopbar('My Applications') + H.emptyState('Sign in required', '', null, null) + '</div>';
     var apps = (H.state.applications || []).filter(function(a){ return a.applicantId === u.id; })
       .sort(function(a,b){ return b.appliedAt - a.appliedAt; });
     var statusColors = { pending:'#F5A623', reviewed:'#1A3A8F', shortlisted:'#22c55e', rejected:'#ef4444' };
     var statusLabels = { pending:'Pending', reviewed:'Reviewed', shortlisted:'Shortlisted', rejected:'Not selected' };
 
-    return '<div class="page active">'
+    return '<div class="page active sticky-topbar">'
       + H.innerTopbar('My Applications')
       + '<div style="padding:12px 14px 88px">'
       + (apps.length ? apps.map(function(app) {

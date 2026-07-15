@@ -69,7 +69,7 @@
 
     const sellerListings = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active');
 
-    return `<div class="page active">
+    return `<div class="page active${isOwn ? ' sticky-topbar' : ''}">
       ${topbar}
 
       <div class="profile-hero">
@@ -191,7 +191,7 @@
       ? `<svg viewBox="0 0 42 24" width="42" height="24" style="flex-shrink:0"><rect x="0" y="0" width="42" height="24" rx="12" fill="#1A3A8F"/><circle cx="30" cy="12" r="9" fill="white"/></svg>`
       : `<svg viewBox="0 0 42 24" width="42" height="24" style="flex-shrink:0"><rect x="0" y="0" width="42" height="24" rx="12" fill="#CBD5E1"/><circle cx="12" cy="12" r="9" fill="white"/></svg>`;
 
-    return `<div class="page active">
+    return `<div class="page active sticky-topbar">
       ${H.innerTopbar('Edit Profile')}
 
       <div class="avatar-edit-section">
@@ -423,7 +423,7 @@
     const section = (list, label, status) => list.length
       ? `<div style="padding:12px">${list.map(l => myCard(l, status)).join('')}</div>`
       : `<div style="color:var(--sub);padding:32px 20px;text-align:center;font-size:13px">No ${label.toLowerCase()} listings</div>`;
-    return `<div class="page active">
+    return `<div class="page active sticky-topbar">
       ${H.innerTopbar('My Listings')}
       <div class="listing-tabs">
         <button class="tab active" data-tab="active">Active (${active.length})</button>
@@ -610,7 +610,7 @@
           <button onclick="H.openListing('${l.id}')" style="flex:2;padding:9px 4px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#EFF6FF;color:#1A3A8F;border:1.5px solid #BFDBFE;font-family:inherit">View Listing</button>
         </div>
       </div>`;
-    return `<div class="page active">
+    return `<div class="page active sticky-topbar">
       ${H.innerTopbar(list.length ? `Saved & Favorites (${list.length})` : 'Saved & Favorites')}
       <div style="padding:14px">
         ${list.length ? list.map(savedCard).join('') : H.emptyState('No saved listings', 'Tap the heart on any listing to save it', 'Browse', "H.navTo('Browse')")}
@@ -1062,7 +1062,7 @@
       : '<div style="color:var(--sub);font-size:13px">No resume uploaded yet</div>';
 
     if (!hasProfile) {
-      return `<div class="page active">
+      return `<div class="page active sticky-topbar">
         ${H.innerTopbar('My Job Profile')}
         <div style="padding:40px 24px;text-align:center">
           <div style="width:72px;height:72px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
@@ -1075,7 +1075,7 @@
       </div>`;
     }
 
-    return `<div class="page active">
+    return `<div class="page active sticky-topbar">
       ${H.innerTopbar('My Job Profile')}
       <div style="padding:0 14px 100px">
 

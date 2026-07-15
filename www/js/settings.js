@@ -54,7 +54,7 @@
     const verifiedBadge = u && u.verified
       ? `<div class="settings-user-badge"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verified</div>` : '';
 
-    return `<div class="page active">
+    return `<div class="page active sticky-topbar">
       ${_st('Settings')}
 
       <div style="height:8px"></div>
@@ -357,7 +357,7 @@
 
   // --- Security Settings ------------------------------------
   pages.SecuritySettings = function () {
-    return `<div class="page active">
+    return `<div class="page active sticky-topbar">
       ${_st('Security')}
       <div style="height:8px"></div>
       <div class="profile-section-label">Account Security</div>
@@ -561,7 +561,7 @@
          </div>`
       : `${sectionLabel('Recently Viewed')}${emptyCard('No recently viewed listings')}`;
 
-    return `<div class="page active">
+    return `<div class="page active sticky-topbar">
       ${H.innerTopbar('My Activity')}
       <div style="padding-top:8px;padding-bottom:32px">
         ${applicationsCard}

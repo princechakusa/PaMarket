@@ -2749,7 +2749,7 @@ window.H = {
     };
 
     H.pages.Ads=function(){
-      return '<div class="page active">'+H.innerTopbar('Advertise with PaMarket')
+      return '<div class="page active sticky-topbar">'+H.innerTopbar('Advertise with PaMarket')
         +'<div class="about-wrap">'
         +'<div class="ads-hero"><div class="ads-hero-title">Grow Your Business</div><div class="ads-hero-sub">Connect with active buyers across all provinces of Zimbabwe. Tell us about your goals and we\'ll find the right fit for you.</div></div>'
         +'<div class="about-card"><div class="about-sec-title">What We Offer</div>'

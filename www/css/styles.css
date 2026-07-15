@@ -989,8 +989,12 @@ select.fi {
 
 /* Premium Help Center — scoped so legacy support/legal screens are unchanged. */
 .premium-help-page { position: relative; min-height: 100%; padding-bottom: 82px; background: var(--bg); }
-.premium-help-page .inner-topbar { position: sticky; z-index: 20; top: 0; min-height: 54px; padding: 6px 10px; border-bottom: .5px solid var(--border); background: color-mix(in srgb,var(--card) 92%,transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-.premium-help-page .inner-topbar-title { color: var(--text-primary); text-align: center; font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
+.premium-help-page .inner-topbar,
+.sticky-topbar .inner-topbar,
+.sticky-topbar .profile-topbar { position: sticky; z-index: 20; top: 0; min-height: 54px; padding: 6px 10px; border-bottom: .5px solid var(--border); background: color-mix(in srgb,var(--card) 92%,transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.premium-help-page .inner-topbar-title,
+.sticky-topbar .inner-topbar-title,
+.sticky-topbar .profile-topbar-title { color: var(--text-primary); text-align: center; font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
 .premium-help-page .back { width: 38px; height: 38px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
 .premium-help-page .back:active { background: var(--blue-light); }
 .premium-help-page .back svg { stroke: var(--blue-text); }
@@ -1056,6 +1060,8 @@ select.fi {
 .ph-contact-dock small { margin-top: 1px; overflow: hidden; color: var(--text-hint); font-size: 7.5px; font-weight: 650; text-overflow: ellipsis; }
 .ph-contact-dock .whatsapp small { color: var(--green); opacity: .82; }
 [data-theme="dark"] .premium-help-page .inner-topbar,
+[data-theme="dark"] .sticky-topbar .inner-topbar,
+[data-theme="dark"] .sticky-topbar .profile-topbar,
 [data-theme="dark"] .ph-contact-dock { background: color-mix(in srgb,var(--card) 90%,transparent); }
 @media (max-width: 350px) {
   .ph-hero h1 { font-size: 26px; }

@@ -1208,7 +1208,7 @@ pages.HelpCommunity = function () {
         </div>
       </div>`;
 
-    return `<div class="page active">
+    return `<div class="page active sticky-topbar">
       ${H.innerTopbar('About PaMarket')}
 
       <!-- Hero -->
