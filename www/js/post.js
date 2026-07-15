@@ -14,7 +14,7 @@
 
   pages.Post = function () {
     if (!H.currentUser()) {
-      return `<div class="page active">${H.innerTopbar('Post a Listing')}<div style="padding: 20px;">${H.emptyState('Sign In Required', 'Sign in to post listings and reach millions of buyers.', 'Sign In', "H.requireAuth('Sign in to post listings')")}</div></div>`;
+      return `<div class="page active sticky-topbar">${H.innerTopbar('Post a Free Ad')}<div style="padding: 20px;">${H.emptyState('Sign In Required', 'Sign in to post listings and reach millions of buyers.', 'Sign In', "H.requireAuth('Sign in to post listings')")}</div></div>`;
     }
     // Check for saved draft and offer to restore it
     let savedDraft = null;
@@ -31,7 +31,7 @@
         H._postBizTarget = null;
         const mins = Math.round(draftAge);
         const ageLabel = mins < 60 ? mins + ' min ago' : Math.round(draftAge / 60) + 'h ago';
-        return `<div class="page active">${H.innerTopbar('Post a Listing')}
+        return `<div class="page active sticky-topbar">${H.innerTopbar('Post a Free Ad')}
           <div style="padding:24px 16px">
             <div style="background:#EEF2FB;border:1.5px solid #1A3A8F;border-radius:16px;padding:18px;margin-bottom:16px">
               <div style="font-size:15px;font-weight:800;color:#1A3A8F;margin-bottom:4px">Continue your draft?</div>
@@ -55,13 +55,19 @@
     return renderPostShell();
   };
 
+  function renderPostTopbar() {
+    const title = postState.businessId ? 'Add Business Product' : 'Post a Free Ad';
+    // Reuse the shared sticky header, but redirect its back button to the
+    // step-aware headerBack() (which saves a draft / steps back through the
+    // wizard) instead of a plain goBack. NOTE: this string-replace must match
+    // innerTopbar's exact onclick — if that markup changes, update this too, or
+    // the back button silently reverts to goBack and drops the draft-save.
+    return H.innerTopbar(title).replace('onclick="H.goBack()"', 'onclick="H._post.headerBack()"');
+  }
+
   function renderPostShell() {
-    return `<div class="page active">
-      <div class="post-header" style="position:relative">
-        <button onclick="H._post.headerBack()" aria-label="Back" style="position:absolute;left:12px;top:12px;z-index:2;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.16);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <div class="post-h" style="padding-left:46px">${postState.businessId ? 'Add Business Product' : 'Post a Free Ad'}</div>
-        <div class="post-sub-txt" style="padding-left:46px">${postState.businessId ? 'Publishing to your business store' : 'Reach buyers across Zimbabwe in minutes'}</div>
-      </div>
+    return `<div class="page active sticky-topbar post-flow-page">
+      ${renderPostTopbar()}
       <div class="steps-bar" id="stepsBar">
         ${[1, 2, 3, 4].map(n => `<div class="sdot ${n < postState.step ? 'done' : n === postState.step ? 'cur' : ''}"></div>`).join('')}
       </div>
@@ -231,8 +237,23 @@
     ).join('');
   }
 
-  function refreshBody() {
-    document.getElementById('postBody').innerHTML = renderPostStep();
+  function refreshBody(isStepTransition) {
+    const body = document.getElementById('postBody');
+    if (!body) return;
+    body.classList.remove('post-step-enter');
+    body.innerHTML = renderPostStep();
+    if (!isStepTransition) return;
+
+    // The page scrolls inside mainArea. Reset before the next paint so a new
+    // step never appears halfway down the form beneath the sticky header.
+    const scroller = document.getElementById('mainArea');
+    if (scroller) scroller.scrollTop = 0;
+    else window.scrollTo(0, 0);
+
+    // Restart the lightweight CSS entrance animation for the newly-rendered
+    // step. The stylesheet disables it for reduced-motion users.
+    void body.offsetWidth;
+    body.classList.add('post-step-enter');
   }
 
   function refreshSteps() {
@@ -308,14 +329,14 @@
       const t = document.getElementById('postTitle'); if (t) postState.title = t.value;
       const d = document.getElementById('postDesc');  if (d) postState.desc  = d.value;
       if (H.readAttrFields) postState.attrs = Object.assign({}, postState.attrs, H.readAttrFields(document.getElementById('postBody')));
-      postState.cat = c; refreshBody();
+      postState.cat = c; refreshBody(true);
     },
     changeCat() {
       // Back to the category picker. Keep title/desc; drop the old category's attrs.
       const t = document.getElementById('postTitle'); if (t) postState.title = t.value;
       const d = document.getElementById('postDesc');  if (d) postState.desc  = d.value;
       postState.cat = null; postState.attrs = {};
-      refreshBody();
+      refreshBody(true);
     },
     toggleChip(btn) { if (btn) btn.classList.toggle('on'); },
     setCur(c)    { postState.currency = c; refreshBody(); },
@@ -406,10 +427,10 @@
       }
       s.step++;
       refreshSteps();
-      refreshBody();
+      refreshBody(true);
     },
     prev() {
-      if (postState.step > 1) { postState.step--; refreshSteps(); refreshBody(); }
+      if (postState.step > 1) { postState.step--; refreshSteps(); refreshBody(true); }
     },
     async submit() {
       if (H._post._posting) return;            // guard against double-tap → duplicate listings

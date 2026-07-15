@@ -717,6 +717,14 @@ select.fi {
 .sdot.done { background: var(--blue); }
 .sdot.cur { background: var(--gold); }
 .form-wrap { padding: 16px 16px 110px; }
+.post-step-enter { animation: postStepEnter .2s cubic-bezier(.22,.61,.36,1) both; }
+@keyframes postStepEnter {
+  from { opacity: .35; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .post-step-enter { animation: none; }
+}
 .cat-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
 .cat-opt { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--r-md); padding: 14px 6px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: all .2s; }
 .cat-opt.sel { background: var(--blue-light); border-color: var(--blue); }
