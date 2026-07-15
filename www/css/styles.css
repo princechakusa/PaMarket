@@ -987,6 +987,85 @@ select.fi {
 .contact-label { font-size: 11px; font-weight: 700; color: var(--text-primary); }
 .contact-value { font-size: 10px; color: var(--text-sub); line-height: 1.4; text-align: center; }
 
+/* Premium Help Center — scoped so legacy support/legal screens are unchanged. */
+.premium-help-page { position: relative; min-height: 100%; padding-bottom: 82px; background: var(--bg); }
+.premium-help-page .inner-topbar { position: sticky; z-index: 20; top: 0; min-height: 54px; padding: 6px 10px; border-bottom: .5px solid var(--border); background: color-mix(in srgb,var(--card) 92%,transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.premium-help-page .inner-topbar-title { color: var(--text-primary); text-align: center; font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
+.premium-help-page .back { width: 38px; height: 38px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+.premium-help-page .back:active { background: var(--blue-light); }
+.premium-help-page .back svg { stroke: var(--blue-text); }
+.ph-content { padding-bottom: 18px; }
+.ph-hero { padding: 20px 17px 16px; }
+.ph-online { display: flex; align-items: center; gap: 7px; color: var(--green); font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.ph-online > span { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px color-mix(in srgb,var(--green) 12%,transparent); }
+.ph-hero h1 { max-width: 330px; margin: 13px 0 7px; color: var(--text-primary); font-size: 29px; font-weight: 850; line-height: 1.06; letter-spacing: -1.15px; }
+.ph-hero > p { max-width: 350px; color: var(--text-sub); font-size: 12px; line-height: 1.55; }
+.ph-search { position: relative; display: block; margin-top: 17px; }
+.ph-search > svg { position: absolute; top: 50%; left: 14px; width: 18px; height: 18px; fill: none; stroke: var(--text-hint); stroke-width: 2; transform: translateY(-50%); pointer-events: none; }
+.ph-search input { width: 100%; height: 50px; padding: 0 48px 0 44px; border: 1px solid var(--border); border-radius: 16px; outline: none; background: var(--card); color: var(--text-primary); font-size: 13px; box-shadow: 0 8px 24px rgba(24,24,27,.05); }
+.ph-search input::placeholder { color: var(--text-hint); }
+.ph-search input:focus { border-color: var(--blue-text); box-shadow: 0 0 0 3px color-mix(in srgb,var(--blue) 11%,transparent); }
+.ph-search > span { position: absolute; top: 50%; right: 12px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 6px; color: var(--text-hint); font-size: 9px; font-weight: 750; transform: translateY(-50%); }
+.ph-human-card { position: relative; margin: 0 17px 19px; padding: 15px; overflow: hidden; border: 1px solid color-mix(in srgb,var(--blue) 17%,var(--border)); border-radius: 18px; background: color-mix(in srgb,var(--blue) 8%,var(--card)); }
+.ph-human-card::after { content: '?'; position: absolute; right: -8px; bottom: -35px; color: var(--blue-text); font-size: 110px; font-weight: 900; line-height: 1; opacity: .055; pointer-events: none; }
+.ph-human-head { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; }
+.ph-human-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 auto; border-radius: 12px; background: var(--blue); color: #fff; }
+.ph-human-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; }
+.ph-human-head strong { display: block; color: var(--text-primary); font-size: 13px; font-weight: 820; }
+.ph-human-head span { display: block; margin-top: 2px; color: var(--text-sub); font-size: 10px; }
+.ph-human-actions { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 13px; }
+.ph-human-actions button { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 0 10px; border: 1px solid var(--border); border-radius: 11px; background: var(--card); color: var(--text-mid); font-size: 10.5px; font-weight: 750; }
+.ph-human-actions button.primary { border-color: transparent; background: var(--blue); color: #fff; }
+.ph-human-actions svg { width: 15px; height: 15px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2; }
+.ph-faq-heading { display: flex; align-items: end; justify-content: space-between; padding: 0 17px 9px; }
+.ph-faq-heading h2 { color: var(--text-primary); font-size: 15px; font-weight: 830; letter-spacing: -.25px; }
+.ph-faq-heading > span { color: var(--text-hint); font-size: 10px; font-weight: 700; }
+.ph-filters { display: flex; gap: 7px; padding: 0 17px 13px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.ph-filters::-webkit-scrollbar { display: none; }
+.ph-filter { min-height: 32px; padding: 0 12px; flex: 0 0 auto; border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--card); color: var(--text-sub); font-size: 10px; font-weight: 750; }
+.ph-filter.active { border-color: var(--blue); background: var(--blue); color: #fff; }
+.ph-faq-groups { padding: 0 17px; }
+.ph-faq-group { margin-bottom: 17px; }
+.ph-faq-group[hidden], .ph-faq-item[hidden] { display: none; }
+.ph-group-label { display: flex; align-items: center; gap: 7px; margin: 0 2px 7px; color: var(--text-hint); font-size: 9px; font-weight: 820; letter-spacing: .08em; text-transform: uppercase; }
+.ph-group-label svg { width: 13px; height: 13px; fill: none; stroke: var(--blue-text); stroke-width: 2; }
+.ph-faq-stack { overflow: hidden; border: 1px solid var(--border); border-radius: 16px; background: var(--card); box-shadow: var(--shadow-xs); }
+.ph-faq-item { border-bottom: 1px solid var(--border); }
+.ph-faq-item:last-child { border-bottom: 0; }
+.ph-faq-question { display: grid; grid-template-columns: 25px minmax(0,1fr) 22px; align-items: center; gap: 9px; width: 100%; min-height: 56px; padding: 10px 12px; background: transparent; text-align: left; }
+.ph-faq-index { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 8px; background: color-mix(in srgb,var(--blue) 9%,var(--card)); color: var(--blue-text); font-size: 9px; font-weight: 850; }
+.ph-faq-question-text { color: var(--text-mid); font-size: 11.5px; font-weight: 730; line-height: 1.38; }
+.ph-faq-chevron { display: grid; place-items: center; color: var(--text-hint); transition: transform .2s var(--ease); }
+.ph-faq-chevron svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+.ph-faq-item.open .ph-faq-chevron { color: var(--blue-text); transform: rotate(180deg); }
+.ph-faq-answer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .23s var(--ease); }
+.ph-faq-item.open .ph-faq-answer { grid-template-rows: 1fr; }
+.ph-faq-answer > div { overflow: hidden; }
+.ph-faq-answer p { margin: 0 12px 13px 46px; color: var(--text-sub); font-size: 11px; line-height: 1.62; }
+.ph-no-results { display: none; margin: 0 17px 24px; padding: 28px 18px; border: 1px dashed var(--border); border-radius: 16px; text-align: center; }
+.ph-no-results.visible { display: block; }
+.ph-no-results strong { display: block; color: var(--text-primary); font-size: 12px; }
+.ph-no-results span { display: block; margin-top: 5px; color: var(--text-sub); font-size: 10.5px; line-height: 1.5; }
+.ph-contact-dock { position: fixed; z-index: 25; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: 1.35fr .85fr .75fr; gap: 7px; padding: 9px 10px calc(9px + var(--safe-bottom)); border-top: 1px solid var(--border); background: color-mix(in srgb,var(--card) 92%,transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.ph-contact-dock a { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; min-height: 47px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 13px; background: var(--card); color: var(--text-mid); text-decoration: none; }
+.ph-contact-dock a.whatsapp { border-color: color-mix(in srgb,var(--green) 34%,var(--border)); background: color-mix(in srgb,var(--green) 10%,var(--card)); color: var(--green); }
+.ph-contact-dock svg { width: 17px; height: 17px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2; }
+.ph-contact-dock a > span { min-width: 0; }
+.ph-contact-dock strong, .ph-contact-dock small { display: block; white-space: nowrap; }
+.ph-contact-dock strong { overflow: hidden; font-size: 10.5px; font-weight: 800; text-overflow: ellipsis; }
+.ph-contact-dock small { margin-top: 1px; overflow: hidden; color: var(--text-hint); font-size: 7.5px; font-weight: 650; text-overflow: ellipsis; }
+.ph-contact-dock .whatsapp small { color: var(--green); opacity: .82; }
+[data-theme="dark"] .premium-help-page .inner-topbar,
+[data-theme="dark"] .ph-contact-dock { background: color-mix(in srgb,var(--card) 90%,transparent); }
+@media (max-width: 350px) {
+  .ph-hero h1 { font-size: 26px; }
+  .ph-human-actions { grid-template-columns: 1fr; }
+  .ph-contact-dock { grid-template-columns: 1.2fr .8fr .7fr; gap: 5px; padding-inline: 7px; }
+  .ph-contact-dock a { padding-inline: 5px; }
+  .ph-contact-dock svg { width: 15px; height: 15px; }
+  .ph-contact-dock small { display: none; }
+}
+
 /* Doc content */
 .doc-content { padding: 16px 16px 110px; }
 .doc-content h2 { font-size: 17px; font-weight: 800; color: var(--blue); margin: 20px 0 8px; letter-spacing: -.2px; }

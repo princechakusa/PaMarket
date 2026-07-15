@@ -45,218 +45,162 @@
     chevronDown:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>',
   };
 
-  // --- Help Center ------------------------------------------
-  pages.Help = function () {
-    const WA = 'https://wa.me/971589772645';
+  // --- Premium Help Center ----------------------------------
+  // This is the single source for both Help and the legacy FAQs deep link.
+  // Keep visible answers truthful: these are the 12 FAQ objects that existed
+  // before the redesign, now grouped without changing their wording.
+  const HELP_FAQS = [
+    { group:'Getting started', icon:'spark', q:'How do I post an ad on PaMarket?', a:'Tap the "Post" button at the bottom of the screen. Choose your category, add clear photos, write a title and description, set your price, and select your location. Your listing goes live instantly — no waiting for review.' },
+    { group:'Getting started', icon:'spark', q:'Is PaMarket free to use?', a:'Yes — completely free. Posting ads, browsing listings, sending messages, applying for jobs, and getting verified are all 100% free. No subscriptions, no commission on sales, no hidden charges.' },
+    { group:'Getting started', icon:'spark', q:'How do I get my account verified?', a:'Go to Account → Verify Identity. Enter your ID number, take a selfie, and upload a photo of your National ID or passport. Our team reviews your submission within 24 hours and your blue verified badge appears automatically when approved.' },
+    { group:'Managing listings', icon:'tag', q:'How long do my listings stay active?', a:'Listings stay active for 30 days. You can renew any listing anytime by going to My Listings and tapping Renew. Renewing resets the 30-day timer and bumps your listing back to the top.' },
+    { group:'Managing listings', icon:'tag', q:'Can I edit or delete a listing after posting?', a:'Yes. Go to Account → My Listings, tap the listing you want to change, then tap Edit to update photos, price, or description. To remove a listing, tap Delete. Deleted listings are permanently removed and cannot be recovered.' },
+    { group:'Managing listings', icon:'tag', q:'Why is my listing not showing up?', a:'Make sure your listing is set to "Active" in My Listings. Check that it was saved successfully — you should have received a confirmation. If your listing was removed by our moderation team, you will receive a notification with the reason. Contact support if you believe this was an error.' },
+    { group:'Buying & safety', icon:'shield', q:'How do payments work?', a:'PaMarket does not process or hold any payments. All payments are arranged directly between the buyer and seller — cash on collection, EcoCash, OneMoney, or bank transfer. Always inspect the item in person before paying, and never send money upfront for something you have not seen.' },
+    { group:'Buying & safety', icon:'shield', q:'How do I stay safe from scams?', a:'Never pay in advance without seeing the item. Avoid sellers who refuse to meet in person or who ask you to pay via gift cards or Western Union. If a deal feels too good to be true, it probably is. Use the in-app Report button to flag suspicious listings immediately.' },
+    { group:'Buying & safety', icon:'shield', q:'How do I contact a seller?', a:'Tap any listing, then tap "Send Message" to chat in-app, or tap "Call" or "WhatsApp" to contact the seller directly. All messages are stored in your Messages tab so you never lose a conversation.' },
+    { group:'Buying & safety', icon:'shield', q:'How do I report a listing or block a user?', a:'To report a listing: open the listing and tap the flag icon or scroll to the bottom and tap "Report". To block a user: tap their name on a listing or in Messages, then tap "Block User". Blocked users cannot see your listings or message you.' },
+    { group:'Jobs & account', icon:'briefcase', q:'How do I post a job as a company?', a:'Your company must be verified before you can post jobs on PaMarket. Go to Post → Jobs and follow the Company Verification steps. You will need your Certificate of Incorporation, Tax Clearance Certificate from ZIMRA, owner ID, and a photo of your premises. Verification takes up to 2 business days.' },
+    { group:'Jobs & account', icon:'briefcase', q:'How do I delete my account?', a:'Go to Settings → Security → Delete Account. Type DELETE to confirm. Your account, listings, and messages are permanently removed within 30 days. This action cannot be undone — download any data you need before proceeding.' }
+  ];
 
-    const topics = [
-      { label:'FAQs',            desc:'Common questions answered',         icon:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>', page:'FAQs',             color:'#1A3A8F', bg:'#EEF2FF' },
-      { label:'Post a Listing',  desc:'How to sell on PaMarket',           icon:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>', page:'FAQs',             color:'#059669', bg:'#ECFDF5' },
-      { label:'Get Verified',    desc:'Blue badge & business accounts',     icon:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>', page:'HelpVerification', color:'#1A3A8F', bg:'#EEF2FF' },
-      { label:'Safety & Fraud',  desc:'Avoid scams, stay protected',        icon:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', page:'ReportProblem',   color:'#DC2626', bg:'#FEF2F2' },
-      { label:'Jobs & CV',       desc:'Apply for jobs, build your CV',      icon:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>', page:'FAQs',             color:'#D97706', bg:'#FFFBEB' },
-      { label:'Payments',        desc:'How money works on PaMarket',        icon:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>', page:'FAQs',             color:'#059669', bg:'#ECFDF5' },
-    ];
+  const HELP_GROUPS = ['Getting started', 'Managing listings', 'Buying & safety', 'Jobs & account'];
+  const HELP_CONTACT = {
+    whatsapp: 'https://wa.me/971589772645',
+    email: 'mailto:support@pamarketzw.com',
+    phone: 'tel:+971589772645'
+  };
+  const HELP_GROUP_ICONS = {
+    spark: '<svg viewBox="0 0 24 24"><path d="m12 3 1.4 4.1L17.5 8.5l-4.1 1.4L12 14l-1.4-4.1-4.1-1.4 4.1-1.4Z"/><path d="m18.5 14 .8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z"/></svg>',
+    tag: '<svg viewBox="0 0 24 24"><path d="M20 13 13 20l-9-9V4h7Z"/><circle cx="8.5" cy="8.5" r="1"/></svg>',
+    shield: '<svg viewBox="0 0 24 24"><path d="m12 3 7 3v5c0 4.7-3 8.3-7 10-4-1.7-7-5.3-7-10V6Z"/><path d="m9 12 2 2 4-4"/></svg>',
+    briefcase: '<svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg>'
+  };
 
-    const topicGrid = topics.map(function(t) {
-      return '<button onclick="H.openInner(\'' + t.page + '\')" style="display:flex;flex-direction:column;align-items:flex-start;padding:14px;background:' + t.bg + ';border:1.5px solid var(--border);border-radius:14px;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;gap:8px">'
-        + '<div style="width:38px;height:38px;border-radius:11px;background:' + t.color + ';display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0">' + t.icon + '</div>'
-        + '<div><div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:2px">' + t.label + '</div><div style="font-size:11px;color:var(--sub);line-height:1.4">' + t.desc + '</div></div>'
-        + '</button>';
-    }).join('');
-
-    const chips = ['Post a listing','Get verified','Report scam','EcoCash payment','Job application','Delete account','Renew listing','Block user'];
-    const chipRow = chips.map(function(c) {
-      return '<button onclick="H.openInner(\'ReportProblem\')" style="background:var(--bg);border:1.5px solid var(--border);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap;flex-shrink:0">' + c + '</button>';
-    }).join('');
-
-    const waIcon = '<svg viewBox="0 0 24 24" width="22" height="22" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>';
-
-    return `<div class="page active">
-      ${H.innerTopbar('Help & Support')}
-
-      <div style="padding:12px 16px 0">
-        <button onclick="H.openInner('ReportProblem')" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
-          ${S.help}
-          <span style="font-size:14px;color:var(--sub)">Search for help...</span>
-        </button>
-      </div>
-
-      <div style="padding:10px 16px 4px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
-        ${chipRow}
-      </div>
-
-      <div style="margin:12px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px">
-        <div style="width:10px;height:10px;border-radius:50%;background:#10B981;flex-shrink:0;box-shadow:0 0 0 3px rgba(16,185,129,.2)"></div>
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:700;color:var(--text)">All systems running normally</div>
-          <div style="font-size:11px;color:var(--sub);margin-top:1px">No reported issues</div>
+  function helpFaqGroupsHtml() {
+    let number = 0;
+    return HELP_GROUPS.map(function(group) {
+      const items = HELP_FAQS.filter(function(item) { return item.group === group; });
+      return `<section class="ph-faq-group" data-help-group="${H.escHtml(group)}">
+        <div class="ph-group-label">${HELP_GROUP_ICONS[items[0].icon]}<span>${H.escHtml(group)}</span></div>
+        <div class="ph-faq-stack">
+          ${items.map(function(item) {
+            const index = number++;
+            const search = (item.q + ' ' + item.a).toLowerCase();
+            return `<article class="ph-faq-item" id="help-faq-${index}" data-help-search="${H.escHtml(search)}">
+              <button class="ph-faq-question" type="button" aria-expanded="false" onclick="H._helpPremium.toggle(${index})">
+                <span class="ph-faq-index">${String(index + 1).padStart(2, '0')}</span>
+                <span class="ph-faq-question-text">${H.escHtml(item.q)}</span>
+                <span class="ph-faq-chevron">${S.chevronDown}</span>
+              </button>
+              <div class="ph-faq-answer"><div><p>${H.escHtml(item.a)}</p></div></div>
+            </article>`;
+          }).join('')}
         </div>
-        <div style="font-size:11px;font-weight:700;color:#10B981;background:#ECFDF5;border-radius:8px;padding:3px 8px">Operational</div>
+      </section>`;
+    }).join('');
+  }
+
+  function helpPageHtml(title) {
+    return `<div class="page active premium-help-page">
+      ${H.innerTopbar(title || 'Help & Support')}
+      <div class="ph-content">
+        <section class="ph-hero">
+          <div class="ph-online"><span></span>Support is online</div>
+          <h1>What can we help you solve?</h1>
+          <p>Search practical answers about buying, selling, safety and your account.</p>
+          <label class="ph-search">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input id="helpFaqSearch" type="search" placeholder="Search help articles" autocomplete="off" oninput="H._helpPremium.search(this.value)" aria-label="Search help articles">
+            <span>FAQ</span>
+          </label>
+        </section>
+
+        <section class="ph-human-card">
+          <div class="ph-human-head">
+            <div class="ph-human-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg></div>
+            <div><strong>Need a human?</strong><span>Talk to support or send a detailed bug report.</span></div>
+          </div>
+          <div class="ph-human-actions">
+            <button type="button" class="primary" onclick="H.openInner('ReportProblem')">${S.message}<span>Talk to a human</span></button>
+            <button type="button" onclick="H.openInner('ReportProblem')">${S.bug}<span>Submit a bug report</span></button>
+          </div>
+        </section>
+
+        <div class="ph-faq-heading"><h2>Popular questions</h2><span id="helpFaqCount">${HELP_FAQS.length} answers</span></div>
+        <div class="ph-filters" id="helpFaqFilters">
+          ${['All'].concat(HELP_GROUPS).map(function(group, index) {
+            return `<button type="button" class="ph-filter${index === 0 ? ' active' : ''}" data-help-filter="${H.escHtml(group)}" onclick="H._helpPremium.filter('${H.escHtml(group).replace(/'/g, '&#39;')}')">${H.escHtml(group)}</button>`;
+          }).join('')}
+        </div>
+        <div class="ph-faq-groups">${helpFaqGroupsHtml()}</div>
+        <div class="ph-no-results" id="helpFaqEmpty">
+          <strong>No matching answer yet</strong>
+          <span>Try a shorter search, or contact the support team.</span>
+        </div>
       </div>
 
-      <div style="padding:0 16px 8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)">Browse Topics</div>
-      <div style="margin:0 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        ${topicGrid}
-      </div>
-
-      <div style="padding:0 16px 8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)">Contact Us</div>
-      <div style="margin:0 16px 16px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:var(--card)">
-
-        <button onclick="H.openInner('ReportProblem')" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;background:linear-gradient(135deg,#1A3A8F,#2952cc);border:none;border-bottom:1px solid rgba(255,255,255,.1);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
-          <div style="width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;font-weight:900;color:#fff;border:1.5px solid rgba(255,255,255,.2)">P</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:800;color:#fff">PaMarket Support Bot</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:2px;display:flex;align-items:center;gap:5px">
-              <span style="width:6px;height:6px;border-radius:50%;background:#4ADE80;flex-shrink:0"></span>
-              Answers instantly · 37 topics covered
-            </div>
-          </div>
-          ${S.chevron.replace('currentColor','rgba(255,255,255,.7)')}
-        </button>
-
-        <a href="${WA}" onclick="event.preventDefault();(window.open('${WA}','_blank','noopener'))" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent">
-          <div style="width:42px;height:42px;border-radius:13px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;flex-shrink:0">${waIcon}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:700;color:#25D366">WhatsApp Support</div>
-            <div style="font-size:11px;color:var(--sub);margin-top:2px">+971 589 772 645 · Fastest response</div>
-          </div>
-          ${S.chevron}
+      <nav class="ph-contact-dock" aria-label="Support contact options">
+        <a class="whatsapp" href="${HELP_CONTACT.whatsapp}" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M20 11.5a8.1 8.1 0 0 1-8.3 8A8.5 8.5 0 0 1 8 18.6L3 20l1.4-4.8A8 8 0 1 1 20 11.5Z"/><path d="M8.5 8.2c.5 2.7 2.4 4.6 5.2 5.3"/></svg>
+          <span><strong>WhatsApp</strong><small>Usually replies in minutes</small></span>
         </a>
-
-        <a href="mailto:support@pamarketzw.com" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;-webkit-tap-highlight-color:transparent">
-          <div style="width:42px;height:42px;border-radius:13px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">${S.mail}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:700;color:#1A3A8F">Email Support</div>
-            <div style="font-size:11px;color:var(--sub);margin-top:2px">support@pamarketzw.com · Reply within 24h</div>
-          </div>
-          ${S.chevron}
-        </a>
-      </div>
-
-      <div style="padding:0 16px 8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)">For Businesses</div>
-      <div style="margin:0 16px 16px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:var(--card)">
-        <button onclick="H.openInner('HelpVerification')" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
-          <div style="width:42px;height:42px;border-radius:13px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:700;color:var(--text)">How to Get Verified</div>
-            <div style="font-size:11px;color:var(--sub);margin-top:2px">Blue badge, Business &amp; Job posting verification</div>
-          </div>
-          ${S.chevron}
-        </button>
-        <button onclick="H.openInner('FAQs')" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;background:transparent;border:none;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
-          <div style="width:42px;height:42px;border-radius:13px;background:#FFFBEB;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#D97706">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-          </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:700;color:var(--text)">Posting Jobs</div>
-            <div style="font-size:11px;color:var(--sub);margin-top:2px">How to post vacancies and find candidates</div>
-          </div>
-          ${S.chevron}
-        </button>
-      </div>
-
-      <div style="padding:0 16px 8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)">Legal</div>
-      <div style="margin:0 16px 24px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:var(--card)">
-        <button onclick="H.openInner('LegalHub')" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;background:transparent;border:none;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent">
-          <div style="width:42px;height:42px;border-radius:13px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1A3A8F">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:700;color:var(--text)">Legal Hub</div>
-            <div style="font-size:11px;color:var(--sub);margin-top:2px">Terms, Privacy Policy &amp; 16 more documents</div>
-          </div>
-          ${S.chevron}
-        </button>
-      </div>
-
-      <div style="height:8px"></div>
+        <a href="${HELP_CONTACT.email}">${S.mail}<span><strong>Email</strong><small>Send details</small></span></a>
+        <a href="${HELP_CONTACT.phone}">${S.phone}<span><strong>Call</strong><small>Phone support</small></span></a>
+      </nav>
     </div>`;
-  };
+  }
 
-  // --- FAQs -------------------------------------------------
-  pages.FAQs = function () {
-    const faqs = [
-      {
-        q: 'How do I post an ad on PaMarket?',
-        a: 'Tap the "Post" button at the bottom of the screen. Choose your category, add clear photos, write a title and description, set your price, and select your location. Your listing goes live instantly — no waiting for review.'
+  function initPremiumHelp() {
+    H._helpPremium = {
+      group: 'All',
+      query: '',
+      toggle: function(index) {
+        const item = document.getElementById('help-faq-' + index);
+        if (!item || item.hidden) return;
+        const open = item.classList.toggle('open');
+        const button = item.querySelector('.ph-faq-question');
+        if (button) button.setAttribute('aria-expanded', open ? 'true' : 'false');
       },
-      {
-        q: 'Is PaMarket free to use?',
-        a: 'Yes — completely free. Posting ads, browsing listings, sending messages, applying for jobs, and getting verified are all 100% free. No subscriptions, no commission on sales, no hidden charges.'
+      search: function(value) {
+        this.query = String(value || '').trim().toLowerCase();
+        this.apply();
       },
-      {
-        q: 'How do I get my account verified?',
-        a: 'Go to Account → Verify Identity. Enter your ID number, take a selfie, and upload a photo of your National ID or passport. Our team reviews your submission within 24 hours and your blue verified badge appears automatically when approved.'
+      filter: function(group) {
+        this.group = group || 'All';
+        document.querySelectorAll('#helpFaqFilters .ph-filter').forEach(function(button) {
+          button.classList.toggle('active', button.getAttribute('data-help-filter') === H._helpPremium.group);
+        });
+        this.apply();
       },
-      {
-        q: 'How long do my listings stay active?',
-        a: 'Listings stay active for 30 days. You can renew any listing anytime by going to My Listings and tapping Renew. Renewing resets the 30-day timer and bumps your listing back to the top.'
-      },
-      {
-        q: 'Can I edit or delete a listing after posting?',
-        a: 'Yes. Go to Account → My Listings, tap the listing you want to change, then tap Edit to update photos, price, or description. To remove a listing, tap Delete. Deleted listings are permanently removed and cannot be recovered.'
-      },
-      {
-        q: 'How do payments work?',
-        a: 'PaMarket does not process or hold any payments. All payments are arranged directly between the buyer and seller — cash on collection, EcoCash, OneMoney, or bank transfer. Always inspect the item in person before paying, and never send money upfront for something you have not seen.'
-      },
-      {
-        q: 'How do I stay safe from scams?',
-        a: 'Never pay in advance without seeing the item. Avoid sellers who refuse to meet in person or who ask you to pay via gift cards or Western Union. If a deal feels too good to be true, it probably is. Use the in-app Report button to flag suspicious listings immediately.'
-      },
-      {
-        q: 'How do I contact a seller?',
-        a: 'Tap any listing, then tap "Send Message" to chat in-app, or tap "Call" or "WhatsApp" to contact the seller directly. All messages are stored in your Messages tab so you never lose a conversation.'
-      },
-      {
-        q: 'How do I report a listing or block a user?',
-        a: 'To report a listing: open the listing and tap the flag icon or scroll to the bottom and tap "Report". To block a user: tap their name on a listing or in Messages, then tap "Block User". Blocked users cannot see your listings or message you.'
-      },
-      {
-        q: 'How do I post a job as a company?',
-        a: 'Your company must be verified before you can post jobs on PaMarket. Go to Post → Jobs and follow the Company Verification steps. You will need your Certificate of Incorporation, Tax Clearance Certificate from ZIMRA, owner ID, and a photo of your premises. Verification takes up to 2 business days.'
-      },
-      {
-        q: 'Why is my listing not showing up?',
-        a: 'Make sure your listing is set to "Active" in My Listings. Check that it was saved successfully — you should have received a confirmation. If your listing was removed by our moderation team, you will receive a notification with the reason. Contact support if you believe this was an error.'
-      },
-      {
-        q: 'How do I delete my account?',
-        a: 'Go to Settings → Security → Delete Account. Type DELETE to confirm. Your account, listings, and messages are permanently removed within 30 days. This action cannot be undone — download any data you need before proceeding.'
-      }
-    ];
-
-    return `<div class="page active">
-      ${H.innerTopbar('FAQs')}
-      <div class="faq-list">
-        ${faqs.map((item, idx) => `
-          <div class="faq-item" id="faq-${idx}">
-            <button class="faq-question" onclick="H._faqs.toggleFaq(${idx})">
-              <span>${H.escHtml(item.q)}</span>
-              <span class="faq-toggle">${S.chevronDown}</span>
-            </button>
-            <div class="faq-answer">
-              <div class="faq-text">${H.escHtml(item.a)}</div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-      <div style="height:20px"></div>
-    </div>`;
-  };
-
-  pages.FAQs_after = function () {
-    H._faqs = {
-      toggleFaq: (idx) => {
-        const item = document.getElementById('faq-' + idx);
-        if (!item) return;
-        item.classList.toggle('open');
+      apply: function() {
+        let count = 0;
+        const groupFilter = this.group;
+        const query = this.query;
+        document.querySelectorAll('.premium-help-page .ph-faq-group').forEach(function(group) {
+          let groupCount = 0;
+          group.querySelectorAll('.ph-faq-item').forEach(function(item) {
+            const matchesGroup = groupFilter === 'All' || group.getAttribute('data-help-group') === groupFilter;
+            const matchesSearch = !query || (item.getAttribute('data-help-search') || '').indexOf(query) !== -1;
+            item.hidden = !(matchesGroup && matchesSearch);
+            if (!item.hidden) { groupCount++; count++; }
+          });
+          group.hidden = groupCount === 0;
+        });
+        const countNode = document.getElementById('helpFaqCount');
+        if (countNode) countNode.textContent = count + (count === 1 ? ' answer' : ' answers');
+        const empty = document.getElementById('helpFaqEmpty');
+        if (empty) empty.classList.toggle('visible', count === 0);
       }
     };
-  };
+    // Preserve the legacy accordion hook for any older deep-link caller.
+    H._faqs = { toggleFaq: H._helpPremium.toggle };
+  }
+
+  pages.Help = function () { return helpPageHtml('Help & Support'); };
+  pages.Help_after = initPremiumHelp;
+  pages.FAQs = function () { return helpPageHtml('FAQs'); };
+  pages.FAQs_after = initPremiumHelp;
 
   // --- Contact Support --------------------------------------
   pages.ContactSupport = function () {
