@@ -581,7 +581,11 @@
   H.loadProfile = async function(userId) {
     try {
     var c = sb(); if (!c) return;
-    var res = await c.from('profiles').select('*').eq('id',userId).single();
+    // Explicit column list — NOT select('*'). The admin-only `mfa_secret` column
+    // is REVOKEd from app roles for privacy, and select('*') pulls it, which
+    // makes the WHOLE query fail with 42501 and drops the user to a "User"/
+    // unverified stub. Every column the mapping below uses is listed here.
+    var res = await c.from('profiles').select('id,email,name,phone,avatar,verified,verification_pending,language,created_at,role,company_verified,company_verification_pending,job_title,job_types,sector,exp,city,bio,skills,open_to_work,expected_salary,whatsapp_number,phone_for_calls,contact_method,contact_availability,linkedin_url,github_url,website_url,cv_file_url,cv_file_name,cv,two_factor_enabled,two_factor_secret').eq('id',userId).single();
     if (res.error||!res.data) {
       var u = (H.state.users||[]).find(function(x){return x.id===userId;});
       if (!u) { u={id:userId,email:'',name:'User',phone:'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]}; (H.state.users = H.state.users || []).push(u); }
