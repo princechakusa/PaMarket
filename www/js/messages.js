@@ -251,7 +251,7 @@
     const ini = other ? initials(other.name || 'PaMarket User') : '?';
     const initialsDiv = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + ini + '</div>';
     return (other && other.avatar)
-      ? '<img src="' + escHtml(other.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
+      ? '<img src="' + escHtml(other.avatar) + '" width="26" height="26" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
         + '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + ini + '</div>'
       : initialsDiv;
   }
@@ -296,7 +296,7 @@
     const url = escHtml(m.image);
     const safeUrl = escHtml(m.image).replace(/'/g, "\\'");
     const caption = m.text && m.text !== '[Photo]' ? escHtml(m.text) : '';
-    return '<img src="' + url + '" class="chat-img" onclick="H._chat.viewImg(\'' + safeUrl + '\')" onerror="this.style.display=\'none\'">'
+    return '<img src="' + url + '" class="chat-img" width="220" height="165" onclick="H._chat.viewImg(\'' + safeUrl + '\')" onerror="this.style.visibility=\'hidden\'">'
       + (caption ? '<div class="chat-caption">' + caption + '</div>' : '');
   }
 
@@ -314,7 +314,7 @@
     const ini = initials(name || '?');
     const grad = 'background:linear-gradient(135deg,' + color + ',' + color + 'bb)';
     if (other && other.avatar) {
-      return '<img src="' + escHtml(other.avatar) + '" class="' + cls + '" style="object-fit:cover" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+      return '<img src="' + escHtml(other.avatar) + '" class="' + cls + '" width="50" height="50" style="object-fit:cover" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
         + '<span class="' + cls + '" style="display:none;' + grad + '">' + ini + '</span>';
     }
     return '<span class="' + cls + '" style="' + grad + '">' + ini + '</span>';
@@ -627,7 +627,7 @@
     const otherIni = initials(chatDisplayName);
     const otherAvatarUrl = showBizBrand ? (_bizChat.logo || null) : (other && other.avatar);
     const otherAvatar = otherAvatarUrl
-      ? '<img src="' + escHtml(otherAvatarUrl) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
+      ? '<img src="' + escHtml(otherAvatarUrl) + '" width="40" height="40" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.nextElementSibling&&(this.nextElementSibling.style.display=\'flex\')">'
         + '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>'
       : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1A3A8F,#2952cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + otherIni + '</div>';
     H._chatOtherAvatar = otherAvatar;
@@ -746,7 +746,7 @@
       + '<button class="chat-hdr-menu" onclick="H._chat.openMenu(\'' + otherIdSafe + '\'' + (showBizBrand ? ',\'' + escHtml(_bizChatId || '') + '\'' : '') + ')"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'
       + '</div>'
       + (listing ? chatContextCard(listing) : '')
-      + '<div class="chat-thread" id="chatThread"><div class="chat-thread-spacer"></div>'
+      + '<div class="chat-thread chat-thread-initializing" id="chatThread"><div class="chat-thread-spacer"></div>'
       + (showBizBrand ? '<div style="margin:10px 16px 4px;padding:12px 16px;background:#EEF2FB;border:1.5px solid #1A3A8F;border-radius:14px"><div style="font-size:13.5px;font-weight:700;color:#1A3A8F">You are messaging ' + escHtml(chatDisplayName) + '</div><div style="font-size:12px;color:var(--sub);margin-top:3px">Replies come from the business, not a personal account</div></div>' : '')
       + (!showBizBrand && c.messages.length < 6 ? '<div class="chat-safety"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div><b>Stay safe.</b> Meet in a public place, inspect the item before you pay, and never send a deposit to someone you don\'t know.</div></div>' : '')
       + (H._chatHasOlder ? '<div id="chatLoadOlder" style="text-align:center;padding:10px"><button onclick="H._chat.loadOlder()" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:7px 16px;font-size:12.5px;font-weight:600;color:var(--sub);cursor:pointer">Load earlier messages</button></div>' : '')
@@ -1204,27 +1204,18 @@
     });
   };
 
-  // Reliably pin the chat thread to the most recent message. Repeats over a few
-  // frames/delays (layout + late images shift the height) and re-pins as each
-  // thread image loads, so the chat never opens stuck on middle messages.
+  // The flex spacer pins short conversations to the bottom in CSS. Longer
+  // conversations need one initial correction, kept invisible until it has
+  // landed so the user never sees the thread paint at the top first.
   function forceChatScrollBottom() {
     var th = document.getElementById('chatThread');
     if (!th) return;
-    var jump = function () {
+    window.requestAnimationFrame(function () {
       var el = document.getElementById('chatThread');
-      if (el) el.scrollTop = el.scrollHeight;
-    };
-    jump();
-    setTimeout(jump, 80);
-    setTimeout(jump, 400);
-    // Re-pin once after late-loading images grow the thread.
-    var imgs = th.querySelectorAll('img');
-    for (var i = 0; i < imgs.length; i++) {
-      if (!imgs[i].complete) {
-        imgs[i].addEventListener('load',  jump, { once: true });
-        imgs[i].addEventListener('error', jump, { once: true });
-      }
-    }
+      if (!el) return;
+      el.scrollTop = el.scrollHeight;
+      el.classList.remove('chat-thread-initializing');
+    });
   }
   H._forceChatScrollBottom = forceChatScrollBottom;
 
@@ -1241,17 +1232,14 @@
       window.visualViewport.removeEventListener('scroll', window._chatVPHandler);
       window._chatVPHandler = null;
     }
+    if (window._chatVPRaf) { window.cancelAnimationFrame(window._chatVPRaf); window._chatVPRaf = 0; }
+    if (window._chatFocusSyncTimer) { clearTimeout(window._chatFocusSyncTimer); window._chatFocusSyncTimer = 0; }
     if (window._chatKBResizeHandler) {
       window.removeEventListener('resize', window._chatKBResizeHandler);
       window._chatKBResizeHandler = null;
     }
     if (window._chatKBShow && typeof window._chatKBShow.remove === 'function') { try { window._chatKBShow.remove(); } catch (e) {} window._chatKBShow = null; }
     if (window._chatKBHide && typeof window._chatKBHide.remove === 'function') { try { window._chatKBHide.remove(); } catch (e) {} window._chatKBHide = null; }
-    // Pin to the latest message. A single synchronous scroll lands short because
-    // message images/avatars haven't loaded yet — once they do, the thread grows
-    // and leaves the user stranded mid-list. So we scroll now, on the next few
-    // frames/delays, and again each time a thread image finishes loading.
-    forceChatScrollBottom();
     attachReplySwipe();
     const ma  = document.getElementById('mainArea');
     const wrap = document.getElementById('chatPageWrap');
@@ -1310,7 +1298,8 @@
       if (wrap) { wrap.style.position = 'fixed'; wrap.style.left = '0'; wrap.style.right = '0'; wrap.style.top = '0'; wrap.style.bottom = 'auto'; wrap.style.transform = ''; wrap.style.zIndex = '50'; }
       if (ma) { ma.style.overflowY = 'hidden'; ma.scrollTop = 0; }
       let _prevVPH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-      function _syncToViewport() {
+      var _viewportWantsBottom = false;
+      function _applyViewportSync() {
         const w = document.getElementById('chatPageWrap');
         const vp = window.visualViewport;
         if (!w || !vp) return;
@@ -1325,11 +1314,20 @@
           window.scrollTo(0, 0);
           if (se) se.scrollTop = 0;
         }
-        if (vp.height < _prevVPH - 60) {               // keyboard just opened
+        if (_viewportWantsBottom || vp.height < _prevVPH - 60) { // focus request or keyboard just opened
           const th = document.getElementById('chatThread');
           if (th) th.scrollTop = th.scrollHeight;
         }
+        _viewportWantsBottom = false;
         _prevVPH = vp.height;
+      }
+      function _syncToViewport(pinBottom) {
+        if (pinBottom === true) _viewportWantsBottom = true;
+        if (window._chatVPRaf) return;
+        window._chatVPRaf = window.requestAnimationFrame(function () {
+          window._chatVPRaf = 0;
+          _applyViewportSync();
+        });
       }
       window._chatVPHandler = _syncToViewport;
       if (window.visualViewport) {
@@ -1337,22 +1335,29 @@
         window.visualViewport.addEventListener('scroll', _syncToViewport);
         _syncToViewport();
       }
-      // iOS often fires the viewport resize late (or not at all on first focus),
-      // so re-sync a few times after the field gains focus and scroll to bottom.
+      // iOS can report its final viewport slightly after focus. One delayed,
+      // rAF-throttled sync is enough; repeated timers made typing feel sticky.
       const _inp = document.getElementById('chatIn');
       if (_inp) {
         _inp.addEventListener('focus', function () {
-          [60, 200, 350, 550, 800].forEach(function (d) {
-            setTimeout(function () {
-              _syncToViewport();
-              const th = document.getElementById('chatThread');
-              if (th) th.scrollTop = th.scrollHeight;
-            }, d);
-          });
+          if (window._chatFocusSyncTimer) clearTimeout(window._chatFocusSyncTimer);
+          window._chatFocusSyncTimer = setTimeout(function () {
+            window._chatFocusSyncTimer = 0;
+            _syncToViewport(true);
+          }, 220);
         });
-        _inp.addEventListener('blur', function () { setTimeout(_syncToViewport, 100); });
+        _inp.addEventListener('blur', function () {
+          if (window._chatFocusSyncTimer) clearTimeout(window._chatFocusSyncTimer);
+          window._chatFocusSyncTimer = setTimeout(function () {
+            window._chatFocusSyncTimer = 0;
+            _syncToViewport(false);
+          }, 100);
+        });
       }
     }
+    // Run after platform-specific viewport setup; the one rAF correction lands
+    // after the browser viewport rAF, then reveals the already-pinned thread.
+    forceChatScrollBottom();
     if (H.currentPageParams && H.currentPageParams.id) {
       const cid = H.currentPageParams.id;
       // Restore any saved draft
@@ -2050,6 +2055,9 @@
       const img = document.createElement('img');
       img.src = imageUrl;
       img.className = 'chat-img';
+      img.width = 220;
+      img.height = 165;
+      img.onerror = function() { img.style.visibility = 'hidden'; };
       img.onclick = function() { H._chat.viewImg(imageUrl); };
       bubble.appendChild(img);
       if (msgText_) {

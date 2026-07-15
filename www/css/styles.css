@@ -1107,16 +1107,19 @@ select.fi {
 .chat-hdr-back { background: none; border: none; color: var(--text); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 2px; }
 .chat-hdr-back svg { width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 2.2; }
 .chat-hdr-av { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; overflow: hidden; border: none; cursor: pointer; position: relative; }
+.chat-hdr-av > img { width: 40px; height: 40px; object-fit: cover; }
 .chat-hdr-info { flex: 1; min-width: 0; cursor: pointer; }
 .chat-hdr-name { font-family: var(--font); font-size: 15px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat-hdr-sub { font-size: 11px; color: var(--sub); margin-top: 1px; display: flex; align-items: center; gap: 4px; font-weight: 600; }
 .chat-hdr-menu { background: none; border: none; color: var(--text-sub); cursor: pointer; padding: 8px; flex-shrink: 0; display: flex; align-items: center; }
 .chat-context-strip { flex-shrink: 0; padding: 8px 16px; background: var(--card); border-bottom: .5px solid var(--border); font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 12px; font-weight: 500; color: var(--sub); display: flex; align-items: center; gap: 6px; }
 .chat-thread { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 14px 6px; display: flex; flex-direction: column; background-color: #F0EBE3; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88'%3E%3Cg fill='%23785C42' fill-opacity='.13'%3E%3Cpath d='M11 21C11 21 3 15 3 9 3 5.7 5.7 3 9 3c1.5 0 2.8.7 3.5 1.8C13.2 3.7 14.5 3 16 3c3.3 0 6 2.7 6 6 0 6-8 12-8 12-1-1-7-6-7-6z' transform='translate(-1 -1)'/%3E%3Cpath d='M8 0l2 6 6 2-6 2-2 6-2-6-6-2 6-2z' transform='translate(58 5) scale(.72)'/%3E%3Ccircle cx='44' cy='44' r='3.5'/%3E%3Cpath d='M7 0l7 7-7 7-7-7z' transform='translate(10 60)'/%3E%3Cpath d='M6 13C6 13 1 10 1 6.5 1 4.6 2.6 3 4.5 3c.9 0 1.7.4 2.1 1 .4-.6 1.2-1 2.1-1C10.4 3 12 4.6 12 6.5 12 10 6 13 6 13z' transform='translate(62 60)'/%3E%3Ccircle cx='22' cy='44' r='2.2'/%3E%3Cpath d='M4.5 0l4.5 4.5-4.5 4.5-4.5-4.5z' transform='translate(62 26)'/%3E%3C/g%3E%3C/svg%3E"); background-repeat: repeat; }
-.chat-thread-spacer { flex: 1; min-height: 0; }
+.chat-thread.chat-thread-initializing { visibility: hidden; }
+.chat-thread-spacer { flex: 1 0 auto; min-height: 0; }
 .chat-msg-row { display: flex; align-items: flex-end; gap: 7px; margin-bottom: 6px; }
 .chat-msg-row.me { flex-direction: row-reverse; }
 .chat-row-av { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; overflow: hidden; }
+.chat-row-av > img { width: 26px; height: 26px; object-fit: cover; }
 .chat-bubble { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 78%; padding: 9px 13px; border-radius: 18px; font-size: 14.5px; line-height: 1.55; word-wrap: break-word; word-break: break-word; white-space: pre-wrap; -webkit-user-select: none !important; user-select: none !important; -webkit-touch-callout: none; touch-action: manipulation; }
 .chat-bubble.me { background: #1A3A8F; color: #fff; border-bottom-right-radius: 4px; box-shadow: 0 1px 3px rgba(26,58,143,.25); }
 .chat-bubble.them { background: #fff; color: #1A1A2E; border-bottom-left-radius: 4px; border: none; box-shadow: 0 1px 2px rgba(0,0,0,.10); }
@@ -1198,7 +1201,7 @@ select.fi {
 .cam-wrap .cam-state { position: absolute; top: 12px; left: 0; right: 0; text-align: center; color: #fff; font-size: 13px; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,.7); }
 .cam-wrap .cam-instr { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; color: #fff; font-size: 12px; text-shadow: 0 1px 4px rgba(0,0,0,.7); }
 .chat-bubble-img { padding: 4px !important; background: transparent !important; }
-.chat-img { display: block; max-width: 220px; max-height: 280px; width: auto; height: auto; border-radius: 12px; object-fit: cover; cursor: pointer; }
+.chat-img { display: block; width: min(220px, 68vw); height: auto; aspect-ratio: 4 / 3; border-radius: 12px; object-fit: cover; cursor: pointer; }
 .chat-caption { font-size: 13px; color: inherit; padding: 5px 6px 2px; max-width: 220px; word-break: break-word; line-height: 1.4; }
 .chat-img-viewer { position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 9999; display: flex; align-items: center; justify-content: center; }
 .chat-img-viewer img { max-width: 96vw; max-height: 92vh; border-radius: 8px; object-fit: contain; }
