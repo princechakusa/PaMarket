@@ -35,6 +35,50 @@
     };
   }
 
+  function detailStarsHtml(average, count) {
+    const filled = count ? Math.round(Number(average) || 0) : 0;
+    return [1,2,3,4,5].map(function(n) {
+      return '<svg class="' + (n <= filled ? 'is-on' : '') + '" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+    }).join('');
+  }
+
+  // Ratings arrive after the detail page mounts. Patch the stable rating nodes
+  // only: replacing the whole page here resets the app scroll container to 0.
+  function patchDetailRatings(sellerId) {
+    const card = document.querySelector('.det-page [data-detail-seller-id="' + sellerId + '"]');
+    if (!card) return;
+    const ratings = (H.state.ratings && H.state.ratings[sellerId]) || [];
+    const averageNumber = ratings.length
+      ? ratings.reduce(function(sum, item) { return sum + (Number(item.rating) || 0); }, 0) / ratings.length
+      : 0;
+    const averageText = ratings.length ? averageNumber.toFixed(1) : '—';
+    const currentUser = H.currentUser && H.currentUser();
+    const myRating = currentUser && ratings.find(function(item) { return item.userId === currentUser.id; });
+
+    const stars = document.getElementById('detailSellerStars');
+    const value = document.getElementById('detailSellerRatingValue');
+    const count = document.getElementById('detailSellerReviewCount');
+    if (stars) stars.innerHTML = detailStarsHtml(averageNumber, ratings.length);
+    if (value) value.textContent = averageText;
+    if (count) count.textContent = ratings.length
+      ? '(' + ratings.length + ' review' + (ratings.length === 1 ? '' : 's') + ')'
+      : 'No reviews yet';
+
+    const rateSummary = document.getElementById('detailRateSummary');
+    if (rateSummary) rateSummary.textContent = ratings.length
+      ? averageText + ' average · ' + ratings.length + ' rating' + (ratings.length === 1 ? '' : 's')
+      : 'Be the first to rate this seller';
+    document.querySelectorAll('#detailRateStars [data-rate-star]').forEach(function(button) {
+      const selected = !!myRating && Number(button.getAttribute('data-rate-star')) <= Number(myRating.rating);
+      button.classList.toggle('is-on', selected);
+    });
+    const myRatingLine = document.getElementById('detailMyRating');
+    if (myRatingLine) {
+      myRatingLine.textContent = myRating ? 'Your rating: ' + myRating.rating + '/5' : '';
+      myRatingLine.hidden = !myRating;
+    }
+  }
+
   // Render the variants table (colour / size / stock) if the listing has any.
   H._variationsHtml = function (l) {
     var vars = (l && (l.variations || (l.attrs && l.attrs.variations))) || [];
@@ -106,15 +150,19 @@
     const COND_LABEL = { 'new':'New', 'like-new':'Like New', 'used':'Used', 'refurbished':'Refurbished' };
     const condRaw  = l.condition || (l.attrs && l.attrs.condition) || '';
     const condText = COND_LABEL[condRaw] || '';
-    const condGood = condRaw === 'new' || condRaw === 'like-new';
 
     // Location string
-    const locStr = H.escHtml(([l.suburb, l.city, l.prov].filter(Boolean)[0] || ''));
+    const locStr = H.escHtml(([l.suburb, l.city].filter(Boolean).join(', ') || l.prov || ''));
+    const categoryText = H.escHtml((l.cat||'Listing').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()));
 
     // Seller stats
     const sellerListings = (H.state.listings||[]).filter(x => x.sellerId === seller.id && x.status === 'active').length;
+    const sellerSales    = (H.state.listings||[]).filter(x => x.sellerId === seller.id && x.status === 'sold').length;
     const ratings        = (H.state.ratings && H.state.ratings[seller.id]) || [];
-    const avgRating      = ratings.length ? (ratings.reduce((s,r) => s + r.rating, 0) / ratings.length).toFixed(1) : '—';
+    const avgRatingNum   = ratings.length ? ratings.reduce((s,r) => s + (Number(r.rating)||0), 0) / ratings.length : 0;
+    const avgRating      = ratings.length ? avgRatingNum.toFixed(1) : '—';
+    const mileageRaw     = l.attrs && (l.attrs.mileage || l.attrs.mileage_km);
+    const mileageText    = mileageRaw ? Number(mileageRaw).toLocaleString() + ' km' : '';
 
     // Photo HTML
     const photoHtml = photos.length
@@ -125,12 +173,11 @@
     let rateSection = '';
     if (u && u.id !== seller.id) {
       const myRating = ratings.find(r => r.userId === u.id);
-      const avgLine  = ratings.length ? `<div style="font-size:11px;color:#71717A;margin-bottom:8px">${avgRating} avg · ${ratings.length} rating${ratings.length===1?'':'s'}</div>` : '';
       const stars    = [1,2,3,4,5].map(n => {
         const on = myRating && myRating.rating >= n;
-        return `<button onclick="H._rateSeller('${seller.id}',${n},'${l.id}')" style="background:none;border:none;cursor:pointer;padding:2px;flex-shrink:0;line-height:1"><svg viewBox="0 0 24 24" width="28" height="28" fill="${on?'#F5A623':'none'}" stroke="${on?'#F5A623':'#D4D4D8'}" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>`;
+        return `<button class="det-rate-star${on?' is-on':''}" data-rate-star="${n}" onclick="H._rateSeller('${seller.id}',${n},'${l.id}')" aria-label="Rate ${n} out of 5"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>`;
       }).join('');
-      rateSection = `<div style="background:var(--card);padding:14px 16px;margin-bottom:8px"><div class="det-sec-title">Rate this Seller</div>${avgLine}<div style="display:flex;gap:2px;align-items:center">${stars}</div>${myRating?`<div style="font-size:11px;color:#71717A;margin-top:6px">Your rating: ${myRating.rating}/5</div>`:''}</div>`;
+      rateSection = `<div class="det-rate-card"><div class="det-sec-title">Rate this Seller</div><div class="det-rate-summary" id="detailRateSummary">${ratings.length ? `${avgRating} average · ${ratings.length} rating${ratings.length===1?'':'s'}` : 'Be the first to rate this seller'}</div><div class="det-rate-stars" id="detailRateStars">${stars}</div><div class="det-my-rating" id="detailMyRating"${myRating?'':' hidden'}>${myRating?`Your rating: ${myRating.rating}/5`:''}</div></div>`;
     }
 
     // Owner performance + actions
@@ -146,7 +193,7 @@
           </div>
           <div class="det-boost-banner">
             <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <div style="flex:1"><div style="font-size:12px;font-weight:800;color:#92400E">Boost this ad</div><div style="font-size:11px;color:#B45309;margin-top:1px">Get 5× more views for $2/day</div></div>
+            <div class="det-boost-copy-wrap"><div class="det-boost-title">Boost this ad</div><div class="det-boost-copy">Get 5× more views for $2/day</div></div>
             <button class="det-boost-btn" onclick="H.boostListing&&H.boostListing('${l.id}')">Boost</button>
           </div>
         </div>
@@ -166,37 +213,31 @@
     // CTA bar
     const sellerPrivacy = seller.privacySettings || {};
     const msgDisabled   = sellerPrivacy.allowMessages === false;
-    const cm            = l.contactMethod || 'chat';
     let ctaBar;
     if (isMine) {
-      ctaBar = `<div class="det-cta-bar det-cta-owner"><span style="font-size:12px;color:#A1A1AA;font-weight:600">This is your listing</span></div>`;
+      ctaBar = `<div class="det-cta-bar det-cta-owner"><span class="det-owner-label">This is your listing</span></div>`;
     } else {
-      const waBtn = `<button class="cta-wa-btn" onclick="H.openWA('${l.id}')" title="Chat on WhatsApp">${S.wa}</button>`;
+      const waBtn = `<button class="cta-wa-btn" onclick="H.openWA('${l.id}')" title="Chat on WhatsApp">${S.wa}<span>WhatsApp</span></button>`;
       const callBtn = sellerPhone
-        ? `<button class="cta-call-btn" onclick="H.callSeller('${H.escHtml(sellerPhone)}')" title="Call seller"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.6a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.07 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.05 9.9a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21 16.92z"/></svg></button>`
+        ? `<button class="cta-call-btn" onclick="H.callSeller('${H.escHtml(sellerPhone)}')" title="Call seller"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.6a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.07 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.05 9.9a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21 16.92z"/></svg><span>Call</span></button>`
         : '';
       const msgBtn = msgDisabled
         ? `<button class="cta-msg-btn" disabled style="opacity:.5;cursor:not-allowed"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messaging Off</button>`
-        : `<button class="cta-msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Message Seller</button>`;
-      ctaBar = cm === 'phone'
-        ? `<div class="det-cta-bar">${callBtn}${waBtn}${msgBtn}</div>`
-        : `<div class="det-cta-bar">${msgBtn}${waBtn}${callBtn}</div>`;
+        : `<button class="cta-msg-btn" onclick="H.startChatWith('${seller.id}','${l.id}')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Message</span></button>`;
+      ctaBar = `<div class="det-cta-bar">${callBtn}${waBtn}${msgBtn}</div>`;
     }
 
     return `<div class="page active det-page">
       <div class="det-photo-wrap" id="dPhoto">
         ${photoHtml}
         <div class="det-photo-overlay"></div>
-        ${photos.length > 1 ? `
-          <div class="photo-dots">${photos.map((_,i)=>`<div class="pdot ${i===0?'on':''}" onclick="H.setPhoto('${l.id}',${i})"></div>`).join('')}</div>
-          <div class="photo-counter" id="photoCount">1 / ${photos.length}</div>
-        ` : ''}
-        ${l.boost ? '<div class="feat-badge-abs">Featured</div>' : ''}
+        ${photos.length > 1 ? `<div class="photo-dots">${photos.map((_,i)=>`<button class="pdot ${i===0?'on':''}" onclick="H.setPhoto('${l.id}',${i})" aria-label="Show photo ${i+1}"></button>`).join('')}</div>` : ''}
+        ${photos.length ? `<div class="photo-counter"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M8 5l1.2-2h5.6L16 5"/></svg><span id="photoCount">1 / ${photos.length}</span></div>` : ''}
         <div class="det-topbar">
           <button class="det-icon-btn" onclick="H.goBack()" aria-label="Back">
             <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
-          <div class="det-topbar-title">${H.escHtml(l.title)}</div>
+          <div class="det-topbar-title" aria-hidden="true"></div>
           <button class="det-icon-btn" onclick="H.shareListing('${l.id}')" aria-label="Share">
             <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
@@ -207,17 +248,21 @@
       </div>
 
       <div class="det-content">
-        <div class="det-card">
+        <div class="det-card det-hero-card">
+          <div class="det-chip-row">
+            <span class="det-category-chip">${categoryText}</span>
+            ${l.boost ? '<span class="det-featured-chip"><svg viewBox="0 0 24 24"><path d="m12 2 3.1 6.3L22 9.3l-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1Z"/></svg>Featured</span>' : ''}
+            ${l.negotiable ? '<span class="nego-pill">Negotiable</span>' : ''}
+          </div>
           <div class="det-price-row">
             <div class="det-price">${H.escHtml(H.fmtPrice(l.price, l.currency))}</div>
-            ${l.negotiable ? '<div class="nego-pill">Negotiable</div>' : ''}
           </div>
           <div class="det-listing-title">${H.escHtml(l.title)}</div>
-          <div class="qf-row">
-            ${condText ? `<div class="qf-chip${condGood?' qf-green':''}"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${H.escHtml(condText)}</div>` : ''}
-            ${locStr ? `<div class="qf-chip"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${locStr}</div>` : ''}
-            <div class="qf-chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${H.timeAgo(l.createdAt)}</div>
-            <div class="qf-chip qf-blue"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${l.views||0} views</div>
+          ${locStr ? `<div class="det-location"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${locStr}<span>·</span>${H.timeAgo(l.createdAt)}</div>` : ''}
+          <div class="det-key-specs">
+            <div class="det-key-spec"><span class="det-key-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span><span><small>Condition</small><strong>${H.escHtml(condText||'Not specified')}</strong></span></div>
+            <div class="det-key-spec"><span class="det-key-icon"><svg viewBox="0 0 24 24"><path d="m20 7-8 4-8-4 8-4 8 4Z"/><path d="m4 7 8 4 8-4v10l-8 4-8-4V7Z"/></svg></span><span><small>Category</small><strong>${categoryText}</strong></span></div>
+            <div class="det-key-spec"><span class="det-key-icon"><svg viewBox="0 0 24 24">${mileageText?'<circle cx="12" cy="12" r="9"/><path d="m12 12 4-3M7 16h10"':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'}</svg></span><span><small>${mileageText?'Mileage':'Views'}</small><strong>${mileageText||((l.views||0).toLocaleString())}</strong></span></div>
           </div>
         </div>
 
@@ -226,22 +271,25 @@
         ${H._variationsHtml ? H._variationsHtml(l) : ''}
 
         <div class="det-desc-wrap">
-          <div class="det-sec-title">Description</div>
+          <div class="det-sec-title">About this listing</div>
+          <h3 class="det-section-heading">Description</h3>
           <div class="desc-text">${H.escHtml(l.desc||'No description provided.')}</div>
-          <div style="font-size:11px;color:#71717A;margin-top:10px;display:flex;align-items:center;gap:4px">
-            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#A1A1AA" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-            Posted in <strong style="color:#3F3F46;margin-left:3px">${H.escHtml((l.cat||'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()))}</strong>
+          <div class="det-posted-category">
+            <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            Posted in <strong>${categoryText}</strong>
           </div>
         </div>
 
         ${H.attrAmenitiesHtml ? H.attrAmenitiesHtml(l) : ''}
 
-        <div class="det-seller-section">
+        <div class="det-seller-section" data-detail-seller-id="${seller.id}">
+          <div class="det-sec-title">Seller &amp; trust</div>
           <div class="seller-card" onclick="H.openUserProfile('${seller.id}')">
-            <div style="position:relative;flex-shrink:0">
+            <div class="seller-avatar-wrap">
               <div class="seller-av">
                 ${seller.avatar ? `<img src="${H.escHtml(seller.avatar)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(sellerName)}
               </div>
+              ${seller.verified ? '<div class="seller-verified-check"><svg viewBox="0 0 24 24"><path d="m7.5 12.5 3 3 6-7"/></svg></div>' : ''}
               ${(seller.privacySettings && seller.privacySettings.showActivity) ? '<div class="seller-online-dot"></div>' : ''}
             </div>
             <div class="seller-body">
@@ -249,26 +297,23 @@
                 <div class="seller-name">${H.escHtml(sellerName)}</div>
                 ${seller.verified ? `<div class="verified-badge-det"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Verified</div>` : ''}
               </div>
-              <div class="seller-meta">Member since ${new Date(seller.joinedAt||Date.now()).getFullYear()}${seller.verified?' · ID Verified':''}</div>
+              <div class="seller-rating-line"><span class="seller-rating-stars" id="detailSellerStars">${detailStarsHtml(avgRatingNum,ratings.length)}</span><strong id="detailSellerRatingValue">${avgRating}</strong><span id="detailSellerReviewCount">${ratings.length?`(${ratings.length} review${ratings.length===1?'':'s'})`:'No reviews yet'}</span></div>
+              <div class="seller-meta">${sellerSales} sold · ${sellerListings} active · Joined ${new Date(seller.joinedAt||Date.now()).getFullYear()}</div>
             </div>
             <div class="seller-profile-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
           </div>
-          <div class="seller-stats">
-            <div class="seller-stat"><div class="ss-val">${sellerListings||'—'}</div><div class="ss-label">Listings</div></div>
-            <div class="seller-stat"><div class="ss-val">${avgRating}</div><div class="ss-label">Rating</div></div>
-            <div class="seller-stat"><div class="ss-val">${ratings.length||'—'}</div><div class="ss-label">Reviews</div></div>
-          </div>
+          ${seller.verified ? '<div class="seller-trust-note"><svg viewBox="0 0 24 24"><path d="m12 3 7 3v5c0 4.7-3 8.3-7 10-4-1.7-7-5.3-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg>Identity verified by PaMarket</div>' : ''}
         </div>
 
         ${!isMine ? `<div class="safety-tip">
-          <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <div class="safety-tip-text">Never pay in advance or transfer money before seeing the item. Meet in a public place and inspect before purchasing.</div>
+          <svg viewBox="0 0 24 24"><path d="m12 3 7 3v5c0 4.7-3 8.3-7 10-4-1.7-7-5.3-7-10V6l7-3Z"/><path d="M12 8v4m0 4h.01"/></svg>
+          <div><strong>Trade safely</strong><div class="safety-tip-text">Meet in public, inspect before paying, and remember: PaMarket never handles payments.</div></div>
         </div>` : ''}
 
         ${ownerSection}
         ${rateSection}
 
-        <div style="background:#F5F5F7;padding-top:4px" id="similarListingsPlaceholder"></div>
+        <div class="det-related-placeholder" id="similarListingsPlaceholder"></div>
       </div>
 
       ${ctaBar}
@@ -312,7 +357,9 @@
         }
         _applyLocal();
         H.toast('Thanks for your rating!');
-        if (H.currentPageName === 'Detail') H.renderPage('Detail', { id: listingId || params.id });
+        if (H.currentPageName === 'Detail' && H.currentPageParams && H.currentPageParams.id === (listingId || params.id)) {
+          patchDetailRatings(sellerId);
+        }
       }).catch(function(e) {
         console.warn('Rating save error:', e && e.message);
         H.toast('Could not save your rating. Please try again.', 4000, true);
@@ -344,7 +391,8 @@
     if (H._detailFetchFailed === params.id) H._detailFetchFailed = null;
 
     // Fetch ratings from Supabase so the star display is never stuck on stale
-    // local state. Re-renders in place when data lands.
+    // local state. Patch only the rating nodes when data lands: a full detail
+    // render here resets the scroll container and causes the visible jump.
     (function() {
       const _sb = window.supabase;
       const _sellerId = l.sellerId || l.seller_id;
@@ -372,7 +420,7 @@
           });
           H.saveState();
           if (H.currentPageName === 'Detail' && H.currentPageParams && H.currentPageParams.id === params.id) {
-            H.renderPage('Detail', params);
+            patchDetailRatings(_sellerId);
           }
         }).catch(function(){});
     })();
@@ -400,12 +448,11 @@
       </div>`;
     }
     let html = '';
-    if (similar.length) html += `<div style="padding:12px 16px 6px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;font-weight:800;color:#18181B;letter-spacing:-.2px">Similar Listings</span></div><div class="det-similar-scroll">${similar.map(simCardHtml).join('')}</div>`;
-    if (recent.length)  html += `<div style="padding:12px 16px 6px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;font-weight:800;color:#18181B;letter-spacing:-.2px">Recently Viewed</span></div><div class="det-similar-scroll">${recent.map(simCardHtml).join('')}</div>`;
+    if (similar.length) html += `<div class="det-related-head">Similar Listings</div><div class="det-similar-scroll">${similar.map(simCardHtml).join('')}</div>`;
+    if (recent.length)  html += `<div class="det-related-head">Recently Viewed</div><div class="det-similar-scroll">${recent.map(simCardHtml).join('')}</div>`;
     if (!html) { if (placeholder) placeholder.remove(); return; }
     const sec = document.createElement('div');
-    sec.style.background = '#F5F5F7';
-    sec.style.paddingBottom = '8px';
+    sec.className = 'det-related-section';
     sec.innerHTML = html;
     if (placeholder) {
       placeholder.replaceWith(sec);
