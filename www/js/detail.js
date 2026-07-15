@@ -79,6 +79,47 @@
     }
   }
 
+  // Seller profile details are backfilled after the listing feed renders.
+  // Update the stable seller-card nodes only so the app never rebuilds the
+  // Detail page (and resets its scroll position) when verification arrives.
+  function patchDetailSeller(sellerId) {
+    const section = document.querySelector('.det-page [data-detail-seller-id="' + sellerId + '"]');
+    if (!section) return;
+    const seller = (H.state.users || []).find(function(user) { return user.id === sellerId; });
+    if (!seller) return;
+
+    const avatar = document.getElementById('detailSellerAvatar');
+    if (avatar) {
+      avatar.textContent = '';
+      if (seller.avatar) {
+        const image = document.createElement('img');
+        image.src = seller.avatar;
+        image.width = 50;
+        image.height = 50;
+        image.decoding = 'async';
+        image.alt = '';
+        image.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover';
+        avatar.appendChild(image);
+      } else {
+        avatar.textContent = H.initials(seller.name || 'Seller');
+      }
+    }
+
+    const isVerified = !!seller.verified;
+    ['detailSellerVerifiedCheck', 'detailSellerVerifiedBadge'].forEach(function(id) {
+      const element = document.getElementById(id);
+      if (!element) return;
+      element.style.visibility = isVerified ? 'visible' : 'hidden';
+      element.setAttribute('aria-hidden', isVerified ? 'false' : 'true');
+    });
+    const trustNote = document.getElementById('detailSellerTrustNote');
+    if (trustNote) {
+      trustNote.style.display = isVerified ? '' : 'none';
+      trustNote.setAttribute('aria-hidden', isVerified ? 'false' : 'true');
+    }
+  }
+  H.patchDetailSeller = patchDetailSeller;
+
   // Render the variants table (colour / size / stock) if the listing has any.
   H._variationsHtml = function (l) {
     var vars = (l && (l.variations || (l.attrs && l.attrs.variations))) || [];
@@ -166,7 +207,7 @@
 
     // Photo HTML
     const photoHtml = photos.length
-      ? `<img src="${photos[0]}" id="dPhotoImg" data-photos="${H.escHtml(JSON.stringify(photos))}" onclick="H.openPhotoViewer(JSON.parse(this.dataset.photos),0)" style="cursor:zoom-in;position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`
+      ? `<img src="${photos[0]}" id="dPhotoImg" width="390" height="330" fetchpriority="high" decoding="async" data-photos="${H.escHtml(JSON.stringify(photos))}" onclick="H.openPhotoViewer(JSON.parse(this.dataset.photos),0)" style="cursor:zoom-in;position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`
       : `<div class="ph">${H.categoryIcon(l.cat)}</div>`;
 
     // Rate-seller section (buyer only, SVG stars)
@@ -286,23 +327,23 @@
           <div class="det-sec-title">Seller &amp; trust</div>
           <div class="seller-card" onclick="H.openUserProfile('${seller.id}')">
             <div class="seller-avatar-wrap">
-              <div class="seller-av">
-                ${seller.avatar ? `<img src="${H.escHtml(seller.avatar)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(sellerName)}
+              <div class="seller-av" id="detailSellerAvatar">
+                ${seller.avatar ? `<img src="${H.escHtml(seller.avatar)}" width="50" height="50" decoding="async" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : H.initials(sellerName)}
               </div>
-              ${seller.verified ? '<div class="seller-verified-check"><svg viewBox="0 0 24 24"><path d="m7.5 12.5 3 3 6-7"/></svg></div>' : ''}
+              <div class="seller-verified-check" id="detailSellerVerifiedCheck" aria-hidden="${seller.verified?'false':'true'}"${seller.verified?'':' style="visibility:hidden"'}><svg viewBox="0 0 24 24"><path d="m7.5 12.5 3 3 6-7"/></svg></div>
               ${(seller.privacySettings && seller.privacySettings.showActivity) ? '<div class="seller-online-dot"></div>' : ''}
             </div>
             <div class="seller-body">
               <div class="seller-name-row">
                 <div class="seller-name">${H.escHtml(sellerName)}</div>
-                ${seller.verified ? `<div class="verified-badge-det"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Verified</div>` : ''}
+                <div class="verified-badge-det" id="detailSellerVerifiedBadge" aria-hidden="${seller.verified?'false':'true'}"${seller.verified?'':' style="visibility:hidden"'}><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Verified</div>
               </div>
               <div class="seller-rating-line"><span class="seller-rating-stars" id="detailSellerStars">${detailStarsHtml(avgRatingNum,ratings.length)}</span><strong id="detailSellerRatingValue">${avgRating}</strong><span id="detailSellerReviewCount">${ratings.length?`(${ratings.length} review${ratings.length===1?'':'s'})`:'No reviews yet'}</span></div>
               <div class="seller-meta">${sellerSales} sold · ${sellerListings} active · Joined ${new Date(seller.joinedAt||Date.now()).getFullYear()}</div>
             </div>
             <div class="seller-profile-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
           </div>
-          ${seller.verified ? '<div class="seller-trust-note"><svg viewBox="0 0 24 24"><path d="m12 3 7 3v5c0 4.7-3 8.3-7 10-4-1.7-7-5.3-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg>Identity verified by PaMarket</div>' : ''}
+          <div class="seller-trust-note" id="detailSellerTrustNote" aria-hidden="${seller.verified?'false':'true'}"${seller.verified?'':' style="display:none"'}><svg viewBox="0 0 24 24"><path d="m12 3 7 3v5c0 4.7-3 8.3-7 10-4-1.7-7-5.3-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg>Identity verified by PaMarket</div>
         </div>
 
         ${!isMine ? `<div class="safety-tip">
@@ -437,7 +478,7 @@
       .slice(0, 4);
     function simCardHtml(s) {
       const thumb = s.photos && s.photos[0]
-        ? `<img src="${H.escHtml(s.photos[0])}" style="width:100%;height:100%;object-fit:cover">`
+        ? `<img src="${H.escHtml(s.photos[0])}" width="140" height="90" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover">`
         : `<div style="display:flex;align-items:center;justify-content:center;height:100%;opacity:.35">${H.categoryIcon(s.cat)}</div>`;
       return `<div class="sim-card" onclick="H.openListing('${s.id}')">
         <div class="sim-img">${thumb}</div>
@@ -450,9 +491,16 @@
     let html = '';
     if (similar.length) html += `<div class="det-related-head">Similar Listings</div><div class="det-similar-scroll">${similar.map(simCardHtml).join('')}</div>`;
     if (recent.length)  html += `<div class="det-related-head">Recently Viewed</div><div class="det-similar-scroll">${recent.map(simCardHtml).join('')}</div>`;
-    if (!html) { if (placeholder) placeholder.remove(); return; }
+    if (!html) {
+      // Related data comes entirely from in-memory state/localStorage and this
+      // after-hook runs synchronously after the page HTML is mounted. Remove
+      // the reserved slot now, before first paint, so an empty result cannot
+      // collapse while the user is scrolling.
+      if (placeholder) placeholder.remove();
+      return;
+    }
     const sec = document.createElement('div');
-    sec.className = 'det-related-section';
+    sec.className = 'det-related-section' + (similar.length && recent.length ? ' det-related-section--two' : '');
     sec.innerHTML = html;
     if (placeholder) {
       placeholder.replaceWith(sec);

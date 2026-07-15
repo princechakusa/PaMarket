@@ -1850,8 +1850,8 @@ window.H = {
 
       // Seller verified-badge backfill runs in the background so it never
       // delays the main fetch return. The UI already has fresh listings above;
-      // badge updates arrive a moment later and only trigger a re-render when
-      // something actually changed (prevents an infinite re-render loop).
+      // badge updates arrive a moment later and only refresh affected UI when
+      // something actually changed (prevents an infinite update loop).
       const sellerIds = [...new Set(cloud.map(l => l.sellerId).filter(Boolean))];
       if (sellerIds.length) {
         window.supabase.from('profiles_public').select('id,name,avatar,verified').in('id', sellerIds)
@@ -1875,7 +1875,14 @@ window.H = {
             if (verifiedChanged) {
               H.saveState();
               const pg = H.currentPageName;
-              if (pg === 'Home' || pg === 'Browse' || pg === 'Detail' || pg === 'CategoryView') {
+              if (pg === 'Detail') {
+                const detailListing = (H.state.listings || []).find(function(listing) {
+                  return H.currentPageParams && listing.id === H.currentPageParams.id;
+                });
+                if (detailListing && typeof H.patchDetailSeller === 'function') {
+                  try { H.patchDetailSeller(detailListing.sellerId); } catch(e) {}
+                }
+              } else if (pg === 'Home' || pg === 'Browse' || pg === 'CategoryView') {
                 try { H.renderPage(pg, H.currentPageParams); } catch(e) {}
               }
             }

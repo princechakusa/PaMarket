@@ -610,8 +610,12 @@ body.kb-open .bottom-nav { display: none !important; }
 .det-my-rating { margin-top: 6px; color: var(--text-sub); font-size: 10px; }
 .det-page .det-related-placeholder,
 .det-page .det-related-section { background: var(--bg); }
-.det-related-section { padding: 4px 0 8px; }
-.det-related-head { padding: 14px 16px 7px; color: var(--text-primary); font-size: 14px; font-weight: 820; letter-spacing: -.01em; }
+.det-page .det-related-placeholder { min-height: 206px; }
+.det-page .det-related-section { min-height: 206px; padding: 4px 0 8px; }
+.det-page .det-related-section--two { min-height: 400px; }
+.det-related-head { padding: 14px 16px 7px; color: var(--text-primary); font-size: 14px; font-weight: 820; line-height: 17px; letter-spacing: -.01em; }
+.det-page .sim-price { line-height: 16px; }
+.det-page .sim-title { line-height: 13px; }
 .det-page .sim-card { border-color: var(--border); background: var(--card); }
 .det-page .sim-title { color: var(--text-mid); }
 .det-page .owner-actions { margin: 10px 12px 0; border: 1px solid var(--border); border-radius: var(--r-lg); }
