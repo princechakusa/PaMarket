@@ -48,16 +48,10 @@
 
     const hasAny = resolved.length > 0;
 
-    return `<div class="page active">
-      <div class="app-header" style="padding-bottom:16px">
-        <div class="app-header-row">
-          <div class="logo">Saved <em>Ads</em></div>
-          <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.6);padding:4px 10px;background:rgba(255,255,255,.1);border-radius:20px">
-            ${ids.length} saved
-          </div>
-        </div>
-      </div>
-      <div class="listing-list">
+    const savedTitle = ids.length ? `Saved & Favorites (${ids.length})` : 'Saved & Favorites';
+    return `<div class="page active sticky-topbar">
+      ${innerTopbar(savedTitle)}
+      <div class="listing-list" style="padding-top:8px">
         ${hasAny
           ? resolved.map(renderEntry).join('')
           : emptyState('Nothing saved yet', 'Tap the ♡ on any listing to save it for later', 'Browse Listings', "H.navTo('Browse',document.querySelector('[data-nav=Browse]'))")}
