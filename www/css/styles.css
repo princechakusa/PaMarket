@@ -995,9 +995,14 @@ select.fi {
 .premium-help-page .inner-topbar-title,
 .sticky-topbar .inner-topbar-title,
 .sticky-topbar .profile-topbar-title { color: var(--text-primary); text-align: center; font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
-.premium-help-page .back { width: 38px; height: 38px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
-.premium-help-page .back:active { background: var(--blue-light); }
-.premium-help-page .back svg { stroke: var(--blue-text); }
+.premium-help-page .back,
+.sticky-topbar .back { width: 38px; height: 38px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+.premium-help-page .back:active,
+.sticky-topbar .back:active { background: var(--blue-light); }
+/* Frosted sticky headers are light, so the back arrow must be dark, not the
+   white it is on the standard blue header — otherwise it is invisible. */
+.premium-help-page .back svg,
+.sticky-topbar .back svg { stroke: var(--blue-text); }
 .ph-content { padding-bottom: 18px; }
 .ph-hero { padding: 20px 17px 16px; }
 .ph-online { display: flex; align-items: center; gap: 7px; color: var(--green); font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
