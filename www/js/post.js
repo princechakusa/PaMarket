@@ -521,6 +521,20 @@
             H.toast(msg, 6000, true);
             return;
           }
+          // Any other cloud failure (RLS denial, a plan/limit trigger, a schema
+          // error) was previously swallowed here — the ad kept its optimistic
+          // local row and the user was told "Your ad is live!" even though
+          // nothing was ever written to Supabase, so it vanished on the next
+          // fetch/refresh/device. Undo the optimistic add and surface it instead.
+          if (saveRes && saveRes.ok === false) {
+            H.state.listings = (H.state.listings || []).filter(x => x.id !== listingId);
+            H.saveState();
+            H._post._posting = false;
+            if (btn) { btn.disabled = false; btn.textContent = 'Post Ad →'; }
+            const msg = window.Safety ? Safety.friendlyError(saveRes.error).message : 'Could not post your ad — please try again.';
+            H.toast(msg, 6000, true);
+            return;
+          }
         } catch (e) {
           if (e && e._timeout && H.showError) H.showError('Saved on your device but the cloud didn’t respond — it will sync later.', e, 'post.cloud.timeout');
         }

@@ -1609,6 +1609,17 @@
         H.toast(msg, 6000, true);
         return;
       }
+      // Any other cloud failure (RLS denial, JOB_POST_LIMIT, a schema error) was
+      // previously swallowed here — the job kept its optimistic local row and
+      // was reported as posted even though nothing reached Supabase, so it
+      // disappeared on the next fetch/refresh/device.
+      if (saveRes && saveRes.ok === false) {
+        H.state.listings = (H.state.listings || []).filter(function (x) { return x.id !== listing.id; });
+        H.saveState();
+        var msg2 = window.Safety ? Safety.friendlyError(saveRes.error).message : 'Could not post your job — please try again.';
+        H.toast(msg2, 6000, true);
+        return;
+      }
     }
     if (overLimit) {
       var sb = window.supabase;

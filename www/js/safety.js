@@ -45,6 +45,26 @@
     rate_limited: {
       message: 'You’ve reached today’s posting limit. Please try again later — this keeps PaMarket free of spam.',
       blocked: true
+    },
+    listing_limit: {
+      message: 'You’ve reached your plan’s active listing limit. Upgrade your plan to add more.',
+      blocked: true
+    },
+    job_post_limit: {
+      message: 'You’ve reached your free job posting limit. Buy a job credit or upgrade your recruiter plan.',
+      blocked: true
+    },
+    no_featured_slots: {
+      message: 'All your featured slots are in use — buy more slots or upgrade your plan.',
+      blocked: true
+    },
+    boost_requires_purchase: {
+      message: 'Featuring this listing requires a purchase through the boost flow.',
+      blocked: true
+    },
+    feature_duration_limit: {
+      message: 'Featured placement can’t exceed 31 days.',
+      blocked: true
     }
   };
 
