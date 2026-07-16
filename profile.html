@@ -108,26 +108,48 @@ button{font-family:inherit;cursor:pointer}
 
 
 /* ══ PAGE-SPECIFIC ══ */
-.crumb{max-width:1200px;margin:0 auto;padding:16px 32px 0;font-size:13px;color:var(--mute)}
+.crumb{max-width:1200px;margin:0 auto;padding:16px 32px 0;font-size:12px;color:var(--mute)}
 .crumb a{color:var(--sub);font-weight:500}
 .crumb a:hover{color:var(--navy)}
 
-.pf-wrap{max-width:1200px;margin:0 auto;padding:16px 32px 70px;display:grid;grid-template-columns:320px 1fr;gap:28px;align-items:start}
-.pf-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px;position:sticky;top:82px}
-.pf-avatar{width:80px;height:80px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;margin:0 auto 16px;overflow:hidden}
+.pf-shell{max-width:1200px;margin:0 auto;padding:16px 32px 70px}
+.pf-hero{overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 35px rgba(25,31,55,.08)}
+.pf-cover{height:170px;position:relative;background:linear-gradient(100deg,rgba(11,28,77,.94),rgba(26,58,143,.72)),url('img/category-heroes/hero-shops.jpg') center 58%/cover}
+.pf-cover-copy{position:absolute;left:30px;bottom:23px;color:#fff}
+.pf-cover-copy small{display:block;color:#dbe5ff;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.pf-cover-copy strong{display:block;margin-top:3px;font-family:'Fraunces',Georgia,serif;font-size:25px;line-height:1.2}
+.pf-owner-top{position:absolute;right:20px;top:18px;padding:9px 13px;border:1px solid rgba(255,255,255,.35);border-radius:10px;background:rgba(255,255,255,.15);backdrop-filter:blur(10px);color:#fff;font-size:11px;font-weight:800}
+.pf-identity{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;padding:20px 26px}
+.pf-avatar-wrap{position:relative;margin-top:-65px}
+.pf-avatar{width:104px;height:104px;border:5px solid #fff;border-radius:24px;background:linear-gradient(145deg,var(--navy),#5472ce);color:#fff;display:flex;align-items:center;justify-content:center;font-size:31px;font-weight:800;overflow:hidden;box-shadow:0 12px 28px rgba(11,28,77,.2)}
 .pf-avatar img{width:100%;height:100%;object-fit:cover}
-.pf-name{font-size:19px;font-weight:800;text-align:center;display:flex;align-items:center;justify-content:center;gap:7px}
-.pf-verified{width:18px;height:18px;border-radius:50%;background:var(--green);color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-.pf-role{font-size:12.5px;color:var(--mute);text-align:center;margin-top:3px}
-.pf-meta{display:flex;flex-direction:column;gap:10px;margin-top:20px;padding-top:20px;border-top:1px solid var(--line)}
-.pf-meta-row{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--sub)}
+.pf-avatar-check{position:absolute;right:-7px;bottom:6px;width:27px;height:27px;border:4px solid #fff;border-radius:50%;background:var(--green);color:#fff;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:900}
+.pf-name{font-family:'Fraunces',Georgia,serif;font-size:25px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:8px}
+.pf-verified{display:inline-flex;padding:4px 8px;border-radius:20px;background:#E9F7EF;color:var(--green);font-family:'Inter',sans-serif;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+.pf-verified::after{content:' Verified'}
+.pf-role{font-size:13px;color:var(--sub);margin-top:4px}
+.pf-meta{display:flex;flex-wrap:wrap;gap:14px;margin-top:9px}
+.pf-meta-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mute)}
 .pf-meta-row svg{flex-shrink:0;color:var(--navy)}
-.pf-bio{font-size:13.5px;color:var(--sub);line-height:1.7;margin-top:16px}
-.pf-contact-btn{width:100%;margin-top:20px}
-.pf-rating{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;font-size:13px;color:var(--sub)}
+.pf-trust-chip{min-width:210px;padding:14px 15px;border:1px solid #BFDCCB;border-radius:14px;background:#F1F9F4}
+.pf-trust-chip strong{display:flex;align-items:center;gap:7px;color:var(--green);font-size:12px}
+.pf-trust-chip span{display:block;margin-top:4px;color:var(--sub);font-size:10.5px;line-height:1.45}
+.pf-metrics{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line)}
+.pf-metric{padding:17px 23px;border-right:1px solid var(--line)}
+.pf-metric:last-child{border-right:0}.pf-metric b{display:block;font-size:20px;color:var(--navy);letter-spacing:-.02em}.pf-metric span{display:block;margin-top:2px;color:var(--mute);font-size:9px;font-weight:850;text-transform:uppercase;letter-spacing:.06em}
+.pf-layout{display:grid;grid-template-columns:300px 1fr;gap:24px;margin-top:24px;align-items:start}
+.pf-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}
+.pf-card h2{font-family:'Fraunces',Georgia,serif;font-size:17px}
+.pf-bio{font-size:13px;color:var(--sub);line-height:1.7;margin-top:10px}
+.pf-trust-list{display:grid;gap:11px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.pf-trust-row{display:flex;align-items:center;gap:9px;color:var(--sub);font-size:11.5px}
+.pf-trust-icon{width:29px;height:29px;display:grid;place-items:center;border-radius:8px;background:var(--navy-tint);color:var(--navy);font-weight:900;flex-shrink:0}
+.pf-actions{margin-top:16px}.pf-contact-btn{width:100%;margin-top:8px}.pf-actions .pf-contact-btn:first-child{margin-top:0}
+.pf-owner-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}.pf-owner-actions .btn{padding:10px 8px;font-size:11.5px}.pf-owner-actions .btn:first-child{grid-column:1/-1}
+.pf-rating{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sub)}
 .pf-rating .stars{color:var(--gold);font-size:14px;letter-spacing:1px}
 .rev-list{display:flex;flex-direction:column;gap:12px;margin-top:14px}
-.rev{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.rev{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 16px}
 .rev-top{display:flex;align-items:center;gap:10px}
 .rev-av{width:36px;height:36px;border-radius:50%;background:#EEF2FF;color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
 .rev-who{font-size:14px;font-weight:700;color:var(--ink)}
@@ -136,14 +158,16 @@ button{font-family:inherit;cursor:pointer}
 .rev-body{font-size:14px;color:var(--sub);margin-top:9px;line-height:1.6}
 
 
-.pf-listings h2{font-size:20px;font-weight:800;margin-bottom:18px}
-.pf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.pf-section-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px}.pf-section-head h2{font-family:'Fraunces',Georgia,serif;font-size:22px}.pf-section-head a{color:var(--navy);font-size:11px;font-weight:800}
+.pf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 
 /* Owner-only "My Ads" boost controls on each listing card */
-.gcard{position:relative}
-.gcard-feat{position:absolute;top:8px;left:8px;font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;z-index:2;background:var(--gold);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.pf-grid .gcard{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:15px;background:#fff;box-shadow:0 5px 18px rgba(25,31,55,.06);transition:transform .18s,box-shadow .18s}.pf-grid .gcard:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(25,31,55,.12)}
+.pf-grid .gcard-img{aspect-ratio:4/3;height:auto}.pf-grid .gcard-body{padding:13px}.pf-grid .gcard-price{font-size:18px}.pf-grid .gcard-title{min-height:38px;font-size:12.5px;line-height:1.45}.pf-grid .gcard-loc{font-size:10.5px;margin-top:7px}
+.gcard-feat{position:absolute;top:8px;left:8px;font-size:9px;font-weight:800;padding:4px 8px;border-radius:8px;z-index:2;background:var(--gold);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .gcard-boost{position:absolute;top:8px;right:8px;z-index:3;display:inline-flex;align-items:center;gap:5px;background:var(--navy);color:#fff;border:none;border-radius:20px;padding:6px 12px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 10px rgba(15,36,96,.28)}
 .gcard-boost:hover{background:var(--navy-deep)}
+.gcard-foot{display:flex;justify-content:space-between;margin-top:10px;padding-top:9px;border-top:1px solid var(--line);color:var(--mute);font-size:9.5px;font-weight:650}
 .boost-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px}
 .boost-modal{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:26px;position:relative}
 .boost-modal h3{font-size:18px;font-weight:900;letter-spacing:-.01em}
@@ -173,13 +197,12 @@ button{font-family:inherit;cursor:pointer}
 
 
 @media(max-width:860px) {
-  .pf-wrap{grid-template-columns:1fr;padding:16px 20px 50px}
-  .pf-card{position:static}
+  .pf-shell{padding:16px 20px 50px}.pf-identity{grid-template-columns:auto 1fr}.pf-trust-chip{grid-column:1/-1;width:100%}.pf-layout{grid-template-columns:1fr}.pf-sidebar{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .pf-grid{grid-template-columns:repeat(2,1fr)}
   .crumb{padding:14px 20px 0}
 }
 
-@media(max-width:540px) {.pf-grid{grid-template-columns:1fr}}
+@media(max-width:540px) {.crumb{display:none}.pf-shell{padding:12px 12px 42px}.pf-hero{border-radius:18px}.pf-cover{height:125px}.pf-cover-copy{display:none}.pf-owner-top{right:12px;top:12px}.pf-identity{display:block;padding:0 16px 18px;text-align:center}.pf-avatar-wrap{display:inline-block;margin-top:-45px}.pf-avatar{width:88px;height:88px;border-radius:22px;font-size:27px}.pf-name{justify-content:center;font-size:23px;margin-top:8px}.pf-meta{justify-content:center}.pf-trust-chip{text-align:left;margin-top:14px}.pf-metrics{grid-template-columns:1fr 1fr}.pf-metric:nth-child(2){border-right:0}.pf-metric:nth-child(-n+2){border-bottom:1px solid var(--line)}.pf-layout{margin-top:14px}.pf-sidebar{display:block}.pf-card+.pf-card{margin-top:12px}.pf-grid{gap:9px}.pf-grid .gcard-body{padding:10px}.pf-grid .gcard-price{font-size:16px}.pf-grid .gcard-title{font-size:11.5px}.gcard-foot{display:none}.pf-section-head h2{font-size:20px}.gcard-boost{padding:6px 8px;font-size:10px}}
 
 h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,.logo,.auth-brand{font-family:'Fraunces',Georgia,serif;font-weight:700;letter-spacing:-.02em}
 </style>
@@ -313,9 +336,9 @@ window.doSearch = window.doSearch || function(){
 
 <div class="crumb"><a href="/">Home</a> / <span id="crumbName">Profile</span></div>
 
-<div id="loadingState" class="pf-wrap">
-  <div class="pf-card"><div class="skeleton" style="height:220px;border-radius:10px"></div></div>
-  <div class="pf-listings"><div class="skeleton" style="height:200px;border-radius:10px"></div></div>
+<div id="loadingState" class="pf-shell">
+  <div class="skeleton" style="height:330px;border-radius:20px"></div>
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:24px;margin-top:24px"><div class="skeleton" style="height:250px;border-radius:16px"></div><div class="skeleton" style="height:250px;border-radius:16px"></div></div>
 </div>
 
 <div id="notFoundState" class="state-msg hidden">
@@ -324,28 +347,30 @@ window.doSearch = window.doSearch || function(){
 </div>
 
 <div id="profileContent" class="hidden">
-  <div class="pf-wrap">
-    <div class="pf-card">
-      <div class="pf-avatar" id="pfAvatar"></div>
-      <h1 class="pf-name" id="pfName"></h1>
-      <div class="pf-role" id="pfRole"></div>
-      <div class="pf-rating hidden" id="pfRating"></div>
-      <div class="pf-meta" id="pfMeta"></div>
-      <div class="pf-bio hidden" id="pfBio"></div>
-      <a class="btn btn-whatsapp pf-contact-btn" id="pfWaBtn" target="_blank" rel="noopener">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
-        Chat on WhatsApp
-      </a>
-      <a class="btn btn-outline pf-contact-btn hidden" id="pfEmailBtn">
-        Email Seller
-      </a>
-    </div>
-    <div class="pf-listings">
-      <h2 id="pfListingsHeading">Active Listings</h2>
-      <div class="pf-grid" id="pfGrid"></div>
-      <div class="pf-reviews hidden" id="pfReviews">
-        <h2 style="margin-top:36px">Reviews</h2>
-        <div class="rev-list" id="pfRevList"></div>
+  <div class="pf-shell">
+    <section class="pf-hero">
+      <div class="pf-cover"><div class="pf-cover-copy"><small id="pfCoverEyebrow">Public seller profile</small><strong id="pfCoverTitle">Trusted seller on PaMarket</strong></div><a href="dashboard" class="pf-owner-top hidden" id="pfOwnerTop">Manage profile</a></div>
+      <div class="pf-identity">
+        <div class="pf-avatar-wrap"><div class="pf-avatar" id="pfAvatar"></div><span class="pf-avatar-check" id="pfAvatarCheck">✓</span></div>
+        <div><h1 class="pf-name" id="pfName"></h1><div class="pf-role" id="pfRole"></div><div class="pf-meta" id="pfMeta"></div></div>
+        <div class="pf-trust-chip" id="pfTrustChip"><strong>✓ PaMarket member</strong><span>View active listings and real seller feedback before making contact.</span></div>
+      </div>
+      <div class="pf-metrics">
+        <div class="pf-metric"><b id="pfActiveCount">—</b><span>Active listings</span></div>
+        <div class="pf-metric"><b id="pfRatingMetric">—</b><span>Seller rating</span></div>
+        <div class="pf-metric"><b id="pfReviewCount">0</b><span>Reviews</span></div>
+        <div class="pf-metric"><b id="pfVerifyMetric">Member</b><span>Trust status</span></div>
+      </div>
+    </section>
+    <div class="pf-layout">
+      <aside class="pf-sidebar">
+        <div class="pf-card"><h2 id="pfAboutHeading">About this seller</h2><div class="pf-bio" id="pfBio">This seller has not added a bio yet.</div><div class="pf-trust-list"><div class="pf-trust-row"><span class="pf-trust-icon">✓</span><span id="pfIdentityRow">PaMarket member</span></div><div class="pf-trust-row"><span class="pf-trust-icon">⌖</span><span id="pfLocationRow">Zimbabwe</span></div><div class="pf-trust-row"><span class="pf-trust-icon">◷</span><span>Profile and listings shown from live PaMarket data</span></div></div></div>
+        <div class="pf-card"><h2 id="pfActionHeading">Contact seller</h2><div class="pf-actions"><a class="btn btn-whatsapp pf-contact-btn" id="pfWaBtn" target="_blank" rel="noopener"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>Chat on WhatsApp</a><a class="btn btn-outline pf-contact-btn hidden" id="pfEmailBtn">Email Seller</a></div><div class="pf-owner-actions hidden" id="pfOwnerActions"><a class="btn btn-navy" href="dashboard">Open dashboard</a><a class="btn btn-outline" href="post-ad">Post new ad</a><a class="btn btn-outline" href="dashboard">Manage listings</a></div></div>
+      </aside>
+      <div class="pf-listings">
+        <div class="pf-section-head"><h2 id="pfListingsHeading">Active Listings</h2><a href="dashboard" class="hidden" id="pfManageAll">Manage all →</a></div>
+        <div class="pf-grid" id="pfGrid"></div>
+        <div class="pf-reviews hidden" id="pfReviews"><div class="pf-section-head" style="margin-top:34px"><h2>Reviews</h2><div class="pf-rating hidden" id="pfRating"></div></div><div class="rev-list" id="pfRevList"></div></div>
       </div>
     </div>
   </div>
@@ -477,6 +502,7 @@ function gcard(listing,idx){
       <div class="gcard-price">${PM.money(listing.price,listing.currency)}</div>
       <div class="gcard-title">${listing.title}</div>
       <div class="gcard-loc">${PIN} ${loc}</div>
+      <div class="gcard-foot"><span>${(Number(listing.views)||0).toLocaleString()} views</span><span>${isFeatured?'Featured':'Active'}</span></div>
     </div>
   </a>`;
 }
@@ -533,14 +559,20 @@ async function init(){
     if(IS_OWNER){
       const h=document.getElementById('pfListingsHeading');
       if(h)h.textContent='My Listings';
+      document.getElementById('pfOwnerTop').classList.remove('hidden');
+      document.getElementById('pfOwnerActions').classList.remove('hidden');
+      document.getElementById('pfManageAll').classList.remove('hidden');
+      document.getElementById('pfActionHeading').textContent='Manage profile';
+      document.getElementById('pfCoverEyebrow').textContent='My public seller profile';
     }
     render(profile);
     document.getElementById('loadingState').classList.add('hidden');
     document.getElementById('profileContent').classList.remove('hidden');
-    PM.fetchListings({sellerId:id,limit:12}).then(rows=>{
+    PM.fetchListings({sellerId:id,limit:100}).then(rows=>{
       const grid=document.getElementById('pfGrid');
+      document.getElementById('pfActiveCount').textContent=rows.length;
       grid.innerHTML=rows.length
-        ? rows.map(gcard).join('')
+        ? rows.slice(0,12).map(gcard).join('')
         : '<div class="empty-state">No active listings from this seller right now.</div>';
     }).catch(()=>{
       document.getElementById('pfGrid').innerHTML='<div class="empty-state">Couldn\'t load listings right now.</div>';
@@ -558,10 +590,12 @@ function showNotFound(){
 
 // Seller reviews — rating summary in the profile card + full review list.
 function renderReviews(reviews){
-  if(!reviews||!reviews.length)return;
+  if(!reviews||!reviews.length){document.getElementById('pfRatingMetric').textContent='New';return;}
   const escR=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const starsOf=r=>{const f=Math.max(0,Math.min(5,Math.round(Number(r)||0)));return '★★★★★'.slice(0,f)+'☆☆☆☆☆'.slice(0,5-f);};
   const avg=reviews.reduce((a,r)=>a+(Number(r.rating)||0),0)/reviews.length;
+  document.getElementById('pfRatingMetric').textContent=avg.toFixed(1)+' ★';
+  document.getElementById('pfReviewCount').textContent=reviews.length;
   const sr=document.getElementById('pfRating');
   sr.innerHTML=`<span class="stars">${starsOf(avg)}</span><span>${avg.toFixed(1)} · ${reviews.length} review${reviews.length>1?'s':''}</span>`;
   sr.classList.remove('hidden');
@@ -600,6 +634,15 @@ function render(p){
 
   document.getElementById('pfName').innerHTML=name+(p.verified?'<span class="pf-verified" title="Verified">✓</span>':'');
   document.getElementById('pfRole').textContent=p.job_title||(p.role==='admin'?'PaMarket Team':'Member on PaMarket');
+  document.getElementById('pfCoverTitle').textContent=IS_OWNER?'Your trusted PaMarket profile':('Listings and feedback from '+name);
+  document.getElementById('pfAboutHeading').textContent=IS_OWNER?'About me':'About '+name.split(' ')[0];
+  document.getElementById('pfVerifyMetric').textContent=p.verified?'Verified':'Member';
+  document.getElementById('pfIdentityRow').textContent=p.verified?'Identity verified by PaMarket':'PaMarket member';
+  document.getElementById('pfLocationRow').textContent=p.city||'Zimbabwe';
+  if(p.verified){
+    document.getElementById('pfAvatarCheck').style.display='flex';
+    document.getElementById('pfTrustChip').innerHTML='<strong>✓ Verified by PaMarket</strong><span>Identity checked. Review listings and seller feedback before making contact.</span>';
+  }
 
   const CAL='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
   const PIN2='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
@@ -617,7 +660,9 @@ function render(p){
   }
 
   const waBtn=document.getElementById('pfWaBtn');
-  if(p.phone){
+  if(IS_OWNER){
+    waBtn.classList.add('hidden');
+  }else if(p.phone){
     const clean=String(p.phone).replace(/[^\d+]/g,'').replace('+','');
     waBtn.href='https://wa.me/'+clean+'?text='+encodeURIComponent('Hi '+name.split(' ')[0]+', I found your profile on PaMarket.');
   }else{
@@ -625,10 +670,14 @@ function render(p){
   }
 
   const emailBtn=document.getElementById('pfEmailBtn');
-  if(p.email){
+  if(IS_OWNER){
+    emailBtn.classList.add('hidden');
+  }else if(p.email){
     emailBtn.href='mailto:'+p.email;
     emailBtn.textContent='Email Seller';
     emailBtn.classList.remove('hidden');
+  }else{
+    emailBtn.classList.add('hidden');
   }
 
   const schema=document.createElement('script');

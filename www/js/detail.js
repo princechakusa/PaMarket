@@ -672,6 +672,12 @@
 
   H.reportListing = function(id) {
     if (!H.currentUser()) { H.requireAuth('Sign in to report'); return; }
+    const reporter = H.currentUser();
+    const target = (H.state.listings || []).find(l => String(l.id) === String(id));
+    if (target && String(target.sellerId || target.seller_id || '') === String(reporter.id)) {
+      H.toast('You cannot report your own listing');
+      return;
+    }
     const reasons = ['Scam or fraud','Counterfeit or fake item','Wrong category','Prohibited item','Offensive content','Duplicate listing','Other'];
     H.modal({
       title:'Report this listing',
@@ -680,6 +686,11 @@
       confirmText:'Submit Report',
       onConfirm:() => {
         const cu = H.currentUser(); if (!cu) { H.requireAuth('Sign in to report'); return; }
+        const currentTarget = (H.state.listings || []).find(l => String(l.id) === String(id));
+        if (currentTarget && String(currentTarget.sellerId || currentTarget.seller_id || '') === String(cu.id)) {
+          H.toast('You cannot report your own listing');
+          return;
+        }
         const reason = document.getElementById('reportReason')?.value||'';
         const note   = document.getElementById('reportNote')?.value||'';
         H.state.reports = H.state.reports||[];

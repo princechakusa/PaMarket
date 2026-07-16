@@ -198,6 +198,10 @@ button{font-family:inherit;cursor:pointer}
 .pf-photo .pf-spin{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 .pf-photo .pf-spin::after{content:'';width:22px;height:22px;border:2.5px solid rgba(26,58,143,.25);border-top-color:var(--navy);border-radius:50%;animation:pfspin .7s linear infinite}
 @keyframes pfspin{to{transform:rotate(360deg)}}
+.pf-photo.pf-uploading img{filter:brightness(.7)}
+.pf-photo.pf-failed{border-color:var(--red);cursor:pointer}
+.pf-photo.pf-failed img{filter:brightness(.5)}
+.pf-photo .pf-retry-note{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;font-size:10px;font-weight:800;background:rgba(220,38,38,.55);padding:4px}
 .pf-addphoto{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--navy);background:#EEF2FF;border:1.5px dashed rgba(26,58,143,.35);border-radius:11px;padding:11px 18px;cursor:pointer;transition:all .15s}
 .pf-addphoto:hover{background:#E0E7FF}
 .pf-submit{width:100%;margin-top:6px;font-size:15px;padding:14px}
@@ -649,17 +653,50 @@ window.doSearch = window.doSearch || function(){
 
   function renderPhotos(){
     photosEl.innerHTML=photos.map((p,i)=>{
-      if(p.uploading) return '<div class="pf-photo pf-uploading"><div class="pf-spin"></div></div>';
-      return '<div class="pf-photo">'+
-        '<img src="'+p.url+'" alt="" loading="eager" decoding="async">'+
-        (i===0?'<div class="pf-cover">COVER</div>':'')+
+      // Always show the picture the moment it is picked (local preview), with an
+      // upload spinner overlaid until the R2 upload finishes. This is what makes
+      // the chosen photo appear immediately on phones, even on slow data.
+      var src=p.url||p.preview;
+      return '<div class="pf-photo'+(p.uploading?' pf-uploading':'')+(p.failed?' pf-failed':'')+'">'+
+        (src?'<img src="'+src+'" alt="" loading="eager" decoding="async">':'')+
+        (p.uploading?'<div class="pf-spin"></div>':'')+
+        (p.failed?'<div class="pf-retry-note">Tap to retry</div>':'')+
+        (i===0&&!p.uploading&&!p.failed?'<div class="pf-cover">COVER</div>':'')+
         '<button type="button" class="pf-rm" data-i="'+i+'" aria-label="Remove photo">×</button>'+
       '</div>';
     }).join('');
-    photosEl.querySelectorAll('.pf-rm').forEach(b=>b.addEventListener('click',()=>{
-      photos.splice(Number(b.dataset.i),1);renderPhotos();
+    photosEl.querySelectorAll('.pf-rm').forEach(b=>b.addEventListener('click',(ev)=>{
+      ev.stopPropagation();
+      const removed=photos.splice(Number(b.dataset.i),1)[0];
+      if(removed&&removed.preview){URL.revokeObjectURL(removed.preview);removed.preview='';}
+      renderPhotos();
     }));
+    // Tapping a failed photo retries its upload.
+    photosEl.querySelectorAll('.pf-failed').forEach((el,idx)=>{
+      const i=Array.prototype.indexOf.call(photosEl.children,el);
+      el.addEventListener('click',()=>{const p=photos[i];if(p&&p.failed&&p._file)uploadOne(p);});
+    });
     $('pfAddPhoto').style.display=photos.length>=MAX_PHOTOS?'none':'';
+  }
+
+  // Compress + upload a single photo slot. The slot already holds a local
+  // preview so the image is on screen before this resolves.
+  async function uploadOne(slot){
+    slot.uploading=true;slot.failed=false;renderPhotos();
+    try{
+      const blob=await compress(slot._file);
+      const url=await PM.uploadListingPhoto(blob,'image/jpeg');
+      slot.uploading=false;slot.url=url;
+      if(slot.preview){URL.revokeObjectURL(slot.preview);slot.preview='';}
+      clearError();
+    }catch(err){
+      slot.uploading=false;slot.failed=true;
+      const msg=(err&&err.message)||'';
+      showError(/not-authenticated/.test(msg)
+        ? 'Your session expired. Please sign in again to upload photos.'
+        : 'A photo could not be uploaded. Check your connection and tap the photo to retry.');
+    }
+    renderPhotos();
   }
 
   fileInput.addEventListener('change',async()=>{
@@ -668,17 +705,10 @@ window.doSearch = window.doSearch || function(){
     for(const file of files){
       if(photos.length>=MAX_PHOTOS){showError('You can add up to '+MAX_PHOTOS+' photos.');break;}
       if(!/^image\//.test(file.type))continue;
-      const slot={uploading:true};
+      // Show the picked photo immediately via a local object-URL preview.
+      const slot={_file:file,preview:URL.createObjectURL(file)};
       photos.push(slot);renderPhotos();
-      try{
-        const blob=await compress(file);
-        const url=await PM.uploadListingPhoto(blob,'image/jpeg');
-        slot.uploading=false;slot.url=url;
-      }catch(err){
-        const idx=photos.indexOf(slot);if(idx>=0)photos.splice(idx,1);
-        showError('A photo failed to upload. Please try a different image.');
-      }
-      renderPhotos();
+      await uploadOne(slot);
     }
   });
 
@@ -709,6 +739,7 @@ window.doSearch = window.doSearch || function(){
       return;
     }
     if(photos.some(p=>p.uploading)){showError('Please wait for photos to finish uploading.');return;}
+    if(photos.some(p=>p.failed)){showError('Some photos failed to upload. Tap them to retry, or remove them before posting.');return;}
 
     const btn=$('pfSubmit');
     btn.disabled=true;btn.textContent=editingId?'Saving…':'Posting…';

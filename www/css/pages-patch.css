@@ -1,21 +1,6 @@
 /* HOSTLY — pages-patch.css — cleaned */
 
 /* ── PROFILE ─────────────────────────────────────── */
-.profile-hero{display:flex;align-items:center;gap:16px;padding:20px 16px 12px}
-.profile-pic{width:74px;height:74px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--blue);border:3px solid var(--blue-light);box-shadow:var(--shadow-blue)}
-.profile-pic img{width:100%;height:100%;object-fit:cover}
-.profile-initials{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff}
-.profile-info{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
-.profile-name{font-size:19px;font-weight:800;color:var(--text-primary);letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.profile-phone{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-sub)}
-.profile-phone svg{flex-shrink:0;width:13px;height:13px}
-.verified{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:var(--blue-light);color:var(--blue)}
-.unverified{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:var(--gold-light);color:var(--gold-dark)}
-.verified svg,.unverified svg{width:12px;height:12px}
-.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 16px}
-.stat-box{background:var(--card);border-radius:12px;padding:14px 8px;text-align:center;box-shadow:var(--shadow-xs);border:.5px solid var(--border)}
-.stat-val{font-size:22px;font-weight:800;color:var(--blue);line-height:1}
-.stat-label{font-size:10px;font-weight:600;color:var(--text-sub);margin-top:4px;text-transform:uppercase;letter-spacing:.4px}
 .section-box{background:var(--card);border-radius:12px;margin:0 16px 12px;padding:16px;box-shadow:var(--shadow-xs);border:.5px solid var(--border)}
 .info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:.5px solid var(--border);font-size:14px}
 .info-row:last-child{border-bottom:none}

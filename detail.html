@@ -667,9 +667,32 @@ function setNoIndex(){
 
 window.__reportTarget=null;
 
+function currentViewerOwnsListing(){
+  const uid=PM.currentUserId&&PM.currentUserId();
+  return !!(uid&&window.__sellerId&&String(uid)===String(window.__sellerId));
+}
+
+async function staticListingExists(staticPath){
+  const controller=typeof AbortController!=='undefined'?new AbortController():null;
+  const timeout=controller?setTimeout(()=>controller.abort(),5000):null;
+  try{
+    const head=await fetch(staticPath,{method:'HEAD',signal:controller?controller.signal:undefined});
+    return head.ok;
+  }catch(e){
+    console.warn('Static listing redirect check failed; rendering dynamic detail instead:',staticPath,e&&e.message?e.message:e);
+    return false;
+  }finally{
+    if(timeout)clearTimeout(timeout);
+  }
+}
+
 async function init(){
   const id=new URLSearchParams(location.search).get('id');
   if(!id){showNotFound();return}
+  // Keep the skeleton as the only visible detail state until the static-page
+  // redirect decision completes. Render dynamic content only on fallback.
+  document.getElementById('loadingState').classList.remove('hidden');
+  document.getElementById('detailContent').classList.add('hidden');
   try{
     // Public (anon) fetch — RLS only returns active listings, so this is the
     // authoritative public-visibility check. Hidden statuses never come back.
@@ -685,7 +708,7 @@ async function init(){
     // last build isn't generated yet, so we fall back to rendering here.
     if(window.PMSchema){
       const staticPath='/'+PMSchema.listingPath(listing);
-      try{ const head=await fetch(staticPath,{method:'HEAD'}); if(head.ok){ location.replace(staticPath); return; } }catch(e){}
+      if(await staticListingExists(staticPath)){location.replace(staticPath);return;}
     }
     // Seller reviews drive Product aggregateRating/review (real data only).
     const reviews=await PM.fetchSellerReviews(listing.seller_id,20).catch(()=>[]);
@@ -783,8 +806,7 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 
 // Show the owner a small "live" banner on their own active listing.
 function maybeShowSellerBanner(l,state){
-  const uid=PM.currentUserId&&PM.currentUserId();
-  if(!uid||!l.seller_id||String(uid)!==String(l.seller_id))return;
+  if(!currentViewerOwnsListing())return;
   if(state==='active'){
     const banner=document.getElementById('sellerStatusBanner');
     banner.innerHTML='<div class="ssb-inner ssb-active">'
@@ -798,6 +820,11 @@ function renderListing(l,reviews){
   window.__listingId=l.id;
   window.__sellerId=l.seller_id||null;
   window.__sellerName=l.seller_name||'this seller';
+  const ownerView=currentViewerOwnsListing();
+  const reportSellerBtn=document.getElementById('reportSellerBtn');
+  const reportListingBtn=document.getElementById('reportBtn');
+  if(reportSellerBtn)reportSellerBtn.style.display=ownerView?'none':'';
+  if(reportListingBtn)reportListingBtn.style.display=ownerView?'none':'';
   initFavouriteButton(l.id);
   const loc=[l.suburb,l.city,l.province].filter(Boolean).join(', ')||'Zimbabwe';
   const catLabel=CAT_LABELS[l.category]||l.category;
@@ -1087,6 +1114,10 @@ const REPORT_REASONS={
   function open(type){
     const targetId=type==='user'?window.__sellerId:window.__listingId;
     if(!targetId){alert('Nothing to report here.');return;}
+    if(currentViewerOwnsListing()){
+      alert(type==='user'?'You cannot report yourself.':'You cannot report your own listing.');
+      return;
+    }
     window.__reportTarget={type:type,id:targetId};
     document.getElementById('rptTitle').textContent=type==='user'?'Report this seller':'Report this listing';
     document.getElementById('rptSub').textContent=type==='user'
@@ -1114,6 +1145,11 @@ const REPORT_REASONS={
   overlay.addEventListener('click',function(e){if(e.target===overlay)close();});
   submitBtn.addEventListener('click',function(){
     if(!chosen||!window.__reportTarget)return;
+    if(currentViewerOwnsListing()){
+      alert(window.__reportTarget.type==='user'?'You cannot report yourself.':'You cannot report your own listing.');
+      close();
+      return;
+    }
     submitBtn.disabled=true;submitBtn.textContent='Submitting…';
     PM.submitReport({targetType:window.__reportTarget.type,targetId:window.__reportTarget.id,reason:chosen})
       .then(function(){

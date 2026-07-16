@@ -96,6 +96,22 @@ table.db-tbl{width:100%;border-collapse:collapse;min-width:640px}
 .boost-pay-note{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:12px;color:var(--mute)}
 
 @media(max-width:820px){.db-tiles{grid-template-columns:repeat(2,1fr)}.db-admin-tiles{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){
+  #dbListings .db-tablewrap{overflow:visible;border:0;border-radius:0;background:transparent}
+  #dbListings .db-tbl,#dbListings .db-tbl tbody{display:block;width:100%;min-width:0}
+  #dbListings .db-tbl thead{display:none}
+  #dbListings .db-tbl tr{display:flex;flex-wrap:wrap;gap:10px 14px;margin-bottom:12px;padding:15px;background:#fff;border:1px solid var(--line);border-radius:14px}
+  #dbListings .db-tbl td{display:block;flex:1 1 calc(50% - 7px);min-width:0;padding:0;border:0;font-size:13px}
+  #dbListings .db-tbl td:first-child,#dbListings .db-tbl td:last-child{flex-basis:100%}
+  #dbListings .db-tbl td::before{display:block;margin-bottom:2px;color:var(--mute);font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+  #dbListings .db-tbl td:nth-child(2)::before{content:'Category'}
+  #dbListings .db-tbl td:nth-child(3)::before{content:'Price'}
+  #dbListings .db-tbl td:nth-child(4)::before{content:'Views'}
+  #dbListings .db-tbl td:nth-child(5)::before{content:'Status'}
+  #dbListings .db-tbl .t-title{max-width:none;white-space:normal;font-size:15px;line-height:1.35}
+  #dbListings .db-act{display:flex;gap:7px;margin-top:4px}
+  #dbListings .db-act button,#dbListings .db-act a{display:flex;flex:1 1 calc(33.333% - 5px);align-items:center;justify-content:center;min-height:38px;padding:7px 8px;text-align:center}
+}
 
 h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,.logo,.auth-brand{font-family:'Fraunces',Georgia,serif;font-weight:700;letter-spacing:-.02em}
 </style>

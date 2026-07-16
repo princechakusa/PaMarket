@@ -467,16 +467,40 @@
       // Upload photos to cloud storage and keep only URLs. Storing base64 in
       // localStorage overflows the 5MB quota (the old crash) and bloats both
       // the cloud row and every listing fetch (the old slowness).
-      let photos = s.photos;
+      let photos = [];
       try {
         if (btn && s.photos.length) btn.textContent = 'Uploading photos…';
-        // Cap the upload so a stalled network surfaces a code instead of hanging.
-        photos = H.withTimeout
-          ? await H.withTimeout(H.uploadListingPhotos(s.photos, u.id), 45000, 'photo upload')
-          : await H.uploadListingPhotos(s.photos, u.id);
+        // Older callers intentionally treat uploads as best-effort, so this
+        // helper can return the original data URL after an R2 failure. Posting
+        // is strict: retry, then accept only a complete set of hosted URLs.
+        const isHostedPhoto = p => typeof p === 'string' && /^https?:\/\//i.test(p);
+        let uploadError = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            if (attempt) {
+              if (btn) btn.textContent = 'Retrying photos…';
+              await new Promise(resolve => setTimeout(resolve, attempt === 1 ? 750 : 2000));
+            }
+            const result = H.withTimeout
+              ? await H.withTimeout(H.uploadListingPhotos(s.photos, u.id), 45000, 'photo upload')
+              : await H.uploadListingPhotos(s.photos, u.id);
+            if (!Array.isArray(result) || result.length !== s.photos.length || result.some(p => !isHostedPhoto(p))) {
+              throw new Error('One or more photos were not uploaded');
+            }
+            photos = result;
+            uploadError = null;
+            break;
+          } catch (e) {
+            uploadError = e;
+          }
+        }
+        if (uploadError) throw uploadError;
       } catch (e) {
-        if (e && e._timeout && H.showError) H.showError('Photos took too long to upload — posting without waiting.', e, 'post.upload.timeout');
-        /* fall back to whatever we have */
+        H._post._posting = false;
+        if (btn) { btn.disabled = false; btn.textContent = 'Post Ad →'; }
+        if (H.showError) H.showError('We could not upload every photo. Check your connection and tap Post Ad to retry.', e, 'post.upload.failed');
+        else H.toast('Photos could not be uploaded. Check your connection and try again.', 6000, true);
+        return; // Never add locally or call saveListingToCloud with data/blob URLs.
       }
 
       // USD is the canonical currency. If the seller entered ZiG, convert to USD

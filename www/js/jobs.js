@@ -1921,11 +1921,8 @@
       + (national ? detailRow('Nationality', national) : '')
       + '</div>'
 
-      // Report this Ad
-      + '<div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;border:1px solid #e5e7eb">'
-      + '<div onclick="' + (isMine ? '' : 'H.reportListing(\'' + id + '\')') + '" style="display:flex;align-items:center;gap:10px;cursor:pointer">' + icoFlag + '<span style="font-size:13.5px;font-weight:600;color:#374151">Report this Ad</span></div>'
-      + (isMine ? '<span style="font-size:12.5px;font-weight:600;color:#1A3A8F;cursor:pointer" onclick="H.openInner(\'EditJob\',{listingId:\'' + id + '\'})">Manage Ad</span>' : '')
-      + '</div>'
+      // Report this Ad (never render a self-report control on the owner's listing)
+      + (isMine ? '' : '<div onclick="H.reportListing(\'' + id + '\')" style="display:flex;align-items:center;gap:10px;background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;border:1px solid #e5e7eb;cursor:pointer">' + icoFlag + '<span style="font-size:13.5px;font-weight:600;color:#374151">Report this Ad</span></div>')
 
       // Add Digital Profile CTA
       + (!hasCV
