@@ -223,12 +223,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://pamarketzw.com/l/the-best-at-the-top-test-2bc9725f-d3aa-46a3-8ad8-31b47d77c81b.html</loc>
-    <lastmod>2026-07-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://pamarketzw.com/l/this-is-for-your-house-4f886f37-aa78-42a2-ba97-a4fc9a8b3bf2.html</loc>
     <lastmod>2026-06-22</lastmod>
     <changefreq>weekly</changefreq>
@@ -248,12 +242,6 @@
   </url>
   <url>
     <loc>https://pamarketzw.com/l/sewing-machine-6e865581-3e21-4231-a44f-8bc16b8db82a.html</loc>
-    <lastmod>2026-06-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://pamarketzw.com/l/s20ultra-da7eacee-4b96-4cc4-9095-52c2985af596.html</loc>
     <lastmod>2026-06-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -302,12 +290,6 @@
   </url>
   <url>
     <loc>https://pamarketzw.com/l/welding-b929873a-071c-44a0-9d7b-b6adcb1c55ec.html</loc>
-    <lastmod>2026-06-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://pamarketzw.com/l/snooker-b598dcc4-7921-4c41-a0c2-bffda78a006d.html</loc>
     <lastmod>2026-06-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -379,6 +361,12 @@
     <priority>0.4</priority>
   </url>
   <url>
+    <loc>https://pamarketzw.com/profile?id=961b5b49-f135-4152-8c0c-c8f07821ad32</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
     <loc>https://pamarketzw.com/profile?id=27c5abbd-53dc-4d74-8f9a-701fc2eb2ed0</loc>
     <lastmod>2026-05-18</lastmod>
     <changefreq>monthly</changefreq>
@@ -421,18 +409,6 @@
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://pamarketzw.com/profile?id=961b5b49-f135-4152-8c0c-c8f07821ad32</loc>
-    <lastmod>2026-05-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
-    <loc>https://pamarketzw.com/profile?id=b770372f-3dd8-476a-b3ba-a79322af5f39</loc>
-    <lastmod>2026-05-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
     <loc>https://pamarketzw.com/profile?id=d83248d2-0bff-4fde-af70-7cf7ba415bc1</loc>
     <lastmod>2026-07-11</lastmod>
     <changefreq>monthly</changefreq>
@@ -445,13 +421,19 @@
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://pamarketzw.com/profile?id=68bd428e-d021-4f8d-9cf6-2aeb2a2d0204</loc>
-    <lastmod>2026-07-12</lastmod>
+    <loc>https://pamarketzw.com/profile?id=b770372f-3dd8-476a-b3ba-a79322af5f39</loc>
+    <lastmod>2026-05-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://pamarketzw.com/profile?id=a45b5720-a2ca-4487-886e-47307c834fb5</loc>
+    <lastmod>2026-07-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pamarketzw.com/profile?id=68bd428e-d021-4f8d-9cf6-2aeb2a2d0204</loc>
     <lastmod>2026-07-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
