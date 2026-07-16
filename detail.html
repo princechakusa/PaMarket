@@ -218,7 +218,7 @@ button{font-family:inherit;cursor:pointer}
 .rating-hero{padding:14px;border-radius:13px;background:#FBFAF7}.rev{background:#FBFAF7}
 #sellerStatusBanner{padding-top:10px}.ssb-inner{border-radius:15px;padding:14px 17px;box-shadow:0 5px 16px rgba(31,122,77,.06)}
 .similar-sec h2{font-family:'Fraunces',Georgia,serif;font-size:25px}.similar-grid .gcard{border-radius:15px;box-shadow:0 5px 18px rgba(25,31,55,.06);transition:transform .18s,box-shadow .18s}.similar-grid .gcard:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(25,31,55,.12)}
-.photo-viewer{position:fixed;inset:0;z-index:800;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(5,10,22,.95)}.photo-viewer.open{display:flex}.photo-viewer-img{max-width:min(1100px,88vw);max-height:82vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 80px rgba(0,0,0,.5)}
+.photo-viewer{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;padding:24px;background:#050A16}.photo-viewer.open{display:flex}.photo-viewer-img{display:block;max-width:min(1100px,88vw);max-height:82vh;object-fit:contain;border-radius:10px;background:#050A16;box-shadow:0 20px 80px rgba(0,0,0,.5)}
 .pv-btn{position:absolute;width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.25);border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:24px}.pv-close{right:20px;top:20px}.pv-prev{left:24px;top:50%}.pv-next{right:24px;top:50%}.pv-count{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);padding:8px 13px;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:11px}
 
 /* ══ SELLER STATUS BANNER (owner view) ══ */
@@ -933,8 +933,10 @@ function renderListing(l,reviews){
       ? `<img src="${esc(photos[activePhoto])}" alt="${esc(l.title)}" fetchpriority="high" decoding="async"><span class="gallery-open-hint">↗ View full image</span><span class="gallery-count">${activePhoto+1} / ${photos.length}</span>`
       : `<div class="gallery-main-ph">${esc(l.title)}</div>`;
     thumbsEl.querySelectorAll('.gallery-thumb').forEach((t,ti)=>t.classList.toggle('on',ti===activePhoto));
-    if(viewer.classList.contains('open')){
-      viewerImg.src=photos[activePhoto];
+    if(photos.length){
+      // This is a DOM property assignment, so keep the real URL intact. HTML
+      // escaping here would turn valid query-string separators into '&amp;'.
+      viewerImg.src=String(photos[activePhoto]);
       viewerImg.alt=l.title+' — photo '+(activePhoto+1);
       viewerCount.textContent=(activePhoto+1)+' of '+photos.length;
     }
@@ -946,7 +948,7 @@ function renderListing(l,reviews){
   showPhoto(0);
   function openPhotoViewer(){
     if(!photos.length)return;
-    showPhoto(activePhoto);viewer.classList.add('open');document.body.style.overflow='hidden';
+    viewer.classList.add('open');showPhoto(activePhoto);document.body.style.overflow='hidden';
     document.getElementById('photoViewerClose').focus();
   }
   function closePhotoViewer(){viewer.classList.remove('open');document.body.style.overflow='';mainEl.focus();}
