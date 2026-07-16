@@ -649,8 +649,6 @@ window.doSearch = window.doSearch || function(){
       $('pfTitle').dispatchEvent(new Event('input'));$('pfDesc').dispatchEvent(new Event('input'));$('pfCat').dispatchEvent(new Event('change'));
     }).catch(()=>{showError('Could not load this listing. Please return to your dashboard and try again.');$('pfSubmit').disabled=true;});
   }
-  $('pfAddPhoto').addEventListener('click',(e)=>{ if(e.target.tagName!=='INPUT') fileInput.click(); });
-
   function renderPhotos(){
     photosEl.innerHTML=photos.map((p,i)=>{
       // Always show the picture the moment it is picked (local preview), with an
