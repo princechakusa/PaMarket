@@ -3765,6 +3765,12 @@ H._checkEngagementAlerts = function () {
 };
 
 // ── Cloudflare R2 helpers ────────────────────────────────────────────────────
+// These must be (re)defined here, not just in supabase.js. `window.H = {...}`
+// above (line 8) replaces the whole H object, discarding anything supabase.js
+// attached to the H object that existed before app.js ran — including these
+// two functions. Removing them from here previously (assuming supabase.js's
+// copies would simply "win" by load order) silently broke every photo/file
+// upload in the app: H.uploadToR2 was undefined by the time post.js called it.
 H.uploadToR2 = async function (blob, key, contentType) {
   var session = await window.supabase.auth.getSession();
   var token = session && session.data && session.data.session && session.data.session.access_token;
@@ -3786,8 +3792,19 @@ H.uploadToR2 = async function (blob, key, contentType) {
     throw new Error('R2 upload-url error: ' + (errText || res.status));
   }
   var payload = await res.json();
-  var up = await fetch(payload.signedUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: blob });
+  var signedUrl = payload.signedUrl;
+  var publicUrl = payload.publicUrl;
+  if (!signedUrl) throw new Error('R2 upload-url response missing signedUrl');
+  var up = await fetch(signedUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: blob });
   if (!up.ok) throw new Error('R2 PUT failed: ' + up.status);
+  // Only verification/ keys legitimately get no publicUrl (private bucket).
+  // Every other key must come back as a real hosted URL — if it doesn't, the
+  // file uploaded successfully but is unusable, which is worse than a clean
+  // failure: it looks like success until someone tries to view it.
+  var isVerificationKey = typeof key === 'string' && key.indexOf('verification/') === 0;
+  if (!isVerificationKey && !/^https?:\/\//i.test(publicUrl || '')) {
+    throw new Error('R2 upload succeeded but returned an invalid public URL: ' + JSON.stringify(publicUrl));
+  }
   return payload.publicUrl;
 };
 

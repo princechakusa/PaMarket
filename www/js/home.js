@@ -22,18 +22,15 @@
       return `<div style="padding:32px 16px">${H.emptyState('No listings yet', 'Be the first to post in your area!', 'Post your first ad', "H.navTo('Post',null)")}</div>`;
     }
     return sections.map(s => `
-      <div style="padding:20px 0 0">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:20px">${s.icon}</span>
-            <span style="font-size:16px;font-weight:800;color:var(--text)">Latest in ${s.name}</span>
-          </div>
-          <span onclick="H.filterByCat('${s.id}')" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>
+      <section class="home-latest-section">
+        <div class="home-premium-head">
+          <div class="home-latest-title"><span class="home-latest-icon">${s.icon}</span><span>Latest in ${s.name}</span></div>
+          <button type="button" onclick="H.filterByCat('${s.id}')">See all</button>
         </div>
-        <div style="display:flex;gap:10px;padding:0 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">
-          ${s.items.map(l => `<div style="flex:0 0 156px;min-width:156px">${renderHCard(l)}</div>`).join('')}
+        <div class="home-premium-rail">
+          ${s.items.map(l => renderHCard(l)).join('')}
         </div>
-      </div>
+      </section>
     `).join('');
   }
 
@@ -59,19 +56,25 @@
     const price = l.price ? ('$' + Number(l.price).toLocaleString()) : 'Free';
     const title = escHtml((l.title || '').slice(0, 36));
     const loc   = escHtml(l.suburb || l.city || l.prov || '');
-    return `<div onclick="openListing('${l.id}')" style="background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--border);cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.07)">
-      <div style="aspect-ratio:4/3;overflow:hidden;background:#f0f0f0;position:relative">
+    const featuredUntil = l.featuredUntil || l.featured_until;
+    const createdAt = l.createdAt || l.created_at;
+    const isFeatured = featuredUntil && new Date(featuredUntil).getTime() > Date.now();
+    const createdTime = createdAt ? new Date(createdAt).getTime() : 0;
+    const isNew = createdTime > 0 && Date.now() - createdTime < 3 * 24 * 60 * 60 * 1000;
+    const tag = isFeatured ? 'FEATURED' : (isNew ? 'NEW' : (l.negotiable ? 'NEG' : ''));
+    return `<article class="home-match-card" onclick="openListing('${l.id}')">
+      <div class="home-match-photo">
         ${photo
-          ? `<img src="${escHtml(photo)}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.onerror=null;this.style.display='none'">`
-          : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>'}
-        ${l.negotiable ? '<span style="position:absolute;top:6px;right:6px;background:#F5A623;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">NEG</span>' : ''}
+          ? `<img src="${escHtml(photo)}" loading="lazy" onerror="this.onerror=null;this.style.display='none'">`
+          : '<div class="home-match-placeholder"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></div>'}
+        ${tag ? `<span class="home-match-tag">${tag}</span>` : ''}
       </div>
-      <div style="padding:8px 10px 11px">
-        <div style="font-size:14px;font-weight:800;color:#1A3A8F;margin-bottom:2px">${price}</div>
-        <div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">${title}</div>
-        <div style="font-size:11px;color:var(--sub)">${loc}</div>
+      <div class="home-match-body">
+        <div class="home-match-price">${price}</div>
+        <div class="home-match-title">${title}</div>
+        <div class="home-match-loc">${loc ? '⌖ ' + loc : 'Zimbabwe'}</div>
       </div>
-    </div>`;
+    </article>`;
   }
 
   H.pages.Home = function () {
@@ -194,40 +197,35 @@
               ? featuredProds.filter(function(l){ return l.photos && l.photos[0]; })
               : bProds.filter(function(l){ return l.photos && l.photos[0]; })).slice(0, 2);
             const logoHtml = b.logo
-              ? '<img src="' + escHtml(b.logo) + (b.logo.startsWith('data:') ? '' : '?v=' + (b._updatedAt || b.updatedAt || '')) + '" style="width:100%;height:100%;object-fit:cover">'
-              : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-6h15L21 9M3 9h18v11a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm6 0v2a3 3 0 006 0V9"/></svg>';
+              ? '<img src="' + escHtml(b.logo) + (b.logo.startsWith('data:') ? '' : '?v=' + (b._updatedAt || b.updatedAt || '')) + '" alt="" loading="lazy">'
+              : '<span>' + escHtml(ini) + '</span>';
             var thumbsHtml = '';
             for (var ti = 0; ti < 2; ti++) {
               if (thumbProds[ti]) {
-                thumbsHtml += '<div style="flex:1;border-radius:5px;overflow:hidden;background:#EEF2FB">'
-                  + '<img src="' + escHtml(thumbProds[ti].photos[0]) + '" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
+                thumbsHtml += '<div class="home-shop-thumb">'
+                  + '<img src="' + escHtml(thumbProds[ti].photos[0]) + '" alt="" loading="lazy">'
                   + '</div>';
               } else {
-                thumbsHtml += '<div style="flex:1;border-radius:5px;background:#EEF2FB"></div>';
+                thumbsHtml += '<div class="home-shop-thumb"></div>';
               }
             }
             return '<div onclick="H.openBusinessShop && H.openBusinessShop(\'' + escHtml(String(b.id)) + '\')" '
-              + 'style="flex:0 0 150px;width:150px;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:14px;padding:8px;cursor:pointer">'
-              + '<div style="display:flex;gap:4px;height:62px;margin-bottom:7px">'
-              + '<div style="width:56px;height:62px;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2245b8);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+              + 'class="home-shop-card">'
+              + '<div class="home-shop-logo">'
               + logoHtml
               + '</div>'
-              + '<div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0;overflow:hidden">'
-              + thumbsHtml
-              + '</div>'
-              + '</div>'
-              + '<div style="font-size:11px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">' + escHtml(b.name) + '</div>'
-              + '<div style="font-size:10px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(niche) + ' (' + lCount + (lCount === 1 ? ' item' : ' items') + ')</div>'
+              + '<div class="home-shop-copy"><div class="home-shop-name">' + escHtml(b.name) + (((b.verificationLevel || 0) >= 2) ? '<span class="home-shop-check">✓</span>' : '') + '</div>'
+              + '<div class="home-shop-meta">' + escHtml(niche) + ' · ' + lCount + (lCount === 1 ? ' item' : ' items') + '</div>'
+              + '<div class="home-shop-thumbs">' + thumbsHtml + '</div></div>'
               + '</div>';
           }).join('');
-          return '<div style="background:var(--card,#fff);padding:18px 0 20px;margin-bottom:8px">'
-            + '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px">'
-            + '<span style="font-size:15px;font-weight:800;color:var(--text)">Local Shops</span>'
-            + '<span onclick="H._bizSearch&&H._bizSearch.open()" style="font-size:13px;font-weight:600;color:#1A3A8F;cursor:pointer">See all</span>'
+          return '<section class="home-premium-section home-shops-section">'
+            + '<div class="home-premium-head"><div><span class="home-premium-kicker">Trusted nearby</span><h2>Local Shops</h2></div>'
+            + '<button type="button" onclick="H._bizSearch&&H._bizSearch.open()">See all</button>'
             + '</div>'
-            + '<div style="display:flex;gap:10px;overflow-x:auto;padding:0 16px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">'
+            + '<div class="home-premium-rail">'
             + cards
-            + '</div></div>';
+            + '</div></section>';
         })()}
 
         <!-- SPONSORED ADS — paid/sponsored advertising slot (replaces the old marketing banner) -->
@@ -251,23 +249,22 @@
           const rvListings = rvIds.map(id => (H.state.listings || []).find(l => l.id === id && l.status === 'active')).filter(Boolean).slice(0, 10);
           if (!rvListings.length) return '';
           const rvCards = rvListings.map(l => {
-            const photo = l.photos && l.photos[0] ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.style.display='none'">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+            const photo = l.photos && l.photos[0] ? `<img src="${escHtml(l.photos[0])}" loading="lazy" onerror="this.style.display='none'">` : `<div class="home-recent-placeholder"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
             const price = l.price ? '$' + Number(l.price).toLocaleString() : 'Free';
-            return `<div onclick="H.openListing('${escHtml(l.id)}')" style="flex:0 0 120px;min-width:120px;cursor:pointer">
-              <div style="width:120px;height:72px;border-radius:10px;overflow:hidden;background:#f0f0f0;border:1px solid var(--border)">${photo}</div>
-              <div style="margin-top:5px;padding:0 1px">
-                <div style="font-size:12px;font-weight:700;color:#1A3A8F">${escHtml(price)}</div>
-                <div style="font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:118px">${escHtml((l.title || '').slice(0, 22))}</div>
-              </div>
-            </div>`;
+            const rvLoc = escHtml(l.suburb || l.city || l.prov || 'Zimbabwe');
+            return `<article class="home-recent-card" onclick="H.openListing('${escHtml(l.id)}')">
+              <div class="home-recent-photo">${photo}<span>♡</span></div>
+              <div class="home-recent-price">${escHtml(price)}</div>
+              <div class="home-recent-title">${escHtml((l.title || '').slice(0, 28))}</div>
+              <div class="home-recent-loc">${rvLoc}</div>
+            </article>`;
           }).join('');
-          return `<div style="background:var(--card,#fff);padding:14px 0 16px;margin-bottom:8px">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:10px">
-              <span style="font-size:14px;font-weight:800;color:var(--text)">Recently Viewed</span>
-              <span onclick="localStorage.removeItem('pamarket_rv');H.renderPage('Home')" style="font-size:11px;font-weight:600;color:var(--sub);cursor:pointer">Clear</span>
+          return `<section class="home-premium-section home-recent-section">
+            <div class="home-premium-head"><div><span class="home-premium-kicker">Continue exploring</span><h2>Recently Viewed</h2></div>
+              <button type="button" onclick="localStorage.removeItem('pamarket_rv');H.renderPage('Home')">Clear</button>
             </div>
-            <div style="display:flex;gap:10px;overflow-x:auto;padding:0 16px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">${rvCards}</div>
-          </div>`;
+            <div class="home-premium-rail">${rvCards}</div>
+          </section>`;
         })()}
 
         <!-- SEARCH RESULTS (shown when typing) -->

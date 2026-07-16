@@ -80,13 +80,22 @@
     var payload = await res.json();
     var signedUrl = payload.signedUrl;
     var publicUrl = payload.publicUrl;
+    if (!signedUrl) throw new Error('R2 upload-url response missing signedUrl');
     var up = await fetch(signedUrl, {
       method: 'PUT',
       headers: { 'Content-Type': contentType },
       body: blob,
     });
     if (!up.ok) throw new Error('R2 PUT failed: ' + up.status);
-    return publicUrl; // undefined for verification/ keys (private bucket)
+    // Only verification/ keys legitimately get no publicUrl (private bucket).
+    // Every other key must come back as a real hosted URL — if it doesn't,
+    // the file uploaded successfully but is unusable, which is worse than a
+    // clean failure: it looks like success until someone tries to view it.
+    var isVerificationKey = typeof key === 'string' && key.indexOf('verification/') === 0;
+    if (!isVerificationKey && !/^https?:\/\//i.test(publicUrl || '')) {
+      throw new Error('R2 upload succeeded but returned an invalid public URL: ' + JSON.stringify(publicUrl));
+    }
+    return publicUrl;
   };
 
   // Generates a short-lived presigned GET URL for private verification documents.

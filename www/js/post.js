@@ -485,21 +485,31 @@
               ? await H.withTimeout(H.uploadListingPhotos(s.photos, u.id), 45000, 'photo upload')
               : await H.uploadListingPhotos(s.photos, u.id);
             if (!Array.isArray(result) || result.length !== s.photos.length || result.some(p => !isHostedPhoto(p))) {
-              throw new Error('One or more photos were not uploaded');
+              // Prefer the real per-photo failure reason (auth/R2/network) captured by
+              // uploadListingPhotos over a generic message, so the user and the logs
+              // both see what actually went wrong.
+              throw (result && result._uploadError) || new Error('One or more photos were not uploaded');
             }
             photos = result;
             uploadError = null;
             break;
           } catch (e) {
             uploadError = e;
+            // An expired/invalid session will fail identically on every retry —
+            // stop burning attempts and tell the user to sign in again instead.
+            if (e && /not authenticated/i.test(e.message || '')) break;
           }
         }
         if (uploadError) throw uploadError;
       } catch (e) {
         H._post._posting = false;
         if (btn) { btn.disabled = false; btn.textContent = 'Post Ad →'; }
-        if (H.showError) H.showError('We could not upload every photo. Check your connection and tap Post Ad to retry.', e, 'post.upload.failed');
-        else H.toast('Photos could not be uploaded. Check your connection and try again.', 6000, true);
+        const authFailure = e && /not authenticated/i.test(e.message || '');
+        const userMsg = authFailure
+          ? 'Your session expired. Please sign in again and retry posting.'
+          : 'We could not upload every photo. Check your connection and tap Post Ad to retry.';
+        if (H.showError) H.showError(userMsg, e, 'post.upload.failed');
+        else H.toast(userMsg, 6000, true);
         return; // Never add locally or call saveListingToCloud with data/blob URLs.
       }
 
@@ -604,6 +614,7 @@
     const list = Array.isArray(photos) ? photos : [];
     if (typeof H.uploadToR2 !== 'function') return list;
     const out = [];
+    let lastError = null;
     for (const p of list) {
       if (typeof p !== 'string' || p.indexOf('data:') !== 0) { out.push(p); continue; }
       try {
@@ -612,8 +623,16 @@
         const blob = new Blob([Uint8Array.from(atob(b64p), c => c.charCodeAt(0))], { type: 'image/jpeg' });
         const url = await H.uploadToR2(blob, key, 'image/jpeg');
         out.push(url || p);
-      } catch (e) { out.push(p); }
+      } catch (e) {
+        // Keep the real reason instead of discarding it — callers need to know
+        // WHY an upload failed (expired session vs. R2 outage vs. bad network)
+        // to decide whether retrying even makes sense.
+        lastError = e;
+        if (H.logError) H.logError('uploadListingPhotos', e);
+        out.push(p);
+      }
     }
+    out._uploadError = lastError; // non-enumerable-ish flag; array stays a normal array for existing callers
     return out;
   };
 
