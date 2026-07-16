@@ -588,13 +588,14 @@
   }
 
   // ── Seller / owner dashboard ─────────────────────────────────────
-  // The signed-in user's own listings across ALL statuses (RLS select policy
-  // allows owner reads regardless of status), with view counts + boost state.
+  // The signed-in user's dashboard listings across all visible statuses.
+  // Soft-deleted rows remain in Postgres for moderation/audit history, but do
+  // not belong in the owner's active My Ads view.
   function fetchMyListings() {
     var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
     return fetch(SB_URL + '/rest/v1/listings?seller_id=eq.' + esc(s.user.id) +
-      '&select=id,title,category,price,currency,status,views,boost,featured_until,created_at,photos&order=created_at.desc&limit=200', {
+      '&status=neq.deleted&select=id,title,category,price,currency,status,views,boost,featured_until,created_at,photos&order=created_at.desc&limit=200', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
     }).then(function (res) { return res.ok ? res.json() : []; }).catch(function () { return []; });
   }

@@ -37,7 +37,7 @@ async function pget(cfg, pathq) {
 }
 
 async function fetchActiveListings(cfg) {
-  const select = 'id,title,description,price,currency,category,province,city,suburb,photos,seller_id,seller_name,seller_phone,business_id,attributes,condition,views,created_at';
+  const select = 'id,title,description,price,currency,category,province,city,suburb,photos,seller_id,seller_name,seller_phone,business_id,attributes,condition,views,featured_until,created_at';
   const rows = []; let offset = 0;
   for (;;) {
     const page = await pget(cfg, 'listings?status=eq.active&order=created_at.desc&select=' + select + '&limit=1000&offset=' + offset);
@@ -178,6 +178,7 @@ function shell(o) {
     hyd +
     '<script src="js/supabase-config.js"></script>\n<script src="js/session.js"></script>\n<script src="js/marketplace-data.js"></script>\n<script src="js/nav-dropdowns.js"></script>\n' +
     (o.extrasMeta ? '<script src="js/listing-extras.js"></script>\n<script>window.PMListingExtras&&PMListingExtras.init(' + jsonld(o.extrasMeta) + ');</script>\n' : '') +
+    (o.afterScripts ? '<script>' + o.afterScripts + '</script>\n' : '') +
     '</body>\n</html>\n';
 }
 
@@ -189,12 +190,13 @@ function renderListing(l, chrome) {
   const isJob = l.category === 'jobs';
   const priceStr = isJob ? (l.price ? money(l.price, l.currency) + '/mo' : 'Salary negotiable') : money(l.price, l.currency);
   const title = esc(l.title);
-  const mainImg = photos.length ? '<img src="' + esc(photos[0]) + '" alt="' + title + '">' : '<div class="gallery-main-ph">' + title + '</div>';
-  const thumbs = photos.length > 1 ? '<div class="gallery-thumbs">' + photos.map(function (p, i) { return '<div class="gallery-thumb' + (i === 0 ? ' on' : '') + '"><img src="' + esc(p) + '" alt="" loading="lazy"></div>'; }).join('') + '</div>' : '';
+  const mainImg = photos.length ? '<img src="' + esc(photos[0]) + '" alt="' + title + '" fetchpriority="high" decoding="async"><span class="gallery-open-hint">↗ View full image</span><span class="gallery-count">1 / ' + photos.length + '</span>' : '<div class="gallery-main-ph">' + title + '</div>';
+  const thumbs = photos.length ? '<div class="gallery-thumbs" id="galleryThumbs">' + photos.map(function (p, i) { return '<button type="button" class="gallery-thumb' + (i === 0 ? ' on' : '') + '" data-photo="' + i + '" aria-label="View photo ' + (i + 1) + '"><img src="' + esc(p) + '" alt="" loading="lazy" decoding="async"></button>'; }).join('') + '</div>' : '<div class="gallery-thumbs" id="galleryThumbs"></div>';
   const profileUrl = l.seller_id ? ('profile?id=' + esc(l.seller_id)) : null;
   const phone = l.seller_phone ? String(l.seller_phone).replace(/[^\d+]/g, '') : '';
   const waHref = phone ? ('https://wa.me/' + phone.replace('+', '') + '?text=' + encodeURIComponent('Hi, I saw your listing "' + l.title + '" on PaMarket. Is it still available?')) : '';
   const waBtn = waHref ? '<a class="btn btn-whatsapp contact-btn" href="' + esc(waHref) + '" target="_blank" rel="noopener">Chat on WhatsApp</a>' : '';
+  const callBtn = phone ? '<a class="btn btn-navy contact-btn contact-primary" href="tel:' + esc(phone) + '">Call seller</a>' : '';
   const profileBtn = profileUrl ? '<a class="btn btn-navy contact-btn" href="' + profileUrl + '">View Full Profile</a>' : '';
   const shareBtn = '<button type="button" class="btn contact-btn" id="shareBtn" style="background:#fff;border:1.5px solid var(--line);color:var(--ink)">' +
     '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share Listing</button>';
@@ -207,28 +209,36 @@ function renderListing(l, chrome) {
   const revSection = reviews.length
     ? '<div class="d-section"><h3>Seller Reviews</h3>' + reviewsHtml(reviews, 'this seller') + '</div>'
     : '';
+  const featured = !!(l.featured_until && new Date(l.featured_until) > new Date());
+  const attrs = l.attributes && typeof l.attributes === 'object' ? l.attributes : {};
+  const condition = attrs.condition || l.condition || 'Not specified';
+  const special = l.category === 'vehicles' && (attrs.mileage || l.mileage) ? { value: String(attrs.mileage || l.mileage), label: 'Mileage' } : null;
+  const statRows = [special || { value: condition, label: 'Condition' }, { value: catLabel, label: 'Category' }, { value: Number(l.views || 0).toLocaleString(), label: 'Views' }];
+  const stats = '<div class="d-stats">' + statRows.map(function (s) { return '<div class="d-stat"><b>' + esc(s.value) + '</b><span>' + esc(s.label) + '</span></div>'; }).join('') + '</div>';
   const crumb = '<div class="crumb"><a href="/">Home</a> / <a href="browse">Browse</a> / <a href="browse?cat=' + esc(l.category) + '">' + esc(catLabel) + '</a> / <span>' + title + '</span></div>';
-  const main = '<div id="detailContent"><div class="detail-wrap"><div>' +
-    '<div class="gallery"><div class="gallery-main" id="galleryMain">' + mainImg + '</div>' + thumbs + '</div>' +
-    '<h1 class="d-title">' + title + '</h1><div class="d-price">' + esc(priceStr) + '</div>' +
-    '<div class="d-meta"><span>' + esc(loc) + '</span><span>Posted ' + esc(timeAgo(l.created_at)) + '</span>' +
-    '<span style="background:#EEF2FF;color:var(--navy);padding:3px 10px;border-radius:20px;font-weight:700">' + esc(catLabel) + '</span></div>' +
-    '<div class="d-section"><h3>Description</h3><div class="d-desc">' + esc(l.description || 'No description provided.') + '</div></div>' +
-    revSection +
+  const mainPremium = '<div id="detailContent"><div class="detail-wrap"><div class="detail-main">' +
+    '<div class="gallery"><div class="gallery-main" id="galleryMain" role="button" tabindex="0" aria-label="Open full-screen photo viewer">' + mainImg + '</div>' + thumbs + '</div>' +
+    '<section class="listing-summary"><div class="d-chips">' + (featured ? '<span class="d-chip featured">&#9733; Featured</span>' : '') + '<span class="d-chip">' + esc(catLabel) + '</span></div>' +
+    '<div class="d-heading-row"><h1 class="d-title">' + title + '</h1><div class="d-price">' + esc(priceStr) + '</div></div>' +
+    '<div class="d-meta"><span>' + esc(loc) + '</span><span>Posted ' + esc(timeAgo(l.created_at)) + '</span>' + (l.views ? '<span>' + Number(l.views).toLocaleString() + ' views</span>' : '') + '</div>' + stats + '</section>' +
+    '<div class="d-section"><h3>About this listing</h3><div class="d-desc">' + esc(l.description || 'No description provided.') + '</div></div>' + revSection +
     '</div><div class="sidebar"><div class="seller-card">' +
-    '<div class="seller-top"><div class="seller-avatar">' + initials + '</div><div><div class="seller-name">' + esc(l.seller_name || 'PaMarket Seller') + '</div><div class="seller-sub">View profile →</div></div></div>' + ratingLine + waBtn + profileBtn + shareBtn + '</div>' +
-    '<div class="safety-card"><h4>Stay Safe</h4><ul><li>Meet in a public place during daylight hours</li><li>Never pay before seeing the item in person</li><li>Keep all conversations and payments inside PaMarket</li></ul></div>' +
-    '</div></div>' +
-    '<div class="similar-sec hidden" id="recentSec" style="padding-top:28px"><h2>Recently <span style="color:var(--navy)">Viewed</span></h2><div class="similar-grid" id="recentGrid"></div></div>' +
-    '</div>' +
+    '<div class="seller-top"><div class="seller-avatar">' + initials + '</div><div><div class="seller-name">' + esc(l.seller_name || 'PaMarket Seller') + '</div><div class="seller-sub">View profile &rarr;</div></div></div>' + ratingLine +
+    '<div class="seller-trust"><strong>Safe contact</strong><span>Check the seller profile and inspect before paying.</span></div>' +
+    '<div class="contact-actions">' + callBtn + waBtn + profileBtn + '</div><div class="seller-secondary-actions">' + shareBtn + '</div></div>' +
+    '<div class="safety-card"><h4>Stay Safe</h4><ul><li>Meet in a public place during daylight hours</li><li>Never pay before seeing the item in person</li><li>PaMarket does not handle payments or delivery</li></ul></div>' +
+    '</div></div><div class="similar-sec hidden" id="recentSec" style="padding-top:28px"><h2>Recently <span style="color:var(--navy)">Viewed</span></h2><div class="similar-grid" id="recentGrid"></div></div></div>' +
+    '<div class="photo-viewer" id="photoViewer" role="dialog" aria-modal="true" aria-label="Full-screen listing photo viewer"><button type="button" class="pv-btn pv-close" id="photoViewerClose" aria-label="Close photo viewer">&times;</button><button type="button" class="pv-btn pv-prev" id="photoViewerPrev" aria-label="Previous photo">&#8249;</button><img class="photo-viewer-img" id="photoViewerImg" alt="Expanded listing photo"><button type="button" class="pv-btn pv-next" id="photoViewerNext" aria-label="Next photo">&#8250;</button><div class="pv-count" id="photoViewerCount"></div></div>' +
     '<div id="unavailableState" class="state-msg" style="display:none">This listing is no longer available or is being reviewed.<br><br><a href="browse">Browse other listings</a></div>';
+  const photoScript = '(function(){var photos=' + jsonld(photos) + ',title=' + jsonld(l.title) + ',i=0,main=document.getElementById("galleryMain"),viewer=document.getElementById("photoViewer"),img=document.getElementById("photoViewerImg"),count=document.getElementById("photoViewerCount"),touch=0;function show(n){if(!photos.length)return;i=(n+photos.length)%photos.length;main.querySelector("img").src=photos[i];var c=main.querySelector(".gallery-count");if(c)c.textContent=(i+1)+" / "+photos.length;document.querySelectorAll(".gallery-thumb").forEach(function(t,x){t.classList.toggle("on",x===i);});if(viewer.classList.contains("open")){img.src=photos[i];img.alt=title+" - photo "+(i+1);count.textContent=(i+1)+" of "+photos.length;}}function open(){if(!photos.length)return;show(i);viewer.classList.add("open");document.body.style.overflow="hidden";document.getElementById("photoViewerClose").focus();}function close(){viewer.classList.remove("open");document.body.style.overflow="";main.focus();}document.querySelectorAll(".gallery-thumb").forEach(function(t){t.onclick=function(){show(Number(t.dataset.photo));};});main.onclick=open;main.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}};document.getElementById("photoViewerClose").onclick=close;document.getElementById("photoViewerPrev").onclick=function(){show(i-1);};document.getElementById("photoViewerNext").onclick=function(){show(i+1);};viewer.onclick=function(e){if(e.target===viewer)close();};viewer.addEventListener("touchstart",function(e){touch=e.changedTouches[0].clientX;},{passive:true});viewer.addEventListener("touchend",function(e){var d=e.changedTouches[0].clientX-touch;if(Math.abs(d)>45)show(i+(d<0?1:-1));},{passive:true});document.addEventListener("keydown",function(e){if(!viewer.classList.contains("open"))return;if(e.key==="Escape")close();if(e.key==="ArrowLeft")show(i-1);if(e.key==="ArrowRight")show(i+1);});})();';
   return shell({
     url: url, pageTitle: l.title + ' — ' + priceStr + ' | PaMarket Zimbabwe',
     desc: l.description ? String(l.description).slice(0, 155) : (l.title + ' — ' + catLabel + ' in ' + loc + ' on PaMarket, Zimbabwe.'),
     ogImg: photos[0] || (SITE + '/img/icon-512.png'), ogType: isJob ? 'website' : 'product',
     schema: [PMSchema.buildListingSchema(l, url, reviews), PMSchema.buildBreadcrumb(l, url)],
-    crumb: crumb, main: main, hydrateListingId: l.id, chrome: chrome,
-    extrasMeta: { id: l.id, title: l.title, price: l.price, currency: l.currency, photo: photos[0] || null, city: l.city, province: l.province, url: url }
+    crumb: crumb, main: mainPremium, hydrateListingId: l.id, chrome: chrome,
+    extrasMeta: { id: l.id, title: l.title, price: l.price, currency: l.currency, photo: photos[0] || null, city: l.city, province: l.province, url: url },
+    afterScripts: photoScript
   });
 }
 
