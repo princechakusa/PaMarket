@@ -627,6 +627,18 @@
       if (profile.two_factor_enabled != null) u.twoFactorEnabled = !!profile.two_factor_enabled;
       if (profile.two_factor_secret  != null) u.twoFactorSecret  = profile.two_factor_secret;
     }
+    // Hydrate saved listings from the server. H.state.saves is otherwise a pure
+    // local cache that's only ever written to (optimistically, on tap) and never
+    // read back — so a reinstall, cleared cache, new device, or a save made via
+    // the website (which writes to the same user_saves table) never showed up
+    // in the app's "Saved & Favorites" list even though the row was persisted.
+    try {
+      var savesRes = await c.from('user_saves').select('listing_id').eq('user_id', userId);
+      if (!savesRes.error && Array.isArray(savesRes.data)) {
+        H.state.saves = H.state.saves || {};
+        H.state.saves[userId] = savesRes.data.map(function (r) { return String(r.listing_id); });
+      }
+    } catch (se) {}
     H.saveState();
     } catch(e) { console.warn('loadProfile:', e && e.message); }
   };

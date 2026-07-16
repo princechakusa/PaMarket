@@ -642,8 +642,25 @@
         H.saveState();
         H.toast('Removed from saved');
         H.renderPage('Favorites');
+        if (window.supabase && typeof window.supabase.rpc === 'function') {
+          window.supabase.rpc('unsave_listing', { p_listing_id: id }).then(function(){}, function(){});
+        }
       }
     };
+    // Saved ids whose listing isn't in the local feed cache (older than the
+    // most-recent-50 fetch window, or fetched under a different filter) were
+    // silently dropped from the list. Fetch them individually so a save never
+    // just disappears from the screen.
+    const u = H.currentUser();
+    if (!u) return;
+    const saved = (H.state.saves && H.state.saves[u.id]) || [];
+    const missing = saved.filter(id => !(H.state.listings || []).some(l => l.id === id));
+    if (missing.length && typeof H._fetchListingById === 'function') {
+      Promise.all(missing.map(id => H._fetchListingById(id).catch(() => null))).then(results => {
+        if (H.currentPageName !== 'Favorites') return;
+        if (results.some(Boolean)) H.renderPage('Favorites');
+      });
+    }
   };
 
   // Verification capture held in memory only (uploaded to private Storage on submit)
