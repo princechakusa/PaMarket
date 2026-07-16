@@ -953,6 +953,16 @@ window.H = {
         }
       }
     } catch(e) { console.warn('Boot fetch failed:', e); }
+    // Retry any listing whose cloud save previously failed (offline post, RLS
+    // hiccup) so it stops living only on the device. Also re-attempt whenever
+    // connectivity returns. Registered once, guarded by _syncQueueWired.
+    if (typeof this.flushListingSyncQueue === 'function') {
+      this.flushListingSyncQueue().catch(function(){});
+      if (!H._syncQueueWired && typeof window !== 'undefined' && window.addEventListener) {
+        H._syncQueueWired = true;
+        window.addEventListener('online', function () { H.flushListingSyncQueue().catch(function(){}); });
+      }
+    }
     if(typeof H._setupRealtimeMessages==='function') H._setupRealtimeMessages();
     if(typeof H._setupRealtimeListings==='function') H._setupRealtimeListings();
     if(typeof H._setupRealtimeBusinesses==='function') H._setupRealtimeBusinesses();
@@ -1519,6 +1529,48 @@ window.H = {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
       await window.supabase.from('listings').delete().eq('id',id);
     } catch(e){ console.warn('deleteListingFromCloud:',e.message); }
+  },
+
+  // ── Failed-listing-save retry queue ──────────────────────────────────
+  // When saveListingToCloud fails for a non-moderation reason (offline, a
+  // transient network error, or an RLS/schema issue), the ad exists on the
+  // device but not in the cloud — so it would vanish the next time the feed
+  // reloads from the server. queueListingSync remembers the ad id; flushed
+  // on reconnect and on app boot, it re-runs saveListingToCloud from the
+  // live local row until the cloud accepts it, then forgets it. A moderation
+  // block during retry removes it (the row can never be posted), so it never
+  // loops forever.
+  queueListingSync(listing) {
+    try {
+      if (!listing || !listing.id) return;
+      const q = JSON.parse(localStorage.getItem('pm_listing_sync_q') || '[]');
+      if (q.indexOf(listing.id) === -1) { q.push(listing.id); localStorage.setItem('pm_listing_sync_q', JSON.stringify(q)); }
+    } catch (e) { /* best-effort */ }
+  },
+
+  async flushListingSyncQueue() {
+    let q;
+    try { q = JSON.parse(localStorage.getItem('pm_listing_sync_q') || '[]'); } catch (e) { return; }
+    if (!Array.isArray(q) || !q.length) return;
+    if (!window.supabase || typeof window.supabase.from !== 'function') return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+    const remaining = [];
+    for (const id of q) {
+      const l = (H.state.listings || []).find(x => x.id === id);
+      if (!l) continue; // deleted locally — drop from queue
+      try {
+        const res = await H.saveListingToCloud(l);
+        if (res && res.blocked) {
+          // Cannot ever be posted — remove the optimistic local row too.
+          H.state.listings = (H.state.listings || []).filter(x => x.id !== id);
+          H.saveState();
+          continue; // don't re-queue
+        }
+        if (res && res.ok === false) { remaining.push(id); continue; } // still failing — keep for next flush
+        // ok — synced; drop from queue
+      } catch (e) { remaining.push(id); }
+    }
+    try { localStorage.setItem('pm_listing_sync_q', JSON.stringify(remaining)); } catch (e) {}
   },
 
   async fetchAdsFromSupabase() {

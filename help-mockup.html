@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>PaMarket Help &amp; Support — Premium Mockup</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --blue: #1A3A8F;
+      --blue-soft: rgba(26,58,143,.08);
+      --blue-line: rgba(26,58,143,.15);
+      --green: #16A34A;
+      --green-soft: rgba(22,163,74,.10);
+      --bg: #F6F7F9;
+      --card: #FFFFFF;
+      --text: #18181B;
+      --text-2: #3F3F46;
+      --text-3: #52525B;
+      --hint: #A1A1AA;
+      --line: #ECECEF;
+      --glass: rgba(255,255,255,.88);
+      --phone-edge: #18181B;
+      --shadow: 0 30px 80px rgba(24,24,27,.22), 0 8px 24px rgba(24,24,27,.10);
+    }
+    html[data-theme="dark"] {
+      --blue: #5B7CE0;
+      --blue-soft: rgba(91,124,224,.13);
+      --blue-line: rgba(91,124,224,.24);
+      --green: #16A34A;
+      --green-soft: rgba(22,163,74,.14);
+      --bg: #0A0A0B;
+      --card: #161618;
+      --text: #FAFAFA;
+      --text-2: #D4D4D8;
+      --text-3: #A1A1AA;
+      --hint: #71717A;
+      --line: #2A2A2E;
+      --glass: rgba(22,22,24,.88);
+      --phone-edge: #303034;
+      --shadow: 0 30px 90px rgba(0,0,0,.6), 0 8px 24px rgba(0,0,0,.35);
+    }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 34px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 22% 18%, var(--blue-soft), transparent 31%),
+        radial-gradient(circle at 82% 78%, var(--green-soft), transparent 28%),
+        var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      transition: background .25s ease, color .25s ease;
+    }
+    button, input { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { color: inherit; }
+    .stage { position: relative; }
+    .phone {
+      position: relative;
+      width: 402px;
+      height: min(872px, calc(100vh - 68px));
+      min-height: 620px;
+      padding: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 46px;
+      background: var(--phone-edge);
+      box-shadow: var(--shadow);
+    }
+    .phone::before {
+      content: "";
+      position: absolute;
+      z-index: 5;
+      top: 13px;
+      left: 50%;
+      width: 106px;
+      height: 28px;
+      border-radius: 18px;
+      background: #050506;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .screen {
+      position: relative;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 40px;
+      background: var(--bg);
+    }
+    .scroll {
+      height: 100%;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+      padding-bottom: 112px;
+    }
+    .scroll::-webkit-scrollbar { display: none; }
+    .topbar {
+      position: sticky;
+      z-index: 4;
+      top: 0;
+      display: grid;
+      grid-template-columns: 40px 1fr 40px;
+      align-items: center;
+      min-height: 74px;
+      padding: 20px 14px 8px;
+      border-bottom: 1px solid transparent;
+      background: var(--glass);
+      backdrop-filter: blur(18px) saturate(1.25);
+      -webkit-backdrop-filter: blur(18px) saturate(1.25);
+    }
+    .icon-btn {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--card);
+      cursor: pointer;
+    }
+    .icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+    .topbar-copy { min-width: 0; text-align: center; }
+    .topbar-title { font-size: 15px; font-weight: 800; letter-spacing: -.2px; }
+    .topbar-sub { margin-top: 1px; color: var(--hint); font-size: 10px; font-weight: 650; }
+    .theme-toggle svg:last-child, html[data-theme="dark"] .theme-toggle svg:first-child { display: none; }
+    html[data-theme="dark"] .theme-toggle svg:last-child { display: block; }
+    .hero { padding: 19px 17px 15px; }
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--green);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 4px var(--green-soft);
+    }
+    h1 {
+      max-width: 315px;
+      margin: 13px 0 7px;
+      font-size: 30px;
+      line-height: 1.05;
+      letter-spacing: -1.15px;
+    }
+    .hero-copy { margin: 0; color: var(--text-3); font-size: 12px; line-height: 1.55; }
+    .search-wrap { position: relative; margin-top: 17px; }
+    .search-wrap svg {
+      position: absolute;
+      top: 50%;
+      left: 14px;
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: var(--hint);
+      stroke-width: 2;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    .search {
+      width: 100%;
+      height: 50px;
+      padding: 0 44px;
+      outline: none;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 13px;
+      box-shadow: 0 8px 24px rgba(24,24,27,.05);
+    }
+    .search:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+    .search::placeholder { color: var(--hint); }
+    .search-kbd {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      padding: 3px 6px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--hint);
+      font-size: 9px;
+      font-weight: 750;
+      transform: translateY(-50%);
+    }
+    .human-card {
+      position: relative;
+      margin: 0 17px 18px;
+      padding: 15px;
+      overflow: hidden;
+      border: 1px solid var(--blue-line);
+      border-radius: 18px;
+      background: var(--blue-soft);
+    }
+    .human-card::after {
+      content: "?";
+      position: absolute;
+      right: -8px;
+      bottom: -35px;
+      color: var(--blue);
+      font-size: 110px;
+      font-weight: 900;
+      line-height: 1;
+      opacity: .06;
+      pointer-events: none;
+    }
+    .human-head { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; }
+    .human-avatar {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      border-radius: 12px;
+      background: var(--blue);
+      color: #fff;
+    }
+    .human-avatar svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; }
+    .human-title { font-size: 13px; font-weight: 820; }
+    .human-sub { margin-top: 2px; color: var(--text-3); font-size: 10px; }
+    .human-actions { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 13px; }
+    .support-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 39px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--card);
+      color: var(--text-2);
+      font-size: 11px;
+      font-weight: 750;
+      text-decoration: none;
+    }
+    .support-btn.primary { border-color: transparent; background: var(--blue); color: #fff; }
+    .support-btn svg { width: 15px; height: 15px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2; }
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      padding: 0 17px 9px;
+    }
+    .section-title { font-size: 15px; font-weight: 830; letter-spacing: -.25px; }
+    .result-count { color: var(--hint); font-size: 10px; font-weight: 700; }
+    .filters {
+      display: flex;
+      gap: 7px;
+      padding: 0 17px 13px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filters::-webkit-scrollbar { display: none; }
+    .filter {
+      flex: 0 0 auto;
+      min-height: 31px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--text-3);
+      font-size: 10px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .filter.is-active { border-color: var(--blue); background: var(--blue); color: #fff; }
+    .faq-groups { padding: 0 17px; }
+    .faq-group { margin-bottom: 17px; }
+    .faq-group[hidden] { display: none; }
+    .group-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0 2px 7px;
+      color: var(--hint);
+      font-size: 9px;
+      font-weight: 820;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .group-label svg { width: 13px; height: 13px; fill: none; stroke: var(--blue); stroke-width: 2; }
+    .faq-stack { overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--card); }
+    .faq-item { border-bottom: 1px solid var(--line); }
+    .faq-item:last-child { border-bottom: 0; }
+    .faq-item[hidden] { display: none; }
+    .question {
+      display: grid;
+      grid-template-columns: 25px 1fr 22px;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      min-height: 56px;
+      padding: 10px 12px;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+    .q-index {
+      display: grid;
+      place-items: center;
+      width: 25px;
+      height: 25px;
+      border-radius: 8px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-size: 9px;
+      font-weight: 850;
+    }
+    .q-text { color: var(--text-2); font-size: 11.5px; font-weight: 730; line-height: 1.35; }
+    .chevron { display: grid; place-items: center; color: var(--hint); transition: transform .2s ease; }
+    .chevron svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+    .faq-item.is-open .chevron { color: var(--blue); transform: rotate(180deg); }
+    .answer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .23s ease; }
+    .faq-item.is-open .answer { grid-template-rows: 1fr; }
+    .answer-inner { overflow: hidden; }
+    .answer-copy { margin: 0 12px 13px 46px; color: var(--text-3); font-size: 11px; line-height: 1.62; }
+    .no-results {
+      display: none;
+      margin: 0 17px 24px;
+      padding: 28px 18px;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      color: var(--text-3);
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .no-results.is-visible { display: block; }
+    .contact-dock {
+      position: absolute;
+      z-index: 5;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 10px 12px 14px;
+      border-top: 1px solid var(--line);
+      background: var(--glass);
+      backdrop-filter: blur(18px) saturate(1.25);
+      -webkit-backdrop-filter: blur(18px) saturate(1.25);
+    }
+    .dock-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--card);
+      color: var(--text-2);
+      font-size: 11px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .dock-btn:first-child { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+    .dock-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; }
+    @media (max-width: 600px) {
+      body { display: block; padding: 0; overflow: hidden; background: var(--bg); }
+      .stage, .phone { width: 100%; height: 100vh; min-height: 0; }
+      .phone { padding: 0; border: 0; border-radius: 0; box-shadow: none; background: var(--bg); }
+      .phone::before { display: none; }
+      .screen { border-radius: 0; }
+      .topbar { padding-top: max(10px, env(safe-area-inset-top)); }
+      .contact-dock { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage" aria-label="Help and Support app mockup">
+    <div class="phone">
+      <section class="screen">
+        <div class="scroll" id="helpScroll">
+          <header class="topbar">
+            <button class="icon-btn" aria-label="Go back">
+              <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="topbar-copy">
+              <div class="topbar-title">Help &amp; Support</div>
+              <div class="topbar-sub">PaMarket Zimbabwe</div>
+            </div>
+            <button class="icon-btn theme-toggle" id="themeToggle" aria-label="Switch theme">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+            </button>
+          </header>
+
+          <section class="hero">
+            <div class="eyebrow"><span class="status-dot"></span> Support is online</div>
+            <h1>What can we help you solve?</h1>
+            <p class="hero-copy">Search practical answers about buying, selling, safety and your account.</p>
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+              <input class="search" id="faqSearch" type="search" placeholder="Search help articles" autocomplete="off" aria-label="Search frequently asked questions">
+              <span class="search-kbd">FAQ</span>
+            </div>
+          </section>
+
+          <section class="human-card" aria-label="Contact PaMarket support">
+            <div class="human-head">
+              <div class="human-avatar">
+                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>
+              </div>
+              <div>
+                <div class="human-title">Need a human?</div>
+                <div class="human-sub">Talk to support or send a detailed bug report.</div>
+              </div>
+            </div>
+            <div class="human-actions">
+              <a class="support-btn primary" href="https://wa.me/971589772645" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24"><path d="M20 11.5a8.1 8.1 0 0 1-8.3 8A8.5 8.5 0 0 1 8 18.6L3 20l1.4-4.8A8 8 0 1 1 20 11.5Z"/><path d="M8.5 8.2c.5 2.7 2.4 4.6 5.2 5.3"/></svg>
+                Talk to a human
+              </a>
+              <a class="support-btn" href="mailto:support@pamarketzw.com?subject=PaMarket%20Bug%20Report">
+                <svg viewBox="0 0 24 24"><path d="M8 2l2 2m6-2-2 2M7 8h10v7a5 5 0 0 1-10 0Z"/><path d="M3 10h4m10 0h4M3 16h4m10 0h4"/></svg>
+                Submit a bug
+              </a>
+            </div>
+          </section>
+
+          <div class="section-head">
+            <div class="section-title">Popular questions</div>
+            <div class="result-count" id="resultCount">12 answers</div>
+          </div>
+          <nav class="filters" id="filters" aria-label="FAQ categories"></nav>
+          <div class="faq-groups" id="faqGroups"></div>
+          <div class="no-results" id="noResults">
+            No matching answer yet.<br>Try a shorter search, or contact the support team below.
+          </div>
+        </div>
+
+        <nav class="contact-dock" aria-label="Persistent support actions">
+          <a class="dock-btn" href="https://wa.me/971589772645" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24"><path d="M20 11.5a8.1 8.1 0 0 1-8.3 8A8.5 8.5 0 0 1 8 18.6L3 20l1.4-4.8A8 8 0 1 1 20 11.5Z"/><path d="M8.5 8.2c.5 2.7 2.4 4.6 5.2 5.3"/></svg>
+            WhatsApp
+          </a>
+          <a class="dock-btn" href="mailto:support@pamarketzw.com">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            Email support
+          </a>
+        </nav>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const faqData = [
+      {
+        group: 'Getting started', icon: 'spark',
+        q: 'How do I post an ad on PaMarket?',
+        a: 'Tap the "Post" button at the bottom of the screen. Choose your category, add clear photos, write a title and description, set your price, and select your location. Your listing goes live instantly — no waiting for review.'
+      },
+      {
+        group: 'Getting started', icon: 'spark',
+        q: 'Is PaMarket free to use?',
+        a: 'Yes — completely free. Posting ads, browsing listings, sending messages, applying for jobs, and getting verified are all 100% free. No subscriptions, no commission on sales, no hidden charges.'
+      },
+      {
+        group: 'Getting started', icon: 'spark',
+        q: 'How do I get my account verified?',
+        a: 'Go to Account → Verify Identity. Enter your ID number, take a selfie, and upload a photo of your National ID or passport. Our team reviews your submission within 24 hours and your blue verified badge appears automatically when approved.'
+      },
+      {
+        group: 'Managing listings', icon: 'tag',
+        q: 'How long do my listings stay active?',
+        a: 'Listings stay active for 30 days. You can renew any listing anytime by going to My Listings and tapping Renew. Renewing resets the 30-day timer and bumps your listing back to the top.'
+      },
+      {
+        group: 'Managing listings', icon: 'tag',
+        q: 'Can I edit or delete a listing after posting?',
+        a: 'Yes. Go to Account → My Listings, tap the listing you want to change, then tap Edit to update photos, price, or description. To remove a listing, tap Delete. Deleted listings are permanently removed and cannot be recovered.'
+      },
+      {
+        group: 'Managing listings', icon: 'tag',
+        q: 'Why is my listing not showing up?',
+        a: 'Make sure your listing is set to "Active" in My Listings. Check that it was saved successfully — you should have received a confirmation. If your listing was removed by our moderation team, you will receive a notification with the reason. Contact support if you believe this was an error.'
+      },
+      {
+        group: 'Buying & safety', icon: 'shield',
+        q: 'How do payments work?',
+        a: 'PaMarket does not process or hold any payments. All payments are arranged directly between the buyer and seller — cash on collection, EcoCash, OneMoney, or bank transfer. Always inspect the item in person before paying, and never send money upfront for something you have not seen.'
+      },
+      {
+        group: 'Buying & safety', icon: 'shield',
+        q: 'How do I stay safe from scams?',
+        a: 'Never pay in advance without seeing the item. Avoid sellers who refuse to meet in person or who ask you to pay via gift cards or Western Union. If a deal feels too good to be true, it probably is. Use the in-app Report button to flag suspicious listings immediately.'
+      },
+      {
+        group: 'Buying & safety', icon: 'shield',
+        q: 'How do I contact a seller?',
+        a: 'Tap any listing, then tap "Send Message" to chat in-app, or tap "Call" or "WhatsApp" to contact the seller directly. All messages are stored in your Messages tab so you never lose a conversation.'
+      },
+      {
+        group: 'Buying & safety', icon: 'shield',
+        q: 'How do I report a listing or block a user?',
+        a: 'To report a listing: open the listing and tap the flag icon or scroll to the bottom and tap "Report". To block a user: tap their name on a listing or in Messages, then tap "Block User". Blocked users cannot see your listings or message you.'
+      },
+      {
+        group: 'Jobs & account', icon: 'briefcase',
+        q: 'How do I post a job as a company?',
+        a: 'Your company must be verified before you can post jobs on PaMarket. Go to Post → Jobs and follow the Company Verification steps. You will need your Certificate of Incorporation, Tax Clearance Certificate from ZIMRA, owner ID, and a photo of your premises. Verification takes up to 2 business days.'
+      },
+      {
+        group: 'Jobs & account', icon: 'briefcase',
+        q: 'How do I delete my account?',
+        a: 'Go to Settings → Security → Delete Account. Type DELETE to confirm. Your account, listings, and messages are permanently removed within 30 days. This action cannot be undone — download any data you need before proceeding.'
+      }
+    ];
+
+    const groupIcons = {
+      spark: '<svg viewBox="0 0 24 24"><path d="m12 3 1.4 4.1L17.5 8.5l-4.1 1.4L12 14l-1.4-4.1-4.1-1.4 4.1-1.4Z"/><path d="m18.5 14 .8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z"/></svg>',
+      tag: '<svg viewBox="0 0 24 24"><path d="M20 13 13 20l-9-9V4h7Z"/><circle cx="8.5" cy="8.5" r="1"/></svg>',
+      shield: '<svg viewBox="0 0 24 24"><path d="m12 3 7 3v5c0 4.7-3 8.3-7 10-4-1.7-7-5.3-7-10V6Z"/><path d="m9 12 2 2 4-4"/></svg>',
+      briefcase: '<svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg>'
+    };
+
+    const groups = [...new Set(faqData.map(item => item.group))];
+    const filters = document.getElementById('filters');
+    const faqGroups = document.getElementById('faqGroups');
+    let activeGroup = 'All';
+
+    function renderFilters() {
+      filters.innerHTML = ['All', ...groups].map(group =>
+        `<button class="filter${group === activeGroup ? ' is-active' : ''}" data-group="${group}">${group}</button>`
+      ).join('');
+    }
+
+    function renderFaqs() {
+      let number = 0;
+      faqGroups.innerHTML = groups.map(group => {
+        const items = faqData.filter(item => item.group === group);
+        return `<section class="faq-group" data-group="${group}">
+          <div class="group-label">${groupIcons[items[0].icon]} ${group}</div>
+          <div class="faq-stack">
+            ${items.map(item => {
+              number += 1;
+              return `<article class="faq-item" data-search="${(item.q + ' ' + item.a).toLowerCase().replace(/"/g, '&quot;')}">
+                <button class="question" aria-expanded="false">
+                  <span class="q-index">${String(number).padStart(2, '0')}</span>
+                  <span class="q-text">${item.q}</span>
+                  <span class="chevron"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span>
+                </button>
+                <div class="answer"><div class="answer-inner"><p class="answer-copy">${item.a}</p></div></div>
+              </article>`;
+            }).join('')}
+          </div>
+        </section>`;
+      }).join('');
+    }
+
+    function applyFilters() {
+      const query = document.getElementById('faqSearch').value.trim().toLowerCase();
+      let visible = 0;
+      document.querySelectorAll('.faq-group').forEach(group => {
+        let groupVisible = 0;
+        group.querySelectorAll('.faq-item').forEach(item => {
+          const matchesGroup = activeGroup === 'All' || group.dataset.group === activeGroup;
+          const matchesQuery = !query || item.dataset.search.includes(query);
+          item.hidden = !(matchesGroup && matchesQuery);
+          if (!item.hidden) { groupVisible += 1; visible += 1; }
+        });
+        group.hidden = groupVisible === 0;
+      });
+      document.getElementById('resultCount').textContent = `${visible} ${visible === 1 ? 'answer' : 'answers'}`;
+      document.getElementById('noResults').classList.toggle('is-visible', visible === 0);
+    }
+
+    renderFilters();
+    renderFaqs();
+
+    filters.addEventListener('click', event => {
+      const button = event.target.closest('.filter');
+      if (!button) return;
+      activeGroup = button.dataset.group;
+      renderFilters();
+      applyFilters();
+    });
+
+    faqGroups.addEventListener('click', event => {
+      const button = event.target.closest('.question');
+      if (!button) return;
+      const item = button.closest('.faq-item');
+      const open = item.classList.toggle('is-open');
+      button.setAttribute('aria-expanded', String(open));
+    });
+
+    document.getElementById('faqSearch').addEventListener('input', applyFilters);
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const html = document.documentElement;
+      html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+    });
+  </script>
+</body>
+</html>

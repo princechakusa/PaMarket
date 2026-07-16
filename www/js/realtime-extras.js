@@ -550,6 +550,8 @@
         var ts = H._rtInsertWindow[l.id];
         return ts && (now - ts < _RT_WIN_MS) && !cloudIds[l.id];
       });
+      var rtSafeIds = {};
+      rtSafe.forEach(function (l) { rtSafeIds[l.id] = true; });
 
       // 5. Non-active local items (the CURRENT USER's own pending/sold posts) —
       //    these come from a different query and are not contradicted by this
@@ -561,14 +563,31 @@
       //    the resulting zombie entry keeps resurfacing on every refresh.
       var nonActive = H.state.listings.filter(function (l) { return l.status !== 'active' && _cu && l.sellerId === _cu.id; });
 
+      // 5b. The CURRENT USER's own freshly-posted ACTIVE ads that this snapshot
+      //     doesn't contain yet. The 5 s rtSafe window (step 4) only catches
+      //     realtime-INSERTed rows; a post whose cloud write is still in flight
+      //     (or failed and is being retried) has no realtime event and would be
+      //     wiped by this server-wins snapshot — the "my ad vanished on refresh"
+      //     bug. Keep own active posts younger than _OWN_POST_GRACE_MS that the
+      //     cloud hasn't echoed back, so they survive refreshes/polls until the
+      //     server confirms (or a later snapshot that DOES include them, or a
+      //     moderation removal that flips their status, naturally reconciles).
+      var _OWN_POST_GRACE_MS = 6 * 60 * 60 * 1000; // 6h — long enough to bridge an offline/slow-sync gap
+      var ownUnsynced = H.state.listings.filter(function (l) {
+        return l.status === 'active' && _cu && l.sellerId === _cu.id
+          && !cloudIds[l.id]
+          && !rtSafeIds[l.id]
+          && (l.createdAt && (now - l.createdAt) < _OWN_POST_GRACE_MS);
+      });
+
       // 6. Expire the short-lived reconciliation structures.
       Object.keys(H._rtInsertWindow).forEach(function (id) {
         if (now - H._rtInsertWindow[id] >= _RT_WIN_MS) delete H._rtInsertWindow[id];
       });
       _prunePendingDeletes();
 
-      H.state.listings = rtSafe.concat(cloud).concat(nonActive);
-      H.RT._log('feed', 'listings_full applied', { server: cloud.length, rtSafe: rtSafe.length, nonActive: nonActive.length });
+      H.state.listings = rtSafe.concat(cloud).concat(ownUnsynced).concat(nonActive);
+      H.RT._log('feed', 'listings_full applied', { server: cloud.length, rtSafe: rtSafe.length, ownUnsynced: ownUnsynced.length, nonActive: nonActive.length });
       H.RT._log('pipeline', '[2] data merged', { type: 'listings_full', total: H.state.listings.length });
       H.saveState && H.saveState();
       if (typeof H._pruneCache === 'function') H._pruneCache('listings');

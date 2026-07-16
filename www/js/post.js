@@ -505,6 +505,12 @@
       if (vars.length) { l.attrs = l.attrs || {}; l.attrs.variations = vars; l.variations = vars; }
       H.state.listings.unshift(l);
       H.saveState();
+      // Did the cloud accept the row? Only a confirmed cloud write makes the
+      // ad visible to other devices and lets it survive a refresh (the feed
+      // reloads from the cloud, so a local-only ad is dropped). Track the
+      // outcome so we never falsely tell the user "your ad is live" when the
+      // write actually failed.
+      let cloudSaved = true;
       if (typeof H.saveListingToCloud === "function") {
         try {
           const saveRes = await (H.withTimeout ? H.withTimeout(H.saveListingToCloud(l), 20000, 'save listing') : H.saveListingToCloud(l));
@@ -521,7 +527,17 @@
             H.toast(msg, 6000, true);
             return;
           }
+          // A non-blocked failure (RLS/network/schema) — the ad is on the device
+          // but NOT in the cloud. Keep it locally (the feed-merge grace window
+          // preserves own recent posts across refreshes) and queue a retry
+          // instead of claiming success.
+          if (saveRes && saveRes.ok === false) {
+            cloudSaved = false;
+            if (typeof H.queueListingSync === 'function') H.queueListingSync(l);
+          }
         } catch (e) {
+          cloudSaved = false;
+          if (typeof H.queueListingSync === 'function') H.queueListingSync(l);
           if (e && e._timeout && H.showError) H.showError('Saved on your device but the cloud didn’t respond — it will sync later.', e, 'post.cloud.timeout');
         }
       }
@@ -538,7 +554,13 @@
       // Use the reconciled status: saveListingToCloud may have downgraded the ad
       // to 'flagged' server-side, so honour l.status over the pre-save guess.
       const liveStatus = l.status || finalStatus;
-      if (liveStatus !== 'active') {
+      if (!cloudSaved) {
+        // Saved on device, cloud write didn't land — be honest and send them to
+        // My Listings (where the retry queue will sync it) rather than Home,
+        // where a not-yet-synced ad can look like it "disappeared".
+        H.toast('Saved on your device — we’ll finish posting it as soon as you’re back online.', 6000, true);
+        H.openInner('MyListings');
+      } else if (liveStatus !== 'active') {
         H.toast(mod.status === 'pending' && !needsApproval
           ? (mod.reason || 'Ad submitted for review before going live.')
           : 'Ad submitted! It will go live after review.', 5000);
