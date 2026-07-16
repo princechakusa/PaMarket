@@ -441,6 +441,48 @@
     </div>`;
   };
 
+  // Owner listing actions. Defined at MODULE LOAD (not inside MyListings_after)
+  // so the Edit/Mark-Sold/Remove buttons on the DETAIL page work even when the
+  // user has never opened My Listings this session. Previously these lived
+  // inside _after, so H._myListings was undefined off the My Listings page and
+  // the buttons (guarded with `H._myListings && ...`) silently did nothing.
+  //
+  // After an action, re-render whatever page the user is actually on: refresh
+  // My Listings if they're there, otherwise (e.g. the detail page) step back —
+  // the listing they were viewing is gone or changed.
+  function _afterOwnerAction() {
+    if (H.currentPageName === 'MyListings') { H.renderPage('MyListings'); }
+    else if (typeof H.goBack === 'function') { H.goBack(); }
+  }
+  H._myListings = {
+    edit: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); H.openInner(l&&l.cat==='jobs'?'EditJob':'EditListing',{listingId:id}); },
+    markSold: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='sold'; l.soldAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'sold'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job marked as filled' : 'Listing marked as sold'); _afterOwnerAction(); },
+    del: (id) => {
+      // Branded confirm + cloud-first delete (mirrors H.deleteListing on the
+      // detail page). The old path used window.confirm and removed the row
+      // locally before the DB call, so a permission/network failure left the
+      // listing gone from the UI but still live in the cloud.
+      H.modal({
+        title: 'Delete this listing?', body: 'This cannot be undone.', confirmText: 'Delete', danger: true,
+        onConfirm: async () => {
+          const sc = window.supabase;
+          if (sc && sc.auth && typeof sc.from === 'function') {
+            try {
+              const res = await sc.from('listings').delete().eq('id', id).select();
+              if (res && res.error) { H.toast('Could not delete: ' + (res.error.message || 'permission denied')); return; }
+            } catch (e) { H.toast('Network error — try again'); return; }
+          }
+          if (typeof H.markPendingDelete === 'function') H.markPendingDelete(id);
+          H.state.listings = (H.state.listings || []).filter(x => x.id !== id);
+          H.saveState();
+          H.toast('Listing deleted');
+          _afterOwnerAction();
+        }
+      });
+    },
+    reactivate: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='active'; delete l.soldAt; l.renewedAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'active'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job reopened!' : 'Listing reactivated!'); _afterOwnerAction(); },
+  };
+
   pages.MyListings_after = function () {
     document.querySelectorAll('.listing-tabs .tab').forEach(btn => {
       btn.addEventListener('click', e => {
@@ -451,34 +493,6 @@
         if (el) el.classList.add('active');
       });
     });
-    H._myListings = {
-      edit: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); H.openInner(l&&l.cat==='jobs'?'EditJob':'EditListing',{listingId:id}); },
-      markSold: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='sold'; l.soldAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'sold'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job marked as filled' : 'Listing marked as sold'); H.renderPage('MyListings'); },
-      del: (id) => {
-        // Branded confirm + cloud-first delete (mirrors H.deleteListing on the
-        // detail page). The old path used window.confirm and removed the row
-        // locally before the DB call, so a permission/network failure left the
-        // listing gone from the UI but still live in the cloud.
-        H.modal({
-          title: 'Delete this listing?', body: 'This cannot be undone.', confirmText: 'Delete', danger: true,
-          onConfirm: async () => {
-            const sc = window.supabase;
-            if (sc && sc.auth && typeof sc.from === 'function') {
-              try {
-                const res = await sc.from('listings').delete().eq('id', id).select();
-                if (res && res.error) { H.toast('Could not delete: ' + (res.error.message || 'permission denied')); return; }
-              } catch (e) { H.toast('Network error — try again'); return; }
-            }
-            if (typeof H.markPendingDelete === 'function') H.markPendingDelete(id);
-            H.state.listings = (H.state.listings || []).filter(x => x.id !== id);
-            H.saveState();
-            H.toast('Listing deleted');
-            H.renderPage('MyListings');
-          }
-        });
-      },
-      reactivate: (id) => { const l=(H.state.listings||[]).find(x=>x.id===id); if(!l)return; l.status='active'; delete l.soldAt; l.renewedAt=Date.now(); H.saveState(); if(window.supabase&&typeof window.supabase.from==='function') window.supabase.from('listings').update({status:'active'}).eq('id',id); H.toast(l.cat==='jobs' ? 'Job reopened!' : 'Listing reactivated!'); H.renderPage('MyListings'); },
-    };
   };
 
   function elPhotoThumbHtml(p, i) {
