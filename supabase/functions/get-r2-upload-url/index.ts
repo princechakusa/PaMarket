@@ -8,17 +8,27 @@ const ALLOWED_ORIGINS = new Set([
   'https://www.pamarketzw.com',
   'https://pamarket.app',
   'https://www.pamarket.app',
-  'https://pamarketzw.com',
-  'https://www.pamarketzw.com',
-  'com.pamarket.app',       // Capacitor deep-link scheme treated as origin
+  'com.pamarket.app',       // Capacitor deep-link scheme, sent by some WebViews
+  // capacitor.config.json sets androidScheme:"https" with no custom hostname,
+  // so Capacitor's local WebView server actually serves the app from
+  // https://localhost — NOT com.pamarket.app. A request from that real origin
+  // was falling through to FALLBACK_ORIGIN below, whose Access-Control-Allow-
+  // Origin (the website's) didn't match the WebView's actual origin, so the
+  // browser/WebView silently rejected the response as a CORS violation —
+  // surfacing in-app only as a generic "Failed to fetch", never reaching this
+  // function's own logic (confirmed: it happened on the very first network
+  // call, before any response could be read).
+  'https://localhost',
+  'capacitor://localhost', // iOS Capacitor WebView origin (same root cause)
   'http://127.0.0.1:5500',  // Local dev (Live Server)
   'http://localhost:5500',
   'http://localhost:3000',
 ])
 
 // The fallback ACAO when an origin isn't in the set. The website is the
-// browser client that actually needs CORS (the Android app isn't subject to
-// it), so fall back to the website origin rather than the app scheme.
+// primary browser client, so fall back to its origin rather than any app
+// scheme — but every real client this function serves must be listed above;
+// this fallback existing is not a substitute for an accurate allowlist.
 const FALLBACK_ORIGIN = 'https://pamarketzw.com'
 
 function corsHeaders(req: Request) {

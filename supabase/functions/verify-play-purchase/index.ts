@@ -37,6 +37,15 @@
 const ALLOWED_ORIGINS = new Set([
   'https://pamarketzw.com',
   'https://www.pamarketzw.com',
+  // capacitor.config.json sets androidScheme:"https" with no custom hostname,
+  // so the Android app's WebView actually serves the app from
+  // https://localhost (iOS: capacitor://localhost) — this function is called
+  // directly from the app (billing.js) to verify Play purchases, so without
+  // these origins listed here every purchase verification request was
+  // rejected by CORS before this function's logic ever ran, surfacing only
+  // as a generic network failure in-app.
+  'https://localhost',
+  'capacitor://localhost',
   'http://127.0.0.1:5500',
   'http://localhost:5500',
 ]);

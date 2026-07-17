@@ -67,11 +67,16 @@
       } catch (_) {}
     }
     if (!token) throw new Error('Not authenticated');
-    const res = await fetch(window.SUPABASE_URL + '/functions/v1/get-r2-upload-url', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: key, contentType: contentType }),
-    });
+    var res;
+    try {
+      res = await fetch(window.SUPABASE_URL + '/functions/v1/get-r2-upload-url', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: key, contentType: contentType }),
+      });
+    } catch (fetchErr) {
+      throw new Error('get-r2-upload-url request failed: ' + (fetchErr && fetchErr.message));
+    }
     if (!res.ok) {
       var errText = '';
       try { errText = (await res.json()).error || ''; } catch(e) {}
@@ -81,11 +86,16 @@
     var signedUrl = payload.signedUrl;
     var publicUrl = payload.publicUrl;
     if (!signedUrl) throw new Error('R2 upload-url response missing signedUrl');
-    var up = await fetch(signedUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': contentType },
-      body: blob,
-    });
+    var up;
+    try {
+      up = await fetch(signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': contentType },
+        body: blob,
+      });
+    } catch (fetchErr) {
+      throw new Error('R2 PUT request failed: ' + (fetchErr && fetchErr.message) + ' (url-domain: ' + (function(){ try { return new URL(signedUrl).hostname; } catch(e){ return 'unparseable'; } })() + ')');
+    }
     if (!up.ok) throw new Error('R2 PUT failed: ' + up.status);
     // Only verification/ keys legitimately get no publicUrl (private bucket).
     // Every other key must come back as a real hosted URL — if it doesn't,

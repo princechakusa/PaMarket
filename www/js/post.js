@@ -487,8 +487,13 @@
             if (!Array.isArray(result) || result.length !== s.photos.length || result.some(p => !isHostedPhoto(p))) {
               // Prefer the real per-photo failure reason (auth/R2/network) captured by
               // uploadListingPhotos over a generic message, so the user and the logs
-              // both see what actually went wrong.
-              throw (result && result._uploadError) || new Error('One or more photos were not uploaded');
+              // both see what actually went wrong. If that's still missing, describe
+              // exactly which validation branch failed instead of a generic message —
+              // this is the one signal we can get from a device we can't remote-debug.
+              const reason = !Array.isArray(result) ? 'not-array(' + typeof result + ')'
+                : result.length !== s.photos.length ? 'length-mismatch(' + result.length + 'vs' + s.photos.length + ')'
+                : 'non-hosted-url(' + JSON.stringify((result.find(p => !isHostedPhoto(p)) || '').toString().slice(0, 40)) + ')';
+              throw (result && result._uploadError) || new Error('Upload validation failed: ' + reason);
             }
             photos = result;
             uploadError = null;
@@ -612,7 +617,12 @@
   // (best-effort, never blocks the user).
   H.uploadListingPhotos = async function uploadListingPhotos(photos, userId) {
     const list = Array.isArray(photos) ? photos : [];
-    if (typeof H.uploadToR2 !== 'function') return list;
+    if (typeof H.uploadToR2 !== 'function') {
+      const err = new Error('H.uploadToR2 is not a function at call time (typeof=' + typeof H.uploadToR2 + ')');
+      list._uploadError = err;
+      if (H.logError) H.logError('uploadListingPhotos.noR2fn', err);
+      return list;
+    }
     const out = [];
     let lastError = null;
     for (const p of list) {
