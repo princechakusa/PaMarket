@@ -411,6 +411,38 @@
     });
   }
 
+  // Upload a signed-in user's profile photo through the same R2 edge function.
+  // Keep this separate from listing uploads so the object key stays inside the
+  // server-approved profiles/{auth.uid()}/ prefix. Only the returned hosted
+  // URL should ever be persisted to public.profiles.avatar.
+  function uploadProfilePhoto(blob, contentType) {
+    var s = sharedSession();
+    if (!s || !s.access_token || !s.user || !s.user.id) {
+      return Promise.reject(new Error('not-authenticated'));
+    }
+    var type = contentType || 'image/jpeg';
+    var key = 'profiles/' + s.user.id + '/avatar_' + Date.now() + '.jpg';
+    return fetch(SB_URL + '/functions/v1/get-r2-upload-url', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: key, contentType: type }),
+    }).then(function (res) {
+      if (!res.ok) return res.json().catch(function () { return {}; }).then(function (j) {
+        throw new Error('upload-url: ' + (j.error || res.status));
+      });
+      return res.json();
+    }).then(function (payload) {
+      return fetch(payload.signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': type },
+        body: blob,
+      }).then(function (up) {
+        if (!up.ok) throw new Error('R2 PUT failed: ' + up.status);
+        return payload.publicUrl;
+      });
+    });
+  }
+
   // Insert a new listing. Mirrors the app's saveListingToCloud column map so
   // both clients write identical rows, and honours the backend Phase A
   // moderation trigger: a prohibited/banned INSERT raises a Postgres error,
@@ -886,6 +918,7 @@
   // Website posting (create listing + R2 image upload).
   global.PM.createListing = createListing;
   global.PM.uploadListingPhoto = uploadListingPhoto;
+  global.PM.uploadProfilePhoto = uploadProfilePhoto;
   // Paynow checkout (website twin of the app's Play Billing paid features).
   global.PM.BOOST_PRODUCTS = BOOST_PRODUCTS;
   global.PM.JOB_BOOST_PRODUCTS = JOB_BOOST_PRODUCTS;
