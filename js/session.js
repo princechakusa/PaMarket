@@ -175,7 +175,7 @@
         '<a href="notifications">Notifications</a>' +
         '<a href="' + APP_URL + '" target="_blank" rel="noopener">Chats (open app)</a>' +
         '<div class="acct-sep"></div>' +
-        '<a href="rentals#fleet">My Rental Fleet</a>' +
+        '<a href="rental-fleet">My Rental Fleet</a>' +
         '<a href="account-settings">Account Settings</a>' +
         '<a href="#" class="acct-signout" id="acctSignOutBtn">Sign Out</a>' +
       '</div>';
