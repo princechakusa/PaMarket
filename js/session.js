@@ -173,7 +173,7 @@
         '<a href="favourites">My Favourites</a>' +
         '<a href="saved-searches">Saved Searches</a>' +
         '<a href="notifications">Notifications</a>' +
-        '<a href="' + APP_URL + '" target="_blank" rel="noopener">Chats (open app)</a>' +
+        '<a href="chats">Chats</a>' +
         '<div class="acct-sep"></div>' +
         '<a href="rental-fleet">My Rental Fleet</a>' +
         '<a href="account-settings">Account Settings</a>' +
