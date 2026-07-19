@@ -39,6 +39,7 @@ Deno.serve(async (req) => {
     listings_expiry_warned: 0,
     listings_stale_prompted: 0,
     listings_milestone_notified: 0,
+    users_recommended: 0,
     errors: [] as string[],
   }
 
@@ -131,6 +132,10 @@ Deno.serve(async (req) => {
     const viewMilestones = await db.rpc('run_view_milestones')
     if (viewMilestones.error) summary.errors.push('View milestones: ' + viewMilestones.error.message)
     else summary.listings_milestone_notified = Number(viewMilestones.data?.notified || 0)
+
+    const recommendations = await db.rpc('run_personalized_recommendations')
+    if (recommendations.error) summary.errors.push('Personalized recommendations: ' + recommendations.error.message)
+    else summary.users_recommended = Number(recommendations.data?.recommended || 0)
 
     const ok = summary.errors.length === 0
     await db.from('job_runs').insert({
