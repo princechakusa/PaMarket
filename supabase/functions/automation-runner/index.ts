@@ -36,6 +36,10 @@ Deno.serve(async (req) => {
     stale_jobs_recovered: 0,
     ads_activated: 0,
     ads_completed: 0,
+    listings_expiry_warned: 0,
+    listings_stale_prompted: 0,
+    listings_milestone_notified: 0,
+    users_recommended: 0,
     errors: [] as string[],
   }
 
@@ -116,6 +120,22 @@ Deno.serve(async (req) => {
       summary.ads_activated = Number(adLifecycle.data?.activated || 0)
       summary.ads_completed = Number(adLifecycle.data?.completed || 0)
     }
+
+    const expiryWarnings = await db.rpc('run_listing_expiry_warnings')
+    if (expiryWarnings.error) summary.errors.push('Expiry warnings: ' + expiryWarnings.error.message)
+    else summary.listings_expiry_warned = Number(expiryWarnings.data?.warned || 0)
+
+    const staleListings = await db.rpc('run_stale_listing_prompts')
+    if (staleListings.error) summary.errors.push('Stale listing prompts: ' + staleListings.error.message)
+    else summary.listings_stale_prompted = Number(staleListings.data?.prompted || 0)
+
+    const viewMilestones = await db.rpc('run_view_milestones')
+    if (viewMilestones.error) summary.errors.push('View milestones: ' + viewMilestones.error.message)
+    else summary.listings_milestone_notified = Number(viewMilestones.data?.notified || 0)
+
+    const recommendations = await db.rpc('run_personalized_recommendations')
+    if (recommendations.error) summary.errors.push('Personalized recommendations: ' + recommendations.error.message)
+    else summary.users_recommended = Number(recommendations.data?.recommended || 0)
 
     const ok = summary.errors.length === 0
     await db.from('job_runs').insert({
