@@ -300,20 +300,20 @@
   function _notifNavClass(type) {
     const m = { message:'nn-msg', sale:'nn-blue', verify:'nn-blue', boost:'nn-gold', ban:'nn-red', report:'nn-red', review:'nn-purple', lead:'nn-blue', job_alert:'nn-job', security:'nn-red', info:'nn-blue',
       listing_approved:'nn-blue', listing_rejected:'nn-red', listing_flagged:'nn-red', price_drop:'nn-gold', saved_search_match:'nn-blue', listing_expiry:'nn-red', stale_listing:'nn-gold', view_milestone:'nn-gold',
-      job_application:'nn-job', job_shortlisted:'nn-job', job_declined:'nn-job', personalized_recommendation:'nn-blue' };
+      job_application:'nn-job', job_shortlisted:'nn-job', job_declined:'nn-job', personalized_recommendation:'nn-blue', chat_scam_warning:'nn-red' };
     return m[type] || 'nn-blue';
   }
   function _notifDotColor(type) {
     const m = { message:'#16A34A', sale:'#1D4ED8', boost:'#CA8A04', lead:'#1A3A8F', job_alert:'#475569', verify:'#1A3A8F', ban:'#DC2626', report:'#C2410C', review:'#7C3AED', security:'#DC2626', info:'#1A3A8F',
       listing_approved:'#1D4ED8', listing_rejected:'#DC2626', listing_flagged:'#DC2626', price_drop:'#CA8A04', saved_search_match:'#1A3A8F', listing_expiry:'#DC2626', stale_listing:'#CA8A04', view_milestone:'#CA8A04',
-      job_application:'#475569', job_shortlisted:'#16A34A', job_declined:'#475569', personalized_recommendation:'#1A3A8F' };
+      job_application:'#475569', job_shortlisted:'#16A34A', job_declined:'#475569', personalized_recommendation:'#1A3A8F', chat_scam_warning:'#DC2626' };
     return m[type] || '#1A3A8F';
   }
   function _notifNavHint(type, deepLink) {
     if (deepLink && /^https?:\/\//i.test(deepLink)) return 'Open ›';
     const m = { message:'Messages ›', sale:'View listing ›', boost:'Boost again ›', verify:'View profile ›', ban:'View account ›', report:'View report ›', review:'Review ›', lead:'View lead ›', job_alert:'View job ›', security:'Security ›',
       listing_approved:'View listing ›', listing_rejected:'Edit listing ›', listing_flagged:'View listing ›', price_drop:'View listing ›', saved_search_match:'View listing ›', listing_expiry:'Renew ›', stale_listing:'Boost ad ›', view_milestone:'Boost ad ›',
-      job_application:'View applicants ›', job_shortlisted:'View status ›', job_declined:'View status ›', personalized_recommendation:'View listing ›' };
+      job_application:'View applicants ›', job_shortlisted:'View status ›', job_declined:'View status ›', personalized_recommendation:'View listing ›', chat_scam_warning:'View chat ›' };
     return m[type] || (deepLink ? 'Open ›' : 'View ›');
   }
 
