@@ -9,6 +9,7 @@
   var toastTimer=null,typingTimer=null,lastTypingSent=0;
   var isSending=false;
   var shell=document.getElementById('chatShell');
+  document.body.classList.add('chat-view');
 
   function esc(v){return String(v==null?'':v).replace(/[&<>'"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'})[c]})}
   function initials(name){return String(name||'User').trim().split(/\s+/).slice(0,2).map(function(v){return v.charAt(0)}).join('').toUpperCase()||'U'}
@@ -30,7 +31,30 @@
   // stored directly in the messages.text column, never a separate table.
   // Shape: {"_offer":{k:'offer'|'accept'|'decline'|'counter',price,by,cur,listingId?,listingTitle?}}
   function parseOffer(text){if(typeof text!=='string'||text.charAt(0)!=='{'||text.indexOf('"_offer"')===-1)return null;try{var o=JSON.parse(text);return(o&&o._offer)?o._offer:null}catch(e){return null}}
-  function previewText(m){if(m.deleted)return'Message deleted';if(m.image)return'📷 Photo';var of=parseOffer(m.text);if(of)return(of.k==='accept'?'Offer accepted':of.k==='decline'?'Offer declined':of.k==='counter'?'Counter-offer '+money(of.price):'Offer '+money(of.price));return m.text||''}
+  function parseReply(text){if(typeof text!=='string'||text.charAt(0)!=='{'||text.indexOf('"_reply"')===-1)return null;try{var o=JSON.parse(text);if(!o||!o._reply)return null;return{name:o._reply.n||'Reply',quote:o._reply.t||'',text:o.t||''}}catch(e){return null}}
+  function previewText(m){if(m.deleted)return'Message deleted';if(m.image)return'📷 Photo';var of=parseOffer(m.text);if(of)return(of.k==='accept'?'Offer accepted':of.k==='decline'?'Offer declined':of.k==='counter'?'Counter-offer '+money(of.price):'Offer '+money(of.price));var reply=parseReply(m.text);return reply?reply.text:(m.text||'')}
+
+  function fitChatPage(){
+    var page=document.querySelector('.chat-page');
+    if(!page)return;
+    var viewport=window.visualViewport?window.visualViewport.height:window.innerHeight;
+    var top=Math.max(0,page.getBoundingClientRect().top);
+    page.style.setProperty('--chat-page-height',Math.max(280,Math.floor(viewport-top))+'px');
+  }
+  var fitFrame=0;
+  function scheduleChatFit(){cancelAnimationFrame(fitFrame);fitFrame=requestAnimationFrame(fitChatPage)}
+  window.addEventListener('resize',scheduleChatFit);
+  window.addEventListener('orientationchange',scheduleChatFit);
+  window.addEventListener('load',scheduleChatFit);
+  if(window.visualViewport)window.visualViewport.addEventListener('resize',scheduleChatFit);
+  if(window.ResizeObserver){
+    var chromeObserver=new ResizeObserver(scheduleChatFit);
+    var siteHeader=document.getElementById('hdr');
+    var announcement=document.getElementById('siteAnnouncementBanner');
+    if(siteHeader)chromeObserver.observe(siteHeader);
+    if(announcement)chromeObserver.observe(announcement);
+  }
+  fitChatPage();
 
   function request(path,opts,retried){
     opts=opts||{};
@@ -172,6 +196,16 @@
     });
     renderInbox();
     tabCounts();
+    fitChatPage();
+    if(window.matchMedia('(min-width:681px)').matches&&conversations.length){
+      var first=conversations.find(function(c){return convKind(c)===activeTab})||conversations[0];
+      if(first){
+        activeTab=convKind(first);
+        document.querySelectorAll('#chatTabs button').forEach(function(button){button.classList.toggle('active',button.dataset.tab===activeTab)});
+        renderInbox();
+        openConversation(first.id);
+      }
+    }
   }
 
   // ── Thread ───────────────────────────────────────────────────────────────
@@ -268,7 +302,9 @@
     if(m.image){
       return '<div class="'+rowCls+'" data-msg-id="'+esc(m.id)+'">'+avatarHtml+'<div class="bubble-col"><div class="bubble photo-bubble"><img src="'+esc(m.image)+'" alt="Shared photo" onclick="window.open(this.src,\'_blank\')">'+(m.text?'<p style="margin:7px 6px 2px">'+esc(m.text)+'</p>':'')+'<div class="meta">'+esc(timeStr)+tick+'</div></div>'+reactionsHtml(m)+'</div></div>';
     }
-    return '<div class="'+rowCls+'" data-msg-id="'+esc(m.id)+'">'+avatarHtml+'<div class="bubble-col"><div class="bubble">'+esc(m.text||'')+(m.edited?' <span style="opacity:.6;font-size:9px">(edited)</span>':'')+'<div class="meta">'+esc(timeStr)+tick+'</div></div>'+reactionsHtml(m)+'</div></div>';
+    var reply=parseReply(m.text);
+    var body=reply?'<div class="reply-quote"><b>'+esc(reply.name)+'</b>'+esc(reply.quote)+'</div>'+esc(reply.text):esc(m.text||'');
+    return '<div class="'+rowCls+'" data-msg-id="'+esc(m.id)+'">'+avatarHtml+'<div class="bubble-col"><div class="bubble">'+body+(m.edited?' <span style="opacity:.6;font-size:9px">(edited)</span>':'')+'<div class="meta">'+esc(timeStr)+tick+'</div></div>'+reactionsHtml(m)+'</div></div>';
   }
   function miniAvatarHtml(senderId){
     var p=profiles[senderId]||{};
