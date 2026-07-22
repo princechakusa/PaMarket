@@ -7,11 +7,17 @@
   var msgChannel=null,typingChannel=null,typingChannelConvId=null,presenceChannel=null;
   var onlineUsers={};
   var toastTimer=null,typingTimer=null,lastTypingSent=0;
+  var isSending=false;
   var shell=document.getElementById('chatShell');
 
   function esc(v){return String(v==null?'':v).replace(/[&<>'"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'})[c]})}
   function initials(name){return String(name||'User').trim().split(/\s+/).slice(0,2).map(function(v){return v.charAt(0)}).join('').toUpperCase()||'U'}
-  function headers(extra){return Object.assign({apikey:SB_KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},extra||{})}
+  function currentSession(){
+    var latest=window.PMSession&&window.PMSession.getSession?window.PMSession.getSession():null;
+    if(latest&&latest.access_token)session=latest;
+    return session;
+  }
+  function headers(extra){var active=currentSession();return Object.assign({apikey:SB_KEY,Authorization:'Bearer '+(active&&active.access_token||''),'Content-Type':'application/json'},extra||{})}
   function toast(message,isError){var el=document.getElementById('chatToast');if(!el)return;el.textContent=message;el.classList.toggle('error',!!isError);el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show')},2600)}
   function idFrag(id){return String(id||'').replace(/-/g,'')}
   function pairConvId(a,b){var ids=[String(a),String(b)].sort();return 'conv_'+idFrag(ids[0])+'_'+idFrag(ids[1])}
@@ -26,7 +32,32 @@
   function parseOffer(text){if(typeof text!=='string'||text.charAt(0)!=='{'||text.indexOf('"_offer"')===-1)return null;try{var o=JSON.parse(text);return(o&&o._offer)?o._offer:null}catch(e){return null}}
   function previewText(m){if(m.deleted)return'Message deleted';if(m.image)return'📷 Photo';var of=parseOffer(m.text);if(of)return(of.k==='accept'?'Offer accepted':of.k==='decline'?'Offer declined':of.k==='counter'?'Counter-offer '+money(of.price):'Offer '+money(of.price));return m.text||''}
 
-  function request(path,opts){opts=opts||{};opts.headers=Object.assign(headers(),opts.headers||{});return fetch(SB_URL+path,opts).then(function(res){if(res.status===204)return null;return res.text().then(function(text){var data=null;try{data=text?JSON.parse(text):null}catch(_){data=text}if(!res.ok){var msg=data&&(data.message||data.msg||data.error_description||data.error);throw Object.assign(new Error(msg||('Request failed: '+res.status)),{status:res.status,code:data&&data.code})}return data})})}
+  function request(path,opts,retried){
+    opts=opts||{};
+    var requestOpts=Object.assign({},opts,{headers:Object.assign(headers(),opts.headers||{})});
+    return fetch(SB_URL+path,requestOpts).then(function(res){
+      if(res.status===401&&!retried&&window.PMSession&&window.PMSession.refreshSession){
+        return window.PMSession.refreshSession().then(function(renewed){
+          if(!renewed||!renewed.access_token)throw Object.assign(new Error('Your session has expired. Please sign in again.'),{status:401});
+          session=renewed;
+          return request(path,opts,true);
+        });
+      }
+      if(res.status===204)return null;
+      return res.text().then(function(text){
+        var data=null;
+        try{data=text?JSON.parse(text):null}catch(_){data=text}
+        if(!res.ok){
+          var msg=data&&(data.message||data.msg||data.error_description||data.error||data.details);
+          throw Object.assign(new Error(msg||('Request failed: '+res.status)),{status:res.status,code:data&&data.code});
+        }
+        return data;
+      });
+    }).catch(function(err){
+      if(err&&err.name==='TypeError'&&!err.status)throw Object.assign(new Error('Network unavailable. Check your connection and try again.'),{cause:err});
+      throw err;
+    });
+  }
 
   // ── Load conversations + profiles + listing context ────────────────────
   function loadConversations(){
@@ -170,9 +201,9 @@
       document.getElementById('dealLink').href='detail?id='+encodeURIComponent(listing.id);
     } else { dealCard.style.display='none'; }
     document.getElementById('mobileBack').addEventListener('click',function(){shell.classList.remove('thread-open')});
-    document.getElementById('sendButton').addEventListener('click',sendMessage);
+    document.getElementById('messageComposer').addEventListener('submit',function(e){e.preventDefault();sendMessage()});
     document.getElementById('messageInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
-    document.getElementById('messageInput').addEventListener('input',notifyTyping);
+    document.getElementById('messageInput').addEventListener('input',function(){resizeComposerInput(this);updateSendButton();notifyTyping()});
     document.getElementById('attachButton').addEventListener('click',function(){document.getElementById('photoFile').click()});
     document.getElementById('photoFile').addEventListener('change',sendPhoto);
     document.getElementById('offerButton').addEventListener('click',openOfferPrompt);
@@ -186,6 +217,7 @@
       markConversationRead(convId,otherId);
     });
     joinTypingChannel(convId);
+    updateSendButton();
   }
   var REACTION_EMOJIS=['👍','❤️','😂','😮','😢','🙏'];
   function openReactionPicker(msgId,x,y){
@@ -274,27 +306,61 @@
     thread.insertAdjacentHTML('beforeend',messageHtml(m));
     thread.scrollTop=thread.scrollHeight;
   }
+  function resizeComposerInput(input){
+    if(!input)return;
+    input.style.height='auto';
+    input.style.height=Math.min(90,Math.max(31,input.scrollHeight))+'px';
+  }
+  function updateSendButton(){
+    var input=document.getElementById('messageInput');
+    var button=document.getElementById('sendButton');
+    if(!button)return;
+    button.disabled=isSending||!input||!input.value.trim()||!activeConvId;
+    button.classList.toggle('sending',isSending);
+    button.setAttribute('aria-label',isSending?'Sending message':'Send message');
+  }
+  function messageErrorText(err){
+    var raw=String(err&&err.message||'');
+    if(err&&err.status===401)return'Your session expired. Sign in again to send messages.';
+    if(/block exists between these users/i.test(raw))return'You cannot message this user.';
+    if(/row-level security|permission denied|not a member/i.test(raw))return'This conversation is no longer available to send to.';
+    if(/network unavailable|failed to fetch|networkerror/i.test(raw))return'You are offline. Reconnect and try again.';
+    return'Could not send this message. Please try again.';
+  }
   function sendMessage(){
     var input=document.getElementById('messageInput');
+    if(!input||isSending)return Promise.resolve();
     var text=input.value.trim();
-    if(!text||!activeConvId)return;
-    var conv=conversations.find(function(c){return c.id===activeConvId});if(!conv)return;
+    if(!text||!activeConvId){updateSendButton();return Promise.resolve()}
+    var convId=activeConvId;
+    var conv=conversations.find(function(c){return c.id===convId});
+    if(!conv||!Array.isArray(conv.members)||!conv.members.some(function(id){return String(id)===String(me.id)})){
+      toast('This conversation is no longer available to send to.',true);
+      return Promise.resolve();
+    }
     var msgId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('m'+Date.now()+Math.random().toString(36).slice(2));
     var createdAt=new Date().toISOString();
-    var row={id:msgId,conversation_id:activeConvId,sender_id:me.id,sender_name:me.name||'',text:text,read:false,created_at:createdAt};
+    var row={id:msgId,conversation_id:convId,sender_id:me.id,sender_name:me.name||'',text:text,read:false,created_at:createdAt};
+    isSending=true;
     input.value='';
+    resizeComposerInput(input);
+    updateSendButton();
     stopTyping();
     insertMessageRow(row);
-    request('/rest/v1/messages',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(row)}).then(function(){
-      return ensureConversationTimestamp(activeConvId);
+    return request('/rest/v1/messages',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(row)}).then(function(saved){
+      if(!Array.isArray(saved)||!saved.length)throw new Error('The server did not confirm the message.');
+      return ensureConversationTimestamp(convId);
     }).then(function(){
-      var c=conversations.find(function(x){return x.id===activeConvId});
+      var c=conversations.find(function(x){return x.id===convId});
       if(c)c._lastMessage=row;
       renderInbox();
     }).catch(function(err){
       console.warn('sendMessage:',err);
-      toast('Could not send — check your connection',true);
+      toast(messageErrorText(err),true);
       markMessageFailed(msgId,text);
+    }).then(function(){
+      isSending=false;
+      updateSendButton();
     });
   }
   function markMessageFailed(msgId,text){
@@ -302,7 +368,7 @@
     if(!rowEl)return;
     rowEl.remove();
     var input=document.getElementById('messageInput');
-    if(input)input.value=text;
+    if(input){input.value=text;resizeComposerInput(input);input.focus()}
   }
   function ensureConversationTimestamp(convId){
     return request('/rest/v1/conversations?id=eq.'+encodeURIComponent(convId),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({updated_at:new Date().toISOString()})}).catch(function(){});
