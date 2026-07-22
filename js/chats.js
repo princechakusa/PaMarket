@@ -234,9 +234,9 @@
       return '<div class="'+rowCls+'" data-msg-id="'+esc(m.id)+'">'+offerHtml(of,mine,m.id)+'</div>';
     }
     if(m.image){
-      return '<div class="'+rowCls+'" data-msg-id="'+esc(m.id)+'">'+avatarHtml+'<div><div class="bubble photo-bubble"><img src="'+esc(m.image)+'" alt="Shared photo" onclick="window.open(this.src,\'_blank\')">'+(m.text?'<p style="margin:7px 6px 2px">'+esc(m.text)+'</p>':'')+'<div class="meta">'+esc(timeStr)+tick+'</div></div>'+reactionsHtml(m)+'</div></div>';
+      return '<div class="'+rowCls+'" data-msg-id="'+esc(m.id)+'">'+avatarHtml+'<div class="bubble-col"><div class="bubble photo-bubble"><img src="'+esc(m.image)+'" alt="Shared photo" onclick="window.open(this.src,\'_blank\')">'+(m.text?'<p style="margin:7px 6px 2px">'+esc(m.text)+'</p>':'')+'<div class="meta">'+esc(timeStr)+tick+'</div></div>'+reactionsHtml(m)+'</div></div>';
     }
-    return '<div class="'+rowCls+'" data-msg-id="'+esc(m.id)+'">'+avatarHtml+'<div><div class="bubble">'+esc(m.text||'')+(m.edited?' <span style="opacity:.6;font-size:9px">(edited)</span>':'')+'<div class="meta">'+esc(timeStr)+tick+'</div></div>'+reactionsHtml(m)+'</div></div>';
+    return '<div class="'+rowCls+'" data-msg-id="'+esc(m.id)+'">'+avatarHtml+'<div class="bubble-col"><div class="bubble">'+esc(m.text||'')+(m.edited?' <span style="opacity:.6;font-size:9px">(edited)</span>':'')+'<div class="meta">'+esc(timeStr)+tick+'</div></div>'+reactionsHtml(m)+'</div></div>';
   }
   function miniAvatarHtml(senderId){
     var p=profiles[senderId]||{};
