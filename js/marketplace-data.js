@@ -480,6 +480,39 @@
     });
   }
 
+  // Upload a signed-in user's resume/CV through the same R2 edge function,
+  // under the cv/{auth.uid()} prefix it already allow-lists for CVs
+  // specifically (get-r2-upload-url/index.ts: "PDF uploads only permitted
+  // under cv/ prefix") — same object key scheme the app's Job Seeker Profile
+  // uses (www/js/jobs.js), so a CV uploaded on either platform is visible
+  // on both. PDF only, matching the edge function's content-type allowlist.
+  function uploadCV(blob, filename) {
+    var s = sharedSession();
+    if (!s || !s.access_token || !s.user || !s.user.id) {
+      return Promise.reject(new Error('not-authenticated'));
+    }
+    var key = 'cv/' + s.user.id + '/' + Date.now() + '_' + String(filename || 'resume.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
+    return fetch(SB_URL + '/functions/v1/get-r2-upload-url', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: key, contentType: 'application/pdf' }),
+    }).then(function (res) {
+      if (!res.ok) return res.json().catch(function () { return {}; }).then(function (j) {
+        throw new Error('upload-url: ' + (j.error || res.status));
+      });
+      return res.json();
+    }).then(function (payload) {
+      return fetch(payload.signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/pdf' },
+        body: blob,
+      }).then(function (up) {
+        if (!up.ok) throw new Error('R2 PUT failed: ' + up.status);
+        return payload.publicUrl;
+      });
+    });
+  }
+
   // Insert a new listing. Mirrors the app's saveListingToCloud column map so
   // both clients write identical rows, and honours the backend Phase A
   // moderation trigger: a prohibited/banned INSERT raises a Postgres error,
@@ -957,6 +990,7 @@
   global.PM.createListing = createListing;
   global.PM.uploadListingPhoto = uploadListingPhoto;
   global.PM.uploadProfilePhoto = uploadProfilePhoto;
+  global.PM.uploadCV = uploadCV;
   // Paynow checkout (website twin of the app's Play Billing paid features).
   global.PM.BOOST_PRODUCTS = BOOST_PRODUCTS;
   global.PM.JOB_BOOST_PRODUCTS = JOB_BOOST_PRODUCTS;
