@@ -2,7 +2,7 @@
   'use strict';
   var SB_URL=window.SUPABASE_URL,SB_KEY=window.SUPABASE_ANON_KEY;
   var session=null,me=null;
-  var conversations=[],profiles={},listings={},businesses={};
+  var conversations=[],profiles={},listings={},businessesByOwner={};
   var activeTab='personal',unreadOnly=false,activeConvId=null;
   var msgChannel=null,typingChannel=null,typingChannelConvId=null,presenceChannel=null;
   var onlineUsers={};
@@ -100,28 +100,44 @@
   // No business_id column exists on conversations (nor does the app's own
   // scheme use one) — a biz_ conversation encodes the business identity in
   // its id (biz_<last8ofBusinessId>_<last6ofBuyerId>), matching
-  // www/js/business-messaging.js's H.startBizChat exactly. Resolve it against
-  // the public, already-anon-readable businesses table by suffix, cross-
-  // checked against the conversation's non-owner member for safety.
-  function bizIdSuffix(convId){var parts=String(convId).split('_');return parts.length>=2?parts[1]:null}
+  // www/js/business-messaging.js's H.startBizChat exactly. businesses.id is a
+  // native uuid column, so a suffix LIKE match isn't usable through PostgREST
+  // without a cast it doesn't expose (confirmed live: "operator does not
+  // exist: uuid ~~ unknown"). Instead, fetch every business owned by either
+  // member (a plain, cast-free equality filter) and recompute each
+  // candidate's id to find the one that produced this exact conversation id.
   function loadBusinessesForConversations(){
-    var suffixes=Array.from(new Set(conversations.filter(function(c){return convKind(c)==='business'&&String(c.id).indexOf('biz_')===0}).map(function(c){return bizIdSuffix(c.id)}).filter(Boolean)));
-    var unresolved=suffixes.filter(function(s){return !businesses[s]});
+    var memberIds=new Set();
+    conversations.forEach(function(c){
+      if(convKind(c)!=='business'||String(c.id).indexOf('biz_')!==0)return;
+      (Array.isArray(c.members)?c.members:[]).forEach(function(m){memberIds.add(String(m))});
+    });
+    var unresolved=Array.from(memberIds).filter(function(id){return !businessesByOwner[id]});
     if(!unresolved.length)return Promise.resolve();
-    var filter=unresolved.map(function(s){return 'id.like.*'+encodeURIComponent(s)}).join(',');
-    return request('/rest/v1/businesses?or=('+filter+')&select=id,owner_user_id,name,logo').then(function(rows){
+    return request('/rest/v1/businesses?owner_user_id=in.('+unresolved.map(encodeURIComponent).join(',')+')&select=id,owner_user_id,name,logo').then(function(rows){
+      unresolved.forEach(function(id){businessesByOwner[id]=businessesByOwner[id]||[]});
       (rows||[]).forEach(function(b){
-        var suf=String(b.id).slice(-8);
-        businesses[suf]=businesses[suf]||b;
+        var ownerId=String(b.owner_user_id);
+        businessesByOwner[ownerId]=businessesByOwner[ownerId]||[];
+        businessesByOwner[ownerId].push(b);
       });
     }).catch(function(){});
+  }
+  function matchBusinessFor(ownerCandidate,buyerCandidate,convId){
+    var list=businessesByOwner[ownerCandidate]||[];
+    for(var i=0;i<list.length;i++){
+      if('biz_'+String(list[i].id).slice(-8)+'_'+String(buyerCandidate).slice(-6)===convId)return list[i];
+    }
+    return null;
   }
   // For a business conversation, the buyer should see the shop's identity,
   // not the owner's personal profile (matches the app's stated intent in
   // H.startBizChat). The owner still sees the buyer's personal identity.
   function businessDisplay(conv){
     if(convKind(conv)!=='business'||String(conv.id).indexOf('biz_')!==0)return null;
-    var b=businesses[bizIdSuffix(conv.id)];
+    var mem=Array.isArray(conv.members)?conv.members.map(String):[];
+    if(mem.length!==2)return null;
+    var b=matchBusinessFor(mem[0],mem[1],conv.id)||matchBusinessFor(mem[1],mem[0],conv.id);
     if(!b)return null;
     if(String(b.owner_user_id)===String(me.id))return null; // viewer is the owner — show the buyer normally
     return b;
@@ -702,7 +718,8 @@
       if(!biz||!biz.owner_user_id){toast('This business is not available right now.',true);return null}
       var ownerId=String(biz.owner_user_id);
       if(ownerId===String(me.id)){toast('This is your own business.',true);return null}
-      businesses[String(bizId).slice(-8)]=biz;
+      businessesByOwner[ownerId]=businessesByOwner[ownerId]||[];
+      if(businessesByOwner[ownerId].indexOf(biz)===-1)businessesByOwner[ownerId].push(biz);
       var convId='biz_'+String(bizId).slice(-8)+'_'+String(me.id).slice(-6);
       var existing=conversations.find(function(c){return c.id===convId});
       if(existing)return existing.id;
