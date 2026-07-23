@@ -79,7 +79,12 @@
       return 'dashboard';
     }
     if (m.listing_id || m.listingId) return 'detail?id=' + encodeURIComponent(m.listing_id || m.listingId);
-    if (n.type === 'job_alert' && (m.job_id || m.jobId)) return 'detail?id=' + encodeURIComponent(m.job_id || m.jobId);
+    // applications.job_id references public.listings(id) directly (jobs are
+    // category='jobs' listings rows), so this is safe to route to detail?id=
+    // — unlike the rental listing_id case above.
+    if (['job_alert', 'job_shortlisted', 'job_declined'].indexOf(n.type) !== -1 && (m.job_id || m.jobId)) {
+      return 'detail?id=' + encodeURIComponent(m.job_id || m.jobId);
+    }
     if (n.type === 'lead') return 'dashboard';
     if (['sale','boost','review','verify','ban','report'].indexOf(n.type) !== -1) return 'dashboard';
     return '';
