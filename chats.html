@@ -242,7 +242,7 @@ window.doSearch = window.doSearch || function(){
     <div class="compose-row">
       <button class="icon-btn" id="attachButton" type="button" title="Send photo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.4 11.6-8.5 8.5a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg></button>
       <input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
-      <div class="compose-input"><textarea id="messageInput" rows="1" placeholder="Write a message…"></textarea><button class="offer-btn" id="offerButton" type="button">Make offer</button></div>
+      <div class="compose-input"><textarea id="messageInput" rows="1" placeholder="Write a message…" autocomplete="off" autocorrect="on" spellcheck="true"></textarea><button class="offer-btn" id="offerButton" type="button">Make offer</button></div>
       <button class="send-btn" id="sendButton" type="submit" aria-label="Send message" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
     </div>
     <div class="compose-hint">Enter to send · Shift + Enter for a new line</div>

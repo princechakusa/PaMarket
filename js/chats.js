@@ -316,10 +316,27 @@
     document.getElementById('messageInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
     document.getElementById('messageInput').addEventListener('input',function(){resizeComposerInput(this);updateSendButton();notifyTyping()});
     // Belt-and-suspenders for the iOS keyboard blank-page issue: visualViewport
-    // events normally cover this, but the keyboard's open animation can still
-    // outlast them on some iOS versions, so re-fit again once it's settled.
-    document.getElementById('messageInput').addEventListener('focus',function(){setTimeout(scheduleChatFit,50);setTimeout(scheduleChatFit,350)});
-    document.getElementById('messageInput').addEventListener('blur',function(){setTimeout(scheduleChatFit,350)});
+    // events normally cover this, but the keyboard's open/close animation
+    // duration varies by device and iOS version (seen anywhere from ~250ms to
+    // 600ms+), so a couple of fixed-delay retries can still land BEFORE the
+    // animation actually settles, leaving the page painted blank with no
+    // further repaint trigger. Poll instead: keep nudging every 80ms until the
+    // visualViewport height stops changing for two consecutive checks (i.e.
+    // the keyboard animation has actually finished), capped at ~1.5s so a
+    // stuck poll can't run forever.
+    function settleChatFitAfterKeyboardAnimation(){
+      var lastHeight=-1,stableCount=0,ticks=0;
+      var poll=setInterval(function(){
+        scheduleChatFit();
+        var h=window.visualViewport?window.visualViewport.height:window.innerHeight;
+        if(h===lastHeight)stableCount++;else stableCount=0;
+        lastHeight=h;
+        ticks++;
+        if(stableCount>=2||ticks>18)clearInterval(poll);
+      },80);
+    }
+    document.getElementById('messageInput').addEventListener('focus',settleChatFitAfterKeyboardAnimation);
+    document.getElementById('messageInput').addEventListener('blur',settleChatFitAfterKeyboardAnimation);
     document.getElementById('attachButton').addEventListener('click',function(){document.getElementById('photoFile').click()});
     document.getElementById('photoFile').addEventListener('change',sendPhoto);
     document.getElementById('offerButton').addEventListener('click',openOfferPrompt);
