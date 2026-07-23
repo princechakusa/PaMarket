@@ -156,7 +156,8 @@
         'rental_brands(label),rental_categories(label),rental_locations(city,province),' +
         'rental_vehicle_media(url,is_cover,sort_order),rental_vehicle_specs(*),' +
         'rental_vehicle_features(feature),rental_companies(business_id,trading_name,rental_phone,rental_whatsapp,rental_email,' +
-        'year_established,deposit_policy,driver_available,cross_border,insurance_included,min_rental_days,avg_rating,review_count)'
+        'year_established,deposit_policy,driver_available,cross_border,insurance_included,min_rental_days,avg_rating,review_count,' +
+        'businesses(owner_user_id))'
     ).then(function (rows) {
       return rows[0] || null;
     });
@@ -232,7 +233,7 @@
     if (!sellerId) return Promise.resolve([]);
     return pgFetch(
       'reviews?seller_id=eq.' + esc(sellerId) +
-        '&select=reviewer_name,rating,body,created_at&order=created_at.desc&limit=' +
+        '&select=reviewer_id,reviewer_name,rating,body,created_at&order=created_at.desc&limit=' +
         (limit || 20)
     ).catch(function () { return []; });
   }
@@ -296,7 +297,7 @@
     return pgFetch(
       'blog_videos?is_published=eq.true' +
       '&select=id,title,description,provider,embed_id,sort_order,created_at' +
-      '&order=sort_order.asc,created_at.desc'
+      '&order=sort_order.asc,created_at.desc&limit=100'
     );
   }
   function authHeaders() {
@@ -380,6 +381,42 @@
     });
   }
 
+  // Submit (or update) a review for a seller, into the EXISTING reviews
+  // table (no separate system) — mirrors the app's eligibility rule (one
+  // review per reviewer per seller, upserted on resubmit) and its columns.
+  // NOTE: the live column is `body`, not `text` (the repo's schema file and
+  // the app's own insert code say `text`, but that column does not exist in
+  // production — confirmed by testing; using `body` here matches the real
+  // table and the existing read path in fetchSellerReviews()).
+  function submitReview(sellerId, rating, text) {
+    var s = sharedSession();
+    if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
+    if (!sellerId) return Promise.reject(new Error('missing seller'));
+    var r = Math.round(Number(rating));
+    if (!(r >= 1 && r <= 5)) return Promise.reject(new Error('invalid rating'));
+    if (String(sellerId) === s.user.id) return Promise.reject(new Error('cannot-review-self'));
+    var row = {
+      seller_id: String(sellerId),
+      reviewer_id: s.user.id,
+      reviewer_name: (s.user.user_metadata && s.user.user_metadata.full_name) || (s.user.email || 'User'),
+      rating: r,
+      body: String(text || '').slice(0, 1000),
+    };
+    return fetch(SB_URL + '/rest/v1/reviews?on_conflict=seller_id,reviewer_id', {
+      method: 'POST',
+      headers: Object.assign(
+        { Prefer: 'resolution=merge-duplicates,return=minimal' },
+        authHeaders()
+      ),
+      body: JSON.stringify(row),
+    }).then(function (res) {
+      if (res.ok) return true;
+      return res.text().then(function (t) {
+        throw new Error('review failed: ' + res.status + ' ' + t);
+      });
+    });
+  }
+
   // ── Listing creation (website posting) ───────────────────────────
   // Upload one image blob to Cloudflare R2 via the same security-definer
   // edge function the app uses (get-r2-upload-url → presigned PUT → public
@@ -435,6 +472,39 @@
       return fetch(payload.signedUrl, {
         method: 'PUT',
         headers: { 'Content-Type': type },
+        body: blob,
+      }).then(function (up) {
+        if (!up.ok) throw new Error('R2 PUT failed: ' + up.status);
+        return payload.publicUrl;
+      });
+    });
+  }
+
+  // Upload a signed-in user's resume/CV through the same R2 edge function,
+  // under the cv/{auth.uid()} prefix it already allow-lists for CVs
+  // specifically (get-r2-upload-url/index.ts: "PDF uploads only permitted
+  // under cv/ prefix") — same object key scheme the app's Job Seeker Profile
+  // uses (www/js/jobs.js), so a CV uploaded on either platform is visible
+  // on both. PDF only, matching the edge function's content-type allowlist.
+  function uploadCV(blob, filename) {
+    var s = sharedSession();
+    if (!s || !s.access_token || !s.user || !s.user.id) {
+      return Promise.reject(new Error('not-authenticated'));
+    }
+    var key = 'cv/' + s.user.id + '/' + Date.now() + '_' + String(filename || 'resume.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
+    return fetch(SB_URL + '/functions/v1/get-r2-upload-url', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: key, contentType: 'application/pdf' }),
+    }).then(function (res) {
+      if (!res.ok) return res.json().catch(function () { return {}; }).then(function (j) {
+        throw new Error('upload-url: ' + (j.error || res.status));
+      });
+      return res.json();
+    }).then(function (payload) {
+      return fetch(payload.signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/pdf' },
         body: blob,
       }).then(function (up) {
         if (!up.ok) throw new Error('R2 PUT failed: ' + up.status);
@@ -702,7 +772,7 @@
   function listFavouriteIds() {
     var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
-    return fetch(SB_URL + '/rest/v1/user_saves?user_id=eq.' + esc(s.user.id) + '&select=listing_id,saved_at&order=saved_at.desc', {
+    return fetch(SB_URL + '/rest/v1/user_saves?user_id=eq.' + esc(s.user.id) + '&select=listing_id,saved_at&order=saved_at.desc&limit=500', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
     }).then(function (res) { if (!res.ok) throw new Error('favourites-read-failed'); return res.json(); });
   }
@@ -729,7 +799,7 @@
   function listSavedSearches() {
     var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
-    return fetch(SB_URL + '/rest/v1/saved_searches?user_id=eq.' + esc(s.user.id) + '&select=*&order=saved_at.desc', {
+    return fetch(SB_URL + '/rest/v1/saved_searches?user_id=eq.' + esc(s.user.id) + '&select=*&order=saved_at.desc&limit=200', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
     }).then(function (res) { if (!res.ok) throw new Error('saved-searches-read-failed'); return res.json(); });
   }
@@ -805,7 +875,7 @@
     var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
     return fetch(SB_URL + '/rest/v1/applications?employer_id=eq.' + esc(s.user.id) +
-      '&select=id,job_id,job_title,company,applicant_name,applicant_phone,applicant_email,message,answers,status,applied_at&order=applied_at.desc', {
+      '&select=id,job_id,job_title,company,applicant_name,applicant_phone,applicant_email,message,answers,status,applied_at&order=applied_at.desc&limit=1000', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
     }).then(function (res) { return res.ok ? res.json() : []; }).catch(function () { return []; });
   }
@@ -915,10 +985,12 @@
   global.PM.fetchListingState = fetchListingState;
   global.PM.fetchOwnListingById = fetchOwnListingById;
   global.PM.submitReport = submitReport;
+  global.PM.submitReview = submitReview;
   // Website posting (create listing + R2 image upload).
   global.PM.createListing = createListing;
   global.PM.uploadListingPhoto = uploadListingPhoto;
   global.PM.uploadProfilePhoto = uploadProfilePhoto;
+  global.PM.uploadCV = uploadCV;
   // Paynow checkout (website twin of the app's Play Billing paid features).
   global.PM.BOOST_PRODUCTS = BOOST_PRODUCTS;
   global.PM.JOB_BOOST_PRODUCTS = JOB_BOOST_PRODUCTS;

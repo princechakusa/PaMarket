@@ -2,7 +2,7 @@
   'use strict';
   var SB_URL=window.SUPABASE_URL,SB_KEY=window.SUPABASE_ANON_KEY;
   var session=null,me=null;
-  var conversations=[],profiles={},listings={};
+  var conversations=[],profiles={},listings={},businessesByOwner={};
   var activeTab='personal',unreadOnly=false,activeConvId=null;
   var msgChannel=null,typingChannel=null,typingChannelConvId=null,presenceChannel=null;
   var onlineUsers={};
@@ -37,16 +37,41 @@
   function fitChatPage(){
     var page=document.querySelector('.chat-page');
     if(!page)return;
+    // iOS Safari opens the on-screen keyboard by scrolling the *visual*
+    // viewport to reveal the focused input, without moving the *layout*
+    // viewport — html/body here are pinned (overflow:hidden), so nothing
+    // actually scrolls, but that leaves the visual viewport's own vertical
+    // offset unaccounted for. Snapping the layout scroll position back to
+    // (0,0) on every relevant event keeps the two viewports from drifting
+    // apart, which is what was producing the blank page: the chat shell
+    // was still being laid out correctly, just no longer aligned with what
+    // was actually visible through the shifted visual viewport window.
+    if(window.scrollTo)window.scrollTo(0,0);
     var viewport=window.visualViewport?window.visualViewport.height:window.innerHeight;
     var top=Math.max(0,page.getBoundingClientRect().top);
     page.style.setProperty('--chat-page-height',Math.max(280,Math.floor(viewport-top))+'px');
+    // WebKit compositor bug: on some iOS versions, resizing a fixed/overflow-
+    // hidden ancestor while the keyboard animates leaves the page painted
+    // blank (white) until something forces a new paint. A transform nudge
+    // is the standard workaround — forces a repaint without visibly moving
+    // anything or losing scroll position.
+    page.style.transform='translateZ(0)';
+    void page.offsetHeight;
+    page.style.transform='';
   }
   var fitFrame=0;
   function scheduleChatFit(){cancelAnimationFrame(fitFrame);fitFrame=requestAnimationFrame(fitChatPage)}
   window.addEventListener('resize',scheduleChatFit);
   window.addEventListener('orientationchange',scheduleChatFit);
   window.addEventListener('load',scheduleChatFit);
-  if(window.visualViewport)window.visualViewport.addEventListener('resize',scheduleChatFit);
+  if(window.visualViewport){
+    // 'resize' fires when the keyboard's height changes; 'scroll' fires
+    // when iOS shifts the visual viewport to keep the focused input in
+    // view, which can happen independently of a resize — missing this was
+    // the gap. Both need to trigger a re-fit.
+    window.visualViewport.addEventListener('resize',scheduleChatFit);
+    window.visualViewport.addEventListener('scroll',scheduleChatFit);
+  }
   if(window.ResizeObserver){
     var chromeObserver=new ResizeObserver(scheduleChatFit);
     var siteHeader=document.getElementById('hdr');
@@ -85,21 +110,69 @@
 
   // ── Load conversations + profiles + listing context ────────────────────
   function loadConversations(){
-    return request('/rest/v1/conversations?members=cs.{'+encodeURIComponent(me.id)+'}&select=id,members,listing_id,updated_at&order=updated_at.desc.nullslast').then(function(rows){
+    return request('/rest/v1/conversations?members=cs.{'+encodeURIComponent(me.id)+'}&select=id,members,listing_id,updated_at&order=updated_at.desc.nullslast&limit=300').then(function(rows){
       conversations=(rows||[]).filter(function(c){return Array.isArray(c.members)&&c.members.length>=2});
       var otherIds=conversations.map(otherMember).filter(Boolean);
       var listingIds=conversations.map(function(c){return c.listing_id}).filter(Boolean);
       return Promise.all([
         loadProfiles(otherIds),
         loadListings(listingIds),
-        loadLastMessages()
+        loadLastMessages(),
+        loadBusinessesForConversations()
       ]);
     });
+  }
+  // No business_id column exists on conversations (nor does the app's own
+  // scheme use one) — a biz_ conversation encodes the business identity in
+  // its id (biz_<last8ofBusinessId>_<last6ofBuyerId>), matching
+  // www/js/business-messaging.js's H.startBizChat exactly. businesses.id is a
+  // native uuid column, so a suffix LIKE match isn't usable through PostgREST
+  // without a cast it doesn't expose (confirmed live: "operator does not
+  // exist: uuid ~~ unknown"). Instead, fetch every business owned by either
+  // member (a plain, cast-free equality filter) and recompute each
+  // candidate's id to find the one that produced this exact conversation id.
+  function loadBusinessesForConversations(){
+    var memberIds=new Set();
+    conversations.forEach(function(c){
+      if(convKind(c)!=='business'||String(c.id).indexOf('biz_')!==0)return;
+      (Array.isArray(c.members)?c.members:[]).forEach(function(m){memberIds.add(String(m))});
+    });
+    var unresolved=Array.from(memberIds).filter(function(id){return !businessesByOwner[id]});
+    if(!unresolved.length)return Promise.resolve();
+    return request('/rest/v1/businesses?owner_user_id=in.('+unresolved.map(encodeURIComponent).join(',')+')&select=id,owner_user_id,name,logo').then(function(rows){
+      unresolved.forEach(function(id){businessesByOwner[id]=businessesByOwner[id]||[]});
+      (rows||[]).forEach(function(b){
+        var ownerId=String(b.owner_user_id);
+        businessesByOwner[ownerId]=businessesByOwner[ownerId]||[];
+        businessesByOwner[ownerId].push(b);
+      });
+    }).catch(function(){});
+  }
+  function matchBusinessFor(ownerCandidate,buyerCandidate,convId){
+    var list=businessesByOwner[ownerCandidate]||[];
+    for(var i=0;i<list.length;i++){
+      if('biz_'+String(list[i].id).slice(-8)+'_'+String(buyerCandidate).slice(-6)===convId)return list[i];
+    }
+    return null;
+  }
+  // For a business conversation, the buyer should see the shop's identity,
+  // not the owner's personal profile (matches the app's stated intent in
+  // H.startBizChat). The owner still sees the buyer's personal identity.
+  function businessDisplay(conv){
+    if(convKind(conv)!=='business'||String(conv.id).indexOf('biz_')!==0)return null;
+    var mem=Array.isArray(conv.members)?conv.members.map(String):[];
+    if(mem.length!==2)return null;
+    var b=matchBusinessFor(mem[0],mem[1],conv.id)||matchBusinessFor(mem[1],mem[0],conv.id);
+    if(!b)return null;
+    if(String(b.owner_user_id)===String(me.id))return null; // viewer is the owner — show the buyer normally
+    return b;
   }
   function loadProfiles(ids){
     var unique=Array.from(new Set(ids.filter(function(id){return !profiles[id]})));
     if(!unique.length)return Promise.resolve();
-    return request('/rest/v1/profiles?id=in.('+unique.map(encodeURIComponent).join(',')+')&select=id,name,avatar,verified').then(function(rows){
+    // profiles_public, not the base table — cross-user reads of public.profiles
+    // are owner-or-staff-only since harden_profiles_owner_or_staff_read.sql.
+    return request('/rest/v1/profiles_public?id=in.('+unique.map(encodeURIComponent).join(',')+')&select=id,name,avatar,verified,privacy').then(function(rows){
       (rows||[]).forEach(function(p){profiles[p.id]=p});
     }).catch(function(){});
   }
@@ -142,7 +215,7 @@
     var filtered=conversations.filter(function(c){
       if(convKind(c)!==activeTab)return false;
       if(unreadOnly&&!c._unreadCount)return false;
-      if(q){var p=profiles[otherMember(c)];var name=(p&&p.name||'').toLowerCase();if(name.indexOf(q)===-1)return false}
+      if(q){var biz=businessDisplay(c);var p=biz||profiles[otherMember(c)];var name=(p&&(p.name)||'').toLowerCase();if(name.indexOf(q)===-1)return false}
       return true;
     }).sort(function(a,b){
       var at=(a._lastMessage&&new Date(a._lastMessage.created_at).getTime())||0;
@@ -154,10 +227,12 @@
       return;
     }
     list.innerHTML=filtered.map(function(c){
-      var otherId=otherMember(c);var p=profiles[otherId]||{};
+      var otherId=otherMember(c);
+      var biz=businessDisplay(c);
+      var p=biz||profiles[otherId]||{};
       var name=esc(p.name||'PaMarket user');
       var avatarHtml=p.avatar?'<img src="'+esc(p.avatar)+'" alt="">':esc(initials(p.name));
-      var online=onlineUsers[String(otherId)];
+      var online=!biz&&onlineUsers[String(otherId)];
       var lm=c._lastMessage;
       var preview=lm?esc(previewText(lm)).slice(0,64):'No messages yet';
       var unreadCls=(lm&&c._unreadCount)?' unread':'';
@@ -218,13 +293,15 @@
     var pane=document.getElementById('threadPane');
     pane.innerHTML='';
     pane.appendChild(document.getElementById('threadTemplate').content.cloneNode(true));
-    var otherId=otherMember(conv);var p=profiles[otherId]||{};
+    var otherId=otherMember(conv);
+    var biz=businessDisplay(conv);
+    var p=biz||profiles[otherId]||{};
     document.getElementById('threadAvatar').innerHTML=p.avatar?'<img src="'+esc(p.avatar)+'" alt="">':esc(initials(p.name));
     document.getElementById('threadName').textContent=p.name||'PaMarket user';
-    document.getElementById('threadVerified').style.display=p.verified?'':'none';
-    document.getElementById('threadOnline').style.display=onlineUsers[String(otherId)]?'':'none';
-    document.getElementById('threadStatus').textContent=onlineUsers[String(otherId)]?'Online now':'';
-    document.getElementById('threadProfileLink').href='profile?id='+encodeURIComponent(otherId||'');
+    document.getElementById('threadVerified').style.display=(!biz&&p.verified)?'':'none';
+    document.getElementById('threadOnline').style.display=(!biz&&onlineUsers[String(otherId)])?'':'none';
+    document.getElementById('threadStatus').textContent=(!biz&&onlineUsers[String(otherId)])?'Online now':'';
+    document.getElementById('threadProfileLink').href=biz?('business?id='+encodeURIComponent(biz.id)):('profile?id='+encodeURIComponent(otherId||''));
     var listing=conv.listing_id&&listings[conv.listing_id];
     var dealCard=document.getElementById('dealCard');
     if(listing){
@@ -238,6 +315,11 @@
     document.getElementById('messageComposer').addEventListener('submit',function(e){e.preventDefault();sendMessage()});
     document.getElementById('messageInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
     document.getElementById('messageInput').addEventListener('input',function(){resizeComposerInput(this);updateSendButton();notifyTyping()});
+    // Belt-and-suspenders for the iOS keyboard blank-page issue: visualViewport
+    // events normally cover this, but the keyboard's open animation can still
+    // outlast them on some iOS versions, so re-fit again once it's settled.
+    document.getElementById('messageInput').addEventListener('focus',function(){setTimeout(scheduleChatFit,50);setTimeout(scheduleChatFit,350)});
+    document.getElementById('messageInput').addEventListener('blur',function(){setTimeout(scheduleChatFit,350)});
     document.getElementById('attachButton').addEventListener('click',function(){document.getElementById('photoFile').click()});
     document.getElementById('photoFile').addEventListener('change',sendPhoto);
     document.getElementById('offerButton').addEventListener('click',openOfferPrompt);
@@ -260,14 +342,46 @@
     var picker=document.createElement('div');
     picker.id='reactionPicker';
     picker.style.cssText='position:fixed;z-index:60;display:flex;gap:4px;padding:6px 8px;border-radius:12px;background:#17213a;box-shadow:0 10px 28px rgba(11,28,77,.28);left:'+Math.max(8,x-90)+'px;top:'+Math.max(8,y-46)+'px';
-    picker.innerHTML=REACTION_EMOJIS.map(function(em){return '<button type="button" style="border:0;background:transparent;font-size:17px;padding:3px;cursor:pointer" data-emoji="'+em+'">'+em+'</button>'}).join('');
+    picker.innerHTML=REACTION_EMOJIS.map(function(em){return '<button type="button" style="border:0;background:transparent;font-size:17px;padding:3px;cursor:pointer" data-emoji="'+em+'">'+em+'</button>'}).join('')
+      +'<button type="button" style="border:0;border-left:1px solid rgba(255,255,255,.15);background:transparent;font-size:14px;padding:3px 3px 3px 8px;margin-left:2px;cursor:pointer;opacity:.85" data-report="1" title="Report this message">🚩</button>';
     document.body.appendChild(picker);
     picker.addEventListener('click',function(e){
-      var btn=e.target.closest('[data-emoji]');
-      if(btn)window.PMChat.toggleReaction(msgId,btn.dataset.emoji);
+      var emojiBtn=e.target.closest('[data-emoji]');
+      if(emojiBtn){window.PMChat.toggleReaction(msgId,emojiBtn.dataset.emoji);picker.remove();return}
+      var reportBtn=e.target.closest('[data-report]');
+      if(reportBtn){picker.remove();openReportPicker(msgId,x,y);return}
       picker.remove();
     });
     setTimeout(function(){document.addEventListener('click',function closePicker(e){if(!picker.contains(e.target)){picker.remove();document.removeEventListener('click',closePicker)}})},0);
+  }
+  // Per-message reporting — parity with www/js/messages.js H._chat.reportMsg,
+  // same canonical reason list, into the SAME public.reports table
+  // js/marketplace-data.js's PM.submitReport already writes to (target_type
+  // 'message' has been accepted since fix_reports_target_types.sql).
+  var REPORT_REASONS=['Scam or fraud','Harassment','Spam','Offensive content','Sharing off-platform contact','Other'];
+  function openReportPicker(msgId,x,y){
+    var existing=document.getElementById('reportPicker');
+    if(existing)existing.remove();
+    var picker=document.createElement('div');
+    picker.id='reportPicker';
+    picker.style.cssText='position:fixed;z-index:61;min-width:190px;padding:8px;border-radius:12px;background:#17213a;box-shadow:0 10px 28px rgba(11,28,77,.28);left:'+Math.max(8,x-95)+'px;top:'+Math.max(8,y-46)+'px';
+    picker.innerHTML='<div style="color:#fff;opacity:.7;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px 7px">Report message</div>'
+      +REPORT_REASONS.map(function(r){return '<button type="button" style="display:block;width:100%;text-align:left;border:0;background:transparent;color:#fff;font-size:12px;padding:7px;cursor:pointer;border-radius:7px" data-reason="'+esc(r)+'">'+esc(r)+'</button>'}).join('');
+    document.body.appendChild(picker);
+    picker.addEventListener('click',function(e){
+      var btn=e.target.closest('[data-reason]');
+      if(btn)reportMessage(msgId,btn.getAttribute('data-reason'));
+      picker.remove();
+    });
+    setTimeout(function(){document.addEventListener('click',function closePicker(e){if(!picker.contains(e.target)){picker.remove();document.removeEventListener('click',closePicker)}})},0);
+  }
+  function reportMessage(msgId,reason){
+    if(!window.PM||!PM.submitReport){toast('Reporting is unavailable right now.',true);return}
+    PM.submitReport({targetType:'message',targetId:msgId,reason:reason}).then(function(){
+      toast('Message reported — our team will review within 24 hours');
+    }).catch(function(){
+      toast('Could not report this message. Please try again.',true);
+    });
   }
   function loadThreadMessages(convId){
     return request('/rest/v1/messages?conversation_id=eq.'+encodeURIComponent(convId)+'&select=id,sender_id,sender_name,text,image,read,edited,deleted,reactions,created_at&order=created_at.asc&limit=200').then(function(rows){
@@ -359,9 +473,27 @@
     var raw=String(err&&err.message||'');
     if(err&&err.status===401)return'Your session expired. Sign in again to send messages.';
     if(/block exists between these users/i.test(raw))return'You cannot message this user.';
+    if(/rate_limited/i.test(raw))return'You\'re sending messages too fast. Please wait a moment.';
     if(/row-level security|permission denied|not a member/i.test(raw))return'This conversation is no longer available to send to.';
     if(/network unavailable|failed to fetch|networkerror/i.test(raw))return'You are offline. Reconnect and try again.';
     return'Could not send this message. Please try again.';
+  }
+  // Same job as messageErrorText but for the find-or-create-a-conversation
+  // step (opening a chat, not sending into one) — distinct failure surface:
+  // auth, RLS, network, a genuine insert conflict, or an unrecognized
+  // server/database error. Always returns a category the user can act on,
+  // and for the unrecognized case appends the raw status/code so a report
+  // back is actually diagnosable instead of just "please try again".
+  function conversationErrorText(err){
+    var raw=String(err&&err.message||'');
+    var status=err&&err.status;
+    if(status===401)return'Your session has expired. Please sign in again to start this conversation.';
+    if(/network unavailable|failed to fetch|networkerror/i.test(raw))return'You are offline. Reconnect and try again.';
+    if(/row-level security|permission denied|not a member/i.test(raw))return'You don\'t have permission to start this conversation.';
+    if(status===409||/duplicate key|conflict/i.test(raw))return'This conversation already exists — refreshing should show it. Please try again.';
+    if(status&&status>=500)return'The server had a problem starting this conversation. Please try again shortly.';
+    var detail=(err&&(err.code||status))?(' (error '+(err.code||status)+')'):'';
+    return'Could not start this conversation'+detail+'. Please try again.';
   }
   function sendMessage(){
     var input=document.getElementById('messageInput');
@@ -543,8 +675,15 @@
         replacement.innerHTML=messageHtml(msg);
         row.replaceWith(replacement.firstChild);
       })
-      .subscribe(function(status){setRtPill(status==='SUBSCRIBED')});
+      .subscribe(function(status){
+        setRtPill(status==='SUBSCRIBED');
+        if((status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')&&session){
+          clearTimeout(reconnectTimer);
+          reconnectTimer=setTimeout(function(){if(session)initMessageChannel()},4000);
+        }
+      });
   }
+  var reconnectTimer=null;
   function setRtPill(on){
     var pill=document.getElementById('rtPill');
     if(!pill)return;
@@ -638,8 +777,119 @@
   }
   window.addEventListener('beforeunload',teardownAllChannels);
 
+  // ── Entry points: "Message Seller" (detail.html) / "Message" (profile.html)
+  // link here as chats?to=<userId>&listing=<listingId>. Find-or-create the
+  // 1:1 conversation for that pair (deterministic id, same scheme the mobile
+  // app uses in H.startChatWith) so the listing/profile/chat/notification
+  // surfaces all resolve to the SAME thread instead of a disconnected one.
+  function stripEntryParams(){
+    var url=new URL(location.href);
+    url.searchParams.delete('to');url.searchParams.delete('listing');url.searchParams.delete('conv');url.searchParams.delete('biz');
+    history.replaceState(null,'',url.pathname+url.search+url.hash);
+  }
+  // "Message Business" (business.html) links here as chats?biz=<businessId>.
+  // Conversation id must match www/js/business-messaging.js's H.startBizChat
+  // EXACTLY (raw slice, not idFrag-stripped) so a buyer who already messaged
+  // this business via the app lands on the same thread on the website.
+  function resolveBizEntry(bizId){
+    return request('/rest/v1/businesses?id=eq.'+encodeURIComponent(bizId)+'&select=id,owner_user_id,name,logo').then(function(rows){
+      var biz=rows&&rows[0];
+      if(!biz||!biz.owner_user_id){toast('This business is not available right now.',true);return null}
+      var ownerId=String(biz.owner_user_id);
+      if(ownerId===String(me.id)){toast('This is your own business.',true);return null}
+      businessesByOwner[ownerId]=businessesByOwner[ownerId]||[];
+      if(businessesByOwner[ownerId].indexOf(biz)===-1)businessesByOwner[ownerId].push(biz);
+      var convId='biz_'+String(bizId).slice(-8)+'_'+String(me.id).slice(-6);
+      var existing=conversations.find(function(c){return c.id===convId});
+      if(existing)return existing.id;
+      var body={id:convId,members:[me.id,ownerId]};
+      return request('/rest/v1/conversations?on_conflict=id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(body)}).then(function(rows2){
+        var row=(rows2&&rows2[0])||{id:convId,members:[me.id,ownerId]};
+        conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},row));
+        return row.id;
+      }).catch(function(err){
+        console.warn('resolveBizEntry (create conversation):',err,'status=',err&&err.status,'code=',err&&err.code);
+        toast(conversationErrorText(err),true);
+        return null;
+      });
+    }).catch(function(err){
+      console.warn('resolveBizEntry (business lookup):',err,'status=',err&&err.status,'code=',err&&err.code);
+      toast(businessLookupErrorText(err),true);
+      return null;
+    });
+  }
+  function businessLookupErrorText(err){
+    var raw=String(err&&err.message||'');
+    var status=err&&err.status;
+    if(status===401)return'Your session has expired. Please sign in again.';
+    if(/network unavailable|failed to fetch|networkerror/i.test(raw))return'You are offline. Reconnect and try again.';
+    if(status&&status>=500)return'The server had a problem loading this business. Please try again shortly.';
+    var detail=(err&&(err.code||status))?(' (error '+(err.code||status)+')'):'';
+    return'Could not load this business'+detail+'. Please try again.';
+  }
+  function findExistingPairConversation(otherId,pairKey){
+    var match=conversations.filter(function(c){
+      var id=String(c.id);
+      if(id.indexOf('biz_')===0||id.indexOf('job_')===0)return false;
+      var mem=Array.isArray(c.members)?c.members.map(String):[];
+      var byMembers=mem.indexOf(String(me.id))!==-1&&mem.indexOf(String(otherId))!==-1;
+      var byId=id===pairKey||id.indexOf(pairKey+'_')===0;
+      return byMembers||byId;
+    }).sort(function(a,b){
+      var at=(a._lastMessage&&new Date(a._lastMessage.created_at).getTime())||0;
+      var bt=(b._lastMessage&&new Date(b._lastMessage.created_at).getTime())||0;
+      return bt-at;
+    });
+    return match[0]||null;
+  }
+  function resolveEntryConversation(){
+    var params=new URLSearchParams(location.search);
+    var convId=params.get('conv');
+    var otherId=params.get('to');
+    var bizId=params.get('biz');
+    var listingId=params.get('listing')||null;
+    if(convId){
+      stripEntryParams();
+      // Notification deep-link: only open if we're actually a member (the
+      // conversations list above is already scoped to `members cs. {me}`,
+      // so a conversation the user doesn't belong to simply won't be found).
+      var known=conversations.find(function(c){return c.id===convId});
+      if(!known)toast('That conversation is not available.',true);
+      return Promise.resolve(known?known.id:null);
+    }
+    if(bizId){
+      stripEntryParams();
+      return resolveBizEntry(bizId);
+    }
+    if(!otherId)return Promise.resolve(null);
+    stripEntryParams();
+    if(String(otherId)===String(me.id)){toast('You cannot message yourself',true);return Promise.resolve(null)}
+    var pairKey=pairConvId(me.id,otherId);
+    var existing=findExistingPairConversation(otherId,pairKey);
+    if(existing)return Promise.resolve(existing.id);
+    return loadProfiles([otherId]).then(function(){
+      var target=profiles[otherId];
+      if(target&&target.privacy&&target.privacy.allowMessages===false){
+        toast('This user has turned off direct messages',true);
+        return null;
+      }
+      var body={id:pairKey,members:[me.id,otherId]};
+      if(listingId)body.listing_id=listingId;
+      return request('/rest/v1/conversations?on_conflict=id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(body)}).then(function(rows){
+        var row=(rows&&rows[0])||{id:pairKey,members:[me.id,otherId],listing_id:listingId};
+        conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},row));
+        return (row.listing_id?loadListings([row.listing_id]):Promise.resolve()).then(function(){return row.id});
+      }).catch(function(err){
+        console.warn('resolveEntryConversation:',err,'status=',err&&err.status,'code=',err&&err.code);
+        toast(conversationErrorText(err),true);
+        return null;
+      });
+    });
+  }
+
   // ── Boot ───────────────────────────────────────────────────────────────
-  function showGate(){shell.innerHTML='<section class="gate"><h2>Sign in to view your chats</h2><p>Your PaMarket account keeps every conversation private between you and the other member.</p><a href="auth?return=chats">Sign In</a></section>'}
+  function returnParam(){return encodeURIComponent('chats'+location.search+location.hash)}
+  function showGate(){shell.innerHTML='<section class="gate"><h2>Sign in to view your chats</h2><p>Your PaMarket account keeps every conversation private between you and the other member.</p><a href="auth?return='+returnParam()+'">Sign In</a></section>'}
   function showErrorGate(){shell.innerHTML='<section class="gate"><h2>Could not load your chats</h2><p>Please refresh the page. If the problem continues, contact PaMarket support.</p><a href="chats">Refresh</a></section>'}
   function init(){
     var refresh=window.PMSession&&window.PMSession.maybeRefresh?window.PMSession.maybeRefresh():Promise.resolve();
@@ -647,12 +897,26 @@
       session=window.PMSession&&window.PMSession.getSession?window.PMSession.getSession():null;
       if(!session||!session.user||!session.access_token){showGate();return}
       me={id:session.user.id,name:(session.user.user_metadata&&(session.user.user_metadata.full_name||session.user.user_metadata.name))||session.user.email||'You'};
-      return loadConversations().then(function(){
+      return loadConversations().then(resolveEntryConversation).then(function(entryConvId){
         mount();
         initMessageChannel();
         initPresence();
+        if(entryConvId){
+          activeTab=convKind({id:entryConvId});
+          document.querySelectorAll('#chatTabs button').forEach(function(button){button.classList.toggle('active',button.dataset.tab===activeTab)});
+          renderInbox();
+          openConversation(entryConvId);
+          if(window.matchMedia('(max-width:680px)').matches)shell.classList.add('thread-open');
+        }
       });
     }).catch(function(err){console.warn('Chats load failed:',err);showErrorGate()});
   }
+  window.addEventListener('online',function(){if(session)initMessageChannel()});
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='visible'&&session&&(!msgChannel||msgChannel.state!=='joined')){
+      var pill=document.getElementById('rtPill');
+      if(pill)initMessageChannel();
+    }
+  });
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

@@ -423,14 +423,29 @@ document.addEventListener('click',e=>{
   var SB_URL = window.SUPABASE_URL || 'https://gxgytumhknmnwspxjzxw.supabase.co';
   var SB_KEY = window.SUPABASE_ANON_KEY || 'sb_publishable_cf3Z72lUE6PLCb2m42OFLA_znE8JK2r';
 
-  // Prefill the email field if the visitor is signed in via the shared
-  // website session (js/auth.js), so returning users don't retype it.
+  // If the visitor is signed in, lock the email field to their own session
+  // email instead of just prefilling it — a signed-in user must not be able
+  // to type a different person's email and request deletion of their
+  // account. Anonymous submission stays available and editable: someone
+  // locked out of their account (e.g. forgotten password) still needs a way
+  // to request deletion, and that path is deliberately reviewed by a human
+  // before anything happens (see create_account_deletion_system.sql) rather
+  // than gated by an auth check that would shut them out entirely.
+  var signedInUserId = null;
   try {
     var s = localStorage.getItem('pm_session');
     if (s) {
       var sess = JSON.parse(s);
       var email = sess && sess.user && sess.user.email;
-      if (email) document.getElementById('daEmail').value = email;
+      if (email && sess.user && sess.user.id) {
+        signedInUserId = sess.user.id;
+        var emailInput = document.getElementById('daEmail');
+        emailInput.value = email;
+        emailInput.readOnly = true;
+        emailInput.title = 'Locked to your signed-in account email';
+        var hint = emailInput.parentElement && emailInput.parentElement.querySelector('.hint');
+        if (hint) hint.textContent = 'Locked to your signed-in account — sign out first if you meant to request deletion for a different account.';
+      }
     }
   } catch (e) {}
 
@@ -465,7 +480,7 @@ document.addEventListener('click',e=>{
         'Prefer': 'return=minimal',
       },
       body: JSON.stringify({
-        user_id: null,
+        user_id: signedInUserId,
         email: email,
         reason: reason || null,
         status: 'pending',

@@ -138,8 +138,24 @@
 
   function initAccountUI() {
     var session = getSession();
+    var signedIn = !!(session && session.user);
+
+    // The hamburger menu (#mobNav) is the only nav surface below 768px —
+    // .hdr-util and .btn-sign are both display:none there (site.css) — but
+    // it's static markup with no session-aware entries of its own, so
+    // mobile visitors had no way to sign in (signed out) or reach
+    // Chats/Account Settings (signed in) short of guessing a URL. Inject
+    // the same links the desktop account menu already has below, rather
+    // than building a second nav system.
+    var mobNav = document.getElementById('mobNav');
+    if (mobNav && !mobNav.querySelector('[data-session-nav]')) {
+      mobNav.insertAdjacentHTML('beforeend', signedIn
+        ? '<a href="chats" data-session-nav>Chats</a><a href="account-settings" data-session-nav>Account Settings</a>'
+        : '<a href="auth" data-session-nav>Sign In</a>');
+    }
+
     var signInBtn = document.getElementById('signInBtn');
-    if (!signInBtn || !session || !session.user) return;
+    if (!signInBtn || !signedIn) return;
 
     injectStyles();
 
