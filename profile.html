@@ -370,7 +370,16 @@ window.doSearch = window.doSearch || function(){
       <div class="pf-listings">
         <div class="pf-section-head"><h2 id="pfListingsHeading">Active Listings</h2><a href="dashboard" class="hidden" id="pfManageAll">Manage all →</a></div>
         <div class="pf-grid" id="pfGrid"></div>
-        <div class="pf-reviews hidden" id="pfReviews"><div class="pf-section-head" style="margin-top:34px"><h2>Reviews</h2><div class="pf-rating hidden" id="pfRating"></div></div><div class="rev-list" id="pfRevList"></div></div>
+        <div class="pf-reviews hidden" id="pfReviews"><div class="pf-section-head" style="margin-top:34px"><h2>Reviews</h2><div class="pf-rating hidden" id="pfRating"></div></div>
+          <div class="pf-card hidden" id="pfWriteReview" style="margin-bottom:16px">
+            <h2 id="pfWriteReviewHeading">Leave a review</h2>
+            <div id="pfStarPicker" style="display:flex;gap:4px;margin:10px 0" role="radiogroup" aria-label="Rating"></div>
+            <textarea id="pfReviewText" maxlength="1000" placeholder="Share your experience with this seller..." style="width:100%;min-height:80px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:13.5px;resize:vertical"></textarea>
+            <button type="button" class="btn btn-navy" id="pfSubmitReview" style="margin-top:10px">Submit Review</button>
+            <div id="pfReviewStatus" style="margin-top:8px;font-size:12.5px"></div>
+          </div>
+          <a class="pf-card" id="pfReviewSignIn" style="display:none;text-align:center;text-decoration:none;color:var(--navy);font-weight:700">Sign in to leave a review</a>
+        <div class="rev-list" id="pfRevList"></div></div>
       </div>
     </div>
   </div>
@@ -566,6 +575,7 @@ async function init(){
       document.getElementById('pfCoverEyebrow').textContent='My public seller profile';
     }
     render(profile);
+    initReviewUI(id);
     document.getElementById('loadingState').classList.add('hidden');
     document.getElementById('profileContent').classList.remove('hidden');
     PM.fetchListings({sellerId:id,limit:100}).then(rows=>{
@@ -577,7 +587,7 @@ async function init(){
     }).catch(()=>{
       document.getElementById('pfGrid').innerHTML='<div class="empty-state">Couldn\'t load listings right now.</div>';
     });
-    PM.fetchSellerReviews(id,10).then(renderReviews).catch(()=>{});
+    PM.fetchSellerReviews(id,10).then(r=>renderReviews(r,id)).catch(()=>{});
   }catch(e){
     showNotFound();
   }
@@ -589,8 +599,16 @@ function showNotFound(){
 }
 
 // Seller reviews — rating summary in the profile card + full review list.
-function renderReviews(reviews){
-  if(!reviews||!reviews.length){document.getElementById('pfRatingMetric').textContent='New';return;}
+function renderReviews(reviews,sellerId){
+  reviews=reviews||[];
+  const viewer=PM.currentUserId&&PM.currentUserId();
+  const mine=viewer?reviews.find(r=>r.reviewer_id===viewer):null;
+  if(mine){
+    document.getElementById('pfWriteReviewHeading').textContent='Edit your review';
+    document.getElementById('pfReviewText').value=mine.body||'';
+    setRating(Number(mine.rating)||0);
+  }
+  if(!reviews.length){document.getElementById('pfRatingMetric').textContent='New';return;}
   const escR=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const starsOf=r=>{const f=Math.max(0,Math.min(5,Math.round(Number(r)||0)));return '★★★★★'.slice(0,f)+'☆☆☆☆☆'.slice(0,5-f);};
   const avg=reviews.reduce((a,r)=>a+(Number(r.rating)||0),0)/reviews.length;
@@ -605,6 +623,81 @@ function renderReviews(reviews){
     `<div class="rev-stars">${starsOf(r.rating)}</div></div>`+
     (r.body?`<div class="rev-body">${escR(r.body)}</div>`:'')+`</div>`).join('');
   document.getElementById('pfReviews').classList.remove('hidden');
+}
+
+// Review-authoring UI: visible to signed-in non-owners, sign-in prompt to
+// anonymous non-owners, hidden entirely for the profile's own owner (a
+// seller can't review themselves — matches the reviews table's own check
+// constraint, seller_id <> reviewer_id).
+let SELECTED_RATING=0;
+function initReviewUI(sellerId){
+  const wrap=document.getElementById('pfWriteReview');
+  const signInLink=document.getElementById('pfReviewSignIn');
+  if(IS_OWNER){
+    wrap.classList.add('hidden');
+    signInLink.style.display='none';
+    return;
+  }
+  document.getElementById('pfReviews').classList.remove('hidden');
+  const s=PM.getSession&&PM.getSession();
+  if(!s||!s.access_token){
+    wrap.classList.add('hidden');
+    signInLink.style.display='block';
+    signInLink.href='auth?return='+encodeURIComponent('profile'+location.search);
+    return;
+  }
+  signInLink.style.display='none';
+  wrap.classList.remove('hidden');
+  buildStarPicker();
+  const btn=document.getElementById('pfSubmitReview');
+  btn.addEventListener('click',()=>submitReviewClick(sellerId));
+}
+
+function buildStarPicker(){
+  const box=document.getElementById('pfStarPicker');
+  box.innerHTML='';
+  for(let i=1;i<=5;i++){
+    const b=document.createElement('button');
+    b.type='button';
+    b.setAttribute('role','radio');
+    b.setAttribute('aria-label',i+' star'+(i>1?'s':''));
+    b.style.cssText='background:none;border:none;font-size:26px;line-height:1;cursor:pointer;color:#d8dce3;padding:0';
+    b.textContent='★';
+    b.addEventListener('click',()=>setRating(i));
+    box.appendChild(b);
+  }
+  setRating(SELECTED_RATING);
+}
+function setRating(n){
+  SELECTED_RATING=n;
+  const box=document.getElementById('pfStarPicker');
+  if(!box)return;
+  Array.from(box.children).forEach((b,i)=>{b.style.color=(i<n)?'#f5a623':'#d8dce3';b.setAttribute('aria-checked',i<n?'true':'false');});
+}
+
+async function submitReviewClick(sellerId){
+  const statusEl=document.getElementById('pfReviewStatus');
+  const btn=document.getElementById('pfSubmitReview');
+  if(!SELECTED_RATING){
+    statusEl.style.color='#c0392b';
+    statusEl.textContent='Please select a star rating.';
+    return;
+  }
+  const text=document.getElementById('pfReviewText').value.trim();
+  btn.disabled=true;
+  statusEl.style.color='';
+  statusEl.textContent='Submitting…';
+  try{
+    await PM.submitReview(sellerId,SELECTED_RATING,text);
+    statusEl.style.color='#1e7e34';
+    statusEl.textContent='Thanks — your review has been posted.';
+    PM.fetchSellerReviews(sellerId,10).then(r=>renderReviews(r,sellerId)).catch(()=>{});
+  }catch(e){
+    statusEl.style.color='#c0392b';
+    statusEl.textContent='Could not submit your review. Please try again.';
+  }finally{
+    btn.disabled=false;
+  }
 }
 
 function esc(v){return String(v==null?'':v).replace(/[&<>'"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'})[c]})}

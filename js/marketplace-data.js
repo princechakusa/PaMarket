@@ -232,7 +232,7 @@
     if (!sellerId) return Promise.resolve([]);
     return pgFetch(
       'reviews?seller_id=eq.' + esc(sellerId) +
-        '&select=reviewer_name,rating,body,created_at&order=created_at.desc&limit=' +
+        '&select=reviewer_id,reviewer_name,rating,body,created_at&order=created_at.desc&limit=' +
         (limit || 20)
     ).catch(function () { return []; });
   }
@@ -376,6 +376,42 @@
       return res.text().then(function (t) {
         if (/duplicate key|23505/i.test(t)) return true;
         throw new Error('report failed: ' + res.status);
+      });
+    });
+  }
+
+  // Submit (or update) a review for a seller, into the EXISTING reviews
+  // table (no separate system) — mirrors the app's eligibility rule (one
+  // review per reviewer per seller, upserted on resubmit) and its columns.
+  // NOTE: the live column is `body`, not `text` (the repo's schema file and
+  // the app's own insert code say `text`, but that column does not exist in
+  // production — confirmed by testing; using `body` here matches the real
+  // table and the existing read path in fetchSellerReviews()).
+  function submitReview(sellerId, rating, text) {
+    var s = sharedSession();
+    if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
+    if (!sellerId) return Promise.reject(new Error('missing seller'));
+    var r = Math.round(Number(rating));
+    if (!(r >= 1 && r <= 5)) return Promise.reject(new Error('invalid rating'));
+    if (String(sellerId) === s.user.id) return Promise.reject(new Error('cannot-review-self'));
+    var row = {
+      seller_id: String(sellerId),
+      reviewer_id: s.user.id,
+      reviewer_name: (s.user.user_metadata && s.user.user_metadata.full_name) || (s.user.email || 'User'),
+      rating: r,
+      body: String(text || '').slice(0, 1000),
+    };
+    return fetch(SB_URL + '/rest/v1/reviews?on_conflict=seller_id,reviewer_id', {
+      method: 'POST',
+      headers: Object.assign(
+        { Prefer: 'resolution=merge-duplicates,return=minimal' },
+        authHeaders()
+      ),
+      body: JSON.stringify(row),
+    }).then(function (res) {
+      if (res.ok) return true;
+      return res.text().then(function (t) {
+        throw new Error('review failed: ' + res.status + ' ' + t);
       });
     });
   }
@@ -915,6 +951,7 @@
   global.PM.fetchListingState = fetchListingState;
   global.PM.fetchOwnListingById = fetchOwnListingById;
   global.PM.submitReport = submitReport;
+  global.PM.submitReview = submitReview;
   // Website posting (create listing + R2 image upload).
   global.PM.createListing = createListing;
   global.PM.uploadListingPhoto = uploadListingPhoto;
