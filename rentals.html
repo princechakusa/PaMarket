@@ -479,7 +479,7 @@ PM.fetchRentalListings({limit:24,city:rtCityQ||undefined}).then(rows=>{
   const grid=document.getElementById('rtGrid');
   const count=document.getElementById('rtCount');
   if(!rows.length){
-    grid.innerHTML='<div class="empty-state">No rental vehicles listed'+(rtCityQ?' in '+rtCityQ:'')+' yet. Check back soon, or <a href="browse?cat=vehicles">browse vehicles for sale</a> instead.</div>';
+    grid.innerHTML='<div class="empty-state">No rental vehicles listed'+(rtCityQ?' in '+esc(rtCityQ):'')+' yet. Check back soon, or <a href="browse?cat=vehicles">browse vehicles for sale</a> instead.</div>';
     count.textContent='';
     return;
   }
