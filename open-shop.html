@@ -248,6 +248,7 @@ window.doSearch = window.doSearch || function(){
   'use strict';
   var SB_URL=window.SUPABASE_URL,SB_KEY=window.SUPABASE_ANON_KEY,session=null,ownerProfile={},logoUrl='',logoUploading=false,toastTimer=null,businessId='';
   var selected=[];
+  var existingBusiness=null;
   var intent=new URLSearchParams(location.search).get('intent')||'';
   var INTENTS={'rental-fleet':{banner:'You\'re creating a shop so you can activate your PaMarket Rental Fleet. Once submitted, we\'ll take you back to finish setting up your rental company.',back:'rental-fleet',backLabel:'Continue to Rental Fleet'}};
   var CATEGORIES=[{id:'property',name:'Property',icon:'🏠'},{id:'vehicles',name:'Vehicles',icon:'🚗'},{id:'electronics',name:'Electronics',icon:'📱'},{id:'jobs',name:'Jobs',icon:'💼'},{id:'furniture',name:'Furniture',icon:'🛋️'},{id:'fashion',name:'Fashion',icon:'👗'},{id:'services',name:'Services',icon:'🛠️'},{id:'agriculture',name:'Agriculture',icon:'🌾'},{id:'rooms',name:'Rooms',icon:'🛏️'},{id:'pets',name:'Pets',icon:'🐾'},{id:'kids',name:'Baby & Kids',icon:'🧸'}];
@@ -267,14 +268,63 @@ window.doSearch = window.doSearch || function(){
   function uuid(){if(window.crypto&&typeof window.crypto.randomUUID==='function')return window.crypto.randomUUID();return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0,v=c==='x'?r:(r&3|8);return v.toString(16)})}
   function saveFreePlan(id,attempt){return fetch(SB_URL+'/rest/v1/business_subscriptions',{method:'POST',headers:headers({Prefer:'return=minimal'}),body:JSON.stringify({business_id:id,plan_id:'free',billing_cycle:'monthly',status:'active'})}).then(function(res){if(res.ok)return;if(attempt<2)return new Promise(function(resolve){setTimeout(resolve,500*Math.pow(2,attempt))}).then(function(){return saveFreePlan(id,attempt+1)});return res.text().then(function(t){throw new Error('Shop submitted, but Free plan setup failed: '+t)})})}
   function createShop(){
-    if(logoUploading)return;var name=document.getElementById('businessName').value.trim(),description=document.getElementById('businessDescription').value.trim(),btn=document.getElementById('submitShopBtn');if(!name){toast('Enter a business name',true);return}if(name.length>60){toast('Business name must be 60 characters or less',true);return}if(!selected.length){toast('Pick at least one category',true);return}if(!businessId)businessId=uuid();var id=businessId,row={id:id,owner_user_id:session.user.id,name:name,logo:logoUrl||null,description:description||null,biz_type:'individual',category:selected.join('|'),phone:ownerProfile.phone||null,email:session.user.email||ownerProfile.email||null,status:'pending_activation',onboarding_step:'done',verification_level:0,updated_at:new Date().toISOString()};btn.disabled=true;btn.textContent='Submitting…';
-    fetch(SB_URL+'/rest/v1/businesses?on_conflict=id',{method:'POST',headers:headers({Prefer:'resolution=merge-duplicates,return=representation'}),body:JSON.stringify(row)}).then(function(res){if(!res.ok)return res.text().then(function(t){throw new Error(t||'Business creation failed')});return res.json()}).then(function(){return saveFreePlan(id,0)}).then(function(){showSuccess(name,false)}).catch(function(err){console.warn('Shop creation failed:',err);if(/^Shop submitted/.test(err.message)){showSuccess(name,true);return}toast('Could not submit your shop. Please try again.',true);btn.disabled=false;btn.textContent='Submit for review'})
+    if(logoUploading)return;
+    var name=document.getElementById('businessName').value.trim(),description=document.getElementById('businessDescription').value.trim(),btn=document.getElementById('submitShopBtn');
+    if(!name){toast('Enter a business name',true);return}
+    if(name.length>60){toast('Business name must be 60 characters or less',true);return}
+    if(!selected.length){toast('Pick at least one category',true);return}
+    if(!businessId)businessId=uuid();
+    var isEdit=!!existingBusiness;
+    var id=businessId,row={
+      id:id,owner_user_id:session.user.id,name:name,logo:logoUrl||null,description:description||null,
+      biz_type:'individual',category:selected.join('|'),
+      phone:ownerProfile.phone||null,email:session.user.email||ownerProfile.email||null,
+      onboarding_step:'done',
+      // Editing must not silently deactivate an already-approved shop or
+      // wipe an existing verification level — only a brand-new shop starts
+      // pending review at verification_level 0.
+      status:isEdit?existingBusiness.status:'pending_activation',
+      verification_level:isEdit?existingBusiness.verification_level:0,
+      updated_at:new Date().toISOString()
+    };
+    btn.disabled=true;btn.textContent=isEdit?'Saving…':'Submitting…';
+    fetch(SB_URL+'/rest/v1/businesses?on_conflict=id',{method:'POST',headers:headers({Prefer:'resolution=merge-duplicates,return=representation'}),body:JSON.stringify(row)}).then(function(res){if(!res.ok)return res.text().then(function(t){throw new Error(t||'Business save failed')});return res.json()}).then(function(){
+      // The free-plan subscription row already exists for an edit — only a
+      // brand-new business needs one created.
+      return isEdit?null:saveFreePlan(id,0);
+    }).then(function(){showSuccess(name,false,isEdit,id)}).catch(function(err){console.warn('Shop save failed:',err);if(/^Shop submitted/.test(err.message)){showSuccess(name,true,isEdit,id);return}toast(isEdit?'Could not save your shop. Please try again.':'Could not submit your shop. Please try again.',true);btn.disabled=false;btn.textContent=isEdit?'Save changes':'Submit for review'})
   }
-  function showSuccess(name,planPending){var known=INTENTS[intent];var backLink=(known&&!planPending)?'<a href="'+esc(known.back)+'">'+esc(known.backLabel)+'</a>':'';document.getElementById('shopShell').innerHTML='<section class="os-success"><div class="os-success-icon"><svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m5 12 4 4L19 6"/></svg></div><h2>'+esc(name)+' has been submitted</h2><p>'+ (planPending?'Your shop is safely submitted for review, but its Free plan could not be attached after several attempts. Please contact support before approval.':'PaMarket reviews new shops before they appear publicly. Your business and Free plan are saved, and you can prepare your next steps while review is pending.') +'</p><div class="os-success-links">'+backLink+'<a href="browse?shops=1">Browse Shops</a><a href="'+(planPending?'contact':'plans')+'">'+(planPending?'Contact Support':'View Shop Plans')+'</a></div></section>';window.scrollTo({top:0,behavior:'smooth'})}
+  function showSuccess(name,planPending,isEdit,id){
+    var known=INTENTS[intent];var backLink=(known&&!planPending)?'<a href="'+esc(known.back)+'">'+esc(known.backLabel)+'</a>':'';
+    var viewShopLink=id?'<a href="business?id='+encodeURIComponent(id)+'">View Your Shop</a>':'';
+    var heading=isEdit?(esc(name)+' has been updated'):(esc(name)+' has been submitted');
+    var body=isEdit
+      ?'Your shop details are saved and live on your public shop page.'
+      :(planPending?'Your shop is safely submitted for review, but its Free plan could not be attached after several attempts. Please contact support before approval.':'PaMarket reviews new shops before they appear publicly. Your business and Free plan are saved, and you can prepare your next steps while review is pending.');
+    document.getElementById('shopShell').innerHTML='<section class="os-success"><div class="os-success-icon"><svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m5 12 4 4L19 6"/></svg></div><h2>'+heading+'</h2><p>'+body+'</p><div class="os-success-links">'+backLink+viewShopLink+'<a href="browse?shops=1">Browse Shops</a><a href="'+(planPending?'contact':'plans')+'">'+(planPending?'Contact Support':'View Shop Plans')+'</a></div></section>';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
   function showGate(){var returnTo='open-shop'+(intent?'?intent='+encodeURIComponent(intent):'');document.getElementById('shopShell').innerHTML='<section class="os-gate"><h2>Sign in to open your shop</h2><p>Your PaMarket account securely owns the business record and keeps control of its storefront.</p><a href="auth?return='+encodeURIComponent(returnTo)+'">Sign In</a></section>'}
-  function mount(){var shell=document.getElementById('shopShell');shell.innerHTML='';shell.appendChild(document.getElementById('shopTemplate').content.cloneNode(true));document.getElementById('ownerEmail').textContent=session.user.email||'your PaMarket account';var known=INTENTS[intent];if(known){var banner=document.createElement('div');banner.className='os-account';banner.style.marginBottom='18px';banner.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg><div>'+esc(known.banner)+'</div>';var head=document.querySelector('.os-head');if(head)head.parentNode.insertBefore(banner,head)}renderCategories();syncPreview();document.getElementById('businessName').addEventListener('input',syncPreview);document.getElementById('businessDescription').addEventListener('input',syncPreview);document.getElementById('logoFile').addEventListener('change',uploadLogo);document.getElementById('submitShopBtn').addEventListener('click',createShop)}
-  function loadOwner(){return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+encodeURIComponent(session.user.id)+'&select=id,phone,email',{headers:headers()}).then(function(res){if(!res.ok)return[];return res.json()}).then(function(rows){ownerProfile=rows[0]||{};mount()})}
-  function init(){var refresh=window.PMSession&&window.PMSession.maybeRefresh?window.PMSession.maybeRefresh():Promise.resolve();Promise.resolve(refresh).catch(function(){}).then(function(){session=window.PMSession&&window.PMSession.getSession?window.PMSession.getSession():null;if(!session||!session.user||!session.access_token){showGate();return}return loadOwner()}).catch(function(err){console.warn('Open shop load failed:',err);document.getElementById('shopShell').innerHTML='<section class="os-gate"><h2>Could not prepare shop creation</h2><p>Please refresh the page and try again.</p><a href="open-shop">Refresh</a></section>'})}
+  function mount(){
+    var shell=document.getElementById('shopShell');shell.innerHTML='';shell.appendChild(document.getElementById('shopTemplate').content.cloneNode(true));
+    document.getElementById('ownerEmail').textContent=session.user.email||'your PaMarket account';
+    var known=INTENTS[intent];if(known){var banner=document.createElement('div');banner.className='os-account';banner.style.marginBottom='18px';banner.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg><div>'+esc(known.banner)+'</div>';var head=document.querySelector('.os-head');if(head)head.parentNode.insertBefore(banner,head)}
+    if(existingBusiness){
+      document.getElementById('businessName').value=existingBusiness.name||'';
+      document.getElementById('businessDescription').value=existingBusiness.description||'';
+      logoUrl=existingBusiness.logo||'';
+      selected=(existingBusiness.category||'').split('|').filter(Boolean);
+      var headEl=document.querySelector('.os-head h2'),subEl=document.querySelector('.os-head p'),btnEl=document.getElementById('submitShopBtn');
+      if(headEl)headEl.textContent='Edit your shop';
+      if(subEl)subEl.textContent='Update your shop’s details. Changes are visible on your public shop page right away.';
+      if(btnEl)btnEl.lastChild.textContent='Save changes';
+    }
+    renderCategories();syncPreview();
+    document.getElementById('businessName').addEventListener('input',syncPreview);document.getElementById('businessDescription').addEventListener('input',syncPreview);document.getElementById('logoFile').addEventListener('change',uploadLogo);document.getElementById('submitShopBtn').addEventListener('click',createShop);
+  }
+  function loadOwner(){return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+encodeURIComponent(session.user.id)+'&select=id,phone,email',{headers:headers()}).then(function(res){if(!res.ok)return[];return res.json()}).then(function(rows){ownerProfile=rows[0]||{}})}
+  function loadExistingBusiness(){return fetch(SB_URL+'/rest/v1/businesses?owner_user_id=eq.'+encodeURIComponent(session.user.id)+'&select=id,name,logo,description,category,status,verification_level&limit=1',{headers:headers()}).then(function(res){if(!res.ok)return[];return res.json()}).then(function(rows){existingBusiness=rows&&rows[0]||null;if(existingBusiness)businessId=existingBusiness.id})}
+  function init(){var refresh=window.PMSession&&window.PMSession.maybeRefresh?window.PMSession.maybeRefresh():Promise.resolve();Promise.resolve(refresh).catch(function(){}).then(function(){session=window.PMSession&&window.PMSession.getSession?window.PMSession.getSession():null;if(!session||!session.user||!session.access_token){showGate();return}return Promise.all([loadOwner(),loadExistingBusiness()]).then(mount)}).catch(function(err){console.warn('Open shop load failed:',err);document.getElementById('shopShell').innerHTML='<section class="os-gate"><h2>Could not prepare shop creation</h2><p>Please refresh the page and try again.</p><a href="open-shop">Refresh</a></section>'})}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>

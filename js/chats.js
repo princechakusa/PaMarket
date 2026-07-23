@@ -2,7 +2,7 @@
   'use strict';
   var SB_URL=window.SUPABASE_URL,SB_KEY=window.SUPABASE_ANON_KEY;
   var session=null,me=null;
-  var conversations=[],profiles={},listings={};
+  var conversations=[],profiles={},listings={},businesses={};
   var activeTab='personal',unreadOnly=false,activeConvId=null;
   var msgChannel=null,typingChannel=null,typingChannelConvId=null,presenceChannel=null;
   var onlineUsers={};
@@ -92,9 +92,39 @@
       return Promise.all([
         loadProfiles(otherIds),
         loadListings(listingIds),
-        loadLastMessages()
+        loadLastMessages(),
+        loadBusinessesForConversations()
       ]);
     });
+  }
+  // No business_id column exists on conversations (nor does the app's own
+  // scheme use one) — a biz_ conversation encodes the business identity in
+  // its id (biz_<last8ofBusinessId>_<last6ofBuyerId>), matching
+  // www/js/business-messaging.js's H.startBizChat exactly. Resolve it against
+  // the public, already-anon-readable businesses table by suffix, cross-
+  // checked against the conversation's non-owner member for safety.
+  function bizIdSuffix(convId){var parts=String(convId).split('_');return parts.length>=2?parts[1]:null}
+  function loadBusinessesForConversations(){
+    var suffixes=Array.from(new Set(conversations.filter(function(c){return convKind(c)==='business'&&String(c.id).indexOf('biz_')===0}).map(function(c){return bizIdSuffix(c.id)}).filter(Boolean)));
+    var unresolved=suffixes.filter(function(s){return !businesses[s]});
+    if(!unresolved.length)return Promise.resolve();
+    var filter=unresolved.map(function(s){return 'id.like.*'+encodeURIComponent(s)}).join(',');
+    return request('/rest/v1/businesses?or=('+filter+')&select=id,owner_user_id,name,logo').then(function(rows){
+      (rows||[]).forEach(function(b){
+        var suf=String(b.id).slice(-8);
+        businesses[suf]=businesses[suf]||b;
+      });
+    }).catch(function(){});
+  }
+  // For a business conversation, the buyer should see the shop's identity,
+  // not the owner's personal profile (matches the app's stated intent in
+  // H.startBizChat). The owner still sees the buyer's personal identity.
+  function businessDisplay(conv){
+    if(convKind(conv)!=='business'||String(conv.id).indexOf('biz_')!==0)return null;
+    var b=businesses[bizIdSuffix(conv.id)];
+    if(!b)return null;
+    if(String(b.owner_user_id)===String(me.id))return null; // viewer is the owner — show the buyer normally
+    return b;
   }
   function loadProfiles(ids){
     var unique=Array.from(new Set(ids.filter(function(id){return !profiles[id]})));
@@ -144,7 +174,7 @@
     var filtered=conversations.filter(function(c){
       if(convKind(c)!==activeTab)return false;
       if(unreadOnly&&!c._unreadCount)return false;
-      if(q){var p=profiles[otherMember(c)];var name=(p&&p.name||'').toLowerCase();if(name.indexOf(q)===-1)return false}
+      if(q){var biz=businessDisplay(c);var p=biz||profiles[otherMember(c)];var name=(p&&(p.name)||'').toLowerCase();if(name.indexOf(q)===-1)return false}
       return true;
     }).sort(function(a,b){
       var at=(a._lastMessage&&new Date(a._lastMessage.created_at).getTime())||0;
@@ -156,10 +186,12 @@
       return;
     }
     list.innerHTML=filtered.map(function(c){
-      var otherId=otherMember(c);var p=profiles[otherId]||{};
+      var otherId=otherMember(c);
+      var biz=businessDisplay(c);
+      var p=biz||profiles[otherId]||{};
       var name=esc(p.name||'PaMarket user');
       var avatarHtml=p.avatar?'<img src="'+esc(p.avatar)+'" alt="">':esc(initials(p.name));
-      var online=onlineUsers[String(otherId)];
+      var online=!biz&&onlineUsers[String(otherId)];
       var lm=c._lastMessage;
       var preview=lm?esc(previewText(lm)).slice(0,64):'No messages yet';
       var unreadCls=(lm&&c._unreadCount)?' unread':'';
@@ -220,13 +252,15 @@
     var pane=document.getElementById('threadPane');
     pane.innerHTML='';
     pane.appendChild(document.getElementById('threadTemplate').content.cloneNode(true));
-    var otherId=otherMember(conv);var p=profiles[otherId]||{};
+    var otherId=otherMember(conv);
+    var biz=businessDisplay(conv);
+    var p=biz||profiles[otherId]||{};
     document.getElementById('threadAvatar').innerHTML=p.avatar?'<img src="'+esc(p.avatar)+'" alt="">':esc(initials(p.name));
     document.getElementById('threadName').textContent=p.name||'PaMarket user';
-    document.getElementById('threadVerified').style.display=p.verified?'':'none';
-    document.getElementById('threadOnline').style.display=onlineUsers[String(otherId)]?'':'none';
-    document.getElementById('threadStatus').textContent=onlineUsers[String(otherId)]?'Online now':'';
-    document.getElementById('threadProfileLink').href='profile?id='+encodeURIComponent(otherId||'');
+    document.getElementById('threadVerified').style.display=(!biz&&p.verified)?'':'none';
+    document.getElementById('threadOnline').style.display=(!biz&&onlineUsers[String(otherId)])?'':'none';
+    document.getElementById('threadStatus').textContent=(!biz&&onlineUsers[String(otherId)])?'Online now':'';
+    document.getElementById('threadProfileLink').href=biz?('business?id='+encodeURIComponent(biz.id)):('profile?id='+encodeURIComponent(otherId||''));
     var listing=conv.listing_id&&listings[conv.listing_id];
     var dealCard=document.getElementById('dealCard');
     if(listing){
@@ -655,8 +689,38 @@
   // surfaces all resolve to the SAME thread instead of a disconnected one.
   function stripEntryParams(){
     var url=new URL(location.href);
-    url.searchParams.delete('to');url.searchParams.delete('listing');url.searchParams.delete('conv');
+    url.searchParams.delete('to');url.searchParams.delete('listing');url.searchParams.delete('conv');url.searchParams.delete('biz');
     history.replaceState(null,'',url.pathname+url.search+url.hash);
+  }
+  // "Message Business" (business.html) links here as chats?biz=<businessId>.
+  // Conversation id must match www/js/business-messaging.js's H.startBizChat
+  // EXACTLY (raw slice, not idFrag-stripped) so a buyer who already messaged
+  // this business via the app lands on the same thread on the website.
+  function resolveBizEntry(bizId){
+    return request('/rest/v1/businesses?id=eq.'+encodeURIComponent(bizId)+'&select=id,owner_user_id,name,logo').then(function(rows){
+      var biz=rows&&rows[0];
+      if(!biz||!biz.owner_user_id){toast('This business is not available right now.',true);return null}
+      var ownerId=String(biz.owner_user_id);
+      if(ownerId===String(me.id)){toast('This is your own business.',true);return null}
+      businesses[String(bizId).slice(-8)]=biz;
+      var convId='biz_'+String(bizId).slice(-8)+'_'+String(me.id).slice(-6);
+      var existing=conversations.find(function(c){return c.id===convId});
+      if(existing)return existing.id;
+      var body={id:convId,members:[me.id,ownerId]};
+      return request('/rest/v1/conversations',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(body)}).then(function(rows2){
+        var row=(rows2&&rows2[0])||{id:convId,members:[me.id,ownerId]};
+        conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},row));
+        return row.id;
+      }).catch(function(err){
+        console.warn('resolveBizEntry:',err);
+        toast('Could not start this conversation. Please try again.',true);
+        return null;
+      });
+    }).catch(function(err){
+      console.warn('resolveBizEntry lookup:',err);
+      toast('Could not load this business.',true);
+      return null;
+    });
   }
   function findExistingPairConversation(otherId,pairKey){
     var match=conversations.filter(function(c){
@@ -677,6 +741,7 @@
     var params=new URLSearchParams(location.search);
     var convId=params.get('conv');
     var otherId=params.get('to');
+    var bizId=params.get('biz');
     var listingId=params.get('listing')||null;
     if(convId){
       stripEntryParams();
@@ -686,6 +751,10 @@
       var known=conversations.find(function(c){return c.id===convId});
       if(!known)toast('That conversation is not available.',true);
       return Promise.resolve(known?known.id:null);
+    }
+    if(bizId){
+      stripEntryParams();
+      return resolveBizEntry(bizId);
     }
     if(!otherId)return Promise.resolve(null);
     stripEntryParams();
