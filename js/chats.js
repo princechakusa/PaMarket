@@ -825,6 +825,35 @@
         conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},row));
         return row.id;
       }).catch(function(err){
+        // 23505 on unique_conversation_members means a conversation between
+        // this exact member pair ALREADY EXISTS under a different id — e.g. a
+        // personal (conv_) thread with this same person from before they had
+        // a business, or a biz_ thread created by a different id scheme in an
+        // older app/website version. on_conflict=id only dedupes by id, not
+        // by the members constraint, so this case falls through to the
+        // insert's error path instead of the merge. Recover by looking up the
+        // real existing conversation server-side (not just the locally
+        // cached `conversations` array, which may not have it yet) and reuse
+        // that id instead of surfacing an error toast for something that's
+        // actually a normal, resolvable case.
+        if(err&&err.code==='23505'){
+          return request('/rest/v1/conversations?members=cs.{'+encodeURIComponent(me.id)+'}&select=id,members,listing_id,updated_at').then(function(rows3){
+            var match=(rows3||[]).find(function(c){
+              return Array.isArray(c.members)&&c.members.length===2&&c.members.map(String).indexOf(ownerId)!==-1;
+            });
+            if(match){
+              if(!conversations.some(function(c){return c.id===match.id}))conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},match));
+              return match.id;
+            }
+            console.warn('resolveBizEntry (create conversation):',err,'status=',err&&err.status,'code=',err&&err.code);
+            toast(conversationErrorText(err),true);
+            return null;
+          }).catch(function(lookupErr){
+            console.warn('resolveBizEntry (member-pair lookup):',lookupErr);
+            toast(conversationErrorText(err),true);
+            return null;
+          });
+        }
         console.warn('resolveBizEntry (create conversation):',err,'status=',err&&err.status,'code=',err&&err.code);
         toast(conversationErrorText(err),true);
         return null;

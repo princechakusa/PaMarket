@@ -2769,7 +2769,32 @@ window.H = {
         id: conv.id, members: conv.members,
         listing_id: conv.listingId || null
       });
-      if (error) { console.warn('ensureConversationInCloud:', error.message); return { ok:false, error:error.message }; }
+      if (error) {
+        // 23505 on unique_conversation_members means a conversation between
+        // this exact member pair already exists under a DIFFERENT id — e.g.
+        // a personal conv_ thread with someone who later also has a business,
+        // or a biz_ thread from an older id scheme. upsert() only dedupes by
+        // the primary key (id), so this case isn't resolved by the upsert
+        // itself. Look up the real existing conversation and adopt its id
+        // locally instead of silently failing to sync (the prior behavior —
+        // this left the conversation cloud-less with no error surfaced).
+        if (error.code === '23505' && Array.isArray(conv.members) && conv.members.length === 2) {
+          const myId = H.currentUser && H.currentUser() && H.currentUser().id;
+          const otherId = myId ? conv.members.find(m => String(m) !== String(myId)) : null;
+          if (otherId) {
+            const { data: matches } = await sb.from('conversations')
+              .select('id,members,listing_id,updated_at')
+              .contains('members', [otherId]);
+            const match = (matches || []).find(c => Array.isArray(c.members) && c.members.length === 2 && c.members.map(String).includes(String(otherId)));
+            if (match && match.id !== conv.id) {
+              console.warn('ensureConversationInCloud: reusing existing conversation', match.id, 'for member pair instead of', conv.id);
+              return { ok:true, reusedId: match.id };
+            }
+          }
+        }
+        console.warn('ensureConversationInCloud:', error.message);
+        return { ok:false, error:error.message };
+      }
       return { ok:true };
     } catch(e) { console.warn('ensureConversationInCloud:', e.message); return { ok:false, error:e.message }; }
   },
