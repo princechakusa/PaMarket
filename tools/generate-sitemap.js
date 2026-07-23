@@ -22,18 +22,18 @@ function loadSupabaseConfig() {
 const STATIC_PAGES = [
   { loc: '/', changefreq: 'daily', priority: '1.0' },
   { loc: '/browse', changefreq: 'daily', priority: '0.9' },
-  { loc: '/browse?cat=property', changefreq: 'daily', priority: '0.9' },
-  { loc: '/browse?cat=vehicles', changefreq: 'daily', priority: '0.9' },
-  { loc: '/browse?cat=electronics', changefreq: 'daily', priority: '0.8' },
-  { loc: '/browse?cat=furniture', changefreq: 'daily', priority: '0.8' },
-  { loc: '/browse?cat=fashion', changefreq: 'daily', priority: '0.8' },
-  { loc: '/browse?cat=services', changefreq: 'daily', priority: '0.8' },
-  { loc: '/browse?cat=agriculture', changefreq: 'daily', priority: '0.7' },
-  { loc: '/browse?cat=rooms', changefreq: 'daily', priority: '0.7' },
-  { loc: '/browse?cat=pets', changefreq: 'daily', priority: '0.7' },
-  { loc: '/browse?cat=kids', changefreq: 'daily', priority: '0.7' },
-  { loc: '/browse?cat=other', changefreq: 'daily', priority: '0.6' },
-  { loc: '/browse?shops=1', changefreq: 'daily', priority: '0.8' },
+  // /browse?cat=X, ?shops=1 and ?city=X were previously listed here as
+  // separate indexable URLs, but browse.html serves byte-identical initial
+  // HTML for all of them — title/description/canonical are only
+  // differentiated client-side after JS reads location.search. The raw
+  // <link rel="canonical"> browse.html ships already points every variant
+  // back at plain /browse, so listing them separately in the sitemap
+  // contradicted that signal. This is a static host with no per-request
+  // server rendering, so making each variant a genuinely distinct crawlable
+  // page would need real pre-rendering (like /l/<slug>.html already has for
+  // listings) — a separate, larger project. Until then, /browse alone is the
+  // one indexable hub; category/city are on-site filters, not separate SEO
+  // targets.
   { loc: '/jobs', changefreq: 'daily', priority: '0.9' },
   { loc: '/rentals', changefreq: 'daily', priority: '0.8' },
   { loc: '/plans', changefreq: 'weekly', priority: '0.6' },
@@ -43,15 +43,6 @@ const STATIC_PAGES = [
   { loc: '/services', changefreq: 'monthly', priority: '0.5' },
   { loc: '/help', changefreq: 'monthly', priority: '0.4' },
   { loc: '/contact', changefreq: 'monthly', priority: '0.4' },
-  { loc: '/browse?city=Harare', changefreq: 'daily', priority: '0.6' },
-  { loc: '/browse?city=Bulawayo', changefreq: 'daily', priority: '0.6' },
-  { loc: '/browse?city=Mutare', changefreq: 'daily', priority: '0.5' },
-  { loc: '/browse?city=Gweru', changefreq: 'daily', priority: '0.5' },
-  { loc: '/browse?city=Masvingo', changefreq: 'daily', priority: '0.5' },
-  { loc: '/browse?city=Chinhoyi', changefreq: 'daily', priority: '0.5' },
-  { loc: '/browse?city=Kadoma', changefreq: 'daily', priority: '0.5' },
-  { loc: '/browse?city=Kwekwe', changefreq: 'daily', priority: '0.5' },
-  { loc: '/browse?city=Victoria%20Falls', changefreq: 'daily', priority: '0.5' },
   { loc: '/terms', changefreq: 'yearly', priority: '0.3' },
   { loc: '/privacy', changefreq: 'yearly', priority: '0.3' },
   { loc: '/community-guidelines', changefreq: 'yearly', priority: '0.3' },
