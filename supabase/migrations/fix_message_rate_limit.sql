@@ -3,8 +3,39 @@
 -- js/chats.js and www/js/messages.js send one INSERT per message with no
 -- cooldown; a scripted client can flood a conversation or fan out spam to
 -- many conversations. There was no DB-level backstop. Mirrors the pattern in
--- add_listing_rate_limit.sql: a BEFORE INSERT trigger, configurable via the
--- existing public.moderation_settings table, staff exempt.
+-- add_listing_rate_limit.sql: a BEFORE INSERT trigger, configurable via
+-- public.moderation_settings, staff exempt.
+--
+-- Self-contained: creates moderation_settings and is_moderator() if
+-- add_listing_rate_limit.sql / moderation_backend_phase_a.sql haven't been
+-- applied in this environment, instead of assuming they exist. Definition
+-- matches moderation_backend_phase_a.sql exactly, so this is a no-op if that
+-- migration already ran.
+
+create or replace function public.is_moderator()
+returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role in ('admin','moderator')
+  );
+$$;
+
+create table if not exists public.moderation_settings (
+  key        text primary key,
+  int_value  int,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.moderation_settings enable row level security;
+
+drop policy if exists "moderation_settings: moderator all" on public.moderation_settings;
+create policy "moderation_settings: moderator all"
+  on public.moderation_settings
+  for all
+  to authenticated
+  using (public.is_moderator())
+  with check (public.is_moderator());
 
 insert into public.moderation_settings (key, int_value)
 values ('max_messages_per_5min', 60)

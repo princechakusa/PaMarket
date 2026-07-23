@@ -10,7 +10,11 @@
 -- which degrades gracefully when the column is absent) and is more sensitive
 -- PII, so it is dropped from the public projection.
 
-create or replace view public.profiles_public
+-- CREATE OR REPLACE VIEW cannot drop a column in Postgres — the view must be
+-- dropped and recreated to actually remove `email` from the projection.
+drop view if exists public.profiles_public;
+
+create view public.profiles_public
   with (security_barrier = true)
 as
   select
