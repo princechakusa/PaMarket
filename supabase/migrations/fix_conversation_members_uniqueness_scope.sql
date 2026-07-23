@@ -27,12 +27,18 @@
 -- Idempotent. Run once in the Supabase SQL Editor.
 -- ============================================================================
 
-alter table public.conversations drop constraint if exists unique_conversation_members;
+-- unique_conversation_members turned out to be a bare UNIQUE INDEX (not a
+-- table CONSTRAINT), so `alter table ... drop constraint` silently did
+-- nothing — pg_constraint never listed it, but `drop constraint if exists`
+-- also doesn't error on a missing constraint, so the earlier run of this
+-- file appeared to succeed while the index quietly stayed in place. Drop the
+-- index directly instead.
+drop index if exists public.unique_conversation_members;
 
 -- ============================================================================
 -- Verification (run manually, not part of the migration):
 --
---   select conname from pg_constraint
---   where conrelid = 'public.conversations'::regclass and contype = 'u';
+--   select indexname from pg_indexes
+--   where tablename = 'conversations' and schemaname = 'public';
 --   -- expect: unique_conversation_members no longer listed
 -- ============================================================================
