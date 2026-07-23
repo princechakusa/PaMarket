@@ -1144,9 +1144,14 @@ function initHomeCarousel(el){
   requestAnimationFrame(update);
 }
 
-function renderCards(elId,listings){
+function renderCards(elId,listings,failed){
   const el=document.getElementById(elId);
-  if(!listings||!listings.length){el.innerHTML='<div style="padding:20px;color:var(--mute);font-size:13.5px">No listings yet in this category.</div>';return}
+  if(!listings||!listings.length){
+    el.innerHTML=failed
+      ?'<div style="padding:20px;color:var(--mute);font-size:13.5px">Couldn\'t load listings right now. <a href="javascript:location.reload()" style="color:var(--navy);font-weight:600">Retry</a></div>'
+      :'<div style="padding:20px;color:var(--mute);font-size:13.5px">No listings yet in this category.</div>';
+    return;
+  }
   el.innerHTML=listings.map((l,i)=>lcard(l,i)).join('');
   initHomeCarousel(el);
 }
@@ -1165,16 +1170,16 @@ function lazySection(elId,loader){
 
 // Above the fold: electronics loads eagerly. Everything below loads as the
 // user scrolls — cuts initial Supabase calls roughly in half.
-PM.fetchListings({category:'electronics',featuredFirst:true,limit:8}).then(l=>renderCards('elCards',l)).catch(()=>renderCards('elCards',[]));
+PM.fetchListings({category:'electronics',featuredFirst:true,limit:8}).then(l=>renderCards('elCards',l)).catch(()=>renderCards('elCards',[],true));
 // Vehicles + rentals load together: the rental section starts hidden (no
 // layout box, unobservable), and it directly follows the vehicles section.
 lazySection('vCards',()=>{
-  PM.fetchListings({category:'vehicles',featuredFirst:true,limit:8}).then(l=>renderCards('vCards',l)).catch(()=>renderCards('vCards',[]));
+  PM.fetchListings({category:'vehicles',featuredFirst:true,limit:8}).then(l=>renderCards('vCards',l)).catch(()=>renderCards('vCards',[],true));
   loadRentalHighlights();
 });
-lazySection('pCards',()=>PM.fetchListings({category:'property',featuredFirst:true,limit:8}).then(l=>renderCards('pCards',l)).catch(()=>renderCards('pCards',[])));
+lazySection('pCards',()=>PM.fetchListings({category:'property',featuredFirst:true,limit:8}).then(l=>renderCards('pCards',l)).catch(()=>renderCards('pCards',[],true)));
 [['fashionCards','fashion'],['furnitureCards','furniture'],['agricultureCards','agriculture'],['servicesCards','services'],['roomsCards','rooms'],['petsCards','pets'],['kidsCards','kids']].forEach(([elId,cat])=>{
-  lazySection(elId,()=>PM.fetchListings({category:cat,featuredFirst:true,limit:8}).then(l=>renderCards(elId,l)).catch(()=>renderCards(elId,[])));
+  lazySection(elId,()=>PM.fetchListings({category:cat,featuredFirst:true,limit:8}).then(l=>renderCards(elId,l)).catch(()=>renderCards(elId,[],true)));
 });
 
 // Rental Highlights — only shown when there's at least one live rental to feature.

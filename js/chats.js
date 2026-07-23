@@ -85,7 +85,7 @@
 
   // ── Load conversations + profiles + listing context ────────────────────
   function loadConversations(){
-    return request('/rest/v1/conversations?members=cs.{'+encodeURIComponent(me.id)+'}&select=id,members,listing_id,updated_at&order=updated_at.desc.nullslast').then(function(rows){
+    return request('/rest/v1/conversations?members=cs.{'+encodeURIComponent(me.id)+'}&select=id,members,listing_id,updated_at&order=updated_at.desc.nullslast&limit=300').then(function(rows){
       conversations=(rows||[]).filter(function(c){return Array.isArray(c.members)&&c.members.length>=2});
       var otherIds=conversations.map(otherMember).filter(Boolean);
       var listingIds=conversations.map(function(c){return c.listing_id}).filter(Boolean);
@@ -99,7 +99,9 @@
   function loadProfiles(ids){
     var unique=Array.from(new Set(ids.filter(function(id){return !profiles[id]})));
     if(!unique.length)return Promise.resolve();
-    return request('/rest/v1/profiles?id=in.('+unique.map(encodeURIComponent).join(',')+')&select=id,name,avatar,verified').then(function(rows){
+    // profiles_public, not the base table — cross-user reads of public.profiles
+    // are owner-or-staff-only since harden_profiles_owner_or_staff_read.sql.
+    return request('/rest/v1/profiles_public?id=in.('+unique.map(encodeURIComponent).join(',')+')&select=id,name,avatar,verified,privacy').then(function(rows){
       (rows||[]).forEach(function(p){profiles[p.id]=p});
     }).catch(function(){});
   }
@@ -359,6 +361,7 @@
     var raw=String(err&&err.message||'');
     if(err&&err.status===401)return'Your session expired. Sign in again to send messages.';
     if(/block exists between these users/i.test(raw))return'You cannot message this user.';
+    if(/rate_limited/i.test(raw))return'You\'re sending messages too fast. Please wait a moment.';
     if(/row-level security|permission denied|not a member/i.test(raw))return'This conversation is no longer available to send to.';
     if(/network unavailable|failed to fetch|networkerror/i.test(raw))return'You are offline. Reconnect and try again.';
     return'Could not send this message. Please try again.';
@@ -543,8 +546,15 @@
         replacement.innerHTML=messageHtml(msg);
         row.replaceWith(replacement.firstChild);
       })
-      .subscribe(function(status){setRtPill(status==='SUBSCRIBED')});
+      .subscribe(function(status){
+        setRtPill(status==='SUBSCRIBED');
+        if((status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')&&session){
+          clearTimeout(reconnectTimer);
+          reconnectTimer=setTimeout(function(){if(session)initMessageChannel()},4000);
+        }
+      });
   }
+  var reconnectTimer=null;
   function setRtPill(on){
     var pill=document.getElementById('rtPill');
     if(!pill)return;
@@ -638,8 +648,74 @@
   }
   window.addEventListener('beforeunload',teardownAllChannels);
 
+  // ── Entry points: "Message Seller" (detail.html) / "Message" (profile.html)
+  // link here as chats?to=<userId>&listing=<listingId>. Find-or-create the
+  // 1:1 conversation for that pair (deterministic id, same scheme the mobile
+  // app uses in H.startChatWith) so the listing/profile/chat/notification
+  // surfaces all resolve to the SAME thread instead of a disconnected one.
+  function stripEntryParams(){
+    var url=new URL(location.href);
+    url.searchParams.delete('to');url.searchParams.delete('listing');url.searchParams.delete('conv');
+    history.replaceState(null,'',url.pathname+url.search+url.hash);
+  }
+  function findExistingPairConversation(otherId,pairKey){
+    var match=conversations.filter(function(c){
+      var id=String(c.id);
+      if(id.indexOf('biz_')===0||id.indexOf('job_')===0)return false;
+      var mem=Array.isArray(c.members)?c.members.map(String):[];
+      var byMembers=mem.indexOf(String(me.id))!==-1&&mem.indexOf(String(otherId))!==-1;
+      var byId=id===pairKey||id.indexOf(pairKey+'_')===0;
+      return byMembers||byId;
+    }).sort(function(a,b){
+      var at=(a._lastMessage&&new Date(a._lastMessage.created_at).getTime())||0;
+      var bt=(b._lastMessage&&new Date(b._lastMessage.created_at).getTime())||0;
+      return bt-at;
+    });
+    return match[0]||null;
+  }
+  function resolveEntryConversation(){
+    var params=new URLSearchParams(location.search);
+    var convId=params.get('conv');
+    var otherId=params.get('to');
+    var listingId=params.get('listing')||null;
+    if(convId){
+      stripEntryParams();
+      // Notification deep-link: only open if we're actually a member (the
+      // conversations list above is already scoped to `members cs. {me}`,
+      // so a conversation the user doesn't belong to simply won't be found).
+      var known=conversations.find(function(c){return c.id===convId});
+      if(!known)toast('That conversation is not available.',true);
+      return Promise.resolve(known?known.id:null);
+    }
+    if(!otherId)return Promise.resolve(null);
+    stripEntryParams();
+    if(String(otherId)===String(me.id)){toast('You cannot message yourself',true);return Promise.resolve(null)}
+    var pairKey=pairConvId(me.id,otherId);
+    var existing=findExistingPairConversation(otherId,pairKey);
+    if(existing)return Promise.resolve(existing.id);
+    return loadProfiles([otherId]).then(function(){
+      var target=profiles[otherId];
+      if(target&&target.privacy&&target.privacy.allowMessages===false){
+        toast('This user has turned off direct messages',true);
+        return null;
+      }
+      var body={id:pairKey,members:[me.id,otherId]};
+      if(listingId)body.listing_id=listingId;
+      return request('/rest/v1/conversations',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(body)}).then(function(rows){
+        var row=(rows&&rows[0])||{id:pairKey,members:[me.id,otherId],listing_id:listingId};
+        conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},row));
+        return (row.listing_id?loadListings([row.listing_id]):Promise.resolve()).then(function(){return row.id});
+      }).catch(function(err){
+        console.warn('resolveEntryConversation:',err);
+        toast('Could not start this conversation. Please try again.',true);
+        return null;
+      });
+    });
+  }
+
   // ── Boot ───────────────────────────────────────────────────────────────
-  function showGate(){shell.innerHTML='<section class="gate"><h2>Sign in to view your chats</h2><p>Your PaMarket account keeps every conversation private between you and the other member.</p><a href="auth?return=chats">Sign In</a></section>'}
+  function returnParam(){return encodeURIComponent('chats'+location.search+location.hash)}
+  function showGate(){shell.innerHTML='<section class="gate"><h2>Sign in to view your chats</h2><p>Your PaMarket account keeps every conversation private between you and the other member.</p><a href="auth?return='+returnParam()+'">Sign In</a></section>'}
   function showErrorGate(){shell.innerHTML='<section class="gate"><h2>Could not load your chats</h2><p>Please refresh the page. If the problem continues, contact PaMarket support.</p><a href="chats">Refresh</a></section>'}
   function init(){
     var refresh=window.PMSession&&window.PMSession.maybeRefresh?window.PMSession.maybeRefresh():Promise.resolve();
@@ -647,12 +723,26 @@
       session=window.PMSession&&window.PMSession.getSession?window.PMSession.getSession():null;
       if(!session||!session.user||!session.access_token){showGate();return}
       me={id:session.user.id,name:(session.user.user_metadata&&(session.user.user_metadata.full_name||session.user.user_metadata.name))||session.user.email||'You'};
-      return loadConversations().then(function(){
+      return loadConversations().then(resolveEntryConversation).then(function(entryConvId){
         mount();
         initMessageChannel();
         initPresence();
+        if(entryConvId){
+          activeTab=convKind({id:entryConvId});
+          document.querySelectorAll('#chatTabs button').forEach(function(button){button.classList.toggle('active',button.dataset.tab===activeTab)});
+          renderInbox();
+          openConversation(entryConvId);
+          if(window.matchMedia('(max-width:680px)').matches)shell.classList.add('thread-open');
+        }
       });
     }).catch(function(err){console.warn('Chats load failed:',err);showErrorGate()});
   }
+  window.addEventListener('online',function(){if(session)initMessageChannel()});
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='visible'&&session&&(!msgChannel||msgChannel.state!=='joined')){
+      var pill=document.getElementById('rtPill');
+      if(pill)initMessageChannel();
+    }
+  });
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

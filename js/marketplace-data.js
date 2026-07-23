@@ -296,7 +296,7 @@
     return pgFetch(
       'blog_videos?is_published=eq.true' +
       '&select=id,title,description,provider,embed_id,sort_order,created_at' +
-      '&order=sort_order.asc,created_at.desc'
+      '&order=sort_order.asc,created_at.desc&limit=100'
     );
   }
   function authHeaders() {
@@ -702,7 +702,7 @@
   function listFavouriteIds() {
     var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
-    return fetch(SB_URL + '/rest/v1/user_saves?user_id=eq.' + esc(s.user.id) + '&select=listing_id,saved_at&order=saved_at.desc', {
+    return fetch(SB_URL + '/rest/v1/user_saves?user_id=eq.' + esc(s.user.id) + '&select=listing_id,saved_at&order=saved_at.desc&limit=500', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
     }).then(function (res) { if (!res.ok) throw new Error('favourites-read-failed'); return res.json(); });
   }
@@ -729,7 +729,7 @@
   function listSavedSearches() {
     var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
-    return fetch(SB_URL + '/rest/v1/saved_searches?user_id=eq.' + esc(s.user.id) + '&select=*&order=saved_at.desc', {
+    return fetch(SB_URL + '/rest/v1/saved_searches?user_id=eq.' + esc(s.user.id) + '&select=*&order=saved_at.desc&limit=200', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
     }).then(function (res) { if (!res.ok) throw new Error('saved-searches-read-failed'); return res.json(); });
   }
@@ -805,7 +805,7 @@
     var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
     return fetch(SB_URL + '/rest/v1/applications?employer_id=eq.' + esc(s.user.id) +
-      '&select=id,job_id,job_title,company,applicant_name,applicant_phone,applicant_email,message,answers,status,applied_at&order=applied_at.desc', {
+      '&select=id,job_id,job_title,company,applicant_name,applicant_phone,applicant_email,message,answers,status,applied_at&order=applied_at.desc&limit=1000', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
     }).then(function (res) { return res.ok ? res.json() : []; }).catch(function () { return []; });
   }

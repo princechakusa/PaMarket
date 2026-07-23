@@ -589,6 +589,22 @@ function doGoogle(){
 }
 
 /* ---- ACTION: SIGN IN ---- */
+// Client-side-only speed bump against scripted brute force from THIS browser.
+// Not a substitute for server-side protection (a caller can hit
+// /auth/v1/token?grant_type=password directly, bypassing this file entirely) —
+// real throttling has to live on the Supabase Auth side or an edge proxy.
+function signInLockKey(email){return 'pm_signin_fails_'+email.trim().toLowerCase()}
+function signInLockState(email){
+  try{return JSON.parse(sessionStorage.getItem(signInLockKey(email))||'null')||{count:0,until:0}}catch{return{count:0,until:0}}
+}
+function signInLockRecord(email,ok){
+  const key=signInLockKey(email);
+  if(ok){sessionStorage.removeItem(key);return}
+  const s=signInLockState(email);
+  s.count=(s.count||0)+1;
+  if(s.count>=5)s.until=Date.now()+60*1000;
+  sessionStorage.setItem(key,JSON.stringify(s));
+}
 async function doSignIn(){
   if(busy)return;
   const email=(document.getElementById('siEmail')?.value||'').trim();
@@ -596,12 +612,15 @@ async function doSignIn(){
   showError('signInError','');
   if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){showError('signInError','Please enter a valid email address.');return}
   if(!pass){showError('signInError','Please enter your password.');return}
+  const lock=signInLockState(email);
+  if(lock.until>Date.now()){showError('signInError','Too many failed attempts. Please wait '+Math.ceil((lock.until-Date.now())/1000)+'s and try again.');return}
   setBusy(true);
   const btn=document.getElementById('signInBtn');
   btn.innerHTML='<div class="spinner"></div> Signing in…';
   try{
     const res=await sbPost('/auth/v1/token?grant_type=password',{email,password:pass});
     if(!res.ok){
+      signInLockRecord(email,false);
       let msg=res.data?.error_description||res.data?.msg||res.data?.error||'Sign in failed';
       if(msg.toLowerCase().includes('invalid login'))msg='Wrong email or password. Please try again.';
       if(msg.toLowerCase().includes('email not confirmed'))msg='Please verify your email first. Check your inbox.';
@@ -609,6 +628,7 @@ async function doSignIn(){
       btn.innerHTML='Sign In';
       setBusy(false);return;
     }
+    signInLockRecord(email,true);
     saveSession(res.data);
     const name=res.data.user?.user_metadata?.full_name||res.data.user?.user_metadata?.name||res.data.user?.email||'';
     showSuccess(name.split(' ')[0],'signin');
@@ -725,11 +745,16 @@ async function doResendOtp(){
 }
 
 /* ---- ACTION: FORGOT PASSWORD ---- */
+let forgotRequestTimes=[];
 async function doForgot(){
   if(busy)return;
   const email=(document.getElementById('fpEmail')?.value||'').trim();
   showError('forgotError','');
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){showError('forgotError','Please enter a valid email address.');return}
+  const now=Date.now();
+  forgotRequestTimes=forgotRequestTimes.filter(t=>now-t<15*60*1000);
+  if(forgotRequestTimes.length>=3){showError('forgotError','Too many reset requests. Please wait a few minutes and try again.');return}
+  forgotRequestTimes.push(now);
   setBusy(true);
   const btn=document.getElementById('forgotBtn');
   btn.innerHTML='<div class="spinner"></div> Sending…';

@@ -437,24 +437,25 @@ function rcard(v){
   const company=(v.rental_companies&&v.rental_companies.trading_name)||'';
   const loc=[v.pickup_suburb,v.rental_locations&&v.rental_locations.city].filter(Boolean).join(', ');
   const img=cover
-    ?`<img src="${cover.url}" alt="${title.replace(/"/g,'&quot;')}" loading="lazy">`
+    ?`<img src="${esc(cover.url)}" alt="${esc(title)}" loading="lazy">`
     :`<div class="rcard-img-ph"><svg width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 17H5v-5l2-6h10l2 6v5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg></div>`;
   const availCls=v.is_available?'yes':'no';
   const availTxt=v.is_available?'Available':'Booked';
-  return`<a class="rcard" href="rental-detail?id=${v.id}">
+  return`<a class="rcard" href="rental-detail?id=${encodeURIComponent(v.id)}">
     <div class="rcard-img">
       ${img}
       <div class="rcard-avail ${availCls}">${availTxt}</div>
     </div>
     <div class="rcard-body">
       <div class="rcard-price">${v.daily_rate?'$'+Number(v.daily_rate).toLocaleString():'POA'}<small>${v.daily_rate?'/day':''}</small></div>
-      <div class="rcard-title">${title||'Rental Vehicle'}</div>
-      <div class="rcard-meta">${catLabel}${catLabel&&loc?' · ':''}${loc}</div>
-      ${company?`<div class="rcard-meta">${company}</div>`:''}
+      <div class="rcard-title">${esc(title)||'Rental Vehicle'}</div>
+      <div class="rcard-meta">${esc(catLabel)}${catLabel&&loc?' · ':''}${esc(loc)}</div>
+      ${company?`<div class="rcard-meta">${esc(company)}</div>`:''}
     </div>
   </a>`;
 }
 
+function esc(v){return String(v==null?'':v).replace(/[&<>'"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'})[c]})}
 const rtCityQ=new URLSearchParams(location.search).get('city')||'';
 if(rtCityQ){
   const pageTitle='Car Rental in '+rtCityQ+', Zimbabwe | PaMarket';

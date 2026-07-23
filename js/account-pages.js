@@ -65,6 +65,9 @@
     if (link && /^https?:\/\//i.test(link)) return link;
     if (link && /^Detail\?id=/i.test(link)) return 'detail?' + link.split('?')[1];
     if (link && /^Reviews/i.test(link)) return 'profile';
+    if (m.conversationId || m.conversation_id) return 'chats?conv=' + encodeURIComponent(m.conversationId || m.conversation_id);
+    if (link && /^Chat\?id=/i.test(link)) return 'chats?conv=' + encodeURIComponent(link.split('=')[1] || '');
+    if (n.type === 'message') return 'chats';
     if (m.listing_id || m.listingId) return 'detail?id=' + encodeURIComponent(m.listing_id || m.listingId);
     if (n.type === 'job_alert' && (m.job_id || m.jobId)) return 'detail?id=' + encodeURIComponent(m.job_id || m.jobId);
     if (n.type === 'lead') return 'dashboard';
