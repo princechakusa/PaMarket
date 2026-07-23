@@ -1,0 +1,36 @@
+-- CRITICAL — found during audit, 2026-07-23.
+--
+-- Two INSERT policies exist on storage.objects for the cv-files bucket:
+--   1. "cv-files auth upload" (supabase/schema/_gaps.sql) — with check
+--      (bucket_id = 'cv-files') only. No per-user folder restriction: any
+--      authenticated user can write to (or overwrite) any path in this
+--      bucket, including another user's CV.
+--   2. "cv_files_insert" (supabase/migrations/add_cv_file_url.sql) — with
+--      check (bucket_id = 'cv-files' and (storage.foldername(name))[1] =
+--      auth.uid()::text). Correctly scoped, but never drops policy 1.
+--
+-- Since storage RLS policies for the same command OR together, policy 1
+-- alone is enough to make policy 2 irrelevant — this is the exact same bug
+-- class as the profiles-table leak found and fixed earlier (a later,
+-- correctly-scoped policy coexisting with an older permissive one instead
+-- of replacing it).
+--
+-- Fix: drop only the unscoped policy by exact name. Nothing else about the
+-- cv-files bucket changes:
+--   * "cv-files public read" and "cv_files_select" (both intentionally
+--     public — employers need to read any applicant's CV) are untouched.
+--   * "cv_files_insert" / "cv_files_update" / "cv_files_delete" (the
+--     correctly-scoped policies) are untouched.
+--   * No other bucket (listings-photos, rental-media, verification-docs,
+--     chat-images) is touched by this migration.
+
+drop policy if exists "cv-files auth upload" on storage.objects;
+
+-- Verification (run after applying):
+--   select policyname, cmd, roles, with_check
+--   from pg_policies
+--   where schemaname = 'storage' and tablename = 'objects' and policyname ilike 'cv%'
+--   order by policyname;
+--   -- expect exactly: cv-files public read (select), cv_files_delete (delete),
+--   -- cv_files_insert (insert), cv_files_select (select), cv_files_update (update)
+--   -- "cv-files auth upload" must be gone.
