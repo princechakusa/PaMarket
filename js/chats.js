@@ -416,6 +416,23 @@
     if(/network unavailable|failed to fetch|networkerror/i.test(raw))return'You are offline. Reconnect and try again.';
     return'Could not send this message. Please try again.';
   }
+  // Same job as messageErrorText but for the find-or-create-a-conversation
+  // step (opening a chat, not sending into one) — distinct failure surface:
+  // auth, RLS, network, a genuine insert conflict, or an unrecognized
+  // server/database error. Always returns a category the user can act on,
+  // and for the unrecognized case appends the raw status/code so a report
+  // back is actually diagnosable instead of just "please try again".
+  function conversationErrorText(err){
+    var raw=String(err&&err.message||'');
+    var status=err&&err.status;
+    if(status===401)return'Your session has expired. Please sign in again to start this conversation.';
+    if(/network unavailable|failed to fetch|networkerror/i.test(raw))return'You are offline. Reconnect and try again.';
+    if(/row-level security|permission denied|not a member/i.test(raw))return'You don\'t have permission to start this conversation.';
+    if(status===409||/duplicate key|conflict/i.test(raw))return'This conversation already exists — refreshing should show it. Please try again.';
+    if(status&&status>=500)return'The server had a problem starting this conversation. Please try again shortly.';
+    var detail=(err&&(err.code||status))?(' (error '+(err.code||status)+')'):'';
+    return'Could not start this conversation'+detail+'. Please try again.';
+  }
   function sendMessage(){
     var input=document.getElementById('messageInput');
     if(!input||isSending)return Promise.resolve();
@@ -729,15 +746,24 @@
         conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},row));
         return row.id;
       }).catch(function(err){
-        console.warn('resolveBizEntry:',err);
-        toast('Could not start this conversation. Please try again.',true);
+        console.warn('resolveBizEntry (create conversation):',err,'status=',err&&err.status,'code=',err&&err.code);
+        toast(conversationErrorText(err),true);
         return null;
       });
     }).catch(function(err){
-      console.warn('resolveBizEntry lookup:',err);
-      toast('Could not load this business.',true);
+      console.warn('resolveBizEntry (business lookup):',err,'status=',err&&err.status,'code=',err&&err.code);
+      toast(businessLookupErrorText(err),true);
       return null;
     });
+  }
+  function businessLookupErrorText(err){
+    var raw=String(err&&err.message||'');
+    var status=err&&err.status;
+    if(status===401)return'Your session has expired. Please sign in again.';
+    if(/network unavailable|failed to fetch|networkerror/i.test(raw))return'You are offline. Reconnect and try again.';
+    if(status&&status>=500)return'The server had a problem loading this business. Please try again shortly.';
+    var detail=(err&&(err.code||status))?(' (error '+(err.code||status)+')'):'';
+    return'Could not load this business'+detail+'. Please try again.';
   }
   function findExistingPairConversation(otherId,pairKey){
     var match=conversations.filter(function(c){
@@ -792,8 +818,8 @@
         conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},row));
         return (row.listing_id?loadListings([row.listing_id]):Promise.resolve()).then(function(){return row.id});
       }).catch(function(err){
-        console.warn('resolveEntryConversation:',err);
-        toast('Could not start this conversation. Please try again.',true);
+        console.warn('resolveEntryConversation:',err,'status=',err&&err.status,'code=',err&&err.code);
+        toast(conversationErrorText(err),true);
         return null;
       });
     });
