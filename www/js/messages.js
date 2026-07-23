@@ -1771,9 +1771,18 @@
             else if (_bw && _rh) _bw.insertAdjacentHTML('beforeend', _rh);
           }
         }
+        // A personal 1:1 (conv_) thread must NEVER silently gain a 3rd member —
+        // otherId = members.find(m => m !== u.id) becomes ambiguous and can
+        // resolve to the wrong person's name/avatar (the "opens the wrong
+        // conversation" bug). Only biz_/job_ threads can legitimately grow.
         if (m.sender_id && m.sender_id !== u.id && !(conv.members||[]).includes(m.sender_id)) {
           conv.members = conv.members || [];
-          conv.members.push(m.sender_id);
+          const _isPersonalConv3 = typeof conv.id === 'string' && conv.id.indexOf('conv_') === 0;
+          if (_isPersonalConv3 && conv.members.length >= 2) {
+            console.warn('Unexpected sender for 1:1 conversation (not merging):', conv.id, m.sender_id);
+          } else {
+            conv.members.push(m.sender_id);
+          }
         }
       });
       conv.messages.sort(function(a,b){ return (a.t||0)-(b.t||0); });

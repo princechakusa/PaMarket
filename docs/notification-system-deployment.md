@@ -18,7 +18,9 @@ plus three migrations and one edge function edit:
 | `supabase/migrations/marketplace_notifications_phase1.sql` | Listing approved/rejected/flagged, price drop, saved-search match, listing expiry warning, stale-listing prompt, view-count milestone |
 | `supabase/migrations/marketplace_notifications_phase2.sql` | Job application push (employer lead + candidate shortlisted/declined), `viewed_listings` history table, personalized recommendations poll job |
 | `supabase/migrations/marketplace_notifications_phase3.sql` | Real-time in-app chat scam warning (WhatsApp/Telegram redirects, OTP requests, external links, pay-before-meetup phrasing) |
-| `supabase/functions/automation-runner/index.ts` | Calls the new poll-driven jobs (`run_listing_expiry_warnings`, `run_stale_listing_prompts`, `run_view_milestones`, `run_personalized_recommendations`) each tick |
+| `supabase/migrations/marketplace_notifications_phase4.sql` | Proactive, Dubizzle-style re-engagement pushes sent even when the user isn't in the app: shop new-arrivals (viewed a business, it posted new listings since), category digest (browsed a category repeatedly with no saved search), verification nudge. Shared daily engagement cap (max 2/24h) across all proactive types so this never feels like spam. |
+| `supabase/functions/automation-runner/index.ts` | Calls the new poll-driven jobs (`run_listing_expiry_warnings`, `run_stale_listing_prompts`, `run_view_milestones`, `run_personalized_recommendations`, `run_shop_new_arrivals`, `run_category_digest`, `run_verification_nudge`) each tick |
+| `www/js/business-profile.js` | `pages.BusinessShop` calls the new `increment_business_view` RPC once per session per shop, logging interest for the shop-new-arrivals job |
 | `www/js/notifications.js` | Icon/color/label mapping for all the new notification `type` values, so the in-app bell list renders them properly instead of falling back to defaults |
 
 Out of scope, on purpose: nothing related to escrow/buyer-seller in-app
@@ -31,7 +33,13 @@ Google Play Billing and Paynow), so those notification types don't apply.
 - [x] `marketplace_notifications_phase1.sql` run in Supabase SQL Editor
 - [x] `marketplace_notifications_phase2.sql` run in Supabase SQL Editor
 - [x] `marketplace_notifications_phase3.sql` run in Supabase SQL Editor
-- [ ] `automation-runner` deployed as an Edge Function (it did not exist in
+- [ ] `marketplace_notifications_phase4.sql` run in Supabase SQL Editor (proactive
+      re-engagement: shop new arrivals, category digest, verification nudge —
+      assumes phase1-3 plus `schema/profiles.sql`, `schema/businesses.sql`,
+      `schema/conversations.sql`, `schema/applications.sql`, `schema/saved_searches.sql`
+      are already applied)
+- [ ] `automation-runner` redeployed as an Edge Function (after phase4 lands, so
+      the new RPCs it calls actually exist) (it did not exist in
       this project before this work — only its `AUTOMATION_SECRET` secret
       did). Deploy via:
       ```bash

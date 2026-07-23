@@ -532,6 +532,18 @@
     const waNum = (b.whatsapp || '').replace(/[^0-9]/g, '');
     const isOwn = canEdit(b);
 
+    // Track shop views for re-engagement notifications (once per session per shop).
+    if (!isOwn) {
+      window._viewedBusinesses = window._viewedBusinesses || new Set();
+      if (!window._viewedBusinesses.has(b.id)) {
+        window._viewedBusinesses.add(b.id);
+        const _sb = window.supabase;
+        if (_sb && typeof _sb.rpc === 'function') {
+          _sb.rpc('increment_business_view', { p_business_id: b.id }).catch(function () {});
+        }
+      }
+    }
+
     const allProds = shopProducts(b);
     const catIds  = allProds.map(function (l) { return l.cat; }).filter(Boolean)
       .filter(function (v, i, a) { return a.indexOf(v) === i; });

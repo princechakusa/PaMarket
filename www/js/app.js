@@ -2646,10 +2646,21 @@ window.H = {
           local.messages.sort((a,b) => (a.t||0) - (b.t||0));
           if (!Array.isArray(local.members)) local.members = [u.id];
           if (!local.members.includes(u.id)) local.members.unshift(u.id);
+          // A personal 1:1 (conv_) thread must NEVER silently gain a 3rd member:
+          // doing so makes otherId = members.find(m => m !== u.id) ambiguous and
+          // can resolve to the WRONG person's name/avatar — the exact "opens the
+          // wrong conversation" bug. Only biz_/job_ threads can legitimately grow
+          // (e.g. staff added to a business chat). See the matching guard above
+          // in the pushNotificationReceived-driven sync path.
+          const _isPersonalConv2 = typeof local.id === 'string' && local.id.indexOf('conv_') === 0;
           (msgs||[]).forEach(function(m) {
             if (m.sender_id && m.sender_id !== u.id && !local.members.includes(m.sender_id)) {
-              local.members.push(m.sender_id);
-              changed = true;
+              if (_isPersonalConv2 && local.members.length >= 2) {
+                console.warn('Unexpected sender for 1:1 conversation (not merging):', local.id, m.sender_id);
+              } else {
+                local.members.push(m.sender_id);
+                changed = true;
+              }
             }
           });
         }));
