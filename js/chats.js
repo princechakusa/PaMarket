@@ -37,6 +37,16 @@
   function fitChatPage(){
     var page=document.querySelector('.chat-page');
     if(!page)return;
+    // iOS Safari opens the on-screen keyboard by scrolling the *visual*
+    // viewport to reveal the focused input, without moving the *layout*
+    // viewport — html/body here are pinned (overflow:hidden), so nothing
+    // actually scrolls, but that leaves the visual viewport's own vertical
+    // offset unaccounted for. Snapping the layout scroll position back to
+    // (0,0) on every relevant event keeps the two viewports from drifting
+    // apart, which is what was producing the blank page: the chat shell
+    // was still being laid out correctly, just no longer aligned with what
+    // was actually visible through the shifted visual viewport window.
+    if(window.scrollTo)window.scrollTo(0,0);
     var viewport=window.visualViewport?window.visualViewport.height:window.innerHeight;
     var top=Math.max(0,page.getBoundingClientRect().top);
     page.style.setProperty('--chat-page-height',Math.max(280,Math.floor(viewport-top))+'px');
@@ -46,7 +56,14 @@
   window.addEventListener('resize',scheduleChatFit);
   window.addEventListener('orientationchange',scheduleChatFit);
   window.addEventListener('load',scheduleChatFit);
-  if(window.visualViewport)window.visualViewport.addEventListener('resize',scheduleChatFit);
+  if(window.visualViewport){
+    // 'resize' fires when the keyboard's height changes; 'scroll' fires
+    // when iOS shifts the visual viewport to keep the focused input in
+    // view, which can happen independently of a resize — missing this was
+    // the gap. Both need to trigger a re-fit.
+    window.visualViewport.addEventListener('resize',scheduleChatFit);
+    window.visualViewport.addEventListener('scroll',scheduleChatFit);
+  }
   if(window.ResizeObserver){
     var chromeObserver=new ResizeObserver(scheduleChatFit);
     var siteHeader=document.getElementById('hdr');
@@ -290,6 +307,11 @@
     document.getElementById('messageComposer').addEventListener('submit',function(e){e.preventDefault();sendMessage()});
     document.getElementById('messageInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
     document.getElementById('messageInput').addEventListener('input',function(){resizeComposerInput(this);updateSendButton();notifyTyping()});
+    // Belt-and-suspenders for the iOS keyboard blank-page issue: visualViewport
+    // events normally cover this, but the keyboard's open animation can still
+    // outlast them on some iOS versions, so re-fit again once it's settled.
+    document.getElementById('messageInput').addEventListener('focus',function(){setTimeout(scheduleChatFit,50);setTimeout(scheduleChatFit,350)});
+    document.getElementById('messageInput').addEventListener('blur',function(){setTimeout(scheduleChatFit,350)});
     document.getElementById('attachButton').addEventListener('click',function(){document.getElementById('photoFile').click()});
     document.getElementById('photoFile').addEventListener('change',sendPhoto);
     document.getElementById('offerButton').addEventListener('click',openOfferPrompt);
@@ -741,7 +763,7 @@
       var existing=conversations.find(function(c){return c.id===convId});
       if(existing)return existing.id;
       var body={id:convId,members:[me.id,ownerId]};
-      return request('/rest/v1/conversations',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(body)}).then(function(rows2){
+      return request('/rest/v1/conversations?on_conflict=id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(body)}).then(function(rows2){
         var row=(rows2&&rows2[0])||{id:convId,members:[me.id,ownerId]};
         conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},row));
         return row.id;
@@ -813,7 +835,7 @@
       }
       var body={id:pairKey,members:[me.id,otherId]};
       if(listingId)body.listing_id=listingId;
-      return request('/rest/v1/conversations',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(body)}).then(function(rows){
+      return request('/rest/v1/conversations?on_conflict=id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(body)}).then(function(rows){
         var row=(rows&&rows[0])||{id:pairKey,members:[me.id,otherId],listing_id:listingId};
         conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},row));
         return (row.listing_id?loadListings([row.listing_id]):Promise.resolve()).then(function(){return row.id});
