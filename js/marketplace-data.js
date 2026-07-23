@@ -513,6 +513,42 @@
     });
   }
 
+  // Upload an identity verification document (ID photo or selfie) through
+  // the same R2 edge function, under the verification/{auth.uid()} prefix —
+  // the ONE prefix get-r2-upload-url deliberately never returns a publicUrl
+  // for (isVerification check in that function), since these are private and
+  // only ever readable via a signed GET gated to the owner or an admin (see
+  // www/js/verify.js H.signedVerificationUrl for the app's read-side
+  // equivalent — the website doesn't need a read helper yet since it only
+  // submits, it doesn't display the uploaded images back).
+  function uploadVerificationDoc(blob, label) {
+    var s = sharedSession();
+    if (!s || !s.access_token || !s.user || !s.user.id) {
+      return Promise.reject(new Error('not-authenticated'));
+    }
+    var type = (blob && blob.type) || 'image/jpeg';
+    var key = 'verification/' + s.user.id + '/' + (label || 'doc') + '_' + Date.now() + '.jpg';
+    return fetch(SB_URL + '/functions/v1/get-r2-upload-url', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: key, contentType: type }),
+    }).then(function (res) {
+      if (!res.ok) return res.json().catch(function () { return {}; }).then(function (j) {
+        throw new Error('upload-url: ' + (j.error || res.status));
+      });
+      return res.json();
+    }).then(function (payload) {
+      return fetch(payload.signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': type },
+        body: blob,
+      }).then(function (up) {
+        if (!up.ok) throw new Error('R2 PUT failed: ' + up.status);
+        return key; // return the object KEY, never a public URL — matches the app's convention
+      });
+    });
+  }
+
   // Insert a new listing. Mirrors the app's saveListingToCloud column map so
   // both clients write identical rows, and honours the backend Phase A
   // moderation trigger: a prohibited/banned INSERT raises a Postgres error,
@@ -991,6 +1027,7 @@
   global.PM.uploadListingPhoto = uploadListingPhoto;
   global.PM.uploadProfilePhoto = uploadProfilePhoto;
   global.PM.uploadCV = uploadCV;
+  global.PM.uploadVerificationDoc = uploadVerificationDoc;
   // Paynow checkout (website twin of the app's Play Billing paid features).
   global.PM.BOOST_PRODUCTS = BOOST_PRODUCTS;
   global.PM.JOB_BOOST_PRODUCTS = JOB_BOOST_PRODUCTS;

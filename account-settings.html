@@ -178,6 +178,7 @@ window.doSearch = window.doSearch || function(){
     <nav class="as-nav" aria-label="Account settings sections">
       <button class="active" data-target="profileSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile details</button>
       <button data-target="jobSeekerSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>Job seeker profile</button>
+      <button data-target="verificationSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>Identity verification</button>
       <button data-target="passwordSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Password</button>
       <button data-target="notificationSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M10 21h4"/></svg>Notifications</button>
     </nav>
@@ -215,6 +216,40 @@ window.doSearch = window.doSearch || function(){
           </div>
         </div>
         <div class="as-save-row"><button class="as-btn as-btn-ghost" type="button" onclick="location.reload()">Cancel</button><button class="as-btn as-btn-main" id="saveJobSeekerBtn" type="button">Save job seeker profile</button></div>
+      </div>
+    </section>
+
+    <section class="as-card" id="verificationSettings">
+      <div class="as-card-head"><div><h2>Identity verification</h2><p>Get the blue badge on your profile and listings. Review takes up to 24 hours.</p></div><span class="as-status" id="verifStatusChip" style="display:none">Verified</span></div>
+      <div class="as-card-body">
+        <div id="verifVerifiedState" style="display:none;padding:16px;border-radius:14px;background:#EAF8F0;color:var(--green);font-size:12.5px;line-height:1.6"><b style="display:block;font-size:14px;margin-bottom:2px">You're verified</b>Your blue badge shows on your profile and every listing you post.</div>
+        <div id="verifPendingState" style="display:none;padding:16px;border-radius:14px;background:var(--navy-tint);color:#314779;font-size:12.5px;line-height:1.6"><b style="display:block;font-size:14px;margin-bottom:2px">Under review</b>Your ID and selfie were submitted. Our team reviews within 24 hours — you'll be notified once approved.</div>
+        <div id="verifFormState">
+          <div class="as-form-grid">
+            <div class="as-field"><label for="verifIdType">ID type</label>
+              <select id="verifIdType" style="width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none;padding:12px 13px">
+                <option>National ID</option><option>Passport</option><option>Driver's License</option>
+              </select>
+            </div>
+            <div class="as-field"><label for="verifIdNum">ID number</label><input id="verifIdNum" maxlength="40" placeholder="Enter your ID number"></div>
+            <div class="as-field full">
+              <label>Selfie photo <span>Required</span></label>
+              <div id="verifSelfieState" style="font-size:11.5px;color:var(--mute);margin-bottom:8px">No selfie uploaded yet</div>
+              <label class="as-avatar-label" for="verifSelfieFile" style="cursor:pointer">Upload selfie</label>
+              <input id="verifSelfieFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+              <div class="as-upload-state" id="verifSelfieUploadState"></div>
+            </div>
+            <div class="as-field full">
+              <label>ID document photo (front) <span>Required</span></label>
+              <div id="verifIdDocState" style="font-size:11.5px;color:var(--mute);margin-bottom:8px">No ID photo uploaded yet</div>
+              <label class="as-avatar-label" for="verifIdDocFile" style="cursor:pointer">Upload ID photo</label>
+              <input id="verifIdDocFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+              <div class="as-upload-state" id="verifIdDocUploadState"></div>
+            </div>
+          </div>
+          <div class="as-password-note" style="margin-top:17px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><b>Your data is secure.</b> Your ID and selfie are stored privately and used only to confirm your identity. They are never sold or shared.</div></div>
+          <div class="as-save-row"><button class="as-btn as-btn-main" id="submitVerificationBtn" type="button" disabled>Complete all fields</button></div>
+        </div>
       </div>
     </section>
 
@@ -322,6 +357,8 @@ window.doSearch = window.doSearch || function(){
   var avatarUploading=false;
   var cvUploading=false;
   var pendingCvName='',pendingCvUrl='';
+  var pendingSelfieKey='',pendingIdDocKey='';
+  var verifSelfieUploading=false,verifIdDocUploading=false;
   var toastTimer=null;
   var NOTIFICATION_DEFAULTS={messages:true,listings:true,approvals:true,promotions:true,favorites:true,priceDrops:true,security:true};
   var NOTIFICATIONS=[
@@ -373,9 +410,9 @@ window.doSearch = window.doSearch || function(){
     }
   }
   function showAuthGate(){document.getElementById('settingsShell').innerHTML='<div class="as-auth-card" style="grid-column:1/-1"><h2>Sign in to manage your account</h2><p>Your profile, password and notification preferences are private account settings.</p><a href="auth?return=account-settings">Sign In</a></div>'}
-  function mount(){var shell=document.getElementById('settingsShell');shell.innerHTML='';shell.appendChild(document.getElementById('settingsTemplate').content.cloneNode(true));renderProfile();renderNotifications();bindEvents()}
+  function mount(){var shell=document.getElementById('settingsShell');shell.innerHTML='';shell.appendChild(document.getElementById('settingsTemplate').content.cloneNode(true));renderProfile();renderNotifications();renderVerification();bindEvents()}
 
-  function loadProfile(){return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+encodeURIComponent(session.user.id)+'&select=id,name,phone,bio,avatar,email,job_title,open_to_work,cv_file_name,cv_file_url',{headers:authHeaders()}).then(function(res){if(!res.ok)throw new Error('Could not load profile');return res.json()}).then(function(rows){profile=rows[0]||{id:session.user.id,name:'',phone:'',bio:'',avatar:'',email:session.user.email||''};mount()})}
+  function loadProfile(){return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+encodeURIComponent(session.user.id)+'&select=id,name,phone,bio,avatar,email,job_title,open_to_work,cv_file_name,cv_file_url,verified,verification_pending',{headers:authHeaders()}).then(function(res){if(!res.ok)throw new Error('Could not load profile');return res.json()}).then(function(rows){profile=rows[0]||{id:session.user.id,name:'',phone:'',bio:'',avatar:'',email:session.user.email||''};mount()})}
   function compressImage(file){return new Promise(function(resolve,reject){var img=new Image(),url=URL.createObjectURL(file);img.onload=function(){try{var max=400,scale=Math.min(1,max/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale)),canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);canvas.toBlob(function(blob){URL.revokeObjectURL(url);blob?resolve(blob):reject(new Error('Could not process image'))},'image/jpeg',.82)}catch(e){URL.revokeObjectURL(url);reject(e)}};img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('Could not read image'))};img.src=url})}
 
   function bindEvents(){
@@ -386,6 +423,11 @@ window.doSearch = window.doSearch || function(){
     document.getElementById('saveProfileBtn').addEventListener('click',saveProfile);
     document.getElementById('cvFile').addEventListener('change',handleCv);
     document.getElementById('saveJobSeekerBtn').addEventListener('click',saveJobSeeker);
+    var verifSelfieFile=document.getElementById('verifSelfieFile'),verifIdDocFile=document.getElementById('verifIdDocFile'),verifIdNum=document.getElementById('verifIdNum'),submitVerificationBtn=document.getElementById('submitVerificationBtn');
+    if(verifSelfieFile)verifSelfieFile.addEventListener('change',function(e){handleVerifDoc(e,'selfie')});
+    if(verifIdDocFile)verifIdDocFile.addEventListener('change',function(e){handleVerifDoc(e,'id')});
+    if(verifIdNum)verifIdNum.addEventListener('input',updateVerifSubmitState);
+    if(submitVerificationBtn)submitVerificationBtn.addEventListener('click',submitVerification);
     document.getElementById('newPassword').addEventListener('input',updateStrength);
     document.getElementById('togglePassword').addEventListener('click',togglePassword);
     document.getElementById('updatePasswordBtn').addEventListener('click',updatePassword);
@@ -413,6 +455,84 @@ window.doSearch = window.doSearch || function(){
       document.getElementById('cvUploadState').textContent='';
       showToast('Could not upload that file. Try again.',true);
     }).finally(function(){cvUploading=false;setBusy(document.getElementById('saveJobSeekerBtn'),false,'Save job seeker profile')})
+  }
+  // Compress to a larger max dimension than the avatar helper (400px is too
+  // low-res for an ID document to stay legible for admin review) — matches
+  // the app's own compress(f, 1400, 0.82) call in www/js/profile.js.
+  function compressVerifImage(file){return new Promise(function(resolve,reject){var img=new Image(),url=URL.createObjectURL(file);img.onload=function(){try{var max=1400,scale=Math.min(1,max/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale)),canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);canvas.toBlob(function(blob){URL.revokeObjectURL(url);blob?resolve(blob):reject(new Error('Could not process image'))},'image/jpeg',.85)}catch(e){URL.revokeObjectURL(url);reject(e)}};img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('Could not read image'))};img.src=url})}
+  function renderVerification(){
+    var chip=document.getElementById('verifStatusChip'),verified=document.getElementById('verifVerifiedState'),pending=document.getElementById('verifPendingState'),form=document.getElementById('verifFormState');
+    if(!chip)return;
+    if(profile.verified){
+      chip.style.display='';chip.textContent='Verified';
+      verified.style.display='';pending.style.display='none';form.style.display='none';
+    }else if(profile.verification_pending){
+      chip.style.display='';chip.textContent='Under review';
+      verified.style.display='none';pending.style.display='';form.style.display='none';
+    }else{
+      chip.style.display='none';verified.style.display='none';pending.style.display='none';form.style.display='';
+      updateVerifSubmitState();
+    }
+  }
+  function updateVerifSubmitState(){
+    var btn=document.getElementById('submitVerificationBtn');if(!btn)return;
+    var ready=!!(document.getElementById('verifIdNum').value.trim()&&pendingSelfieKey&&pendingIdDocKey);
+    btn.disabled=!ready;btn.textContent=ready?'Submit for review':'Complete all fields';
+  }
+  function handleVerifDoc(event,kind){
+    var file=event.target.files&&event.target.files[0];if(!file)return;
+    if(!/^image\/(jpeg|png|webp)$/i.test(file.type)){showToast('Choose a JPG, PNG or WebP image',true);return}
+    if(file.size>10*1024*1024){showToast('That image is too large. Choose one under 10 MB',true);return}
+    var stateEl=document.getElementById(kind==='selfie'?'verifSelfieState':'verifIdDocState');
+    var uploadEl=document.getElementById(kind==='selfie'?'verifSelfieUploadState':'verifIdDocUploadState');
+    var btn=document.getElementById('submitVerificationBtn');
+    if(kind==='selfie')verifSelfieUploading=true;else verifIdDocUploading=true;
+    uploadEl.textContent='Uploading…';setBusy(btn,true,'Uploading…');
+    compressVerifImage(file).then(function(blob){return window.PM.uploadVerificationDoc(blob,kind)}).then(function(key){
+      if(!key)throw new Error('Upload did not return a reference');
+      if(kind==='selfie')pendingSelfieKey=key;else pendingIdDocKey=key;
+      stateEl.textContent=(kind==='selfie'?'Selfie':'ID photo')+' uploaded ✓';
+      uploadEl.textContent='';
+      showToast((kind==='selfie'?'Selfie':'ID photo')+' uploaded');
+    }).catch(function(err){
+      console.warn('Verification doc upload failed:',err);
+      uploadEl.textContent='';
+      showToast('Could not upload that photo. Try again.',true);
+    }).finally(function(){
+      if(kind==='selfie')verifSelfieUploading=false;else verifIdDocUploading=false;
+      setBusy(btn,false,'Submit for review');
+      updateVerifSubmitState();
+    })
+  }
+  function submitVerification(){
+    if(verifSelfieUploading||verifIdDocUploading)return;
+    var idNum=document.getElementById('verifIdNum').value.trim();
+    if(!idNum){showToast('Enter your ID number',true);return}
+    if(!pendingSelfieKey||!pendingIdDocKey){showToast('Upload both a selfie and an ID photo',true);return}
+    var idType=document.getElementById('verifIdType').value;
+    var btn=document.getElementById('submitVerificationBtn');
+    setBusy(btn,true,'Submitting…');
+    var verifRow={user_id:session.user.id,status:'pending',id_doc_path:pendingIdDocKey,selfie_path:pendingSelfieKey,submitted_at:new Date().toISOString()};
+    fetch(SB_URL+'/rest/v1/verifications?on_conflict=user_id',{
+      method:'POST',
+      headers:Object.assign({},authHeaders(),{'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'}),
+      body:JSON.stringify(verifRow)
+    }).then(function(res){
+      if(!res.ok)return res.json().catch(function(){return{}}).then(function(j){throw new Error(j.message||'Could not submit verification')});
+      return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+encodeURIComponent(session.user.id),{
+        method:'PATCH',
+        headers:Object.assign({},authHeaders(),{'Content-Type':'application/json',Prefer:'return=minimal'}),
+        body:JSON.stringify({verification_pending:true,updated_at:new Date().toISOString()})
+      });
+    }).then(function(res){
+      if(!res.ok)throw new Error('Could not update profile status');
+      profile.verification_pending=true;
+      renderVerification();
+      showToast('Submitted — we\'ll review within 24 hours');
+    }).catch(function(err){
+      console.warn('Verification submit failed:',err);
+      showToast(err.message||'Could not submit verification. Try again.',true);
+    }).finally(function(){setBusy(btn,false,'Submit for review')})
   }
   function saveJobSeeker(){
     if(cvUploading)return;
