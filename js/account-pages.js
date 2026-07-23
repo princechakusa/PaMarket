@@ -68,6 +68,16 @@
     if (m.conversationId || m.conversation_id) return 'chats?conv=' + encodeURIComponent(m.conversationId || m.conversation_id);
     if (link && /^Chat\?id=/i.test(link)) return 'chats?conv=' + encodeURIComponent(link.split('=')[1] || '');
     if (n.type === 'message') return 'chats';
+    // Rental notifications carry a rental_vehicle_listings.id under
+    // listing_id — a different table from public.listings. Routing it
+    // through the generic detail?id= below 404s (detail.html looks the id
+    // up in listings, not rental_vehicle_listings). Send rental_* types to
+    // rental-detail instead; company/review notifications carry no listing
+    // at all, so send those to the owner's dashboard.
+    if (n.type && n.type.indexOf('rental_') === 0) {
+      if (m.listing_id || m.listingId) return 'rental-detail?id=' + encodeURIComponent(m.listing_id || m.listingId);
+      return 'dashboard';
+    }
     if (m.listing_id || m.listingId) return 'detail?id=' + encodeURIComponent(m.listing_id || m.listingId);
     if (n.type === 'job_alert' && (m.job_id || m.jobId)) return 'detail?id=' + encodeURIComponent(m.job_id || m.jobId);
     if (n.type === 'lead') return 'dashboard';
