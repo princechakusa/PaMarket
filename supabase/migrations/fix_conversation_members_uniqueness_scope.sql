@@ -1,0 +1,38 @@
+-- ============================================================================
+-- PaMarket — Allow a personal AND a business conversation between the same 2 people
+-- ----------------------------------------------------------------------------
+-- unique_conversation_members (not tracked in any prior migration file — it
+-- was created directly in the Supabase dashboard/SQL Editor at some point)
+-- enforces exactly ONE conversation total between any 2 people, keyed on
+-- sort_uuid_array(members). This is too strict: "Message Business" always
+-- creates/looks up a deterministic biz_<businessId>_<userId> conversation ID,
+-- separate from any personal conv_<a>_<b> thread the same 2 people might
+-- already have — but the members-uniqueness constraint blocks the biz_
+-- conversation from ever being created if a personal one already exists
+-- between the same pair (or vice versa), throwing 23505
+-- "duplicate key value violates unique constraint unique_conversation_members".
+--
+-- The website/app's own recovery code was falling back to the ONLY
+-- conversation the constraint allowed to exist (the personal one), which is
+-- why "Message Business" was opening the owner's personal chat instead of a
+-- business-branded thread — not a client bug, a real schema constraint
+-- forcing an incorrect merge.
+--
+-- Fix: drop the constraint. A person can now have a personal conv_ thread AND
+-- a separate biz_ thread with the business owner, AND a separate job_ thread
+-- for job applications, exactly as the conversation id scheme (conv_/biz_/
+-- job_ prefixes) already implies they should be able to. No data is deleted;
+-- every existing conversation keeps its rows.
+--
+-- Idempotent. Run once in the Supabase SQL Editor.
+-- ============================================================================
+
+alter table public.conversations drop constraint if exists unique_conversation_members;
+
+-- ============================================================================
+-- Verification (run manually, not part of the migration):
+--
+--   select conname from pg_constraint
+--   where conrelid = 'public.conversations'::regclass and contype = 'u';
+--   -- expect: unique_conversation_members no longer listed
+-- ============================================================================

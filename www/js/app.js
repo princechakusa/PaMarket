@@ -2785,7 +2785,16 @@ window.H = {
             const { data: matches } = await sb.from('conversations')
               .select('id,members,listing_id,updated_at')
               .contains('members', [otherId]);
-            const match = (matches || []).find(c => Array.isArray(c.members) && c.members.length === 2 && c.members.map(String).includes(String(otherId)));
+            const candidates = (matches || []).filter(c => Array.isArray(c.members) && c.members.length === 2 && c.members.map(String).includes(String(otherId)));
+            // Only reuse a match with the SAME prefix (conv_/biz_/job_) as the
+            // conversation we were trying to create — reusing a different-
+            // prefixed thread would silently merge, e.g., a personal DM with
+            // a business chat (the "Message Business opens the owner's
+            // personal chat" bug). Once
+            // fix_conversation_members_uniqueness_scope.sql is applied this
+            // 23505 shouldn't happen at all; this is a defensive fallback.
+            const wantPrefix = String(conv.id).split('_')[0] + '_';
+            const match = candidates.find(c => String(c.id).indexOf(wantPrefix) === 0) || null;
             if (match && match.id !== conv.id) {
               console.warn('ensureConversationInCloud: reusing existing conversation', match.id, 'for member pair instead of', conv.id);
               return { ok:true, reusedId: match.id };

@@ -837,16 +837,31 @@
         // that id instead of surfacing an error toast for something that's
         // actually a normal, resolvable case.
         if(err&&err.code==='23505'){
+          // Prefer an existing biz_ conversation with this exact business
+          // owner over any other 2-person match — reusing a personal conv_
+          // thread here would silently rebrand a private DM as this business
+          // (or vice versa), which is the "opens the owner's personal chat
+          // instead of the business" bug. Once
+          // fix_conversation_members_uniqueness_scope.sql has been run this
+          // 23505 should no longer happen at all (a person can have both a
+          // personal AND a business thread with the same owner); this
+          // recovery only matters for a transition window or if the
+          // constraint drop hasn't been applied yet.
           return request('/rest/v1/conversations?members=cs.{'+encodeURIComponent(me.id)+'}&select=id,members,listing_id,updated_at').then(function(rows3){
-            var match=(rows3||[]).find(function(c){
+            var candidates=(rows3||[]).filter(function(c){
               return Array.isArray(c.members)&&c.members.length===2&&c.members.map(String).indexOf(ownerId)!==-1;
             });
+            var match=candidates.find(function(c){return String(c.id).indexOf('biz_')===0})||null;
             if(match){
               if(!conversations.some(function(c){return c.id===match.id}))conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},match));
               return match.id;
             }
+            // No biz_ thread exists yet, and the DB still won't allow a new
+            // conversation with this member pair (constraint not yet
+            // dropped) — surface a clear, actionable error instead of
+            // silently opening the wrong (personal) thread.
             console.warn('resolveBizEntry (create conversation):',err,'status=',err&&err.status,'code=',err&&err.code);
-            toast(conversationErrorText(err),true);
+            toast('This business owner already has a personal chat with you. Business messaging for this pair needs a database update — contact support.',true);
             return null;
           }).catch(function(lookupErr){
             console.warn('resolveBizEntry (member-pair lookup):',lookupErr);
