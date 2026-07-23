@@ -50,6 +50,14 @@
     var viewport=window.visualViewport?window.visualViewport.height:window.innerHeight;
     var top=Math.max(0,page.getBoundingClientRect().top);
     page.style.setProperty('--chat-page-height',Math.max(280,Math.floor(viewport-top))+'px');
+    // WebKit compositor bug: on some iOS versions, resizing a fixed/overflow-
+    // hidden ancestor while the keyboard animates leaves the page painted
+    // blank (white) until something forces a new paint. A transform nudge
+    // is the standard workaround — forces a repaint without visibly moving
+    // anything or losing scroll position.
+    page.style.transform='translateZ(0)';
+    void page.offsetHeight;
+    page.style.transform='';
   }
   var fitFrame=0;
   function scheduleChatFit(){cancelAnimationFrame(fitFrame);fitFrame=requestAnimationFrame(fitChatPage)}
