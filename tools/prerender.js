@@ -332,7 +332,12 @@ function renderBusiness(b, chrome) {
   const cover = b.cover ? '<img src="' + esc(b.cover) + '" alt="' + esc(b.name) + ' cover">' : '';
   const logo = b.logo ? '<img src="' + esc(b.logo) + '" alt="' + esc(b.name) + ' logo">' : initialsOf(b.name);
 
-  let actions = '';
+  // This static page has no client-side identity check (it's baked at build
+  // time for crawlers/anonymous visitors), so "Message Business" is always
+  // shown — mirrors business.html's non-owner branch. If the owner
+  // themselves lands here and clicks it, js/chats.js's resolveBizEntry
+  // already guards against messaging your own business with a clear toast.
+  let actions = '<a class="btn btn-navy" href="chats?biz=' + esc(b.id) + '"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="vertical-align:-3px;margin-right:6px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Message Business</a>';
   const wa = b.whatsapp || b.phone;
   if (wa) actions += '<a class="btn btn-whatsapp" href="https://wa.me/' + esc(String(wa).replace(/[^0-9]/g, '')) + '" target="_blank" rel="noopener">WhatsApp</a>';
   if (b.phone) actions += '<a class="btn btn-navy" href="tel:' + esc(b.phone) + '">Call</a>';
