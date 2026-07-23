@@ -11,13 +11,16 @@
 --   SELECT:
 --     • moderation_backend_phase_a.sql → "reports: reporter or moderator read"
 --       using (reporter_id = auth.uid() or public.is_moderator())
+--       ^ CONFIRMED LIVE (2026-07-23, via a running-attempt of this very
+--       migration): reports.reporter_id is TEXT in production, not uuid —
+--       same "schema file says uuid, live column is text" pattern already
+--       found on messages.sender_id. Comparing it bare to auth.uid() (uuid)
+--       throws 42883 "operator does not exist: text = uuid", so THIS
+--       policy (not admin_security_hardening.sql's, as first assumed) is
+--       the one that could never have applied as originally written either.
 --     • admin_security_hardening.sql   → "reports: read own or admin"
 --       using (public.is_admin() or reporter_id = auth.uid()::text)
---       ^ this compares a uuid column to a text value — Postgres has no
---       uuid = text operator, so this exact CREATE POLICY statement cannot
---       have succeeded as written. Whether it silently failed (leaving only
---       the first policy) or was hand-corrected before running is not
---       something static analysis can settle either way.
+--       ^ this one already had the correct ::text cast.
 --   UPDATE:
 --     • moderation_backend_phase_a.sql → "reports: moderator update"
 --       using (public.is_moderator())
@@ -46,7 +49,7 @@ drop policy if exists "reports: reporter or moderator read" on public.reports;
 drop policy if exists "reports: read own or admin" on public.reports;
 create policy "reports: reporter or moderator read"
   on public.reports for select
-  using (reporter_id = auth.uid() or public.is_moderator());
+  using (reporter_id = auth.uid()::text or public.is_moderator());
 
 -- ── UPDATE: moderators/admins only (regular users never update reports) ──
 drop policy if exists "reports: moderator update" on public.reports;
