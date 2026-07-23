@@ -342,14 +342,46 @@
     var picker=document.createElement('div');
     picker.id='reactionPicker';
     picker.style.cssText='position:fixed;z-index:60;display:flex;gap:4px;padding:6px 8px;border-radius:12px;background:#17213a;box-shadow:0 10px 28px rgba(11,28,77,.28);left:'+Math.max(8,x-90)+'px;top:'+Math.max(8,y-46)+'px';
-    picker.innerHTML=REACTION_EMOJIS.map(function(em){return '<button type="button" style="border:0;background:transparent;font-size:17px;padding:3px;cursor:pointer" data-emoji="'+em+'">'+em+'</button>'}).join('');
+    picker.innerHTML=REACTION_EMOJIS.map(function(em){return '<button type="button" style="border:0;background:transparent;font-size:17px;padding:3px;cursor:pointer" data-emoji="'+em+'">'+em+'</button>'}).join('')
+      +'<button type="button" style="border:0;border-left:1px solid rgba(255,255,255,.15);background:transparent;font-size:14px;padding:3px 3px 3px 8px;margin-left:2px;cursor:pointer;opacity:.85" data-report="1" title="Report this message">🚩</button>';
     document.body.appendChild(picker);
     picker.addEventListener('click',function(e){
-      var btn=e.target.closest('[data-emoji]');
-      if(btn)window.PMChat.toggleReaction(msgId,btn.dataset.emoji);
+      var emojiBtn=e.target.closest('[data-emoji]');
+      if(emojiBtn){window.PMChat.toggleReaction(msgId,emojiBtn.dataset.emoji);picker.remove();return}
+      var reportBtn=e.target.closest('[data-report]');
+      if(reportBtn){picker.remove();openReportPicker(msgId,x,y);return}
       picker.remove();
     });
     setTimeout(function(){document.addEventListener('click',function closePicker(e){if(!picker.contains(e.target)){picker.remove();document.removeEventListener('click',closePicker)}})},0);
+  }
+  // Per-message reporting — parity with www/js/messages.js H._chat.reportMsg,
+  // same canonical reason list, into the SAME public.reports table
+  // js/marketplace-data.js's PM.submitReport already writes to (target_type
+  // 'message' has been accepted since fix_reports_target_types.sql).
+  var REPORT_REASONS=['Scam or fraud','Harassment','Spam','Offensive content','Sharing off-platform contact','Other'];
+  function openReportPicker(msgId,x,y){
+    var existing=document.getElementById('reportPicker');
+    if(existing)existing.remove();
+    var picker=document.createElement('div');
+    picker.id='reportPicker';
+    picker.style.cssText='position:fixed;z-index:61;min-width:190px;padding:8px;border-radius:12px;background:#17213a;box-shadow:0 10px 28px rgba(11,28,77,.28);left:'+Math.max(8,x-95)+'px;top:'+Math.max(8,y-46)+'px';
+    picker.innerHTML='<div style="color:#fff;opacity:.7;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px 7px">Report message</div>'
+      +REPORT_REASONS.map(function(r){return '<button type="button" style="display:block;width:100%;text-align:left;border:0;background:transparent;color:#fff;font-size:12px;padding:7px;cursor:pointer;border-radius:7px" data-reason="'+esc(r)+'">'+esc(r)+'</button>'}).join('');
+    document.body.appendChild(picker);
+    picker.addEventListener('click',function(e){
+      var btn=e.target.closest('[data-reason]');
+      if(btn)reportMessage(msgId,btn.getAttribute('data-reason'));
+      picker.remove();
+    });
+    setTimeout(function(){document.addEventListener('click',function closePicker(e){if(!picker.contains(e.target)){picker.remove();document.removeEventListener('click',closePicker)}})},0);
+  }
+  function reportMessage(msgId,reason){
+    if(!window.PM||!PM.submitReport){toast('Reporting is unavailable right now.',true);return}
+    PM.submitReport({targetType:'message',targetId:msgId,reason:reason}).then(function(){
+      toast('Message reported — our team will review within 24 hours');
+    }).catch(function(){
+      toast('Could not report this message. Please try again.',true);
+    });
   }
   function loadThreadMessages(convId){
     return request('/rest/v1/messages?conversation_id=eq.'+encodeURIComponent(convId)+'&select=id,sender_id,sender_name,text,image,read,edited,deleted,reactions,created_at&order=created_at.asc&limit=200').then(function(rows){
