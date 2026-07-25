@@ -1,0 +1,247 @@
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Polyline } from "react-native-svg";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../lib/auth";
+import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
+import { businessInitials } from "../../lib/businesses";
+import { jobCompany, jobSalary, jobType, parseJobField } from "../../lib/jobs";
+import { Badge, Button, Card, EmptyState } from "../../components/ui";
+
+type JobListing = {
+  id: string;
+  seller_id: string;
+  seller_name: string | null;
+  title: string;
+  description: string | null;
+  city: string | null;
+  province: string | null;
+  photos: string[] | null;
+  created_at: string;
+};
+
+const JOB_COLUMNS = "id,seller_id,seller_name,title,description,city,province,photos,created_at";
+
+function BackIcon() {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
+      <Polyline points="15 18 9 12 15 6" />
+    </Svg>
+  );
+}
+
+type Styles = ReturnType<typeof buildStyles>;
+
+function MetaChip({ label, value, styles }: { label: string; value: string; styles: Styles }) {
+  if (!value) return null;
+  return (
+    <View style={styles.metaChip}>
+      <Text style={styles.metaChipLabel}>{label}</Text>
+      <Text style={styles.metaChipValue} numberOfLines={1}>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+function DetailSection({ title, body, styles }: { title: string; body: string; styles: Styles }) {
+  if (!body.trim()) return null;
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={styles.sectionBody}>{body.trim()}</Text>
+    </View>
+  );
+}
+
+export default function JobDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const { session } = useAuth();
+  const insets = useSafeAreaInsets();
+  const styles = useThemedStyles(buildStyles);
+  const [job, setJob] = useState<JobListing | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    if (!id) return;
+    const { data } = await supabase.from("listings").select(JOB_COLUMNS).eq("id", id).maybeSingle();
+    setJob((data as JobListing) ?? null);
+  }, [id]);
+
+  useEffect(() => {
+    setIsLoading(true);
+    load().finally(() => setIsLoading(false));
+  }, [load]);
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color={color.brand} />
+      </View>
+    );
+  }
+
+  if (!job) {
+    return (
+      <View style={styles.centered}>
+        <EmptyState title="Job not found" subtitle="This posting may have been closed or removed." />
+      </View>
+    );
+  }
+
+  const company = jobCompany(job.description, job.seller_name);
+  const isOwner = session?.user?.id === job.seller_id;
+  const location = [job.city, job.province].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", ");
+  const type = jobType(job.description);
+  const expLabel = parseJobField(job.description, "EXPERIENCE");
+  const industry = parseJobField(job.description, "INDUSTRY");
+  const about = parseJobField(job.description, "DESCRIPTION") || job.description || "";
+  const responsibilities = parseJobField(job.description, "RESPONSIBILITIES");
+  const requirements = parseJobField(job.description, "REQUIREMENTS");
+  const howToApply = parseJobField(job.description, "HOW TO APPLY");
+
+  function applyNow() {
+    if (!session?.user) {
+      router.push("/(auth)/sign-in");
+      return;
+    }
+    router.push({ pathname: "/jobs/apply/[id]", params: { id: job!.id } });
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <Pressable onPress={() => router.back()} hitSlop={10}>
+          <BackIcon />
+        </Pressable>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {company}
+        </Text>
+        <View style={{ width: 20 }} />
+      </View>
+
+      <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: 110 }}>
+        <Card style={styles.headCard}>
+          <View style={styles.headRow}>
+            <View style={styles.logoWrap}>
+              {job.photos?.[0] ? (
+                <Image source={{ uri: job.photos[0] }} style={styles.logo} />
+              ) : (
+                <Text style={styles.logoInitial}>{businessInitials(company)}</Text>
+              )}
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.jobTitle}>{job.title}</Text>
+              <Pressable
+                onPress={() => router.push({ pathname: "/business/[id]", params: { id: job.seller_id } })}
+                hitSlop={6}
+              >
+                <Text style={styles.company}>{company}</Text>
+              </Pressable>
+              {location ? <Text style={styles.location}>{location}</Text> : null}
+            </View>
+          </View>
+
+          <View style={styles.metaChips}>
+            <MetaChip label="Type" value={type || "Not specified"} styles={styles} />
+            <MetaChip label="Salary" value={jobSalary(job.description)} styles={styles} />
+            {expLabel ? <MetaChip label="Experience" value={expLabel} styles={styles} /> : null}
+            {industry ? <MetaChip label="Industry" value={industry} styles={styles} /> : null}
+          </View>
+        </Card>
+
+        <Card style={styles.detailsCard}>
+          <DetailSection title="About the role" body={about} styles={styles} />
+          <DetailSection title="Responsibilities" body={responsibilities} styles={styles} />
+          <DetailSection title="Requirements" body={requirements} styles={styles} />
+          <DetailSection title="How to apply" body={howToApply} styles={styles} />
+          {!about.trim() && !responsibilities && !requirements ? (
+            <Text style={styles.sectionBody}>No description provided.</Text>
+          ) : null}
+        </Card>
+      </ScrollView>
+
+      <View style={[styles.ctaBar, { paddingBottom: insets.bottom + space.md }]}>
+        {isOwner ? (
+          <View style={styles.ownerRow}>
+            <View style={{ flex: 1 }}>
+              <Button
+                label="Edit"
+                variant="secondary"
+                onPress={() => router.push({ pathname: "/jobs/edit/[id]", params: { id: job.id } })}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button label="View applicants" onPress={() => router.push("/jobs/applications")} />
+            </View>
+          </View>
+        ) : (
+          <Button label="Apply now" variant="gold" size="lg" onPress={applyNow} />
+        )}
+      </View>
+    </View>
+  );
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: color.bg },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: color.bg },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: space.md,
+    backgroundColor: color.brand,
+    paddingHorizontal: space.lg,
+    paddingBottom: space.md,
+  },
+  headerTitle: { flex: 1, ...font.title, color: color.textOnBrand, textAlign: "center" },
+  headCard: { gap: space.lg },
+  headRow: { flexDirection: "row", gap: space.md, alignItems: "flex-start" },
+  logoWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.md,
+    backgroundColor: color.brandTint,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    flexShrink: 0,
+  },
+  logo: { width: "100%", height: "100%" },
+  logoInitial: { ...font.h3, color: color.brand },
+  jobTitle: { ...font.h3, color: color.text },
+  company: { ...font.bodyStrong, color: color.brand, marginTop: space.xxs },
+  location: { ...font.sub, color: color.textMuted, marginTop: space.xxs },
+  metaChips: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
+  metaChip: {
+    backgroundColor: color.surfaceAlt,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: color.border,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
+    minWidth: 96,
+  },
+  metaChipLabel: { ...font.micro, color: color.textMuted, textTransform: "uppercase" },
+  metaChipValue: { ...font.bodyStrong, color: color.text, marginTop: 2 },
+  detailsCard: { marginTop: space.lg, gap: 0 },
+  section: { marginBottom: space.xl },
+  sectionTitle: { ...font.title, color: color.text, marginBottom: space.sm },
+  sectionBody: { ...font.body, color: color.textSub, lineHeight: 22 },
+  ctaBar: {
+    padding: space.lg,
+    paddingBottom: space.md,
+    borderTopWidth: 1,
+    borderTopColor: color.border,
+    backgroundColor: color.surface,
+    ...shadow.md,
+  },
+  ownerRow: { flexDirection: "row", gap: space.md },
+  });
+}

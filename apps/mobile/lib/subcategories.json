@@ -1,0 +1,302 @@
+{
+  "property": [
+    {
+      "key": "houses",
+      "label": "Houses"
+    },
+    {
+      "key": "flats",
+      "label": "Flats & Apartments"
+    },
+    {
+      "key": "cottages",
+      "label": "Cottages & Garden Flats"
+    },
+    {
+      "key": "townhouses",
+      "label": "Townhouses & Clusters"
+    },
+    {
+      "key": "stands",
+      "label": "Stands & Land"
+    },
+    {
+      "key": "commercial",
+      "label": "Commercial & Office"
+    },
+    {
+      "key": "student",
+      "label": "Student Accommodation"
+    }
+  ],
+  "vehicles": [
+    {
+      "key": "cars",
+      "label": "Cars"
+    },
+    {
+      "key": "bakkies",
+      "label": "Bakkies & Trucks"
+    },
+    {
+      "key": "suvs",
+      "label": "SUVs & 4x4"
+    },
+    {
+      "key": "kombis",
+      "label": "Kombis & Buses"
+    },
+    {
+      "key": "motorbikes",
+      "label": "Motorbikes"
+    },
+    {
+      "key": "trailers",
+      "label": "Trailers"
+    },
+    {
+      "key": "parts",
+      "label": "Spares & Parts"
+    },
+    {
+      "key": "tyres",
+      "label": "Tyres & Rims"
+    }
+  ],
+  "rooms": [
+    {
+      "key": "single",
+      "label": "Single Rooms"
+    },
+    {
+      "key": "shared",
+      "label": "Shared Rooms"
+    },
+    {
+      "key": "cottage",
+      "label": "Cottages"
+    },
+    {
+      "key": "full-house",
+      "label": "Full House Share"
+    },
+    {
+      "key": "self-contained",
+      "label": "Self-Contained"
+    },
+    {
+      "key": "student",
+      "label": "Student Digs"
+    }
+  ],
+  "electronics": [
+    {
+      "key": "phones",
+      "label": "Phones & Tablets"
+    },
+    {
+      "key": "computers",
+      "label": "Laptops & Computers"
+    },
+    {
+      "key": "tvs",
+      "label": "TVs & Monitors"
+    },
+    {
+      "key": "audio",
+      "label": "Audio & Sound"
+    },
+    {
+      "key": "cameras",
+      "label": "Cameras"
+    },
+    {
+      "key": "gaming",
+      "label": "Gaming"
+    },
+    {
+      "key": "accessories",
+      "label": "Accessories"
+    }
+  ],
+  "furniture": [
+    {
+      "key": "sofas",
+      "label": "Sofas & Lounge"
+    },
+    {
+      "key": "beds",
+      "label": "Beds & Bedroom"
+    },
+    {
+      "key": "dining",
+      "label": "Dining & Kitchen"
+    },
+    {
+      "key": "office",
+      "label": "Office Furniture"
+    },
+    {
+      "key": "outdoor",
+      "label": "Garden & Outdoor"
+    },
+    {
+      "key": "wardrobes",
+      "label": "Wardrobes & Storage"
+    },
+    {
+      "key": "curtains",
+      "label": "Curtains & Blinds"
+    },
+    {
+      "key": "rugs",
+      "label": "Rugs & Carpets"
+    },
+    {
+      "key": "lighting",
+      "label": "Lighting & Fans"
+    },
+    {
+      "key": "decor",
+      "label": "Home Décor"
+    }
+  ],
+  "fashion": [
+    {
+      "key": "clothing",
+      "label": "Clothing"
+    },
+    {
+      "key": "shoes",
+      "label": "Shoes"
+    },
+    {
+      "key": "bags",
+      "label": "Bags & Luggage"
+    },
+    {
+      "key": "watches",
+      "label": "Watches"
+    },
+    {
+      "key": "jewellery",
+      "label": "Jewellery"
+    },
+    {
+      "key": "accessories",
+      "label": "Accessories"
+    }
+  ],
+  "services": [
+    {
+      "key": "home",
+      "label": "Home & Repairs"
+    },
+    {
+      "key": "building",
+      "label": "Building & Construction"
+    },
+    {
+      "key": "tutoring",
+      "label": "Tutoring & Lessons"
+    },
+    {
+      "key": "events",
+      "label": "Events & Catering"
+    },
+    {
+      "key": "beauty",
+      "label": "Beauty & Hair"
+    },
+    {
+      "key": "transport",
+      "label": "Transport & Moving"
+    },
+    {
+      "key": "professional",
+      "label": "Professional Services"
+    }
+  ],
+  "agriculture": [
+    {
+      "key": "livestock",
+      "label": "Livestock"
+    },
+    {
+      "key": "poultry",
+      "label": "Poultry"
+    },
+    {
+      "key": "produce",
+      "label": "Crops & Produce"
+    },
+    {
+      "key": "seeds",
+      "label": "Seeds & Seedlings"
+    },
+    {
+      "key": "equipment",
+      "label": "Farm Equipment"
+    },
+    {
+      "key": "irrigation",
+      "label": "Irrigation"
+    },
+    {
+      "key": "feed",
+      "label": "Feed & Fertiliser"
+    }
+  ],
+  "pets": [
+    {
+      "key": "dogs",
+      "label": "Dogs"
+    },
+    {
+      "key": "cats",
+      "label": "Cats"
+    },
+    {
+      "key": "birds",
+      "label": "Birds"
+    },
+    {
+      "key": "fish",
+      "label": "Fish"
+    },
+    {
+      "key": "farm",
+      "label": "Farm Animals"
+    },
+    {
+      "key": "accessories",
+      "label": "Pet Accessories"
+    }
+  ],
+  "kids": [
+    {
+      "key": "clothing",
+      "label": "Clothing"
+    },
+    {
+      "key": "toys",
+      "label": "Toys"
+    },
+    {
+      "key": "prams",
+      "label": "Prams & Strollers"
+    },
+    {
+      "key": "cots",
+      "label": "Cots & Beds"
+    },
+    {
+      "key": "carseats",
+      "label": "Car Seats"
+    },
+    {
+      "key": "school",
+      "label": "School Items"
+    }
+  ]
+}
