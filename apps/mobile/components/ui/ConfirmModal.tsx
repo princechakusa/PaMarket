@@ -1,8 +1,15 @@
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import type { ColorPalette } from "../../lib/theme";
+import { useEffect } from "react";
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { BlurView } from "expo-blur";
+import * as Haptics from "expo-haptics";
+import { glass, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
-// Mirrors www/js/app.js H.modal — generic confirm/cancel dialog.
+// Mirrors www/js/app.js H.modal — generic confirm/cancel dialog. Backdrop is
+// a real blur (native "overlay" material) rather than a flat dim, matching
+// the rest of the glass system; the card itself stays solid/opaque so a
+// destructive confirm (delete account, remove listing, etc.) stays fully
+// legible rather than fighting a translucent surface for contrast.
 export function ConfirmModal({
   visible,
   title,
@@ -23,17 +30,40 @@ export function ConfirmModal({
   onCancel: () => void;
 }) {
   const styles = useThemedStyles(buildStyles);
+
+  useEffect(() => {
+    if (!visible) return;
+    (danger ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning) : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)).catch(
+      () => {}
+    );
+  }, [visible, danger]);
+
+  function handleCancel() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    onCancel();
+  }
+  function handleConfirm() {
+    Haptics.impactAsync(danger ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    onConfirm();
+  }
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.backdrop}>
+        <BlurView
+          intensity={glass.intensity.strong}
+          tint="dark"
+          experimentalBlurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
+          style={StyleSheet.absoluteFill}
+        />
         <View style={styles.card}>
           <Text style={styles.title}>{title}</Text>
           {body ? <Text style={styles.body}>{body}</Text> : null}
           <View style={styles.buttonRow}>
-            <Pressable style={styles.cancelButton} onPress={onCancel}>
+            <Pressable style={styles.cancelButton} onPress={handleCancel}>
               <Text style={styles.cancelText}>{cancelText}</Text>
             </Pressable>
-            <Pressable style={[styles.confirmButton, danger && styles.confirmButtonDanger]} onPress={onConfirm}>
+            <Pressable style={[styles.confirmButton, danger && styles.confirmButtonDanger]} onPress={handleConfirm}>
               <Text style={styles.confirmText}>{confirmText}</Text>
             </Pressable>
           </View>
@@ -47,9 +77,9 @@ function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
-      backgroundColor: color.overlay,
       justifyContent: "center",
       paddingHorizontal: 28,
+      overflow: "hidden",
     },
     card: {
       backgroundColor: color.surface,
