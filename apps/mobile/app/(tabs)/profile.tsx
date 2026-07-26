@@ -19,7 +19,7 @@ import { DARK_COLORS, LIGHT_COLORS, font, radius, shadow, space, type ColorPalet
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 import type { Profile } from "../../lib/profiles";
 import { averageRating, type Review } from "../../lib/sellers";
-import { fetchSavedListingIds } from "../../lib/saves";
+import { fetchValidSavedCount } from "../../lib/saves";
 import { clearPushToken } from "../../lib/push";
 import { businessInitials, type Business } from "../../lib/businesses";
 import { Avatar, Badge, Card, SectionHeader, VerifiedBadge } from "../../components/ui";
@@ -177,7 +177,7 @@ export default function AccountScreen() {
   const load = useCallback(async () => {
     if (!session?.user) return;
     const myId = session.user.id;
-    const [profileRes, activeRes, unreadRes, bizRes, applicationsRes, reviewsRes, savedIds] = await Promise.all([
+    const [profileRes, activeRes, unreadRes, bizRes, applicationsRes, reviewsRes, savedCountRes] = await Promise.all([
       supabase
         .from("profiles")
         .select("id,name,email,phone,avatar,verified,bio,city,created_at,company_verified")
@@ -188,14 +188,14 @@ export default function AccountScreen() {
       supabase.from("businesses").select("*").eq("owner_user_id", myId),
       supabase.from("applications").select("id", { count: "exact", head: true }).eq("applicant_id", myId),
       supabase.from("reviews").select("reviewer_id,rating,created_at").eq("seller_id", myId),
-      fetchSavedListingIds(myId),
+      fetchValidSavedCount(myId),
     ]);
     if (profileRes.data) setProfile(profileRes.data as Profile);
     setCompanyVerified(!!(profileRes.data as any)?.company_verified);
     setActiveCount(activeRes.count ?? 0);
     setUnreadMessages(unreadRes.count ?? 0);
     setApplicationsCount(applicationsRes.count ?? 0);
-    setSavedCount(savedIds.size);
+    setSavedCount(savedCountRes);
 
     const reviews = (reviewsRes.data as Review[] | null) ?? [];
     setReviewCount(reviews.length);

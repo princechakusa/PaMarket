@@ -9,6 +9,24 @@ export async function fetchSavedListingIds(userId: string): Promise<Set<string>>
   return new Set((data ?? []).map((r: { listing_id: string }) => r.listing_id));
 }
 
+// Counts only saves whose listing still actually exists. user_saves.listing_id
+// has no foreign key to listings (plain text column, no constraint), so a row
+// isn't cleaned up when its listing is later hard-deleted — a raw count of
+// fetchSavedListingIds() can be higher than what Favourites actually shows
+// (that screen fetches the listing rows themselves and silently drops any
+// id that no longer resolves to one). Anywhere a "you have N saved" count is
+// displayed should use this instead, so it always matches what opening
+// Favourites shows.
+export async function fetchValidSavedCount(userId: string): Promise<number> {
+  const ids = await fetchSavedListingIds(userId);
+  if (!ids.size) return 0;
+  const { count } = await supabase
+    .from("listings")
+    .select("id", { count: "exact", head: true })
+    .in("id", Array.from(ids));
+  return count ?? 0;
+}
+
 export async function isListingSaved(userId: string, listingId: string): Promise<boolean> {
   const { data } = await supabase
     .from("user_saves")

@@ -233,3 +233,41 @@ export function chatSafetyHint(text: string | null | undefined): string | null {
   }
   return null;
 }
+
+// Keyword/pattern layer for the scam categories the product spec calls out
+// explicitly (advance-fee/loan scams, OTP & credential phishing, fake
+// investment/giveaway schemes, illegal goods). This is one layer, not the
+// whole system — it flags for review and warns; it deliberately does not try
+// to silently block a message outright (false positives on a wording match
+// would be worse than a flagged-for-review false positive), except for the
+// credential-phishing category, which is unambiguous enough and dangerous
+// enough to warrant an explicit confirm step before sending.
+export type ScamRisk = "none" | "flag" | "high";
+
+const CREDENTIAL_PHISHING_PATTERNS = [
+  /\b(?:send|share|give|forward)\s+(?:me\s+)?(?:your\s+)?(?:otp|one[\s-]?time[\s-]?pin|verification\s+code|pin\s+code)\b/i,
+  /\b(?:your\s+)?(?:bank\s+)?(?:pin|password|login|account)\s+(?:number|code|details?)\b.{0,20}\b(?:send|share|give)\b/i,
+  /\bwhat'?s\s+your\s+(?:otp|pin|password)\b/i,
+];
+
+const ADVANCE_FEE_PATTERNS = [
+  /\b(?:pay|send|transfer)\s+(?:a\s+)?(?:small\s+)?(?:registration|processing|clearance|delivery|customs|advance|upfront)\s+fee\b/i,
+  /\bloan\s+(?:guaranteed|approved)\s+(?:without|no)\s+(?:collateral|credit\s+check)\b/i,
+  /\b(?:100%|guaranteed)\s+(?:returns?|profit)\b/i,
+  /\bdouble\s+your\s+(?:money|investment)\b/i,
+  /\byou(?:'ve| have)\s+won\b.{0,20}\bclaim\b/i,
+];
+
+const ILLEGAL_GOODS_PATTERNS = [/\b(?:cocaine|heroin|crystal\s+meth|mbanje\b.{0,10}\bsale)\b/i];
+
+export function scamRisk(text: string | null | undefined): ScamRisk {
+  if (!text) return "none";
+  if (CREDENTIAL_PHISHING_PATTERNS.some((p) => p.test(text)) || ILLEGAL_GOODS_PATTERNS.some((p) => p.test(text))) {
+    return "high";
+  }
+  if (ADVANCE_FEE_PATTERNS.some((p) => p.test(text))) return "flag";
+  return "none";
+}
+
+export const SCAM_CONFIRM_MESSAGE =
+  "This message looks like it's asking for a one-time code or password. PaMarket never needs your OTP or password, and neither does a legitimate buyer or seller. Send anyway?";

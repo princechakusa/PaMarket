@@ -34,7 +34,7 @@ import {
 } from "../../lib/messages";
 import type { Profile } from "../../lib/profiles";
 import { formatPrice } from "../../lib/listings";
-import { chatSafetyHint, REPORT_REASONS } from "../../lib/safety";
+import { chatSafetyHint, scamRisk, SCAM_CONFIRM_MESSAGE, REPORT_REASONS } from "../../lib/safety";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { initPresence, isUserOnline, joinChatChannel } from "../../lib/chat-realtime";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
@@ -308,15 +308,32 @@ export default function ChatScreen() {
     setInputText("");
     setReplyTarget(null);
 
-    await supabase.from("messages").insert({
-      conversation_id: id,
-      sender_id: myId,
-      sender_name: profile?.name ?? "",
-      text: storedText || null,
-      image: imageUrl ?? null,
-      read: false,
-    });
+    const { data: inserted } = await supabase
+      .from("messages")
+      .insert({
+        conversation_id: id,
+        sender_id: myId,
+        sender_name: profile?.name ?? "",
+        text: storedText || null,
+        image: imageUrl ?? null,
+        read: false,
+      })
+      .select("id")
+      .single();
     // Optimistic message stays visible on error; matches web behavior.
+
+    // Pattern-matched scam categories get auto-flagged for moderator review
+    // regardless of whether either party reports it — see lib/safety.ts
+    // scamRisk() for what this covers and why it flags rather than blocks.
+    if (text && inserted?.id && scamRisk(text) !== "none") {
+      await supabase.from("reports").insert({
+        target_type: "message",
+        target_id: inserted.id,
+        chat_id: id,
+        reason: "Scam or fraud (auto-flagged)",
+        reporter_id: myId,
+      });
+    }
   }
 
   async function saveEdit(target: MessageRow, newText: string) {
@@ -325,6 +342,18 @@ export default function ChatScreen() {
   }
 
   async function handleSend() {
+    const trimmed = inputText.trim();
+    if (trimmed && !editTarget && scamRisk(trimmed) === "high") {
+      Alert.alert("Wait a moment", SCAM_CONFIRM_MESSAGE, [
+        { text: "Cancel", style: "cancel" },
+        { text: "Send anyway", style: "destructive", onPress: () => doSend() },
+      ]);
+      return;
+    }
+    await doSend();
+  }
+
+  async function doSend() {
     const trimmed = inputText.trim();
     if (pendingImages.length) {
       await sendPendingImages();
