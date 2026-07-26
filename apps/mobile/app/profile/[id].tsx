@@ -62,6 +62,7 @@ export default function UserProfileScreen() {
         .select("id,seller_id,seller_name,title,price,currency,category,province,city,suburb,photos,status,boost,featured_until,created_at")
         .eq("seller_id", id)
         .eq("status", "active")
+        .neq("category", "jobs")
         .order("created_at", { ascending: false })
         .limit(30),
       supabase.from("businesses").select("id,name").eq("owner_user_id", id).maybeSingle(),

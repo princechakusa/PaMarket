@@ -62,7 +62,7 @@ export default function BusinessShopScreen() {
         )
         .eq("id", id)
         .maybeSingle(),
-      supabase.from("listings").select(LISTING_COLUMNS).eq("business_id", id).eq("status", "active"),
+      supabase.from("listings").select(LISTING_COLUMNS).eq("business_id", id).eq("status", "active").neq("category", "jobs"),
       supabase.from("business_reviews").select("rating").eq("business_id", id),
       supabase.from("business_followers").select("user_id", { count: "exact", head: true }).eq("business_id", id),
       myId

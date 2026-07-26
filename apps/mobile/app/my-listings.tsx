@@ -108,7 +108,11 @@ export default function MyListingsScreen() {
         <View style={styles.card}>
           <Pressable
             style={styles.cardBody}
-            onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })}
+            onPress={() =>
+              item.category === "jobs"
+                ? router.push({ pathname: "/jobs/[id]", params: { id: item.id } })
+                : router.push({ pathname: "/listing/[id]", params: { id: item.id } })
+            }
           >
             {item.photos?.[0] ? (
               <Image source={{ uri: item.photos[0] }} style={styles.thumb} contentFit="cover" transition={150} cachePolicy="memory-disk" />
@@ -135,13 +139,21 @@ export default function MyListingsScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.actions}>
             <Pressable
               style={styles.actionButton}
-              onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })}
+              onPress={() =>
+                item.category === "jobs"
+                  ? router.push({ pathname: "/jobs/[id]", params: { id: item.id } })
+                  : router.push({ pathname: "/listing/[id]", params: { id: item.id } })
+              }
             >
               <Text style={styles.actionText}>View</Text>
             </Pressable>
             <Pressable
               style={styles.actionButton}
-              onPress={() => router.push({ pathname: "/listing/edit/[id]", params: { id: item.id } })}
+              onPress={() =>
+                item.category === "jobs"
+                  ? router.push({ pathname: "/jobs/edit/[id]", params: { id: item.id } })
+                  : router.push({ pathname: "/listing/edit/[id]", params: { id: item.id } })
+              }
             >
               <Text style={styles.actionText}>Edit</Text>
             </Pressable>
