@@ -1,16 +1,16 @@
-import { Platform, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
-import { BlurView } from "expo-blur";
+import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import Svg, { Polyline } from "react-native-svg";
-import { glass, hitSlop as defaultHitSlop } from "../../lib/theme";
+import { hitSlop as defaultHitSlop } from "../../lib/theme";
 import { useThemePreference } from "../../lib/theme-provider";
 
-// One shared back button, replacing the ~21 screens that each hand-rolled
-// their own Pressable + inline chevron SVG + one-off circle/opacity values.
-// `tone` lets a screen opt into a light or dark icon+blur combo for use over
-// photo heroes or brand-colored banners, without re-implementing the button.
+// One shared back button — a plain chevron, no background/circle/blur,
+// matching the plain native back arrow used everywhere a screen relies on
+// the default Stack header (e.g. My Listings). `tone` only controls icon
+// color for legibility over photo heroes / brand-colored banners; it no
+// longer implies any background treatment.
 export type GlassTone = "auto" | "light" | "dark";
 
 type GlassBackButtonProps = {
@@ -22,7 +22,7 @@ type GlassBackButtonProps = {
 
 function ChevronIcon({ color, size }: { color: string; size: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
       <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
@@ -34,15 +34,12 @@ export function GlassBackButton({ onPress, tone = "auto", size = 38, style }: Gl
   const isDark = resolvedScheme === "dark";
 
   // "auto" follows the active theme; "light"/"dark" let a screen force a
-  // legible icon+blur combo when the surface behind it is a photo or a
+  // legible icon color when the surface behind it is a photo or a
   // brand-colored banner rather than the app's own background. `tone`
-  // names the ICON's rendered tone, not the background's — "light" means a
-  // light/white icon (for a dark backdrop), "dark" means a dark icon (for
-  // a light backdrop).
+  // names the ICON's rendered tone — "light" means a light/white icon (for
+  // a dark backdrop), "dark" means a dark icon (for a light backdrop).
   const effectiveDark = tone === "light" ? true : tone === "dark" ? false : isDark;
   const iconColor = effectiveDark ? "#FFFFFF" : "#111827";
-  const blurTint = effectiveDark ? "dark" : "light";
-  const borderColor = effectiveDark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.7)";
 
   function handlePress() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -64,20 +61,9 @@ export function GlassBackButton({ onPress, tone = "auto", size = 38, style }: Gl
         hitSlop={defaultHitSlop}
         accessibilityRole="button"
         accessibilityLabel="Go back"
-        style={({ pressed }) => [
-          styles.wrap,
-          { width: size, height: size, borderRadius: size / 2, borderColor, opacity: pressed ? 0.7 : 1 },
-          style,
-        ]}
+        style={({ pressed }) => [styles.wrap, { width: size, height: size, opacity: pressed ? 0.5 : 1 }, style]}
       >
-        <BlurView
-          intensity={glass.intensity.standard}
-          tint={blurTint}
-          experimentalBlurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: effectiveDark ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.28)" }]} />
-        <ChevronIcon color={iconColor} size={Math.round(size * 0.5)} />
+        <ChevronIcon color={iconColor} size={Math.round(size * 0.58)} />
       </Pressable>
     </>
   );
@@ -87,7 +73,5 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth * 1.5,
   },
 });

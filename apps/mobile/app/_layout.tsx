@@ -58,7 +58,7 @@ function RootNavigator() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, headerBackButtonDisplayMode: "minimal" }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="login-callback" />
@@ -69,7 +69,7 @@ function RootNavigator() {
       <Stack.Screen name="business-manage/[id]" options={{ headerShown: true, title: "Seller Center" }} />
       <Stack.Screen name="business-edit/[id]" options={{ headerShown: true, title: "Edit Business" }} />
       <Stack.Screen name="business-staff/[id]" options={{ headerShown: true, title: "Staff" }} />
-      <Stack.Screen name="profile/[id]" options={{ headerShown: true, title: "" }} />
+      <Stack.Screen name="profile/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="notifications" options={{ headerShown: true, title: "Notifications" }} />
       <Stack.Screen name="chat/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="my-listings" options={{ headerShown: true, title: "My Listings" }} />
