@@ -209,7 +209,7 @@ export default function ShopsDirectoryScreen() {
                     <Text style={styles.name} numberOfLines={1}>
                       {item.name}
                     </Text>
-                    {verified ? <VerifiedBadge label="Verified" /> : null}
+                    {verified ? <VerifiedBadge /> : null}
                   </View>
                   {metaParts.length ? (
                     <Text style={styles.meta} numberOfLines={1}>

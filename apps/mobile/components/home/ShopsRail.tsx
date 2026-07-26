@@ -49,20 +49,18 @@ export function ShopsRail({
                   )}
                 </View>
                 <View style={styles.copy}>
-                  <Text style={styles.name} numberOfLines={1}>
-                    {business.name}
-                  </Text>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.name} numberOfLines={1}>
+                      {business.name}
+                    </Text>
+                    {verified ? <VerifiedBadge /> : null}
+                  </View>
                   <Text style={styles.meta} numberOfLines={1}>
                     {[niche, loc].filter(Boolean).join(" · ")}
                   </Text>
                   <Text style={styles.metaSub} numberOfLines={1}>
                     {products.length} {products.length === 1 ? "item" : "items"}
                   </Text>
-                  {verified ? (
-                    <View style={styles.badgeRow}>
-                      <VerifiedBadge label="Verified" />
-                    </View>
-                  ) : null}
                 </View>
               </View>
               <View style={styles.thumbRow}>
@@ -121,9 +119,15 @@ function buildStyles(color: ColorPalette) {
       flex: 1,
       gap: 2,
     },
+    nameRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
     name: {
       ...font.bodyStrong,
       color: color.text,
+      flexShrink: 1,
     },
     meta: {
       ...font.caption,
@@ -134,9 +138,6 @@ function buildStyles(color: ColorPalette) {
       ...font.caption,
       color: color.textMuted,
       marginTop: 1,
-    },
-    badgeRow: {
-      marginTop: space.xs,
     },
     thumbRow: {
       flexDirection: "row",

@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import Svg, { Polyline } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -30,13 +30,8 @@ function buildStyles(color: ColorPalette) {
       flexDirection: "row",
       alignItems: "center",
       gap: 4,
-      backgroundColor: color.info,
-      borderRadius: radius.pill,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      alignSelf: "flex-start",
     },
-    verifiedText: { ...font.micro, color: "#FFFFFF" },
+    verifiedText: { ...font.micro, color: color.text },
   });
 }
 
@@ -51,15 +46,24 @@ export function Badge({ label, tone = "neutral" }: { label: string; tone?: Tone 
   );
 }
 
-// The "Verified" seller badge — a filled check pill, used consistently.
-export function VerifiedBadge({ label = "Verified", compact }: { label?: string; compact?: boolean }) {
+// The scalloped azure verified seal (Instagram/Meta style) — matches
+// www/js/app.js H.verifiedBadge exactly (same path data, same #00A0E9 blue),
+// replacing a plain blue "Verified" pill that had no equivalent on the web.
+// Icon-only by default, same as every web call site; pass `label` only where
+// a visible text label next to the seal is actually wanted.
+export function VerifiedBadge({ label, compact }: { label?: string; compact?: boolean }) {
   const styles = useThemedStyles(buildStyles);
+  const size = compact ? 12 : 15;
   return (
     <View style={styles.verified}>
-      <Svg width={compact ? 9 : 11} height={compact ? 9 : 11} viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={3.5}>
-        <Polyline points="20 6 9 17 4 12" />
+      <Svg width={size} height={size} viewBox="0 0 24 24">
+        <Path
+          fill="#00A0E9"
+          d="M23 12l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2L12 2.96 8.6 1.5 6.71 4.69 3.1 5.5l.34 3.7L1 12l2.44 2.78-.34 3.7 3.61.82L8.6 22.5l3.4-1.47 3.4 1.46 1.89-3.19 3.61-.82-.34-3.69L23 12z"
+        />
+        <Path d="M9.6 12.3l1.9 1.9 4.1-5.1" fill="none" stroke="#FFFFFF" strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
-      {!compact ? <Text style={styles.verifiedText}>{label}</Text> : null}
+      {label ? <Text style={styles.verifiedText}>{label}</Text> : null}
     </View>
   );
 }
