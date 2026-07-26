@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
     shops_new_arrivals_notified: 0,
     category_digest_notified: 0,
     verification_nudges_sent: 0,
+    messages_noreply_reminded: 0,
     errors: [] as string[],
   }
 
@@ -151,6 +152,10 @@ Deno.serve(async (req) => {
     const verificationNudge = await db.rpc('run_verification_nudge')
     if (verificationNudge.error) summary.errors.push('Verification nudge: ' + verificationNudge.error.message)
     else summary.verification_nudges_sent = Number(verificationNudge.data?.notified || 0)
+
+    const noreplyReminders = await db.rpc('run_message_noreply_reminders')
+    if (noreplyReminders.error) summary.errors.push('Message no-reply reminders: ' + noreplyReminders.error.message)
+    else summary.messages_noreply_reminded = Number(noreplyReminders.data?.reminded || 0)
 
     const ok = summary.errors.length === 0
     await db.from('job_runs').insert({

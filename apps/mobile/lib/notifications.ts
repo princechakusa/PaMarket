@@ -107,6 +107,8 @@ const TYPE_DOT_COLOR: Record<string, string> = {
   shop_new_arrivals: "#1A3A8F",
   category_digest: "#CA8A04",
   verification_nudge: "#1A3A8F",
+  message_noreply_reminder: "#1A3A8F",
+  rental_lead: "#1A3A8F",
 };
 
 export function notifDotColor(type: string): string {
@@ -141,6 +143,10 @@ function parseLegacyWebRoute(s: string): ExpoRoute | null {
       return anyId ? { pathname: "/jobs/[id]", params: { id: anyId } } : { pathname: "/jobs/applications" };
     case "AppliedJobs":
       return { pathname: "/jobs/applications" };
+    case "RentalLeads": {
+      const bizId = params.get("bizId") || undefined;
+      return bizId ? { pathname: "/rental-fleet/leads", params: { bizId } } : { pathname: "/(tabs)" };
+    }
     case "Chat":
       return anyId ? { pathname: "/chat/[id]", params: { id: anyId } } : { pathname: "/(tabs)/messages" };
     case "Profile":
@@ -252,11 +258,18 @@ export function resolveNotifRoute(n: {
   const profileId: string | undefined = meta.profileId || meta.sellerId || undefined;
 
   // 1. Chat / message
-  if (type === "message" || type === "chat_scam_warning") {
+  if (type === "message" || type === "chat_scam_warning" || type === "message_noreply_reminder") {
     if (conversationId) return { pathname: "/chat/[id]", params: { id: conversationId } };
     const parsed = parseDeepLinkString(meta.deepLink);
     if (parsed) return parsed;
     return { pathname: "/(tabs)/messages" };
+  }
+
+  // 1b. Rental lead / booking request — fleet owner side
+  if (type === "rental_lead") {
+    const parsed = parseDeepLinkString(meta.deepLink);
+    if (parsed) return parsed;
+    return { pathname: "/(tabs)" };
   }
 
   // 2. Listing-oriented types

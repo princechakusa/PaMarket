@@ -1,26 +1,72 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Path, Polyline, Rect } from "react-native-svg";
+import { supabase } from "../lib/supabase";
+import { useAuth } from "../lib/auth";
+import type { Listing } from "../lib/listings";
+import { ListingCard } from "../components/ListingCard";
+import { SectionHeader } from "../components/ui";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 
-// Mirrors www/js/settings.js pages.MyActivity. The web version also shows
-// Purchase History, Recent Searches, and Recently Viewed listings — all
-// backed by localStorage state (u.recentSearches, pamarket_rv) and a
-// H.fetchPurchaseHistory() call that have no equivalent in this app yet
-// (favourites.tsx itself notes saves aren't wired to a Supabase table, and
-// there is no recently-viewed/search-history tracking or purchase-history
-// RPC call anywhere in apps/mobile). Rather than fabricate empty sections
-// for data this app doesn't collect, this screen links to the two real,
-// already-working equivalents: My Applications (public.applications) and
-// Saved & Favourites.
+const RECENTLY_VIEWED_COLUMNS =
+  "id,seller_id,seller_name,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at";
+const RECENT_CARD_WIDTH = 170;
+
+// Mirrors www/js/settings.js pages.MyActivity. Purchase History and Recent
+// Searches still have no server-side equivalent in this app, but Recently
+// Viewed is now real: viewed_listings (populated by increment_listing_view,
+// called from listing/[id].tsx on every view) backs this section instead of
+// the web app's localStorage-only pamarket_rv.
 export default function MyActivityScreen() {
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
   const router = useRouter();
+  const { session } = useAuth();
+
+  const [recentlyViewed, setRecentlyViewed] = useState<Listing[]>([]);
+
+  const loadRecentlyViewed = useCallback(async () => {
+    if (!session?.user) return;
+    const { data: views } = await supabase
+      .from("viewed_listings")
+      .select("listing_id,viewed_at")
+      .eq("user_id", session.user.id)
+      .order("viewed_at", { ascending: false })
+      .limit(12);
+    const ids = (views ?? []).map((v: any) => v.listing_id);
+    if (!ids.length) {
+      setRecentlyViewed([]);
+      return;
+    }
+    const { data: listings } = await supabase.from("listings").select(RECENTLY_VIEWED_COLUMNS).in("id", ids).eq("status", "active");
+    const byId = new Map((listings ?? []).map((l: any) => [l.id, l as Listing]));
+    setRecentlyViewed(ids.map((id: string) => byId.get(id)).filter((l): l is Listing => !!l));
+  }, [session?.user]);
+
+  useEffect(() => {
+    loadRecentlyViewed();
+  }, [loadRecentlyViewed]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
+      {recentlyViewed.length ? (
+        <View style={{ marginBottom: 18 }}>
+          <SectionHeader title="Recently Viewed" />
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={recentlyViewed}
+            keyExtractor={(l) => l.id}
+            contentContainerStyle={{ gap: 10, paddingVertical: 4 }}
+            renderItem={({ item }) => (
+              <ListingCard listing={item} width={RECENT_CARD_WIDTH} onPress={() => router.push(`/listing/${item.id}`)} />
+            )}
+          />
+        </View>
+      ) : null}
+
       <Pressable style={styles.card} onPress={() => router.push("/jobs/applications")}>
         <View style={styles.iconWrap}>
           <Svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke={tones.brand} strokeWidth={2}>

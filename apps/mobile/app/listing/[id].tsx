@@ -222,6 +222,11 @@ export default function ListingDetailScreen() {
     }
     if (!reviewsRes.error && reviewsRes.data) setReviews(reviewsRes.data as Review[]);
     if (!similarRes.error && similarRes.data) setSimilar(similarRes.data as Listing[]);
+
+    supabase.rpc("increment_listing_view", { listing_id: found.id }).then(
+      () => {},
+      () => {}
+    );
   }, [id]);
 
   useEffect(() => {
