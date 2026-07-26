@@ -3,9 +3,11 @@ import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, Vi
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line, Path } from "react-native-svg";
+import { Image } from "expo-image";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { applyBrowseFilters, type BrowseFilters, type Listing } from "../../lib/listings";
+import { businessInitials, type Business } from "../../lib/businesses";
 import { fetchActiveAds, adsForCategory, type PaidAd } from "../../lib/ads";
 import { logSearch } from "../../lib/telemetry";
 import { saveSearch } from "../../lib/saved-searches";
@@ -79,6 +81,7 @@ export default function SearchScreen() {
   const [filterPanelVisible, setFilterPanelVisible] = useState(false);
   const [ads, setAds] = useState<PaidAd[]>([]);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [matchingShops, setMatchingShops] = useState<Business[]>([]);
 
   const pageRef = useRef(0);
   const styles = useThemedStyles(buildStyles);
@@ -164,6 +167,31 @@ export default function SearchScreen() {
     const timer = setTimeout(() => logSearch(filters.query, results.length), 600);
     return () => clearTimeout(timer);
   }, [filters.query, results.length]);
+
+  // Search only covers `listings` (the .neq("category","jobs") query above) —
+  // shops/businesses have no search entry point anywhere else in the app, so
+  // surface name matches here too rather than leaving Shops unsearchable.
+  useEffect(() => {
+    const q = filters.query.trim();
+    if (q.length < 2) {
+      setMatchingShops([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const { data } = await supabase
+        .from("businesses")
+        .select("id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,featured_listing_ids,updated_at")
+        .eq("status", "active")
+        .ilike("name", `%${q}%`)
+        .limit(6);
+      if (!cancelled) setMatchingShops((data as Business[]) ?? []);
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [filters.query]);
 
   const categoryAds = useMemo(
     () => adsForCategory(ads, filters.categories.length === 1 ? filters.categories[0] : null),
@@ -272,7 +300,40 @@ export default function SearchScreen() {
           data={results}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
-          ListHeaderComponent={categoryAds.length ? <AdCarousel ads={categoryAds} /> : null}
+          ListHeaderComponent={
+            <>
+              {matchingShops.length ? (
+                <View style={styles.shopsSection}>
+                  <Text style={styles.shopsSectionTitle}>Shops matching &ldquo;{filters.query.trim()}&rdquo;</Text>
+                  <FlatList
+                    horizontal
+                    data={matchingShops}
+                    keyExtractor={(b) => b.id}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.shopsRow}
+                    renderItem={({ item }) => (
+                      <Pressable
+                        style={styles.shopCard}
+                        onPress={() => router.push({ pathname: "/business/[id]", params: { id: item.id } })}
+                      >
+                        <View style={styles.shopLogoWrap}>
+                          {item.logo ? (
+                            <Image source={{ uri: item.logo }} style={styles.shopLogo} contentFit="cover" cachePolicy="memory-disk" />
+                          ) : (
+                            <Text style={styles.shopLogoInitial}>{businessInitials(item.name)}</Text>
+                          )}
+                        </View>
+                        <Text style={styles.shopName} numberOfLines={1}>
+                          {item.name}
+                        </Text>
+                      </Pressable>
+                    )}
+                  />
+                </View>
+              ) : null}
+              {categoryAds.length ? <AdCarousel ads={categoryAds} /> : null}
+            </>
+          }
           ListEmptyComponent={
             <EmptyState
               title="No matches"
@@ -318,6 +379,22 @@ export default function SearchScreen() {
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: color.bg },
+  shopsSection: { paddingTop: space.lg, paddingBottom: space.sm },
+  shopsSectionTitle: { ...font.caption, color: color.textMuted, paddingHorizontal: space.lg, marginBottom: space.sm },
+  shopsRow: { paddingHorizontal: space.lg, gap: space.md },
+  shopCard: { alignItems: "center", width: 76, gap: space.xs },
+  shopLogoWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.pill,
+    backgroundColor: color.brandTint,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  shopLogo: { width: "100%", height: "100%" },
+  shopLogoInitial: { ...font.title, color: color.brand },
+  shopName: { ...font.caption, color: color.text, textAlign: "center" },
   header: {
     backgroundColor: color.brand,
     paddingHorizontal: space.lg,
