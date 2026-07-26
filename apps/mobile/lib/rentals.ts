@@ -135,11 +135,13 @@ export type RentalLead = {
   listing_id: string;
   company_id: string;
   user_id: string | null;
-  lead_source: "chat" | "whatsapp_click" | "call_click" | "favorite" | "share" | "view_detail";
+  lead_source: "chat" | "whatsapp_click" | "call_click" | "favorite" | "share" | "view_detail" | "booking_request";
   status: "new" | "contacted" | "converted" | "lost";
   created_at: string;
   user_name?: string | null;
   vehicle_name?: string | null;
+  requested_start_date?: string | null;
+  requested_end_date?: string | null;
 };
 
 export type RentalAvailabilityBlock = {

@@ -17,6 +17,7 @@ const SOURCE_LABEL: Record<string, string> = {
   favorite: "Saved",
   share: "Share",
   view_detail: "Viewed",
+  booking_request: "Booking Request",
 };
 
 function timeAgo(iso: string) {
@@ -53,7 +54,7 @@ export default function RentalLeadsScreen() {
 
     const { data: leadRows } = await supabase
       .from("rental_vehicle_leads")
-      .select("id,listing_id,company_id,lead_source,status,created_at,user_id")
+      .select("id,listing_id,company_id,lead_source,status,created_at,user_id,requested_start_date,requested_end_date")
       .eq("company_id", rc.id)
       .order("created_at", { ascending: false })
       .limit(50);
@@ -175,6 +176,11 @@ export default function RentalLeadsScreen() {
             <Text style={styles.meta} numberOfLines={1}>
               {l.vehicle_name || "Rental inquiry"} · {timeAgo(l.created_at)}
             </Text>
+            {l.requested_start_date && l.requested_end_date ? (
+              <Text style={styles.meta} numberOfLines={1}>
+                Requested: {l.requested_start_date} → {l.requested_end_date}
+              </Text>
+            ) : null}
             <View style={styles.statusRow}>
               <Text style={[styles.statusText, l.status === "new" && styles.statusNew]}>
                 {l.status[0].toUpperCase() + l.status.slice(1)}

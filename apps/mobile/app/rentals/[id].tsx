@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Linking,
   Pressable,
   ScrollView,
@@ -66,6 +67,23 @@ type BusinessInfo = {
   owner_user_id: string;
 };
 
+type AvailabilityBlock = { starts_on: string; ends_on: string };
+
+function isoDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function isBlocked(dateIso: string, blocks: AvailabilityBlock[]): boolean {
+  return blocks.some((b) => dateIso >= b.starts_on && dateIso <= b.ends_on);
+}
+
+function dayChipLabel(d: Date): { top: string; bottom: string } {
+  return {
+    top: d.toLocaleDateString(undefined, { weekday: "short" }),
+    bottom: d.toLocaleDateString(undefined, { day: "numeric", month: "short" }),
+  };
+}
+
 const DETAIL_COLUMNS =
   "id,model,year,daily_rate,weekly_rate,monthly_rate,deposit,min_rental_days,driver_rate,description,is_available,company_id,brand_id,location_id";
 
@@ -85,6 +103,40 @@ export default function RentalVehicleDetailScreen() {
   const [company, setCompany] = useState<RentalCompany | null>(null);
   const [business, setBusiness] = useState<BusinessInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [availability, setAvailability] = useState<AvailabilityBlock[]>([]);
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
+  const [isBooking, setIsBooking] = useState(false);
+
+  const upcomingDays = useMemo(() => {
+    const days: Date[] = [];
+    const today = new Date();
+    for (let i = 0; i < 45; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      days.push(d);
+    }
+    return days;
+  }, []);
+
+  const minRentalDays = vehicle?.min_rental_days ?? 1;
+  const minEndDate = useMemo(() => {
+    if (!startDate) return null;
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + Math.max(minRentalDays - 1, 0));
+    return isoDate(d);
+  }, [startDate, minRentalDays]);
+
+  const rentalDayCount = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+    const ms = new Date(endDate).getTime() - new Date(startDate).getTime();
+    return Math.round(ms / 86400000) + 1;
+  }, [startDate, endDate]);
+
+  const estimatedTotal = useMemo(() => {
+    if (!rentalDayCount || vehicle?.daily_rate == null) return null;
+    return rentalDayCount * vehicle.daily_rate;
+  }, [rentalDayCount, vehicle?.daily_rate]);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -109,6 +161,12 @@ export default function RentalVehicleDetailScreen() {
     setSpecs((specsRes.data as RentalSpecs) ?? null);
     setFeatures(((featuresRes.data as { feature: string }[]) ?? []).map((f) => f.feature));
     setBrandSlug((brandRes.data as { slug: string } | null)?.slug ?? null);
+
+    const { data: avail } = await supabase
+      .from("rental_vehicle_availability")
+      .select("starts_on,ends_on")
+      .eq("listing_id", id);
+    setAvailability((avail as AvailabilityBlock[]) ?? []);
 
     if ((v as RentalVehicleDetail).company_id) {
       const { data: companyData } = await supabase
@@ -147,6 +205,7 @@ export default function RentalVehicleDetailScreen() {
         id: convId,
         members: [session.user.id, business.owner_user_id],
         listing_id: null,
+        business_id: company.business_id,
       });
     }
     await supabase.from("rental_conversation_context").upsert(
@@ -154,6 +213,56 @@ export default function RentalVehicleDetailScreen() {
       { onConflict: "user_id,listing_id" }
     );
     router.push({ pathname: "/chat/[id]", params: { id: convId } });
+  }
+
+  async function requestBooking() {
+    if (!session?.user) {
+      router.push("/(auth)/sign-in");
+      return;
+    }
+    if (!business || !company || !startDate || !endDate) return;
+    if (isBlocked(startDate, availability) || isBlocked(endDate, availability)) {
+      Alert.alert("Dates unavailable", "One of the selected dates is already booked. Please pick different dates.");
+      return;
+    }
+    setIsBooking(true);
+    try {
+      const convId = `biz_${company.business_id!.slice(-8)}_${session.user.id.slice(-6)}`;
+      const { data: existing } = await supabase.from("conversations").select("id").eq("id", convId).maybeSingle();
+      if (!existing) {
+        await supabase.from("conversations").upsert({
+          id: convId,
+          members: [session.user.id, business.owner_user_id],
+          listing_id: null,
+          business_id: company.business_id,
+        });
+      }
+      await supabase.from("rental_conversation_context").upsert(
+        { conversation_id: convId, listing_id: id, company_id: company.id, user_id: session.user.id },
+        { onConflict: "user_id,listing_id" }
+      );
+      await supabase.from("rental_vehicle_leads").insert({
+        listing_id: id,
+        company_id: company.id,
+        user_id: session.user.id,
+        lead_source: "booking_request",
+        conversation_id: convId,
+        requested_start_date: startDate,
+        requested_end_date: endDate,
+      });
+      const { data: profile } = await supabase.from("profiles").select("name").eq("id", session.user.id).maybeSingle();
+      const totalText = estimatedTotal != null ? ` (est. $${estimatedTotal} for ${rentalDayCount} day${rentalDayCount === 1 ? "" : "s"})` : "";
+      await supabase.from("messages").insert({
+        conversation_id: convId,
+        sender_id: session.user.id,
+        sender_name: profile?.name ?? "",
+        text: `Hi! I'd like to book the ${brandLabel(brandSlug)} ${vehicle?.model} from ${startDate} to ${endDate}${totalText}. Is it available?`,
+        read: false,
+      });
+      router.push({ pathname: "/chat/[id]", params: { id: convId } });
+    } finally {
+      setIsBooking(false);
+    }
   }
 
   function callCompany() {
@@ -244,6 +353,75 @@ export default function RentalVehicleDetailScreen() {
             </Text>
           </View>
 
+          {vehicle.is_available ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Select Rental Dates</Text>
+              <Text style={styles.dateSubLabel}>Pick-up date</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dateChipRow}>
+                {upcomingDays.map((d) => {
+                  const iso = isoDate(d);
+                  const blocked = isBlocked(iso, availability);
+                  const label = dayChipLabel(d);
+                  const active = startDate === iso;
+                  return (
+                    <Pressable
+                      key={iso}
+                      disabled={blocked}
+                      style={[styles.dateChip, active && styles.dateChipActive, blocked && styles.dateChipBlocked]}
+                      onPress={() => {
+                        setStartDate(iso);
+                        if (endDate && endDate < iso) setEndDate(null);
+                      }}
+                    >
+                      <Text style={[styles.dateChipTop, active && styles.dateChipTextActive]}>{label.top}</Text>
+                      <Text style={[styles.dateChipBottom, active && styles.dateChipTextActive]}>{label.bottom}</Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+
+              {startDate ? (
+                <>
+                  <Text style={styles.dateSubLabel}>Return date</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dateChipRow}>
+                    {upcomingDays
+                      .filter((d) => isoDate(d) >= (minEndDate ?? startDate))
+                      .map((d) => {
+                        const iso = isoDate(d);
+                        const blocked = isBlocked(iso, availability);
+                        const label = dayChipLabel(d);
+                        const active = endDate === iso;
+                        return (
+                          <Pressable
+                            key={iso}
+                            disabled={blocked}
+                            style={[styles.dateChip, active && styles.dateChipActive, blocked && styles.dateChipBlocked]}
+                            onPress={() => setEndDate(iso)}
+                          >
+                            <Text style={[styles.dateChipTop, active && styles.dateChipTextActive]}>{label.top}</Text>
+                            <Text style={[styles.dateChipBottom, active && styles.dateChipTextActive]}>{label.bottom}</Text>
+                          </Pressable>
+                        );
+                      })}
+                  </ScrollView>
+                </>
+              ) : null}
+
+              {minRentalDays > 1 ? (
+                <Text style={styles.dateHint}>Minimum rental: {minRentalDays} days</Text>
+              ) : null}
+
+              {startDate && endDate ? (
+                <View style={styles.estimateRow}>
+                  <Text style={styles.estimateLabel}>
+                    {rentalDayCount} day{rentalDayCount === 1 ? "" : "s"}
+                  </Text>
+                  {estimatedTotal != null ? <Text style={styles.estimateValue}>Est. ${estimatedTotal}</Text> : null}
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+
           {specs ? (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Car Overview</Text>
@@ -317,10 +495,20 @@ export default function RentalVehicleDetailScreen() {
               <WhatsAppIcon fill={tones.textOnBrand} />
             </Pressable>
           ) : null}
-          <Pressable style={styles.ctaMessageButton} onPress={contactViaChat}>
-            <MessageIcon stroke={tones.textOnBrand} />
-            <Text style={styles.ctaMessageText}>Chat</Text>
-          </Pressable>
+          {vehicle.is_available && startDate && endDate ? (
+            <Pressable style={styles.ctaMessageButton} onPress={requestBooking} disabled={isBooking}>
+              {isBooking ? (
+                <ActivityIndicator color={tones.textOnBrand} />
+              ) : (
+                <Text style={styles.ctaMessageText}>Request to Book</Text>
+              )}
+            </Pressable>
+          ) : (
+            <Pressable style={styles.ctaMessageButton} onPress={contactViaChat}>
+              <MessageIcon stroke={tones.textOnBrand} />
+              <Text style={styles.ctaMessageText}>Chat</Text>
+            </Pressable>
+          )}
         </View>
       ) : null}
     </View>
@@ -441,6 +629,72 @@ function buildStyles(color: ColorPalette) {
       fontWeight: "700",
       color: color.text,
       marginBottom: 10,
+    },
+    dateSubLabel: {
+      fontSize: 11,
+      fontWeight: "700",
+      color: color.textMuted,
+      textTransform: "uppercase",
+      marginTop: 8,
+      marginBottom: 8,
+    },
+    dateChipRow: {
+      gap: 8,
+      paddingBottom: 4,
+    },
+    dateChip: {
+      width: 56,
+      paddingVertical: 10,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: color.border,
+      backgroundColor: color.surfaceAlt,
+      alignItems: "center",
+    },
+    dateChipActive: {
+      backgroundColor: color.brand,
+      borderColor: color.brand,
+    },
+    dateChipBlocked: {
+      opacity: 0.35,
+    },
+    dateChipTop: {
+      fontSize: 10,
+      fontWeight: "600",
+      color: color.textMuted,
+    },
+    dateChipBottom: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: color.text,
+      marginTop: 2,
+    },
+    dateChipTextActive: {
+      color: color.textOnBrand,
+    },
+    dateHint: {
+      fontSize: 12,
+      color: color.textMuted,
+      marginTop: 8,
+    },
+    estimateRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 14,
+      padding: 12,
+      borderRadius: 12,
+      backgroundColor: color.brandTint,
+    },
+    estimateLabel: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: color.text,
+    },
+    estimateValue: {
+      fontSize: 16,
+      fontWeight: "800",
+      color: color.brand,
     },
     infoRow: {
       flexDirection: "row",
