@@ -34,6 +34,7 @@ export function ShopsRail({
             .filter(Boolean)
             .join(" / ");
           const niche = categoryNames || "Local Shop";
+          const loc = [business.city, business.province].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", ");
           const thumbs = products.filter((l) => l.photos?.[0]).slice(0, 2);
           const verified = (business.verification_level ?? 0) >= 2;
 
@@ -52,7 +53,10 @@ export function ShopsRail({
                     {business.name}
                   </Text>
                   <Text style={styles.meta} numberOfLines={1}>
-                    {niche} · {products.length} {products.length === 1 ? "item" : "items"}
+                    {[niche, loc].filter(Boolean).join(" · ")}
+                  </Text>
+                  <Text style={styles.metaSub} numberOfLines={1}>
+                    {products.length} {products.length === 1 ? "item" : "items"}
                   </Text>
                   {verified ? (
                     <View style={styles.badgeRow}>
@@ -125,6 +129,11 @@ function buildStyles(color: ColorPalette) {
       ...font.caption,
       color: color.textMuted,
       fontWeight: "500",
+    },
+    metaSub: {
+      ...font.caption,
+      color: color.textMuted,
+      marginTop: 1,
     },
     badgeRow: {
       marginTop: space.xs,

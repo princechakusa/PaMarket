@@ -112,6 +112,7 @@ function RootNavigator() {
       <Stack.Screen name="rental-fleet/leads" options={{ headerShown: true, title: "Inquiries" }} />
       <Stack.Screen name="rental-fleet/profile" options={{ headerShown: true, title: "Company Profile" }} />
       <Stack.Screen name="reviews/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="shops/index" options={{ headerShown: false }} />
       <Stack.Screen name="two-factor-setup" options={{ headerShown: true, title: "Two-Factor Authentication" }} />
       <Stack.Screen name="change-password" options={{ headerShown: true, title: "Change Password" }} />
       <Stack.Screen name="delete-account" options={{ headerShown: true, title: "Delete Account" }} />

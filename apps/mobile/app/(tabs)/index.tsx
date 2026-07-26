@@ -356,7 +356,7 @@ export default function HomeScreen() {
               businesses={businesses}
               listings={listings}
               onPressShop={(b) => router.push({ pathname: "/business/[id]", params: { id: b.id } })}
-              onSeeAll={() => router.push("/(tabs)/search")}
+              onSeeAll={() => router.push("/shops")}
             />
 
             <ListingRail
