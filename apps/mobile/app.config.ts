@@ -4,6 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "PaMarket",
   slug: "pamarket",
+  owner: "princechakusa",
   version: "1.29.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
@@ -66,5 +67,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   extra: {
     router: {},
+    eas: {
+      projectId: "d3ca5977-65b4-4690-b686-198e1a83ffd1",
+    },
   },
 });
