@@ -1,8 +1,7 @@
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { CATEGORIES } from "../../lib/constants";
-import { font, radius, space, type ColorPalette } from "../../lib/theme";
+import { font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { SectionHeader } from "../ui";
 
 const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
   property: require("../../assets/cats/cat_property.png"),
@@ -19,13 +18,27 @@ const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
   other: require("../../assets/cats/cat_other.png"),
 };
 
+// Grid card (2 rows x 4 columns), the top 8 categories with a "See all" for
+// the rest — mirrors the reference home-screen mockup's Browse Categories
+// card (eyebrow + serif title + 4-col icon grid) instead of the previous
+// bare horizontal icon rail.
+const GRID_CATEGORIES = CATEGORIES.slice(0, 8);
+
 export function CategoryGrid({ onSelectCategory, onSeeAll }: { onSelectCategory: (id: string) => void; onSeeAll: () => void }) {
   const styles = useThemedStyles(buildStyles);
   return (
-    <View style={styles.container}>
-      <SectionHeader title="Browse Categories" actionLabel="See all" onAction={onSeeAll} />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>
-        {CATEGORIES.map((c) => (
+    <View style={styles.card}>
+      <View style={styles.head}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.eyebrow}>Explore PaMarket</Text>
+          <Text style={styles.title}>Browse Categories</Text>
+        </View>
+        <Pressable onPress={onSeeAll} hitSlop={8}>
+          <Text style={styles.seeAll}>See all</Text>
+        </Pressable>
+      </View>
+      <View style={styles.grid}>
+        {GRID_CATEGORIES.map((c) => (
           <Pressable key={c.id} style={styles.item} onPress={() => onSelectCategory(c.id)}>
             <View style={styles.iconWrap}>
               <Image source={CAT_ICONS[c.id]} style={styles.icon} />
@@ -35,35 +48,63 @@ export function CategoryGrid({ onSelectCategory, onSeeAll }: { onSelectCategory:
             </Text>
           </Pressable>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 }
 
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
-    container: {
+    card: {
       backgroundColor: color.surface,
-      paddingTop: space.lg,
-      paddingBottom: space.lg,
-      marginBottom: space.sm,
+      borderWidth: 1,
+      borderColor: color.border,
+      borderRadius: radius.xl,
+      padding: space.lg,
+      marginHorizontal: space.lg,
+      marginBottom: space.md,
+      ...shadow.sm,
     },
-    rail: {
-      paddingHorizontal: space.lg,
-      gap: space.lg,
+    head: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      justifyContent: "space-between",
+      marginBottom: space.md,
+    },
+    eyebrow: {
+      ...font.micro,
+      color: color.brand,
+      textTransform: "uppercase",
+    },
+    title: {
+      ...font.h3,
+      color: color.text,
+      marginTop: 3,
+    },
+    seeAll: {
+      ...font.caption,
+      color: color.brand,
+    },
+    grid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
     },
     item: {
-      width: 68,
+      width: "25%",
       alignItems: "center",
       gap: space.sm,
+      marginBottom: space.md,
     },
     iconWrap: {
-      width: 60,
-      height: 60,
+      width: 56,
+      height: 56,
       borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: color.border,
       backgroundColor: color.brandTint,
       alignItems: "center",
       justifyContent: "center",
+      ...shadow.sm,
     },
     icon: {
       width: 40,
@@ -74,6 +115,7 @@ function buildStyles(color: ColorPalette) {
       ...font.caption,
       color: color.text,
       textAlign: "center",
+      paddingHorizontal: 2,
     },
   });
 }
