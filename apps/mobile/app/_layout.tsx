@@ -15,10 +15,16 @@ import TwoFactorVerifyScreen from "./two-factor-verify";
 
 // Navigate using the same deep-link mapper the in-app notifications list
 // uses, so a push tap (cold start or backgrounded) and an in-app tap always
-// land on the same real route — never "page not found".
+// land on the same real route — never "page not found". Wrapped in try/catch
+// because a malformed/unexpected notification payload must never crash the
+// app — worst case is staying on the current screen instead of navigating.
 function navigateFromNotificationData(router: ReturnType<typeof useRouter>, data: Record<string, unknown>) {
-  const route = resolveNotifRoute(data as any);
-  router.push(route.params ? ({ pathname: route.pathname as any, params: route.params } as any) : (route.pathname as any));
+  try {
+    const route = resolveNotifRoute(data as any);
+    router.push(route.params ? ({ pathname: route.pathname as any, params: route.params } as any) : (route.pathname as any));
+  } catch (e) {
+    console.warn("push notification navigation failed:", e);
+  }
 }
 
 function usePushNotifications() {
@@ -34,10 +40,14 @@ function usePushNotifications() {
   }, [session?.user?.id]);
 
   useEffect(() => {
-    // Cold start: app opened by tapping a push notification.
+    // Cold start: app opened by tapping a push notification. The root
+    // navigator may not have finished mounting yet at this point — calling
+    // router.push() synchronously here is a known source of "navigate
+    // before mounting the Root Layout" crashes. Deferring to the next tick
+    // lets the navigator finish mounting first.
     Notifications.getLastNotificationResponseAsync().then((response) => {
       const data = response?.notification.request.content.data;
-      if (data) navigateFromNotificationData(router, data);
+      if (data) setTimeout(() => navigateFromNotificationData(router, data), 0);
     });
 
     // Warm/background: app already running, user taps a push notification.

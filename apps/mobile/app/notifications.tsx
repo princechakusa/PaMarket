@@ -69,8 +69,13 @@ export default function NotificationsScreen() {
       setNotifs((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
       markNotifRead(n.id);
     }
-    const route = resolveNotifRoute(n);
-    router.push(route.params ? { pathname: route.pathname as any, params: route.params } : (route.pathname as any));
+    try {
+      const route = resolveNotifRoute(n);
+      router.push(route.params ? { pathname: route.pathname as any, params: route.params } : (route.pathname as any));
+    } catch (e) {
+      console.warn("notification tap navigation failed:", e);
+      toast("Could not open this notification.", 4000, true);
+    }
   }
 
   function onLongPress(n: NotificationRow) {
