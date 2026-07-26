@@ -4,7 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
 import { Sentry } from "../lib/sentry";
 import { AuthProvider, useAuth } from "../lib/auth";
-import { ThemeProvider } from "../lib/theme-provider";
+import { ThemeProvider, useThemePreference } from "../lib/theme-provider";
 import { ToastHost } from "../components/ui/Toast";
 import { AnnouncementModal } from "../components/AnnouncementModal";
 import { RatingPromptModal } from "../components/RatingPromptModal";
@@ -132,13 +132,21 @@ function RootNavigator() {
   );
 }
 
+// Was hardcoded to `style="light"` regardless of theme — invisible white
+// icons on the light theme's white/near-white surfaces. Status bar style
+// now follows the resolved theme, same as every other native chrome piece.
+function ThemedStatusBar() {
+  const { resolvedScheme } = useThemePreference();
+  return <StatusBar style={resolvedScheme === "dark" ? "light" : "dark"} />;
+}
+
 function RootLayout() {
   useEffect(() => initTelemetry(), []);
 
   return (
     <ThemeProvider>
       <AuthProvider>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <ToastHost />
         <AnnouncementModal />
         <RatingPromptModal />

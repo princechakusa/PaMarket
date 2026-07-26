@@ -2,6 +2,7 @@ import { Platform, Pressable, StyleSheet, View, type StyleProp, type ViewStyle }
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import Svg, { Polyline } from "react-native-svg";
 import { glass, hitSlop as defaultHitSlop } from "../../lib/theme";
 import { useThemePreference } from "../../lib/theme-provider";
@@ -34,8 +35,11 @@ export function GlassBackButton({ onPress, tone = "auto", size = 38, style }: Gl
 
   // "auto" follows the active theme; "light"/"dark" let a screen force a
   // legible icon+blur combo when the surface behind it is a photo or a
-  // brand-colored banner rather than the app's own background.
-  const effectiveDark = tone === "light" ? false : tone === "dark" ? true : isDark;
+  // brand-colored banner rather than the app's own background. `tone`
+  // names the ICON's rendered tone, not the background's — "light" means a
+  // light/white icon (for a dark backdrop), "dark" means a dark icon (for
+  // a light backdrop).
+  const effectiveDark = tone === "light" ? true : tone === "dark" ? false : isDark;
   const iconColor = effectiveDark ? "#FFFFFF" : "#111827";
   const blurTint = effectiveDark ? "dark" : "light";
   const borderColor = effectiveDark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.7)";
@@ -47,26 +51,35 @@ export function GlassBackButton({ onPress, tone = "auto", size = 38, style }: Gl
   }
 
   return (
-    <Pressable
-      onPress={handlePress}
-      hitSlop={defaultHitSlop}
-      accessibilityRole="button"
-      accessibilityLabel="Go back"
-      style={({ pressed }) => [
-        styles.wrap,
-        { width: size, height: size, borderRadius: size / 2, borderColor, opacity: pressed ? 0.7 : 1 },
-        style,
-      ]}
-    >
-      <BlurView
-        intensity={glass.intensity.standard}
-        tint={blurTint}
-        experimentalBlurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: effectiveDark ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.28)" }]} />
-      <ChevronIcon color={iconColor} size={Math.round(size * 0.5)} />
-    </Pressable>
+    <>
+      {/* A forced tone means the surface behind this screen's header isn't
+          the app's own background (a photo hero or a brand-colored banner),
+          so the status bar needs to match that surface, not the app theme.
+          expo-status-bar stacks mounted <StatusBar> instances and reverts to
+          the previous one on unmount, so this only applies while this
+          screen is focused. */}
+      {tone !== "auto" && <StatusBar style={effectiveDark ? "light" : "dark"} />}
+      <Pressable
+        onPress={handlePress}
+        hitSlop={defaultHitSlop}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        style={({ pressed }) => [
+          styles.wrap,
+          { width: size, height: size, borderRadius: size / 2, borderColor, opacity: pressed ? 0.7 : 1 },
+          style,
+        ]}
+      >
+        <BlurView
+          intensity={glass.intensity.standard}
+          tint={blurTint}
+          experimentalBlurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: effectiveDark ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.28)" }]} />
+        <ChevronIcon color={iconColor} size={Math.round(size * 0.5)} />
+      </Pressable>
+    </>
   );
 }
 

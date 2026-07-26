@@ -3,7 +3,7 @@ import { Platform, StyleSheet, Text, View } from "react-native";
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { font, glass, space, type ColorPalette } from "../../lib/theme";
-import { useThemedStyles } from "../../lib/theme-provider";
+import { useThemePreference, useThemedStyles } from "../../lib/theme-provider";
 import { GlassBackButton, type GlassTone } from "./GlassBackButton";
 
 // Shared frosted header bar for the ~20 detail-style screens that set
@@ -21,14 +21,20 @@ type GlassHeaderProps = {
 export function GlassHeader({ title, onBack, tone = "auto", trailing, transparentBg = false }: GlassHeaderProps) {
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
-  const isLight = tone === "light";
+  const { resolvedScheme } = useThemePreference();
+
+  // Same tone→surface mapping as GlassBackButton: "light" means a light
+  // (white) title/icon, which needs a DARK-tinted blur behind it for
+  // contrast, and vice versa. "auto" follows the resolved app theme.
+  const effectiveDark = tone === "light" ? true : tone === "dark" ? false : resolvedScheme === "dark";
+  const titleColor = effectiveDark ? "#FFFFFF" : styles.title.color;
 
   return (
     <View style={[styles.wrap, { paddingTop: insets.top + space.sm }]}>
       {!transparentBg && (
         <BlurView
           intensity={glass.intensity.standard}
-          tint={tone === "dark" ? "dark" : tone === "light" ? "light" : undefined}
+          tint={effectiveDark ? "dark" : "light"}
           experimentalBlurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
           style={StyleSheet.absoluteFill}
         />
@@ -36,7 +42,7 @@ export function GlassHeader({ title, onBack, tone = "auto", trailing, transparen
       <View style={styles.row}>
         <GlassBackButton onPress={onBack} tone={tone} />
         {title ? (
-          <Text style={[styles.title, isLight && styles.titleLight]} numberOfLines={1}>
+          <Text style={[styles.title, { color: titleColor }]} numberOfLines={1}>
             {title}
           </Text>
         ) : (
@@ -70,9 +76,6 @@ function buildStyles(color: ColorPalette) {
       ...font.title,
       flex: 1,
       color: color.text,
-    },
-    titleLight: {
-      color: "#FFFFFF",
     },
     trailing: {
       flexDirection: "row",
