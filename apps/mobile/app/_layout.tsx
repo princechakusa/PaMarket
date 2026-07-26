@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
+import { Sentry } from "../lib/sentry";
 import { AuthProvider, useAuth } from "../lib/auth";
 import { ThemeProvider } from "../lib/theme-provider";
 import { ToastHost } from "../components/ui/Toast";
@@ -131,7 +132,7 @@ function RootNavigator() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   useEffect(() => initTelemetry(), []);
 
   return (
@@ -146,3 +147,5 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 }
+
+export default Sentry.wrap(RootLayout);

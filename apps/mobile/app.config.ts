@@ -64,6 +64,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         cameraPermission: "PaMarket uses your camera to take photos for listings, verification, and chat messages.",
       },
     ],
+    "@sentry/react-native",
   ],
   extra: {
     router: {},
