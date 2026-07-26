@@ -17,6 +17,7 @@ import { CITIES_BY_PROVINCE, PROVINCES } from "../../lib/constants";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { JOB_CATEGORIES, JOB_TYPES } from "../../lib/jobs";
+import { friendlyError } from "../../lib/safety";
 import { Badge, Button, Card, Chip, SectionHeader } from "../../components/ui";
 import { toast } from "../../components/ui/Toast";
 
@@ -201,7 +202,7 @@ export default function PostJobScreen() {
 
     setIsSubmitting(false);
     if (error || !data) {
-      toast("Could not post job — please try again");
+      toast(error ? friendlyError(error).message : "Could not post job — please try again", 4000, true);
       return;
     }
     if (data.status && data.status !== "active") {

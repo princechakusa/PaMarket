@@ -21,6 +21,9 @@ const ERROR_MAP: Record<string, { message: string }> = {
   rate_limited: {
     message: "You've reached today's posting limit. Please try again later — this keeps PaMarket free of spam.",
   },
+  company_verification_required: {
+    message: "Employer verification is required before you can post a job. Complete verification to continue.",
+  },
 };
 
 export function friendlyError(err: unknown): FriendlyError {
